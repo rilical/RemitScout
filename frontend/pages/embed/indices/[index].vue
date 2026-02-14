@@ -1,34 +1,34 @@
 <template>
   <div
     class="min-h-screen p-4"
-    :class="theme === 'dark' ? 'bg-neutral-900' : 'bg-white'"
+    :class="theme === 'dark' ? 'bg-neutral-900' : 'bg-surface'"
   >
     <div
       class="rounded-xl overflow-hidden"
-      :class="theme === 'dark' ? 'border border-neutral-700 bg-neutral-800' : 'border border-gray-200 bg-gray-50'"
+      :class="theme === 'dark' ? 'border border-neutral-700 bg-neutral-800' : 'border border-neutral-200 bg-neutral-50'"
     >
       <div
         class="px-4 py-3 border-b"
-        :class="theme === 'dark' ? 'border-neutral-700' : 'border-gray-200'"
+        :class="theme === 'dark' ? 'border-neutral-700' : 'border-neutral-200'"
       >
         <div class="flex items-center justify-between">
           <div>
             <h1
-              class="text-lg font-bold"
-              :class="theme === 'dark' ? 'text-white' : 'text-gray-900'"
+              class="text-body-lg font-bold"
+              :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
             >
               {{ chartTitle }}
             </h1>
             <p
-              class="text-sm"
-              :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-600'"
+              class="text-body-sm"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
             >
               {{ corridorLabel }} · {{ methodLabel }} · ${{ amountBucket }}
             </p>
           </div>
           <div
-            class="text-xs"
-            :class="theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
           >
             {{ weightingLabel }}
           </div>
@@ -38,63 +38,49 @@
       <div class="p-4">
         <div
           v-if="apiKeyWarning"
-          class="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"
+          class="mb-3 rounded-lg border border-warning-600 bg-warning-600 px-3 py-2 text-body-sm text-warning-600"
         >
           {{ apiKeyWarning }}
         </div>
         <div
           v-if="loading"
-          class="flex h-64 items-center justify-center"
+          class="flex h-64 w-full items-center justify-center"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading chart"
         >
-          <div
-            class="flex items-center gap-2"
-            :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
-          >
-            <svg
-              class="h-5 w-5 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              />
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Loading...
-          </div>
+          <SkeletonBlock
+            width="full"
+            height="16rem"
+            :tone="theme === 'dark' ? 'dark' : 'light'"
+          />
+          <span class="sr-only">Loading chart</span>
         </div>
         <div
           v-else-if="error"
-          class="flex h-64 items-center justify-center text-sm text-rose-500"
+          class="flex h-64 items-center justify-center text-body-sm text-danger-600"
         >
           {{ error }}
         </div>
         <div v-else-if="chartSeries.length">
-          <PulseLineChart
-            :series="chartSeries"
-            :unit="unit"
-            :unit-label="unitLabel"
-          />
+          <AsyncErrorBoundary skeleton-height="320">
+            <PulseLineChart
+              :series="chartSeries"
+              :unit="unit"
+              :unit-label="unitLabel"
+            />
+          </AsyncErrorBoundary>
         </div>
         <div
           v-else
-          class="flex h-64 items-center justify-center text-sm text-neutral-500"
+          class="flex h-64 items-center justify-center text-body-sm text-neutral-500"
         >
           No data available yet.
         </div>
         <div
           v-if="!loading && !error"
-          class="mt-4 text-xs"
-          :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
+          class="mt-4 text-body-sm"
+          :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
         >
           {{ citationText }}
         </div>
@@ -102,11 +88,11 @@
 
       <div
         class="flex items-center justify-between px-4 py-3 border-t"
-        :class="theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-100'"
+        :class="theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-neutral-200 bg-neutral-100'"
       >
         <div
-          class="text-xs"
-          :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
+          class="text-body-sm"
+          :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
         >
           Updated {{ formatLastUpdated(lastUpdated) }}
         </div>
@@ -114,7 +100,7 @@
           :href="fullIndexUrl"
           target="_blank"
           rel="noopener"
-          class="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          class="flex items-center gap-1.5 text-body-sm font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"
         >
           <svg
@@ -132,12 +118,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { getIndexSeries } from '~/lib/indicesApi'
 import type { IndexKey } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
+const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
 
 definePageMeta({
   layout: false,
@@ -145,6 +136,9 @@ definePageMeta({
 
 const route = useRoute()
 const config = useRuntimeConfig()
+const siteUrl = config.public.siteUrl || 'https://remit-scout.com'
+const embedUrl = computed(() => `${siteUrl}${route.path}`)
+const { addVideoObjectSchema } = useStructuredData()
 
 const theme = computed(() => (route.query.theme as 'dark' | 'light') || 'dark')
 const indexKey = computed(() => route.params.index as IndexKey)
@@ -182,13 +176,33 @@ const citationText = computed(() => {
 })
 
 const fullIndexUrl = computed(() => {
-  const baseUrl = config.public.siteUrl || ''
   const anchor = indexKey.value === 'teer'
     ? 'teer'
     : indexKey.value === 'rci'
       ? 'rci'
       : 'rvi'
-  return `${baseUrl}/indices-methodology#${anchor}`
+  return `${siteUrl}/indices-methodology#${anchor}`
+})
+
+watchEffect(() => {
+  const title = `Embed: ${chartTitle.value} | Remit-Scout`
+  const description = 'Embeddable Remit-Scout indices chart.'
+
+  setSeo({
+    title,
+    description,
+    canonical: embedUrl.value,
+    noindex: true,
+  })
+
+  addVideoObjectSchema({
+    name: title,
+    description,
+    thumbnailUrl: `${siteUrl}/og-image.png`,
+    uploadDate: new Date().toISOString(),
+    contentUrl: fullIndexUrl.value,
+    embedUrl: embedUrl.value,
+  })
 })
 
 function formatLastUpdated(timestamp: string): string {

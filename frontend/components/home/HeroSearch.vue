@@ -1,23 +1,23 @@
 <template>
   <section class="relative overflow-hidden bg-gradient-to-b from-primary-500 via-primary-600 to-primary-700">
-    <div class="relative mx-auto flex max-w-5xl flex-col items-center gap-8 px-4 pb-16 pt-16 sm:px-6 lg:px-8 lg:pb-20 lg:pt-20">
+    <div class="relative mx-auto flex max-w-5xl flex-col items-center gap-8 px-page-x pb-16 pt-16 lg:pb-20 lg:pt-20">
       <header class="max-w-4xl text-center text-white">
-        <div class="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur">
+        <div class="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-surface/20 px-4 py-2 text-body-sm font-medium backdrop-blur">
           <span aria-hidden="true">💸</span>
           Trusted by 30,000+ global remitters
         </div>
-        <h1 class="text-balance text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
+        <h1 class="text-balance text-hero font-bold leading-tight">
           Compare international money transfers
           <span class="text-primary-200">and save</span>
         </h1>
-        <p class="text-balance mt-4 text-lg text-white/90 md:text-xl">
+        <p class="text-balance mt-4 text-body-lg text-white/90">
           Pinpoint the best exchange rates, delivery speeds, and hidden fees before you hit send. <br class="hidden md:block">
           Our data covers 30+ licensed providers across 200+ corridors.
         </p>
       </header>
 
       <form
-        class="w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-lg"
+        class="w-full max-w-4xl rounded-2xl border border-neutral-200 bg-surface p-6 shadow-lg"
         role="search"
         aria-label="Money transfer comparison form"
         @submit.prevent="handleSubmit"
@@ -27,7 +27,7 @@
           <div>
             <label
               for="from-country"
-              class="mb-2 block text-sm font-semibold text-gray-700"
+              class="mb-2 block text-body-sm font-semibold text-neutral-700"
             >
               <span class="mr-2">🛫</span>Sending from
             </label>
@@ -37,14 +37,14 @@
               label="Sending from"
               :exclude-country="to"
               :error="errors.from ? 'Select a country' : ''"
-              :select-class="errors.from ? 'border-red-500' : 'border-gray-300'"
+              :select-class="errors.from ? 'border-danger-600' : 'border-neutral-300'"
             />
           </div>
 
           <div>
             <label
               for="to-country"
-              class="mb-2 block text-sm font-semibold text-gray-700"
+              class="mb-2 block text-body-sm font-semibold text-neutral-700"
             >
               <span class="mr-2">🛬</span>Receiving in
             </label>
@@ -54,7 +54,7 @@
               label="Receiving in"
               :exclude-country="from"
               :error="errors.to ? 'Select a country' : ''"
-              :select-class="errors.to ? 'border-red-500' : 'border-gray-300'"
+              :select-class="errors.to ? 'border-danger-600' : 'border-neutral-300'"
             />
           </div>
         </div>
@@ -64,7 +64,7 @@
           <div>
             <label
               for="amount"
-              class="mb-2 block text-sm font-semibold text-gray-700"
+              class="mb-2 block text-body-sm font-semibold text-neutral-700"
             >
               <span class="mr-2">💰</span>You send
             </label>
@@ -76,14 +76,14 @@
               :to="to"
               :currency-code="fromCurrency"
               :error="errors.amount ? 'Enter amount' : ''"
-              :input-class="errors.amount ? 'border-red-500' : 'border-gray-300'"
+              :input-class="errors.amount ? 'border-danger-600' : 'border-neutral-300'"
             />
           </div>
 
           <div>
             <label
               for="from-currency"
-              class="mb-2 block text-sm font-semibold text-gray-700"
+              class="mb-2 block text-body-sm font-semibold text-neutral-700"
             >From</label>
             <CurrencySelect
               id="from-currency"
@@ -91,14 +91,14 @@
               label="From currency"
               :country-code="from"
               :error="errors.fromCurrency ? 'Select currency' : ''"
-              :select-class="errors.fromCurrency ? 'border-red-500' : 'border-gray-300'"
+              :select-class="errors.fromCurrency ? 'border-danger-600' : 'border-neutral-300'"
             />
           </div>
 
           <div>
             <label
               for="to-currency"
-              class="mb-2 block text-sm font-semibold text-gray-700"
+              class="mb-2 block text-body-sm font-semibold text-neutral-700"
             >To</label>
             <CurrencySelect
               id="to-currency"
@@ -106,7 +106,7 @@
               label="To currency"
               :country-code="to"
               :error="errors.toCurrency ? 'Select currency' : ''"
-              :select-class="errors.toCurrency ? 'border-red-500' : 'border-gray-300'"
+              :select-class="errors.toCurrency ? 'border-danger-600' : 'border-neutral-300'"
             />
           </div>
 
@@ -124,7 +124,7 @@
 
         <p
           v-if="formError"
-          class="mt-3 text-center text-sm text-red-500"
+          class="mt-3 text-center text-body-sm text-danger-600"
           role="status"
           aria-live="polite"
         >
@@ -133,21 +133,21 @@
       </form>
 
       <!-- Trust indicators -->
-      <div class="mt-8 grid w-full max-w-4xl grid-cols-2 gap-x-4 gap-y-6 text-sm lg:grid-cols-4">
+      <div class="mt-8 grid w-full max-w-4xl grid-cols-2 gap-x-4 gap-y-6 text-body-sm lg:grid-cols-4">
         <div class="flex items-start gap-3 text-white/90">
-          <span class="text-2xl flex-shrink-0">🔒</span>
+          <span class="text-h3 flex-shrink-0">🔒</span>
           <span class="font-medium leading-tight">Bank-level security across every provider</span>
         </div>
         <div class="flex items-start gap-3 text-white/90">
-          <span class="text-2xl flex-shrink-0">🏛️</span>
+          <span class="text-h3 flex-shrink-0">🏛️</span>
           <span class="font-medium leading-tight">Licensed and regulated in the US, UK & Australia</span>
         </div>
         <div class="flex items-start gap-3 text-white/90">
-          <span class="text-2xl flex-shrink-0">⚡</span>
+          <span class="text-h3 flex-shrink-0">⚡</span>
           <span class="font-medium leading-tight">Fresh rates every 10 minutes from live market feeds</span>
         </div>
         <div class="flex items-start gap-3 text-white/90">
-          <span class="text-2xl flex-shrink-0">📊</span>
+          <span class="text-h3 flex-shrink-0">📊</span>
           <span class="font-medium leading-tight">Savings insights for 200+ corridors worldwide</span>
         </div>
       </div>
@@ -398,7 +398,7 @@ const handleSubmit = async () => {
     )
   }
   catch (error) {
-    console.error('Navigation error:', error)
+    useLogger('HeroSearch').error('Navigation error', error)
   }
   finally {
     isSubmitting.value = false

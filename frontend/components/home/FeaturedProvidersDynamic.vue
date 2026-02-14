@@ -1,17 +1,17 @@
 <template>
   <section
     id="providers"
-    class="py-16 sm:py-20 bg-white"
+    class="py-16 sm:py-20 bg-surface"
     aria-live="polite"
   >
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <!-- Heading -->
       <div class="mb-12">
         <div class="mb-4">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-3">
             Compare money transfer providers for your corridor
           </h2>
-          <p class="text-base sm:text-lg text-neutral-600 max-w-4xl leading-relaxed">
+          <p class="text-body-lg text-neutral-600 max-w-4xl leading-relaxed">
             We collect quotes, standardize fees and FX markup into comparable numbers, and rank by delivered outcome. Every quote is timestamped, and refresh cadence varies by corridor and data source.
           </p>
         </div>
@@ -38,7 +38,7 @@
       <!-- Error or empty state -->
       <div
         v-else-if="!providers.length || error"
-        class="rounded-2xl border border-neutral-200 bg-white p-8 text-center"
+        class="rounded-2xl border border-neutral-200 bg-surface p-8 text-center"
       >
         <p class="text-neutral-600">
           Provider information is temporarily unavailable. Please try again later.
@@ -60,18 +60,22 @@
             <article
               v-for="provider in providers"
               :key="provider.id"
-              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl hover:border-brand-600 transition-all duration-300 flex flex-col snap-start"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-surface border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl hover:border-brand-600 transition-all duration-300 flex flex-col snap-start"
             >
               <!-- Header: Logo and Score -->
               <div class="px-6 pt-12 pb-10 flex items-center gap-4">
                 <!-- Logo: 50% left -->
                 <div class="w-1/2 flex items-center justify-start">
-                  <img
+                  <NuxtImg
                     v-if="provider.logoUrl"
                     :src="provider.logoUrl"
                     :alt="provider.name"
+                    width="192"
+                    height="64"
+                    loading="lazy"
+                    :format="provider.logoUrl?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
                     :class="[provider.logoSize || 'h-18 w-auto', 'object-contain flex-shrink-0']"
-                  >
+                  />
                   <ProviderLogo
                     v-else
                     :slug="provider.slug"
@@ -93,7 +97,7 @@
                 <div
                   v-for="metric in provider.metrics"
                   :key="metric.label"
-                  class="flex items-center justify-between border-b border-neutral-100 pb-5 text-sm last:border-b-0 last:pb-0"
+                  class="flex items-center justify-between border-b border-neutral-100 pb-5 text-body-sm last:border-b-0 last:pb-0"
                 >
                   <span class="text-neutral-600">
                     {{ metric.label }}
@@ -108,7 +112,7 @@
               <div class="px-6 pb-12 mt-auto">
                 <NuxtLink
                   :to="`/learn/providers/${provider.slug}`"
-                  class="block w-full rounded-lg bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+                  class="block w-full rounded-lg bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
                 >
                   Read Full Review
                 </NuxtLink>

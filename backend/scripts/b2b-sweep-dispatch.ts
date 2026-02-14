@@ -191,6 +191,22 @@ const schedulerJitterMs = Math.max(
 )
 const lockTtlSeconds = toNumber(process.env.B2B_SWEEP_SCHEDULER_LOCK_TTL_SECONDS, 60)
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
+const staleRunMaxAgeMsOverride = toNumber(
+  process.env.B2B_SWEEP_SCHEDULER_STALE_RUN_MAX_AGE_MS,
+  NaN,
+)
+
+const canaryModeEnabled = toBoolean(process.env.B2B_SWEEP_CANARY_MODE)
+const canaryForceDue = toBoolean(process.env.B2B_SWEEP_CANARY_FORCE_DUE, true)
+const canaryMaxLanes = Math.max(0, toNumber(process.env.B2B_SWEEP_CANARY_MAX_LANES, 0))
+const canaryIntervalSeconds = Math.max(
+  60,
+  toNumber(process.env.B2B_SWEEP_CANARY_INTERVAL_SECONDS, 600),
+)
+const canaryCorridors = (process.env.B2B_SWEEP_CANARY_CORRIDORS || '')
+  .split(',')
+  .map(value => value.trim().toUpperCase())
+  .filter(Boolean)
 
 const defaultB2bPayinMethod = 'bank_transfer'
 const defaultB2bPayoutMethod = 'bank_deposit'
@@ -885,7 +901,15 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
   }
 
   const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
-  const maxQueueAgeSeconds = Math.max(config.planeB.b2bMaxQueueAgeSeconds || 0, 0)
+  const maxQueueAgeSecondsTier1 = Math.max(
+    config.planeB.b2bMaxQueueAgeSecondsTier1 || config.planeB.b2bMaxQueueAgeSeconds || 0,
+    0,
+  )
+  const maxQueueAgeSecondsTier2 = Math.max(
+    config.planeB.b2bMaxQueueAgeSecondsTier2 || config.planeB.b2bMaxQueueAgeSeconds || 0,
+    0,
+  )
+  const maxQueueAgeSecondsCombined = Math.max(maxQueueAgeSecondsTier1, maxQueueAgeSecondsTier2)
   let allowTier1 = !config.planeB.disableTier1
   let allowTier2 = true
   let backpressureActive = false
@@ -907,7 +931,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       details: { reason, ...details },
     })
   }
-  if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+  if (maxQueueDepth > 0 || maxQueueAgeSecondsTier1 > 0 || maxQueueAgeSecondsTier2 > 0) {
     if (ingestFanoutTiered) {
       if (!ingestFanoutQueueTier1Url || !ingestFanoutQueueTier2Url) {
         logger.warn('scheduler_disabled', { reason: 'missing_tier_queues' })
@@ -937,30 +961,30 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
         })
         emitBackpressure('queue_depth', { tier: 'tier_2', queue_depth: tier2Stats.total, max_queue_depth: maxQueueDepth })
       }
-      if (maxQueueAgeSeconds > 0) {
+      if (maxQueueAgeSecondsTier1 > 0 || maxQueueAgeSecondsTier2 > 0) {
         const [tier1Age, tier2Age] = await Promise.all([
           getQueueAgeSeconds(ingestFanoutQueueTier1Url),
           getQueueAgeSeconds(ingestFanoutQueueTier2Url),
         ])
-        if (tier1Age >= maxQueueAgeSeconds) {
+        if (maxQueueAgeSecondsTier1 > 0 && tier1Age >= maxQueueAgeSecondsTier1) {
           allowTier1 = false
           logger.warn('scheduler_backpressure', {
             reason: 'queue_age',
             tier: 'tier_1',
             queue_age_seconds: tier1Age,
-            max_queue_age_seconds: maxQueueAgeSeconds,
+            max_queue_age_seconds: maxQueueAgeSecondsTier1,
           })
-          emitBackpressure('queue_age', { tier: 'tier_1', queue_age_seconds: tier1Age, max_queue_age_seconds: maxQueueAgeSeconds })
+          emitBackpressure('queue_age', { tier: 'tier_1', queue_age_seconds: tier1Age, max_queue_age_seconds: maxQueueAgeSecondsTier1 })
         }
-        if (tier2Age >= maxQueueAgeSeconds) {
+        if (maxQueueAgeSecondsTier2 > 0 && tier2Age >= maxQueueAgeSecondsTier2) {
           allowTier2 = false
           logger.warn('scheduler_backpressure', {
             reason: 'queue_age',
             tier: 'tier_2',
             queue_age_seconds: tier2Age,
-            max_queue_age_seconds: maxQueueAgeSeconds,
+            max_queue_age_seconds: maxQueueAgeSecondsTier2,
           })
-          emitBackpressure('queue_age', { tier: 'tier_2', queue_age_seconds: tier2Age, max_queue_age_seconds: maxQueueAgeSeconds })
+          emitBackpressure('queue_age', { tier: 'tier_2', queue_age_seconds: tier2Age, max_queue_age_seconds: maxQueueAgeSecondsTier2 })
         }
       }
       if (!allowTier1 && !allowTier2) {
@@ -995,15 +1019,15 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
         })
         return 0
       }
-      if (maxQueueAgeSeconds > 0) {
+      if (maxQueueAgeSecondsCombined > 0) {
         const queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueUrl)
-        if (queueAgeSeconds >= maxQueueAgeSeconds) {
+        if (queueAgeSeconds >= maxQueueAgeSecondsCombined) {
           logger.warn('scheduler_backpressure', {
             reason: 'queue_age',
             queue_age_seconds: queueAgeSeconds,
-            max_queue_age_seconds: maxQueueAgeSeconds,
+            max_queue_age_seconds: maxQueueAgeSecondsCombined,
           })
-          emitBackpressure('queue_age', { queue_age_seconds: queueAgeSeconds, max_queue_age_seconds: maxQueueAgeSeconds })
+          emitBackpressure('queue_age', { queue_age_seconds: queueAgeSeconds, max_queue_age_seconds: maxQueueAgeSecondsCombined })
           recordCloudWatchMetric({
             name: 'worker_backpressure_active',
             value: 1,
@@ -1074,11 +1098,46 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       })
     }
 
-    const normalizedMacroLanes = normalizeMacroLanesForSweep(rawMacroLanes, {
-      tierSnapshot,
-      disableTier1: config.planeB.disableTier1,
-    })
-    const macroLanes = normalizedMacroLanes.lanes
+	    const normalizedMacroLanes = normalizeMacroLanesForSweep(rawMacroLanes, {
+	      tierSnapshot,
+	      disableTier1: config.planeB.disableTier1,
+	    })
+	    let macroLanes = normalizedMacroLanes.lanes
+	    if (canaryModeEnabled) {
+	      const beforeLaneCount = macroLanes.length
+	      if (canaryCorridors.length > 0) {
+	        const allowlist = new Set(canaryCorridors)
+	        macroLanes = macroLanes.filter(lane => allowlist.has(lane.corridorId.toUpperCase()))
+	      }
+	      macroLanes = macroLanes
+	        .slice()
+	        .sort((a, b) =>
+	          `${a.corridorId}:${(a as { payinMethod?: string }).payinMethod ?? ''}:${(a as { payoutMethod?: string }).payoutMethod ?? ''}`
+	            .localeCompare(
+	              `${b.corridorId}:${(b as { payinMethod?: string }).payinMethod ?? ''}:${(b as { payoutMethod?: string }).payoutMethod ?? ''}`,
+	            ),
+	        )
+	      if (canaryMaxLanes > 0 && macroLanes.length > canaryMaxLanes) {
+	        macroLanes = macroLanes.slice(0, canaryMaxLanes)
+	      }
+		      logger.warn('scheduler_canary_mode_enabled', {
+		        before_lanes: beforeLaneCount,
+		        after_lanes: macroLanes.length,
+		        force_due: canaryForceDue,
+		        interval_seconds: canaryForceDue ? canaryIntervalSeconds : null,
+		        max_lanes: canaryMaxLanes > 0 ? canaryMaxLanes : null,
+		        corridor_allowlist_size: canaryCorridors.length > 0 ? canaryCorridors.length : null,
+		      })
+	      if (macroLanes.length === 0) {
+	        logger.warn('scheduler_canary_mode_empty', {
+	          before_lanes: beforeLaneCount,
+	          corridor_allowlist_size: canaryCorridors.length > 0 ? canaryCorridors.length : null,
+	        })
+	        return 0
+	      }
+	      // Canary mode is Tier-2 oriented: never schedule Tier-1 work.
+	      allowTier1 = false
+	    }
 
     logger.info('scheduler_data_loaded', {
       tier_version: b2bTierVersion,
@@ -1093,27 +1152,70 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     const tier1Lanes = macroLanes.filter(lane => lane.tier === 'tier_1')
     const tier2Lanes = macroLanes.filter(lane => lane.tier === 'tier_2')
 
-    const checkTierDue = async (tier: CorridorTier): Promise<boolean> => {
-      const config = tierConfig[tier]
-      const activeRun = await sweepRepo.getActiveRunByTier(tier)
-      if (activeRun) {
-        logger.info('tier_skipped', { tier, reason: 'active_run', run_id: activeRun.runId })
-        return false
-      }
+	    const checkTierDue = async (tier: CorridorTier): Promise<boolean> => {
+	      const config = tierConfig[tier]
+	      const activeRun = await sweepRepo.getActiveRunByTier(tier)
+		      if (activeRun) {
+	        const activeCreatedAtMs = activeRun.createdAt
+	          ? new Date(activeRun.createdAt).getTime()
+	          : (activeRun.startedAt ? new Date(activeRun.startedAt).getTime() : NaN)
+	        const ageMs = Number.isFinite(activeCreatedAtMs) ? Date.now() - activeCreatedAtMs : NaN
+	        const defaultStaleAfterMs = Math.max(60 * 60 * 1000, config.cadenceSeconds * 1000 * 2)
+	        const staleAfterMs = Number.isFinite(staleRunMaxAgeMsOverride)
+	          ? Math.max(60 * 1000, staleRunMaxAgeMsOverride)
+	          : defaultStaleAfterMs
 
-      const latestRun = await sweepRepo.getLatestRunByTier(tier)
-      if (latestRun?.createdAt) {
-        const ageMs = Date.now() - new Date(latestRun.createdAt).getTime()
-        const cadenceMs = config.cadenceSeconds * 1000
-        if (ageMs < cadenceMs) {
-          logger.debug('tier_not_due', {
-            tier,
-            last_run_at: latestRun.createdAt,
-            cadence_seconds: config.cadenceSeconds,
-            age_seconds: Math.round(ageMs / 1000),
-          })
-          return false
-        }
+	        if (Number.isFinite(ageMs) && ageMs > staleAfterMs) {
+	          logger.warn('active_run_stale', {
+	            tier,
+	            run_id: activeRun.runId,
+	            age_seconds: Math.round(ageMs / 1000),
+	            stale_after_seconds: Math.round(staleAfterMs / 1000),
+	          })
+	          // Self-heal: a stuck 'running' sweep should not wedge the cadence forever.
+            let markedFailed = false
+            try {
+              await sweepRepo.updateSweepRunStatus(activeRun.runId, 'failed', new Date())
+              markedFailed = true
+            } catch (error) {
+              logger.warn('stale_run_mark_failed_failed', {
+                tier,
+                run_id: activeRun.runId,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            }
+            if (markedFailed) {
+              logger.warn('active_run_stale_recovered', {
+                tier,
+                run_id: activeRun.runId,
+                age_seconds: Math.round(ageMs / 1000),
+                stale_after_seconds: Math.round(staleAfterMs / 1000),
+                status_set: 'failed',
+              })
+            }
+	        } else {
+	          logger.info('tier_skipped', { tier, reason: 'active_run', run_id: activeRun.runId })
+	          return false
+		        }
+		      }
+
+			      const latestRun = await sweepRepo.getLatestRunByTier(tier)
+		      if (latestRun?.createdAt) {
+		        const ageMs = Date.now() - new Date(latestRun.createdAt).getTime()
+	        const effectiveCadenceSeconds =
+	          canaryModeEnabled && canaryForceDue && tier === 'tier_2'
+	            ? canaryIntervalSeconds
+	            : config.cadenceSeconds
+	        const cadenceMs = effectiveCadenceSeconds * 1000
+	        if (ageMs < cadenceMs) {
+	          logger.debug('tier_not_due', {
+	            tier,
+	            last_run_at: latestRun.createdAt,
+	            cadence_seconds: effectiveCadenceSeconds,
+	            age_seconds: Math.round(ageMs / 1000),
+	          })
+	          return false
+	        }
       }
       return true
     }
@@ -1308,6 +1410,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       tasks: tasks.length,
       tier1_tasks: tier1Tasks.length,
       tier2_tasks: tier2Tasks.length,
+      queue_urls: Array.from(messagePayloadsByQueue.keys()),
       enqueued,
       failed,
       duration_ms: durationMs,

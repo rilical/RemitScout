@@ -31,6 +31,15 @@ vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
 const makeApp = () => ({
   get: vi.fn(),
   post: vi.fn(),
+  container: {
+    repositories: {
+      recentSearch: {
+        getByUserAndLimit: mockGetByUserAndLimit,
+        upsertRecent: mockUpsertRecent,
+        trimUserSearches: mockTrimUserSearches,
+      },
+    },
+  },
 }) as unknown as FastifyInstance
 
 const getHandler = (

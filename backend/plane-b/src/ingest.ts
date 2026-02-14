@@ -1,6 +1,6 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
-import { createPool } from '../../shared/db'
+import { createPool, query } from '../../shared/db'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { initErrorTracking } from '../../shared/error-tracker'
@@ -113,6 +113,40 @@ const resolveB2bPayinMethod = (providerId: string) => {
 }
 const resolveB2bPayoutMethod = (providerId: string) => {
   return b2bPayoutMethodByProvider[providerId] ?? defaultB2bPayoutMethod
+}
+
+const normalizeMethod = (value: string) => value.trim().toLowerCase()
+
+const loadCorridorsWithPayoutMethod = async (
+  pool: Pool,
+  providerId: string,
+  corridorIds: string[],
+  payoutMethod: string,
+): Promise<Set<string>> => {
+  const normalized = normalizeMethod(payoutMethod)
+  if (!normalized || corridorIds.length === 0) return new Set()
+
+  // Avoid pathological huge arrays in a single query.
+  const chunkSize = 5000
+  const supported = new Set<string>()
+  for (let i = 0; i < corridorIds.length; i += chunkSize) {
+    const chunk = corridorIds.slice(i, i + chunkSize)
+    const result = await query<{ corridor_id: string }>(
+      `SELECT corridor_id
+         FROM silver.provider_corridor_capability
+        WHERE provider_id = $1
+          AND corridor_id = ANY($2::text[])
+          AND is_supported = true
+          AND payout_methods IS NOT NULL
+          AND $3 = ANY(payout_methods)`,
+      [providerId, chunk, normalized],
+      pool,
+    )
+    for (const row of result.rows) {
+      if (row?.corridor_id) supported.add(row.corridor_id)
+    }
+  }
+  return supported
 }
 
 type IngestFanoutMessage = {
@@ -781,7 +815,15 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         let queueAgeTier2Seconds = 0
         let totalQueueDepth = 0
         const maxQueueDepth = Math.max(config.planeB.b2bMaxQueueDepth || 0, 0)
-        const maxQueueAgeSeconds = Math.max(config.planeB.b2bMaxQueueAgeSeconds || 0, 0)
+        const maxQueueAgeSecondsTier1 = Math.max(
+          config.planeB.b2bMaxQueueAgeSecondsTier1 || config.planeB.b2bMaxQueueAgeSeconds || 0,
+          0,
+        )
+        const maxQueueAgeSecondsTier2 = Math.max(
+          config.planeB.b2bMaxQueueAgeSecondsTier2 || config.planeB.b2bMaxQueueAgeSeconds || 0,
+          0,
+        )
+        const maxQueueAgeSecondsCombined = Math.max(maxQueueAgeSecondsTier1, maxQueueAgeSecondsTier2)
         let backpressureActive = false
         const emitBackpressure = (reason: string, details: Record<string, unknown>) => {
           backpressureActive = true
@@ -823,7 +865,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             return false
           }
           if (ingestFanoutTiered) {
-            if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+            if (maxQueueDepth > 0 || maxQueueAgeSecondsTier1 > 0 || maxQueueAgeSecondsTier2 > 0) {
               queueStats = await getQueueStats(ingestFanoutQueueTier1Url)
               queueStatsTier2 = await getQueueStats(ingestFanoutQueueTier2Url)
               totalQueueDepth = queueStats.total + queueStatsTier2.total
@@ -851,23 +893,31 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 })
                 return false
               }
-              if (maxQueueAgeSeconds > 0) {
+              if (maxQueueAgeSecondsTier1 > 0 || maxQueueAgeSecondsTier2 > 0) {
                 queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueTier1Url)
                 queueAgeTier2Seconds = await getQueueAgeSeconds(ingestFanoutQueueTier2Url)
-                const maxObservedAge = Math.max(queueAgeSeconds, queueAgeTier2Seconds)
-                if (maxObservedAge >= maxQueueAgeSeconds) {
+                const tier1Breached =
+                  maxQueueAgeSecondsTier1 > 0 && queueAgeSeconds >= maxQueueAgeSecondsTier1
+                const tier2Breached =
+                  maxQueueAgeSecondsTier2 > 0 && queueAgeTier2Seconds >= maxQueueAgeSecondsTier2
+                if (tier1Breached || tier2Breached) {
+                  const maxObservedAge = Math.max(queueAgeSeconds, queueAgeTier2Seconds)
                   logger.warn('ingest_fanout_backpressure', {
                     reason: 'queue_age',
                     queue_age_seconds: maxObservedAge,
                     tier1_age_seconds: queueAgeSeconds,
                     tier2_age_seconds: queueAgeTier2Seconds,
-                    max_queue_age_seconds: maxQueueAgeSeconds,
+                    tier1_max_queue_age_seconds: maxQueueAgeSecondsTier1 > 0 ? maxQueueAgeSecondsTier1 : null,
+                    tier2_max_queue_age_seconds: maxQueueAgeSecondsTier2 > 0 ? maxQueueAgeSecondsTier2 : null,
+                    max_queue_age_seconds: maxQueueAgeSecondsCombined,
                   })
                   emitBackpressure('queue_age', {
                     queue_age_seconds: maxObservedAge,
                     tier1_age_seconds: queueAgeSeconds,
                     tier2_age_seconds: queueAgeTier2Seconds,
-                    max_queue_age_seconds: maxQueueAgeSeconds,
+                    tier1_max_queue_age_seconds: maxQueueAgeSecondsTier1 > 0 ? maxQueueAgeSecondsTier1 : null,
+                    tier2_max_queue_age_seconds: maxQueueAgeSecondsTier2 > 0 ? maxQueueAgeSecondsTier2 : null,
+                    max_queue_age_seconds: maxQueueAgeSecondsCombined,
                   })
                   recordCloudWatchMetric({
                     name: 'worker_backpressure_active',
@@ -883,7 +933,7 @@ export const runIngestion = async (options: IngestOptions = {}) => {
               }
             }
           } else if (ingestFanoutQueueUrl) {
-            if (maxQueueDepth > 0 || maxQueueAgeSeconds > 0) {
+            if (maxQueueDepth > 0 || maxQueueAgeSecondsCombined > 0) {
               queueStats = await getQueueStats(ingestFanoutQueueUrl)
               totalQueueDepth = queueStats.total
               if (maxQueueDepth > 0 && queueStats.total >= maxQueueDepth) {
@@ -912,17 +962,17 @@ export const runIngestion = async (options: IngestOptions = {}) => {
                 })
                 return false
               }
-              if (maxQueueAgeSeconds > 0) {
+              if (maxQueueAgeSecondsCombined > 0) {
                 queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueUrl)
-                if (queueAgeSeconds >= maxQueueAgeSeconds) {
+                if (queueAgeSeconds >= maxQueueAgeSecondsCombined) {
                   logger.warn('ingest_fanout_backpressure', {
                     reason: 'queue_age',
                     queue_age_seconds: queueAgeSeconds,
-                    max_queue_age_seconds: maxQueueAgeSeconds,
+                    max_queue_age_seconds: maxQueueAgeSecondsCombined,
                   })
                   emitBackpressure('queue_age', {
                     queue_age_seconds: queueAgeSeconds,
-                    max_queue_age_seconds: maxQueueAgeSeconds,
+                    max_queue_age_seconds: maxQueueAgeSecondsCombined,
                   })
                   recordCloudWatchMetric({
                     name: 'worker_backpressure_active',
@@ -1130,11 +1180,11 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         targetMinutes: number,
         amountByCorridor: Map<string, number>,
         fallbackAmount: number,
+        payinMethod: string,
+        payoutMethod: string,
       ): Promise<PriorityTierPlan> => {
         const tierConfig = priorityTierConfig[tierKey]
         const eligibleCorridors = corridors
-        const payinMethod = resolveB2bPayinMethod(providerId)
-        const payoutMethod = resolveB2bPayoutMethod(providerId)
         const freshness = await applyFreshnessSlo({
           latestQuoteRepository: repositories.latestQuote,
           freshnessReportRepository: repositories.freshnessReport,
@@ -1242,6 +1292,22 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
         const amountByCorridor = await amountResolver.resolveAmountMap(queues.all, b2bAmountFallback)
 
+        // For method-aware sweeps (e.g., mobile_wallet), precompute the corridors where the provider
+        // actually supports that payout method. This is required to keep Plane A's `/providers?method=wallet`
+        // from staying perpetually in `quotes_unavailable` when only bank_deposit is swept.
+        const walletCorridorSet = await loadCorridorsWithPayoutMethod(
+          pool,
+          providerId,
+          queues.all,
+          'mobile_wallet',
+        ).catch((error) => {
+          logger.warn('b2b_wallet_capability_load_failed', {
+            provider_id: providerId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          return new Set<string>()
+        })
+
         const tier1Plan = await buildTierPlan(
           providerId,
           queues.tier1,
@@ -1249,6 +1315,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           targetMinutesByTierKey.tier1,
           amountByCorridor,
           b2bAmountFallback,
+          payinMethod,
+          payoutMethod,
         )
         const tier2Plan = await buildTierPlan(
           providerId,
@@ -1257,7 +1325,37 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           targetMinutesByTierKey.tier2,
           amountByCorridor,
           b2bAmountFallback,
+          payinMethod,
+          payoutMethod,
         )
+
+        const tier1WalletCorridors = queues.tier1.filter((c) => walletCorridorSet.has(c))
+        const tier2WalletCorridors = queues.tier2.filter((c) => walletCorridorSet.has(c))
+
+        const tier1WalletPlan = tier1WalletCorridors.length > 0
+          ? await buildTierPlan(
+            providerId,
+            tier1WalletCorridors,
+            'tier1',
+            targetMinutesByTierKey.tier1,
+            amountByCorridor,
+            b2bAmountFallback,
+            payinMethod,
+            'mobile_wallet',
+          )
+          : null
+        const tier2WalletPlan = tier2WalletCorridors.length > 0
+          ? await buildTierPlan(
+            providerId,
+            tier2WalletCorridors,
+            'tier2',
+            targetMinutesByTierKey.tier2,
+            amountByCorridor,
+            b2bAmountFallback,
+            payinMethod,
+            'mobile_wallet',
+          )
+          : null
 
         logger.info('b2b_priority_plan', {
           provider_id: providerId,
@@ -1266,6 +1364,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           tier2_corridors: queues.tier2.length,
           tier1_eligible_corridors: tier1Plan.eligibleCorridors.length,
           tier2_eligible_corridors: tier2Plan.eligibleCorridors.length,
+          tier1_wallet_corridors: tier1WalletCorridors.length,
+          tier2_wallet_corridors: tier2WalletCorridors.length,
           tier1_stale_corridors: tier1Plan.freshness.staleCorridors.length,
           tier2_stale_corridors: tier2Plan.freshness.staleCorridors.length,
           tier1_shards: tier1Plan.targetShards,
@@ -1286,26 +1386,21 @@ export const runIngestion = async (options: IngestOptions = {}) => {
           plan_minutes: planMinutes,
         })
 
-        const tierPlans = {
-          tier1: tier1Plan,
-          tier2: tier2Plan,
+        const tierPlans: Record<PriorityTierKey, Array<{ payinMethod: string; payoutMethod: string; plan: PriorityTierPlan }>> = {
+          tier1: [
+            { payinMethod, payoutMethod, plan: tier1Plan },
+            ...(tier1WalletPlan ? [{ payinMethod, payoutMethod: 'mobile_wallet', plan: tier1WalletPlan }] : []),
+          ],
+          tier2: [
+            { payinMethod, payoutMethod, plan: tier2Plan },
+            ...(tier2WalletPlan ? [{ payinMethod, payoutMethod: 'mobile_wallet', plan: tier2WalletPlan }] : []),
+          ],
         }
 
         let providerOk: boolean | null = null
         for (const tierKey of priorityTierOrder) {
           const tierConfig = priorityTierConfig[tierKey]
-          const plan = tierPlans[tierKey]
-          const corridorsPerShard = plan.partitions.map(partition => partition.length)
-          logger.info('b2b_partition_plan', {
-            provider_id: providerId,
-            priority_tier: tierConfig.label,
-            total_corridors: plan.freshness.filteredCorridors.length,
-            target_shards: plan.targetShards,
-            corridors_per_shard: corridorsPerShard,
-            rpm_override: plan.rpmOverride,
-            required_rpm: plan.requiredRpm,
-            max_rpm: plan.maxRpm,
-          })
+          const methodPlans = tierPlans[tierKey]
           const gate = await shouldRunPrioritySweep(
             repositories.ingestionRun,
             providerId,
@@ -1323,181 +1418,203 @@ export const runIngestion = async (options: IngestOptions = {}) => {
             continue
           }
 
-          if (plan.freshness.filteredCorridors.length === 0) {
-            const reason = plan.corridors.length === 0
-              ? 'no_priority_corridors'
-              : plan.eligibleCorridors.length === 0
-                ? 'coverage_filter'
-                : b2bFreshnessSloEnabled && plan.freshness.filteredCorridors.length === 0
-                  ? 'freshness_slo'
-                  : 'no_corridors'
-            logger.info('b2b_sweep_skipped', {
-              provider_id: providerId,
-              priority_tier: tierConfig.label,
-              reason,
-              tier_corridors: plan.corridors.length,
-              tier_eligible_corridors: plan.eligibleCorridors.length,
-              tier_stale_corridors: plan.freshness.staleCorridors.length,
-              tier_fresh_corridors: plan.freshness.freshCorridors.length,
-              target_shards: plan.targetShards,
-              corridors_per_shard: corridorsPerShard,
-            })
-            continue
-          }
-
           const amountBuckets = [b2bAmountFallback]
-          let sweepRunId: string | undefined
-          if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
-            sweepRunId = await createProviderSweepRun({
-              sweepRepo,
-              providerId,
-              collectorType: tierConfig.collectorType,
-              priorityTier: tierConfig.label,
-              cadenceMinutes: Math.max(1, Math.round(tierConfig.intervalSeconds / 60)),
-              targetMinutes: targetMinutesByTierKey[tierKey],
-              corridors: plan.freshness.filteredCorridors,
-              amountBuckets,
-              payinMethod,
-              payoutMethod,
-            })
-          }
 
           try {
-            if (corridorFanoutEnabled) {
-              for (const corridorId of plan.freshness.filteredCorridors) {
-                const amountBucket = amountByCorridor.get(corridorId) ?? b2bAmountFallback
-                const providerTask: IngestFanoutProviderTask = {
+            let tierOk = true
+            for (const mp of methodPlans) {
+              const plan = mp.plan
+              const corridorsPerShard = plan.partitions.map(partition => partition.length)
+              logger.info('b2b_partition_plan', {
+                provider_id: providerId,
+                priority_tier: tierConfig.label,
+                payout_method: mp.payoutMethod,
+                total_corridors: plan.freshness.filteredCorridors.length,
+                target_shards: plan.targetShards,
+                corridors_per_shard: corridorsPerShard,
+                rpm_override: plan.rpmOverride,
+                required_rpm: plan.requiredRpm,
+                max_rpm: plan.maxRpm,
+              })
+
+              if (plan.freshness.filteredCorridors.length === 0) {
+                const reason = plan.corridors.length === 0
+                  ? 'no_priority_corridors'
+                  : plan.eligibleCorridors.length === 0
+                    ? 'coverage_filter'
+                    : b2bFreshnessSloEnabled && plan.freshness.filteredCorridors.length === 0
+                      ? 'freshness_slo'
+                      : 'no_corridors'
+                logger.info('b2b_sweep_skipped', {
+                  provider_id: providerId,
+                  priority_tier: tierConfig.label,
+                  payout_method: mp.payoutMethod,
+                  reason,
+                  tier_corridors: plan.corridors.length,
+                  tier_eligible_corridors: plan.eligibleCorridors.length,
+                  tier_stale_corridors: plan.freshness.staleCorridors.length,
+                  tier_fresh_corridors: plan.freshness.freshCorridors.length,
+                  target_shards: plan.targetShards,
+                  corridors_per_shard: corridorsPerShard,
+                })
+                continue
+              }
+
+              let sweepRunId: string | undefined
+              if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
+                sweepRunId = await createProviderSweepRun({
+                  sweepRepo,
                   providerId,
                   collectorType: tierConfig.collectorType,
-                  amountBuckets: [amountBucket],
-                  payinMethod,
-                  payoutMethod,
+                  priorityTier: tierConfig.label,
+                  cadenceMinutes: Math.max(1, Math.round(tierConfig.intervalSeconds / 60)),
+                  targetMinutes: targetMinutesByTierKey[tierKey],
+                  corridors: plan.freshness.filteredCorridors,
+                  amountBuckets,
+                  payinMethod: mp.payinMethod,
+                  payoutMethod: mp.payoutMethod,
+                })
+              }
+
+              if (corridorFanoutEnabled) {
+                for (const corridorId of plan.freshness.filteredCorridors) {
+                  const amountBucket = amountByCorridor.get(corridorId) ?? b2bAmountFallback
+                  const providerTask: IngestFanoutProviderTask = {
+                    providerId,
+                    collectorType: tierConfig.collectorType,
+                    amountBuckets: [amountBucket],
+                    payinMethod: mp.payinMethod,
+                    payoutMethod: mp.payoutMethod,
+                    freshnessSloMinutes: tierConfig.sloMinutes,
+                    freshnessSloEnabled: b2bFreshnessSloEnabled,
+                    rpmOverride: plan.rpmOverride,
+                    perCorridorRpmOverride: plan.perCorridorRpmOverride,
+                    priorityTier: tierConfig.label,
+                    sweepRunId,
+                  }
+                  addCorridorTask(corridorId, providerTask)
+                }
+                if (plan.freshness.filteredCorridors.length > 0) {
+                  queuedSweeps.push({
+                    providerId,
+                    collectorType: tierConfig.collectorType,
+                    corridorsCount: plan.freshness.filteredCorridors.length,
+                    shardsCount: plan.freshness.filteredCorridors.length,
+                    priorityTier: tierConfig.label,
+                  })
+                }
+                continue
+              }
+
+              let enqueuedShards = 0
+              let enqueueFailures = 0
+              const failedCorridors: string[] = []
+              for (let shardIndex = 0; shardIndex < plan.partitions.length; shardIndex += 1) {
+                const corridors = plan.partitions[shardIndex]
+                if (!corridors.length) continue
+                const traceId = getCurrentSpan()?.spanContext().traceId ?? randomUUID()
+                const fanoutPayload: IngestFanoutMessage = {
+                  providerId,
+                  collectorType: tierConfig.collectorType,
+                  corridors,
+                  amountBuckets,
+                  payinMethod: mp.payinMethod,
+                  payoutMethod: mp.payoutMethod,
                   freshnessSloMinutes: tierConfig.sloMinutes,
                   freshnessSloEnabled: b2bFreshnessSloEnabled,
                   rpmOverride: plan.rpmOverride,
                   perCorridorRpmOverride: plan.perCorridorRpmOverride,
                   priorityTier: tierConfig.label,
+                  shardIndex,
+                  requestedAt: new Date().toISOString(),
                   sweepRunId,
+                  traceId,
                 }
-                addCorridorTask(corridorId, providerTask)
-              }
-              if (plan.freshness.filteredCorridors.length > 0) {
-                queuedSweeps.push({
-                  providerId,
-                  collectorType: tierConfig.collectorType,
-                  corridorsCount: plan.freshness.filteredCorridors.length,
-                  shardsCount: plan.freshness.filteredCorridors.length,
-                  priorityTier: tierConfig.label,
-                })
-              }
-              providerOk = providerOk === null ? true : providerOk && true
-              continue
-            }
-            let tierOk = true
-            let enqueuedShards = 0
-            let enqueueFailures = 0
-            const failedCorridors: string[] = []
-            for (let shardIndex = 0; shardIndex < plan.partitions.length; shardIndex += 1) {
-              const corridors = plan.partitions[shardIndex]
-              if (!corridors.length) continue
-              const traceId = getCurrentSpan()?.spanContext().traceId ?? randomUUID()
-              const fanoutPayload: IngestFanoutMessage = {
-                providerId,
-                collectorType: tierConfig.collectorType,
-                corridors,
-                amountBuckets,
-                payinMethod,
-                payoutMethod,
-                freshnessSloMinutes: tierConfig.sloMinutes,
-                freshnessSloEnabled: b2bFreshnessSloEnabled,
-                rpmOverride: plan.rpmOverride,
-                perCorridorRpmOverride: plan.perCorridorRpmOverride,
-                priorityTier: tierConfig.label,
-                shardIndex,
-                requestedAt: new Date().toISOString(),
-                sweepRunId,
-                traceId,
-              }
-              const enqueued = ingestFanoutEnabled
-                ? await enqueueIngestFanout(fanoutPayload)
-                : false
-              if (ingestFanoutEnabled) {
-                logger.debug('ingest_fanout_enqueued', {
-                  provider_id: providerId,
-                  priority_tier: tierConfig.label,
-                  shard_index: shardIndex,
-                  corridors_count: corridors.length,
-                  mode: ingestFanoutMode,
-                  enqueued,
-                  sweep_run_id: sweepRunId ?? null,
-                  trace_id: traceId,
-                  requested_at: fanoutPayload.requestedAt,
-                })
-              }
-              if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
-                if (!enqueued) {
-                  tierOk = false
-                  enqueueFailures += 1
-                  failedCorridors.push(...corridors)
-                } else {
-                  enqueuedShards += 1
+                const enqueued = ingestFanoutEnabled
+                  ? await enqueueIngestFanout(fanoutPayload)
+                  : false
+                if (ingestFanoutEnabled) {
+                  logger.debug('ingest_fanout_enqueued', {
+                    provider_id: providerId,
+                    priority_tier: tierConfig.label,
+                    payout_method: mp.payoutMethod,
+                    shard_index: shardIndex,
+                    corridors_count: corridors.length,
+                    mode: ingestFanoutMode,
+                    enqueued,
+                    sweep_run_id: sweepRunId ?? null,
+                    trace_id: traceId,
+                    requested_at: fanoutPayload.requestedAt,
+                  })
                 }
-                continue
-              }
-              const ok = await provider.run({
-                pool,
-                collectorType: tierConfig.collectorType,
-                corridors,
-                amountBuckets: [b2bAmountFallback],
-                payinMethod,
-                payoutMethod,
-                freshnessSloMinutes: tierConfig.sloMinutes,
-                freshnessSloEnabled: b2bFreshnessSloEnabled,
-                rpmOverride: plan.rpmOverride,
-                perCorridorRpmOverride: plan.perCorridorRpmOverride,
-              })
-              for (const corridorId of corridors) {
-                sweptCorridors.add(corridorId)
-              }
-              tierOk = tierOk && ok
-            }
-            if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
-              if (enqueueFailures > 0) {
-                logger.warn('ingest_fanout_enqueue_incomplete', {
-                  provider_id: providerId,
-                  priority_tier: tierConfig.label,
-                  shards_total: plan.partitions.length,
-                  shards_enqueued: enqueuedShards,
-                  shards_failed: enqueueFailures,
-                })
-                if (sweepRunId && failedCorridors.length > 0) {
-                  const failedKeys = failedCorridors.map((corridorId) => ({
-                    providerId,
-                    corridorId,
-                    amountBucket: amountByCorridor.get(corridorId) ?? b2bAmountFallback,
-                    payinMethod,
-                    payoutMethod,
-                  }))
-                  await sweepRepo.markTasksFinishedBatch(
-                    sweepRunId,
-                    failedKeys,
-                    'failed',
-                    'enqueue_failed',
-                  )
-                  const summary = await sweepRepo.getRunSummary(sweepRunId)
-                  if (summary.remaining === 0) {
-                    const status = summary.failed > 0 ? 'failed' : 'completed'
-                    await sweepRepo.updateSweepRunStatus(sweepRunId, status, new Date())
+                if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
+                  if (!enqueued) {
+                    tierOk = false
+                    enqueueFailures += 1
+                    failedCorridors.push(...corridors)
+                  } else {
+                    enqueuedShards += 1
                   }
+                  continue
                 }
-              } else if (enqueuedShards > 0) {
-                logger.info('b2b_sweep_enqueued', {
-                  provider_id: providerId,
-                  priority_tier: tierConfig.label,
-                  corridors: plan.freshness.filteredCorridors.length,
-                  shards: enqueuedShards,
-                  sweep_run_id: sweepRunId ?? null,
+                const ok = await provider.run({
+                  pool,
+                  collectorType: tierConfig.collectorType,
+                  corridors,
+                  amountBuckets: [b2bAmountFallback],
+                  payinMethod: mp.payinMethod,
+                  payoutMethod: mp.payoutMethod,
+                  freshnessSloMinutes: tierConfig.sloMinutes,
+                  freshnessSloEnabled: b2bFreshnessSloEnabled,
+                  rpmOverride: plan.rpmOverride,
+                  perCorridorRpmOverride: plan.perCorridorRpmOverride,
                 })
+                for (const corridorId of corridors) {
+                  sweptCorridors.add(corridorId)
+                }
+                tierOk = tierOk && ok
+              }
+
+              if (ingestFanoutMode === 'queue' && ingestFanoutEnabled) {
+                if (enqueueFailures > 0) {
+                  logger.warn('ingest_fanout_enqueue_incomplete', {
+                    provider_id: providerId,
+                    priority_tier: tierConfig.label,
+                    payout_method: mp.payoutMethod,
+                    shards_total: plan.partitions.length,
+                    shards_enqueued: enqueuedShards,
+                    shards_failed: enqueueFailures,
+                  })
+                  if (sweepRunId && failedCorridors.length > 0) {
+                    const failedKeys = failedCorridors.map((corridorId) => ({
+                      providerId,
+                      corridorId,
+                      amountBucket: amountByCorridor.get(corridorId) ?? b2bAmountFallback,
+                      payinMethod: mp.payinMethod,
+                      payoutMethod: mp.payoutMethod,
+                    }))
+                    await sweepRepo.markTasksFinishedBatch(
+                      sweepRunId,
+                      failedKeys,
+                      'failed',
+                      'enqueue_failed',
+                    )
+                    const summary = await sweepRepo.getRunSummary(sweepRunId)
+                    if (summary.remaining === 0) {
+                      const status = summary.failed > 0 ? 'failed' : 'completed'
+                      await sweepRepo.updateSweepRunStatus(sweepRunId, status, new Date())
+                    }
+                  }
+                } else if (enqueuedShards > 0) {
+                  logger.info('b2b_sweep_enqueued', {
+                    provider_id: providerId,
+                    priority_tier: tierConfig.label,
+                    payout_method: mp.payoutMethod,
+                    corridors: plan.freshness.filteredCorridors.length,
+                    shards: enqueuedShards,
+                    sweep_run_id: sweepRunId ?? null,
+                  })
+                }
               }
             }
             providerOk = providerOk === null ? tierOk : providerOk && tierOk
@@ -1696,8 +1813,9 @@ if (require.main === module) {
       requirements: {
         requirePlaneB: true,
         requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
+        requireQueues: ingestFanoutMode !== 'off',
+        requireIngestFanoutQueue: ingestFanoutMode !== 'off',
+        requireStorage: false,
       },
     })
 

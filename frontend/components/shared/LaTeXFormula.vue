@@ -20,10 +20,10 @@ const katex = (katexImport as any).default ?? katexImport
 const formulaClass = computed(() => {
   const classes: string[] = []
   if (props.size === 'small') {
-    classes.push('text-sm')
+    classes.push('text-body-sm')
   }
   else if (props.size === 'large') {
-    classes.push('text-2xl')
+    classes.push('text-h3')
   }
   return classes.join(' ')
 })

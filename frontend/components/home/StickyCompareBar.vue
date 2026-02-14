@@ -121,24 +121,24 @@ onBeforeUnmount(() => {
   >
     <div
       v-if="isVisible"
-      class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-2xl"
+      class="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-rs-border shadow-2xl"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+      <div class="container py-3">
         <div class="flex items-center justify-between gap-4">
-          <div class="hidden sm:flex items-center gap-2 text-sm text-slate-600">
+          <div class="hidden sm:flex items-center gap-2 text-body-sm text-neutral-600">
             <span class="font-medium">Compare providers:</span>
             <span v-if="form.from && form.to">
               {{ form.from }} → {{ form.to }}
             </span>
             <span
               v-else
-              class="text-slate-400"
+              class="text-neutral-400"
             >Select countries</span>
           </div>
 
           <div class="flex items-center gap-3 flex-1 sm:flex-initial">
             <button
-              class="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               @click="openSheet"
             >
               <svg
@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
               v-if="form.from && form.to"
               type="button"
               :disabled="isWaitingForQuotes"
-              class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-3 py-2 disabled:cursor-not-allowed disabled:opacity-70"
+              class="hidden sm:inline-flex items-center gap-1 text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-3 py-2 disabled:cursor-not-allowed disabled:opacity-70"
               @click="handleQuickSubmit"
             >
               <span v-if="isWaitingForQuotes">Checking...</span>
@@ -213,22 +213,22 @@ onBeforeUnmount(() => {
     >
       <div
         v-if="sheetOpen"
-        class="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+        class="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-label="Compare providers"
       >
-        <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-3xl">
-          <h2 class="text-lg font-bold text-neutral-900">
+        <div class="sticky top-0 bg-surface border-b border-rs-border px-6 py-4 flex items-center justify-between rounded-t-3xl">
+          <h2 class="text-body-lg font-bold text-neutral-900">
             Compare Providers
           </h2>
           <button
-            class="rounded-full p-2 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="rounded-full p-2 hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
             aria-label="Close"
             @click="closeSheet"
           >
             <svg
-              class="h-5 w-5 text-slate-600"
+              class="h-5 w-5 text-neutral-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -251,7 +251,7 @@ onBeforeUnmount(() => {
             <div>
               <label
                 for="sheet-from-country"
-                class="block text-sm font-semibold text-neutral-700 mb-2"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
               >
                 <span class="mr-2">🛫</span>Sending from
               </label>
@@ -267,7 +267,7 @@ onBeforeUnmount(() => {
             <div>
               <label
                 for="sheet-to-country"
-                class="block text-sm font-semibold text-neutral-700 mb-2"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
               >
                 <span class="mr-2">🛬</span>Receiving in
               </label>
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
             <div>
               <label
                 for="sheet-amount"
-                class="block text-sm font-semibold text-neutral-700 mb-2"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
               >
                 You send
               </label>
@@ -294,13 +294,13 @@ onBeforeUnmount(() => {
                 :min="amountLimits.minAmount"
                 :max="amountLimits.maxAmount"
                 step="0.01"
-                class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-neutral-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                 placeholder="500"
               >
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-neutral-700 mb-2">
+              <label class="block text-body-sm font-semibold text-neutral-700 mb-2">
                 Delivery method
               </label>
               <div class="flex gap-2">
@@ -309,15 +309,15 @@ onBeforeUnmount(() => {
                   :key="method.value"
                   type="button"
                   :class="[
-                    'flex-1 flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium rounded-lg border transition-all',
+                    'flex-1 flex flex-col items-center gap-1 px-3 py-3 text-body-sm font-medium rounded-lg border transition-all',
                     form.method === method.value
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-slate-700 border-slate-300',
+                      ? 'bg-brand-600 text-white border-brand-600'
+                      : 'bg-surface text-neutral-700 border-neutral-300',
                   ]"
                   :aria-pressed="form.method === method.value"
                   @click="form.method = method.value"
                 >
-                  <span class="text-xl">{{ method.icon }}</span>
+                  <span class="text-h4">{{ method.icon }}</span>
                   <span>{{ method.label }}</span>
                 </button>
               </div>
@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
             <button
               type="submit"
               :disabled="isWaitingForQuotes"
-              class="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              class="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-4 text-body font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <span v-if="isWaitingForQuotes">Checking...</span>
               <span v-else>Compare 30+ providers</span>
@@ -347,14 +347,14 @@ onBeforeUnmount(() => {
 
             <p
               v-if="validationError"
-              class="text-sm text-red-600"
+              class="text-body-sm text-danger-600"
               role="alert"
             >
               {{ validationError }}
             </p>
             <p
               v-else-if="statusMessage"
-              class="text-sm text-slate-600"
+              class="text-body-sm text-neutral-600"
               role="status"
             >
               {{ statusMessage }}

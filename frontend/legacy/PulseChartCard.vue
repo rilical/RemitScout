@@ -5,7 +5,7 @@
     <!-- Lock indicator for Plus-gated charts -->
     <div
       v-if="isGated"
-      class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-xs font-semibold text-brand-600"
+      class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-body-sm font-semibold text-brand-600"
     >
       <Icon
         name="lock"
@@ -18,22 +18,22 @@
     <!-- Main content -->
     <div class="p-5">
       <!-- Category badge -->
-      <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+      <div class="mb-3 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
         {{ metadata.categoryLabel }}
       </div>
 
       <!-- Title -->
-      <h3 class="mb-2 text-lg font-bold text-white group-hover:text-brand-600 transition-colors">
+      <h3 class="mb-2 text-h4 font-bold text-white group-hover:text-brand-600 transition-colors">
         {{ metadata.title }}
       </h3>
 
       <!-- Insight line -->
-      <p class="mb-4 text-sm text-neutral-400">
+      <p class="mb-4 text-body-sm text-neutral-400">
         {{ insight }}
       </p>
       <p
         v-if="isGoldIndexChart"
-        class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-emerald-400"
+        class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-success-400"
       >
         Gold indices · $500 bank bucket
       </p>
@@ -79,7 +79,7 @@
         </svg>
         <div
           v-else
-          class="flex h-full items-center justify-center text-xs text-slate-500"
+          class="flex h-full items-center justify-center text-body-sm text-rs-muted"
         >
           No data available
         </div>
@@ -89,7 +89,7 @@
     <!-- Actions -->
     <div class="flex items-center justify-between border-t border-neutral-700 px-5 py-3">
       <button
-        class="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
+        class="text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
         @click="$emit('view', metadata.id)"
       >
         <Icon
@@ -101,13 +101,13 @@
       </button>
       <div class="flex items-center gap-3">
         <button
-          class="text-sm text-neutral-400 hover:text-white transition-colors"
+          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
           @click="$emit('share', metadata.id)"
         >
           Share
         </button>
         <button
-          class="text-sm text-neutral-400 hover:text-white transition-colors"
+          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
           @click="$emit('embed', metadata.id)"
         >
           Embed

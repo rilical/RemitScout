@@ -4,10 +4,10 @@
     <div class="border-b border-neutral-700 px-6 py-4">
       <!-- Consumer Mode Header -->
       <template v-if="store.viewMode === 'sender'">
-        <h2 class="text-lg font-bold text-white">
+        <h2 class="text-body-lg font-bold text-white">
           Best Time to Send
         </h2>
-        <p class="text-sm text-neutral-400">
+        <p class="text-body-sm text-neutral-400">
           Rate trend signal for your corridor
         </p>
       </template>
@@ -15,16 +15,16 @@
       <template v-else>
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-bold text-white">
+            <h2 class="text-body-lg font-bold text-white">
               Execution Signal
             </h2>
-            <p class="text-sm text-neutral-400">
+            <p class="text-body-sm text-neutral-400">
               FX Volatility & Timing Indicator
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-mono text-neutral-500">{{ store.corridor.label }}</span>
-            <span class="inline-flex items-center rounded bg-neutral-700 px-2 py-0.5 text-xs font-semibold text-neutral-300">
+            <span class="text-body-sm font-mono text-neutral-500">{{ store.corridor.label }}</span>
+            <span class="inline-flex items-center rounded bg-neutral-700 px-2 py-0.5 text-body-sm font-semibold text-neutral-300">
               {{ executionSignalBadge }}
             </span>
           </div>
@@ -36,30 +36,17 @@
     <div class="p-6">
       <div
         v-if="loading"
-        class="flex h-48 items-center justify-center"
+        class="flex h-48 w-full items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
       >
-        <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-          Loading...
-        </div>
+        <SkeletonBlock
+          width="full"
+          height="12rem"
+          tone="dark"
+        />
+        <span class="sr-only">Loading chart</span>
       </div>
 
       <div
@@ -78,7 +65,7 @@
         <!-- Consumer Mode: Level Label -->
         <div
           v-if="store.viewMode === 'sender'"
-          class="mt-2 rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide"
+          class="mt-2 rounded-full px-4 py-1.5 text-body-sm font-bold uppercase tracking-wide"
           :class="levelClasses"
         >
           {{ levelLabel }}
@@ -90,12 +77,12 @@
           class="mt-2 flex items-center gap-3"
         >
           <span
-            class="rounded-full px-4 py-1.5 text-sm font-bold uppercase tracking-wide"
+            class="rounded-full px-4 py-1.5 text-body-sm font-bold uppercase tracking-wide"
             :class="levelClasses"
           >
             {{ analystLevelLabel }}
           </span>
-          <span class="text-sm font-mono text-neutral-400">
+          <span class="text-body-sm font-mono text-neutral-400">
             {{ bpsDelta >= 0 ? '+' : '' }}{{ bpsDelta.toFixed(1) }} bps
           </span>
         </div>
@@ -103,7 +90,7 @@
         <!-- Consumer Mode: Recommendation -->
         <p
           v-if="store.viewMode === 'sender'"
-          class="mt-4 text-center text-sm text-neutral-300 max-w-xs"
+          class="mt-4 text-center text-body-sm text-neutral-300 max-w-xs"
         >
           {{ data?.recommendation }}
         </p>
@@ -111,7 +98,7 @@
         <!-- Analyst Mode: Actionable Insight -->
         <p
           v-else
-          class="mt-4 text-center text-sm text-neutral-300 max-w-xs"
+          class="mt-4 text-center text-body-sm text-neutral-300 max-w-xs"
         >
           {{ analystRecommendation }}
         </p>
@@ -124,27 +111,27 @@
           <!-- Primary Metrics -->
           <div class="grid grid-cols-3 gap-4">
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
                 Spot Rate
               </div>
-              <div class="text-lg font-bold font-mono text-white">
+              <div class="text-body-lg font-bold font-mono text-white">
                 {{ data.currentRate.toFixed(4) }}
               </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
                 30D VWAP
               </div>
-              <div class="text-lg font-bold font-mono text-white">
+              <div class="text-body-lg font-bold font-mono text-white">
                 {{ data.avg30Day.toFixed(4) }}
               </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
                 Δ vs Avg
               </div>
               <div
-                class="text-lg font-bold font-mono"
+                class="text-body-lg font-bold font-mono"
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
               >
                 {{ data.percentFromAvg >= 0 ? '+' : '' }}{{ data.percentFromAvg.toFixed(2) }}%
@@ -155,24 +142,24 @@
           <!-- Secondary Metrics (Analyst Only) -->
           <div class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-700">
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
                 Volatility (7D)
               </div>
-              <div class="text-base font-bold font-mono text-white">
+              <div class="text-body font-bold font-mono text-white">
                 {{ volatility7D.toFixed(2) }}%
               </div>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 σ = {{ stdDev.toFixed(4) }}
               </div>
             </div>
             <div class="text-center">
-              <div class="text-xs text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
                 Spread Rank
               </div>
-              <div class="text-base font-bold font-mono text-white">
+              <div class="text-body font-bold font-mono text-white">
                 #{{ spreadRank }} of {{ totalProviders }}
               </div>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 {{ spreadBps }} bps avg
               </div>
             </div>
@@ -180,7 +167,7 @@
 
           <!-- Confidence Bar -->
           <div class="pt-4 border-t border-neutral-700">
-            <div class="flex items-center justify-between text-xs text-neutral-500 mb-1">
+            <div class="flex items-center justify-between text-body-sm text-neutral-500 mb-1">
               <span class="uppercase tracking-wider">Signal Confidence</span>
               <span class="font-mono">{{ Math.round(data.confidence * 100) }}%</span>
             </div>
@@ -193,7 +180,7 @@
           </div>
 
           <!-- Latency & Freshness -->
-          <div class="flex items-center justify-between text-xs text-neutral-500 pt-2">
+          <div class="flex items-center justify-between text-body-sm text-neutral-500 pt-2">
             <span>Data Latency: <span class="font-mono text-neutral-400">{{ dataLatency }}ms</span></span>
             <span>Last Tick: <span class="font-mono text-neutral-400">{{ lastTick }}</span></span>
           </div>
@@ -206,27 +193,27 @@
         >
           <div class="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 Current
               </div>
-              <div class="text-sm font-semibold text-white">
+              <div class="text-body-sm font-semibold text-white">
                 {{ data.currentRate.toFixed(2) }}
               </div>
             </div>
             <div>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 Average
               </div>
-              <div class="text-sm font-semibold text-white">
+              <div class="text-body-sm font-semibold text-white">
                 {{ data.avg30Day.toFixed(2) }}
               </div>
             </div>
             <div>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 Trend
               </div>
               <div
-                class="text-sm font-semibold"
+                class="text-body-sm font-semibold"
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
               >
                 {{ data.percentFromAvg >= 0 ? '↑' : '↓' }} {{ Math.abs(data.percentFromAvg).toFixed(1) }}%
@@ -254,6 +241,7 @@ import { TitleComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { usePulseStore } from '~/stores/pulse'
 import { getSmartSendData, type SmartSendData, type SmartSendLevel } from '~/lib/pulseApi'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 use([CanvasRenderer, GaugeChart, TitleComponent, TooltipComponent])
 
@@ -481,7 +469,7 @@ async function loadData() {
     data.value = normalizeSmartSend(payload)
   }
   catch (e) {
-    console.error('Failed to load smart send data:', e)
+    useLogger('PulseSmartGauge').error('Failed to load smart send data', e)
   }
   finally {
     loading.value = false

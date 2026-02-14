@@ -1,4 +1,5 @@
 import { buildApp } from '../../plane-a/src/app'
+import { getMacroCorridors, type MacroCorridor } from '../../shared/macro-corridors'
 
 type HttpResult = {
   name: string
@@ -6,6 +7,15 @@ type HttpResult = {
   status: number
   ms: number
   note?: string
+}
+
+type CorridorTest = {
+  from: string
+  to: string
+  fromCurrency: string
+  toCurrency: string
+  method: string
+  corridorId: string
 }
 
 const nowMs = () => Date.now()
@@ -18,10 +28,144 @@ const percentile = (values: number[], p: number) => {
 }
 
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '')
+const toInt = (value: string | undefined): number | undefined => {
+  if (!value) return undefined
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
+}
+
+const withTimeout = (ms: number) => {
+  const timeout = Number.isFinite(ms) && ms > 0 ? ms : 0
+  if (!timeout || !('timeout' in AbortSignal)) {
+    return undefined
+  }
+  return AbortSignal.timeout(timeout)
+}
+
+const normalizeMethod = (value?: string) => {
+  const method = (value || 'bank').toLowerCase()
+  const normalized = method === 'wallet' ? 'wallet' : method === 'cash-pickup' ? 'cash_pickup' : method
+  return normalized === 'bank'
+    || normalized === 'wallet'
+    || normalized === 'cash_pickup'
+    || normalized === 'mobile_wallet'
+    || normalized === 'bank_deposit'
+    || normalized === 'cash' || normalized === 'card' || normalized === 'airtime'
+    ? (normalized === 'bank_deposit' ? 'bank' : normalized)
+    : 'bank'
+}
+
+const macroToCorridorTests = (corridors: MacroCorridor[]): CorridorTest[] =>
+  corridors.map(c => ({
+    from: c.sourceCountry,
+    to: c.destCountry,
+    fromCurrency: c.sourceCurrency,
+    toCurrency: c.destCurrency,
+    method: normalizeMethod('bank'),
+    corridorId: c.corridorId,
+  }))
+
+const parseExplicitCorridor = (token: string): CorridorTest[] => {
+  const [corridorPart, methodPart] = token.split(':')
+  const parts = corridorPart.split('-').filter(Boolean)
+  if (parts.length < 4) return []
+  return [{
+    from: parts[0].toUpperCase(),
+    to: parts[1].toUpperCase(),
+    fromCurrency: parts[2].toUpperCase(),
+    toCurrency: parts[3].toUpperCase(),
+    method: normalizeMethod(methodPart),
+    corridorId: `${parts[0].toUpperCase()}-${parts[1].toUpperCase()}-${parts[2].toUpperCase()}-${parts[3].toUpperCase()}`,
+  }]
+}
+
+const resolveCorridorSet = (): CorridorTest[] => {
+  const setMode = (process.env.SMOKE_CORRIDOR_SET || 'default').toLowerCase()
+  const max = toInt(process.env.SMOKE_MAX_CORRIDORS)
+  const explicit = process.env.SMOKE_CORRIDORS
+    ? process.env.SMOKE_CORRIDORS.split(',').map((token) => parseExplicitCorridor(token.trim())).flat()
+    : []
+
+  const defaultCorridors: readonly CorridorTest[] = [
+    {
+      from: 'US',
+      to: 'MX',
+      fromCurrency: 'USD',
+      toCurrency: 'MXN',
+      method: 'bank',
+      corridorId: 'US-MX-USD-MXN',
+    },
+    {
+      from: 'US',
+      to: 'PH',
+      fromCurrency: 'USD',
+      toCurrency: 'PHP',
+      method: 'bank',
+      corridorId: 'US-PH-USD-PHP',
+    },
+    {
+      from: 'US',
+      to: 'IN',
+      fromCurrency: 'USD',
+      toCurrency: 'INR',
+      method: 'bank',
+      corridorId: 'US-IN-USD-INR',
+    },
+    {
+      from: 'US',
+      to: 'NG',
+      fromCurrency: 'USD',
+      toCurrency: 'NGN',
+      method: 'bank',
+      corridorId: 'US-NG-USD-NGN',
+    },
+    {
+      from: 'US',
+      to: 'KE',
+      fromCurrency: 'USD',
+      toCurrency: 'KES',
+      method: 'wallet',
+      corridorId: 'US-KE-USD-KES',
+    },
+    {
+      from: 'US',
+      to: 'CO',
+      fromCurrency: 'USD',
+      toCurrency: 'COP',
+      method: 'bank',
+      corridorId: 'US-CO-USD-COP',
+    },
+  ]
+
+  let corridors: CorridorTest[] = []
+  if (explicit.length > 0) {
+    corridors = explicit
+  } else if (setMode === 'macro' || setMode === 'all') {
+    corridors = macroToCorridorTests(getMacroCorridors())
+  } else if (setMode === 'default') {
+    corridors = [...defaultCorridors]
+  }
+
+  if (corridors.length === 0) {
+    corridors = [...defaultCorridors]
+  }
+
+  if (max && max > 0 && corridors.length > max) {
+    corridors = corridors.slice(0, max)
+  }
+
+  return corridors
+}
 
 const timedFetchJson = async (url: string, init?: RequestInit) => {
   const start = nowMs()
-  const res = await fetch(url, init)
+  const timeoutMs = Number(process.env.SMOKE_FETCH_TIMEOUT_MS || 12000)
+  const initWithTimeout = {
+    ...init,
+    signal: init?.signal || withTimeout(timeoutMs),
+  }
+
+  const res = await fetch(url, initWithTimeout)
   const ms = nowMs() - start
   let body: any = null
   const contentType = res.headers.get('content-type') || ''
@@ -63,14 +207,7 @@ const runRemote = async (baseUrl: string): Promise<HttpResult[]> => {
   }
 
   // B2C corridor -> providers happy path (must return data, not just "collecting").
-  const corridors = [
-    { from: 'US', to: 'MX', fromCurrency: 'USD', toCurrency: 'MXN', method: 'bank' },
-    { from: 'US', to: 'PH', fromCurrency: 'USD', toCurrency: 'PHP', method: 'bank' },
-    { from: 'US', to: 'IN', fromCurrency: 'USD', toCurrency: 'INR', method: 'bank' },
-    { from: 'US', to: 'NG', fromCurrency: 'USD', toCurrency: 'NGN', method: 'bank' },
-    { from: 'US', to: 'KE', fromCurrency: 'USD', toCurrency: 'KES', method: 'wallet' },
-    { from: 'US', to: 'CO', fromCurrency: 'USD', toCurrency: 'COP', method: 'bank' },
-  ] as const
+  const corridors = resolveCorridorSet()
 
   for (const corridor of corridors) {
     const ccUrl = `${apiBase}/corridor-currencies?from=${corridor.from}&to=${corridor.to}`
@@ -198,4 +335,3 @@ main().catch((error) => {
   console.error('Integration smoke crashed:', error instanceof Error ? error.message : String(error))
   process.exit(1)
 })
-

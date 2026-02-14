@@ -1,0 +1,10 @@
+{
+  "opsPauseRuleAllowlist": [
+    "b2b-sweep-scheduler"
+  ],
+  "nightlyAutoPause": {
+    "enabled": true,
+    "timezone": "America/New_York",
+    "cron": "cron(0 0 * * ? *)"
+  }
+}

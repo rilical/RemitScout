@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useApi } from '~/composables/useApi'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 type PulseTeaserMover = {
   corridorId: string
@@ -60,10 +61,10 @@ const toFlagEmoji = (code: string) => {
   <div class="rounded-2xl border border-neutral-700 bg-neutral-900/40 p-6 text-left">
     <div class="flex items-center justify-between gap-4">
       <div>
-        <div class="text-sm font-semibold text-neutral-200">
+        <div class="text-body-sm font-semibold text-neutral-200">
           Preview (real data)
         </div>
-        <div class="text-xs text-neutral-400">
+        <div class="text-body-sm text-neutral-400">
           <span v-if="updatedAt">Updated {{ formatTimestamp(updatedAt) }} UTC</span>
           <span v-else>Warming up (no Gold Export data yet)</span>
         </div>
@@ -78,16 +79,19 @@ const toFlagEmoji = (code: string) => {
         v-if="pending"
         class="space-y-3"
       >
-        <div
+        <SkeletonBlock
           v-for="n in 3"
           :key="n"
-          class="h-16 rounded-xl border border-neutral-800 bg-neutral-900 animate-pulse"
+          height="64"
+          rounded="xl"
+          tone="dark"
+          class="border border-neutral-800"
         />
       </div>
 
       <div
         v-else-if="movers.length === 0"
-        class="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm text-neutral-400"
+        class="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-body-sm text-neutral-400"
       >
         No movers yet. Once Gold Export publishes corridor buckets, this preview will populate automatically.
       </div>
@@ -103,18 +107,18 @@ const toFlagEmoji = (code: string) => {
         >
           <div class="flex items-start justify-between gap-3">
             <div>
-              <div class="text-sm font-semibold text-white">
+              <div class="text-body-sm font-semibold text-white">
                 <span class="mr-2">{{ toFlagEmoji(m.fromCountry) }}</span>
                 {{ m.sendCurrency }} → {{ m.recvCurrency }}
-                <span class="ml-2 text-neutral-500 text-xs">({{ m.fromCountry }}→{{ m.toCountry }})</span>
+                <span class="ml-2 text-neutral-500 text-body-sm">({{ m.fromCountry }}→{{ m.toCountry }})</span>
               </div>
-              <div class="mt-1 text-xs text-neutral-400">
+              <div class="mt-1 text-body-sm text-neutral-400">
                 Current avg {{ m.currentAvgRate.toFixed(4) }} • Providers {{ m.providerCount }}
               </div>
             </div>
             <div
-              class="rounded-lg px-2.5 py-1 text-xs font-bold"
-              :class="m.deltaPct > 0 ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : (m.deltaPct < 0 ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-neutral-800 text-neutral-200 border border-neutral-700')"
+              class="rounded-lg px-2.5 py-1 text-body-sm font-bold"
+              :class="m.deltaPct > 0 ? 'bg-success-600/15 text-success-600 border border-success-600/30' : (m.deltaPct < 0 ? 'bg-danger-600/15 text-danger-600 border border-danger-600/30' : 'bg-neutral-800 text-neutral-200 border border-neutral-700')"
             >
               {{ formatPct(m.deltaPct) }}
             </div>

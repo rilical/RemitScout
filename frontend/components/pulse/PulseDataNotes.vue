@@ -2,7 +2,10 @@
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
     <!-- Collapsible Header -->
     <button
-      class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-neutral-700"
+      id="pulse-data-notes-button"
+      class="flex w-full items-center justify-between px-6 py-4 text-left motion-safe:transition-colors hover:bg-neutral-700"
+      :aria-expanded="isOpen ? 'true' : 'false'"
+      aria-controls="pulse-data-notes-panel"
       @click="isOpen = !isOpen"
     >
       <div class="flex items-center gap-3">
@@ -16,12 +19,12 @@
       <Icon
         name="chevron-down"
         :size="20"
-        class="text-neutral-400 transition-transform duration-200"
+        class="text-neutral-400 motion-safe:transition-transform motion-safe:duration-200"
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
 
-    <div class="flex flex-wrap items-center gap-2 px-6 pb-4 text-xs text-neutral-400">
+    <div class="flex flex-wrap items-center gap-2 px-6 pb-4 text-body-sm text-neutral-400">
       <span>Updated periodically</span>
       <span class="text-neutral-600">|</span>
       <span>All-in cost = fee + FX markup</span>
@@ -32,6 +35,9 @@
     <!-- Collapsible Content -->
     <div
       v-show="isOpen"
+      id="pulse-data-notes-panel"
+      role="region"
+      aria-labelledby="pulse-data-notes-button"
       class="border-t border-neutral-700 px-6 py-4"
     >
       <div class="space-y-6">
@@ -48,7 +54,7 @@
             <h4 class="font-medium text-white">
               Quotes can change at checkout
             </h4>
-            <p class="mt-1 text-sm text-neutral-400">
+            <p class="mt-1 text-body-sm text-neutral-400">
               The rates shown are indicative and captured at a point in time. Actual rates may differ when you initiate a transfer due to market movements or provider adjustments.
             </p>
           </div>
@@ -67,7 +73,7 @@
             <h4 class="font-medium text-white">
               What we normalize
             </h4>
-            <p class="mt-1 text-sm text-neutral-400">
+            <p class="mt-1 text-body-sm text-neutral-400">
               All comparisons use the same send amount, payment method, and payout method. We capture quotes at regular intervals throughout the day and use the same mid-market rate benchmark for FX markup calculations.
             </p>
           </div>
@@ -86,7 +92,7 @@
             <h4 class="font-medium text-white">
               Key definitions
             </h4>
-            <p class="mt-1 text-sm text-neutral-400">
+            <p class="mt-1 text-body-sm text-neutral-400">
               <strong class="text-white">Markup (bps)</strong> = (mid-market - provider rate) / mid-market.
               <strong class="text-white"> All-in cost</strong> = upfront fee + FX markup cost on the selected amount.
             </p>
@@ -108,25 +114,25 @@
             </h4>
             <div class="mt-2 space-y-2">
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-0.5 text-xs text-brand-600">
+                <span class="inline-flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-0.5 text-body-sm text-brand-600">
                   <span class="h-1.5 w-1.5 rounded-full bg-brand-600" />
                   Verified
                 </span>
-                <span class="text-sm text-neutral-400">Direct API quote from the provider</span>
+                <span class="text-body-sm text-neutral-400">Direct API quote from the provider</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 rounded-full bg-neutral-600/20 px-2 py-0.5 text-xs text-neutral-400">
+                <span class="inline-flex items-center gap-1 rounded-full bg-neutral-600/20 px-2 py-0.5 text-body-sm text-neutral-400">
                   <span class="h-1.5 w-1.5 rounded-full bg-neutral-400" />
                   Observed
                 </span>
-                <span class="text-sm text-neutral-400">Captured from provider website</span>
+                <span class="text-body-sm text-neutral-400">Captured from provider website</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 rounded-full bg-neutral-700/50 px-2 py-0.5 text-xs text-neutral-500">
+                <span class="inline-flex items-center gap-1 rounded-full bg-neutral-700/50 px-2 py-0.5 text-body-sm text-neutral-500">
                   <span class="h-1.5 w-1.5 rounded-full bg-neutral-500" />
                   Estimated
                 </span>
-                <span class="text-sm text-neutral-400">Interpolated or modeled from partial data</span>
+                <span class="text-body-sm text-neutral-400">Interpolated or modeled from partial data</span>
               </div>
             </div>
           </div>
@@ -148,7 +154,7 @@
             <h4 class="font-medium text-white">
               About this chart
             </h4>
-            <p class="mt-1 text-sm text-neutral-400">
+            <p class="mt-1 text-body-sm text-neutral-400">
               {{ chartSpecificNote }}
             </p>
           </div>
@@ -158,7 +164,7 @@
         <div class="flex flex-wrap gap-4 pt-4 border-t border-neutral-700">
           <NuxtLink
             to="/methodology"
-            class="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 transition-colors"
+            class="flex items-center gap-1.5 text-body-sm text-brand-600 hover:text-brand-700 transition-colors"
           >
             <Icon
               name="document-text"
@@ -169,7 +175,7 @@
           </NuxtLink>
           <NuxtLink
             to="/legal/how-we-make-money"
-            class="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 transition-colors"
+            class="flex items-center gap-1.5 text-body-sm text-brand-600 hover:text-brand-700 transition-colors"
           >
             <Icon
               name="currency-dollar"
@@ -180,7 +186,7 @@
           </NuxtLink>
           <NuxtLink
             to="/corrections"
-            class="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 transition-colors"
+            class="flex items-center gap-1.5 text-body-sm text-brand-600 hover:text-brand-700 transition-colors"
           >
             <Icon
               name="pencil-square"

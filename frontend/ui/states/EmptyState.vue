@@ -41,7 +41,7 @@ const chromeClass = computed(() => {
   if (props.mode !== 'card') return ''
   return props.variant === 'terminal'
     ? 'border-neutral-700 bg-neutral-900'
-    : 'border-slate-200 bg-white'
+    : 'border-rs-border bg-surface'
 })
 
 const contentWrapperClass = computed(() => {
@@ -69,24 +69,24 @@ const contentWrapperClass = computed(() => {
         <h3
           v-if="hasTitle"
           :id="titleId"
-          class="text-sm font-semibold"
-          :class="props.variant === 'terminal' ? 'text-white' : 'text-slate-900'"
+          class="text-body-sm font-semibold"
+          :class="props.variant === 'terminal' ? 'text-white' : 'text-rs-fg'"
         >
           {{ props.title }}
         </h3>
         <p
           v-if="description"
           :id="descriptionId"
-          class="mt-1 text-sm"
-          :class="props.variant === 'terminal' ? 'text-neutral-300' : 'text-slate-600'"
+          class="mt-1 text-body-sm"
+          :class="props.variant === 'terminal' ? 'text-neutral-300' : 'text-rs-muted'"
         >
           {{ description }}
         </p>
         <p
           v-if="props.details"
           :id="description ? undefined : descriptionId"
-          class="mt-2 text-xs"
-          :class="props.variant === 'terminal' ? 'text-neutral-400' : 'text-slate-500'"
+          class="mt-2 text-body-sm"
+          :class="props.variant === 'terminal' ? 'text-neutral-400' : 'text-neutral-500'"
         >
           {{ props.details }}
         </p>

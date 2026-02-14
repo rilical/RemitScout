@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-page-x">
     <div class="w-full max-w-md">
       <!-- Logo/Header -->
       <div class="text-center mb-8">
@@ -7,29 +7,32 @@
           to="/"
           class="inline-block"
         >
-          <img
+          <NuxtImg
             src="/png/SVG/LOGO.svg"
             alt="RemitScout"
-            class="h-10 w-auto mx-auto mb-4"
-          >
+            width="32"
+            height="40"
+            loading="eager"
+            class="h-10 w-auto mx-auto mb-4 object-contain"
+          />
         </NuxtLink>
-        <h1 class="text-3xl font-bold text-slate-900">
+        <h1 class="text-h2 font-bold text-rs-fg">
           Reset your password
         </h1>
-        <p class="mt-2 text-sm text-slate-600">
+        <p class="mt-2 text-body-sm text-neutral-600">
           Enter your email and we'll send you a reset link
         </p>
       </div>
 
       <!-- Main Card -->
-      <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+      <div class="rounded-2xl border border-rs-border bg-surface p-8 shadow-xl">
         <!-- Success Message -->
         <div
           v-if="sent"
-          class="rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-4 text-center"
+          class="rounded-xl border-2 border-primary-200 bg-primary-50 px-4 py-4 text-center"
         >
           <svg
-            class="w-12 h-12 text-blue-600 mx-auto mb-2"
+            class="w-12 h-12 text-brand-600 mx-auto mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -41,15 +44,15 @@
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
             />
           </svg>
-          <p class="text-sm font-semibold text-blue-900 mb-1">
+          <p class="text-body-sm font-semibold text-primary-900 mb-1">
             Check your email
           </p>
-          <p class="text-xs text-blue-700 mb-4">
+          <p class="text-body-sm text-brand-700 mb-4">
             We've sent a password reset link to {{ email }}
           </p>
           <NuxtLink
             to="/sign-in"
-            class="inline-block text-sm font-semibold text-blue-700 hover:text-blue-800 underline"
+            class="inline-block text-body-sm font-semibold text-brand-700 hover:text-primary-800 underline"
           >
             Back to sign in
           </NuxtLink>
@@ -63,14 +66,14 @@
         >
           <div
             v-if="errorMessage"
-            class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            class="rounded-lg border border-danger-600 bg-danger-600 px-4 py-3 text-body-sm text-danger-600"
           >
             {{ errorMessage }}
           </div>
           <div>
             <label
               for="email"
-              class="block text-sm font-semibold text-slate-700 mb-2"
+              class="block text-body-sm font-semibold text-neutral-700 mb-2"
             >
               Email address
             </label>
@@ -79,7 +82,7 @@
               v-model.trim="email"
               type="email"
               autocomplete="email"
-              class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+              class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
               placeholder="you@example.com"
               required
             >
@@ -88,7 +91,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+            class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
           >
             {{ loading ? 'Sending…' : 'Send reset link' }}
           </button>
@@ -102,7 +105,7 @@
       >
         <NuxtLink
           to="/sign-in"
-          class="text-sm text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2"
+          class="text-body-sm text-neutral-600 hover:text-rs-fg flex items-center justify-center gap-2"
         >
           <svg
             class="w-4 h-4"
@@ -122,24 +125,24 @@
       </div>
 
       <!-- Quick Links -->
-      <div class="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500">
+      <div class="mt-8 flex items-center justify-center gap-6 text-body-sm text-rs-muted">
         <NuxtLink
           to="/about"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           About
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/contact"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Contact Us
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/plus"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Remit-Scout Plus
         </NuxtLink>
@@ -149,7 +152,18 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+
 const { requestPasswordReset } = useAuth()
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Forgot password | Remit-Scout',
+  description: 'Request a password reset link for your Remit-Scout account.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
 
 const email = ref('')
 const sent = ref(false)
@@ -170,11 +184,4 @@ async function handleReset() {
 
   sent.value = true
 }
-
-useHead({
-  title: 'Reset password | Remit-Scout',
-  meta: [
-    { name: 'robots', content: 'noindex, nofollow' },
-  ],
-})
 </script>

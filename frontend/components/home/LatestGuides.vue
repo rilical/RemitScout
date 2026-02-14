@@ -1,16 +1,16 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-surface">
+    <div class="container">
       <div class="text-center mb-12">
         <NuxtLink
           to="/learn"
           class="group"
         >
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
             Read Our Guides
           </h2>
         </NuxtLink>
-        <p class="text-lg text-neutral-600">
+        <p class="text-body-lg text-neutral-600">
           Everything you need to know about international money transfers
         </p>
       </div>
@@ -20,19 +20,19 @@
           v-for="(guide, index) in guides"
           :key="index"
           :to="`/learn/${guide.slug}`"
-          class="group bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          class="group bg-surface rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
         >
           <!-- Content -->
           <div class="p-6">
-            <h3 class="text-lg font-bold text-neutral-900 mb-3 leading-snug group-hover:text-brand-600 transition-colors">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-3 leading-snug group-hover:text-brand-600 transition-colors">
               {{ guide.title }}
             </h3>
 
-            <p class="text-sm text-neutral-600 mb-4 leading-relaxed line-clamp-2">
+            <p class="text-body-sm text-neutral-600 mb-4 leading-relaxed line-clamp-2">
               {{ guide.blurb }}
             </p>
 
-            <div class="flex items-center gap-2 text-xs text-neutral-500 mb-4">
+            <div class="flex items-center gap-2 text-body-sm text-neutral-500 mb-4">
               <svg
                 class="w-4 h-4"
                 fill="none"
@@ -51,7 +51,7 @@
               <span>{{ guide.updated }}</span>
             </div>
 
-            <div class="flex items-center text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
+            <div class="flex items-center text-body-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
               <span>Read guide</span>
               <svg
                 class="w-4 h-4 group-hover:translate-x-1 transition-transform"

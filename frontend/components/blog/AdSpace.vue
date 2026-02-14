@@ -8,15 +8,15 @@
       class="rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 p-8 text-center"
       :class="adClass"
     >
-      <div class="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2">
+      <div class="text-body-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2">
         Advertisement
       </div>
       <div
-        class="bg-white rounded border border-neutral-200"
+        class="bg-surface rounded border border-neutral-200"
         :style="{ width: width, height: height, minHeight: height }"
       >
         <slot>
-          <div class="flex items-center justify-center h-full text-neutral-400 text-sm">
+          <div class="flex items-center justify-center h-full text-neutral-400 text-body-sm">
             Ad Space {{ width }} × {{ height }}
           </div>
         </slot>
@@ -46,7 +46,7 @@ const containerClass = computed(() => {
 
 const adClass = computed(() => {
   if (props.position === 'banner') {
-    return 'w-full max-w-7xl'
+    return 'w-full max-w-page'
   }
   return ''
 })

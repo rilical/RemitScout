@@ -8,7 +8,10 @@ defineProps<Props>()
 </script>
 
 <template>
-  <div class="w-full" :class="rootClass">
+  <div
+class="w-full"
+:class="rootClass"
+>
     <div
       class="mx-auto w-full max-w-page px-page-x py-page-y"
       :class="containerClass"

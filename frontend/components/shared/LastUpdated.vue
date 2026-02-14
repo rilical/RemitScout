@@ -1,8 +1,8 @@
 <template>
-  <div class="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
+  <div class="mt-8 rounded-lg border border-primary-200 bg-primary-50 p-4">
     <div class="flex items-center">
       <svg
-        class="mr-2 h-5 w-5 text-blue-500"
+        class="mr-2 h-5 w-5 text-primary-500"
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -12,7 +12,7 @@
           clip-rule="evenodd"
         />
       </svg>
-      <span class="font-medium text-blue-800">Last updated: {{ formattedDate }}</span>
+      <span class="font-medium text-primary-800">Last updated: {{ formattedDate }}</span>
     </div>
   </div>
 </template>

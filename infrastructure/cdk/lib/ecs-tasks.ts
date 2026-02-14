@@ -35,6 +35,7 @@ export type EcsTaskResources = {
 
 export type EcsTaskOptions = {
   envName: string
+  minimalMode?: boolean
   backendRepository: Repository
   imageTag: string
   roles: IamResources
@@ -44,6 +45,8 @@ export type EcsTaskOptions = {
   planeBDbHost?: string
   planeBDbPort?: string
   planeBDbName?: string
+  quoteRefreshDlqUrl?: string
+  fxRateRefreshDlqUrl?: string
   planeADbSecretArn?: string
   planeADbSsmName?: string
   planeADbHost?: string
@@ -64,6 +67,7 @@ export type EcsTaskOptions = {
   redisSecretJsonKey?: string
   redisSsmName?: string
   redisUrl?: string
+  alertsSlackWebhookUrl?: string
   proxyResidentialSecretArn?: string
   proxyResidentialSecretJsonKey?: string
   proxyResidentialSsmName?: string
@@ -97,6 +101,8 @@ export type EcsTaskOptions = {
   ingestFanoutMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
+  planeBDbPoolMax?: string
+  planeBDbPoolMin?: string
 }
 
 export const createEcsTasks = (
@@ -105,6 +111,9 @@ export const createEcsTasks = (
 ): EcsTaskResources => {
   const isProd = options.envName === 'prod'
   const isDev = options.envName === 'dev'
+  const isStaging = options.envName === 'staging'
+  const isConservativeWorkerDefaults = isDev || isStaging
+  const minimalMode = options.minimalMode === true
   const logRetention = isProd
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
@@ -139,7 +148,7 @@ export const createEcsTasks = (
   const workerHealthCheck: HealthCheck = {
     command: [
       'CMD-SHELL',
-      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/readyz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/health\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
     ],
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
@@ -193,8 +202,10 @@ export const createEcsTasks = (
   const sentrySecretArn = options.sentrySecretArn
   const sentrySecretJsonKey = options.sentrySecretJsonKey
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
+  const quoteRefreshDlqUrl = options.quoteRefreshDlqUrl
   const quoteRefreshQueueMode = options.quoteRefreshQueueMode
   const fxRateRefreshQueueUrl = options.fxRateRefreshQueueUrl
+  const fxRateRefreshDlqUrl = options.fxRateRefreshDlqUrl
   const fxRateRefreshQueueMode = options.fxRateRefreshQueueMode
   const ingestFanoutQueueTier1Url = options.ingestFanoutQueueTier1Url
   const ingestFanoutQueueTier2Url = options.ingestFanoutQueueTier2Url
@@ -211,8 +222,8 @@ export const createEcsTasks = (
   const planeBB2bObservationMode =
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
-  const b2cRefreshLimit = isDev ? '25' : '50'
-  const b2cRefreshConcurrency = isDev ? '1' : '5'
+  const b2cRefreshLimit = isConservativeWorkerDefaults ? '25' : '50'
+  const b2cRefreshConcurrency = isConservativeWorkerDefaults ? '1' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
   const notificationsMode = options.notificationsMode
   const opsAlertsMode = options.opsAlertsMode
@@ -220,7 +231,16 @@ export const createEcsTasks = (
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
 
-    if (planeBDbSecretArn) {
+    // Prefer injecting full DB URLs via SSM when available. This avoids runtime URL construction
+    // and prevents early `config` evaluation from freezing missing DB settings.
+    if (planeBDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'PlaneBEcsDatabaseParameter',
+        planeBDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
+    } else if (planeBDbSecretArn) {
       const secret = Secret.fromSecretCompleteArn(
         scope,
         'PlaneBEcsDatabaseSecret',
@@ -228,13 +248,6 @@ export const createEcsTasks = (
       )
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(secret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(secret, 'password')
-    } else if (planeBDbSsmName) {
-      const parameter = StringParameter.fromStringParameterName(
-        scope,
-        'PlaneBEcsDatabaseParameter',
-        planeBDbSsmName,
-      )
-      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     }
 
     if (redisSecretArn) {
@@ -300,7 +313,14 @@ export const createEcsTasks = (
   const buildGoldLiveSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
 
-    if (planeBDbSecretArn) {
+    if (planeBDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'GoldLivePlaneBDatabaseParameter',
+        planeBDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
+    } else if (planeBDbSecretArn) {
       const planeBSecret = Secret.fromSecretCompleteArn(
         scope,
         'GoldLivePlaneBDatabaseSecret',
@@ -308,13 +328,6 @@ export const createEcsTasks = (
       )
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(planeBSecret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(planeBSecret, 'password')
-    } else if (planeBDbSsmName) {
-      const parameter = StringParameter.fromStringParameterName(
-        scope,
-        'GoldLivePlaneBDatabaseParameter',
-        planeBDbSsmName,
-      )
-      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     }
 
     if (planeCDbSecretArn) {
@@ -365,6 +378,8 @@ export const createEcsTasks = (
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
+  const planeBDbPoolMax = options.planeBDbPoolMax ?? '2'
+  const planeBDbPoolMin = options.planeBDbPoolMin ?? '0'
   if (!isProd) {
     sharedEnv.QUOTE_REFRESH_DB_FALLBACK = '1'
   }
@@ -372,33 +387,43 @@ export const createEcsTasks = (
     sharedEnv.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
   }
   if (isDev) {
-    // Dev-only: allow TLS without local CA bundle in the container.
-    sharedEnv.NODE_TLS_REJECT_UNAUTHORIZED = '0'
     sharedEnv.DB_DISABLE_POOL_SIGNAL_CLEANUP = '1'
     sharedEnv.DB_QUERY_TIMEOUT_MS =
       process.env.DB_QUERY_TIMEOUT_MS || '120000'
     sharedEnv.DB_CONNECTION_TIMEOUT_MS =
       process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
-    sharedEnv.DB_POOL_MAX =
-      process.env.DB_POOL_MAX || '10'
-    sharedEnv.DB_POOL_MIN =
-      process.env.DB_POOL_MIN || '2'
     sharedEnv.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE =
       process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE || '1'
     sharedEnv.PLANE_B_B2B_RPM_SAFETY_FACTOR =
       process.env.PLANE_B_B2B_RPM_SAFETY_FACTOR || '1'
     sharedEnv.PLANE_B_B2B_RPM_MULTIPLIER =
-      process.env.PLANE_B_B2B_RPM_MULTIPLIER || '8'
+      process.env.PLANE_B_B2B_RPM_MULTIPLIER || '2'
     sharedEnv.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER =
-      process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER || '8'
+      process.env.PLANE_B_B2B_CORRIDOR_RPM_MULTIPLIER || '2'
     sharedEnv.PLANE_B_B2B_OBSERVATION_TIER2_RPM =
       process.env.PLANE_B_B2B_OBSERVATION_TIER2_RPM || '60'
     sharedEnv.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM =
       process.env.PLANE_B_B2B_OBSERVATION_TIER2_CORRIDOR_RPM || '60'
-    sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS =
-      process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS || '3600'
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER1 =
+      process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER1 || '900'
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER2 =
+      process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER2 || '21600'
     sharedEnv.SLO_FRESHNESS_P95_TIER2_THRESHOLD =
       process.env.SLO_FRESHNESS_P95_TIER2_THRESHOLD || '21600'
+  }
+  if (isStaging) {
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER1 =
+      process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER1 || '900'
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER2 =
+      process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS_TIER2 || '10800'
+    sharedEnv.SLO_FRESHNESS_P95_TIER2_THRESHOLD =
+      process.env.SLO_FRESHNESS_P95_TIER2_THRESHOLD || '10800'
+  }
+  if (!sharedEnv.DB_POOL_MAX) {
+    sharedEnv.DB_POOL_MAX = planeBDbPoolMax
+  }
+  if (!sharedEnv.DB_POOL_MIN) {
+    sharedEnv.DB_POOL_MIN = planeBDbPoolMin
   }
   if (process.env.DB_DISABLE_STATEMENT_TIMEOUT) {
     sharedEnv.DB_DISABLE_STATEMENT_TIMEOUT = process.env.DB_DISABLE_STATEMENT_TIMEOUT
@@ -453,14 +478,62 @@ export const createEcsTasks = (
   if (quoteRefreshQueueUrl) {
     sharedEnv.QUOTE_REFRESH_QUEUE_URL = quoteRefreshQueueUrl
   }
+  if (quoteRefreshDlqUrl) {
+    sharedEnv.QUOTE_REFRESH_DLQ_URL = quoteRefreshDlqUrl
+  }
   if (quoteRefreshQueueMode) {
     sharedEnv.QUOTE_REFRESH_QUEUE_MODE = quoteRefreshQueueMode
   }
   if (fxRateRefreshQueueUrl) {
     sharedEnv.FX_RATE_REFRESH_QUEUE_URL = fxRateRefreshQueueUrl
   }
+  if (fxRateRefreshDlqUrl) {
+    sharedEnv.FX_RATE_REFRESH_DLQ_URL = fxRateRefreshDlqUrl
+  }
   if (fxRateRefreshQueueMode) {
     sharedEnv.FX_RATE_REFRESH_QUEUE_MODE = fxRateRefreshQueueMode
+  }
+  if (options.exportJobQueueUrl) {
+    sharedEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportJobQueueMode) {
+    sharedEnv.EXPORT_JOB_QUEUE_MODE = options.exportJobQueueMode
+  }
+  if (options.alertEvaluationQueueUrl) {
+    sharedEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportsBucketName) {
+    sharedEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  if (options.exportsPrefix) {
+    sharedEnv.EXPORTS_S3_PREFIX = options.exportsPrefix
+  }
+  if (options.alertsSlackWebhookUrl) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = options.alertsSlackWebhookUrl
+  } else if (process.env.ALERT_SLACK_WEBHOOK_URL) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = process.env.ALERT_SLACK_WEBHOOK_URL
+  } else if (process.env.SLACK_WEBHOOK_URL) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+  }
+  const hydrateAlertWorkerEnv = (target: Record<string, string>): void => {
+    if (!target.ALERT_EVALUATION_QUEUE_URL && options.alertEvaluationQueueUrl) {
+      target.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+    }
+    if (!target.EXPORT_JOB_QUEUE_URL && options.exportJobQueueUrl) {
+      target.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+    }
+    if (!target.EXPORTS_S3_BUCKET && options.exportsBucketName) {
+      target.EXPORTS_S3_BUCKET = options.exportsBucketName
+    }
+    if (!target.ALERT_SLACK_WEBHOOK_URL) {
+      if (options.alertsSlackWebhookUrl) {
+        target.ALERT_SLACK_WEBHOOK_URL = options.alertsSlackWebhookUrl
+      } else if (process.env.ALERT_SLACK_WEBHOOK_URL) {
+        target.ALERT_SLACK_WEBHOOK_URL = process.env.ALERT_SLACK_WEBHOOK_URL
+      } else if (process.env.SLACK_WEBHOOK_URL) {
+        target.ALERT_SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+      }
+    }
   }
   if (ingestFanoutMode) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_MODE = ingestFanoutMode
@@ -484,13 +557,13 @@ export const createEcsTasks = (
     sharedEnv.PLANE_B_B2C_QUEUE_IN_SWEEP = b2cQueueInSweep
   }
   if (planeBB2bTargetMinutes) {
-    sharedEnv.PLANE_B_B2B_TARGET_MINUTES = planeBB2bTargetMinutes
+    sharedEnv.PLANE_B_B2B_TARGET_MINUTES = String(planeBB2bTargetMinutes)
   }
   if (planeBB2bObservationMode !== undefined) {
-    sharedEnv.PLANE_B_B2B_OBSERVATION_MODE = planeBB2bObservationMode
+    sharedEnv.PLANE_B_B2B_OBSERVATION_MODE = String(planeBB2bObservationMode)
   }
   if (planeBB2bMaxQueueDepth) {
-    sharedEnv.PLANE_B_B2B_MAX_QUEUE_DEPTH = planeBB2bMaxQueueDepth
+    sharedEnv.PLANE_B_B2B_MAX_QUEUE_DEPTH = String(planeBB2bMaxQueueDepth)
   }
   if (process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY) {
     sharedEnv.PLANE_B_B2B_NATIVE_CURRENCY_ONLY = process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY
@@ -543,6 +616,7 @@ export const createEcsTasks = (
   }
 
   const planeBIngestEnv = { ...sharedEnv }
+  planeBIngestEnv.DB_APPLICATION_NAME = `rs-${options.envName}:plane-b-ingest`
   if (!planeBIngestEnv.PLANE_B_INGEST_LOOP) {
     planeBIngestEnv.PLANE_B_INGEST_LOOP = '1'
   }
@@ -615,8 +689,36 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      DB_APPLICATION_NAME: `rs-${options.envName}:b2b-sweep-scheduler`,
       B2B_SWEEP_SCHEDULER_LOOP: '0',
-    },
+      ...(isDev ? { B2B_SWEEP_SCHEDULER_STALE_RUN_MAX_AGE_MS: '21600000' } : {}),
+      ...(isDev && minimalMode
+        ? {
+            B2B_SWEEP_CANARY_MODE: '1',
+            B2B_SWEEP_CANARY_FORCE_DUE: '1',
+            B2B_SWEEP_CANARY_INTERVAL_SECONDS: '600',
+            // Canary: keep the sweep corridor set fixed + small so we can observe end-to-end behavior
+            // within minutes without producing a full Tier-2 backlog.
+            B2B_SWEEP_CANARY_MAX_LANES: '30',
+	            B2B_SWEEP_CANARY_CORRIDORS: [
+	              'GB-NG-GBP-NGN',
+	              'GB-IN-GBP-INR',
+	              'AE-IN-AED-INR',
+	              'AE-PK-AED-PKR',
+              'DE-TR-EUR-TRY',
+              'FR-MA-EUR-MAD',
+              'IT-PH-EUR-PHP',
+              'ES-CO-EUR-COP',
+              'CA-PH-CAD-PHP',
+	              'JP-PH-JPY-PHP',
+	              'US-JO-USD-JOD',
+	              'AE-JO-AED-JOD',
+	              'GB-JO-GBP-JOD',
+	              'DE-JO-EUR-JOD',
+	            ].join(','),
+	          }
+	        : {}),
+	    },
     ...secretsConfig,
     logging: LogDrivers.awsLogs({
       streamPrefix: 'b2b-sweep-scheduler',
@@ -676,7 +778,6 @@ export const createEcsTasks = (
       ...sharedEnv,
       B2C_REFRESH_LIMIT: b2cRefreshLimit,
       B2C_REFRESH_CONCURRENCY: b2cRefreshConcurrency,
-      B2C_REFRESH_HEALTH_ENABLED: '0',
       B2C_REFRESH_LOOP_JITTER_MS:
         process.env.B2C_REFRESH_LOOP_JITTER_MS || defaultLoopJitterMs,
       B2C_REFRESH_MESSAGE_JITTER_MS:
@@ -774,27 +875,33 @@ export const createEcsTasks = (
 
   const buildIngestFanoutEnv = (queueUrl: string, tierLabel: string) => {
     const ingestFanoutEnv = { ...sharedEnv }
+    ingestFanoutEnv.DB_APPLICATION_NAME = `rs-${options.envName}:ingest-fanout-${tierLabel}`
     ingestFanoutEnv.PLANE_B_INGEST_FANOUT_QUEUE_URL = queueUrl
     ingestFanoutEnv.PLANE_B_INGEST_FANOUT_QUEUE_TIER = tierLabel
     if (process.env.INGEST_FANOUT_BATCH_SIZE) {
       ingestFanoutEnv.INGEST_FANOUT_BATCH_SIZE = process.env.INGEST_FANOUT_BATCH_SIZE
-    } else if (isDev) {
+    } else if (isConservativeWorkerDefaults) {
       ingestFanoutEnv.INGEST_FANOUT_BATCH_SIZE = '10'
     }
     if (process.env.INGEST_FANOUT_CONCURRENCY) {
       ingestFanoutEnv.INGEST_FANOUT_CONCURRENCY = process.env.INGEST_FANOUT_CONCURRENCY
     } else if (isDev) {
+      // Dev: keep DB + downstream pressure low until the pipeline is stable.
+      ingestFanoutEnv.INGEST_FANOUT_CONCURRENCY = '1'
+    } else if (isConservativeWorkerDefaults) {
       ingestFanoutEnv.INGEST_FANOUT_CONCURRENCY = '4'
     }
     if (process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY) {
       ingestFanoutEnv.INGEST_FANOUT_PROVIDER_CONCURRENCY =
         process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY
     } else if (isDev) {
+      ingestFanoutEnv.INGEST_FANOUT_PROVIDER_CONCURRENCY = '1'
+    } else if (isConservativeWorkerDefaults) {
       ingestFanoutEnv.INGEST_FANOUT_PROVIDER_CONCURRENCY = '2'
     }
     if (process.env.INGEST_FANOUT_IDLE_SLEEP_MS) {
       ingestFanoutEnv.INGEST_FANOUT_IDLE_SLEEP_MS = process.env.INGEST_FANOUT_IDLE_SLEEP_MS
-    } else if (isDev) {
+    } else if (isConservativeWorkerDefaults) {
       ingestFanoutEnv.INGEST_FANOUT_IDLE_SLEEP_MS = '250'
     }
     ingestFanoutEnv.INGEST_FANOUT_LOOP_JITTER_MS =
@@ -979,13 +1086,35 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const notificationsEnv = {
+  const notificationsEnv: Record<string, string> = {
     ...sharedEnv,
     NOTIFICATIONS_QUEUE_LOOP_JITTER_MS:
       process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS:
       process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS || defaultMessageJitterMs,
   }
+  if (!notificationsEnv.PLANE_B_DB_HOST && planeBDbHost) {
+    notificationsEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (!notificationsEnv.PLANE_B_DB_PORT && planeBDbPort) {
+    notificationsEnv.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (!notificationsEnv.PLANE_B_DB_NAME && planeBDbName) {
+    notificationsEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (!notificationsEnv.PLANE_B_DB_SECRET_ARN && planeBDbSecretArn) {
+    notificationsEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
+  }
+  if (options.alertEvaluationQueueUrl) {
+    notificationsEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportJobQueueUrl) {
+    notificationsEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportsBucketName) {
+    notificationsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  hydrateAlertWorkerEnv(notificationsEnv)
   notificationsQueueTask.addContainer('NotificationsQueueWorkerContainer', {
     image,
     command: resolveCommand(
@@ -1046,13 +1175,35 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const opsAlertsEnv = {
+  const opsAlertsEnv: Record<string, string> = {
     ...sharedEnv,
     OPS_ALERTS_QUEUE_LOOP_JITTER_MS:
       process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS:
       process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS || defaultMessageJitterMs,
   }
+  if (!opsAlertsEnv.PLANE_B_DB_HOST && planeBDbHost) {
+    opsAlertsEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_PORT && planeBDbPort) {
+    opsAlertsEnv.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_NAME && planeBDbName) {
+    opsAlertsEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_SECRET_ARN && planeBDbSecretArn) {
+    opsAlertsEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
+  }
+  if (options.alertEvaluationQueueUrl) {
+    opsAlertsEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportJobQueueUrl) {
+    opsAlertsEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportsBucketName) {
+    opsAlertsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  hydrateAlertWorkerEnv(opsAlertsEnv)
   opsAlertsQueueTask.addContainer('OpsAlertsQueueWorkerContainer', {
     image,
     command: resolveCommand(
@@ -1144,6 +1295,7 @@ export const createEcsTasks = (
   if (options.communicationsSecretArn) {
     alertEvaluationEnv.COMMUNICATIONS_SECRET_ARN = options.communicationsSecretArn
   }
+  hydrateAlertWorkerEnv(alertEvaluationEnv)
   alertEvaluationTask.addContainer('AlertEvaluationWorkerContainer', {
     image,
     command: resolveCommand(

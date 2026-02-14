@@ -53,9 +53,22 @@ export const handler = async (): Promise<number> => {
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
-      requireQueues: true,
+      requireRedis: true,
+      // The sweep scheduler only needs Plane B DB + Redis + ingest-fanout queue.
+      // It must not hard-require unrelated queues/buckets (exports, alerts eval, etc).
+      requireQueues: false,
+      requireStorage: false,
     },
   })
+
+  const ingestMode = process.env.PLANE_B_INGEST_FANOUT_QUEUE_MODE || 'off'
+  const ingestUrl =
+    process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL ||
+    process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL ||
+    ''
+  if (ingestMode === 'queue' && !ingestUrl) {
+    throw new Error('PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL (or PLANE_B_INGEST_FANOUT_QUEUE_URL) required when PLANE_B_INGEST_FANOUT_QUEUE_MODE=queue')
+  }
 
   try {
     const { runB2bSweepScheduler } = await import('../b2b-sweep-dispatch')

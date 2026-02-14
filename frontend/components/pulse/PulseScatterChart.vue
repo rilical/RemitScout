@@ -53,7 +53,7 @@
             :x="centerX + deviationCircles[0] + 5"
             :y="centerY - 5"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             1σ
           </text>
@@ -61,7 +61,7 @@
             :x="centerX + deviationCircles[1] + 5"
             :y="centerY - 5"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             2σ
           </text>
@@ -69,7 +69,7 @@
             :x="centerX + deviationCircles[2] + 5"
             :y="centerY - 5"
             fill="currentColor"
-            class="text-amber-500"
+            class="text-warning-600"
           >
             3σ (anomaly)
           </text>
@@ -82,7 +82,7 @@
             :y="height - 10"
             text-anchor="middle"
             fill="currentColor"
-            class="text-slate-400"
+            class="text-neutral-400"
           >
             Price deviation →
           </text>
@@ -91,7 +91,7 @@
             :y="height / 2"
             text-anchor="middle"
             fill="currentColor"
-            class="text-slate-400"
+            class="text-neutral-400"
             transform="rotate(-90, 15, 160)"
           >
             Time deviation →
@@ -147,15 +147,15 @@
             class="h-2 w-2 rounded-full"
             :style="{ backgroundColor: hoveredPoint.color }"
           />
-          <span class="text-sm font-semibold text-white">{{ hoveredPoint.provider }}</span>
+          <span class="text-body-sm font-semibold text-white">{{ hoveredPoint.provider }}</span>
           <span
             v-if="hoveredPoint.isAnomaly"
-            class="text-xs px-1.5 py-0.5 rounded bg-brand-600/20 text-brand-600"
+            class="text-body-sm px-1.5 py-0.5 rounded bg-brand-600/20 text-brand-600"
           >
             Anomaly
           </span>
         </div>
-        <div class="text-xs text-neutral-400">
+        <div class="text-body-sm text-neutral-400">
           Deviation: {{ hoveredPoint.deviationX.toFixed(1) }}σ / {{ hoveredPoint.deviationY.toFixed(1) }}σ
         </div>
       </div>
@@ -166,7 +166,7 @@
       <button
         v-for="s in series"
         :key="`legend-${s.id}`"
-        class="flex items-center gap-2 rounded-full px-3 py-1 text-sm transition-opacity"
+        class="flex items-center gap-2 rounded-full px-3 py-1 text-body-sm transition-opacity"
         :class="hoveredProvider === null || hoveredProvider === s.label ? 'opacity-100' : 'opacity-40'"
         @mouseenter="hoveredProvider = s.label"
         @mouseleave="hoveredProvider = null"
@@ -200,7 +200,7 @@
         </svg>
         <span class="font-semibold">{{ anomalyPoints.length }} anomalies detected</span>
       </div>
-      <p class="mt-1 text-sm text-neutral-400">
+      <p class="mt-1 text-body-sm text-neutral-400">
         These quotes deviate significantly from the provider's baseline. Could be errors or temporary promos.
       </p>
     </div>

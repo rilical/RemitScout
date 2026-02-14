@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+  <div class="bg-gradient-to-b from-neutral-50 to-white border border-rs-border rounded-2xl shadow-sm overflow-hidden">
     <!-- Main Query Builder -->
     <div class="p-5">
       <div class="flex flex-col lg:flex-row lg:items-end gap-4">
@@ -7,7 +7,7 @@
         <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- From Country -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">From</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">From</label>
             <div class="relative w-full">
               <CountrySelect
                 id="corridor-from-country"
@@ -21,7 +21,7 @@
           </div>
           <!-- To Country -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">To</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">To</label>
             <div class="relative w-full">
               <CountrySelect
                 id="corridor-to-country"
@@ -38,7 +38,7 @@
         <!-- Amount & Currency -->
         <div class="flex items-end gap-3">
           <div class="w-32">
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">You send</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">You send</label>
             <div class="relative">
               <input
                 id="amount-input"
@@ -47,7 +47,7 @@
                 :min="inputMin"
                 :max="inputMax"
                 step="0.01"
-                class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 @blur="handleAmountBlur"
                 @input="sanitizeAmountInput"
                 @keydown="preventNegative"
@@ -57,7 +57,7 @@
 
           <!-- From Currency -->
           <div class="w-24 sm:w-28">
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Currency</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">Currency</label>
             <CurrencySelect
               id="corridor-from-currency"
               v-model="localFromCurrency"
@@ -72,7 +72,7 @@
 
           <!-- To Currency -->
           <div class="w-24 sm:w-28">
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Receive</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">Receive</label>
             <CurrencySelect
               id="corridor-to-currency"
               v-model="localToCurrency"
@@ -87,11 +87,11 @@
 
           <!-- Compare Button -->
           <div class="flex-shrink-0">
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Action</label>
+            <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">Action</label>
             <button
               type="button"
               :disabled="isSearching"
-              class="h-12 flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white hover:bg-brand-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              class="h-12 flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 text-body-sm font-semibold text-white hover:bg-brand-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               @click="handleSearch"
             >
               <svg
@@ -137,18 +137,18 @@
     </div>
 
     <!-- Actions Bar -->
-    <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-4">
+    <div class="border-t border-rs-border bg-neutral-50/50 px-5 py-4">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <!-- Payout Methods -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Delivery</span>
+          <span class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mr-2">Delivery</span>
           <!-- Loading state -->
           <div
             v-if="props.methodsLoading"
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm"
+            class="inline-flex items-center gap-2 rounded-lg border border-rs-border bg-surface px-4 py-2 shadow-sm"
           >
             <svg
-              class="w-4 h-4 animate-spin text-slate-400"
+              class="w-4 h-4 animate-spin text-neutral-400"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -166,22 +166,22 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span class="text-xs text-slate-500">Loading options...</span>
+            <span class="text-body-sm text-rs-muted">Loading options...</span>
           </div>
           <!-- Actual method buttons -->
           <div
             v-else-if="payoutMethods.length > 0"
-            class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+            class="inline-flex rounded-lg border border-rs-border bg-surface p-1 shadow-sm"
           >
             <button
               v-for="method in payoutMethods"
               :key="method.value"
               type="button"
               :class="[
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-body-sm font-semibold transition-all',
                 localPayoutMethod === method.value
                   ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50',
+                  : 'text-neutral-600 hover:bg-neutral-50',
               ]"
               @click="selectMethod(method.value)"
             >
@@ -198,26 +198,27 @@
         <div class="flex items-center gap-3">
           <!-- Sort Dropdown -->
           <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort</span>
+            <span class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider">Sort</span>
             <div class="w-[200px] flex-shrink-0">
               <UniversalDropdown
                 :model-value="localSortBy"
                 :options="sortOptions"
-                button-class="h-12 rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                button-class="h-12 rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 @update:model-value="(value) => { localSortBy = value as string; $emit('sort', localSortBy) }"
               />
             </div>
           </div>
 
           <!-- Divider -->
-          <div class="h-6 w-px bg-slate-200" />
+          <div class="h-6 w-px bg-neutral-200" />
 
           <!-- Action Icons -->
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="p-2 rounded-lg text-slate-500 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              class="p-2 rounded-lg text-rs-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
               title="Add to watchlist"
+              aria-label="Add to watchlist"
               @click="emit('save')"
             >
               <svg
@@ -236,8 +237,9 @@
             </button>
             <button
               type="button"
-              class="p-2 rounded-lg text-slate-500 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              class="p-2 rounded-lg text-rs-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
               title="Set rate alert"
+              aria-label="Set rate alert"
               @click="emit('alert')"
             >
               <svg
@@ -256,8 +258,9 @@
             </button>
             <button
               type="button"
-              class="p-2 rounded-lg text-slate-500 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              class="p-2 rounded-lg text-rs-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
               title="Share"
+              aria-label="Share"
               @click="emit('share')"
             >
               <svg

@@ -120,6 +120,87 @@ export const runStartupChecks = async (params: {
   awsValidation?: ValidationOptions
 } = {}): Promise<void> => {
   const requirements = params.requirements ?? {}
+  const queueShouldValidate = requirements.requireQueues === true
+  const storageShouldValidate = requirements.requireStorage === true
+
+  const resolveRequiredQueues = (): ValidationOptions['requiredQueues'] => {
+    const queueRequirements = new Set<NonNullable<ValidationOptions['requiredQueues']>[number]>()
+    const explicitQueueRequirements = ([
+      'requireQuoteRefreshQueue',
+      'requireFxRateRefreshQueue',
+      'requireExportJobQueue',
+      'requireIngestFanoutQueue',
+      'requireNotificationsQueue',
+      'requireOpsAlertsQueue',
+      'requireAlertEvaluationQueue',
+    ] as const).some((key) => Object.prototype.hasOwnProperty.call(requirements, key))
+    const defaultQueueRequirement = explicitQueueRequirements ? false : true
+
+    if (!queueShouldValidate) {
+      return Array.from(queueRequirements)
+    }
+
+    const requireQuoteRefreshQueue = requirements.requireQuoteRefreshQueue ?? defaultQueueRequirement
+    const requireFxRateRefreshQueue = requirements.requireFxRateRefreshQueue ?? defaultQueueRequirement
+    const requireExportJobQueue = requirements.requireExportJobQueue ?? defaultQueueRequirement
+    const requireIngestFanoutQueue = requirements.requireIngestFanoutQueue ?? defaultQueueRequirement
+    const requireNotificationsQueue = requirements.requireNotificationsQueue ?? defaultQueueRequirement
+    const requireOpsAlertsQueue = requirements.requireOpsAlertsQueue ?? defaultQueueRequirement
+    const requireAlertEvaluationQueue = requirements.requireAlertEvaluationQueue ?? defaultQueueRequirement
+
+    if (requireQuoteRefreshQueue) {
+      queueRequirements.add('quote_refresh')
+      queueRequirements.add('quote_refresh_dlq')
+    }
+    if (requireFxRateRefreshQueue) {
+      queueRequirements.add('fx_rate_refresh')
+      queueRequirements.add('fx_rate_refresh_dlq')
+    }
+    if (requireExportJobQueue) {
+      queueRequirements.add('exports')
+    }
+    if (requireIngestFanoutQueue) {
+      queueRequirements.add('ingest_fanout')
+      queueRequirements.add('ingest_fanout_tier1')
+      queueRequirements.add('ingest_fanout_tier2')
+    }
+    if (requireNotificationsQueue) {
+      queueRequirements.add('notifications')
+    }
+    if (requireOpsAlertsQueue) {
+      queueRequirements.add('ops_alerts')
+    }
+    if (requireAlertEvaluationQueue) {
+      queueRequirements.add('alert_evaluation')
+    }
+
+    return Array.from(queueRequirements)
+  }
+
+  const resolveRequiredBuckets = (): ValidationOptions['requiredBuckets'] => {
+    const bucketRequirements = new Set<NonNullable<ValidationOptions['requiredBuckets']>[number]>()
+    const explicitBucketRequirements = ([
+      'requireBronzeBucket',
+      'requireExportsBucket',
+    ] as const).some((key) => Object.prototype.hasOwnProperty.call(requirements, key))
+    const defaultBucketRequirement = explicitBucketRequirements ? false : true
+
+    if (!storageShouldValidate) {
+      return Array.from(bucketRequirements)
+    }
+
+    const requireBronzeBucket = requirements.requireBronzeBucket ?? defaultBucketRequirement
+    const requireExportsBucket = requirements.requireExportsBucket ?? defaultBucketRequirement
+
+    if (requireBronzeBucket) {
+      bucketRequirements.add('bronze_bucket')
+    }
+    if (requireExportsBucket) {
+      bucketRequirements.add('exports_bucket')
+    }
+
+    return Array.from(bucketRequirements)
+  }
 
   validateConfigOrDie(requirements)
   assertRuntimeConfig(requirements)
@@ -144,6 +225,8 @@ export const runStartupChecks = async (params: {
         requirements.requirePlaneB ||
         requirements.requirePlaneCDb
       ),
+      ...(requirements.requireQueues ? { requiredQueues: resolveRequiredQueues() } : {}),
+      ...(requirements.requireStorage ? { requiredBuckets: resolveRequiredBuckets() } : {}),
       ...params.awsValidation,
     }
 

@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6">
-      <h2 class="mb-2 text-2xl font-bold text-white flex items-center gap-2">
+      <h2 class="mb-2 text-h3 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-6 w-6 text-blue-400"
+          class="h-6 w-6 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -17,7 +17,7 @@
         </svg>
         All Corridors
       </h2>
-      <p class="text-slate-400">
+      <p class="text-neutral-400">
         View quote snapshots for {{ corridors.length }} corridors
       </p>
     </div>
@@ -25,7 +25,7 @@
     <div class="mb-6 flex flex-col gap-4 sm:flex-row">
       <div class="relative flex-1">
         <svg
-          class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500"
+          class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-rs-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -41,28 +41,30 @@
           v-model="search"
           type="text"
           placeholder="Search corridors..."
-          class="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+          aria-label="Search corridors"
+          class="h-12 w-full rounded-xl border border-white/10 bg-surface/5 pl-12 pr-4 text-white placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
         >
       </div>
       <select
         v-model="sortBy"
-        class="h-12 rounded-xl border border-white/10 bg-white/5 px-4 text-slate-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
+        aria-label="Sort corridors"
+        class="h-12 rounded-xl border border-white/10 bg-surface/5 px-4 text-neutral-300 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer"
       >
         <option
           value="popular"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Most popular
         </option>
         <option
           value="change"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Biggest change
         </option>
         <option
           value="value"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Best value
         </option>
@@ -70,18 +72,20 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div
+      <button
         v-for="corridor in filteredCorridors"
         :key="`${corridor.from}-${corridor.to}`"
-        class="group cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 p-5 transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+        type="button"
+        class="group w-full cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 p-5 text-left transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+        :aria-label="`View corridor ${corridor.from} to ${corridor.to}`"
         @click="$emit('corridor-click', { from: corridor.from, to: corridor.to })"
       >
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 text-2xl">
+            <div class="flex items-center gap-2 text-h3">
               <span>{{ corridor.fromFlag }}</span>
               <svg
-                class="h-4 w-4 text-slate-500"
+                class="h-4 w-4 text-rs-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -95,11 +99,11 @@
               </svg>
               <span>{{ corridor.toFlag }}</span>
             </div>
-            <span class="font-semibold text-white group-hover:text-blue-400 transition-colors">{{ corridor.name }}</span>
+            <span class="font-semibold text-white group-hover:text-primary-400 transition-colors">{{ corridor.name }}</span>
           </div>
           <span
-            class="flex items-center gap-1 text-sm font-semibold"
-            :class="corridor.changeType === 'up' ? 'text-emerald-400' : 'text-red-400'"
+            class="flex items-center gap-1 text-body-sm font-semibold"
+            :class="corridor.changeType === 'up' ? 'text-success-600' : 'text-danger-600'"
           >
             <svg
               class="h-4 w-4"
@@ -127,40 +131,40 @@
         </div>
 
         <div class="grid grid-cols-3 gap-4">
-          <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">
+          <div class="rounded-xl bg-surface/5 p-3">
+            <div class="text-body-sm text-rs-muted mb-1">
               Best provider
             </div>
             <div class="font-semibold text-white">
               {{ corridor.bestProvider }}
             </div>
           </div>
-          <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">
+          <div class="rounded-xl bg-surface/5 p-3">
+            <div class="text-body-sm text-rs-muted mb-1">
               Recipient gets
             </div>
-            <div class="font-semibold text-emerald-400">
+            <div class="font-semibold text-success-600">
               {{ corridor.recipientGets }}
             </div>
           </div>
-          <div class="rounded-xl bg-white/5 p-3">
-            <div class="text-xs text-slate-500 mb-1">
+          <div class="rounded-xl bg-surface/5 p-3">
+            <div class="text-body-sm text-rs-muted mb-1">
               Updated
             </div>
             <div class="font-semibold text-white flex items-center gap-1">
               <span class="relative flex h-1.5 w-1.5">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-600 opacity-75" />
+                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-success-600" />
               </span>
               {{ corridor.updated }}
             </div>
           </div>
         </div>
-      </div>
+      </button>
     </div>
 
     <div class="mt-8 text-center">
-      <button class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
+      <button class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-6 py-3 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
         Load more corridors
         <svg
           class="h-4 w-4"

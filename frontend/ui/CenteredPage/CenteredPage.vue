@@ -13,13 +13,13 @@
           <div class="min-w-0">
             <h1
               v-if="hasTitle"
-              class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl"
+              class="text-h1 tracking-tight text-rs-fg"
             >
               <slot name="title">{{ title }}</slot>
             </h1>
             <p
               v-if="hasSubtitle"
-              class="mt-2 text-sm leading-relaxed text-slate-600 sm:text-base"
+              class="mt-2 text-body text-rs-muted"
             >
               <slot name="subtitle">{{ subtitle }}</slot>
             </p>
@@ -85,11 +85,11 @@ const containerClass = computed(() => {
     '2xl': 'max-w-2xl',
     '5xl': 'max-w-5xl',
     '6xl': 'max-w-6xl',
-    '7xl': 'max-w-7xl',
+    '7xl': 'max-w-page',
     'full': 'max-w-none',
   }
 
-  return `mx-auto w-full ${maxWidthClass[props.maxWidth]} px-4 sm:px-6 lg:px-8`
+  return `mx-auto w-full ${maxWidthClass[props.maxWidth]} px-page-x`
 })
 
 const paddingYClass = computed(() => {

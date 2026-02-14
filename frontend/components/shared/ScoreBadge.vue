@@ -2,7 +2,7 @@
   <button
     v-if="clickable"
     type="button"
-    class="rounded-full border-2 grid place-items-center font-semibold bg-white transition-all hover:scale-110 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2"
+    class="rounded-full border-2 grid place-items-center font-semibold bg-surface transition-all hover:scale-110 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2"
     :class="[sizeClasses, focusRingClass]"
     :style="{ borderColor: scoreColor }"
     :aria-label="`Remit-Score: ${score.toFixed(1)} out of 10. Click to view details.`"
@@ -14,7 +14,7 @@
   </button>
   <div
     v-else
-    class="rounded-full border-2 grid place-items-center font-semibold bg-white transition-colors"
+    class="rounded-full border-2 grid place-items-center font-semibold bg-surface transition-colors"
     :class="sizeClasses"
     :style="{ borderColor: scoreColor }"
     role="img"
@@ -49,11 +49,11 @@ defineEmits<Emits>()
 const sizeClasses = computed(() => {
   switch (props.size) {
     case 'small':
-      return 'w-8 h-8 text-xs'
+      return 'w-8 h-8 text-body-sm'
     case 'large':
-      return 'w-12 h-12 text-base'
+      return 'w-12 h-12 text-body'
     default:
-      return 'w-9 h-9 text-sm'
+      return 'w-9 h-9 text-body-sm'
   }
 })
 
@@ -67,17 +67,17 @@ const scoreColor = computed(() => {
 
 const scoreTextClass = computed(() => {
   const score = props.score || 0
-  if (score >= 9.0) return 'text-green-600'
+  if (score >= 9.0) return 'text-success-600'
   if (score >= 8.0) return 'text-brand-600'
-  if (score >= 7.0) return 'text-yellow-600'
+  if (score >= 7.0) return 'text-warning-600'
   return 'text-neutral-600'
 })
 
 const focusRingClass = computed(() => {
   const score = props.score || 0
-  if (score >= 9.0) return 'focus:ring-green-500'
+  if (score >= 9.0) return 'focus:ring-success-500'
   if (score >= 8.0) return 'focus:ring-brand-500'
-  if (score >= 7.0) return 'focus:ring-yellow-500'
+  if (score >= 7.0) return 'focus:ring-warning-500'
   return 'focus:ring-neutral-500'
 })
 </script>

@@ -1,7 +1,7 @@
 <template>
   <!-- Desktop: Top sticky -->
-  <div class="hidden md:block sticky top-16 z-40 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800 shadow-lg">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+  <div class="hidden md:block sticky top-16 z-40 bg-gradient-to-r from-brand-600 to-brand-700 border-b border-primary-800 shadow-lg">
+    <div class="container py-4">
       <form
         class="flex items-center justify-center gap-4"
         @submit.prevent="handleCompare"
@@ -45,7 +45,7 @@
         <button
           type="submit"
           :disabled="!isValid"
-          class="h-12 flex items-center justify-center gap-2 rounded-lg bg-white px-8 text-sm font-bold text-blue-700 hover:bg-blue-50 hover:shadow-lg shadow-md transition-all disabled:bg-white/40 disabled:text-gray-400 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
+          class="h-12 flex items-center justify-center gap-2 rounded-lg bg-surface px-8 text-body-sm font-bold text-brand-700 hover:bg-primary-50 hover:shadow-lg shadow-md transition-all disabled:bg-surface/40 disabled:text-neutral-400 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
         >
           <span>Compare Rates</span>
           <svg
@@ -67,7 +67,7 @@
   </div>
 
   <!-- Mobile: Bottom sticky -->
-  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 border-t border-blue-800 shadow-2xl">
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-brand-600 to-brand-700 border-t border-primary-800 shadow-2xl">
     <div class="px-4 py-4 pb-safe">
       <form
         class="space-y-3"
@@ -114,7 +114,7 @@
         <button
           type="submit"
           :disabled="!isValid"
-          class="w-full h-12 flex items-center justify-center gap-2 rounded-lg bg-white px-6 text-base font-bold text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all disabled:bg-white/40 disabled:text-blue-300 disabled:cursor-not-allowed disabled:shadow-none"
+          class="w-full h-12 flex items-center justify-center gap-2 rounded-lg bg-surface px-6 text-body font-bold text-brand-700 hover:bg-primary-50 shadow-lg hover:shadow-xl transition-all disabled:bg-surface/40 disabled:text-primary-300 disabled:cursor-not-allowed disabled:shadow-none"
         >
           <span>Compare Rates</span>
           <svg

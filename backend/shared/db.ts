@@ -58,7 +58,7 @@ const getPoolSizeLimits = (): { max: number; min: number } => {
       return { max: 20, min: 1 }
     }
     if (isECS) {
-      return { max: 50, min: 2 }
+      return config.env === 'production' ? { max: 50, min: 2 } : { max: 8, min: 1 }
     }
     return { max: 10, min: 1 }
   })()
@@ -136,12 +136,25 @@ export const createPool = (connectionString?: string) => {
     resolvedConnectionString,
     sslMode,
   )
+  const applicationName = config.dbPool.applicationName?.trim()
+  const connectionStringWithAppName = (() => {
+    if (!normalizedConnectionString || !applicationName) return normalizedConnectionString
+    if (normalizedConnectionString.includes('application_name=')) return normalizedConnectionString
+    try {
+      const parsed = new URL(normalizedConnectionString)
+      parsed.searchParams.set('application_name', applicationName)
+      return parsed.toString()
+    } catch {
+      const delimiter = normalizedConnectionString.includes('?') ? '&' : '?'
+      return `${normalizedConnectionString}${delimiter}application_name=${encodeURIComponent(applicationName)}`
+    }
+  })()
   const disableStatementTimeout = (() => {
     if (config.dbPool.disableStatementTimeoutExplicit) return true
-    if (!normalizedConnectionString) return false
-    return isProxyConnectionString(normalizedConnectionString)
+    if (!connectionStringWithAppName) return false
+    return isProxyConnectionString(connectionStringWithAppName)
   })()
-  const validateConnectionOnCheckout = isProxyConnectionString(normalizedConnectionString)
+  const validateConnectionOnCheckout = isProxyConnectionString(connectionStringWithAppName)
 
   // Safety: if someone disables statement_timeout explicitly in production, make it visible in logs.
   if (config.dbPool.disableStatementTimeoutExplicit && config.env === 'production') {
@@ -159,7 +172,7 @@ export const createPool = (connectionString?: string) => {
     : undefined
 
   const pool = new Pool({
-    connectionString: normalizedConnectionString,
+    connectionString: connectionStringWithAppName,
     ssl: sslConfig,
     ...(disableStatementTimeout ? {} : { statement_timeout: queryTimeoutMs }),
     query_timeout: queryTimeoutMs,

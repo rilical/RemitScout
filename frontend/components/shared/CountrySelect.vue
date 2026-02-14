@@ -2,14 +2,17 @@
   <div class="relative">
     <div class="relative">
       <input
-        :id="id"
+        :id="resolvedId"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed"
         :class="selectClass"
         :placeholder="placeholder"
+        :aria-label="props.label"
         autocomplete="off"
         :disabled="disabled"
+        :aria-invalid="error ? 'true' : 'false'"
+        :aria-describedby="error ? errorId : undefined"
         @input="handleSearch"
         @focus="handleFocus"
         @blur="handleBlur"
@@ -19,7 +22,7 @@
         <svg
           :class="[
             'h-5 w-5 transition-transform duration-200',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-400',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-400',
             { 'rotate-180': isOpen },
           ]"
           fill="none"
@@ -44,10 +47,10 @@
         v-show="isOpen && filteredCountries.length > 0"
         ref="dropdownRef"
         :class="[
-          'fixed z-[9999] overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
+          'fixed z-dropdown overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
-            : 'border-gray-300 bg-white',
+            : 'border-neutral-300 bg-surface',
         ]"
         style="max-height: 400px;"
         :style="dropdownStyle"
@@ -55,8 +58,8 @@
         <div
           v-if="filteredCountries.length === 0"
           :class="[
-            'px-4 py-2 text-sm',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500',
+            'px-4 py-2 text-body-sm',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500',
           ]"
         >
           No countries found
@@ -66,7 +69,7 @@
           :key="country.value"
           type="button"
           :class="[
-            'w-full px-4 py-2.5 text-left text-sm transition-colors focus:outline-none',
+            'w-full px-4 py-2.5 text-left text-body-sm transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
               : 'text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
@@ -80,18 +83,21 @@
     </Teleport>
 
     <slot name="error">
-      <div
+      <p
         v-if="error"
-        class="mt-1 text-sm text-red-500"
+        :id="errorId"
+        class="mt-1 text-body-sm text-danger-600"
+        role="alert"
+        aria-live="polite"
       >
         {{ error }}
-      </div>
+      </p>
     </slot>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from 'vue'
 import { COUNTRIES } from '~/utils/countries-currencies'
 
 interface Props {
@@ -117,6 +123,10 @@ const props = withDefaults(defineProps<Props>(), {
   theme: 'light',
   excludeCountry: undefined,
 })
+
+const fallbackId = useId()
+const resolvedId = computed(() => props.id ?? `country-select-${fallbackId}`)
+const errorId = computed(() => `${resolvedId.value}-error`)
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]

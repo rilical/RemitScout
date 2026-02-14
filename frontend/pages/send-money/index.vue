@@ -1,13 +1,13 @@
 <template>
-  <div class="bg-gradient-to-b from-slate-50 to-white min-h-screen">
+  <div class="bg-gradient-to-b from-neutral-50 to-white min-h-screen">
     <!-- Hero Section -->
-    <section class="relative py-10 lg:py-12 overflow-hidden bg-slate-50">
-      <div class="container relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
+    <section class="relative py-10 lg:py-12 overflow-hidden bg-neutral-50">
+      <div class="container relative mx-auto max-w-page px-page-x z-10">
         <div class="text-center mb-8">
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+          <h1 class="text-h2 font-bold text-rs-fg mb-4">
             Stop <span class="text-brand-600">Overpaying</span> on International Transfers
           </h1>
-          <p class="text-lg text-slate-600 max-w-3xl mx-auto break-words">
+          <p class="text-body-lg text-neutral-600 max-w-3xl mx-auto break-words">
             Get the best rates for your international money transfer and see exactly how much your recipient will receive.
           </p>
         </div>
@@ -15,61 +15,61 @@
         <!-- Two Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Article Section -->
-          <article class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 flex flex-col">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4">
+          <article class="bg-surface rounded-2xl shadow-lg p-6 border border-rs-border flex flex-col">
+            <h2 class="text-h3 font-bold text-rs-fg mb-4">
               Your Money Transfer Comparison Engine
             </h2>
 
             <div class="space-y-5 flex-1 flex flex-col">
-              <p class="text-base text-slate-700 leading-relaxed">
+              <p class="text-body text-neutral-700 leading-relaxed">
                 Compare rates from <NuxtLink
                   to="/learn/providers"
-                  class="text-blue-600 hover:text-blue-700 font-medium"
+                  class="text-brand-600 hover:text-brand-700 font-medium"
                 >30+ licensed providers</NuxtLink> including
                 <NuxtLink
                   to="/learn/providers/wise"
-                  class="text-blue-600 hover:text-blue-700 font-medium"
+                  class="text-brand-600 hover:text-brand-700 font-medium"
                 >Wise</NuxtLink>,
                 <NuxtLink
                   to="/learn/providers/remitly"
-                  class="text-blue-600 hover:text-blue-700 font-medium"
+                  class="text-brand-600 hover:text-brand-700 font-medium"
                 >Remitly</NuxtLink>,
                 <NuxtLink
                   to="/learn/providers/western-union"
-                  class="text-blue-600 hover:text-blue-700 font-medium"
+                  class="text-brand-600 hover:text-brand-700 font-medium"
                 >Western Union</NuxtLink>,
                 <NuxtLink
                   to="/learn/providers/xe"
-                  class="text-blue-600 hover:text-blue-700 font-medium"
+                  class="text-brand-600 hover:text-brand-700 font-medium"
                 >XE</NuxtLink>, and many more.
                 All providers are fully licensed and regulated in their respective jurisdictions.
               </p>
 
               <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-3">
                   What Makes Our Comparison Different
                 </h3>
-                <p class="text-sm text-slate-700 leading-relaxed">
+                <p class="text-body-sm text-neutral-700 leading-relaxed">
                   We refresh our data every few minutes by directly querying provider APIs, showing you current and accurate rates—not outdated estimates. Unlike other comparison sites that may show cached or estimated rates, we calculate the true total cost by comparing every provider's rate against the mid-market rate, revealing both visible fees and hidden exchange rate markups. Our rankings are 100% independent, ranking purely on total cost, transfer speed, and reliability based on real user experiences.
                 </p>
               </div>
 
               <div>
-                <h3 class="text-lg font-bold text-slate-900 mb-3">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-3">
                   How Our Comparison Works
                 </h3>
-                <p class="text-sm text-slate-700 mb-3 leading-relaxed">
+                <p class="text-body-sm text-neutral-700 mb-3 leading-relaxed">
                   We pull live exchange rates and fees directly from provider APIs every few minutes. When you enter your transfer details, we calculate the exact amount your recipient will receive after all fees and exchange rate markups. The best provider changes based on your specific corridor, amount, and transfer method.
                 </p>
-                <p class="text-sm text-slate-700 leading-relaxed">
+                <p class="text-body-sm text-neutral-700 leading-relaxed">
                   Our rankings are 100% independent. Providers cannot pay for better placement. We rank purely on total cost (fees plus exchange rate markup), transfer speed, and reliability based on real user experiences.
                 </p>
               </div>
 
-              <div class="mt-auto pt-6 border-t border-slate-200">
+              <div class="mt-auto pt-6 border-t border-rs-border">
                 <NuxtLink
                   to="/learn"
-                  class="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-6 py-3 transition-all shadow-md hover:shadow-lg"
+                  class="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-body px-6 py-3 transition-all shadow-md hover:shadow-lg"
                 >
                   <span>Read More Money Transfer Guides on Our Blog</span>
                   <svg
@@ -92,12 +92,12 @@
 
           <!-- Extended Comparison Widget -->
           <div class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden">
-              <div class="border-b border-slate-100 bg-blue-600 px-6 py-5">
-                <h3 class="text-xl font-bold text-white mb-1">
+            <div class="bg-surface rounded-2xl shadow-lg border border-rs-border flex flex-col overflow-hidden">
+              <div class="border-b border-neutral-100 bg-brand-600 px-6 py-5">
+                <h3 class="text-h4 font-bold text-white mb-1">
                   Find Your Best Rate Now
                 </h3>
-                <p class="text-sm text-white/90">
+                <p class="text-body-sm text-white/90">
                   Compare live rates from 30+ providers
                 </p>
               </div>
@@ -110,7 +110,7 @@
                   <div>
                     <label
                       for="from-country"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                     >
                       Sending from
                     </label>
@@ -121,7 +121,7 @@
                       :exclude-country="moneyForm.to"
                       placeholder="United States"
                     />
-                    <p class="mt-2 text-xs text-slate-500">
+                    <p class="mt-2 text-body-sm text-rs-muted">
                       Select your sending country to see the best rates.
                     </p>
                   </div>
@@ -129,7 +129,7 @@
                   <div>
                     <label
                       for="to-country"
-                      class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                     >
                       Receiving in
                     </label>
@@ -140,7 +140,7 @@
                       :exclude-country="moneyForm.from"
                       placeholder="Select country"
                     />
-                    <p class="mt-2 text-xs text-slate-500">
+                    <p class="mt-2 text-body-sm text-rs-muted">
                       Choose where your recipient will receive the money.
                     </p>
                   </div>
@@ -150,7 +150,7 @@
                   <div>
                     <label
                       for="from-currency"
-                      class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                     >
                       From currency
                     </label>
@@ -166,7 +166,7 @@
                   <div>
                     <label
                       for="to-currency"
-                      class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                      class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                     >
                       To currency
                     </label>
@@ -184,7 +184,7 @@
                 <div>
                   <label
                     for="amount"
-                    class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                    class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                   >
                     Amount to send
                   </label>
@@ -194,16 +194,16 @@
                     type="number"
                     min="1"
                     step="1"
-                    class="h-10 w-full rounded-lg border border-slate-300 bg-white px-4 text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    class="h-10 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-rs-fg transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
                     placeholder="500"
                   >
                 </div>
 
-                <div class="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                <div class="rounded-lg bg-primary-50 border border-primary-200 p-4">
                   <div class="flex items-start gap-3">
                     <div class="flex-shrink-0">
                       <svg
-                        class="w-7 h-7 text-blue-600"
+                        class="w-7 h-7 text-brand-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -216,17 +216,17 @@
                         />
                       </svg>
                     </div>
-                    <div class="text-sm text-blue-900">
+                    <div class="text-body-sm text-primary-900">
                       <p class="font-semibold mb-1.5">
                         Live Rate Comparison
                       </p>
-                      <p class="text-blue-700 text-xs mb-2">
+                      <p class="text-brand-700 text-body-sm mb-2">
                         Rates are updated in real-time directly from provider APIs. See the exact amount your recipient will receive before you send.
                       </p>
-                      <ul class="space-y-1 text-blue-700 text-xs">
+                      <ul class="space-y-1 text-brand-700 text-body-sm">
                         <li class="flex items-center gap-2">
                           <svg
-                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -242,7 +242,7 @@
                         </li>
                         <li class="flex items-center gap-2">
                           <svg
-                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -258,7 +258,7 @@
                         </li>
                         <li class="flex items-center gap-2">
                           <svg
-                            class="w-3.5 h-3.5 text-blue-600 flex-shrink-0"
+                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -280,7 +280,7 @@
                 <button
                   type="submit"
                   :disabled="!isFormValid || isWaitingForQuotes"
-                  class="w-full h-11 rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
+                  class="w-full h-11 rounded-lg bg-brand-600 px-6 text-body-sm font-semibold text-white transition-all hover:bg-brand-700 hover:shadow-lg disabled:bg-neutral-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                 >
                   <span v-if="isWaitingForQuotes">Checking...</span>
                   <span v-else>Compare Providers</span>
@@ -301,41 +301,41 @@
 
                 <p
                   v-if="formError"
-                  class="text-sm text-red-600"
+                  class="text-body-sm text-danger-600"
                   role="alert"
                 >
                   {{ formError }}
                 </p>
                 <p
                   v-else-if="formInfo"
-                  class="text-sm text-slate-600"
+                  class="text-body-sm text-neutral-600"
                   role="status"
                 >
                   {{ formInfo }}
                 </p>
 
-                <div class="pt-4 border-t border-slate-200">
-                  <p class="text-center text-xs text-slate-500 mb-3">
+                <div class="pt-4 border-t border-rs-border">
+                  <p class="text-center text-body-sm text-rs-muted mb-3">
                     Need help? Learn more about our comparison process
                   </p>
                   <div class="flex justify-center gap-4 flex-wrap">
                     <NuxtLink
                       to="/methodology"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
                     >
                       How we compare
                     </NuxtLink>
-                    <span class="text-slate-300">•</span>
+                    <span class="text-neutral-300">•</span>
                     <NuxtLink
                       to="/faq"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
                     >
                       FAQ
                     </NuxtLink>
-                    <span class="text-slate-300">•</span>
+                    <span class="text-neutral-300">•</span>
                     <NuxtLink
                       to="/learn/providers"
-                      class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
                     >
                       All Providers
                     </NuxtLink>
@@ -360,7 +360,7 @@
               <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
                 <!-- Icon and Title -->
                 <div class="flex items-center gap-4 flex-shrink-0">
-                  <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <div class="w-12 h-12 rounded-xl bg-surface/20 backdrop-blur-sm flex items-center justify-center">
                     <svg
                       class="w-6 h-6 text-white"
                       fill="none"
@@ -375,24 +375,24 @@
                       />
                     </svg>
                   </div>
-                  <h3 class="text-xl lg:text-2xl font-bold">
+                  <h3 class="text-h4 font-bold">
                     Trust & Independence
                   </h3>
                 </div>
 
                 <!-- Main Description -->
                 <div class="flex-1">
-                  <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                  <p class="text-white/95 leading-relaxed text-body-lg mb-4">
                     <strong class="text-white font-bold">100% independent rankings.</strong> Providers cannot pay for better placement.
                   </p>
-                  <p class="text-white/95 leading-relaxed text-base lg:text-lg mb-4">
+                  <p class="text-white/95 leading-relaxed text-body-lg mb-4">
                     Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.
                   </p>
 
                   <!-- Key Features - Horizontal -->
                   <div class="flex flex-wrap items-center gap-4 mb-4">
                     <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
                         <svg
                           class="w-3 h-3 text-white"
                           fill="none"
@@ -407,10 +407,10 @@
                           />
                         </svg>
                       </div>
-                      <span class="text-white text-sm font-medium">No paid placements</span>
+                      <span class="text-white text-body-sm font-medium">No paid placements</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
                         <svg
                           class="w-3 h-3 text-white"
                           fill="none"
@@ -425,10 +425,10 @@
                           />
                         </svg>
                       </div>
-                      <span class="text-white text-sm font-medium">Real-time rate updates</span>
+                      <span class="text-white text-body-sm font-medium">Real-time rate updates</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
                         <svg
                           class="w-3 h-3 text-white"
                           fill="none"
@@ -443,7 +443,7 @@
                           />
                         </svg>
                       </div>
-                      <span class="text-white text-sm font-medium">Transparent methodology</span>
+                      <span class="text-white text-body-sm font-medium">Transparent methodology</span>
                     </div>
                   </div>
                 </div>
@@ -452,9 +452,9 @@
                 <div class="flex-shrink-0">
                   <NuxtLink
                     to="/methodology"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg text-white font-semibold text-sm transition-all hover:scale-105"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-surface/20 hover:bg-surface/30 backdrop-blur-sm rounded-lg text-white font-semibold text-body-sm transition-all hover:scale-105"
                   >
-                    <span>Learn more</span>
+                    <span>Methodology</span>
                     <svg
                       class="w-4 h-4"
                       fill="none"
@@ -478,13 +478,13 @@
     </section>
 
     <!-- Countries by Region -->
-    <section class="relative py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="relative py-16 lg:py-20 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-16">
-          <h2 class="text-4xl sm:text-5xl font-bold text-slate-900 mb-6">
+          <h2 class="text-h1 font-bold text-rs-fg mb-6">
             Browse Money Transfer Routes by Country
           </h2>
-          <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-8 break-words">
+          <p class="text-h4 text-neutral-600 max-w-3xl mx-auto mb-8 break-words">
             Select your destination country to see the best money transfer providers, exchange rates, and fees.
             All providers are licensed and regulated for your security.
           </p>
@@ -492,7 +492,7 @@
 
         <div class="space-y-20">
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money To <span class="text-brand-600">South-Eastern Asia</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -506,7 +506,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to the <span class="text-brand-600">Middle East</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -520,7 +520,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">East Asia</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -534,7 +534,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">South Asia</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -548,7 +548,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Western Europe</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -562,7 +562,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Southern Europe</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -576,7 +576,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Eastern Europe</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -590,7 +590,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Northern Europe</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -604,7 +604,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">North America</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -618,7 +618,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Central America & Caribbean</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -632,7 +632,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">South America</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -646,7 +646,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Send Money to <span class="text-brand-600">Africa</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -660,7 +660,7 @@
           </section>
 
           <section>
-            <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-10 text-center">
+            <h2 class="text-h2 font-bold text-rs-fg mb-10 text-center">
               Overseas Money Transfers to <span class="text-brand-600">Oceania</span>
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -682,103 +682,103 @@
     <WhyTrustUs />
 
     <!-- Mini FAQ Section -->
-    <section class="relative py-16 lg:py-20 bg-gradient-to-br from-slate-50 to-white">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section class="relative py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-white">
+      <div class="mx-auto max-w-6xl px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+          <h2 class="text-h2 font-bold text-rs-fg mb-4">
             Frequently Asked Questions
           </h2>
-          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p class="text-body-lg text-neutral-600 max-w-2xl mx-auto">
             Quick answers to common questions about money transfers, fees, and our comparison platform.
           </p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-6 mb-8">
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               How does international money transfer work?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               International money transfers allow you to send funds from your account to a recipient in another country. The provider converts your currency to the recipient's currency using an exchange rate, then delivers it to their bank account, mobile wallet, or for cash pickup.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               Learn more about transfers →
             </NuxtLink>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               What's the difference between a transfer fee and an exchange rate markup?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               A <strong>transfer fee</strong> is the upfront charge you see (e.g., $5.99). An <strong>exchange rate markup</strong> is hidden in the rate they offer you versus the real "mid-market" rate. Always check "Total Received" to see the true cost.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               Understand fees better →
             </NuxtLink>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               How long does an international transfer take?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               Speed varies by method: Instant (0-30 min) for debit card to mobile wallet, same day for many online providers to bank accounts, 1-3 days for bank transfers, and 3-5 days for traditional banks.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               See delivery times →
             </NuxtLink>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               Are there limits on how much I can send?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               Yes, limits vary by provider and your verification level. Unverified accounts typically allow $500-$1,000, while ID-verified accounts can send $10,000-$50,000+. Banks typically allow higher amounts but charge more.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               Check transfer limits →
             </NuxtLink>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               Can I track my transfer?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               Yes! All modern providers offer tracking via app or website. You'll get updates when the transfer is initiated, funds are received by provider, currency is exchanged, and money is available to recipient.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               Learn about tracking →
             </NuxtLink>
           </div>
 
-          <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-lg font-bold text-slate-900 mb-3">
+          <div class="bg-surface rounded-xl shadow-md p-6 border border-rs-border">
+            <h3 class="text-body-lg font-bold text-rs-fg mb-3">
               Is it cheaper to send large amounts?
             </h3>
-            <p class="text-slate-700 mb-4">
+            <p class="text-neutral-700 mb-4">
               Generally, yes. Many providers charge a percentage fee (e.g., 1%), so larger amounts cost more in absolute terms but the same percentage. Fixed fees ($5) are better for large amounts, and some providers offer better rates for $5,000+.
             </p>
             <NuxtLink
               to="/faq"
-              class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              class="text-brand-600 hover:text-brand-700 font-medium text-body-sm"
             >
               Compare large transfers →
             </NuxtLink>
@@ -788,7 +788,7 @@
         <div class="text-center">
           <NuxtLink
             to="/faq"
-            class="inline-flex items-center gap-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+            class="inline-flex items-center gap-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 text-body-lg font-semibold shadow-lg transition-all"
           >
             <span>View All FAQs</span>
             <svg
@@ -828,6 +828,7 @@ import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { setSeo } from '~/composables/useSeo'
 
 const { pulseEnabled } = useFeatureFlags()
 
@@ -1197,12 +1198,21 @@ const regions = {
   oceania: getCountriesByCodes(['AS', 'AU', 'FJ', 'FM', 'GU', 'KI', 'MH', 'NC', 'NR', 'NZ', 'PF', 'PG', 'PW', 'TO', 'TV', 'VU', 'WF', 'WS']),
 }
 
-useSeoMeta({
+const { public: { siteUrl } } = useRuntimeConfig()
+
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Send Money Abroad',
+    description: 'Compare live rates, fees, and delivery times across 30+ licensed money transfer providers.',
+  },
+})
+
+setSeo({
   title: 'Send Money Abroad - Compare 30+ Providers | RemitScout',
   description: 'Compare the best money transfer services to send money abroad. Live exchange rates, transparent fees, and trusted providers across 200+ countries.',
-  ogTitle: 'Send Money Abroad - Compare 30+ Providers',
-  ogDescription: 'Compare 30+ money transfer providers and find the best rates to send money internationally.',
-  ogImage: '/og-image.jpg',
+  canonical: `${siteUrl}/send-money`,
+  ogImage: false,
 })
 </script>
 

@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-slate-900 flex items-center justify-center py-12 px-4">
+  <div class="min-h-screen bg-neutral-900 flex items-center justify-center py-12 px-page-x">
     <div class="max-w-2xl w-full">
-      <div class="bg-slate-800 rounded-2xl border-2 border-red-500 p-8 sm:p-12 text-center">
+      <div class="bg-neutral-800 rounded-2xl border-2 border-danger-600 p-8 sm:p-12 text-center">
         <!-- Error Icon -->
-        <div class="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center mx-auto mb-6">
+        <div class="w-20 h-20 rounded-full bg-danger-600 flex items-center justify-center mx-auto mb-6">
           <svg
             class="w-10 h-10 text-white"
             fill="none"
@@ -19,22 +19,22 @@
           </svg>
         </div>
 
-        <h1 class="text-4xl font-bold text-white mb-4">
+        <h1 class="text-h1 font-bold text-white mb-4">
           Payment Failed
         </h1>
-        <p class="text-xl text-slate-300 mb-8">
+        <p class="text-h4 text-neutral-300 mb-8">
           We were unable to process your payment. Don't worry, you have not been charged.
         </p>
 
         <!-- Common Reasons -->
-        <div class="bg-slate-900 rounded-xl border border-slate-700 p-6 mb-8 text-left">
-          <h2 class="text-lg font-bold text-white mb-4 text-center">
+        <div class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 mb-8 text-left">
+          <h2 class="text-body-lg font-bold text-white mb-4 text-center">
             Common Reasons for Payment Failure
           </h2>
-          <ul class="space-y-3 text-sm text-slate-300">
+          <ul class="space-y-3 text-body-sm text-neutral-300">
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-rs-muted flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -50,7 +50,7 @@
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-rs-muted flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -66,7 +66,7 @@
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-rs-muted flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -82,7 +82,7 @@
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-rs-muted flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -100,14 +100,14 @@
         </div>
 
         <!-- What to Do -->
-        <div class="bg-slate-900 rounded-xl border border-slate-700 p-6 mb-8 text-left">
-          <h2 class="text-lg font-bold text-white mb-4 text-center">
+        <div class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 mb-8 text-left">
+          <h2 class="text-body-lg font-bold text-white mb-4 text-center">
             What You Can Do
           </h2>
-          <ul class="space-y-3 text-sm text-slate-300">
+          <ul class="space-y-3 text-body-sm text-neutral-300">
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -123,7 +123,7 @@
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -139,7 +139,7 @@
             </li>
             <li class="flex items-start gap-2">
               <svg
-                class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -160,7 +160,7 @@
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
             to="/plus/checkout"
-            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
             <svg
               class="w-5 h-5"
@@ -179,7 +179,7 @@
           </NuxtLink>
           <NuxtLink
             to="/contact"
-            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-lg font-semibold border-2 border-slate-600 transition-all"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 hover:bg-neutral-600 text-white rounded-xl text-body-lg font-semibold border-2 border-neutral-600 transition-all"
           >
             <svg
               class="w-5 h-5"
@@ -198,8 +198,8 @@
           </NuxtLink>
         </div>
 
-        <div class="mt-8 pt-6 border-t border-slate-700">
-          <p class="text-sm text-slate-400">
+        <div class="mt-8 pt-6 border-t border-neutral-700">
+          <p class="text-body-sm text-neutral-400">
             Need help? Our support team is here to assist you.
           </p>
         </div>

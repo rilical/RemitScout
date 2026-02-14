@@ -3,17 +3,17 @@
     id="hero-compare"
     class="relative overflow-hidden bg-gradient-to-b from-brand-600/5 to-white"
   >
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+    <div class="container py-12 sm:py-20">
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
         <div class="lg:col-span-3">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-neutral-900 leading-tight mb-4">
+          <h1 class="text-hero font-bold text-neutral-900 leading-tight mb-4">
             {{ STR.hero.h1 }}
           </h1>
-          <p class="text-lg sm:text-xl text-neutral-600 mb-8 leading-relaxed">
+          <p class="text-body-lg text-neutral-600 mb-8 leading-relaxed">
             {{ STR.hero.sub }}
           </p>
 
-          <div class="bg-white rounded-2xl border border-neutral-200 p-6 shadow-xl">
+          <div class="bg-surface rounded-2xl border border-neutral-200 p-6 shadow-xl">
             <form
               role="search"
               aria-label="Money transfer comparison form"
@@ -23,7 +23,7 @@
                 <div>
                   <label
                     for="from-country"
-                    class="block text-sm font-semibold text-neutral-700 mb-2"
+                    class="block text-body-sm font-semibold text-neutral-700 mb-2"
                   >
                     Sending from
                   </label>
@@ -40,7 +40,7 @@
                 <div>
                   <label
                     for="to-country"
-                    class="block text-sm font-semibold text-neutral-700 mb-2"
+                    class="block text-body-sm font-semibold text-neutral-700 mb-2"
                   >
                     Receiving in
                   </label>
@@ -58,7 +58,7 @@
               <div class="mb-4">
                 <label
                   for="amount"
-                  class="block text-sm font-semibold text-neutral-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   You send
                 </label>
@@ -75,7 +75,7 @@
               </div>
 
               <div class="mb-6">
-                <label class="block text-sm font-semibold text-neutral-700 mb-2">
+                <label class="block text-body-sm font-semibold text-neutral-700 mb-2">
                   Delivery method
                 </label>
                 <div class="grid grid-cols-3 gap-2">
@@ -86,11 +86,11 @@
                     class="flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 transition-all focus:outline-none focus:ring-2 focus:ring-brand-600"
                     :class="selectedMethod === method.value
                       ? 'border-brand-600 bg-brand-50 text-brand-700'
-                      : 'border-neutral-200 bg-white text-neutral-700 hover:border-brand-300'"
+                      : 'border-neutral-200 bg-surface text-neutral-700 hover:border-brand-300'"
                     @click="selectedMethod = method.value"
                   >
-                    <span class="text-2xl mb-1">{{ method.icon }}</span>
-                    <span class="text-xs font-semibold text-center">{{ method.label }}</span>
+                    <span class="text-h3 mb-1">{{ method.icon }}</span>
+                    <span class="text-body-sm font-semibold text-center">{{ method.label }}</span>
                   </button>
                 </div>
               </div>
@@ -105,7 +105,7 @@
 
               <p
                 v-if="formError"
-                class="mt-3 text-center text-sm text-danger-600"
+                class="mt-3 text-center text-body-sm text-danger-600"
                 role="status"
                 aria-live="polite"
               >
@@ -114,10 +114,10 @@
             </form>
 
             <div class="mt-6 pt-6 border-t border-neutral-100">
-              <p class="text-xs sm:text-sm text-neutral-600 mb-3">
+              <p class="text-body-sm text-neutral-600 mb-3">
                 {{ STR.hero.pill }}
               </p>
-              <div class="flex items-center gap-2 text-xs text-neutral-500">
+              <div class="flex items-center gap-2 text-body-sm text-neutral-500">
                 <svg
                   class="h-4 w-4 text-success-600"
                   fill="none"
@@ -144,7 +144,7 @@
                 <div class="text-7xl mb-4">
                   🌍
                 </div>
-                <div class="flex items-center justify-center gap-3 text-4xl">
+                <div class="flex items-center justify-center gap-3 text-h1">
                   <span>🇺🇸</span>
                   <svg
                     class="h-8 w-8 text-brand-600"
@@ -161,7 +161,7 @@
                   </svg>
                   <span>🇵🇭</span>
                 </div>
-                <p class="mt-6 text-sm text-neutral-600 max-w-xs mx-auto">
+                <p class="mt-6 text-body-sm text-neutral-600 max-w-xs mx-auto">
                   Most popular routes for expats near you
                 </p>
               </div>
@@ -344,7 +344,7 @@ const handleSubmit = async () => {
     )
   }
   catch (error) {
-    console.error('Navigation error:', error)
+    useLogger('HeroCompare').error('Navigation error', error)
   }
   finally {
     isSubmitting.value = false

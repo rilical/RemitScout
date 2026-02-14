@@ -1,26 +1,26 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <PageContainer class="min-h-screen">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-900 py-12 lg:py-16">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="relative bg-neutral-900 py-12 lg:py-16">
+      <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs
           :items="breadcrumbItems"
           dark
         />
 
         <div class="mx-auto max-w-4xl text-center mt-8">
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-brand-600 mb-4">
+          <h1 class="text-hero font-bold text-brand-600 mb-4">
             Frequently Asked Questions
           </h1>
-          <p class="text-lg sm:text-xl text-neutral-300 max-w-3xl mx-auto mb-8">
+          <p class="text-body-lg text-neutral-300 max-w-3xl mx-auto mb-8">
             Answers about how Remit‑Scout works: how we collect quotes, how we rank providers, how to read results, and what you get with Remit‑Scout Plus.
           </p>
 
           <!-- Trust Note Banner -->
           <div class="mx-auto max-w-3xl mb-8 rounded-xl border border-neutral-700 bg-neutral-800 px-6 py-4">
-            <p class="text-sm text-neutral-300 leading-relaxed">
+            <p class="text-body-sm text-neutral-300 leading-relaxed">
               <strong class="font-semibold text-white">Remit‑Scout is a comparison and research product.</strong> We don't hold, move, or transmit money. When you choose a provider, you complete your transfer directly on the provider's licensed website or app.
             </p>
           </div>
@@ -38,6 +38,7 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search questions..."
+                aria-label="Search FAQs"
                 class="w-full rounded-xl border border-neutral-700 bg-neutral-800 px-6 py-4 pl-12 text-white placeholder-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
               >
               <svg
@@ -60,12 +61,12 @@
     </section>
 
     <!-- Main Content -->
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20 pt-12">
+    <div class="mx-auto max-w-page px-page-x pb-20 pt-12">
       <div class="lg:grid lg:grid-cols-12 lg:gap-12">
         <!-- Sticky Navigation (Desktop) -->
         <aside class="hidden lg:block lg:col-span-3">
           <div class="sticky top-24 space-y-2">
-            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-4">
+            <h3 class="text-body-sm font-semibold uppercase tracking-wide text-neutral-500 mb-4">
               Quick Navigation
             </h3>
             <nav class="space-y-1">
@@ -74,7 +75,7 @@
                 :key="category.id"
                 :href="`#${category.id}`"
                 :class="[
-                  'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'block rounded-lg px-3 py-2 text-body-sm font-medium transition-colors',
                   activeCategory === category.id
                     ? 'bg-brand-50 text-brand-700'
                     : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900',
@@ -94,7 +95,7 @@
             id="getting-started"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Getting started
             </h2>
             <div class="space-y-4">
@@ -107,7 +108,7 @@
             id="pricing-quotes"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Pricing, quotes, and accuracy
             </h2>
             <div class="space-y-4">
@@ -120,7 +121,7 @@
             id="rankings"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Rankings and Remit‑Score
             </h2>
             <div class="space-y-4">
@@ -133,7 +134,7 @@
             id="providers-safety"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Providers, safety, and availability
             </h2>
             <div class="space-y-4">
@@ -146,7 +147,7 @@
             id="remit-scout-plus"
             class="scroll-mt-24 mb-24"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Remit‑Scout Plus
             </h2>
             <div class="space-y-4">
@@ -159,7 +160,7 @@
             id="partnerships"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Partnerships and how we make money
             </h2>
             <div class="space-y-4">
@@ -172,7 +173,7 @@
             id="privacy"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Privacy and data
             </h2>
             <div class="space-y-4">
@@ -185,7 +186,7 @@
             id="reporting"
             class="scroll-mt-24 mb-16"
           >
-            <h2 class="text-3xl font-bold text-neutral-900 mb-8">
+            <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Reporting issues and support
             </h2>
             <div class="space-y-4">
@@ -197,9 +198,9 @@
 
       <!-- Trust & Independence Section -->
       <section class="py-12 sm:py-16 bg-brand-600 mt-20 mb-16 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-page px-page-x">
           <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            <h2 class="text-h2 font-bold text-white mb-4">
               Trust & independence
             </h2>
           </div>
@@ -208,7 +209,7 @@
             <div>
               <div class="space-y-6">
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                     <ShieldCheckIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
@@ -222,7 +223,7 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                     <ClockIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
@@ -236,7 +237,7 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                     <LockClosedIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
@@ -250,7 +251,7 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                     <UserGroupIcon class="w-7 h-7 text-brand-600" />
                   </div>
                   <div class="pt-2">
@@ -269,7 +270,7 @@
                   to="/methodology"
                   class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
                 >
-                  <span class="text-sm font-semibold">Find out more about how we pick our providers</span>
+                  <span class="text-body-sm font-semibold">Find out more about how we pick our providers</span>
                   <svg
                     class="w-4 h-4 group-hover:translate-x-1 transition-transform"
                     fill="none"
@@ -289,13 +290,13 @@
 
             <div>
               <div class="bg-neutral-50 rounded-2xl border border-neutral-200 p-6 sm:p-8">
-                <h3 class="text-xl font-bold text-neutral-900 mb-6">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                   Compliance & Security
                 </h3>
 
                 <div class="space-y-4">
-                  <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
+                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                       <svg
                         class="w-4 h-4 text-white"
                         fill="none"
@@ -317,8 +318,8 @@
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
+                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                       <svg
                         class="w-4 h-4 text-white"
                         fill="none"
@@ -340,8 +341,8 @@
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
+                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                       <svg
                         class="w-4 h-4 text-white"
                         fill="none"
@@ -363,8 +364,8 @@
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
+                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                       <svg
                         class="w-4 h-4 text-white"
                         fill="none"
@@ -387,7 +388,7 @@
                   </div>
                 </div>
 
-                <p class="mt-6 text-xs text-neutral-500">
+                <p class="mt-6 text-body-sm text-neutral-500">
                   Regulation applies to providers. Remit‑Scout is a comparison and research product and does not handle funds.
                 </p>
               </div>
@@ -399,34 +400,34 @@
       <!-- Final CTA Section -->
       <section class="mb-16">
         <div class="text-center">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 class="text-h2 font-bold text-white mb-4">
             Still have questions?
           </h2>
-          <p class="text-lg text-neutral-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p class="text-body-lg text-neutral-300 max-w-2xl mx-auto mb-8 leading-relaxed">
             If you can't find what you need here, contact us or report an issue — we read every message and use them to improve accuracy and clarity.
           </p>
           <div class="flex flex-wrap items-center justify-center gap-4">
             <NuxtLink
               to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-brand-700"
+              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-brand-700"
             >
               Contact support
             </NuxtLink>
             <NuxtLink
               to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               Report a rate issue
             </NuxtLink>
             <NuxtLink
               to="/methodology"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               Read Methodology
             </NuxtLink>
             <NuxtLink
               to="/partnerships"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-neutral-700"
+              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
             >
               How we make money
             </NuxtLink>
@@ -436,7 +437,7 @@
     </div>
 
     <TrustMetricsStrip />
-  </div>
+  </PageContainer>
 </template>
 
 <script setup lang="ts">
@@ -447,6 +448,7 @@ import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import TrustBadgesRow from '~/components/shared/TrustBadgesRow.vue'
+import PageContainer from '~/components/shared/PageContainer.vue'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { setSeo } from '~/composables/useSeo'
 import { TRUST_BADGES } from '~/lib/marketing/trust'
@@ -520,15 +522,15 @@ const gettingStartedFaqs = [
 const pricingFaqs = [
   {
     question: 'What does "Recipient gets" mean?',
-    answer: '<p><strong>"Recipient gets"</strong> is our best estimate of what the recipient should receive after fees and FX markup for the specific scenario you entered.</p><p class="mt-2">It’s practical because it answers the question most senders actually care about: <em>what should arrive?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-sm"><strong>Send:</strong> $500 USD</p><p class="text-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong></p><p class="text-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong></p><p class="text-sm mt-2 text-emerald-700 font-semibold">That’s 278 MXN more delivered on the same transfer, even if both advertise “low fees”.</p></div><p class="mt-2">We calculate this as:</p><div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 overflow-x-auto"><span>\\[\\text{recipient gets} = (\\text{send amount} - \\text{fees}) \\times \\text{provider FX rate}\\]</span></div>',
+    answer: '<p><strong>"Recipient gets"</strong> is our best estimate of what the recipient should receive after fees and FX markup for the specific scenario you entered.</p><p class="mt-2">It’s practical because it answers the question most senders actually care about: <em>what should arrive?</em></p><p class="mt-3"><strong>Example:</strong></p><div class="bg-neutral-50 rounded-lg p-4 my-3 border border-neutral-200"><p class="text-body-sm"><strong>Send:</strong> $500 USD</p><p class="text-body-sm"><strong>Provider A:</strong> $5 fee, 18.00 rate → <strong>8,910 MXN</strong></p><p class="text-body-sm"><strong>Provider B:</strong> $1.99 fee, 18.45 rate → <strong>9,188 MXN</strong></p><p class="text-body-sm mt-2 text-success-600 font-semibold">That’s 278 MXN more delivered on the same transfer, even if both advertise “low fees”.</p></div><p class="mt-2">We calculate this as:</p><div class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 overflow-x-auto"><span>\\[\\text{recipient gets} = (\\text{send amount} - \\text{fees}) \\times \\text{provider FX rate}\\]</span></div>',
   },
   {
     question: 'What does "Total cost" include?',
-    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient should receive:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> the upfront charge you see</li><li><strong>FX markup:</strong> the difference between a provider’s rate and a reference mid-market rate at the same time</li></ul><div class="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4"><p class="text-sm font-semibold text-amber-900 mb-2">⚠️ The hidden markup problem</p><p class="text-sm text-amber-800">Example: if the reference USD→MXN rate is 18.50 but a provider offers 18.00, that’s roughly a <strong>2.7% markup</strong>. On a $500 transfer, that’s meaningful — even before any stated fee.</p></div><p class="mt-2">Some providers advertise “$0 fees” but price through the exchange rate. Total cost helps you compare apples to apples.</p>',
+    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient should receive:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> the upfront charge you see</li><li><strong>FX markup:</strong> the difference between a provider’s rate and a reference mid-market rate at the same time</li></ul><div class="bg-warning-600 border border-warning-600 rounded-lg p-4 my-4"><p class="text-body-sm font-semibold text-warning-600 mb-2">⚠️ The hidden markup problem</p><p class="text-body-sm text-warning-600">Example: if the reference USD→MXN rate is 18.50 but a provider offers 18.00, that’s roughly a <strong>2.7% markup</strong>. On a $500 transfer, that’s meaningful — even before any stated fee.</p></div><p class="mt-2">Some providers advertise “$0 fees” but price through the exchange rate. Total cost helps you compare apples to apples.</p>',
   },
   {
     question: 'Why might the provider checkout show a different price than Remit‑Scout?',
-    answer: '<p>Checkout can differ from a captured quote. Common reasons include:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Payment method:</strong> bank vs card pricing can differ</li><li><strong>Promotions:</strong> offers that depend on user status, codes, or targeted eligibility</li><li><strong>KYC:</strong> verification steps can change eligibility, speed, or fees</li><li><strong>Local rules:</strong> corridor-specific requirements or payout constraints</li><li><strong>FX movement:</strong> rates can move between the time a quote is captured and the time you checkout</li></ul><div class="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4"><p class="text-sm"><strong>💡 Quick checklist</strong></p><ul class="text-sm space-y-1 mt-2 list-disc pl-5"><li>Match payment method, payout method, and amount</li><li>Check for promotions or codes</li><li>Check the quote timestamp</li></ul></div><p class="mt-2"><strong>The provider checkout is always the final source of truth.</strong> If you see a mismatch that looks systematic, <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">report it</a> with corridor, amount, time, and a screenshot if possible.</p>',
+    answer: '<p>Checkout can differ from a captured quote. Common reasons include:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Payment method:</strong> bank vs card pricing can differ</li><li><strong>Promotions:</strong> offers that depend on user status, codes, or targeted eligibility</li><li><strong>KYC:</strong> verification steps can change eligibility, speed, or fees</li><li><strong>Local rules:</strong> corridor-specific requirements or payout constraints</li><li><strong>FX movement:</strong> rates can move between the time a quote is captured and the time you checkout</li></ul><div class="bg-primary-50 border border-primary-200 rounded-lg p-4 my-4"><p class="text-body-sm"><strong>💡 Quick checklist</strong></p><ul class="text-body-sm space-y-1 mt-2 list-disc pl-5"><li>Match payment method, payout method, and amount</li><li>Check for promotions or codes</li><li>Check the quote timestamp</li></ul></div><p class="mt-2"><strong>The provider checkout is always the final source of truth.</strong> If you see a mismatch that looks systematic, <a href="/contact" class="text-brand-600 hover:text-brand-700 underline font-semibold">report it</a> with corridor, amount, time, and a screenshot if possible.</p>',
   },
   {
     question: 'How often do you update rates?',
@@ -552,7 +554,7 @@ const rankingsFaqs = [
   },
   {
     question: 'What is Remit‑Score?',
-    answer: '<p><strong>Remit‑Score</strong> is a 0–10 score designed to summarize overall value and usability in one number. It’s built from measurable signals, weighted by importance:</p><div class="bg-neutral-50 rounded-lg p-4 my-4 border border-neutral-200"><ul class="space-y-2 text-sm"><li><strong>Delivered Value (40%):</strong> fees + FX markup and delivered outcome for the scenario shown</li><li><strong>Reliability & Success (20%):</strong> quote success rate and data freshness signals</li><li><strong>Friction & Speed (15%):</strong> ETA and speed buckets where available</li><li><strong>Support & Refunds (15%):</strong> policy and support signals where available</li><li><strong>Trust & Safety (10%):</strong> licensing and safety signals where available</li></ul></div><p class="mt-2">Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">9.5</span>, <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">8.4</span>, or <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-sm mx-1">7.2</span> are shorthand — not pay-to-play.</p><p class="mt-2"><a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">See our full methodology</a> for details.</p>',
+    answer: '<p><strong>Remit‑Score</strong> is a 0–10 score designed to summarize overall value and usability in one number. It’s built from measurable signals, weighted by importance:</p><div class="bg-neutral-50 rounded-lg p-4 my-4 border border-neutral-200"><ul class="space-y-2 text-body-sm"><li><strong>Delivered Value (40%):</strong> fees + FX markup and delivered outcome for the scenario shown</li><li><strong>Reliability & Success (20%):</strong> quote success rate and data freshness signals</li><li><strong>Friction & Speed (15%):</strong> ETA and speed buckets where available</li><li><strong>Support & Refunds (15%):</strong> policy and support signals where available</li><li><strong>Trust & Safety (10%):</strong> licensing and safety signals where available</li></ul></div><p class="mt-2">Scores like <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-body-sm mx-1">9.5</span>, <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-body-sm mx-1">8.4</span>, or <span class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-brand-500 text-brand-600 font-bold text-body-sm mx-1">7.2</span> are shorthand — not pay-to-play.</p><p class="mt-2"><a href="/methodology" class="text-brand-600 hover:text-brand-700 underline font-semibold">See our full methodology</a> for details.</p>',
   },
   {
     question: 'Can providers pay to rank higher?',
@@ -684,10 +686,19 @@ const allFaqs = [
 const { addFAQSchema, addBreadcrumbSchema } = useStructuredData()
 const { public: { siteUrl } } = useRuntimeConfig()
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'FAQ',
+    description: 'Answers about fees, exchange rates, provider rankings, and how Remit-Scout works.',
+  },
+})
+
 setSeo({
   title: 'Frequently Asked Questions | Remit-Scout',
-  description: 'Everything you need to know about comparing money transfer providers on Remit‑Scout — how we collect pricing, how we rank providers, and what you get with Remit‑Scout Plus.',
+  description: 'FAQs about comparing money transfer providers on Remit-Scout: how we collect pricing, rank providers, and what you get with Remit-Scout Plus.',
   canonical: `${siteUrl}/faq`,
+  ogImage: false,
 })
 
 addBreadcrumbSchema([

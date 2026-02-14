@@ -66,7 +66,8 @@ const resolvePublicApiBase = () => {
   if (apiEndpoint) {
     return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
   }
-  return '/api/v1'
+  // Default to the local BFF proxy (Nitro server/api/* routes).
+  return '/api'
 }
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')
@@ -121,9 +122,17 @@ const watchOptions = {
   ignored: watchIgnored,
   ...(usePolling ? { usePolling: true, interval: 1000 } : {}),
 }
-const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt']
+const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt', 'nuxt-og-image', '@nuxtjs/google-fonts']
 const enableEzoic = (process.env.PUBLIC_ENABLE_EZOIC === 'true' || process.env.ENABLE_EZOIC === 'true') && isStagingOrProd
 const adsEnabled = enableEzoic
+const cloudfrontPublicOrigin = process.env.CLOUDFRONT_DISTRIBUTION_ID
+  ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
+  : undefined
+const publicImageBase = process.env.PUBLIC_IMAGE_BASE
+const needsCloudfrontPreconnect = Boolean(
+  cloudfrontPublicOrigin
+  && (!publicImageBase || !publicImageBase.startsWith(cloudfrontPublicOrigin)),
+)
 const analyticsEnabled = (() => {
   const flag = resolveEnvValue('NUXT_PUBLIC_ANALYTICS_ENABLED', 'PUBLIC_ANALYTICS_ENABLED')
   // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
@@ -179,11 +188,14 @@ const ensureNuxtPaths = async () => {
 }
 
 export default defineNuxtConfig({
+
   // Development
 
   // Modules
   modules: nuxtModules,
 
+  // Nuxt auto-imports components from these dirs.
+  // Tip: Use the `Lazy` prefix in templates (e.g. `<LazyShareModal />`) to code-split auto-imported components.
   components: {
     dirs: [
       '~/components',
@@ -238,8 +250,6 @@ export default defineNuxtConfig({
           : []),
       ],
       link: [
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         // Favicon - using Remit-Scout logo
         { rel: 'icon', type: 'image/svg+xml', href: '/png/SVG/LOGO.svg' },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/png/SVG/LOGO.svg' },
@@ -247,13 +257,15 @@ export default defineNuxtConfig({
         // Apple touch icons
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/png/SVG/LOGO.svg' },
         { rel: 'manifest', href: '/site.webmanifest' },
-        // DNS prefetch for performance
-        ...(process.env.PUBLIC_IMAGE_BASE
-          ? [
-              { rel: 'preconnect', href: process.env.PUBLIC_IMAGE_BASE },
-              { rel: 'dns-prefetch', href: process.env.PUBLIC_IMAGE_BASE },
-            ]
-          : []),
+        // Resource hints (preconnect first, then dns-prefetch).
+        ...(publicImageBase ? [{ rel: 'preconnect', href: publicImageBase }] : []),
+        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin ? [{ rel: 'preconnect', href: cloudfrontPublicOrigin }] : []),
+        ...(publicImageBase ? [{ rel: 'dns-prefetch', href: publicImageBase }] : []),
+        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin ? [{ rel: 'dns-prefetch', href: cloudfrontPublicOrigin }] : []),
+        { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' }, // GA4
+        { rel: 'dns-prefetch', href: 'https://connect.facebook.net' }, // Meta Pixel
+        { rel: 'dns-prefetch', href: 'https://www.ezojs.com' }, // Ezoic ads
+        { rel: 'dns-prefetch', href: 'https://www.google-analytics.com' }, // GA
       ],
     },
   },
@@ -339,7 +351,10 @@ export default defineNuxtConfig({
 
   // Experimental Features
   experimental: {
-    payloadExtraction: false,
+    renderJsonPayloads: true,
+    // Enable in staging/prod to reduce duplicated SSR/ISR payload bytes across many static-ish routes.
+    // Keep disabled in dev for faster iteration and fewer generated artifacts.
+    payloadExtraction: isStagingOrProd,
     viewTransition: true,
     watcher: 'chokidar-granular',
   },
@@ -458,6 +473,16 @@ export default defineNuxtConfig({
       await ensureNuxtPaths()
     },
   },
+  googleFonts: {
+    families: {
+      Inter: [400, 500, 600, 700],
+    },
+    display: 'swap',
+    prefetch: true,
+    preload: true,
+    download: true,
+    inject: true,
+  },
 
   // i18n Configuration (temporarily disabled)
   // i18n: {
@@ -485,10 +510,22 @@ export default defineNuxtConfig({
     provider: isAwsEnvironment ? 'ipx' : 'ipx',
     sizes: [320, 640, 768, 1024, 1280, 1536],
     format: ['webp', 'avif', 'png', 'jpg'],
-    domains: isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
-      ? [`d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`]
-      : [],
+    quality: 80,
+    densities: [1, 2],
+    domains: [
+      'images.remit-scout.com',
+      ...(isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
+        ? [`d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`]
+        : []),
+    ],
     cloudflare: false,
+  },
+  ogImage: {
+    defaults: {
+      width: 1200,
+      height: 630,
+      fonts: ['Inter:400', 'Inter:700'],
+    },
   },
 
   // robots.txt is served by `server/routes/robots.txt.ts` (env-aware).

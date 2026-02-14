@@ -29,8 +29,8 @@
       />
     </svg>
     <div class="absolute inset-0 flex flex-col items-center justify-center">
-      <span class="text-5xl font-bold text-black">{{ displayScore }}</span>
-      <span class="text-sm text-slate-500">/10</span>
+      <span class="text-hero font-bold text-black">{{ displayScore }}</span>
+      <span class="text-body-sm text-rs-muted">/10</span>
     </div>
   </div>
 </template>

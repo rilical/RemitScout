@@ -1,20 +1,20 @@
 <template>
   <div
     class="min-h-screen"
-    :class="isDark ? 'bg-neutral-900' : 'bg-white'"
+    :class="isDark ? 'bg-neutral-900' : 'bg-surface'"
   >
     <!-- Compact Header -->
     <div
       class="border-b px-4 py-3"
-      :class="isDark ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-50'"
+      :class="isDark ? 'border-neutral-700 bg-neutral-800' : 'border-neutral-200 bg-neutral-50'"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-2">
-            <span class="text-xl">{{ corridorData?.fromFlag }}</span>
+            <span class="text-h4">{{ corridorData?.fromFlag }}</span>
             <svg
               class="h-3 w-3"
-              :class="isDark ? 'text-neutral-500' : 'text-gray-400'"
+              :class="isDark ? 'text-neutral-500' : 'text-neutral-400'"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -26,18 +26,28 @@
                 d="M17 8l4 4m0 0l-4 4m4-4H3"
               />
             </svg>
-            <span class="text-xl">{{ corridorData?.toFlag }}</span>
+            <span class="text-h4">{{ corridorData?.toFlag }}</span>
           </div>
           <div>
             <div
-              class="text-sm font-semibold"
-              :class="isDark ? 'text-white' : 'text-gray-900'"
+              class="text-body-sm font-semibold"
+              :class="isDark ? 'text-white' : 'text-neutral-900'"
             >
-              {{ corridorData?.label || 'Loading...' }}
+              <template v-if="corridorData?.label">
+                {{ corridorData.label }}
+              </template>
+              <template v-else>
+                <SkeletonBlock
+                  width="10rem"
+                  height="0.875rem"
+                  :tone="isDark ? 'dark' : 'light'"
+                />
+                <span class="sr-only">Loading corridor</span>
+              </template>
             </div>
             <div
-              class="text-xs"
-              :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
+              class="text-body-sm"
+              :class="isDark ? 'text-neutral-400' : 'text-neutral-500'"
             >
               True Cost vs Mid-Market
             </div>
@@ -54,8 +64,8 @@
             <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
           </span>
           <span
-            class="text-xs"
-            :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="isDark ? 'text-neutral-400' : 'text-neutral-500'"
           >
             {{ updatedLabel }}
           </span>
@@ -67,33 +77,25 @@
     <div class="p-4">
       <div
         v-if="loading"
-        class="flex h-64 items-center justify-center"
+        class="flex h-64 w-full items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
       >
-        <div
-          class="flex items-center gap-3"
-          :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
-        >
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-          Loading...
-        </div>
+        <SkeletonBlock
+          width="full"
+          height="16rem"
+          :tone="isDark ? 'dark' : 'light'"
+        />
+        <span class="sr-only">Loading chart</span>
+      </div>
+
+      <div
+        v-else-if="loadError"
+        class="flex h-64 items-center justify-center text-body-sm"
+        :class="isDark ? 'text-neutral-300' : 'text-neutral-700'"
+      >
+        {{ loadError }}
       </div>
 
       <div
@@ -110,41 +112,41 @@
       <!-- Key Stats -->
       <div
         class="mt-4 grid grid-cols-3 gap-4 border-t pt-4"
-        :class="isDark ? 'border-neutral-700' : 'border-gray-200'"
+        :class="isDark ? 'border-neutral-700' : 'border-neutral-200'"
       >
         <div>
           <div
-            class="text-xs"
-            :class="isDark ? 'text-neutral-500' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="isDark ? 'text-neutral-500' : 'text-neutral-500'"
           >
             Current Spread
           </div>
-          <div class="text-lg font-bold text-brand-600">
+          <div class="text-body-lg font-bold text-brand-600">
             {{ heroData?.currentSpreadPercent.toFixed(2) }}%
           </div>
         </div>
         <div>
           <div
-            class="text-xs"
-            :class="isDark ? 'text-neutral-500' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="isDark ? 'text-neutral-500' : 'text-neutral-500'"
           >
             Best Provider
           </div>
           <div
-            class="text-lg font-bold"
-            :class="isDark ? 'text-white' : 'text-gray-900'"
+            class="text-body-lg font-bold"
+            :class="isDark ? 'text-white' : 'text-neutral-900'"
           >
             {{ heroData?.bestProvider }}
           </div>
         </div>
         <div>
           <div
-            class="text-xs"
-            :class="isDark ? 'text-neutral-500' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="isDark ? 'text-neutral-500' : 'text-neutral-500'"
           >
             You Save
           </div>
-          <div class="text-lg font-bold text-brand-600">
+          <div class="text-body-lg font-bold text-brand-600">
             ${{ heroData?.lossOn1000.toFixed(2) }}
           </div>
         </div>
@@ -154,12 +156,12 @@
     <!-- Attribution Footer -->
     <div
       class="border-t px-4 py-3"
-      :class="isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-gray-200 bg-gray-50'"
+      :class="isDark ? 'border-neutral-700 bg-neutral-800/50' : 'border-neutral-200 bg-neutral-50'"
     >
       <div class="flex items-center justify-between">
         <div
-          class="text-xs"
-          :class="isDark ? 'text-neutral-400' : 'text-gray-500'"
+          class="text-body-sm"
+          :class="isDark ? 'text-neutral-400' : 'text-neutral-500'"
         >
           {{ updatedLabel }}
         </div>
@@ -167,7 +169,7 @@
           :href="pulseUrl"
           target="_blank"
           rel="noopener"
-          class="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors"
+          class="flex items-center gap-1 text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
         >
           <span>Powered by</span>
           <span class="font-bold">Remit-Scout</span>
@@ -191,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -202,7 +204,10 @@ import { getCorridors, getCorridorBySlug, getHeroChartData, type HeroChartData }
 import type { PulseCorridor, PulseTimeframe } from '~/stores/pulse'
 import type { CorridorOption } from '~/types/pulse'
 import { formatUpdatedLabel } from '~/shared/lib/format'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 
 const { pulseEnabled } = useFeatureFlags()
 
@@ -214,9 +219,13 @@ use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
 const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig.public.siteUrl || 'https://remit-scout.com'
+const embedUrl = computed(() => `${siteUrl}${route.path}`)
+const { addVideoObjectSchema } = useStructuredData()
 
 const loading = ref(true)
 const heroData = ref<HeroChartData | null>(null)
+const loadError = ref<string | null>(null)
 
 const isDark = computed(() => {
   return route.query.theme !== 'light'
@@ -267,6 +276,28 @@ const corridorData = computed<PulseCorridor | null>(() => {
 const pulseUrl = computed(() => {
   const base = runtimeConfig.public.siteUrl || ''
   return base ? `${base}/pulse` : '/pulse'
+})
+
+watchEffect(() => {
+  const corridorLabel = corridorOption.value?.label || corridorSlug.value
+  const title = `Embed: Pulse for ${corridorLabel} | Remit-Scout`
+  const description = 'Embeddable Remit-Scout Pulse chart.'
+
+  setSeo({
+    title,
+    description,
+    canonical: embedUrl.value,
+    noindex: true,
+  })
+
+  addVideoObjectSchema({
+    name: title,
+    description,
+    thumbnailUrl: `${siteUrl}/og-image.png`,
+    uploadDate: new Date().toISOString(),
+    contentUrl: `${siteUrl}/pulse?corridor=${encodeURIComponent(corridorSlug.value)}`,
+    embedUrl: embedUrl.value,
+  })
 })
 
 const updatedLabel = computed(() => formatUpdatedLabel(heroData.value?.lastUpdated ?? null))
@@ -355,6 +386,7 @@ const chartOption = computed(() => {
 
 async function loadData() {
   loading.value = true
+  loadError.value = null
   try {
     const corridor = corridorData.value
     if (corridor) {
@@ -362,7 +394,7 @@ async function loadData() {
     }
   }
   catch (e) {
-    console.error('Failed to load embed data:', e)
+    loadError.value = 'Unable to load embed data.'
   }
   finally {
     loading.value = false

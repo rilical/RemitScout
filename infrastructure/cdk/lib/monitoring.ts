@@ -8,6 +8,7 @@ import {
   Metric,
   TreatMissingData,
 } from 'aws-cdk-lib/aws-cloudwatch'
+import { FargateService } from 'aws-cdk-lib/aws-ecs'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
 import type { QueueResources } from './queues'
@@ -197,30 +198,34 @@ export const createMonitoring = (
   const ecsCpuWidget = new GraphWidget({
     title: 'ECS CPU Utilization',
     left: [
-      options.ecs.planeBIngestService.metricCpuUtilization(),
-      options.ecs.b2cRefreshService.metricCpuUtilization(),
-      options.ecs.fxRateRefreshService.metricCpuUtilization(),
-      options.ecs.ingestFanoutTier1Service.metricCpuUtilization(),
-      options.ecs.ingestFanoutTier2Service.metricCpuUtilization(),
-      options.ecs.goldLiveService.metricCpuUtilization(),
-      options.ecs.notificationsQueueService.metricCpuUtilization(),
-      options.ecs.opsAlertsQueueService.metricCpuUtilization(),
-    ],
+      ...(options.ecs.planeBIngestService
+        ? [options.ecs.planeBIngestService]
+        : []),
+      ...(options.ecs.b2cRefreshService ? [options.ecs.b2cRefreshService] : []),
+      ...(options.ecs.fxRateRefreshService ? [options.ecs.fxRateRefreshService] : []),
+      ...(options.ecs.ingestFanoutTier1Service ? [options.ecs.ingestFanoutTier1Service] : []),
+      ...(options.ecs.ingestFanoutTier2Service ? [options.ecs.ingestFanoutTier2Service] : []),
+      ...(options.ecs.goldLiveService ? [options.ecs.goldLiveService] : []),
+      ...(options.ecs.notificationsQueueService ? [options.ecs.notificationsQueueService] : []),
+      ...(options.ecs.opsAlertsQueueService ? [options.ecs.opsAlertsQueueService] : []),
+    ].map((service) => service.metricCpuUtilization()),
     period: Duration.minutes(5),
   })
 
   const ecsMemoryWidget = new GraphWidget({
     title: 'ECS Memory Utilization',
     left: [
-      options.ecs.planeBIngestService.metricMemoryUtilization(),
-      options.ecs.b2cRefreshService.metricMemoryUtilization(),
-      options.ecs.fxRateRefreshService.metricMemoryUtilization(),
-      options.ecs.ingestFanoutTier1Service.metricMemoryUtilization(),
-      options.ecs.ingestFanoutTier2Service.metricMemoryUtilization(),
-      options.ecs.goldLiveService.metricMemoryUtilization(),
-      options.ecs.notificationsQueueService.metricMemoryUtilization(),
-      options.ecs.opsAlertsQueueService.metricMemoryUtilization(),
-    ],
+      ...(options.ecs.planeBIngestService
+        ? [options.ecs.planeBIngestService]
+        : []),
+      ...(options.ecs.b2cRefreshService ? [options.ecs.b2cRefreshService] : []),
+      ...(options.ecs.fxRateRefreshService ? [options.ecs.fxRateRefreshService] : []),
+      ...(options.ecs.ingestFanoutTier1Service ? [options.ecs.ingestFanoutTier1Service] : []),
+      ...(options.ecs.ingestFanoutTier2Service ? [options.ecs.ingestFanoutTier2Service] : []),
+      ...(options.ecs.goldLiveService ? [options.ecs.goldLiveService] : []),
+      ...(options.ecs.notificationsQueueService ? [options.ecs.notificationsQueueService] : []),
+      ...(options.ecs.opsAlertsQueueService ? [options.ecs.opsAlertsQueueService] : []),
+    ].map((service) => service.metricMemoryUtilization()),
     period: Duration.minutes(5),
   })
 
@@ -513,7 +518,7 @@ export const createMonitoring = (
   })
   redisEngineCpuAlarm.addAlarmAction(warningAction)
 
-  const restartMetrics = [
+  const ecsServices: FargateService[] = [
     options.ecs.planeBIngestService,
     options.ecs.b2cRefreshService,
     options.ecs.fxRateRefreshService,
@@ -524,36 +529,41 @@ export const createMonitoring = (
     options.ecs.opsAlertsQueueService,
     options.ecs.alertEvaluationService,
     options.ecs.exportWorkerService,
-  ].map((service, index) => ({
-    key: `m${index + 1}`,
-    metric: new Metric({
-      namespace: 'ECS/ContainerInsights',
-      metricName: 'RestartCount',
-      dimensionsMap: {
-        ClusterName: service.cluster.clusterName,
-        ServiceName: service.serviceName,
-      },
-      statistic: 'Sum',
+  ].filter((service): service is FargateService => Boolean(service))
+
+  if (ecsServices.length > 0) {
+    const restartMetrics = ecsServices.map((service, index) => ({
+      key: `m${index + 1}`,
+      metric: new Metric({
+        namespace: 'ECS/ContainerInsights',
+        metricName: 'RestartCount',
+        dimensionsMap: {
+          ClusterName: service.cluster.clusterName,
+          ServiceName: service.serviceName,
+        },
+        statistic: 'Sum',
+        period: Duration.minutes(15),
+      }),
+    }))
+
+    const restartExpression = restartMetrics.map(({ key }) => key).join('+') || '0'
+    const ecsRestartCountMetric = new MathExpression({
+      expression: restartExpression,
+      usingMetrics: Object.fromEntries(restartMetrics.map(({ key, metric }) => [key, metric])),
       period: Duration.minutes(15),
-    }),
-  }))
-  const restartExpression = restartMetrics.map(({ key }) => key).join('+') || '0'
-  const ecsRestartCountMetric = new MathExpression({
-    expression: restartExpression,
-    usingMetrics: Object.fromEntries(restartMetrics.map(({ key, metric }) => [key, metric])),
-    period: Duration.minutes(15),
-    label: 'ECS Restart Count (15m)',
-  })
-  const ecsRestartCountAlarm = new Alarm(scope, 'EcsRestartCountAlarm', {
-    alarmName: `remit-scout-${options.envName}-ecs-restarts-high`,
-    metric: ecsRestartCountMetric,
-    threshold: 3,
-    evaluationPeriods: 1,
-    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-    treatMissingData: TreatMissingData.NOT_BREACHING,
-    alarmDescription: 'ECS task restart count exceeds 3 within 15 minutes',
-  })
-  ecsRestartCountAlarm.addAlarmAction(opsAction)
+      label: 'ECS Restart Count (15m)',
+    })
+    const ecsRestartCountAlarm = new Alarm(scope, 'EcsRestartCountAlarm', {
+      alarmName: `remit-scout-${options.envName}-ecs-restarts-high`,
+      metric: ecsRestartCountMetric,
+      threshold: 3,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'ECS task restart count exceeds 3 within 15 minutes',
+    })
+    ecsRestartCountAlarm.addAlarmAction(opsAction)
+  }
 
   const sloMissingDataBehavior = isProd || isStaging
     ? TreatMissingData.BREACHING
@@ -735,24 +745,22 @@ export const createMonitoring = (
     alarm.addAlarmAction(opsAction)
   }
 
-  const ingestFanoutAgeThresholdSeconds =
-    options.envName === 'prod' ? 4 * 60 * 60 : 6 * 60 * 60
   const ingestFanoutHardMaxSeconds = 24 * 60 * 60
   const ingestFanoutQueues = [
-    { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue },
-    { name: 'IngestFanoutTier2', queue: options.queues.ingestFanoutTier2Queue },
+    { name: 'IngestFanout', queue: options.queues.ingestFanoutQueue, thresholdSeconds: 15 * 60 },
+    { name: 'IngestFanoutTier2', queue: options.queues.ingestFanoutTier2Queue, thresholdSeconds: 3 * 60 * 60 },
   ]
-  for (const { name, queue } of ingestFanoutQueues) {
+  for (const { name, queue, thresholdSeconds } of ingestFanoutQueues) {
     const ageAlarm = new Alarm(scope, `${name}AgeAlarm`, {
       alarmName: `remit-scout-${options.envName}-${name.toLowerCase()}-age`,
       metric: queue.metricApproximateAgeOfOldestMessage({
         period: Duration.minutes(5),
       }),
-      threshold: ingestFanoutAgeThresholdSeconds,
+      threshold: thresholdSeconds,
       evaluationPeriods: 1,
       comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
       treatMissingData: TreatMissingData.NOT_BREACHING,
-      alarmDescription: `${name} queue age exceeds sweep deadline`,
+      alarmDescription: `${name} queue age exceeds ${thresholdSeconds}s sweep deadline`,
     })
     ageAlarm.addAlarmAction(opsAction)
 

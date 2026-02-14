@@ -1,37 +1,40 @@
 <template>
-  <section class="py-16 sm:py-20 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-16 sm:py-20 bg-surface">
+    <div class="container">
       <!-- Header -->
       <div class="text-center mb-12">
-        <img
+        <NuxtImg
           src="/png/SVG/FULL_LOGO_PLUS.svg"
           alt="Remit-Scout Plus"
+          width="304"
+          height="64"
+          loading="lazy"
           class="h-12 sm:h-16 object-contain mx-auto mb-6"
-        >
-        <h2 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
+        />
+        <h2 class="text-h1 font-bold text-neutral-900 mb-4">
           Get More Out of <span class="text-brand-600">Remit-Scout</span>
         </h2>
-        <p class="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed break-words">
+        <p class="text-h4 text-neutral-600 max-w-3xl mx-auto leading-relaxed break-words">
           Unlock Pulse access, 16 smart alerts, 365-day history, data exports, and an ad-free experience. Perfect for frequent senders who want deeper insights and better control.
         </p>
       </div>
 
       <!-- What Plus Does -->
-      <div class="bg-slate-800 rounded-2xl border-2 border-slate-700 p-8 sm:p-10 mb-10 shadow-lg">
-        <h2 class="text-3xl font-bold text-white mb-6 text-center">
+      <div class="bg-neutral-800 rounded-2xl border-2 border-neutral-700 p-8 sm:p-10 mb-10 shadow-lg">
+        <h2 class="text-h2 font-bold text-white mb-6 text-center">
           What is Plus?
         </h2>
-        <p class="text-lg text-slate-300 mb-8 text-center max-w-3xl mx-auto leading-relaxed break-words">
+        <p class="text-body-lg text-neutral-300 mb-8 text-center max-w-3xl mx-auto leading-relaxed break-words">
           For people who send money repeatedly. Plus monitors the market 24/7 and notifies you when rates improve, giving you deeper insights and higher limits (up to 16 watchlist corridors and 16 alerts).
         </p>
 
         <!-- Free vs Plus Comparison -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Free Account -->
-          <div class="rounded-xl border-2 border-slate-600 p-8 bg-slate-900">
+          <div class="rounded-xl border-2 border-neutral-600 p-8 bg-neutral-900">
             <div class="flex items-center gap-3 mb-6">
               <svg
-                class="w-7 h-7 text-slate-400"
+                class="w-7 h-7 text-neutral-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -43,15 +46,15 @@
                   d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                 />
               </svg>
-              <h4 class="text-2xl font-bold text-white">
+              <h4 class="text-h3 font-bold text-white">
                 Free Account
               </h4>
             </div>
             <ul class="space-y-4">
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
-                    class="w-3.5 h-3.5 text-slate-300"
+                    class="w-3.5 h-3.5 text-neutral-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -64,12 +67,12 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">3 watchlist corridors</strong></span>
+                <span class="text-body text-neutral-300 leading-relaxed"><strong class="text-white">3 watchlist corridors</strong></span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
-                    class="w-3.5 h-3.5 text-slate-300"
+                    class="w-3.5 h-3.5 text-neutral-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -82,12 +85,12 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">1 alert</strong></span>
+                <span class="text-body text-neutral-300 leading-relaxed"><strong class="text-white">1 alert</strong></span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
-                    class="w-3.5 h-3.5 text-slate-300"
+                    class="w-3.5 h-3.5 text-neutral-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -100,12 +103,12 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed"><strong class="text-white">30-day history</strong> for your transfer</span>
+                <span class="text-body text-neutral-300 leading-relaxed"><strong class="text-white">30-day history</strong> for your transfer</span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
-                    class="w-3.5 h-3.5 text-slate-300"
+                    class="w-3.5 h-3.5 text-neutral-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -118,12 +121,12 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed">Compare 50+ providers</span>
+                <span class="text-body text-neutral-300 leading-relaxed">Compare 50+ providers</span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
-                    class="w-3.5 h-3.5 text-slate-300"
+                    class="w-3.5 h-3.5 text-neutral-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -136,15 +139,15 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-slate-300 leading-relaxed">Ads and sponsored placements</span>
+                <span class="text-body text-neutral-300 leading-relaxed">Ads and sponsored placements</span>
               </li>
             </ul>
           </div>
 
           <!-- Plus Account -->
-          <div class="rounded-xl border-2 border-blue-600 p-8 bg-blue-600 relative">
+          <div class="rounded-xl border-2 border-brand-600 p-8 bg-brand-600 relative">
             <div class="flex items-center gap-3 mb-6">
-              <div class="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
+              <div class="w-9 h-9 rounded-lg bg-surface/20 flex items-center justify-center">
                 <svg
                   class="w-5 h-5 text-white"
                   fill="none"
@@ -159,13 +162,13 @@
                   />
                 </svg>
               </div>
-              <h4 class="text-2xl font-bold text-white">
+              <h4 class="text-h3 font-bold text-white">
                 Plus Account
               </h4>
             </div>
             <ul class="space-y-4">
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
                     class="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -180,10 +183,10 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>Up to 16 watchlist corridors</strong></span>
+                <span class="text-body text-white leading-relaxed"><strong>Up to 16 watchlist corridors</strong></span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
                     class="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -198,10 +201,10 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>Up to 16 intelligent alerts</strong></span>
+                <span class="text-body text-white leading-relaxed"><strong>Up to 16 intelligent alerts</strong></span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
                     class="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -216,10 +219,10 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>365-day history</strong> for your transfer</span>
+                <span class="text-body text-white leading-relaxed"><strong>365-day history</strong> for your transfer</span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
                     class="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -234,10 +237,10 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed">Export data to CSV or PDF</span>
+                <span class="text-body text-white leading-relaxed">Export data to CSV or PDF</span>
               </li>
               <li class="flex items-start gap-3">
-                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div class="w-6 h-6 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg
                     class="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -252,7 +255,7 @@
                     />
                   </svg>
                 </div>
-                <span class="text-base text-white leading-relaxed"><strong>Ad-free</strong> experience</span>
+                <span class="text-body text-white leading-relaxed"><strong>Ad-free</strong> experience</span>
               </li>
             </ul>
           </div>
@@ -261,13 +264,13 @@
 
       <!-- Key Features in Detail -->
       <div class="mb-12">
-        <h3 class="text-3xl font-bold text-neutral-900 text-center mb-10">
+        <h3 class="text-h2 font-bold text-neutral-900 text-center mb-10">
           What You Get with Plus
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Feature 1 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -282,20 +285,20 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               16 Intelligent Alerts
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               Smart score alerts analyze rate patterns and volatility, scoring 0–100. Only triggers when score hits your threshold. Weekly smart alerts plus daily alerts for Plus.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Free: 1 alert | Plus: 16 alerts
             </div>
           </div>
 
           <!-- Feature 2 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -310,20 +313,20 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               365-Day History for Your Transfer
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               See how rates changed over the past year for your corridors. Track trends, spot volatility patterns, and time your transfers for better rates.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Free: 30 days | Plus: 365 days
             </div>
           </div>
 
           <!-- Feature 3 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -338,20 +341,20 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               16 Watchlist Corridors
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               Monitor up to 16 corridors you send to. Weekly digest emails show what changed so you never miss better rates.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Free: 3 corridors | Plus: 16 corridors
             </div>
           </div>
 
           <!-- Feature 4 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -366,20 +369,20 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               Export Data
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               Download transfer history and rate data as CSV or PDF. Ready for tax filing and expense tracking.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Plus only
             </div>
           </div>
 
           <!-- Feature 5 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -394,20 +397,20 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               No Ads
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               Zero distractions. No sponsor banners, no ads, no clutter. Just the rates and data you need to make decisions.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Plus only
             </div>
           </div>
 
           <!-- Feature 6 -->
-          <div class="bg-slate-800 rounded-xl border-2 border-slate-700 p-6 hover:border-blue-600 hover:shadow-lg transition-all flex flex-col">
-            <div class="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+          <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
+            <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -422,13 +425,13 @@
                 />
               </svg>
             </div>
-            <h4 class="text-lg font-bold text-white mb-2">
+            <h4 class="text-body-lg font-bold text-white mb-2">
               100% Independent
             </h4>
-            <p class="text-sm text-slate-300 leading-relaxed mb-4">
+            <p class="text-body-sm text-neutral-300 leading-relaxed mb-4">
               Plus subscriptions fund our independence. Rankings stay data-driven. No pay-to-rank schemes—ever.
             </p>
-            <div class="text-xs text-slate-500 mt-auto">
+            <div class="text-body-sm text-rs-muted mt-auto">
               Rankings stay the same
             </div>
           </div>
@@ -436,10 +439,10 @@
       </div>
 
       <!-- Trust Message -->
-      <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8 mb-10 text-center">
+      <div class="bg-neutral-800 border-2 border-neutral-700 rounded-xl p-8 mb-10 text-center">
         <div class="flex items-center justify-center gap-3 mb-3">
           <svg
-            class="w-6 h-6 text-blue-400"
+            class="w-6 h-6 text-primary-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -451,11 +454,11 @@
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <h4 class="text-lg font-bold text-white">
+          <h4 class="text-body-lg font-bold text-white">
             How Plus Fits Our Independence
           </h4>
         </div>
-        <p class="text-base text-slate-300 leading-relaxed max-w-3xl mx-auto break-words">
+        <p class="text-body text-neutral-300 leading-relaxed max-w-3xl mx-auto break-words">
           Plus helps fund Remit-Scout without pay-to-rank sponsorships. Plus users see no ads, but <strong>scoring and rankings remain identical for everyone.</strong> Whether free or Plus, you see the same data-driven comparisons.
         </p>
       </div>
@@ -464,7 +467,7 @@
       <div class="text-center">
         <NuxtLink
           to="/plus"
-          class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl text-white text-lg font-semibold shadow-xl hover:shadow-2xl transition-all group"
+          class="inline-flex items-center gap-3 px-8 py-4 bg-brand-600 hover:bg-brand-700 rounded-xl text-white text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all group"
         >
           <span>See Full Features and Pricing</span>
           <svg
@@ -481,7 +484,7 @@
             />
           </svg>
         </NuxtLink>
-        <p class="mt-4 text-sm text-slate-400">
+        <p class="mt-4 text-body-sm text-neutral-400">
           Start with a free account, upgrade anytime, cancel anytime
         </p>
       </div>

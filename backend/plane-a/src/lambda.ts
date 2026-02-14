@@ -1,8 +1,9 @@
 import awsLambdaFastify from '@fastify/aws-lambda'
-import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
-import { createLogger } from '../../shared/logger'
 
-const logger = createLogger('plane-a.lambda')
+let logger: {
+  info: (event: string, context?: Record<string, unknown>) => void
+  error: (event: string, context?: Record<string, unknown>) => void
+} | null = null
 
 let proxy: ReturnType<typeof awsLambdaFastify> | null = null
 let initPromise: Promise<void> | null = null
@@ -11,14 +12,23 @@ const withOptionalKey = (key: string | undefined, defaults: string[]) => {
   return key ? [key, ...defaults] : defaults
 }
 
+const getLogger = async () => {
+  if (logger) return logger
+  const { createLogger } = await import('../../shared/logger')
+  logger = createLogger('plane-a.lambda')
+  return logger
+}
+
 const init = async () => {
   if (initPromise) {
     return initPromise
   }
 
-  initPromise = (async () => {
-    await resolveDatabaseUrl({
-      envVar: 'DATABASE_URL_PLANE_A',
+	initPromise = (async () => {
+	  const { resolveAwsEnv, resolveDatabaseUrl } = await import('../../shared/aws-params')
+
+	  await resolveDatabaseUrl({
+	    envVar: 'DATABASE_URL_PLANE_A',
       secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
       ssmNameEnv: 'PLANE_A_DB_SSM_NAME',
       hostEnv: 'PLANE_A_DB_HOST',
@@ -32,6 +42,44 @@ const init = async () => {
       jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
         'url',
         'DATABASE_URL_PLANE_A',
+        'database_url',
+      ]),
+    })
+
+    await resolveDatabaseUrl({
+      envVar: 'DATABASE_URL_PLANE_B',
+      secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
+      ssmNameEnv: 'PLANE_A_DB_SSM_NAME',
+      hostEnv: 'PLANE_A_DB_HOST',
+      portEnv: 'PLANE_A_DB_PORT',
+      nameEnv: 'PLANE_A_DB_NAME',
+      usernameEnv: 'PLANE_A_DB_USERNAME',
+      passwordEnv: 'PLANE_A_DB_PASSWORD',
+      requireJson: true,
+      required: true,
+      sslModeEnv: 'PGSSLMODE',
+      jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
+        'url',
+        'DATABASE_URL_PLANE_B',
+        'database_url',
+      ]),
+    })
+
+    await resolveDatabaseUrl({
+      envVar: 'DATABASE_URL_PLANE_C',
+      secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
+      ssmNameEnv: 'PLANE_A_DB_SSM_NAME',
+      hostEnv: 'PLANE_A_DB_HOST',
+      portEnv: 'PLANE_A_DB_PORT',
+      nameEnv: 'PLANE_A_DB_NAME',
+      usernameEnv: 'PLANE_A_DB_USERNAME',
+      passwordEnv: 'PLANE_A_DB_PASSWORD',
+      requireJson: true,
+      required: true,
+      sslModeEnv: 'PGSSLMODE',
+      jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
+        'url',
+        'DATABASE_URL_PLANE_C',
         'database_url',
       ]),
     })
@@ -141,22 +189,64 @@ const init = async () => {
       },
     ])
 
-    const { config } = await import('../../shared/config')
-    const { runStartupChecks } = await import('../../shared/startup')
-    const { initErrorTracking } = await import('../../shared/error-tracker')
-    const { initTracing } = await import('../../shared/tracing')
-    const { buildApp } = await import('./app')
+	    console.log(
+	      'Lambda init env snapshot',
+	      {
+	        DATABASE_URL_PLANE_A: process.env.DATABASE_URL_PLANE_A ? 'set' : 'missing',
+	        DATABASE_URL_PLANE_B: process.env.DATABASE_URL_PLANE_B ? 'set' : 'missing',
+	        DATABASE_URL_PLANE_C: process.env.DATABASE_URL_PLANE_C ? 'set' : 'missing',
+	        PLANE_A_DB_HOST: process.env.PLANE_A_DB_HOST ? 'set' : 'missing',
+	        PLANE_A_DB_PORT: process.env.PLANE_A_DB_PORT ? 'set' : 'missing',
+	        PLANE_A_DB_NAME: process.env.PLANE_A_DB_NAME ? 'set' : 'missing',
+	      },
+	    )
+
+	    // IMPORTANT: `shared/config` snapshots env at import time. For Lambda, we must resolve
+	    // SSM/Secrets-backed env vars (DATABASE_URL_*) first, then import config.
+	    const { config } = await import('../../shared/config')
+
+	    const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
+	    const { runStartupChecks } = await import('../../shared/startup')
+	    const { initErrorTracking } = await import('../../shared/error-tracker')
+	    const { initTracing } = await import('../../shared/tracing')
+	    const { buildApp } = await import('./app')
+
+    const requireQuoteRefreshQueue = config.queues.quoteRefreshMode !== 'off'
+    const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
+    const requireExportJobQueue = config.queues.exports.mode !== 'off'
+    const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
+    const requireNotificationsQueue = config.queues.notifications.mode !== 'off'
+    const requireOpsAlertsQueue = config.queues.opsAlerts.mode !== 'off'
+    const requireGoldLiveQueue = config.queues.goldLive.mode !== 'off'
+    const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
+    const requireStorage = requireExportJobQueue
 
     await runStartupChecks({
       requirements: {
         requirePlaneA: true,
         requirePlaneC: true,
         requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
-        requireSupabase: true,
-        requireStripe: true,
-        requireJwtSecret: config.planeA.requireJwt,
+        requireQueues:
+          requireQuoteRefreshQueue ||
+          requireFxRateRefreshQueue ||
+          requireExportJobQueue ||
+          requireIngestFanoutQueue ||
+          requireNotificationsQueue ||
+          requireOpsAlertsQueue ||
+          requireGoldLiveQueue ||
+          requireAlertEvaluationQueue,
+        requireQuoteRefreshQueue,
+        requireFxRateRefreshQueue,
+        requireExportJobQueue,
+        requireIngestFanoutQueue,
+        requireNotificationsQueue,
+        requireOpsAlertsQueue,
+        requireGoldLiveQueue,
+        requireAlertEvaluationQueue,
+        requireStorage,
+        requireExportsBucket: requireStorage,
+        requireSupabase: isProdLikeEnv,
+        requireStripe: isProdLikeEnv,
       },
     })
 
@@ -166,7 +256,8 @@ const init = async () => {
     const app = await buildApp()
     proxy = awsLambdaFastify(app)
     await app.ready()
-    logger.info('lambda_initialized')
+    const loggerInstance = await getLogger()
+    loggerInstance.info('lambda_initialized', {})
   })()
 
   return initPromise
@@ -181,8 +272,9 @@ export const handler = async (
   try {
     await init()
   } catch (error: unknown) {
+    const loggerInstance = await getLogger()
     const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error('lambda_initialization_failed', {
+    loggerInstance.error('lambda_initialization_failed', {
       error: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
     })
@@ -200,11 +292,12 @@ export const handler = async (
   }
 
   if (!proxy) {
+    const loggerInstance = await getLogger()
     const eventPath =
       event && typeof event === 'object' && 'path' in event
         ? (event as { path?: unknown }).path
         : undefined
-    logger.error('lambda_proxy_not_initialized', {
+    loggerInstance.error('lambda_proxy_not_initialized', {
       event_path: typeof eventPath === 'string' ? eventPath : null,
     })
     return {
@@ -222,9 +315,11 @@ export const handler = async (
   return new Promise((resolve, reject) => {
     proxy?.(event, context, (err, result) => {
       if (err) {
-        logger.error('lambda_handler_error', {
-          error: err instanceof Error ? err.message : String(err),
-          stack: err instanceof Error ? err.stack : undefined,
+        getLogger().then((loggerInstance) => {
+          loggerInstance.error('lambda_handler_error', {
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          })
         })
         reject(err)
         return

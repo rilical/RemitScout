@@ -89,12 +89,22 @@ export const handler = async (): Promise<number> => {
   }
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const { config } = await import('../../shared/config')
+  const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      requireQueues: requireFxRateRefreshQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue: false,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
+      requireStorage: false,
     },
   })
 

@@ -1,22 +1,22 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-surface">
+    <div class="container">
       <div class="text-center mb-8">
-        <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+        <h2 class="text-h2 font-bold text-neutral-900 mb-3">
           Keep an eye on exchange rates and set up smart alerts
         </h2>
-        <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
+        <p class="text-body-lg text-neutral-600 max-w-3xl mx-auto">
           Monitor live exchange rates and get notified when rates hit your target, so you can act fast.
         </p>
-        <p class="text-lg font-semibold max-w-3xl mx-auto mt-1 text-brand-600">
+        <p class="text-body-lg font-semibold max-w-3xl mx-auto mt-1 text-brand-600">
           Send more for less.
         </p>
       </div>
 
       <div class="grid lg:grid-cols-2 gap-8 items-stretch">
-        <div class="bg-white rounded-2xl border border-neutral-200 p-6 shadow-lg flex flex-col">
+        <div class="bg-surface rounded-2xl border border-neutral-200 p-6 shadow-lg flex flex-col">
           <div class="mb-6">
-            <h3 class="text-xl font-bold text-neutral-900 mb-4">
+            <h3 class="text-h4 font-bold text-neutral-900 mb-4">
               Exchange Rate History
             </h3>
 
@@ -24,7 +24,7 @@
               <div>
                 <label
                   for="from-country"
-                  class="block text-sm font-semibold text-neutral-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   From
                 </label>
@@ -39,7 +39,7 @@
               <div>
                 <label
                   for="to-country"
-                  class="block text-sm font-semibold text-neutral-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   To
                 </label>
@@ -57,18 +57,18 @@
           <div class="bg-neutral-50 rounded-xl p-4 mb-4">
             <div class="flex items-baseline justify-between mb-2">
               <div>
-                <p class="text-sm text-neutral-600">
+                <p class="text-body-sm text-neutral-600">
                   {{ fromCurrencyDisplay }} to {{ toCurrencyDisplay }} Exchange Rate
                 </p>
-                <p class="text-xs text-neutral-500 mt-1">
+                <p class="text-body-sm text-neutral-500 mt-1">
                   Historical mid-market exchange rate data
                 </p>
               </div>
             </div>
 
             <div class="flex items-baseline gap-2 mb-4">
-              <span class="text-3xl font-bold text-neutral-900">1 {{ fromCurrencyDisplay }} = {{ currentRateDisplay }} {{ toCurrencyDisplay }}</span>
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-700">
+              <span class="text-h2 font-bold text-neutral-900">1 {{ fromCurrencyDisplay }} = {{ currentRateDisplay }} {{ toCurrencyDisplay }}</span>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-body-sm font-medium bg-success-100 text-success-700">
                 <svg
                   class="h-3 w-3 mr-1"
                   fill="none"
@@ -86,7 +86,7 @@
               </span>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-xs text-neutral-600 mb-4">
+            <div class="grid grid-cols-2 gap-4 text-body-sm text-neutral-600 mb-4">
               <div>
                 <span class="block">Bid: {{ bidRateDisplay }}</span>
               </div>
@@ -96,14 +96,14 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-lg border border-neutral-200 p-4">
+          <div class="bg-surface rounded-lg border border-neutral-200 p-4">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-neutral-700">
+              <h4 class="text-body-sm font-semibold text-neutral-700">
                 Exchange Rate History
               </h4>
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 text-xs">
-                  <span class="w-3 h-0.5 bg-emerald-500 rounded" />
+                <span class="inline-flex items-center gap-1 text-body-sm">
+                  <span class="w-3 h-0.5 bg-success-600 rounded" />
                   <span class="text-neutral-600">{{ fromCurrencyDisplay }}-{{ toCurrencyDisplay }}</span>
                 </span>
               </div>
@@ -111,13 +111,15 @@
 
             <div
               v-if="historyLoading"
-              class="flex h-48 items-center justify-center text-xs text-neutral-500"
+              class="flex h-48 items-center justify-center text-body-sm text-neutral-500"
+              role="status"
+              aria-live="polite"
             >
               Loading rate history...
             </div>
             <div
               v-else-if="historicalData.length === 0"
-              class="flex h-48 items-center justify-center text-xs text-neutral-500"
+              class="flex h-48 items-center justify-center text-body-sm text-neutral-500"
             >
               No rate history yet.
             </div>
@@ -175,7 +177,7 @@
 
             <div
               v-if="historicalData.length > 0"
-              class="flex justify-between text-xs text-neutral-500 mt-2"
+              class="flex justify-between text-body-sm text-neutral-500 mt-2"
             >
               <span>{{ chartDateLabels[0] }}</span>
               <span>{{ chartDateLabels[Math.floor(chartDateLabels.length / 2)] }}</span>
@@ -183,7 +185,7 @@
             </div>
           </div>
 
-          <div class="mt-4 text-xs text-neutral-500">
+          <div class="mt-4 text-body-sm text-neutral-500">
             <p>Last updated: {{ lastUpdatedText }}</p>
             <p
               v-if="historyError"
@@ -196,7 +198,7 @@
 
         <div class="bg-gradient-to-br from-brand-50 to-white rounded-2xl border border-brand-200 p-6 sm:p-8 shadow-lg flex flex-col">
           <div class="flex items-center gap-3 mb-4">
-            <div class="flex items-center gap-2 text-3xl">
+            <div class="flex items-center gap-2 text-h2">
               <span>{{ fromCountryFlag }}</span>
               <svg
                 class="h-5 w-5 text-brand-600"
@@ -215,13 +217,13 @@
             </div>
           </div>
 
-          <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
+          <h2 class="text-h3 font-bold text-neutral-900 mb-3">
             {{ alertTitle }}
           </h2>
           <p class="text-neutral-600 mb-4 leading-relaxed">
             We'll email you when the rate hits your target so you can send more for less.
           </p>
-          <p class="text-neutral-500 mb-6 leading-relaxed text-sm">
+          <p class="text-neutral-500 mb-6 leading-relaxed text-body-sm">
             Interested in knowing when's the best time to send through this corridor? Set up a rate alert and we'll notify you instantly when rates move in your favor. Track multiple currency pairs and never miss an opportunity to maximize your transfer value.
           </p>
 
@@ -233,7 +235,7 @@
               <div>
                 <label
                   for="alert-email"
-                  class="block text-sm font-semibold text-neutral-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   Email address
                 </label>
@@ -242,13 +244,18 @@
                   v-model="email"
                   type="email"
                   placeholder="your@email.com"
-                  class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+                  :aria-invalid="errors.email ? 'true' : undefined"
+                  :aria-describedby="errors.email ? 'alert-email-error' : undefined"
+                  class="w-full px-4 py-3 bg-surface border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
                   :class="errors.email ? 'border-danger-600' : ''"
                   @blur="validateEmail"
                 >
                 <p
                   v-if="errors.email"
-                  class="mt-1 text-sm text-danger-600"
+                  id="alert-email-error"
+                  class="mt-1 text-body-sm text-danger-600"
+                  role="alert"
+                  aria-live="polite"
                 >
                   {{ errors.email }}
                 </p>
@@ -257,7 +264,7 @@
               <div>
                 <label
                   for="target-rate"
-                  class="block text-sm font-semibold text-neutral-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   Target rate
                 </label>
@@ -266,13 +273,18 @@
                   v-model="targetRate"
                   type="text"
                   :placeholder="`e.g. ${currentRateDisplay}`"
-                  class="w-full px-4 py-3 bg-white border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+                  :aria-invalid="errors.targetRate ? 'true' : undefined"
+                  :aria-describedby="errors.targetRate ? 'target-rate-error' : undefined"
+                  class="w-full px-4 py-3 bg-surface border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
                   :class="errors.targetRate ? 'border-danger-600' : ''"
                   @blur="validateRate"
                 >
                 <p
                   v-if="errors.targetRate"
-                  class="mt-1 text-sm text-danger-600"
+                  id="target-rate-error"
+                  class="mt-1 text-body-sm text-danger-600"
+                  role="alert"
+                  aria-live="polite"
                 >
                   {{ errors.targetRate }}
                 </p>
@@ -307,7 +319,7 @@
                 />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-neutral-900 mb-2">
+            <h3 class="text-h4 font-bold text-neutral-900 mb-2">
               Alert created ✅
             </h3>
             <p class="text-neutral-600">
@@ -538,7 +550,7 @@ const handleSubmit = async () => {
     submitted.value = true
   }
   catch (error) {
-    console.error('Failed to create alert:', error)
+    useLogger('RateAlertForm').error('Failed to create alert', error)
   }
   finally {
     isSubmitting.value = false

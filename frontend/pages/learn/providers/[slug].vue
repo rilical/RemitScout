@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
+  <div class="min-h-screen bg-neutral-50">
+    <div class="container py-8">
       <Breadcrumbs :items="breadcrumbItems" />
 
-      <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
+      <div class="mb-8 rounded-lg bg-surface p-6 shadow-md">
         <div class="mb-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div class="flex items-center">
             <ProviderLogo
@@ -13,10 +13,10 @@
               class="mr-4"
             />
             <div>
-              <h1 class="mb-2 text-4xl font-bold text-gray-900">
+              <h1 class="mb-2 text-h1 font-bold text-neutral-900">
                 {{ provider?.name }}
               </h1>
-              <p class="text-sm text-gray-500">
+              <p class="text-body-sm text-neutral-500">
                 {{ providerTypeLabel }}
               </p>
             </div>
@@ -33,7 +33,7 @@
               :href="outboundUrl"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-brand-500 hover:text-brand-600"
+              class="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:border-brand-500 hover:text-brand-600"
             >
               Visit provider
             </a>
@@ -43,30 +43,30 @@
         <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           <div class="flex flex-col items-center">
             <RemitScoreRing :score="provider?.remitScore ?? 0" />
-            <div class="mt-2 text-gray-600">
+            <div class="mt-2 text-neutral-600">
               Remit-Scout Score
             </div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-primary-600">
+            <div class="text-h3 font-bold text-primary-600">
               {{ provider?.type || 'N/A' }}
             </div>
-            <div class="text-gray-600">
+            <div class="text-neutral-600">
               Provider Type
             </div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-primary-600">
+            <div class="text-h3 font-bold text-primary-600">
               {{ provider?.slug?.toUpperCase() || 'N/A' }}
             </div>
-            <div class="text-gray-600">
+            <div class="text-neutral-600">
               Provider ID
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg bg-gray-50 p-6">
-          <h3 class="mb-4 text-lg font-semibold text-gray-900">
+        <div class="rounded-lg bg-neutral-50 p-6">
+          <h3 class="mb-4 text-body-lg font-semibold text-neutral-900">
             Score Breakdown
           </h3>
           <div
@@ -78,13 +78,13 @@
               :key="item.label"
               class="flex items-center justify-between"
             >
-              <span class="text-sm text-gray-600">{{ item.label }}</span>
-              <span class="text-sm font-semibold text-gray-900">{{ item.value }}</span>
+              <span class="text-body-sm text-neutral-600">{{ item.label }}</span>
+              <span class="text-body-sm font-semibold text-neutral-900">{{ item.value }}</span>
             </div>
           </div>
           <p
             v-else
-            class="text-sm text-gray-500"
+            class="text-body-sm text-neutral-500"
           >
             Score breakdown is unavailable for this provider.
           </p>
@@ -98,22 +98,22 @@
           min-height="120px"
         />
       </div>
-      <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
+      <div class="mb-8 rounded-lg bg-surface p-6 shadow-md">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-gray-900">
+            <h2 class="text-h3 font-bold text-neutral-900">
               Current quote for {{ from }} -> {{ to }}
             </h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-body-sm text-neutral-600">
               Based on {{ amountDisplay }} via {{ methodLabel }}.
             </p>
-            <p class="text-xs text-gray-500">
+            <p class="text-body-sm text-neutral-500">
               Updated {{ quoteUpdatedLabel }}
             </p>
           </div>
           <NuxtLink
             :to="compareUrl"
-            class="inline-flex items-center justify-center rounded-lg border border-brand-600 px-4 py-2 text-sm font-semibold text-brand-600 hover:bg-brand-50"
+            class="inline-flex items-center justify-center rounded-lg border border-brand-600 px-4 py-2 text-body-sm font-semibold text-brand-600 hover:bg-brand-50"
           >
             Compare all providers
           </NuxtLink>
@@ -121,13 +121,13 @@
 
         <div
           v-if="quotesPending"
-          class="mt-6 text-sm text-gray-500"
+          class="mt-6 text-body-sm text-neutral-500"
         >
           Loading the latest quote...
         </div>
         <div
           v-else-if="quotesError || !providerQuote"
-          class="mt-6 text-sm text-gray-500"
+          class="mt-6 text-body-sm text-neutral-500"
         >
           No live quote is available for this corridor yet.
         </div>
@@ -136,45 +136,45 @@
           class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4"
         >
           <div>
-            <p class="text-xs text-gray-500">
+            <p class="text-body-sm text-neutral-500">
               Recipient gets
             </p>
-            <p class="text-lg font-semibold text-gray-900">
+            <p class="text-body-lg font-semibold text-neutral-900">
               {{ formatMoney(providerQuote.recipientGets, toCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">
+            <p class="text-body-sm text-neutral-500">
               Fee
             </p>
-            <p class="text-lg font-semibold text-gray-900">
+            <p class="text-body-lg font-semibold text-neutral-900">
               {{ formatMoney(providerQuote.fee, fromCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">
+            <p class="text-body-sm text-neutral-500">
               FX rate
             </p>
-            <p class="text-sm font-semibold text-gray-900">
+            <p class="text-body-sm font-semibold text-neutral-900">
               {{ formatRate(providerQuote.fxRate, fromCurrency, toCurrency) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-500">
+            <p class="text-body-sm text-neutral-500">
               Delivery
             </p>
-            <p class="text-sm font-semibold text-gray-900">
+            <p class="text-body-sm font-semibold text-neutral-900">
               {{ providerQuote.delivery || 'Unknown' }}
             </p>
           </div>
         </div>
       </div>
 
-      <div class="rounded-lg bg-white p-6 shadow-md">
-        <h2 class="mb-4 text-2xl font-bold text-gray-900">
+      <div class="rounded-lg bg-surface p-6 shadow-md">
+        <h2 class="mb-4 text-h3 font-bold text-neutral-900">
           Compare Live Rates
         </h2>
-        <p class="mb-4 text-gray-600">
+        <p class="mb-4 text-neutral-600">
           Compare live rates across providers for your corridor and amount.
         </p>
         <MiniCompareWidget
@@ -194,6 +194,7 @@ import MiniCompareWidget from '~/components/shared/MiniCompareWidget.vue'
 import { useCompareForm } from '~/composables/useCompareForm'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { useProvider } from '~/composables/useProvider'
+import { getProviderLogoPath } from '~/composables/useProviderLogo'
 import { getCountryByCode } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { setSeo } from '~/composables/useSeo'
@@ -326,13 +327,28 @@ const amountDisplay = computed(() => formatMoney(amount.value, fromCurrency.valu
 const runtimeConfig = useRuntimeConfig()
 const siteBaseUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
+const seoTitle = computed(() => `${provider.value?.name || 'Provider'} Review | Remit-Scout`)
+const seoDescription = computed(() => `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`)
+
+useServerSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+})
+
 setSeo({
-  title: `${provider.value?.name || 'Provider'} Review | Remit-Scout`,
-  description: `Compare ${provider.value?.name || 'this provider'} on Remit-Scout and see live rates across providers.`,
+  title: seoTitle.value,
+  description: seoDescription.value,
   canonical: `${siteBaseUrl}${route.path}`,
-  ogImage: provider.value?.slug
-    ? `${siteBaseUrl}/og-images/provider-${provider.value.slug}.jpg`
-    : `${siteBaseUrl}/og-image.jpg`,
+  ogImage: false,
+})
+
+defineOgImage({
+  component: 'OgImageProvider',
+  props: {
+    providerName: provider.value?.name || 'Provider',
+    remitScore: provider.value?.remitScore || 0,
+    logoUrl: `${siteBaseUrl}${getProviderLogoPath(provider.value?.slug || '')}`,
+  },
 })
 
 // Breadcrumbs
@@ -344,19 +360,22 @@ const breadcrumbItems = computed(() => [
 ])
 
 // Review schema
-const { addReviewSchema } = useStructuredData()
+const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+
+addBreadcrumbSchema(breadcrumbItems.value.map(item => ({
+  name: item.name,
+  url: `${siteBaseUrl}${item.path}`,
+})))
 
 if (provider.value?.remitScore && typeof provider.value.remitScore === 'number') {
   const reviewBody = `${provider.value.name} earns a Remit-Score of ${provider.value.remitScore.toFixed(1)}/10 based on our independent analysis of delivered value, reliability, speed, support, and trust factors.`
 
-  addReviewSchema({
-    itemReviewed: provider.value.name || 'Provider',
-    reviewBody,
-    author: 'Remit-Scout Editorial Team',
+  addAggregateRatingSchema({
+    name: provider.value.name || 'Provider',
     ratingValue: provider.value.remitScore,
     bestRating: 10,
     worstRating: 1,
-    datePublished: new Date().toISOString().split('T')[0],
+    reviewCount: 1,
   })
 }
 </script>

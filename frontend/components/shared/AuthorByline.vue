@@ -1,18 +1,22 @@
 <template>
   <div class="flex items-center gap-3">
-    <img
+    <NuxtImg
       :src="authorImageUrl"
       :alt="author.name"
+      width="32"
+      height="32"
+      loading="lazy"
+      format="webp"
       class="w-8 h-8 rounded-full"
-    >
-    <div class="text-sm">
+    />
+    <div class="text-body-sm">
       <NuxtLink
         :to="`/author/${author.id}`"
         class="font-medium text-neutral-900 hover:text-brand-600 transition-colors"
       >
         {{ author.name }}
       </NuxtLink>
-      <p class="text-xs text-neutral-600">
+      <p class="text-body-sm text-neutral-600">
         {{ author.role }}
         <span
           v-if="showDate"

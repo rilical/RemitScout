@@ -1,10 +1,10 @@
 <template>
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
     <div class="border-b border-neutral-700 px-6 py-4">
-      <h2 class="text-lg font-bold text-white">
+      <h2 class="text-body-lg font-bold text-white">
         Reliability & Coverage
       </h2>
-      <p class="text-sm text-neutral-400">
+      <p class="text-body-sm text-neutral-400">
         Quote success, method availability, and data freshness
       </p>
     </div>
@@ -12,37 +12,37 @@
     <div class="grid grid-cols-1 gap-6 p-6 lg:grid-cols-12">
       <div class="space-y-4 lg:col-span-4 flex flex-col">
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
-          <div class="text-xs text-neutral-500 mb-2">
+          <div class="text-body-sm text-neutral-500 mb-2">
             Quote Success Rate
           </div>
-          <div class="text-3xl font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1">
             {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             {{ quoteSuccessDelta }}
           </div>
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
-          <div class="text-xs text-neutral-500 mb-2">
+          <div class="text-body-sm text-neutral-500 mb-2">
             Data Freshness
           </div>
-          <div class="text-3xl font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1">
             {{ freshnessMedian !== null ? `${freshnessMedian}m median` : 'n/a' }}
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             p95 {{ freshnessP95 !== null ? `${freshnessP95}m` : 'n/a' }} | updated {{ store.lastUpdatedRelative }}
           </div>
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-6 flex-1 flex flex-col justify-center">
-          <div class="text-xs text-neutral-500 mb-2">
+          <div class="text-body-sm text-neutral-500 mb-2">
             Coverage
           </div>
-          <div class="text-3xl font-bold text-white mb-1">
+          <div class="text-h2 font-bold text-white mb-1">
             {{ coverage.providersIncluded }} providers
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Methods: {{ coverage.methodsIncluded.length ? coverage.methodsIncluded.join(', ') : 'n/a' }}
           </div>
         </div>
@@ -147,7 +147,7 @@ async function loadData() {
     }
   }
   catch (e) {
-    console.error('Failed to load reliability data:', e)
+    useLogger('PulseReliabilityCoverage').error('Failed to load reliability data', e)
   }
   finally {
     loading.value = false

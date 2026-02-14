@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
-        <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
+    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
+      <div class="mx-auto max-w-page px-page-x relative">
+        <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70 relative z-10">
           <NuxtLink
             to="/"
             class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
@@ -28,7 +28,7 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+              <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface p-3 shadow-xl">
                 <ProviderLogo
                   slug="transfergo"
                   alt="TransferGo"
@@ -36,7 +36,7 @@
                 />
               </div>
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface/10 text-white text-body-sm font-medium mb-2">
                   <svg
                     class="w-4 h-4"
                     fill="currentColor"
@@ -46,23 +46,23 @@
                   </svg>
                   Provider Review
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
+                <h1 class="text-h1 font-bold text-white mb-2">
                   TransferGo Review
                 </h1>
-                <p class="text-xl text-slate-300">
+                <p class="text-h4 text-neutral-300">
                   Independent Remit-Scout Analysis
                 </p>
               </div>
             </div>
 
-            <p class="text-lg text-white/90 leading-relaxed mb-8">
+            <p class="text-body-lg text-white/90 leading-relaxed mb-8">
               A data-driven review based on real transfer outcomes - not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
             </p>
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 to="/send-money?provider=transfergo"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg
@@ -82,7 +82,7 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold text-white transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold text-white transition-all"
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
@@ -105,9 +105,9 @@
 
           <!-- Right: Score Card -->
           <div class="flex justify-center lg:justify-end">
-            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
+            <div class="bg-surface rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">
                   REMIT-SCOUT SCORE
                 </div>
                 <RemitScoreRing :score="score" />
@@ -116,35 +116,35 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
@@ -152,9 +152,9 @@
                 </div>
               </div>
 
-              <div class="mt-6 pt-6 border-t border-slate-200 text-center">
+              <div class="mt-6 pt-6 border-t border-rs-border text-center">
                 <p
-                  class="text-xs"
+                  class="text-body-sm"
                   style="color: rgba(17, 24, 39, 1);"
                 >
                   Based on our independent methodology.<br>
@@ -172,38 +172,38 @@
     </section>
 
     <!-- Quick Stats Strip -->
-    <section class="bg-slate-50 border-y border-slate-200 py-6">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="bg-neutral-50 border-y border-rs-border py-6">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               Europe
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Origin Only
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">
+            <div class="text-h2 font-bold text-success-600">
               30 Min
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Fastest Option
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               Multiple
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Speed Tiers
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               Fixed
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Rate on Booking
             </div>
           </div>
@@ -214,15 +214,15 @@
     <!-- Main Content -->
     <section
       id="review"
-      class="py-16 bg-white"
+      class="py-16 bg-surface"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg
                     class="w-12 h-12 text-brand-600/20"
@@ -238,27 +238,27 @@
                     />
                   </svg>
                 </div>
-                <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
+                <p class="text-h4 text-neutral-800 leading-relaxed relative z-10 font-medium">
                   This is a data-first, non-sponsored review using Remit-Scout's weighted rubric. Because Delivered Value is 40% of the score, we anchor the 8.6/10 there first: what you pay in practice is fees + FX spread, and TransferGo can be very competitive in its core Europe-led corridors, but it's less dominant globally because its supported sending footprint is Europe-centric.
                 </p>
               </div>
 
               <div class="mb-12">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-brand-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
-                <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                  <p class="text-lg text-slate-800 leading-relaxed italic m-0">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <p class="text-body-lg text-neutral-800 leading-relaxed italic m-0">
                     "TransferGo (8.6): European strength; good speed tiers; value strong in-core; less dominant globally."
                   </p>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-8">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-4 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -274,101 +274,101 @@
                   </svg>
                   Score Breakdown
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Here's how TransferGo performs across each category in our rubric:
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-primary-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-h3 shadow-md">
                     8.6
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <h3 class="text-h3 font-bold text-rs-fg mb-1 flex items-center gap-2">
                       TransferGo
                     </h3>
-                    <p class="text-sm text-black">
+                    <p class="text-body-sm text-black">
                       Remit-Score
                     </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong (Core)</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Strong (Core)</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Value strong in-core (Europe-led corridors). Small FX mark-up on mid-market rate, no hidden fees. Funding method matters (card costs more than bank transfer).
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Reliability
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       20% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Solid in supported routes with clear status cues. Constrained by Europe-only sending footprint (not available from US, Canada, etc.).
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Friction & Speed
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Clear speed buckets: 30 minutes, same-day, next working day by noon, 1 working day. Payout options vary by destination.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Support & Refunds
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Straightforward refund guidance when funds haven't been transferred. Formal complaints process (email/phone/chat).
                     </div>
                   </div>
-                  <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="sm:col-span-2 p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Trust & Safety
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       10% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Authorised electronic money institution by UK Financial Conduct Authority (FCA). Verifiable on FCA register.
                     </div>
                   </div>
                 </div>
-                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
+                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -381,10 +381,10 @@
                       />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-1.5">
+                      <div class="font-semibold text-rs-fg mb-1.5">
                         Why 8.6 (not 9.0+):
                       </div>
-                      <div class="text-sm text-slate-700 leading-relaxed">
+                      <div class="text-body-sm text-neutral-700 leading-relaxed">
                         Less dominant globally because sending is Europe-only and payout methods vary by destination. Best pricing depends on funding method (card vs bank transfer) and corridor.
                       </div>
                     </div>
@@ -392,53 +392,53 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Delivered Value (40%)
                   </h2>
                 </div>
-                <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                <p class="text-body-lg text-neutral-700 leading-relaxed mb-6">
                   Effective cost = fees + FX spread
                 </p>
-                <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="mb-6 p-5 rounded-xl bg-neutral-50 border border-rs-border">
+                  <p class="font-semibold text-rs-fg mb-3 text-body">
                     For remittance pricing, the "real" cost is almost always:
                   </p>
-                  <p class="text-slate-700 mb-3">
-                    <strong class="text-slate-900">Effective cost = upfront fee(s) + FX spread (rate markup)</strong>
+                  <p class="text-neutral-700 mb-3">
+                    <strong class="text-rs-fg">Effective cost = upfront fee(s) + FX spread (rate markup)</strong>
                   </p>
-                  <p class="text-slate-700 mb-3">
+                  <p class="text-neutral-700 mb-3">
                     TransferGo's help center is fairly explicit about its model:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
+                  <ul class="space-y-2 text-neutral-700">
                     <li>• It says it applies a small FX mark-up on the mid-market rate and emphasizes "no hidden fees."</li>
                     <li>• It also explains why card payments cost more (percentage-based fees and other costs), and contrasts that with bank transfers using a fixed-fee structure that can enable better exchange rates and lower costs.</li>
                   </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
+                  <p class="text-neutral-700 mt-4 mb-0">
                     What that means in practice: if you're trying to minimize total cost, you should treat the exchange rate you're offered as part of the "fee," and you should expect the best-value outcomes more often when you can fund via bank transfer/Open Banking versus card (all else equal).
                   </p>
                 </div>
 
-                <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">
+                <div class="p-6 rounded-xl border-2 border-success-600">
+                  <p class="font-semibold text-rs-fg mb-3">
                     "How often is it cheapest?"
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
+                  <p class="text-neutral-800 leading-relaxed mb-4">
                     We don't invent "% cheapest" statistics. The best data-aligned statement is the auditor's: "value strong in-core; less dominant globally."
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
+                  <p class="text-neutral-800 leading-relaxed mb-4">
                     A practical interpretation is:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
+                  <ul class="space-y-2 text-neutral-700">
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -450,11 +450,11 @@
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span><strong class="text-slate-900">In-core (Europe-led corridors):</strong> TransferGo can be very competitive because it's designed around Europe-origin transfers.</span>
+                      <span><strong class="text-rs-fg">In-core (Europe-led corridors):</strong> TransferGo can be very competitive because it's designed around Europe-origin transfers.</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -466,19 +466,19 @@
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                         />
                       </svg>
-                      <span><strong class="text-slate-900">Outside core:</strong> you may find better deals elsewhere, or TransferGo may not be available at all (Europe-only sending constraint).</span>
+                      <span><strong class="text-rs-fg">Outside core:</strong> you may find better deals elsewhere, or TransferGo may not be available at all (Europe-only sending constraint).</span>
                     </li>
                   </ul>
                 </div>
 
-                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-primary-50 to-neutral-50 border-2 border-primary-200">
+                  <p class="font-semibold text-rs-fg mb-3 text-body">
                     Quote vs delivered accuracy
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-3">
+                  <p class="text-neutral-800 leading-relaxed mb-3">
                     TransferGo makes a few strong "quote integrity" claims:
                   </p>
-                  <ul class="space-y-2.5 text-slate-700">
+                  <ul class="space-y-2.5 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
                         class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -496,18 +496,18 @@
                       <span>"Pay the exact amount entered" and "No currency fluctuations—once booked, the transfer amount remains fixed."</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-4 mb-0">
+                  <p class="text-neutral-700 mt-4 mb-0">
                     That's valuable for consumers because it reduces "surprise" outcomes between the quote screen and delivery.
                   </p>
-                  <p class="text-slate-700 mt-3 mb-0 text-sm">
+                  <p class="text-neutral-700 mt-3 mb-0 text-body-sm">
                     One important caveat (also documented): you must choose a currency the recipient account can accept—TransferGo warns that sending the wrong currency to an incompatible account can result in a bank rejection.
                   </p>
                 </div>
-                <div class="mt-6 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                  <p class="font-semibold text-slate-900 mb-2">
+                <div class="mt-6 p-5 rounded-xl bg-neutral-50 border-l-4 border-brand-600">
+                  <p class="font-semibold text-rs-fg mb-2">
                     Delivered Value takeaway:
                   </p>
-                  <p class="text-slate-800 mb-0">
+                  <p class="text-neutral-800 mb-0">
                     TransferGo earns most of its 8.6/10 here—strong value in its European core, with clearer fee/rate signaling than many banks—while losing points because "best" pricing is not universal and depends materially on payment method and corridor.
                   </p>
                 </div>
@@ -515,43 +515,43 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Reliability & Success (20%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Reliability starts with "can you even use it for your route?" TransferGo states it only supports transfers from Europe (then onward to destinations listed in its supported-countries table). That's good clarity, but it's also a real constraint versus global providers that let you send from the U.S., Canada, etc.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Pricing stability signals
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       A reliability-positive detail: TransferGo says once booked, the amount remains fixed (no currency fluctuations). This supports consistent "quote → outcome" behavior.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       TransferGo's help content describes operational updates like: it emails you when it receives your deposit, and bank transfers can take time to arrive (timing guidance is given by region).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">
+                  <div class="mt-5 p-5 rounded-xl bg-neutral-50 border-l-4 border-brand-600">
+                    <p class="font-semibold text-rs-fg mb-2">
                       Reliability takeaway:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Solid in supported routes with clear status cues, but constrained by Europe-only sending footprint.
                     </p>
                   </div>
@@ -560,39 +560,39 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Friction & Speed (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       ETA / speed buckets
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       TransferGo publishes four speed options in its help center:
                     </p>
-                    <ul class="space-y-2 text-slate-700">
+                    <ul class="space-y-2 text-neutral-700">
                       <li>• 30 minutes</li>
                       <li>• Same-day (end of day)</li>
                       <li>• Next working day (by noon)</li>
                       <li>• 1 working day</li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
+                    <p class="text-neutral-700 mt-3 mb-0">
                       That's a "good speed tiers" signal (matching the audit note), because you can choose a delivery time instead of guessing.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       TransferGo supports multiple "delivery options," including:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -607,7 +607,7 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Bank account / IBAN-style delivery</strong> (implied across its help center and supported-countries guidance)</span>
+                        <span><strong class="text-rs-fg">Bank account / IBAN-style delivery</strong> (implied across its help center and supported-countries guidance)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -623,7 +623,7 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Debit/credit card delivery</strong> (help article explains card-based receiving using receiver name + card info)</span>
+                        <span><strong class="text-rs-fg">Debit/credit card delivery</strong> (help article explains card-based receiving using receiver name + card info)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -639,27 +639,27 @@
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Cash pickup in some corridors</strong> (e.g., a dedicated help article describes cash pickup for Morocco, while another destination page notes cash pickup isn't available in Ukraine)</span>
+                        <span><strong class="text-rs-fg">Cash pickup in some corridors</strong> (e.g., a dedicated help article describes cash pickup for Morocco, while another destination page notes cash pickup isn't available in Ukraine)</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery behavior
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Two practical patterns show up in TransferGo's own guidance:
                     </p>
-                    <ul class="space-y-2 text-slate-700">
+                    <ul class="space-y-2 text-neutral-700">
                       <li>• Your end-to-end time depends on the speed option you choose.</li>
                       <li>• If you fund via bank transfer, there's an additional "time-to-receipt" step: TransferGo notes local deposits can take up to an hour (UK) or up to 24–36 hours (some European contexts) to reach them.</li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">
+                  <div class="mt-5 p-5 rounded-xl bg-neutral-50 border-l-4 border-brand-600">
+                    <p class="font-semibold text-rs-fg mb-2">
                       Friction & Speed takeaway:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Fast options exist and are clearly enumerated, but your funding method can add real-world delay before the "delivery speed" clock really starts.
                     </p>
                   </div>
@@ -668,54 +668,54 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Support & Refunds (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund experience
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       TransferGo states that if you change your mind and the money hasn't been transferred yet, you can request a refund, and it may take up to 3 business days for your bank to process the refund back into your account. That's fairly standard "bank-timed" refund behavior, and it's useful that the expectation is documented.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Disputes and post-issue friction
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       TransferGo offers guidance on what to do if the receiver hasn't gotten funds after the provider says it sent the deposit (submit a request after 24 hours), which is a practical escalation path.
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       They also document troubleshooting topics like rejected transfers and correcting receiver details (a common post-issue friction point).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       How to contact them / complaints
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       TransferGo publishes a formal complaints process with:
                     </p>
-                    <ul class="space-y-2 text-slate-700">
+                    <ul class="space-y-2 text-neutral-700">
                       <li>• Complaints email</li>
                       <li>• Phone numbers (UK and EU)</li>
                       <li>• In-app chat route</li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
+                    <p class="text-neutral-700 mt-3 mb-0">
                       And it publishes general customer support hours for English support (weekday + weekend coverage).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">
+                  <div class="mt-5 p-5 rounded-xl bg-neutral-50 border-l-4 border-brand-600">
+                    <p class="font-semibold text-rs-fg mb-2">
                       Support & Refunds takeaway:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Clear documented pathways exist, but refunds and some fixes can still be "process-heavy" once funds are already moving (common to bank/card rails).
                     </p>
                   </div>
@@ -724,42 +724,42 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Trust & Safety (10%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     We only reference public regulatory checks where available, and we avoid implying uniform regulation in every country.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Public licensing / regulatory checks (where available)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       TransferGo states in its terms that it is an authorised electronic money institution authorised by the UK Financial Conduct Authority (FCA) under the Electronic Money Regulations and Payment Services Regulations (with a published FCA firm reference number).
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       The FCA register also lists a TransferGo entity as an Authorised Electronic Money Institution (you can verify directly on the FCA register).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-slate-50 border-l-4 border-brand-600">
-                    <p class="font-semibold text-slate-900 mb-2">
+                  <div class="mt-5 p-5 rounded-xl bg-neutral-50 border-l-4 border-brand-600">
+                    <p class="font-semibold text-rs-fg mb-2">
                       Trust & Safety takeaway:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       "Trust strong" matches the presence of UK FCA authorisation disclosures and a verifiable register entry, while users outside the UK should still check the relevant legal entity and regulator for their region.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
-              <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+              <h2 class="text-h2 font-bold text-rs-fg mb-8 flex items-center gap-3">
                 <svg
                   class="w-7 h-7 text-brand-600"
                   fill="none"
@@ -777,10 +777,10 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -792,25 +792,25 @@
                     </svg>
                     Pros
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       Delivered Value: TransferGo states it applies a small FX mark‑up on the mid‑market rate and that there are no hidden fees; once booked, the transfer amount remains fixed.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       Friction & Speed: Clear speed buckets are published (30 minutes / same-day / next working day by noon / 1 working day).
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       Support & Refunds: Straightforward refund guidance exists when funds haven't been transferred yet, plus a formal complaints process (email/phone/chat).
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -822,30 +822,30 @@
                     </svg>
                     Cons
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       Delivered Value: Funding method matters: TransferGo explains card payments cost more (percentage-based costs + exchange-rate constraints), while bank transfers use a fixed fee structure that can be cheaper.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       Reliability & Success: Coverage isn't "global from anywhere"—TransferGo states sending is from Europe only, which affects quote availability and corridor breadth.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       Friction & Speed: Payout options are destination-dependent (e.g., cash pickup in Morocco is described, while Ukraine explicitly notes no cash pickup).
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-12">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -859,10 +859,10 @@
                     </svg>
                     Best For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -878,7 +878,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -894,7 +894,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -911,10 +911,10 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -928,10 +928,10 @@
                     </svg>
                     Not Ideal For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -947,7 +947,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -963,7 +963,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -981,10 +981,10 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-10">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1000,62 +1000,62 @@
                   </svg>
                   How to Get the Best Rate with TransferGo
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Use this checklist as a quick "don't overpay" routine:
                 </p>
                 <div class="space-y-3">
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       1
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Compare funding methods:</strong>
-                      <span class="text-slate-700">TransferGo explains card payments can cost more, while bank transfers use a fixed-fee structure that can improve total cost.</span>
+                      <strong class="text-rs-fg block mb-1.5 text-body">Compare funding methods:</strong>
+                      <span class="text-neutral-700">TransferGo explains card payments can cost more, while bank transfers use a fixed-fee structure that can improve total cost.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       2
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Treat the exchange rate as part of the fee:</strong>
-                      <span class="text-slate-700">TransferGo states it applies an FX mark-up on the mid-market rate—check the actual rate you're offered at checkout.</span>
+                      <strong class="text-rs-fg block mb-1.5 text-body">Treat the exchange rate as part of the fee:</strong>
+                      <span class="text-neutral-700">TransferGo states it applies an FX mark-up on the mid-market rate—check the actual rate you're offered at checkout.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       3
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Pick the slowest speed you can tolerate:</strong>
-                      <span class="text-slate-700">Speed tiers range up to 30 minutes; faster isn't free in most remittance models.</span>
+                      <strong class="text-rs-fg block mb-1.5 text-body">Pick the slowest speed you can tolerate:</strong>
+                      <span class="text-neutral-700">Speed tiers range up to 30 minutes; faster isn't free in most remittance models.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       4
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Verify payout method availability by destination:</strong>
-                      <span class="text-slate-700">Bank vs card vs cash pickup varies.</span>
+                      <strong class="text-rs-fg block mb-1.5 text-body">Verify payout method availability by destination:</strong>
+                      <span class="text-neutral-700">Bank vs card vs cash pickup varies.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       5
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-1.5 text-base">Match currency to the recipient account:</strong>
-                      <span class="text-slate-700">TransferGo warns banks can reject transfers if the account can't accept that currency.</span>
+                      <strong class="text-rs-fg block mb-1.5 text-body">Match currency to the recipient account:</strong>
+                      <span class="text-neutral-700">TransferGo warns banks can reject transfers if the account can't accept that currency.</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-10">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1073,44 +1073,44 @@
                 </h2>
 
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       1) XE Money (8.7)
                     </h3>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       XE beats TransferGo when you want a broader global footprint and you're comfortable with bank‑timed delivery. XE states transfers typically take 1–4 business days after they receive your payment (currency/destination dependent).
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Also, XE explicitly explains a similar "send rate vs mid-market rate" model (margin varies by transfer size/currencies/conditions), which can be useful if you want a consistent quoting framework across more routes.
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose XE over TransferGo when:</strong> You need coverage outside Europe-origin sending, or you're optimizing for a general-purpose international transfer provider and don't need 30‑minute tiers.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose XE over TransferGo when:</strong> You need coverage outside Europe-origin sending, or you're optimizing for a general-purpose international transfer provider and don't need 30‑minute tiers.
                     </p>
                   </div>
 
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       2) Remitly (9.1)
                     </h3>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Remitly beats TransferGo when you need more corridor breadth (Remitly markets transfers to 170+ countries/territories) and remittance-first payout options for those destinations.
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Remitly also commonly frames speed as Express vs Economy, where Express is usually faster but more expensive (useful if you want a speed-versus-cost tradeoff on a remittance-first platform).
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose Remitly over TransferGo when:</strong> You're sending to remittance-heavy corridors outside TransferGo's Europe core, or you need a provider designed around global corridor breadth and "Express vs Economy" choices.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose Remitly over TransferGo when:</strong> You're sending to remittance-heavy corridors outside TransferGo's Europe core, or you need a provider designed around global corridor breadth and "Express vs Economy" choices.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-10">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1126,20 +1126,20 @@
                   </svg>
                   Bottom Line
                 </h2>
-                <div class="space-y-5 text-lg leading-relaxed text-slate-700">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                <div class="space-y-5 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Who should use TransferGo?
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       TransferGo's 8.6/10 is justified because Delivered Value (40%) is strong in-core (European-origin transfers with a clear "rate/amount fixed once booked" posture), and because it offers good speed tiers that are unusually explicit for a consumer remittance product.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Why the 8.6/10 is justified:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Who should use it: people sending from Europe who value a clear speed menu and predictable "quoted vs delivered" behavior, and who will choose funding and speed options thoughtfully. Why it's not higher: it's less dominant globally because sending is Europe-only and payout methods vary by destination—so outside its core, you'll often find a better fit (or broader availability) with alternatives like XE or Remitly.
                     </p>
                   </div>
@@ -1152,16 +1152,16 @@
           <div class="lg:col-span-1">
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
-              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">
+              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-2">
                   Ready to Compare?
                 </h3>
-                <p class="text-sm text-slate-600 mb-4">
+                <p class="text-body-sm text-neutral-600 mb-4">
                   See how TransferGo stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
-                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                 >
                   Compare Rates Now
                 </NuxtLink>
@@ -1174,56 +1174,56 @@
                 min-height="160px"
               />
               <!-- Quick Facts -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Quick Facts
                 </h3>
-                <dl class="space-y-3 text-sm">
+                <dl class="space-y-3 text-body-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Origin
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Europe Only
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Platform
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Web & App
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Fastest Speed
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       30 Minutes
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Speed Tiers
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       4 Options
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Rate Lock
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       On Booking
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Regulation
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       UK FCA
                     </dd>
                   </div>
@@ -1231,11 +1231,11 @@
               </div>
 
               <!-- Why Trust Us -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Why Trust This Review?
                 </h3>
-                <ul class="space-y-3 text-sm text-slate-700">
+                <ul class="space-y-3 text-body-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <svg
                       class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -1281,7 +1281,7 @@
                 </ul>
                 <NuxtLink
                   to="/methodology"
-                  class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  class="mt-4 inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
                   <svg
@@ -1301,42 +1301,42 @@
               </div>
 
               <!-- More Providers -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   More Provider Reviews
                 </h3>
                 <ul class="space-y-3">
                   <li>
                     <NuxtLink
                       to="/learn/providers/xe-money"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-primary-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/remitly"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/wise"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers"
-                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      class="flex items-center gap-3 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                     >
                       View all providers →
                     </NuxtLink>
@@ -1351,25 +1351,25 @@
 
     <!-- Final CTA -->
     <section
-      class="py-16 bg-blue-600"
+      class="py-16 bg-brand-600"
       style="background-color: rgba(37, 99, 235, 1);"
     >
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
         <h2
-          class="text-3xl font-bold mb-4"
+          class="text-h2 font-bold mb-4"
           style="color: rgba(255, 255, 255, 1);"
         >
           Ready to See How TransferGo Compares?
         </h2>
         <p
-          class="text-lg mb-8"
+          class="text-body-lg mb-8"
           style="color: rgba(255, 255, 255, 1);"
         >
           Enter your transfer details to see real-time rates from TransferGo and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
-          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-body-lg font-semibold shadow-lg transition-all"
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
@@ -1395,30 +1395,39 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
+import { getProviderLogoPath } from '~/composables/useProviderLogo'
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 const score = 8.6
 
-setSeo({
-  title: 'TransferGo Review 2024 - Remit-Score 8.6/10 | Remit-Scout',
-  description: 'Independent TransferGo review with Remit-Score 8.6/10. European strength, good speed tiers, strong value in-core. Detailed breakdown of fees, speed, and delivered value.',
-  canonical: `${siteUrl}/learn/providers/transfergo`,
-  ogImage: `${siteUrl}/og-images/provider-transfergo.jpg`,
+const providerName = 'TransferGo'
+const providerLogoUrl = `${siteUrl}${getProviderLogoPath('transfergo')}`
+
+defineOgImage({
+  component: 'OgImageProvider',
+  props: {
+    providerName,
+    remitScore: score,
+    logoUrl: providerLogoUrl,
+  },
 })
 
-const { addReviewSchema } = useStructuredData()
-const reviewBody = `TransferGo earns a Remit-Score of 8.6/10 based on our independent analysis. The provider shows European strength with good speed tiers and strong value in core corridors. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+setSeo({
+  title: `TransferGo Review ${new Date().getFullYear()} - Remit-Score 8.6/10 | Remit-Scout`,
+  description: 'Independent TransferGo review with Remit-Score 8.6/10. Fees, exchange rates, delivery speed, and key pros/cons to compare before you send.',
+  canonical: `${siteUrl}/learn/providers/transfergo`,
+  ogImage: false,
+})
 
-addReviewSchema({
-  itemReviewed: 'TransferGo',
-  reviewBody,
-  author: 'Remit-Scout Editorial Team',
+const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+
+addAggregateRatingSchema({
+  name: 'TransferGo',
   ratingValue: score,
   bestRating: 10,
   worstRating: 1,
-  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [
@@ -1427,4 +1436,11 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'TransferGo Review', path: '/learn/providers/transfergo' },
 ]
+
+addBreadcrumbSchema(
+  breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.path === '/' ? `${siteUrl}/` : `${siteUrl}${item.path}`,
+  })),
+)
 </script>

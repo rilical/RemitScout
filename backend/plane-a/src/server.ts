@@ -29,6 +29,16 @@ const start = async () => {
   let isShutdownRequested = () => false
   let smartAlertsTimer: ReturnType<typeof setInterval> | null = null
   let smartAlertsRunning = false
+  const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
+  const requireQuoteRefreshQueue = config.queues.quoteRefreshMode !== 'off'
+  const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
+  const requireExportJobQueue = config.queues.exports.mode !== 'off'
+  const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
+  const requireNotificationsQueue = config.queues.notifications.mode !== 'off'
+  const requireOpsAlertsQueue = config.queues.opsAlerts.mode !== 'off'
+  const requireGoldLiveQueue = config.queues.goldLive.mode !== 'off'
+  const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
+  const requireStorage = requireExportJobQueue
 
   try {
     // Fail-fast validation for required runtime config. For ECS, also validates AWS connectivity.
@@ -37,11 +47,28 @@ const start = async () => {
         requirePlaneA: true,
         requirePlaneC: true,
         requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
-        requireSupabase: true,
-        requireStripe: true,
-        requireJwtSecret: config.planeA.requireJwt,
+        requireQueues:
+          requireQuoteRefreshQueue ||
+          requireFxRateRefreshQueue ||
+          requireExportJobQueue ||
+          requireIngestFanoutQueue ||
+          requireNotificationsQueue ||
+          requireOpsAlertsQueue ||
+          requireGoldLiveQueue ||
+          requireAlertEvaluationQueue,
+        requireQuoteRefreshQueue,
+        requireFxRateRefreshQueue,
+        requireExportJobQueue,
+        requireIngestFanoutQueue,
+        requireNotificationsQueue,
+        requireOpsAlertsQueue,
+        requireGoldLiveQueue,
+        requireAlertEvaluationQueue,
+        requireStorage,
+        requireBronzeBucket: false,
+        requireExportsBucket: requireStorage,
+        requireSupabase: isProdLikeEnv,
+        requireStripe: isProdLikeEnv,
       },
     })
 

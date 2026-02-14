@@ -15,6 +15,10 @@
       "description": "ECR image tag for backend Docker image",
       "default": "latest"
     },
+    "sharedSecretArn": {
+      "type": "string",
+      "description": "ARN of the shared Secrets Manager secret used for runtime config (Supabase/Stripe/Redis/etc)"
+    },
     "cpuArchitecture": {
       "type": "string",
       "enum": ["x86_64", "arm64"],
@@ -23,6 +27,10 @@
     "devNatGateways": {
       "type": "number",
       "description": "Dev-only override for number of NAT gateways (0/1). Useful for repairing NAT drift without code changes."
+    },
+    "devMinimalInfra": {
+      "type": "boolean",
+      "description": "Dev-only: deploy a reduced-cost minimal infra footprint focused on Tier-2 B2B observation"
     },
     "planeADbSecretArn": {
       "type": "string",
@@ -163,6 +171,18 @@
       "type": "boolean",
       "description": "Pause dev ECS services and EventBridge schedules when true"
     },
+    "devNightlyPauseEnabled": {
+      "type": "boolean",
+      "description": "Dev-only: enable the nightly auto-pause schedule (default: false)"
+    },
+    "devNightlyPauseTimezone": {
+      "type": "string",
+      "description": "Dev-only: timezone for the nightly auto-pause schedule (e.g., America/New_York)"
+    },
+    "devNightlyPauseCron": {
+      "type": "string",
+      "description": "Dev-only: cron() expression for the nightly auto-pause schedule (e.g., cron(0 0 * * ? *))"
+    },
     "goldIndicesLookbackDays": {
       "type": "string",
       "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"
@@ -188,6 +208,10 @@
     "planeBB2cQueueInSweep": {
       "type": "boolean",
       "description": "Enable B2C queue in sweep"
+    },
+    "planeBB2bMaxQueueDepth": {
+      "type": "number",
+      "description": "Max allowed B2B sweep queue depth before backpressure disables scheduling"
     },
     "planeBFxRateRefreshServiceEnabled": {
       "type": "boolean",

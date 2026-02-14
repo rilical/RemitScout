@@ -1,7 +1,6 @@
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm'
 
-import { createLogger } from './logger'
 
 export type AwsEnvSource = {
   envVar: string
@@ -35,7 +34,34 @@ export type DatabaseEnvSource = AwsEnvSource & {
   sslMode?: string
 }
 
-const logger = createLogger('shared.aws-params')
+type Logger = {
+  debug: (event: string, context?: Record<string, unknown>) => void
+  warn: (event: string, context?: Record<string, unknown>) => void
+  error: (event: string, context?: Record<string, unknown>) => void
+}
+
+let loggerPromise: Promise<Logger> | null = null
+
+const getLogger = (): Promise<Logger> => {
+  if (!loggerPromise) {
+    loggerPromise = import('./logger').then(({ createLogger }) =>
+      createLogger('shared.aws-params'),
+    )
+  }
+  return loggerPromise
+}
+
+const logger: Logger = {
+  debug: (event: string, context?: Record<string, unknown>) => {
+    void getLogger().then((loggerInstance) => loggerInstance.debug(event, context))
+  },
+  warn: (event: string, context?: Record<string, unknown>) => {
+    void getLogger().then((loggerInstance) => loggerInstance.warn(event, context))
+  },
+  error: (event: string, context?: Record<string, unknown>) => {
+    void getLogger().then((loggerInstance) => loggerInstance.error(event, context))
+  },
+}
 
 // Cache for parameter values with TTL
 type CacheEntry = {

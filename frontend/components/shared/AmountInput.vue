@@ -1,16 +1,19 @@
 <template>
   <div class="relative">
     <input
-      :id="id"
+      :id="resolvedId"
       :value="modelValue"
       type="number"
-      class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+      class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
       :class="inputClass"
       placeholder="4000"
+      :aria-label="props.label"
       :min="inputMin"
       :max="inputMax"
       step="0.01"
       :disabled="disabled"
+      :aria-invalid="error ? 'true' : 'false'"
+      :aria-describedby="error ? errorId : undefined"
       @input="handleInput"
       @change="handleChange"
       @blur="handleChange"
@@ -19,20 +22,23 @@
 
     <!-- Error message -->
     <slot name="error">
-      <div
+      <p
         v-if="error"
-        class="mt-1 text-sm text-red-500"
+        :id="errorId"
+        class="mt-1 text-body-sm text-danger-600"
+        role="alert"
+        aria-live="polite"
       >
         {{ error }}
-      </div>
+      </p>
     </slot>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { getCountryByCode } from '~/utils/countries-currencies'
-import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
+import { computed, useId } from 'vue'
+  import { getCountryByCode } from '~/utils/countries-currencies'
+  import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
 
 interface Props {
   modelValue: number
@@ -61,6 +67,10 @@ const props = withDefaults(defineProps<Props>(), {
   min: undefined,
   max: undefined,
 })
+
+const fallbackId = useId()
+const resolvedId = computed(() => props.id ?? `amount-input-${fallbackId}`)
+const errorId = computed(() => `${resolvedId.value}-error`)
 
 const emit = defineEmits<{
   'update:modelValue': [value: number]

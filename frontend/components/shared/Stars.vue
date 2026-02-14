@@ -20,7 +20,7 @@
     </svg>
 
     <!-- Rating text -->
-    <span class="ml-2 text-sm font-medium text-gray-700">
+    <span class="ml-2 text-body-sm font-medium text-neutral-700">
       {{ rating.toFixed(1) }}/5
     </span>
   </div>
@@ -39,13 +39,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const getStarClass = (starIndex: number) => {
   if (starIndex <= Math.floor(props.rating)) {
-    return 'text-yellow-400'
+    return 'text-warning-400'
   }
   else if (starIndex === Math.ceil(props.rating) && props.rating % 1 !== 0) {
-    return 'text-yellow-400' // Partial star - for future enhancement
+    return 'text-warning-400' // Partial star - for future enhancement
   }
   else {
-    return 'text-gray-300'
+    return 'text-neutral-300'
   }
 }
 </script>

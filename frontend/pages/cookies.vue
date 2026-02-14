@@ -10,19 +10,19 @@
     :highlights="highlights"
     :related="relatedLinks"
   >
-    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
-      <p class="mb-6 text-lg leading-relaxed">
-        This Cookie Policy explains how <strong class="text-blue-600">Remit-Scout</strong> uses cookies and similar technologies
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-rs-fg prose-a:font-semibold prose-a:text-brand-600">
+      <p class="mb-6 text-body-lg leading-relaxed">
+        This Cookie Policy explains how <strong class="text-brand-600">Remit-Scout</strong> uses cookies and similar technologies
         to operate, secure, and improve our comparison platform. If required by law, we
         will ask for consent before placing non-essential cookies.
       </p>
 
-      <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
-        <h3 class="mb-2 text-lg font-semibold text-blue-900">
+      <div class="my-8 rounded-lg border-l-4 border-primary-500 bg-primary-50 p-6">
+        <h3 class="mb-2 text-body-lg font-semibold text-primary-900">
           Important Information
         </h3>
-        <p class="text-blue-800 leading-relaxed">
-          <strong class="text-blue-600">Remit-Scout</strong> uses cookies to enhance your experience, ensure security, and improve our platform.
+        <p class="text-primary-800 leading-relaxed">
+          <strong class="text-brand-600">Remit-Scout</strong> uses cookies to enhance your experience, ensure security, and improve our platform.
           We use essential cookies for core functionality, and (with your consent) functional, analytics, and marketing cookies.
           Marketing cookies may be used for ads and attribution to help keep the free plan free. You can control cookie preferences
           through your browser settings, our cookie banner, or the “Manage cookies” link in the footer.
@@ -31,7 +31,7 @@
 
       <h2
         id="what-are-cookies"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         What are cookies?
       </h2>
@@ -44,24 +44,24 @@
 
       <h2
         id="how-we-use-cookies"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         How we use cookies
       </h2>
       <p class="mb-4 leading-relaxed">
-        <strong class="text-blue-600">Remit-Scout</strong> uses cookies for the following purposes:
+        <strong class="text-brand-600">Remit-Scout</strong> uses cookies for the following purposes:
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-        <li><strong class="text-blue-600">Essential operations:</strong> Enable core features like session security and site stability.</li>
-        <li><strong class="text-blue-600">Functional:</strong> Remember preferences like your last corridor.</li>
-        <li><strong class="text-blue-600">Analytics:</strong> Understand how people use Remit-Scout so we can improve accuracy and performance.</li>
-        <li><strong class="text-blue-600">Marketing:</strong> Ads and attribution (only after opt-in where required by law).</li>
-        <li><strong class="text-blue-600">Security:</strong> Detect abuse, prevent fraud, and protect the service.</li>
+        <li><strong class="text-brand-600">Essential operations:</strong> Enable core features like session security and site stability.</li>
+        <li><strong class="text-brand-600">Functional:</strong> Remember preferences like your last corridor.</li>
+        <li><strong class="text-brand-600">Analytics:</strong> Understand how people use Remit-Scout so we can improve accuracy and performance.</li>
+        <li><strong class="text-brand-600">Marketing:</strong> Ads and attribution (only after opt-in where required by law).</li>
+        <li><strong class="text-brand-600">Security:</strong> Detect abuse, prevent fraud, and protect the service.</li>
       </ul>
 
       <h2
         id="types-of-cookies"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Types of cookies we use
       </h2>
@@ -69,10 +69,10 @@
         We use the following categories of cookies:
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-        <li><strong class="text-blue-600">Essential cookies:</strong> Required for the website to function properly. These cookies cannot be disabled.</li>
-        <li><strong class="text-blue-600">Functional cookies:</strong> Remember local preferences like your corridor and UI choices.</li>
-        <li><strong class="text-blue-600">Analytics cookies:</strong> Help us measure usage patterns and improve the experience (opt-in where required).</li>
-        <li><strong class="text-blue-600">Marketing cookies:</strong> Used for ads and attribution (opt-in where required).</li>
+        <li><strong class="text-brand-600">Essential cookies:</strong> Required for the website to function properly. These cookies cannot be disabled.</li>
+        <li><strong class="text-brand-600">Functional cookies:</strong> Remember local preferences like your corridor and UI choices.</li>
+        <li><strong class="text-brand-600">Analytics cookies:</strong> Help us measure usage patterns and improve the experience (opt-in where required).</li>
+        <li><strong class="text-brand-600">Marketing cookies:</strong> Used for ads and attribution (opt-in where required).</li>
       </ul>
       <p class="mb-6 leading-relaxed">
         We do not use cookies to sell personal data. If we introduce new categories in the future,
@@ -81,7 +81,7 @@
 
       <h2
         id="manage-preferences"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Manage your preferences
       </h2>
@@ -94,7 +94,7 @@
 
       <h2
         id="third-party-services"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Third-party services
       </h2>
@@ -106,7 +106,7 @@
 
       <h2
         id="policy-updates"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Updates to this policy
       </h2>
@@ -119,18 +119,18 @@
     </div>
 
     <template #sidebar>
-      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-        <h3 class="text-sm font-semibold text-blue-900">
+      <div class="rounded-2xl border border-primary-200 bg-primary-50 p-5">
+        <h3 class="text-body-sm font-semibold text-primary-900">
           Need help with privacy or cookies?
         </h3>
-        <p class="mt-2 text-sm text-blue-800 leading-relaxed">
+        <p class="mt-2 text-body-sm text-primary-800 leading-relaxed">
           Visit our <NuxtLink
             to="/legal/privacy"
-            class="font-semibold underline hover:text-blue-900"
+            class="font-semibold underline hover:text-primary-900"
           >Privacy Policy</NuxtLink>
           or <NuxtLink
             to="/contact"
-            class="font-semibold underline hover:text-blue-900"
+            class="font-semibold underline hover:text-primary-900"
           >contact us</NuxtLink>.
         </p>
       </div>
@@ -189,11 +189,20 @@ const relatedLinks = [
   },
 ]
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Cookie Policy',
+    description: 'Learn how Remit-Scout uses cookies and how you can manage your preferences.',
+  },
+})
+
 setSeo({
-  title: 'Cookie Policy | Remit-Scout',
+  title: 'Cookie Policy & Preferences | Remit-Scout',
   description:
     'Learn how Remit-Scout uses essential, functional, analytics, and marketing cookies, and how you can manage your preferences.',
   canonical: `${siteUrl}/cookies`,
+  ogImage: false,
   ogType: 'article',
   publishedTime: lastUpdatedIso,
   modifiedTime: lastUpdatedIso,

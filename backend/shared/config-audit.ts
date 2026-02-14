@@ -15,6 +15,11 @@ type AuditItem = {
 const isEmptyString = (value: unknown): boolean =>
   typeof value === 'string' && value.trim().length === 0
 
+const shouldRequire = (
+  overrideValue: boolean | undefined,
+  defaultValue: boolean,
+) => overrideValue ?? defaultValue
+
 export const auditConfig = (
   requirements: RuntimeConfigRequirements = {},
 ): ConfigAuditResult => {
@@ -24,26 +29,58 @@ export const auditConfig = (
     items.push({ envVar, value, required, warnWhenEmpty })
   }
 
-  add('DATABASE_URL_PLANE_A', config.db.planeAUrl, Boolean(requirements.requirePlaneA))
+  // Only warn on empty when the subsystem is actually required for this process.
+  // Otherwise, jobs like the B2B sweep scheduler (Plane B + Redis only) will emit noisy warnings
+  // about unrelated Plane A / Plane C wiring that they intentionally do not need.
+  add(
+    'DATABASE_URL_PLANE_A',
+    config.db.planeAUrl,
+    Boolean(requirements.requirePlaneA),
+    Boolean(requirements.requirePlaneA),
+  )
   add('DATABASE_URL_PLANE_B', config.db.planeBUrl, Boolean(requirements.requirePlaneB))
-  add('DATABASE_URL_PLANE_C', config.db.planeCUrl, Boolean(requirements.requirePlaneCDb))
-  add('PLANE_C_BASE_URL', config.planeA.planeCBaseUrl, Boolean(requirements.requirePlaneC))
+  add(
+    'DATABASE_URL_PLANE_C',
+    config.db.planeCUrl,
+    Boolean(requirements.requirePlaneCDb),
+    Boolean(requirements.requirePlaneCDb),
+  )
+  add(
+    'PLANE_C_BASE_URL',
+    config.planeA.planeCBaseUrl,
+    Boolean(requirements.requirePlaneC),
+    Boolean(requirements.requirePlaneC),
+  )
   add('REDIS_URL', config.redis.url, Boolean(requirements.requireRedis))
 
   if (requirements.requireQueues) {
-    add('QUOTE_REFRESH_QUEUE_URL', config.queues.quoteRefreshUrl, true)
-    add('FX_RATE_REFRESH_QUEUE_URL', config.queues.fxRateRefreshUrl, true)
-    add('EXPORT_JOB_QUEUE_URL', config.queues.exports.url, true)
-    add('PLANE_B_INGEST_FANOUT_QUEUE_URL', config.queues.ingestFanout.url, true)
-    add('PLANE_B_NOTIFICATIONS_QUEUE_URL', config.queues.notifications.url, true)
-    add('PLANE_B_OPS_ALERT_QUEUE_URL', config.queues.opsAlerts.url, true)
-    add('GOLD_LIVE_QUEUE_URL', config.queues.goldLive.url, true)
-    add('ALERT_EVALUATION_QUEUE_URL', config.alerts.evaluation.queueUrl, true)
+    const requireQuoteRefreshQueue = shouldRequire(requirements.requireQuoteRefreshQueue, true)
+    const requireFxRateRefreshQueue = shouldRequire(requirements.requireFxRateRefreshQueue, true)
+    const requireExportJobQueue = shouldRequire(requirements.requireExportJobQueue, true)
+    const requireIngestFanoutQueue = shouldRequire(requirements.requireIngestFanoutQueue, true)
+    const requireNotificationsQueue = shouldRequire(requirements.requireNotificationsQueue, true)
+    const requireOpsAlertsQueue = shouldRequire(requirements.requireOpsAlertsQueue, true)
+    const requireGoldLiveQueue = shouldRequire(requirements.requireGoldLiveQueue, true)
+    const requireAlertEvaluationQueue = shouldRequire(
+      requirements.requireAlertEvaluationQueue,
+      true,
+    )
+
+    add('QUOTE_REFRESH_QUEUE_URL', config.queues.quoteRefreshUrl, requireQuoteRefreshQueue)
+    add('FX_RATE_REFRESH_QUEUE_URL', config.queues.fxRateRefreshUrl, requireFxRateRefreshQueue)
+    add('EXPORT_JOB_QUEUE_URL', config.queues.exports.url, requireExportJobQueue)
+    add('PLANE_B_INGEST_FANOUT_QUEUE_URL', config.queues.ingestFanout.url, requireIngestFanoutQueue)
+    add('PLANE_B_NOTIFICATIONS_QUEUE_URL', config.queues.notifications.url, requireNotificationsQueue)
+    add('PLANE_B_OPS_ALERT_QUEUE_URL', config.queues.opsAlerts.url, requireOpsAlertsQueue)
+    add('GOLD_LIVE_QUEUE_URL', config.queues.goldLive.url, requireGoldLiveQueue)
+    add('ALERT_EVALUATION_QUEUE_URL', config.alerts.evaluation.queueUrl, requireAlertEvaluationQueue)
   }
 
   if (requirements.requireStorage) {
-    add('BRONZE_S3_BUCKET', config.storage.bronze.bucket, true)
-    add('EXPORTS_S3_BUCKET', config.storage.exports.bucket, true)
+    const requireBronzeBucket = shouldRequire(requirements.requireBronzeBucket, true)
+    const requireExportsBucket = shouldRequire(requirements.requireExportsBucket, true)
+    add('BRONZE_S3_BUCKET', config.storage.bronze.bucket, requireBronzeBucket)
+    add('EXPORTS_S3_BUCKET', config.storage.exports.bucket, requireExportsBucket)
   }
 
   if (requirements.requireAlerts) {
@@ -91,4 +128,3 @@ export const auditConfig = (
     warnings: Array.from(new Set(warnings.filter((w) => !missing.includes(w)))),
   }
 }
-

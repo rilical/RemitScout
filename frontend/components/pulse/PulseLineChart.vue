@@ -48,7 +48,7 @@
 
         <!-- Y-axis labels -->
         <g
-          class="y-axis text-slate-400"
+          class="y-axis text-neutral-400"
           font-size="11"
         >
           <text
@@ -58,7 +58,7 @@
             :y="label.y + 4"
             text-anchor="end"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             {{ label.text }}
           </text>
@@ -66,7 +66,7 @@
 
         <!-- X-axis labels -->
         <g
-          class="x-axis text-slate-400"
+          class="x-axis text-neutral-400"
           font-size="11"
         >
           <text
@@ -76,7 +76,7 @@
             :y="height - padding.bottom + 20"
             text-anchor="middle"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             {{ label.text }}
           </text>
@@ -158,13 +158,13 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">
+        <div class="mb-1 text-body-sm text-neutral-400">
           {{ tooltipData.date }}
         </div>
         <div
           v-for="item in tooltipData.values"
           :key="item.label"
-          class="flex items-center gap-2 text-sm"
+          class="flex items-center gap-2 text-body-sm"
         >
           <span
             class="h-2 w-2 rounded-full"
@@ -181,7 +181,7 @@
       <button
         v-for="s in series"
         :key="`legend-${s.id}`"
-        class="flex items-center gap-2 rounded-full px-3 py-1 text-sm transition-opacity"
+        class="flex items-center gap-2 rounded-full px-3 py-1 text-body-sm transition-opacity"
         :class="visibleSeries.has(s.id) ? 'opacity-100' : 'opacity-40'"
         @click="toggleSeries(s.id)"
       >

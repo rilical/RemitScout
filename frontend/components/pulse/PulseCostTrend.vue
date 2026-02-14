@@ -11,10 +11,10 @@
           />
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">
+          <h2 class="text-body-lg font-bold text-white">
             Cost Trend
           </h2>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             Hidden fee changes over time
           </p>
         </div>
@@ -23,7 +23,7 @@
         <button
           v-for="range in ranges"
           :key="range"
-          class="rounded-md px-3 py-1 text-xs font-semibold transition-colors"
+          class="rounded-md px-3 py-1 text-body-sm font-semibold transition-colors"
           :class="selectedRange === range ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white'"
           @click="selectedRange = range"
         >
@@ -49,38 +49,38 @@
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div class="rounded-lg bg-neutral-900 p-4">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs text-neutral-500">Avg Hidden Fee</span>
+              <span class="text-body-sm text-neutral-500">Avg Hidden Fee</span>
               <span
-                class="text-xs font-semibold"
+                class="text-body-sm font-semibold"
                 :class="trendDirection === 'down' ? 'text-brand-600' : 'text-danger-600'"
               >
                 {{ trendDirection === 'down' ? '↓' : '↑' }} {{ formatPercent(Math.abs(trendPercent), { digits: 1 }) }}
               </span>
             </div>
             <div class="flex items-baseline gap-2">
-              <span class="text-xl font-bold text-white">{{ money(currentAvgCost) }}</span>
-              <span class="text-sm text-neutral-500">from {{ money(previousAvgCost) }}</span>
+              <span class="text-h4 font-bold text-white">{{ money(currentAvgCost) }}</span>
+              <span class="text-body-sm text-neutral-500">from {{ money(previousAvgCost) }}</span>
             </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4">
-            <div class="text-xs text-neutral-500 mb-2">
+            <div class="text-body-sm text-neutral-500 mb-2">
               Market Leader
             </div>
-            <div class="text-xl font-bold text-white">
+            <div class="text-h4 font-bold text-white">
               {{ marketLeader }}
             </div>
-            <div class="text-sm text-neutral-500">
+            <div class="text-body-sm text-neutral-500">
               {{ marketLeaderDays }} of {{ selectedDays }} days
             </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4">
-            <div class="text-xs text-neutral-500 mb-2">
+            <div class="text-body-sm text-neutral-500 mb-2">
               Consistency
             </div>
-            <div class="text-xl font-bold text-white">
+            <div class="text-h4 font-bold text-white">
               {{ leaderConsistency }}%
             </div>
-            <div class="text-sm text-neutral-500">
+            <div class="text-body-sm text-neutral-500">
               same best provider
             </div>
           </div>
@@ -167,7 +167,7 @@
 
         <!-- Provider Performance -->
         <div class="border-t border-neutral-700 pt-4 mt-4">
-          <h4 class="text-sm font-semibold text-white mb-3">
+          <h4 class="text-body-sm font-semibold text-white mb-3">
             Provider Performance ({{ selectedRange }})
           </h4>
           <div class="space-y-2">
@@ -183,10 +183,10 @@
                 >
                   {{ index + 1 }}
                 </span>
-                <span class="text-sm text-white">{{ provider.name }}</span>
+                <span class="text-body-sm text-white">{{ provider.name }}</span>
               </div>
               <div class="flex items-center gap-4">
-                <span class="text-sm text-neutral-400">{{ provider.winDays }} days best</span>
+                <span class="text-body-sm text-neutral-400">{{ provider.winDays }} days best</span>
                 <div class="w-20 h-2 rounded-full bg-neutral-700 overflow-hidden">
                   <div
                     class="h-full rounded-full"
@@ -319,7 +319,7 @@ async function loadData() {
     lastUpdated.value = lastDate ? new Date(lastDate).toISOString() : (store.lastUpdated || null)
   }
   catch (e) {
-    console.error('Failed to load cost trend:', e)
+    useLogger('PulseCostTrend').error('Failed to load cost trend', e)
   }
   finally {
     loading.value = false

@@ -1,7 +1,7 @@
 import { COUNTRIES, type Country } from './countries-currencies'
 import { getCorridorTier, type CorridorTier } from './corridor-tiers'
 
-export const MAJOR_SEND_CURRENCIES = ['USD', 'EUR', 'CAD', 'AED', 'SAR', 'JPY', 'GBP'] as const
+export const MAJOR_SEND_CURRENCIES = ['USD', 'EUR', 'CAD', 'AED', 'JPY', 'GBP'] as const
 export type MajorSendCurrency = (typeof MAJOR_SEND_CURRENCIES)[number]
 
 export const PAYOUT_METHODS = ['bank_deposit', 'cash_pickup', 'mobile_wallet'] as const

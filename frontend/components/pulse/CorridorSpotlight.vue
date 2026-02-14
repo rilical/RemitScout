@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+      <h2 class="text-h4 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-5 w-5 text-blue-400"
+          class="h-5 w-5 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -19,9 +19,9 @@
       </h2>
       <NuxtLink
         to="/pulse/corridors"
-        class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+        class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
       >
-        View all
+        View all corridors
         <svg
           class="h-4 w-4"
           fill="none"
@@ -39,21 +39,23 @@
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div
+      <button
         v-for="corridor in spotlightCorridors"
         :key="`${corridor.from}-${corridor.to}`"
-        class="group relative cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 overflow-hidden transition-all duration-300 hover:border-white/20 hover:scale-[1.02]"
+        type="button"
+        class="group relative w-full cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 overflow-hidden text-left transition-all duration-300 hover:border-white/20 hover:scale-[1.02]"
+        :aria-label="`View corridor ${corridor.from} to ${corridor.to}`"
         @click="$emit('corridor-click', { from: corridor.from, to: corridor.to })"
       >
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <div class="relative p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-              <div class="flex items-center gap-2 text-3xl">
+              <div class="flex items-center gap-2 text-h2">
                 <span>{{ corridor.fromFlag }}</span>
                 <svg
-                  class="h-4 w-4 text-slate-500"
+                  class="h-4 w-4 text-rs-muted"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -69,37 +71,37 @@
               </div>
             </div>
             <span
-              class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+              class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-body-sm font-medium"
               :class="corridor.freshnessClass"
             >
               <span class="relative flex h-1.5 w-1.5">
                 <span
                   v-if="corridor.freshness.includes('5m') || corridor.freshness.includes('8m')"
                   class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-                  :class="corridor.freshnessClass.includes('green') ? 'bg-emerald-400' : 'bg-amber-400'"
+                  :class="corridor.freshnessClass.includes('success') ? 'bg-success-600' : 'bg-warning-600'"
                 />
                 <span
                   class="relative inline-flex h-1.5 w-1.5 rounded-full"
-                  :class="corridor.freshnessClass.includes('green') ? 'bg-emerald-500' : 'bg-amber-500'"
+                  :class="corridor.freshnessClass.includes('success') ? 'bg-success-600' : 'bg-warning-600'"
                 />
               </span>
               {{ corridor.freshness }}
             </span>
           </div>
 
-          <div class="text-sm font-medium text-slate-400 mb-4">
+          <div class="text-body-sm font-medium text-neutral-400 mb-4">
             {{ corridor.from }} → {{ corridor.to }}
           </div>
 
-          <div class="mb-4 p-3 rounded-xl bg-white/5 border border-white/5">
-            <div class="text-xs text-slate-500 mb-1">
+          <div class="mb-4 p-3 rounded-xl bg-surface/5 border border-white/5">
+            <div class="text-body-sm text-rs-muted mb-1">
               Best provider
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-lg font-bold text-white">{{ corridor.bestProvider }}</span>
+              <span class="text-body-lg font-bold text-white">{{ corridor.bestProvider }}</span>
               <span
-                class="flex items-center gap-1 text-sm font-semibold"
-                :class="corridor.changeType === 'up' ? 'text-emerald-400' : 'text-red-400'"
+                class="flex items-center gap-1 text-body-sm font-semibold"
+                :class="corridor.changeType === 'up' ? 'text-success-600' : 'text-danger-600'"
               >
                 <svg
                   class="h-4 w-4"
@@ -129,15 +131,15 @@
 
           <div class="flex items-end justify-between">
             <div>
-              <div class="text-xs text-slate-500 mb-1">
+              <div class="text-body-sm text-rs-muted mb-1">
                 Recipient gets
               </div>
-              <div class="text-2xl font-bold text-emerald-400">
+              <div class="text-h3 font-bold text-success-600">
                 {{ corridor.recipientGets }}
               </div>
             </div>
             <div class="text-right">
-              <div class="text-xs text-slate-500">
+              <div class="text-body-sm text-rs-muted">
                 ${{ corridor.amount }} • {{ corridor.method }}
               </div>
             </div>
@@ -146,9 +148,9 @@
 
         <div
           class="h-1 w-full"
-          :class="corridor.changeType === 'up' ? 'bg-gradient-to-r from-emerald-500/50 to-emerald-500/0' : 'bg-gradient-to-r from-red-500/50 to-red-500/0'"
+          :class="corridor.changeType === 'up' ? 'bg-gradient-to-r from-success-600/50 to-success-600/0' : 'bg-gradient-to-r from-danger-600/50 to-danger-600/0'"
         />
-      </div>
+      </button>
     </div>
   </div>
 </template>
@@ -171,7 +173,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Bank',
     freshness: '5m ago',
-    freshnessClass: 'bg-emerald-500/20 text-emerald-400',
+    freshnessClass: 'bg-success-600/20 text-success-600',
   },
   {
     from: 'US',
@@ -185,7 +187,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Cash',
     freshness: '12m ago',
-    freshnessClass: 'bg-emerald-500/20 text-emerald-400',
+    freshnessClass: 'bg-success-600/20 text-success-600',
   },
   {
     from: 'GB',
@@ -199,7 +201,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Bank',
     freshness: '18m ago',
-    freshnessClass: 'bg-amber-500/20 text-amber-400',
+    freshnessClass: 'bg-warning-600/20 text-warning-600',
   },
   {
     from: 'US',
@@ -213,7 +215,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Bank',
     freshness: '8m ago',
-    freshnessClass: 'bg-emerald-500/20 text-emerald-400',
+    freshnessClass: 'bg-success-600/20 text-success-600',
   },
   {
     from: 'CA',
@@ -227,7 +229,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Bank',
     freshness: '22m ago',
-    freshnessClass: 'bg-amber-500/20 text-amber-400',
+    freshnessClass: 'bg-warning-600/20 text-warning-600',
   },
   {
     from: 'US',
@@ -241,7 +243,7 @@ const spotlightCorridors = [
     amount: 1000,
     method: 'Wallet',
     freshness: '15m ago',
-    freshnessClass: 'bg-emerald-500/20 text-emerald-400',
+    freshnessClass: 'bg-success-600/20 text-success-600',
   },
 ]
 </script>

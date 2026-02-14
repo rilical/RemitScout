@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
-        <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
+    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
+      <div class="mx-auto max-w-page px-page-x relative">
+        <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70 relative z-10">
           <NuxtLink
             to="/"
             class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
@@ -28,13 +28,13 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+              <div class="w-20 h-20 rounded-2xl bg-surface p-3 shadow-xl">
+                <div class="w-full h-full rounded-xl bg-primary-500 flex items-center justify-center text-white text-h3 font-bold">
                   PS
                 </div>
               </div>
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface/10 text-white text-body-sm font-medium mb-2">
                   <svg
                     class="w-4 h-4"
                     fill="currentColor"
@@ -44,23 +44,23 @@
                   </svg>
                   Provider Review
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
+                <h1 class="text-h1 font-bold text-white mb-2">
                   Paysend Review
                 </h1>
-                <p class="text-xl text-slate-300">
+                <p class="text-h4 text-neutral-300">
                   Independent Remit-Scout Analysis
                 </p>
               </div>
             </div>
 
-            <p class="text-lg text-white/90 leading-relaxed mb-8">
+            <p class="text-body-lg text-white/90 leading-relaxed mb-8">
               A data-driven review based on real transfer outcomes - not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
             </p>
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 to="/send-money?provider=paysend"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold shadow-lg transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg
@@ -80,7 +80,7 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold text-white transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold text-white transition-all"
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
@@ -103,9 +103,9 @@
 
           <!-- Right: Score Card -->
           <div class="flex justify-center lg:justify-end">
-            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
+            <div class="bg-surface rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">
                   REMIT-SCOUT SCORE
                 </div>
                 <RemitScoreRing :score="score" />
@@ -114,35 +114,35 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
@@ -150,9 +150,9 @@
                 </div>
               </div>
 
-              <div class="mt-6 pt-6 border-t border-slate-200 text-center">
+              <div class="mt-6 pt-6 border-t border-rs-border text-center">
                 <p
-                  class="text-xs"
+                  class="text-body-sm"
                   style="color: rgba(17, 24, 39, 1);"
                 >
                   Based on our independent methodology.<br>
@@ -170,38 +170,38 @@
     </section>
 
     <!-- Quick Stats Strip -->
-    <section class="bg-slate-50 border-y border-slate-200 py-6">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="bg-neutral-50 border-y border-rs-border py-6">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               Card-to-Card
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Core Model
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">
+            <div class="text-h2 font-bold text-success-600">
               Minutes
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Typical Speed
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               Fixed Fees
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Pricing Model
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               100+
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Countries
             </div>
           </div>
@@ -212,15 +212,15 @@
     <!-- Main Content -->
     <section
       id="review"
-      class="py-16 bg-white"
+      class="py-16 bg-surface"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg
                     class="w-12 h-12 text-brand-600/20"
@@ -236,27 +236,27 @@
                     />
                   </svg>
                 </div>
-                <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
+                <p class="text-h4 text-neutral-800 leading-relaxed relative z-10 font-medium">
                   Paysend's 8.1/10 is anchored first to Delivered Value (40%). The service is built around card-to-card convenience and predictable, upfront fees, but the effective cost still depends on the FX rate you actually get. Paysend's own US consumer terms are explicit that its exchange rate is influenced by multiple factors and may include a mark‑up, which is the main reason delivered value can be inconsistent even when the fee looks simple.
                 </p>
               </div>
 
               <div class="mb-22">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-brand-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
-                <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                  <p class="text-lg text-slate-800 leading-relaxed italic m-0">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <p class="text-body-lg text-neutral-800 leading-relaxed italic m-0">
                     "Paysend (8.1): Card-to-card convenience; predictable fees; FX spread can reduce delivered value; good speed"
                   </p>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-8">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-4 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -272,101 +272,101 @@
                   </svg>
                   Score Breakdown
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Here's how Paysend performs across each category in our rubric:
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-primary-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-h3 shadow-md">
                     8.1
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <h3 class="text-h3 font-bold text-rs-fg mb-2 flex items-center gap-2">
                       Paysend
                     </h3>
-                    <p class="text-sm text-black">
+                    <p class="text-body-sm text-black">
                       Remit-Score
                     </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Paysend positions pricing as "fixed, simple, shown upfront," but Paysend's US terms say its exchange rate may include a mark‑up, which can reduce delivered value even if the fee is fixed.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Reliability
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       20% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Paysend shows the fee, FX rate, and "total to recipient" before you confirm, and the rate is locked at the time of the transaction. Bank-based flows can be bank-timed.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Friction & Speed
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Card and wallet transfers "usually arrive within minutes," and payment confirmation is typically minutes for card funding (sometimes up to an hour). Bank transfers can take up to 3 business days.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Support & Refunds
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Cancellation is time/status dependent (e.g., if a transfer is already delivered, cancellation isn't possible; some bank-account transfers can't be reversed once sent in major regions).
                     </div>
                   </div>
-                  <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="sm:col-span-2 p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Trust & Safety
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       10% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       In the UK, Paysend plc appears on the FCA register as an Authorised Electronic Money Institution (a concrete, public check).
                     </div>
                   </div>
                 </div>
-                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
+                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -379,10 +379,10 @@
                       />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-2.5">
+                      <div class="font-semibold text-rs-fg mb-2.5">
                         Why 8.1 (not 9.0+):
                       </div>
-                      <div class="text-sm text-slate-700 leading-relaxed">
+                      <div class="text-body-sm text-neutral-700 leading-relaxed">
                         Paysend is strong on speed and convenience, with clear pre-send disclosure of fees and recipient amount. The score is capped mainly by Delivered Value (40%): Paysend's own documentation allows for exchange-rate mark-up/margin, so the FX spread can materially reduce what the recipient gets—especially on larger transfers—even when the fee feels predictable.
                       </div>
                     </div>
@@ -390,56 +390,56 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Delivered Value (40%)
                   </h2>
                 </div>
-                <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                <p class="text-body-lg text-neutral-700 leading-relaxed mb-6">
                   This is the biggest weighting, and it's the main reason Paysend scores 8.1 rather than higher.
                 </p>
-                <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="mb-6 p-5 rounded-xl bg-neutral-50 border border-rs-border">
+                  <p class="font-semibold text-rs-fg mb-3 text-body">
                     Effective cost = transfer fee + FX spread
                   </p>
-                  <p class="text-slate-700 mb-3">
+                  <p class="text-neutral-700 mb-3">
                     Paysend positions its pricing as "fixed, simple, shown upfront," and also notes the exact fee can vary based on the sending country and delivery method.
                   </p>
-                  <p class="text-slate-700 mb-3">
+                  <p class="text-neutral-700 mb-3">
                     But the larger variable is the exchange rate:
                   </p>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">1</span>
                       <span>Paysend's US consumer terms state the exchange rate is based on factors including the rate Paysend is charged, the mid‑market rate, and third‑party partner rates—and that Paysend may also include a mark‑up in its exchange rate.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">2</span>
                       <span>Paysend's own promo disclaimers explicitly say FX rates are determined by Paysend and may include a margin—a direct indicator that the rate can carry spread/markup.</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-3 mb-0">
+                  <p class="text-neutral-700 mt-3 mb-0">
                     So even when the fee feels predictable, delivered value can swing based on the FX component—especially on larger sends.
                   </p>
                 </div>
 
-                <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">
+                <div class="p-6 rounded-xl border-2 border-success-600">
+                  <p class="font-semibold text-rs-fg mb-3">
                     "How often is it the cheapest?"
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
+                  <p class="text-neutral-800 leading-relaxed mb-4">
                     We're not going to invent "Paysend wins X% of the time." The evidence-based way to frame it is:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
+                  <ul class="space-y-2 text-neutral-700">
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -455,7 +455,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -473,60 +473,60 @@
                 </div>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p class="text-sm text-blue-800 m-0">
+              <div class="not-prose my-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p class="text-body-sm text-primary-800 m-0">
                   <strong>Quote vs delivered accuracy:</strong> Paysend's quoting mechanics are generally "what you see is what they get": Paysend's help center describes the exchange rate as locked in at the time of the transaction, and it defines "Total to recipient" as the exact amount your recipient receives. The US terms also say the applied fee and FX rate appear in your transaction history. One nuance: the US terms note Mastercard exchange rates can fluctuate and this may create a difference between the amount debited from your funding source and the rate at authorization time (a network/funding mechanic worth being aware of for card-funded flows).
                 </p>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
+                <p class="text-body-sm text-warning-600 m-0">
                   <strong>Delivered Value takeaway:</strong> Paysend's fee model is easy to understand, but FX margin/spread is the lever that can reduce delivered value—matching the auditor note.
                 </p>
               </div>
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Reliability & Success (20%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This category is about whether the provider can consistently produce a usable quote and then successfully complete the transfer — without surprises like sudden unavailability, frequent recalculations, or failed deliveries.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Paysend's sending flow supports multiple destination rails—card, bank account, cash pickup, and digital wallet—which improves "quote success" in corridors where one method might be unavailable.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Pricing stability
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Fees may be "fixed" per transaction type, but rates and mark-ups can change with market conditions: Paysend's US terms say the exchange rate may change daily and changes are made right away.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Paysend emphasizes real-time quoting and clear pre-send disclosure: Help content emphasizes seeing the exchange rate before sending and "no surprises later on" once locked.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Reliability takeaway
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Generally strong for supported corridors (especially card rails), with the main variability coming from bank processing times and the usual verification/payment-confirmation dependencies.
                     </p>
                   </div>
@@ -535,28 +535,28 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Friction & Speed (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This measures how quickly funds arrive in practice and how much effort is required (setup, verification, payment steps, payout complexity).
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       ETA / speed buckets (based on Paysend's own guidance)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Paysend's speed behavior breaks into practical buckets:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -568,11 +568,11 @@
                             d="M13 10V3L4 14h7v7l9-11h-7z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Card transfers:</strong> payment confirmation usually within minutes (sometimes up to 1 hour).</span>
+                        <span><strong class="text-rs-fg">Card transfers:</strong> payment confirmation usually within minutes (sometimes up to 1 hour).</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -584,11 +584,11 @@
                             d="M13 10V3L4 14h7v7l9-11h-7z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Card and wallet delivery:</strong> usually within minutes, occasionally up to ~30 minutes.</span>
+                        <span><strong class="text-rs-fg">Card and wallet delivery:</strong> usually within minutes, occasionally up to ~30 minutes.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -600,29 +600,29 @@
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Bank transfer processing:</strong> can take up to 3 business days depending on banks (and often slows around weekends/holidays).</span>
+                        <span><strong class="text-rs-fg">Bank transfer processing:</strong> can take up to 3 business days depending on banks (and often slows around weekends/holidays).</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Paysend supports sending to:
                     </p>
                     <div class="flex flex-wrap gap-2">
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cards</span>
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Bank accounts</span>
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Digital wallets</span>
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cash pickup</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Cards</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Bank accounts</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Digital wallets</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Cash pickup</span>
                     </div>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery-speed behavior
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Paysend is strongest when you can stay on card/wallet rails end-to-end. Bank deposits are more "bank-timed" and can vary by receiving institution.
                     </p>
                   </div>
@@ -631,28 +631,28 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Support & Refunds (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This category is about what happens after something goes wrong: refunds, cancellations, dispute handling, and how hard it is to reach a human.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund experience
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Paysend's help content is fairly specific:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -668,7 +668,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -684,11 +684,11 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Dispute handling and post-issue friction
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Practical implication: Paysend's refund path is clear when the transfer is still cancellable—but once funds are delivered or bank processing has started, you may be in "recipient bank trace / return" territory, which typically has more friction (and depends on the receiving institution).
                     </p>
                   </div>
@@ -697,52 +697,52 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Trust & Safety (10%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     We keep this conservative and verifiable "where available."
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       UK licensing check
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Paysend plc appears on the FCA register as an Authorised Electronic Money Institution (a direct public verification point).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Network partnerships
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Paysend's card-to-card model relies on major card rails; for example, Visa has publicly discussed its collaboration with Paysend to transform global money movement.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Trust caveat (without over-claiming)
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Paysend operates across multiple markets, and the applicable legal entity and protections can vary by customer location and product—so if trust is a deciding factor for you, verify the exact entity and regulator for your region.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
+                <p class="text-body-sm text-warning-600 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
-              <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+              <h2 class="text-h2 font-bold text-rs-fg mb-8 flex items-center gap-3">
                 <svg
                   class="w-7 h-7 text-brand-600"
                   fill="none"
@@ -760,10 +760,10 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -775,25 +775,25 @@
                     </svg>
                     Pros
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Friction & Speed:</strong> Card and wallet transfers "usually arrive within minutes," and payment confirmation is typically minutes for card funding (sometimes up to an hour).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Reliability & Success:</strong> Paysend shows the fee, FX rate, and "total to recipient" before you confirm, and the rate is locked at the time of the transaction ("no surprises later on").</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Trust & Safety:</strong> In the UK, Paysend plc appears on the FCA register as an Authorised Electronic Money Institution (a concrete, public check).</span>
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -805,30 +805,30 @@
                     </svg>
                     Cons
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Delivered Value:</strong> Paysend's US terms say its exchange rate is based on multiple factors and it may include a mark‑up, which can reduce delivered value even if the fee is fixed.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Reliability & Success:</strong> Bank-based flows can be bank-timed (payment confirmation for bank transfers may take up to 3 business days, depending on your bank).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Support & Refunds:</strong> Cancellation is time/status dependent (e.g., if a transfer is already delivered, cancellation isn't possible; some bank-account transfers can't be reversed once sent in major regions).</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-22">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -842,10 +842,10 @@
                     </svg>
                     Best For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -861,7 +861,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -877,7 +877,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -894,10 +894,10 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -911,10 +911,10 @@
                     </svg>
                     Not Ideal For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -930,7 +930,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -946,7 +946,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -964,10 +964,10 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -983,62 +983,62 @@
                   </svg>
                   How to Get the Best Rate with Paysend
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Quick checklist to maximize delivered value:
                 </p>
                 <div class="space-y-3">
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       1
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Compare payout rails:</strong>
-                      <span class="text-slate-700">card vs bank vs wallet vs cash pickup—fees and FX outcomes can differ by method.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Compare payout rails:</strong>
+                      <span class="text-neutral-700">card vs bank vs wallet vs cash pickup—fees and FX outcomes can differ by method.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       2
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Treat FX as the real cost driver:</strong>
-                      <span class="text-slate-700">Paysend's terms allow for an exchange-rate mark‑up; compare the quoted rate to a mid‑market reference before you send.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Treat FX as the real cost driver:</strong>
+                      <span class="text-neutral-700">Paysend's terms allow for an exchange-rate mark‑up; compare the quoted rate to a mid‑market reference before you send.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       3
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Try the same transfer amount at two sizes:</strong>
-                      <span class="text-slate-700">fixed fees look great on larger amounts, but spread can scale with amount—so check both $100 and $1,000 equivalents to see how pricing behaves.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Try the same transfer amount at two sizes:</strong>
+                      <span class="text-neutral-700">fixed fees look great on larger amounts, but spread can scale with amount—so check both $100 and $1,000 equivalents to see how pricing behaves.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       4
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Move quickly once the quote looks good:</strong>
-                      <span class="text-slate-700">rates can change and are locked at transaction time.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Move quickly once the quote looks good:</strong>
+                      <span class="text-neutral-700">rates can change and are locked at transaction time.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       5
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">If you might need to cancel, check status early:</strong>
-                      <span class="text-slate-700">cancellation is generally only possible before delivery/irreversible bank processing.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">If you might need to cancel, check status early:</strong>
+                      <span class="text-neutral-700">cancellation is generally only possible before delivery/irreversible bank processing.</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1056,35 +1056,35 @@
                 </h2>
 
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Remitly (9.1)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">Remitly tends to beat Paysend when:</strong> you need more remittance-native payout options and stronger support for common remittance corridors—especially when you want to choose between Express vs Economy behavior (with the tradeoff that Express can cost more, per your note).
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">Remitly tends to beat Paysend when:</strong> you need more remittance-native payout options and stronger support for common remittance corridors—especially when you want to choose between Express vs Economy behavior (with the tradeoff that Express can cost more, per your note).
                     </p>
                   </div>
 
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       XE Money (8.7)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">XE Money tends to beat Paysend when:</strong> you want a broader all‑rounder that feels more like a bank-transfer specialist (reliable quotes, competitive value, but often bank-timed speed).
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">XE Money tends to beat Paysend when:</strong> you want a broader all‑rounder that feels more like a bank-transfer specialist (reliable quotes, competitive value, but often bank-timed speed).
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose XE Money over Paysend when:</strong> It's a common pick when card-to-card convenience isn't the top priority.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose XE Money over Paysend when:</strong> It's a common pick when card-to-card convenience isn't the top priority.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1100,20 +1100,20 @@
                   </svg>
                   Bottom Line
                 </h2>
-                <div class="space-y-5 text-lg leading-relaxed text-slate-700">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                <div class="space-y-5 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Who should use Paysend?
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       If you value card-to-card convenience, want fees shown upfront, and your corridor works well on fast card/wallet rails, Paysend is a practical choice.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Why the 8.1/10 is justified:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Paysend is strong on speed and convenience, with clear pre-send disclosure of fees and recipient amount. The score is capped mainly by Delivered Value (40%): Paysend's own documentation allows for exchange-rate mark‑up/margin, so the FX spread can materially reduce what the recipient gets—especially on larger transfers—even when the fee feels predictable.
                     </p>
                   </div>
@@ -1126,16 +1126,16 @@
           <div class="lg:col-span-1">
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
-              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">
+              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-2">
                   Ready to Compare?
                 </h3>
-                <p class="text-sm text-slate-600 mb-4">
+                <p class="text-body-sm text-neutral-600 mb-4">
                   See how Paysend stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
-                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                 >
                   Compare Rates Now
                 </NuxtLink>
@@ -1148,48 +1148,48 @@
                 min-height="160px"
               />
               <!-- Quick Facts -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Quick Facts
                 </h3>
-                <dl class="space-y-3 text-sm">
+                <dl class="space-y-3 text-body-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Core Model
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Card-to-Card
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Typical Speed
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Minutes
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Pricing
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Fixed Fees
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Countries
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       100+
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       UK License
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       FCA Authorised
                     </dd>
                   </div>
@@ -1197,11 +1197,11 @@
               </div>
 
               <!-- Why Trust Us -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Why Trust This Review?
                 </h3>
-                <ul class="space-y-3 text-sm text-slate-700">
+                <ul class="space-y-3 text-body-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <svg
                       class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -1247,7 +1247,7 @@
                 </ul>
                 <NuxtLink
                   to="/methodology"
-                  class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  class="mt-4 inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
                   <svg
@@ -1267,42 +1267,42 @@
               </div>
 
               <!-- More Providers -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   More Provider Reviews
                 </h3>
                 <ul class="space-y-3">
                   <li>
                     <NuxtLink
                       to="/learn/providers/remitly"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/xe-money"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-primary-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/placid"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">P</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">P</div>
                       <span>Placid Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers"
-                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      class="flex items-center gap-3 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                     >
                       View all providers →
                     </NuxtLink>
@@ -1317,25 +1317,25 @@
 
     <!-- Final CTA -->
     <section
-      class="py-16 bg-blue-600"
+      class="py-16 bg-brand-600"
       style="background-color: rgba(37, 99, 235, 1);"
     >
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
         <h2
-          class="text-3xl font-bold mb-4"
+          class="text-h2 font-bold mb-4"
           style="color: rgba(255, 255, 255, 1);"
         >
           Ready to See How Paysend Compares?
         </h2>
         <p
-          class="text-lg mb-8"
+          class="text-body-lg mb-8"
           style="color: rgba(255, 255, 255, 1);"
         >
           Enter your transfer details to see real-time rates from Paysend and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
-          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-body-lg font-semibold shadow-lg transition-all"
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
@@ -1361,30 +1361,39 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
+import { getProviderLogoPath } from '~/composables/useProviderLogo'
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 const score = 8.1
 
-setSeo({
-  title: 'Paysend Review 2024 - Remit-Score 8.1/10 | Remit-Scout',
-  description: 'Independent Paysend review with Remit-Score 8.1/10. Card-to-card convenience; predictable fees; FX spread can reduce delivered value; good speed. Detailed breakdown of fees, speed, and delivered value.',
-  canonical: `${siteUrl}/learn/providers/paysend`,
-  ogImage: `${siteUrl}/og-images/provider-paysend.jpg`,
+const providerName = 'Paysend'
+const providerLogoUrl = `${siteUrl}${getProviderLogoPath('paysend')}`
+
+defineOgImage({
+  component: 'OgImageProvider',
+  props: {
+    providerName,
+    remitScore: score,
+    logoUrl: providerLogoUrl,
+  },
 })
 
-const { addReviewSchema } = useStructuredData()
-const reviewBody = `Paysend earns a Remit-Score of 8.1/10 based on our independent analysis. The provider offers card-to-card convenience with predictable fees, though FX spread can reduce delivered value. Good speed overall. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+setSeo({
+  title: `Paysend Review ${new Date().getFullYear()} - Remit-Score 8.1/10 | Remit-Scout`,
+  description: 'Independent Paysend review with Remit-Score 8.1/10. Fees, exchange rates, delivery speed, and key pros/cons to compare before you send.',
+  canonical: `${siteUrl}/learn/providers/paysend`,
+  ogImage: false,
+})
 
-addReviewSchema({
-  itemReviewed: 'Paysend',
-  reviewBody,
-  author: 'Remit-Scout Editorial Team',
+const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+
+addAggregateRatingSchema({
+  name: 'Paysend',
   ratingValue: score,
   bestRating: 10,
   worstRating: 1,
-  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [
@@ -1393,4 +1402,11 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Paysend Review', path: '/learn/providers/paysend' },
 ]
+
+addBreadcrumbSchema(
+  breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.path === '/' ? `${siteUrl}/` : `${siteUrl}${item.path}`,
+  })),
+)
 </script>

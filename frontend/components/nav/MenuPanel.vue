@@ -73,7 +73,7 @@ onBeforeUnmount(() => {
       v-if="open"
       ref="panelRef"
       :class="[
-        'absolute top-full mt-3 z-50 rounded-2xl border border-slate-200 bg-white shadow-xl p-2',
+        'absolute top-full mt-3 z-50 rounded-2xl border border-rs-border bg-surface shadow-xl p-2',
         widthClass,
         align === 'right' ? 'right-0' : 'left-0',
       ]"

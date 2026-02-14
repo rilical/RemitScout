@@ -1,4 +1,6 @@
-import { createError, getHeaders, getMethod, getQuery, readBody, setResponseStatus } from 'h3'
+import { randomUUID } from 'node:crypto'
+import { createError, getHeaders, getMethod, getQuery, getRequestHeader, readBody, setResponseHeader, setResponseStatus } from 'h3'
+import { $fetch } from 'ofetch'
 
 const FORWARDED_HEADERS = [
   'authorization',
@@ -14,9 +16,10 @@ const FORWARDED_HEADERS = [
 ]
 
 const getBackendBase = () => {
-  const config = useRuntimeConfig()
   const envBase = process.env.API_BASE || process.env.NUXT_API_BASE
-  const base = envBase || config.apiBase || config.public.apiBase
+  // Prefer env wiring for server proxying. Only fall back to runtime config if env is unset.
+  const config = envBase ? undefined : useRuntimeConfig()
+  const base = envBase || config?.apiBase || config?.public.apiBase
 
   if (!base) {
     throw createError({
@@ -135,9 +138,28 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   const method = getMethod(event)
   const query = getQuery(event)
   const headers = buildForwardHeaders(getHeaders(event))
-  const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(event)
+
+  const requestId = event.context?.requestId
+    || getRequestHeader(event, 'x-request-id')
+    || headers['x-request-id']
+    || randomUUID()
+  headers['x-request-id'] = requestId
+  setResponseHeader(event, 'x-request-id', requestId)
+
+  // Body size guardrail (1MB). Prefer header-based rejection when available.
+  const contentLengthRaw = getRequestHeader(event, 'content-length')
+  const contentLength = contentLengthRaw ? Number(contentLengthRaw) : Number.NaN
+  const hasBody = method !== 'GET' && method !== 'HEAD'
+  if (hasBody && Number.isFinite(contentLength) && contentLength > 1_000_000) {
+    throw createError({ statusCode: 413, statusMessage: 'Payload too large' })
+  }
+
+  const body = !hasBody ? undefined : await readBody(event)
+  if (body && typeof body === 'string' && body.length > 1_000_000) {
+    throw createError({ statusCode: 413, statusMessage: 'Payload too large' })
+  }
   const nonBlocking = options.nonBlocking ?? isNonBlockingPath(path)
-  const fetcher: (input: string, init?: any) => Promise<any> = $fetch as any
+  const fetcher: any = $fetch as any
 
   const envTimeoutMs = Number(process.env.BACKEND_PROXY_TIMEOUT_MS)
   const resolvedEnvTimeoutMs = Number.isFinite(envTimeoutMs) && envTimeoutMs > 0 ? envTimeoutMs : undefined
@@ -148,16 +170,54 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
     ?? DEFAULT_TIMEOUT_MS
   const maxRetries = options.maxRetries ?? (nonBlocking ? 0 : 3)
 
+  const start = Date.now()
   try {
     return await retryWithBackoff(async () => {
       try {
-        return await fetcher(joinUrl(base, path), {
+        const res = await fetcher.raw(joinUrl(base, path), {
           method,
           query,
           body,
           headers,
           timeout: timeoutMs,
+          ignoreResponseError: true,
         })
+        const duration = Date.now() - start
+        setResponseHeader(event, 'Server-Timing', `backend;dur=${duration}`)
+
+        const statusCode: number = res?.status ?? 0
+
+        // For GET/HEAD, forward backend caching validators to the client.
+        // This allows the backend (Plane A) to be the single source of truth for cache policy.
+        if ((method === 'GET' || method === 'HEAD') && statusCode > 0 && statusCode < 400) {
+          const cacheControl = res.headers?.get?.('cache-control')
+          const etag = res.headers?.get?.('etag')
+          const lastModified = res.headers?.get?.('last-modified')
+          if (cacheControl) setResponseHeader(event, 'cache-control', cacheControl)
+          if (etag) setResponseHeader(event, 'etag', etag)
+          if (lastModified) setResponseHeader(event, 'last-modified', lastModified)
+        }
+
+        if (nonBlocking && statusCode >= 400) {
+          setResponseStatus(event, 204)
+          return { ok: false, status: statusCode }
+        }
+
+        // Propagate non-5xx responses from the backend instead of turning them into 500s.
+        if (statusCode >= 400 && statusCode < 500) {
+          setResponseStatus(event, statusCode)
+          return res?._data ?? { error: 'backend_error', message: res?.statusText || 'Request failed' }
+        }
+
+        // Trigger retry/backoff for backend/server errors.
+        if (statusCode >= 500) {
+          const err: any = new Error('Backend error')
+          err.statusCode = statusCode
+          err.data = res?._data
+          throw err
+        }
+
+        return res?._data
       }
       catch (error: any) {
         const statusCode = error?.statusCode || error?.response?.status
@@ -184,15 +244,34 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
     const errorCode = error?.code || error?.cause?.code
     const message = error?.data?.message || error?.message || 'Request failed'
 
+    const duration = Date.now() - start
+    setResponseHeader(event, 'Server-Timing', `backend;dur=${duration}`)
+
+    // Don't swallow client errors raised inside the proxy (e.g., 413).
+    if (statusCode && statusCode < 500) throw error
+
+    if (statusCode && statusCode >= 500) {
+      // Log full backend error details server-side (sanitized client response).
+      console.error(JSON.stringify({ requestId, target: path, statusCode, backendError: error?.data }))
+
+      setResponseStatus(event, 503)
+      return {
+        error: 'service_unavailable',
+        message: 'Service temporarily unavailable',
+        requestId,
+      }
+    }
+
     // Never crash the Nuxt server due to backend outages; return a stable 503 shape.
     setResponseStatus(event, 503)
     return {
       error: 'backend_unreachable',
-      message: statusCode
-        ? `Backend error (${statusCode}). ${message}`
-        : errorCode
-          ? `Backend unreachable (${errorCode}).`
+      message: errorCode
+        ? `Backend unreachable (${errorCode}).`
+        : statusCode
+          ? `Backend error (${statusCode}).`
           : 'Backend unreachable.',
+      requestId,
     }
   }
 }

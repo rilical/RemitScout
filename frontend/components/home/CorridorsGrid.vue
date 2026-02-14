@@ -1,7 +1,7 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 text-center mb-8">
+  <section class="py-12 sm:py-16 bg-surface">
+    <div class="container">
+      <h2 class="text-h3 font-bold text-neutral-900 text-center mb-8">
         {{ STR.corridors.title }}
       </h2>
 
@@ -9,11 +9,11 @@
         <button
           v-for="(tile, index) in corridors"
           :key="`${tile.from}-${tile.to}-${index}`"
-          class="group relative overflow-hidden rounded-xl border-2 border-neutral-200 bg-white p-5 text-left transition-all hover:border-brand-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+          class="group relative overflow-hidden rounded-xl border-2 border-neutral-200 bg-surface p-5 text-left transition-all hover:border-brand-600 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
           @click="handleTileClick(tile)"
         >
           <div class="flex items-center gap-3 mb-3">
-            <span class="text-2xl">{{ getCountryFlag(tile.from) }}</span>
+            <span class="text-h3">{{ getCountryFlag(tile.from) }}</span>
             <svg
               class="h-4 w-4 text-neutral-400 group-hover:text-brand-600"
               fill="none"
@@ -27,14 +27,14 @@
                 d="M17 8l4 4m0 0l-4 4m4-4H3"
               />
             </svg>
-            <span class="text-2xl">{{ getCountryFlag(tile.to) }}</span>
+            <span class="text-h3">{{ getCountryFlag(tile.to) }}</span>
           </div>
 
           <div class="font-bold text-neutral-900 mb-2">
             {{ tile.from }} → {{ tile.to }}
           </div>
 
-          <div class="space-y-1 text-sm text-neutral-600">
+          <div class="space-y-1 text-body-sm text-neutral-600">
             <div class="flex items-center gap-2">
               <svg
                 class="h-4 w-4 text-success-600"
@@ -70,12 +70,12 @@
           </div>
 
           <div class="absolute bottom-3 right-3 text-brand-600 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span class="text-sm font-semibold">Compare now →</span>
+            <span class="text-body-sm font-semibold">Compare now →</span>
           </div>
         </button>
       </div>
 
-      <p class="mt-6 text-center text-xs text-neutral-500">
+      <p class="mt-6 text-center text-body-sm text-neutral-500">
         {{ STR.corridors.note }}
       </p>
     </div>

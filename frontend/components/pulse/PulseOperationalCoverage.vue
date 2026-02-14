@@ -7,12 +7,12 @@
           :size="20"
           class="text-brand-600"
         />
-        <h2 class="text-lg font-bold text-white">
+        <h2 class="text-body-lg font-bold text-white">
           OPERATIONAL COVERAGE
         </h2>
-        <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
+        <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
       </div>
-      <p class="text-sm text-neutral-400">
+      <p class="text-body-sm text-neutral-400">
         Quote success, freshness, and liquidity signals
       </p>
     </div>
@@ -21,26 +21,30 @@
       <!-- Quote Success Rate -->
       <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white">
+          <h3 class="text-body-sm font-semibold text-white">
             Quote Success Rate
           </h3>
-          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
+          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1">
             {{ quoteSuccessRate !== null ? `${quoteSuccessRate.toFixed(1)}%` : 'n/a' }}
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             {{ quoteSuccessDelta }}
           </div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <PulseLineChart
+          <AsyncErrorBoundary
             v-if="successSeries.length"
-            :series="successSeries"
-            unit="percent"
-            :show-area="false"
-          />
+            skeleton-height="128"
+          >
+            <PulseLineChart
+              :series="successSeries"
+              unit="percent"
+              :show-area="false"
+            />
+          </AsyncErrorBoundary>
           <EmptyState
             v-else
             title="No data yet"
@@ -50,13 +54,13 @@
           />
         </div>
         <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Embed
           </button>
         </div>
@@ -65,25 +69,29 @@
       <!-- Provider Availability -->
       <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white">
+          <h3 class="text-body-sm font-semibold text-white">
             Provider Availability
           </h3>
-          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
+          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1">
             Average availability {{ providerAvailability !== null ? providerAvailability.toFixed(1) : 'n/a' }} providers
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Providers returning quotes per interval
           </div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <PulseLineChart
+          <AsyncErrorBoundary
             v-if="availabilitySeries.length"
-            :series="availabilitySeries"
-            :show-area="false"
-          />
+            skeleton-height="128"
+          >
+            <PulseLineChart
+              :series="availabilitySeries"
+              :show-area="false"
+            />
+          </AsyncErrorBoundary>
           <EmptyState
             v-else
             title="No data yet"
@@ -93,13 +101,13 @@
           />
         </div>
         <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Embed
           </button>
         </div>
@@ -108,25 +116,29 @@
       <!-- Data Freshness -->
       <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white">
+          <h3 class="text-body-sm font-semibold text-white">
             Data Freshness (p50/p95)
           </h3>
-          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
+          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1">
             p95 freshness {{ freshnessP95 !== null ? freshnessP95 : 'n/a' }} min
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Quote age distribution in minutes
           </div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <PulseLineChart
+          <AsyncErrorBoundary
             v-if="freshnessSeries.length"
-            :series="freshnessSeries"
-            :show-area="false"
-          />
+            skeleton-height="128"
+          >
+            <PulseLineChart
+              :series="freshnessSeries"
+              :show-area="false"
+            />
+          </AsyncErrorBoundary>
           <EmptyState
             v-else
             title="No data yet"
@@ -136,13 +148,13 @@
           />
         </div>
         <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Embed
           </button>
         </div>
@@ -151,25 +163,29 @@
       <!-- Corridor Liquidity Signal -->
       <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white">
+          <h3 class="text-body-sm font-semibold text-white">
             Corridor Liquidity Signal
           </h3>
-          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-xs font-semibold text-brand-600">Plus</span>
+          <span class="rounded-full bg-brand-600/20 border border-brand-600/30 px-2 py-0.5 text-body-sm font-semibold text-brand-600">Plus</span>
         </div>
         <div class="mb-2">
-          <div class="text-2xl font-bold text-white mb-1">
+          <div class="text-h3 font-bold text-white mb-1">
             Liquidity index {{ liquidityIndex !== null ? liquidityIndex : 'n/a' }}
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Based on quote density and provider coverage
           </div>
         </div>
         <div class="h-32 rounded border border-neutral-700 bg-neutral-800 flex items-center justify-center">
-          <PulseLineChart
+          <AsyncErrorBoundary
             v-if="liquiditySeries.length"
-            :series="liquiditySeries"
-            :show-area="false"
-          />
+            skeleton-height="128"
+          >
+            <PulseLineChart
+              :series="liquiditySeries"
+              :show-area="false"
+            />
+          </AsyncErrorBoundary>
           <EmptyState
             v-else
             title="No data yet"
@@ -179,13 +195,13 @@
           />
         </div>
         <div class="mt-3 flex gap-2">
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             View
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Share
           </button>
-          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700">
+          <button class="flex-1 rounded border border-neutral-600 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700">
             Embed
           </button>
         </div>
@@ -195,12 +211,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, defineAsyncComponent } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getChartData } from '~/lib/pulseApi'
-import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
 import type { ChartSeries } from '~/types/pulse'
 import { EmptyState, Icon } from '~/ui'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
+
+const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
 
 const store = usePulseStore()
 
@@ -278,7 +296,7 @@ async function loadData() {
       : null
   }
   catch (e) {
-    console.error('Failed to load operational coverage data:', e)
+    useLogger('PulseOperationalCoverage').error('Failed to load operational coverage data', e)
   }
 }
 

@@ -2,7 +2,7 @@
   <div class="flex items-center gap-2">
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      class="inline-flex items-center gap-2 rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
       @click="handleSave"
     >
       <span aria-hidden="true">⭐</span>
@@ -11,7 +11,7 @@
 
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
       @click="handleOpenAlert"
     >
       <span aria-hidden="true">🔔</span>
@@ -20,6 +20,7 @@
   </div>
 
   <AuthPromptModal
+    v-if="authModalOpen"
     :is-open="authModalOpen"
     :feature="authModalFeature"
     :title="authModalFeature === 'watchlist' ? 'Sign in to save items' : 'Sign in to set alerts'"
@@ -30,6 +31,7 @@
   />
 
   <LimitReachedModal
+    v-if="limitModalOpen"
     :is-open="limitModalOpen"
     :feature="limitModalFeature"
     :limit="limitModalLimit"
@@ -51,10 +53,12 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import type { WatchTarget } from '~/types/tracking'
-import AuthPromptModal from '~/components/shared/AuthPromptModal.vue'
-import LimitReachedModal from '~/components/shared/LimitReachedModal.vue'
 import SuccessToast from '~/components/shared/SuccessToast.vue'
+
+const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
+const LimitReachedModal = defineAsyncComponent(() => import('~/components/shared/LimitReachedModal.vue'))
 
 const props = defineProps<{
   target: WatchTarget

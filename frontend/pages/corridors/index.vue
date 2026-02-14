@@ -13,11 +13,24 @@ const { corridorsByCountry, pending, error } = usePopularCorridorsModel()
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Popular Corridors',
+    description: 'Explore the most searched international money transfer corridors and compare provider options.',
+  },
+})
+
+useServerSeoMeta({
+  title: 'Popular Money Transfer Corridors | Remit-Scout',
+  description: 'Compare rates across the most popular international money transfer corridors. See provider coverage, fees, and delivered value for each lane in minutes.',
+})
+
 setSeo({
-  title: 'Popular Money Transfer Corridors | Compare Rates | Remit-Scout',
-  description: 'Compare rates across the most popular international money transfer corridors. Real-time data from 30+ providers.',
+  title: 'Popular Money Transfer Corridors | Remit-Scout',
+  description: 'Compare rates across the most popular international money transfer corridors. See provider coverage, fees, and delivered value for each lane in minutes.',
   canonical: `${siteUrl}/corridors`,
-  ogImage: `${siteUrl}/og-image.jpg`,
+  ogImage: false,
 })
 
 jsonLdBreadcrumb([

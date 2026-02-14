@@ -60,12 +60,22 @@ export const handler = async (): Promise<number> => {
   }
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const { config } = await import('../../shared/config')
+  const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      requireQueues: requireIngestFanoutQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue: false,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
+      requireStorage: false,
     },
   })
 

@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
+  <div class="min-h-screen bg-neutral-50">
     <!-- Corridor Decision Header -->
-    <section class="bg-gray-900 text-white relative overflow-hidden">
-      <div class="mx-auto max-w-6xl px-4 py-8 relative">
+    <section class="bg-neutral-900 text-white relative overflow-hidden">
+      <div class="container relative py-8">
         <!-- Breadcrumb -->
-        <nav class="mb-6 text-sm">
+        <nav class="mb-6 text-body-sm">
           <ol class="flex flex-wrap items-center gap-2">
             <li>
               <NuxtLink
                 to="/"
-                class="text-slate-400 hover:text-white transition-colors"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors"
               >Home</NuxtLink>
             </li>
-            <li class="text-slate-600">
+            <li class="text-neutral-600">
               <svg
                 class="w-4 h-4"
                 fill="none"
@@ -30,10 +30,10 @@
             <li>
               <NuxtLink
                 to="/send-money"
-                class="text-slate-400 hover:text-white transition-colors"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors"
               >Send Money</NuxtLink>
             </li>
-            <li class="text-slate-600">
+            <li class="text-neutral-600">
               <svg
                 class="w-4 h-4"
                 fill="none"
@@ -60,12 +60,12 @@
             <!-- Corridor Header -->
             <div class="flex items-center gap-6 mb-4">
               <div class="flex items-center gap-3">
-                <span class="text-4xl leading-none">{{ flagFrom }}</span>
+                <span class="text-h1 leading-none">{{ flagFrom }}</span>
                 <div>
-                  <p class="text-xs text-white/70 mb-0.5">
+                  <p class="text-body-sm text-white/70 mb-0.5">
                     Sending from
                   </p>
-                  <span class="text-lg font-semibold">{{ content.from }}</span>
+                  <span class="text-body-lg font-semibold">{{ content.from }}</span>
                 </div>
               </div>
               <svg
@@ -82,35 +82,35 @@
                 />
               </svg>
               <div class="flex items-center gap-3">
-                <span class="text-4xl leading-none">{{ flagTo }}</span>
+                <span class="text-h1 leading-none">{{ flagTo }}</span>
                 <div>
-                  <p class="text-xs text-white/70 mb-0.5">
+                  <p class="text-body-sm text-white/70 mb-0.5">
                     Receiving in
                   </p>
-                  <span class="text-lg font-semibold">{{ content.to }}</span>
+                  <span class="text-body-lg font-semibold">{{ content.to }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Recipient Gets -->
             <div class="mb-6 p-5 bg-brand-600 rounded-2xl border border-brand-600/20">
-              <p class="text-xs text-white/80 font-semibold uppercase tracking-wider mb-2">
+              <p class="text-body-sm text-white/80 font-semibold uppercase tracking-wider mb-2">
                 Recipient gets (on {{ formatMoney(displayAmount, fromCurrencyCode) }})
               </p>
-              <p class="text-4xl font-black tracking-tight mb-2 text-white">
+              <p class="text-h1 font-black tracking-tight mb-2 text-white">
                 <template v-if="!hasRecipientQuotes">
-                  -- <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
+                  -- <span class="text-h3 text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
                 </template>
                 <template v-else-if="isExactRecipientAmount">
-                  {{ recipientRange.min }} <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
+                  {{ recipientRange.min }} <span class="text-h3 text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
                 </template>
                 <template v-else>
-                  {{ recipientRange.min }} – {{ recipientRange.max }} <span class="text-2xl text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
+                  {{ recipientRange.min }} – {{ recipientRange.max }} <span class="text-h3 text-white/90 font-bold">{{ content.toCode.toUpperCase() }}</span>
                 </template>
               </p>
               <p
                 v-if="hasRecipientQuotes && !isExactRecipientAmount"
-                class="text-sm text-white/80 leading-relaxed"
+                class="text-body-sm text-white/80 leading-relaxed"
               >
                 The spread shows how provider rates differ. Find the best deal below.
               </p>
@@ -120,7 +120,7 @@
             <div class="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20 transition-all"
+                class="inline-flex items-center gap-2 rounded-xl bg-surface/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-surface/20 motion-safe:transition-all"
                 @click="handleSave"
               >
                 <svg
@@ -140,7 +140,7 @@
               </button>
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20 transition-all"
+                class="inline-flex items-center gap-2 rounded-xl bg-surface/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-surface/20 motion-safe:transition-all"
                 @click="handleAlert"
               >
                 <svg
@@ -162,18 +162,18 @@
           </div>
 
           <!-- Right: Rate Widget & Chart -->
-          <div class="bg-white rounded-2xl shadow-2xl shadow-black/20 overflow-hidden">
+          <div class="bg-surface rounded-2xl shadow-2xl shadow-black/20 overflow-hidden">
             <!-- Rate Header -->
-            <div class="p-5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+            <div class="p-5 bg-gradient-to-r from-neutral-50 to-white border-b border-neutral-100">
               <div class="flex items-start justify-between">
                 <div>
-                  <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  <p class="text-[10px] font-bold text-rs-muted uppercase tracking-wider mb-1">
                     Mid-Market Rate
                   </p>
-                  <p class="text-3xl font-black text-brand-600 tracking-tight">
+                  <p class="text-h2 font-black text-brand-600 tracking-tight">
                     {{ content.rateWidget.midMarket }}
                   </p>
-                  <p class="text-xs text-slate-500 mt-1">
+                  <p class="text-body-sm text-rs-muted mt-1">
                     The real exchange rate — anything worse costs you
                   </p>
                 </div>
@@ -182,7 +182,7 @@
 
             <!-- Chart -->
             <div class="p-5">
-              <div class="h-48 relative bg-gradient-to-b from-slate-50 to-white rounded-xl border border-slate-100 overflow-hidden">
+              <div class="h-48 relative bg-gradient-to-b from-neutral-50 to-white rounded-xl border border-neutral-100 overflow-hidden">
                 <!-- Chart SVG -->
                 <svg
                   class="absolute inset-0 w-full h-full"
@@ -386,12 +386,12 @@
                 <!-- Loading/Error State -->
                 <div
                   v-if="chartStatusLabel && !isSameCurrency"
-                  class="absolute inset-0 flex items-center justify-center bg-slate-50/80 backdrop-blur-sm"
+                  class="absolute inset-0 flex items-center justify-center bg-neutral-50/80 backdrop-blur-sm"
                 >
                   <div class="flex flex-col items-center gap-2">
                     <svg
                       v-if="rateHistoryPending"
-                      class="w-6 h-6 text-slate-400 animate-spin"
+                      class="w-6 h-6 text-neutral-400 animate-spin"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -409,17 +409,17 @@
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span class="text-sm text-slate-500 font-medium">{{ chartStatusLabel }}</span>
+                    <span class="text-body-sm text-rs-muted font-medium">{{ chartStatusLabel }}</span>
                   </div>
                 </div>
 
                 <!-- X-axis labels -->
-                <div class="absolute bottom-2 left-14 right-2 flex justify-between text-[10px] text-slate-400 font-semibold">
+                <div class="absolute bottom-2 left-14 right-2 flex justify-between text-[10px] text-neutral-400 font-semibold">
                   <template
                     v-for="(label, index) in chartLabels"
                     :key="index"
                   >
-                    <span :class="{ 'text-slate-600': index === chartLabels.length - 1 }">{{ label }}</span>
+                    <span :class="{ 'text-neutral-600': index === chartLabels.length - 1 }">{{ label }}</span>
                   </template>
                 </div>
               </div>
@@ -427,7 +427,7 @@
               <!-- Stable rate indicator -->
               <div
                 v-if="chartStats?.isFlat && !isSameCurrency"
-                class="mt-3 flex items-center justify-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-lg py-2 px-3"
+                class="mt-3 flex items-center justify-center gap-2 text-body-sm text-success-600 bg-success-600 rounded-lg py-2 px-3"
               >
                 <svg
                   class="w-4 h-4"
@@ -450,11 +450,11 @@
                 v-if="chartStats"
                 class="mt-4 grid grid-cols-3 gap-3"
               >
-                <div class="text-center p-3 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+                <div class="text-center p-3 bg-neutral-50 rounded-lg">
+                  <p class="text-[10px] font-semibold text-rs-muted uppercase tracking-wider mb-0.5">
                     7D Low
                   </p>
-                  <p class="text-sm font-bold text-slate-900">
+                  <p class="text-body-sm font-bold text-rs-fg">
                     {{ chartStats.minRate.toFixed(4) }}
                   </p>
                 </div>
@@ -462,15 +462,15 @@
                   <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider mb-0.5">
                     Current
                   </p>
-                  <p class="text-sm font-bold text-brand-700">
+                  <p class="text-body-sm font-bold text-brand-700">
                     {{ (isSameCurrency ? 1.0 : latestHistoryRate)?.toFixed(4) || '—' }}
                   </p>
                 </div>
-                <div class="text-center p-3 bg-slate-50 rounded-lg">
-                  <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+                <div class="text-center p-3 bg-neutral-50 rounded-lg">
+                  <p class="text-[10px] font-semibold text-rs-muted uppercase tracking-wider mb-0.5">
                     7D High
                   </p>
-                  <p class="text-sm font-bold text-slate-900">
+                  <p class="text-body-sm font-bold text-rs-fg">
                     {{ chartStats.maxRate.toFixed(4) }}
                   </p>
                 </div>
@@ -478,17 +478,17 @@
             </div>
 
             <!-- Footer -->
-            <div class="px-5 py-3 bg-slate-50 border-t border-slate-100">
-              <div class="flex items-center justify-between text-xs">
+            <div class="px-5 py-3 bg-neutral-50 border-t border-neutral-100">
+              <div class="flex items-center justify-between text-body-sm">
                 <div class="flex items-center gap-2">
                   <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-600 opacity-75" />
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-success-600" />
                   </span>
-                  <span class="text-slate-600 font-medium">{{ content.rateWidget.asOf }}</span>
+                  <span class="text-neutral-600 font-medium">{{ content.rateWidget.asOf }}</span>
                 </div>
-                <span class="text-slate-400">
-                  Source: <span class="font-semibold text-slate-600">{{ content.rateWidget.source }}</span>
+                <span class="text-neutral-400">
+                  Source: <span class="font-semibold text-neutral-600">{{ content.rateWidget.source }}</span>
                 </span>
               </div>
             </div>
@@ -503,9 +503,9 @@
     <!-- ZONE A: Compare -->
     <section
       id="compare"
-      class="bg-white scroll-mt-20"
+      class="bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 py-8">
+      <div class="container py-8">
         <!-- Query Builder Card -->
         <div class="mb-8">
           <CorridorStickyBar
@@ -532,25 +532,25 @@
         <!-- Refresh Gate -->
         <div
           v-if="showRefreshGate"
-          class="mb-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+          class="mb-8 rounded-2xl border border-rs-border bg-surface p-8 shadow-sm"
         >
           <div class="flex flex-col items-center justify-center gap-6 text-center mx-auto">
             <div class="flex flex-col items-center justify-center mx-auto w-full max-w-2xl">
-              <span class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+              <span class="inline-flex items-center justify-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-body-sm font-semibold text-brand-700">
                 <span class="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
                 Live refresh
               </span>
-              <h2 class="mt-4 text-2xl font-black text-slate-900 text-center">
+              <h2 class="mt-4 text-h3 font-black text-rs-fg text-center">
                 Collecting live quotes
               </h2>
               <div class="mt-4 w-full">
-                <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
                   <div
                     class="h-full bg-brand-600 rounded-full loading-bar-animate"
                   />
                 </div>
               </div>
-              <p class="mt-4 text-sm text-slate-600 max-w-2xl text-center mx-auto">
+              <p class="mt-4 text-body-sm text-neutral-600 max-w-2xl text-center mx-auto">
                 We query every available provider for this corridor. Results appear together once all providers respond
                 or after {{ refreshTimeoutSeconds }} seconds.
               </p>
@@ -565,10 +565,10 @@
             class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6"
           >
             <div>
-              <h2 class="text-3xl font-black text-slate-900 tracking-tight mb-2">
+              <h2 class="text-h2 font-black text-rs-fg tracking-tight mb-2">
                 Compare <span class="text-brand-600">{{ providerCount }}</span> {{ providerCount === 1 ? 'Provider' : 'Providers' }}
               </h2>
-              <p class="text-sm text-slate-600 max-w-xl break-words">
+              <p class="text-body-sm text-neutral-600 max-w-xl break-words">
                 Independent rankings based on total cost vs. mid-market rates, not just fees.
               </p>
             </div>
@@ -576,7 +576,7 @@
               v-if="hasApiQuotes"
               class="flex items-center gap-4"
             >
-              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-medium text-slate-600">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 rounded-full text-body-sm font-medium text-neutral-600">
                 <svg
                   class="w-3.5 h-3.5"
                   fill="none"
@@ -594,7 +594,7 @@
               </span>
               <NuxtLink
                 to="/legal/how-we-make-money"
-                class="text-xs font-semibold text-slate-500 hover:text-brand-600 transition-colors underline underline-offset-2"
+                class="text-body-sm font-semibold text-rs-muted hover:text-brand-600 motion-safe:transition-colors underline underline-offset-2"
               >
                 How we rank
               </NuxtLink>
@@ -603,56 +603,62 @@
 
           <div
             v-if="corridorUnsupported"
-            class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
+            class="rounded-xl border-2 border-danger-600 bg-danger-600 p-4 text-body-sm text-danger-600"
           >
             Unsupported corridor. Please try another combination.
           </div>
 
           <div
             v-else-if="corridorUnavailable"
-            class="rounded-xl border-2 border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"
+            class="rounded-xl border-2 border-danger-600 bg-danger-600 p-4 text-body-sm text-danger-600"
           >
             This corridor is unavailable right now. Please try another combination.
           </div>
 
           <div
             v-else-if="quotesUnavailable"
-            class="rounded-xl border-2 border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"
+            class="rounded-xl border-2 border-rs-border bg-neutral-50 p-4 text-body-sm text-neutral-700"
           >
             We’re collecting live quotes for this corridor. Hang tight or press Compare to try again.
           </div>
 
           <div
             v-else-if="hasApiError"
-            class="rounded-xl border-2 border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+            class="rounded-xl border-2 border-warning-600 bg-warning-600 p-4 text-body-sm text-warning-600"
           >
             Live quotes are unavailable right now. Please try again shortly.
           </div>
 
           <div
             v-else-if="refreshTimedOut && !hasApiQuotes"
-            class="rounded-xl border-2 border-slate-200 bg-slate-50 p-8 text-center"
           >
-            <p class="text-base font-semibold text-slate-900">
-              This corridor looks empty right now
-            </p>
-            <p class="text-sm text-slate-500 mt-2">
-              We didn't receive live quotes within {{ refreshTimeoutSeconds }} seconds.
-              Try another combination of countries, amount, or method.
-            </p>
-            <button
-              type="button"
-              class="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
-              :disabled="quotesPending || quoteRefreshPending"
-              @click="handleRefreshQuotes"
+            class="rounded-xl border border-rs-border bg-surface p-8"
+          >
+            <EmptyState
+              mode="inline"
+              title="This corridor looks empty right now"
+              :message="`We didn't receive live quotes within ${refreshTimeoutSeconds} seconds. Try another combination of countries, amount, or method.`"
             >
-              Refresh quotes
-            </button>
+              <template #actions>
+                <button
+                  type="button"
+                  class="mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 motion-safe:transition-colors disabled:opacity-60"
+                  :disabled="quotesPending || quoteRefreshPending"
+                  @click="handleRefreshQuotes"
+                >
+                  Refresh quotes
+                </button>
+              </template>
+            </EmptyState>
           </div>
 
           <div
             v-else-if="content.table.rows.length"
             class="space-y-4"
+            role="region"
+            aria-label="Quote results"
+            aria-live="polite"
+            :aria-busy="(quotesPending || quoteRefreshPending) ? 'true' : 'false'"
           >
             <template
               v-for="(row, index) in sortedProviders"
@@ -660,15 +666,15 @@
             >
               <div
                 :id="`provider-${row.provider.toLowerCase().replace(/\s+/g, '-')}`"
-                class="rounded-xl border-2 p-5 transition-all hover:shadow-lg"
+                class="rounded-xl border-2 p-5 motion-safe:transition-all hover:shadow-lg"
                 :class="index === 0
                   ? 'bg-brand-600 border-brand-600/20 text-white'
-                  : 'bg-gray-900 border-gray-800 text-white'"
+                  : 'bg-neutral-900 border-neutral-800 text-white'"
               >
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div class="flex items-center gap-4">
                     <!-- Square logo container with border similar to TrueCostCard -->
-                    <div class="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center flex-shrink-0 rounded-xl border border-white/20 bg-white p-3">
+                    <div class="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center flex-shrink-0 rounded-xl border border-white/20 bg-surface p-3">
                       <ProviderLogo
                         :slug="getProviderSlug(row) || ''"
                         :alt="row.provider"
@@ -678,7 +684,7 @@
                     </div>
                     <div class="flex-1">
                       <div class="flex items-center gap-3 mb-1 flex-wrap">
-                        <p class="text-lg font-bold">
+                        <p class="text-body-lg font-bold">
                           {{ row.provider }}
                         </p>
                         <ScoreBadge
@@ -690,25 +696,25 @@
                         <!-- Best Deal Badge (only for top option) -->
                         <span
                           v-if="index === 0"
-                          class="rounded px-2 py-0.5 text-xs font-bold bg-white text-brand-600"
+                          class="rounded px-2 py-0.5 text-body-sm font-bold bg-surface text-brand-600"
                         >
                           Best Deal
                         </span>
                         <span
                           v-if="row.warning"
-                          class="rounded bg-rose-500 px-2 py-0.5 text-xs font-bold text-white"
+                          class="rounded bg-danger-600 px-2 py-0.5 text-body-sm font-bold text-white"
                         >
                           {{ row.warning }}
                         </span>
                       </div>
                       <div class="flex items-center gap-3">
-                        <p class="text-sm text-white/70">
+                        <p class="text-body-sm text-white/70">
                           {{ row.speed }} · {{ row.speedNote }}
                         </p>
                         <NuxtLink
                           v-if="getProviderSlug(row)"
                           :to="`/learn/providers/${getProviderSlug(row)}`"
-                          class="text-xs font-semibold text-white hover:text-white/80 transition-colors"
+                          class="text-body-sm font-semibold text-white hover:text-white/80 motion-safe:transition-colors"
                         >
                           Read Review →
                         </NuxtLink>
@@ -716,7 +722,7 @@
                       <!-- Promotional Info -->
                       <div
                         v-if="row.hasPromo && row.promoInfo"
-                        class="mt-2 flex items-center gap-2 rounded-lg bg-white border-2 border-brand-200 px-3 py-1.5 w-full"
+                        class="mt-2 flex items-center gap-2 rounded-lg bg-surface border-2 border-brand-200 px-3 py-1.5 w-full"
                       >
                         <svg
                           class="h-4 w-4 text-brand-600 flex-shrink-0"
@@ -732,10 +738,10 @@
                           />
                         </svg>
                         <div class="flex flex-col gap-0.5">
-                          <span class="text-xs font-semibold text-brand-700">
+                          <span class="text-body-sm font-semibold text-brand-700">
                             Promotional Offer
                           </span>
-                          <span class="text-xs text-neutral-700">
+                          <span class="text-body-sm text-neutral-700">
                             {{ row.promoInfo.newCustomersOnly ? 'New customers only' : 'Special rate' }} ·
                             Fee: {{ formatMoney(row.promoInfo.fee, fromCurrencyCode) }}
                           </span>
@@ -745,29 +751,29 @@
                   </div>
 
                   <div class="text-right">
-                    <p class="text-xs font-medium text-white/70 mb-1">
+                    <p class="text-body-sm font-medium text-white/70 mb-1">
                       Recipient gets
                     </p>
-                    <p class="text-2xl font-bold">
+                    <p class="text-h3 font-bold">
                       {{ row.recipientGets }}
                     </p>
                     <div
                       v-if="row.fxRate && midMarketRate && Number.isFinite(row.fxRate)"
                       class="mt-4 space-y-2"
                     >
-                      <div class="text-sm">
+                      <div class="text-body-sm">
                         <span class="text-white/80">Exchange rate: </span>
-                        <span class="font-bold text-white text-base">{{ formatRate(row.fxRate, fromCurrencyCode, toCurrencyCode) }}</span>
+                        <span class="font-bold text-white text-body">{{ formatRate(row.fxRate, fromCurrencyCode, toCurrencyCode) }}</span>
                       </div>
-                      <div class="text-sm">
+                      <div class="text-body-sm">
                         <span
                           :class="[
-                            'font-bold px-3 py-1.5 rounded-md bg-white text-sm',
+                            'font-bold px-3 py-1.5 rounded-md bg-surface text-body-sm',
                             getRateComparison(row.fxRate).isBetter
-                              ? index === 0 ? 'text-emerald-600' : 'text-emerald-700'
+                              ? index === 0 ? 'text-success-600' : 'text-success-600'
                               : getRateComparison(row.fxRate).isWorse
-                                ? index === 0 ? 'text-rose-600' : 'text-rose-700'
-                                : 'text-gray-700',
+                                ? index === 0 ? 'text-danger-600' : 'text-danger-600'
+                                : 'text-neutral-700',
                           ]"
                         >
                           {{ getRateComparison(row.fxRate).text }}
@@ -809,13 +815,13 @@
                         v-if="row.methods && row.methods.length > 0"
                         class="mb-3"
                       >
-                        <p class="text-xs font-semibold text-white/70 mb-1.5">
+                        <p class="text-body-sm font-semibold text-white/70 mb-1.5">
                           Supported:
                         </p>
                         <div class="flex flex-wrap gap-1.5">
                           <span
                             v-if="row.methods.includes('bank') || row.methods.includes('bank_deposit')"
-                            class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
                           >
                             <svg
                               class="w-3 h-3"
@@ -832,7 +838,7 @@
                           </span>
                           <span
                             v-if="row.methods.includes('cash') || row.methods.includes('cash_pickup')"
-                            class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
                           >
                             <svg
                               class="w-3 h-3"
@@ -849,7 +855,7 @@
                           </span>
                           <span
                             v-if="row.methods.includes('wallet') || row.methods.includes('mobile_wallet')"
-                            class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
                           >
                             <svg
                               class="w-3 h-3"
@@ -866,7 +872,7 @@
                           </span>
                           <span
                             v-if="row.methods.includes('airtime')"
-                            class="inline-flex items-center gap-1 rounded bg-white/20 border border-white/30 px-2 py-0.5 text-xs text-white"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
                           >
                             <svg
                               class="w-3 h-3"
@@ -887,7 +893,7 @@
                     <div class="space-y-2">
                       <button
                         type="button"
-                        class="w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-all bg-white text-gray-900 hover:bg-gray-100"
+                        class="w-full rounded-lg px-4 py-2.5 text-body-sm font-bold motion-safe:transition-all bg-surface text-neutral-900 hover:bg-neutral-100"
                         @click="handleProviderOutbound(row)"
                       >
                         Go to {{ row.provider.split(' ')[0] }} →
@@ -910,27 +916,29 @@
 
           <div
             v-else-if="!hasApiQuotes && !isRefreshQueued"
-            class="rounded-xl border-2 border-dashed border-slate-300 p-8 text-center"
+            class="rounded-xl border border-rs-border bg-surface p-8"
           >
-            <p class="text-lg font-semibold text-neutral-700 mb-2">
-              No live quotes yet
-            </p>
-            <p class="text-sm text-neutral-500 mb-4">
-              We're pulling fresh quotes from providers for this corridor. Please try again shortly.
-            </p>
-            <button
-              type="button"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
-              :disabled="quotesPending || quoteRefreshPending"
-              @click="handleRefreshQuotes"
+            <EmptyState
+              mode="inline"
+              title="No live quotes yet"
+              message="We're pulling fresh quotes from providers for this corridor. Please try again shortly."
             >
-              Refresh quotes
-            </button>
+              <template #actions>
+                <button
+                  type="button"
+                  class="mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 motion-safe:transition-colors disabled:opacity-60"
+                  :disabled="quotesPending || quoteRefreshPending"
+                  @click="handleRefreshQuotes"
+                >
+                  Refresh quotes
+                </button>
+              </template>
+            </EmptyState>
           </div>
 
           <p
             v-if="hasApiQuotes"
-            class="mt-4 text-xs text-neutral-500"
+            class="mt-4 text-body-sm text-neutral-500"
           >
             Last updated {{ content.lastUpdated }}. We source data from providers and cannot guarantee accuracy.
             <span v-if="quotesData?.approximate && quotesData?.bucketUsed">
@@ -945,14 +953,14 @@
     <section
       v-if="hasApiQuotes && !showRefreshGate"
       id="insights"
-      class="bg-white border-b border-slate-200 scroll-mt-20"
+      class="bg-surface border-b border-rs-border scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="container py-10">
         <div class="mb-8">
-          <h2 class="text-3xl font-bold text-brand-600 mb-3">
+          <h2 class="text-h2 font-bold text-brand-600 mb-3">
             Corridor Insights
           </h2>
-          <p class="text-lg text-neutral-700 max-w-3xl">
+          <p class="text-body-lg text-neutral-700 max-w-3xl">
             Live data from <strong class="text-brand-600">{{ providerCount }}</strong> providers showing current market conditions.
           </p>
         </div>
@@ -963,29 +971,29 @@
         >
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- TEER Card -->
-            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
               <div class="mb-4">
-                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">
+                <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   TEER
                 </p>
-                <p class="text-sm font-medium text-gray-300">
+                <p class="text-body-sm font-medium text-neutral-300">
                   Total Effective Exchange Rate
                 </p>
               </div>
-              <p class="text-3xl font-bold text-white mb-2">
+              <p class="text-h2 font-bold text-white mb-2">
                 {{ teerDisplay }}
               </p>
-              <p class="text-xs text-gray-400 mb-4">
+              <p class="text-body-sm text-neutral-400 mb-4">
                 {{ indexRateUnit }}
               </p>
-              <p class="text-sm text-gray-300 mb-4 flex-grow">
+              <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
                 Real exchange rate after all fees and hidden costs. Higher is better.
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more</span>
+                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more about TEER</span>
                   <svg
-                    class="h-3 w-3 transition-transform group-open:rotate-180"
+                    class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -998,36 +1006,36 @@
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
                 </div>
               </details>
             </div>
 
             <!-- RVI Card -->
-            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
               <div class="mb-4">
-                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">
+                <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   RVI (bps)
                 </p>
-                <p class="text-sm font-medium text-gray-300">
+                <p class="text-body-sm font-medium text-neutral-300">
                   Rate Volatility Index
                 </p>
               </div>
-              <p class="text-3xl font-bold text-white mb-2">
+              <p class="text-h2 font-bold text-white mb-2">
                 {{ rviDisplay }}
               </p>
-              <p class="text-xs text-gray-400 mb-4">
+              <p class="text-body-sm text-neutral-400 mb-4">
                 basis points
               </p>
-              <p class="text-sm text-gray-300 mb-4 flex-grow">
+              <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
                 How much provider rates vary. Lower means similar deals. Higher means comparing saves money.
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more</span>
+                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more about RVI</span>
                   <svg
-                    class="h-3 w-3 transition-transform group-open:rotate-180"
+                    class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1040,36 +1048,36 @@
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>RVI (bps) measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
                 </div>
               </details>
             </div>
 
             <!-- RCI Card -->
-            <div class="rounded-2xl border-2 border-gray-800 bg-gray-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
               <div class="mb-4">
-                <p class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">
+                <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   RCI
                 </p>
-                <p class="text-sm font-medium text-gray-300">
+                <p class="text-body-sm font-medium text-neutral-300">
                   Remittance Cost Index
                 </p>
               </div>
-              <p class="text-3xl font-bold text-white mb-2">
+              <p class="text-h2 font-bold text-white mb-2">
                 {{ rciDisplay }}
               </p>
-              <p class="text-xs text-gray-400 mb-4">
+              <p class="text-body-sm text-neutral-400 mb-4">
                 of amount sent
               </p>
-              <p class="text-sm text-gray-300 mb-4 flex-grow">
+              <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
                 Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-xs font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more</span>
+                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
+                  <span>Learn more about RCI</span>
                   <svg
-                    class="h-3 w-3 transition-transform group-open:rotate-180"
+                    class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1082,13 +1090,13 @@
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-400 space-y-2 min-h-[77px]">
+                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
                 </div>
               </details>
             </div>
           </div>
-          <div class="mt-6 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+          <div class="mt-6 flex flex-wrap items-center gap-2 text-body-sm text-neutral-600">
             <span>Gold indices · $500 bank bucket · updated daily.</span>
             <span>These indices power enterprise reports and data partnerships.</span>
             <NuxtLink
@@ -1101,43 +1109,43 @@
         </div>
         <div
           v-else
-          class="mb-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600"
+          class="mb-10 rounded-2xl border border-rs-border bg-neutral-50 p-5 text-body-sm text-neutral-600"
         >
           {{ indicesUnavailableMessage }}
         </div>
 
         <!-- Live Insights Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">
+          <div class="rounded-xl border border-rs-border bg-surface p-5">
+            <p class="text-body-sm font-medium text-rs-muted mb-1">
               Best Deal
             </p>
-            <p class="text-lg font-bold text-brand-600 truncate">
+            <p class="text-body-lg font-bold text-brand-600 truncate">
               {{ content.table.rows[0]?.recipientGets || '—' }}
             </p>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="text-body-sm text-rs-muted mt-1">
               Highest recipient amount
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">
+          <div class="rounded-xl border border-rs-border bg-surface p-5">
+            <p class="text-body-sm font-medium text-rs-muted mb-1">
               Cost Spread
             </p>
-            <p class="text-2xl font-bold text-brand-600">
+            <p class="text-h3 font-bold text-brand-600">
               {{ recipientDeltaDisplay }}
             </p>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="text-body-sm text-rs-muted mt-1">
               Best vs worst difference
             </p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-medium text-slate-500 mb-1">
+          <div class="rounded-xl border border-rs-border bg-surface p-5">
+            <p class="text-body-sm font-medium text-rs-muted mb-1">
               Fastest Speed
             </p>
-            <p class="text-lg font-bold text-brand-600 truncate">
+            <p class="text-body-lg font-bold text-brand-600 truncate">
               {{ fastestSpeedDisplay }}
             </p>
-            <p class="text-xs text-slate-500 mt-1">
+            <p class="text-body-sm text-rs-muted mt-1">
               Quickest delivery time
             </p>
           </div>
@@ -1145,12 +1153,12 @@
 
         <!-- Provider Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
+          <div class="rounded-xl border border-rs-border bg-surface p-5">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-slate-900">
+              <h3 class="text-body font-semibold text-rs-fg">
                 Upfront Fees
               </h3>
-              <span class="text-xs text-slate-500">Per transfer</span>
+              <span class="text-body-sm text-rs-muted">Per transfer</span>
             </div>
             <div class="space-y-3">
               <div
@@ -1158,29 +1166,29 @@
                 :key="row.provider"
                 class="flex items-center justify-between gap-3"
               >
-                <span class="text-sm font-medium text-slate-700 truncate">{{ row.provider }}</span>
+                <span class="text-body-sm font-medium text-neutral-700 truncate">{{ row.provider }}</span>
                 <div class="flex items-center gap-2">
                   <span
                     v-if="row.hasPromo && row.promoInfo"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-body-sm font-medium bg-success-100 text-success-700"
                   >
                     Promo
                   </span>
-                  <span class="text-sm font-semibold text-brand-600">{{ row.fee }}</span>
+                  <span class="text-body-sm font-semibold text-brand-600">{{ row.fee }}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-200 bg-white p-5">
+          <div class="rounded-xl border border-rs-border bg-surface p-5">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-base font-semibold text-slate-900">
+              <h3 class="text-body font-semibold text-rs-fg">
                 Payout Methods Available
               </h3>
             </div>
             <div class="space-y-3">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-600">Bank Transfer</span>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Bank Transfer</span>
                 <span class="font-semibold text-brand-600">{{
                   currentRows.filter(r => {
                     const methods = r.methods || []
@@ -1192,8 +1200,8 @@
                   }).length
                 }} providers</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-600">Cash Pickup</span>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Cash Pickup</span>
                 <span class="font-semibold text-brand-600">{{
                   currentRows.filter(r => {
                     const methods = r.methods || []
@@ -1204,8 +1212,8 @@
                   }).length
                 }} providers</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-600">Mobile Wallet</span>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Mobile Wallet</span>
                 <span class="font-semibold text-brand-600">{{
                   currentRows.filter(r => {
                     const methods = r.methods || []
@@ -1217,8 +1225,8 @@
                   }).length
                 }} providers</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-600">Airtime</span>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Airtime</span>
                 <span class="font-semibold text-brand-600">{{
                   currentRows.filter(r => {
                     const methods = r.methods || []
@@ -1237,18 +1245,18 @@
     <!-- ZONE C: Recommendations -->
     <section
       id="how-to-send"
-      class="bg-slate-50"
+      class="bg-neutral-50"
     >
-      <div class="mx-auto max-w-6xl px-4 py-10">
+      <div class="container py-10">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2 space-y-8">
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900 mb-4 break-words">
+              <h2 class="text-h2 font-bold text-neutral-900 mb-4 break-words">
                 Best Money Transfer Providers<br>
                 from <span class="text-brand-600">{{ content.from }}</span> to <span class="text-brand-600">{{ content.to }}</span>
               </h2>
 
-              <p class="text-base text-neutral-700 leading-relaxed mb-6">
+              <p class="text-body text-neutral-700 leading-relaxed mb-6">
                 Finding the best way to send money from {{ content.from }} to {{ content.to }} requires comparing exchange rates, fees, transfer speeds, and payout methods across multiple providers.
                 The cheapest option today might not be the best choice tomorrow, as rates fluctuate constantly and promotional offers change regularly.
                 Our recommendations below are based on live quotes from {{ providerCount }} money transfer providers, helping you find the best-rated, cheapest, and fastest options for your specific needs.
@@ -1263,14 +1271,14 @@
                   <div
                     v-for="rec in recommendations"
                     :key="rec.label"
-                    class="group flex items-start gap-4 p-5 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all cursor-pointer"
+                    class="group flex items-start gap-4 p-5 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all cursor-pointer"
                     @click="scrollToProvider(rec.provider)"
                   >
                     <div class="flex-shrink-0 mt-0.5">
                       <!-- Star icon for "best rated" (general) -->
                       <svg
                         v-if="rec.label.toLowerCase().includes('best rated') && !rec.label.toLowerCase().includes('bank')"
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
@@ -1279,7 +1287,7 @@
                       <!-- Credit card icon for "best rated (transfer to a bank account)" -->
                       <svg
                         v-else-if="rec.label.toLowerCase().includes('best rated') && rec.label.toLowerCase().includes('bank')"
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1294,7 +1302,7 @@
                       <!-- Currency/Dollar icon for "cheapest" -->
                       <svg
                         v-else-if="rec.label.toLowerCase().includes('cheapest')"
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1309,7 +1317,7 @@
                       <!-- Lightning bolt icon for "fastest" -->
                       <svg
                         v-else-if="rec.label.toLowerCase().includes('fastest')"
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1324,7 +1332,7 @@
                       <!-- Bank building icon for other bank-related -->
                       <svg
                         v-else-if="rec.label.toLowerCase().includes('bank')"
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1339,7 +1347,7 @@
                       <!-- Default star icon for any other case -->
                       <svg
                         v-else
-                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 transition-colors"
+                        class="w-6 h-6 text-brand-600 group-hover:text-brand-700 motion-safe:transition-colors"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
@@ -1349,28 +1357,28 @@
                     <div class="flex-1 min-w-0">
                       <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
                         <span class="font-semibold text-neutral-900">{{ rec.label }}:</span>
-                        <span class="font-bold text-brand-600 text-lg">{{ rec.provider }}</span>
+                        <span class="font-bold text-brand-600 text-body-lg">{{ rec.provider }}</span>
                         <span
                           v-if="rec.score"
-                          class="text-sm text-neutral-600 font-medium"
+                          class="text-body-sm text-neutral-600 font-medium"
                         >({{ rec.score }}/10)</span>
                       </div>
                       <p
                         v-if="rec.note"
-                        class="text-sm text-neutral-600 leading-relaxed mb-1"
+                        class="text-body-sm text-neutral-600 leading-relaxed mb-1"
                       >
                         {{ rec.note }}
                       </p>
                       <p
                         v-if="rec.speed"
-                        class="text-xs text-neutral-500 font-medium"
+                        class="text-body-sm text-neutral-500 font-medium"
                       >
                         Transfer speed: {{ rec.speed }}
                       </p>
                     </div>
                     <div class="flex-shrink-0">
                       <svg
-                        class="w-5 h-5 text-slate-400 group-hover:text-brand-600 transition-colors"
+                        class="w-5 h-5 text-neutral-400 group-hover:text-brand-600 motion-safe:transition-colors"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1392,33 +1400,33 @@
                 class="mb-8"
               >
                 <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-6">
-                  <h4 class="text-lg font-bold text-white leading-relaxed mb-3">
+                  <h4 class="text-body-lg font-bold text-white leading-relaxed mb-3">
                     Recommendations will appear here once we have live quotes from providers for this corridor.
                   </h4>
-                  <p class="text-sm text-white leading-relaxed">
+                  <p class="text-body-sm text-white leading-relaxed">
                     Please check back soon or try comparing providers in the table above.
                   </p>
                 </div>
               </div>
 
               <!-- Related Guides Section -->
-              <div class="mt-10 pt-8 border-t border-slate-200">
-                <h3 class="text-xl font-bold text-neutral-900 mb-4">
+              <div class="mt-10 pt-8 border-t border-rs-border">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-4">
                   Learn More About Money Transfers
                 </h3>
-                <p class="text-sm text-neutral-600 mb-5 leading-relaxed">
+                <p class="text-body-sm text-neutral-600 mb-5 leading-relaxed">
                   Master the fundamentals of international money transfers to save more on every transaction.
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <NuxtLink
                     to="/learn/why-compare-before-every-transfer"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
                   >
                     <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
                         Why You Must Compare Before Every Transfer
                       </h4>
-                      <p class="text-sm text-neutral-600 leading-relaxed">
+                      <p class="text-body-sm text-neutral-600 leading-relaxed">
                         Even on the same transfer, the difference between providers can be hundreds of dollars.
                       </p>
                     </div>
@@ -1426,13 +1434,13 @@
 
                   <NuxtLink
                     to="/learn/hidden-exchange-rate-fees-explained"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
                   >
                     <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
                         Hidden Fees Explained (FX Markup vs Fee)
                       </h4>
-                      <p class="text-sm text-neutral-600 leading-relaxed">
+                      <p class="text-body-sm text-neutral-600 leading-relaxed">
                         Learn the difference between FX markup and transfer fees, and why "no fee" doesn't mean no cost.
                       </p>
                     </div>
@@ -1440,13 +1448,13 @@
 
                   <NuxtLink
                     to="/learn/how-to-read-remittance-quote"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
                   >
                     <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
                         How to Read a Quote ("Recipient Gets")
                       </h4>
-                      <p class="text-sm text-neutral-600 leading-relaxed">
+                      <p class="text-body-sm text-neutral-600 leading-relaxed">
                         Understand what "Recipient Gets" really means and how to compare quotes effectively.
                       </p>
                     </div>
@@ -1454,13 +1462,13 @@
 
                   <NuxtLink
                     to="/learn/best-time-to-send-money"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:border-brand-400 hover:shadow-md transition-all"
+                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
                   >
                     <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 transition-colors">
+                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
                         Best Time to Send Money
                       </h4>
-                      <p class="text-sm text-neutral-600 leading-relaxed">
+                      <p class="text-body-sm text-neutral-600 leading-relaxed">
                         Practical guidance on when to send money, without over-optimizing for rate movements.
                       </p>
                     </div>
@@ -1469,7 +1477,7 @@
                 <div class="mt-6 text-center">
                   <NuxtLink
                     to="/learn/money-transfer"
-                    class="inline-flex items-center gap-2 text-brand-600 font-semibold hover:text-brand-700 transition-colors"
+                    class="inline-flex items-center gap-2 text-brand-600 font-semibold hover:text-brand-700 motion-safe:transition-colors"
                   >
                     View all guides
                     <svg
@@ -1494,7 +1502,7 @@
               v-if="content.steps.length"
               class="mt-8"
             >
-              <h3 class="text-lg font-bold text-neutral-900 mb-4">
+              <h3 class="text-body-lg font-bold text-neutral-900 mb-4">
                 How to Send Money to {{ content.to }}
               </h3>
               <ol class="space-y-3">
@@ -1503,10 +1511,10 @@
                   :key="step"
                   class="flex gap-4"
                 >
-                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white flex-shrink-0">
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-body-sm font-bold text-white flex-shrink-0">
                     {{ index + 1 }}
                   </span>
-                  <p class="text-sm text-neutral-700 pt-0.5">
+                  <p class="text-body-sm text-neutral-700 pt-0.5">
                     {{ step }}
                   </p>
                 </li>
@@ -1516,16 +1524,16 @@
 
           <div class="space-y-6">
             <div class="rounded-xl border-2 border-brand-600 bg-brand-600 p-5">
-              <h3 class="font-bold text-white text-base mb-3">
+              <h3 class="font-bold text-white text-body mb-3">
                 Save to Watchlist
               </h3>
-              <p class="text-sm text-white mb-4 leading-relaxed">
+              <p class="text-body-sm text-white mb-4 leading-relaxed">
                 Track this corridor and get notified when rates change.
               </p>
               <div class="space-y-3">
                 <button
                   type="button"
-                  class="w-full rounded-lg bg-white px-4 py-3 text-base font-bold text-brand-700 hover:bg-brand-50 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  class="w-full rounded-lg bg-surface px-4 py-3 text-body font-bold text-brand-700 hover:bg-brand-50 motion-safe:transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                   @click="handleSave"
                 >
                   <svg
@@ -1545,7 +1553,7 @@
                 </button>
                 <button
                   type="button"
-                  class="w-full rounded-lg border-2 border-white bg-transparent px-4 py-3 text-base font-bold text-white hover:bg-white hover:text-brand-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  class="w-full rounded-lg border-2 border-white bg-transparent px-4 py-3 text-body font-bold text-white hover:bg-surface hover:text-brand-700 motion-safe:transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                   @click="handleAlert"
                 >
                   <svg
@@ -1564,7 +1572,7 @@
                   Add Alert
                 </button>
               </div>
-              <p class="text-xs text-center text-white mt-4">
+              <p class="text-body-sm text-center text-white mt-4">
                 <span v-if="isPlus">
                   Plus: {{ limits.watchlistItems === 'unlimited' ? '∞' : limits.watchlistItems }} watchlist corridors · {{ limits.alerts === 'unlimited' ? '∞' : limits.alerts }} alerts
                 </span>
@@ -1607,10 +1615,10 @@
     <!-- Related Guides -->
     <section
       v-if="content.miniGuides && content.miniGuides.length"
-      class="bg-white border-t border-slate-200"
+      class="bg-surface border-t border-rs-border"
     >
-      <div class="mx-auto max-w-6xl px-4 py-10">
-        <h2 class="text-2xl font-bold text-neutral-900 mb-6 text-center">
+      <div class="container py-10">
+        <h2 class="text-h3 font-bold text-neutral-900 mb-6 text-center">
           Related Guides
         </h2>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1618,15 +1626,15 @@
             v-for="guide in content.miniGuides"
             :key="guide.title"
             :to="guide.link"
-            class="group rounded-xl border border-slate-200 bg-slate-50 p-5 hover:border-brand-300 hover:shadow-md transition-all"
+            class="group rounded-xl border border-rs-border bg-neutral-50 p-5 hover:border-brand-300 hover:shadow-md motion-safe:transition-all"
           >
-            <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-brand-600 transition-colors">
+            <h3 class="font-bold text-neutral-900 mb-2 group-hover:text-brand-600 motion-safe:transition-colors">
               {{ guide.title }}
             </h3>
-            <p class="text-sm text-neutral-600 leading-relaxed">
+            <p class="text-body-sm text-neutral-600 leading-relaxed">
               {{ guide.excerpt }}
             </p>
-            <span class="inline-flex items-center gap-1 mt-3 text-sm font-semibold text-brand-600">
+            <span class="inline-flex items-center gap-1 mt-3 text-body-sm font-semibold text-brand-600">
               Read guide
               <svg
                 class="w-4 h-4"
@@ -1651,11 +1659,11 @@
     <TrustMetricsStrip bg-class="bg-brand-600" />
 
     <!-- Methodology Footer -->
-    <section class="bg-slate-900 text-white">
-      <div class="mx-auto max-w-6xl px-4 py-8">
+    <section class="bg-neutral-900 text-white">
+      <div class="container py-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p class="text-sm text-slate-300">
+            <p class="text-body-sm text-neutral-300">
               See an issue with this data? <a
                 href="mailto:support@remit-scout.com"
                 class="text-white hover:underline"
@@ -1665,13 +1673,13 @@
           <div class="flex items-center gap-6">
             <NuxtLink
               to="/methodology"
-              class="text-sm font-semibold text-white hover:text-slate-300 transition-colors"
+              class="text-body-sm font-semibold text-white hover:text-neutral-300 motion-safe:transition-colors"
             >
               Read our methodology →
             </NuxtLink>
             <NuxtLink
               to="/legal/how-we-make-money"
-              class="text-sm text-slate-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
               How we make money
             </NuxtLink>
@@ -1691,6 +1699,7 @@
 
     <!-- Auth Prompt Modal -->
     <AuthPromptModal
+      v-if="authModalOpen"
       :is-open="authModalOpen"
       :feature="authModalFeature"
       :title="authModalFeature === 'watchlist' ? 'Sign in to save corridors' : 'Sign in to set alerts'"
@@ -1702,6 +1711,7 @@
 
     <!-- Limit Reached Modal -->
     <LimitReachedModal
+      v-if="limitModalOpen"
       :is-open="limitModalOpen"
       :feature="limitModalFeature"
       :limit="limitModalLimit"
@@ -1716,6 +1726,7 @@
 
     <!-- Share Modal -->
     <ShareModal
+      v-if="shareModalOpen"
       :is-open="shareModalOpen"
       :from-country="content.from"
       :to-country="content.to"
@@ -1735,7 +1746,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, watchEffect, defineAsyncComponent } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
@@ -1744,10 +1755,6 @@ import AdPlacement from '~/components/ads/AdPlacement.vue'
 import TrueCostCard from '~/components/shared/TrueCostCard.vue'
 import ProviderDeltaBadge from '~/components/shared/ProviderDeltaBadge.vue'
 import ScoreBadge from '~/components/shared/ScoreBadge.vue'
-import ProviderScoreModal from '~/components/shared/ProviderScoreModal.vue'
-import AuthPromptModal from '~/components/shared/AuthPromptModal.vue'
-import LimitReachedModal from '~/components/shared/LimitReachedModal.vue'
-import ShareModal from '~/components/shared/ShareModal.vue'
 import SuccessToast from '~/components/shared/SuccessToast.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { normalizeProviderSlug } from '~/composables/useProviderLogo'
@@ -1776,6 +1783,12 @@ import { useAlerts } from '~/composables/useAlerts'
 import { useAuth } from '~/composables/useAuth'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
+import { EmptyState } from '~/ui/states'
+
+const ProviderScoreModal = defineAsyncComponent(() => import('~/components/shared/ProviderScoreModal.vue'))
+const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
+const LimitReachedModal = defineAsyncComponent(() => import('~/components/shared/LimitReachedModal.vue'))
+const ShareModal = defineAsyncComponent(() => import('~/components/shared/ShareModal.vue'))
 
 const { isPlus, limits } = useEntitlements()
 const { isAuthenticated } = useAuth()
@@ -2037,6 +2050,8 @@ const refreshPollTimer = ref<number | null>(null)
 const refreshAttempts = ref(0)
 const refreshStatusPollTimer = ref<number | null>(null)
 const refreshCompletion = ref<{ done: boolean, pending: number, total: number } | null>(null)
+let refreshPollController: AbortController | null = null
+let refreshStatusController: AbortController | null = null
 const refreshTimedOut = ref(false)
 const refreshFinalizing = ref(false)
 const refreshGateStartedAt = ref<number | null>(null)
@@ -2100,6 +2115,8 @@ if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) 
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
 
+const providersRequestSignal = ref<AbortSignal | undefined>(undefined)
+
 const { data: quotesData, pending: quotesPending, error: quotesError, refresh: refreshQuotes } = await useProviders(
   fromCountryCode,
   toCountryCode,
@@ -2113,6 +2130,7 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
     fromCurrency: fromCurrencyCode,
     toCurrency: toCurrencyCode,
     live: providersLive,
+    signal: providersRequestSignal,
   },
 )
 
@@ -2153,6 +2171,8 @@ const refreshQueueLabel = computed(() => {
 
 const clearRefreshPoll = () => {
   if (!import.meta.client) return
+  refreshPollController?.abort()
+  refreshPollController = null
   if (refreshPollTimer.value !== null) {
     window.clearTimeout(refreshPollTimer.value)
     refreshPollTimer.value = null
@@ -2473,6 +2493,13 @@ onMounted(() => {
   void refreshQuotes()
 })
 
+onUnmounted(() => {
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  providersRequestSignal.value = undefined
+})
+
 watch(availableMethods, (methods) => {
   if (quotesPending.value) return
   if (!methods.length) return
@@ -2485,16 +2512,16 @@ watch([corridorId, displayAmount], () => {
   backgroundRefreshKeys.clear()
 }, { immediate: true })
 
-watch(
+useAbortableWatch(
   [availableMethods, payoutMethod, corridorId, displayAmount],
-  ([methods]) => {
+  async ([methods, selectedMethod]: [string[], string, unknown, unknown], signal) => {
     if (!import.meta.client) return
     if (!methods.length) return
-    methods
-      .filter(method => method !== payoutMethod.value)
-      .forEach((method) => {
-        void enqueueBackgroundRefresh(method)
-      })
+    await Promise.all(
+      methods
+        .filter(method => method !== selectedMethod)
+        .map(method => enqueueBackgroundRefresh(method as Method, signal)),
+    )
   },
   { immediate: true },
 )
@@ -2534,15 +2561,13 @@ const { data: rateHistoryData, pending: rateHistoryPending, error: rateHistoryEr
       })
     }
     catch (error: any) {
-      if (import.meta.dev) {
-        console.error('[remittance] rate history unavailable', {
-          error,
-          statusCode: error?.statusCode,
-          data: error?.data,
-          base: fromCurrencyCode.value,
-          quote: toCurrencyCode.value,
-        })
-      }
+      useLogger('send-money').error('rate history unavailable', {
+        error,
+        statusCode: error?.statusCode,
+        data: error?.data,
+        base: fromCurrencyCode.value,
+        quote: toCurrencyCode.value,
+      })
       return { base: fromCurrencyCode.value, quote: toCurrencyCode.value, history: [], lastUpdated: null }
     }
   },
@@ -3196,6 +3221,16 @@ const seoDescription = computed(() => {
   return `Compare ${providerCount.value} providers${providerLine}.${rateLine} Updated ${seoUpdatedLabel.value}.`
 })
 
+defineOgImage({
+  component: 'OgImageCorridor',
+  props: {
+    from: computed(() => content.value.from),
+    to: computed(() => content.value.to),
+    providerCount,
+    bestRate: computed(() => bestRateLabel.value || '—'),
+  },
+})
+
 type Recommendation = {
   label: string
   provider: string
@@ -3376,11 +3411,41 @@ const handleProviderOutbound = async (row: TableRow) => {
   window.open(outboundUrl, '_blank', 'noopener,noreferrer')
 }
 
+const corridorSchemaProviders = computed(() => {
+  const rows = content.value.table.rows || []
+  const seen = new Set<string>()
+  const providers: Array<{ name: string, slug: string }> = []
+
+  for (const row of rows) {
+    const name = row.provider
+    if (!name || seen.has(name)) continue
+    seen.add(name)
+    providers.push({ name, slug: normalizeProviderSlug(name) })
+  }
+
+  return providers
+})
+
+defineOgImage({
+  component: 'OgImageCorridor',
+  props: {
+    from: fromCountryCode,
+    to: toCountryCode,
+    providerCount,
+    bestRate: bestRateLabel,
+  },
+})
+
+useServerSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+})
+
 setSeo({
   title: seoTitle.value,
   description: seoDescription.value,
   canonical: `${normalizedSiteUrl}${canonicalPath.value}`,
-  ogImage: `${normalizedSiteUrl}/og-images/corridor-${fromCountryCode.value.toLowerCase()}-${toCountryCode.value.toLowerCase()}.jpg`,
+  ogImage: false,
 })
 
 jsonLdBreadcrumb(breadcrumbItems.value.map(item => ({ name: item.name, url: `${normalizedSiteUrl}${item.path}` })))
@@ -3390,7 +3455,20 @@ if (corridorFaqsRaw.value.length) {
 }
 
 // Add FinancialProduct schema for the best quote
-const { addFinancialProductSchema } = useStructuredData()
+const { addFinancialProductSchema, addRemittanceCorridorSchema } = useStructuredData()
+
+watchEffect(() => {
+  if (!providerCount.value) return
+  if (!bestRateLabel.value) return
+
+  addRemittanceCorridorSchema({
+    from: content.value.from,
+    to: content.value.to,
+    providers: corridorSchemaProviders.value,
+    bestRate: bestRateLabel.value,
+  })
+})
+
 if (bestQuote.value && hasApiQuotes.value) {
   const quote = bestQuote.value
   addFinancialProductSchema({
@@ -3648,7 +3726,7 @@ const getBackgroundRefreshKey = (method: Method) => (
   `${corridorId.value}:${displayAmount.value}:${method}`
 )
 
-const enqueueBackgroundRefresh = async (method: Method) => {
+const enqueueBackgroundRefresh = async (method: Method, signal?: AbortSignal) => {
   if (!import.meta.client || displayAmount.value <= 0) return
   if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return
   const refreshKey = getBackgroundRefreshKey(method)
@@ -3666,12 +3744,12 @@ const enqueueBackgroundRefresh = async (method: Method) => {
         live: true,
       },
       retries: 0,
+      signal,
     })
   }
   catch (error) {
-    if (import.meta.dev) {
-      console.warn('[remittance] background quote refresh unavailable', error)
-    }
+    if ((error as any)?.name === 'AbortError') return
+    useLogger('send-money').warn('background quote refresh unavailable', error)
   }
 }
 
@@ -3690,9 +3768,19 @@ const scheduleRefreshPoll = () => {
   if (refreshAttempts.value >= MAX_REFRESH_ATTEMPTS) return
 
   clearRefreshPoll()
+  refreshPollController = new AbortController()
+  const { signal } = refreshPollController
+  providersRequestSignal.value = signal
   refreshPollTimer.value = window.setTimeout(async () => {
+    if (signal.aborted) return
     refreshAttempts.value += 1
-    await refreshQuotes()
+    try {
+      await refreshQuotes()
+    }
+    catch (error: any) {
+      if (error?.name === 'AbortError') return
+      useLogger('send-money').warn('refresh poll failed', error)
+    }
     const timedOut = refreshAttempts.value >= MAX_REFRESH_ATTEMPTS
     if (timedOut && !hasApiQuotes.value && !refreshTimedOut.value) {
       refreshTimedOut.value = true
@@ -3719,6 +3807,8 @@ const scheduleRefreshPoll = () => {
 }
 
 const clearRefreshStatusPoll = () => {
+  refreshStatusController?.abort()
+  refreshStatusController = null
   if (refreshStatusPollTimer.value !== null) {
     window.clearTimeout(refreshStatusPollTimer.value)
     refreshStatusPollTimer.value = null
@@ -3729,6 +3819,9 @@ const clearRefreshStatusPoll = () => {
 
 const startRefreshStatusPoll = (requestIds: string[]) => {
   if (!import.meta.client || !requestIds.length) return
+  clearRefreshStatusPoll()
+  refreshStatusController = new AbortController()
+  const { signal } = refreshStatusController
   refreshTimedOut.value = false
   const startedAt = Date.now()
   refreshCompletion.value = {
@@ -3738,6 +3831,7 @@ const startRefreshStatusPoll = (requestIds: string[]) => {
   }
 
   const poll = async () => {
+    if (signal.aborted) return
     const elapsed = Date.now() - startedAt
     if (elapsed >= REFRESH_STATUS_TIMEOUT_MS) {
       refreshTimedOut.value = true
@@ -3762,6 +3856,7 @@ const startRefreshStatusPoll = (requestIds: string[]) => {
         query: { request_ids: requestIds.join(',') },
         retries: 0,
         timeoutMs: 5000,
+        signal,
       })
       const pending = Number(status?.pending ?? 0) + Number(status?.processing ?? 0)
       const missing = Number(status?.missing ?? 0)
@@ -3775,21 +3870,21 @@ const startRefreshStatusPoll = (requestIds: string[]) => {
         refreshFinalizing.value = true
       }
       if (!refreshCompletion.value.done) {
-        refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
+        if (!signal.aborted) refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
         return
       }
     }
-    catch {
+    catch (error: any) {
+      if (error?.name === 'AbortError' || signal.aborted) return
       refreshStatusPollTimer.value = window.setTimeout(poll, REFRESH_STATUS_POLL_MS)
       return
     }
   }
 
-  clearRefreshStatusPoll()
   refreshStatusPollTimer.value = window.setTimeout(poll, 0)
 }
 
-const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
+const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSignal) => {
   if (!import.meta.client || displayAmount.value <= 0) return
   if (corridorUnavailable.value || corridorUnsupported.value) return
   const refreshKey = quoteRefreshKey.value
@@ -3814,6 +3909,7 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
         live: true,
       },
       retries: 0,
+      signal,
     })
     if (response?.refresh?.enqueued) {
       const requestIds = Array.isArray(response.refresh.request_ids)
@@ -3837,9 +3933,8 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual') => {
     }
   }
   catch (error) {
-    if (import.meta.dev) {
-      console.warn('[remittance] quote refresh unavailable', error)
-    }
+    if ((error as any)?.name === 'AbortError') return
+    useLogger('send-money').warn('quote refresh unavailable', error)
   }
   finally {
     quoteRefreshPending.value = false
@@ -3885,16 +3980,16 @@ watch(quotesPending, (pending) => {
   }
 }, { immediate: true })
 
-watch(
+useAbortableWatch(
   [quoteRefreshKey, quotesPending, hasApiQuotes, hasApiError, corridorUnavailable, corridorUnsupported, isQuoteStale, refreshTimedOut],
-  ([, pending, hasQuotes, hasError, unavailable, unsupported, stale, timedOut]) => {
+  async ([, pending, hasQuotes, hasError, unavailable, unsupported, stale, timedOut], signal) => {
     if (!import.meta.client || pending || hasError || unavailable || unsupported || timedOut) {
       return
     }
     if (hasQuotes && !stale) {
       return
     }
-    void requestQuoteRefresh('auto')
+    await requestQuoteRefresh('auto', signal)
   },
   { immediate: true },
 )
@@ -3919,11 +4014,12 @@ watch(
   },
 )
 
-watch(
+useAbortableWatch(
   refreshCompletion,
-  async (completion) => {
+  async (completion, signal) => {
     if (!completion?.done) return
     refreshFinalizing.value = true
+    providersRequestSignal.value = signal
     try {
       await refreshQuotes()
     }
@@ -3979,7 +4075,7 @@ watch(quoteRefreshKey, () => {
   refreshElapsedSeconds.value = 0
 })
 
-watch(payoutMethod, async () => {
+useAbortableWatch(payoutMethod, async (_, signal) => {
   refreshTimedOut.value = false
   refreshStatus.value = null
   refreshAttempts.value = 0
@@ -3989,6 +4085,7 @@ watch(payoutMethod, async () => {
   clearRefreshGateTimer()
   refreshGateStartedAt.value = null
   refreshElapsedSeconds.value = 0
+  providersRequestSignal.value = signal
   try {
     await refreshQuotes()
   }
@@ -3996,7 +4093,7 @@ watch(payoutMethod, async () => {
     // Ignore refresh errors; the auto refresh queue handles retries.
   }
   if ((!hasApiQuotes.value || isQuoteStale.value) && !hasApiError.value && !corridorUnavailable.value && !corridorUnsupported.value) {
-    void requestQuoteRefresh('auto')
+    await requestQuoteRefresh('auto', signal)
   }
 })
 

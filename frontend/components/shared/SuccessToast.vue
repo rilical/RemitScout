@@ -10,7 +10,7 @@
     >
       <div
         v-if="isVisible"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 rounded-xl bg-slate-900 px-5 py-3 shadow-2xl"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-toast flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 shadow-2xl"
       >
         <div
           class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -36,14 +36,15 @@
           </p>
           <p
             v-if="message"
-            class="text-sm text-slate-300"
+            class="text-body-sm text-neutral-300"
           >
             {{ message }}
           </p>
         </div>
         <button
           type="button"
-          class="ml-2 p-1 rounded-lg text-slate-400 hover:text-white transition-colors"
+          class="ml-2 p-1 rounded-lg text-neutral-400 hover:text-white transition-colors"
+          aria-label="Dismiss notification"
           @click="hide"
         >
           <svg
@@ -82,9 +83,9 @@ const emit = defineEmits<{
 const isVisible = ref(false)
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 const iconBgClass = computed(() => {
-  if (props.variant === 'error') return 'bg-rose-500'
-  if (props.variant === 'warning') return 'bg-amber-500'
-  return 'bg-emerald-500'
+  if (props.variant === 'error') return 'bg-danger-600'
+  if (props.variant === 'warning') return 'bg-warning-600'
+  return 'bg-success-600'
 })
 const iconPath = computed(() => {
   if (props.variant === 'success') {

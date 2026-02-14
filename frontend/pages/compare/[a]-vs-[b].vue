@@ -1,21 +1,21 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="container mx-auto px-4 py-8">
+  <div class="min-h-screen bg-neutral-50">
+    <div class="container py-8">
       <Breadcrumbs :items="breadcrumbItems" />
 
-      <div class="mb-8 rounded-lg bg-white p-6 shadow-md">
-        <h1 class="mb-4 text-4xl font-bold text-gray-900">
+      <div class="mb-8 rounded-lg bg-surface p-6 shadow-md">
+        <h1 class="mb-4 text-h1 font-bold text-neutral-900">
           {{ providerA?.name || 'Provider A' }} vs {{ providerB?.name || 'Provider B' }}
         </h1>
-        <p class="mb-6 text-xl text-gray-600">
+        <p class="mb-6 text-h4 text-neutral-600">
           Compare {{ providerA?.name || 'Provider A' }} and {{ providerB?.name || 'Provider B' }} side by side to find the best
           money transfer provider for your needs.
         </p>
 
-        <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div class="mb-6 rounded-lg border border-primary-200 bg-primary-50 p-4">
           <div class="flex items-center">
             <svg
-              class="mr-2 h-5 w-5 text-blue-500"
+              class="mr-2 h-5 w-5 text-primary-500"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -25,7 +25,7 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span class="font-medium text-blue-800">Comparison based on current rates and user reviews</span>
+            <span class="font-medium text-primary-800">Comparison based on current rates and user reviews</span>
           </div>
         </div>
       </div>
@@ -51,71 +51,71 @@
       />
 
       <div class="mb-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div class="rounded-lg bg-white p-6 shadow-md">
-          <h2 class="mb-4 text-2xl font-bold text-gray-900">
+        <div class="rounded-lg bg-surface p-6 shadow-md">
+          <h2 class="mb-4 text-h3 font-bold text-neutral-900">
             {{ providerA?.name }} Overview
           </h2>
           <div class="space-y-4">
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Rating</span>
+              <span class="text-neutral-600">Rating</span>
               <div class="flex items-center">
                 <Stars :rating="providerA?.rating" />
-                <span class="ml-2 text-gray-900">{{ providerA?.rating }}/5</span>
+                <span class="ml-2 text-neutral-900">{{ providerA?.rating }}/5</span>
               </div>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Transfer Speed</span>
-              <span class="text-gray-900">{{ providerA?.speed }}</span>
+              <span class="text-neutral-600">Transfer Speed</span>
+              <span class="text-neutral-900">{{ providerA?.speed }}</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Countries</span>
-              <span class="text-gray-900">{{ providerA?.countries }}+</span>
+              <span class="text-neutral-600">Countries</span>
+              <span class="text-neutral-900">{{ providerA?.countries }}+</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Trust Score</span>
-              <span class="text-gray-900">{{ providerA?.score }}</span>
+              <span class="text-neutral-600">Trust Score</span>
+              <span class="text-neutral-900">{{ providerA?.score }}</span>
             </div>
           </div>
         </div>
 
-        <div class="rounded-lg bg-white p-6 shadow-md">
-          <h2 class="mb-4 text-2xl font-bold text-gray-900">
+        <div class="rounded-lg bg-surface p-6 shadow-md">
+          <h2 class="mb-4 text-h3 font-bold text-neutral-900">
             {{ providerB?.name }} Overview
           </h2>
           <div class="space-y-4">
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Rating</span>
+              <span class="text-neutral-600">Rating</span>
               <div class="flex items-center">
                 <Stars :rating="providerB?.rating" />
-                <span class="ml-2 text-gray-900">{{ providerB?.rating }}/5</span>
+                <span class="ml-2 text-neutral-900">{{ providerB?.rating }}/5</span>
               </div>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Transfer Speed</span>
-              <span class="text-gray-900">{{ providerB?.speed }}</span>
+              <span class="text-neutral-600">Transfer Speed</span>
+              <span class="text-neutral-900">{{ providerB?.speed }}</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Countries</span>
-              <span class="text-gray-900">{{ providerB?.countries }}+</span>
+              <span class="text-neutral-600">Countries</span>
+              <span class="text-neutral-900">{{ providerB?.countries }}+</span>
             </div>
             <div class="flex items-center justify-between border-b py-2">
-              <span class="text-gray-600">Trust Score</span>
-              <span class="text-gray-900">{{ providerB?.score }}</span>
+              <span class="text-neutral-600">Trust Score</span>
+              <span class="text-neutral-900">{{ providerB?.score }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-lg bg-white p-6 shadow-md">
-        <h2 class="mb-4 text-2xl font-bold text-gray-900">
+      <div class="rounded-lg bg-surface p-6 shadow-md">
+        <h2 class="mb-4 text-h3 font-bold text-neutral-900">
           Which Should You Choose?
         </h2>
         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
               Choose {{ providerA?.name }} if:
             </h3>
-            <ul class="list-inside list-disc space-y-1 text-gray-600">
+            <ul class="list-inside list-disc space-y-1 text-neutral-600">
               <li
                 v-for="reason in (providerA?.features || [])"
                 :key="reason"
@@ -125,10 +125,10 @@
             </ul>
           </div>
           <div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-900">
+            <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
               Choose {{ providerB?.name }} if:
             </h3>
-            <ul class="list-inside list-disc space-y-1 text-gray-600">
+            <ul class="list-inside list-disc space-y-1 text-neutral-600">
               <li
                 v-for="reason in (providerB?.features || [])"
                 :key="reason"

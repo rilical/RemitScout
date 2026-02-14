@@ -183,6 +183,7 @@ export const HEALTH_CORRIDORS: Record<ProviderId, readonly string[]> = {
     'US-CO-USD-COP',
     'US-PH-USD-PHP',
     'US-IN-USD-INR',
+    'US-JO-USD-JOD',
     'US-DO-USD-DOP',
     'US-NG-USD-NGN',
     'GB-IN-GBP-INR',

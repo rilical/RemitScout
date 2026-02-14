@@ -39,7 +39,7 @@ describe('DataTable', () => {
       expect.arrayContaining(['rounded-rs-lg']),
     )
     expect(dashboard.get('[data-testid="data-table"]').classes()).toEqual(
-      expect.arrayContaining(['text-sm']),
+      expect.arrayContaining(['text-body-sm']),
     )
 
     const terminal = mount(DataTable, {
@@ -54,7 +54,7 @@ describe('DataTable', () => {
       expect.arrayContaining(['rounded-rs-md']),
     )
     expect(terminal.get('[data-testid="data-table"]').classes()).toEqual(
-      expect.arrayContaining(['text-xs']),
+      expect.arrayContaining(['text-body-sm']),
     )
   })
 
@@ -69,7 +69,7 @@ describe('DataTable', () => {
     expect(wrapper.get('[data-testid="data-table"]').attributes('aria-busy')).toBe(
       'true',
     )
-    expect(wrapper.text()).toContain('Loading…')
+    expect(wrapper.get('[role="status"]').attributes('aria-label')).toBe('Loading table')
   })
 
   it('renders empty state when no rows', () => {

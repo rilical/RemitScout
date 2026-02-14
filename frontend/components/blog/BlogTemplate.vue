@@ -1,21 +1,21 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden bg-white py-16 lg:py-24">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
+      <div class="container">
         <Breadcrumbs :items="breadcrumbItems" />
 
         <div class="mt-12 max-w-4xl">
           <div
             v-if="category"
-            class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-2 text-xs font-semibold text-brand-700 shadow-md mb-6"
+            class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-surface px-4 py-2 text-body-sm font-semibold text-brand-700 shadow-md mb-6"
           >
             <span>{{ categoryIcon }}</span>
             {{ category }}
           </div>
-          <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl mb-6">
+          <h1 class="text-hero font-bold tracking-tight mb-6">
             <template v-if="title.includes('Remit-Scout')">
               <span class="text-neutral-900">{{ title.replace('Remit-Scout', '') }}</span>
               <span class="text-brand-600">Remit-Scout</span>
@@ -27,11 +27,11 @@
           </h1>
           <p
             v-if="subtitle"
-            class="text-xl text-neutral-600 sm:text-2xl font-medium mb-6 leading-relaxed"
+            class="text-h4 text-neutral-600 font-medium mb-6 leading-relaxed"
           >
             {{ subtitle }}
           </p>
-          <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-600">
+          <div class="flex flex-wrap items-center gap-4 text-body-sm text-neutral-600">
             <div
               v-if="author"
               class="flex items-center gap-2"
@@ -40,15 +40,19 @@
                 v-if="author.avatar"
                 class="w-8 h-8 rounded-full overflow-hidden bg-neutral-100"
               >
-                <img
+                <NuxtImg
                   :src="author.avatar"
                   :alt="author.name"
+                  width="32"
+                  height="32"
+                  loading="lazy"
+                  format="webp"
                   class="w-full h-full object-cover"
-                >
+                />
               </div>
               <div
                 v-else
-                class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-600"
+                class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-body-sm font-bold text-brand-600"
               >
                 {{ author.name.charAt(0).toUpperCase() }}
               </div>
@@ -64,21 +68,26 @@
     </section>
 
     <!-- Main Content with Sidebar -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-surface">
+      <div class="container">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           <!-- Main Content -->
           <div class="lg:col-span-8">
             <!-- Featured Image -->
             <div
               v-if="featuredImage"
-              class="mb-12 -mx-4 sm:-mx-6 lg:-mx-8 rounded-2xl overflow-hidden"
+              class="mb-12 -mx-page-x rounded-2xl overflow-hidden"
             >
-              <img
+              <NuxtImg
                 :src="featuredImage"
                 :alt="title"
+                width="1200"
+                height="630"
+                sizes="sm:100vw md:720px"
+                loading="eager"
+                format="webp"
                 class="w-full h-auto max-h-[600px] object-cover"
-              >
+              />
             </div>
 
             <!-- Article Content -->
@@ -114,11 +123,11 @@
           <aside class="lg:col-span-4">
             <div class="space-y-8 lg:sticky lg:top-20">
               <!-- Save + Alert (Guide CTA) -->
-              <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-2">
+              <div class="rounded-2xl border border-neutral-200 bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
                   Save this & get alerts
                 </h3>
-                <p class="text-sm text-neutral-700 mb-4">
+                <p class="text-body-sm text-neutral-700 mb-4">
                   Save a corridor and set an alert—Remit‑Scout will remember it for your next transfer.
                 </p>
                 <SaveAlertButtons
@@ -129,11 +138,11 @@
               </div>
 
               <!-- Why Trust Us (Compact) -->
-              <div class="rounded-2xl border border-neutral-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-neutral-900 mb-4">
+              <div class="rounded-2xl border border-neutral-200 bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-neutral-900 mb-4">
                   Why Trust Us
                 </h3>
-                <ul class="space-y-3 text-sm text-neutral-700">
+                <ul class="space-y-3 text-body-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <span class="text-brand-600 mt-0.5">✓</span>
                     <span>100% independent rankings</span>
@@ -149,9 +158,9 @@
                 </ul>
                 <NuxtLink
                   to="/methodology"
-                  class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  class="mt-4 inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
-                  Learn more
+                  Our methodology
                   <svg
                     class="w-4 h-4"
                     fill="none"
@@ -183,11 +192,11 @@
     <!-- FAQ Section -->
     <section
       v-if="faqs && faqs.length > 0"
-      class="py-16 lg:py-20 bg-white"
+      class="py-16 lg:py-20 bg-surface"
     >
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-4xl px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
             Frequently Asked Questions
           </h2>
         </div>
@@ -202,7 +211,7 @@
     <WhyTrustUs v-if="showWhyTrustUs" />
     <TrustMetricsStrip
       v-if="showImpact"
-      bg-class="bg-slate-900"
+      bg-class="bg-neutral-900"
     />
     <FounderStory v-if="showOurStory" />
   </div>

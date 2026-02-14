@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
+import SkeletonBlock from './SkeletonBlock.vue'
+import { ErrorState } from '~/ui/states'
 
 type Row = Record<string, unknown>
 
@@ -22,6 +24,8 @@ type Props = {
   rowKey?: string | ((row: Row, rowIndex: number) => string | number)
   caption?: string
   loading?: boolean
+  error?: unknown
+  onRetry?: (() => void) | null
   emptyText?: string
   rootClass?: string
   tableClass?: string
@@ -32,6 +36,8 @@ const props = withDefaults(defineProps<Props>(), {
   rows: () => [],
   caption: undefined,
   loading: false,
+  error: undefined,
+  onRetry: null,
   emptyText: 'No results',
   rootClass: undefined,
   tableClass: undefined,
@@ -41,6 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
 const slots = useSlots()
 
 const variant = computed(() => props.variant)
+const skeletonTone = computed(() => (props.variant === 'terminal' ? 'dark' : 'light'))
 
 const rootClasses = computed(() => {
   const base = 'w-full overflow-x-auto'
@@ -53,8 +60,16 @@ const rootClasses = computed(() => {
 
 const tableClasses = computed(() => {
   const base = 'min-w-full table-auto text-rs-fg'
-  const variant = props.variant === 'terminal' ? 'text-xs' : 'text-sm'
+  const variant = props.variant === 'terminal' ? 'text-body-sm' : 'text-body-sm'
   return [base, variant, props.tableClass].filter(Boolean).join(' ')
+})
+
+const errorMessage = computed(() => {
+  const err = props.error as any
+  if (!err) return ''
+  if (typeof err === 'string') return err
+  if (typeof err?.message === 'string' && err.message) return err.message
+  return 'Failed to load table data'
 })
 
 function rowKeyFor(row: Row, rowIndex: number) {
@@ -85,13 +100,21 @@ function hasSlot(name: string) {
 </script>
 
 <template>
-  <div :class="rootClasses" data-testid="data-table-root">
+  <div
+:class="rootClasses"
+data-testid="data-table-root"
+>
     <table
       :class="tableClasses"
       :aria-busy="loading ? 'true' : 'false'"
       data-testid="data-table"
     >
-      <caption v-if="caption" class="sr-only">{{ caption }}</caption>
+      <caption
+v-if="caption"
+class="sr-only"
+>
+{{ caption }}
+</caption>
 
       <thead class="border-b border-rs-border bg-neutral-50">
         <tr>
@@ -119,15 +142,57 @@ function hasSlot(name: string) {
         </tr>
       </thead>
 
-      <tbody v-if="loading" class="divide-y divide-rs-border">
+      <tbody
+v-if="errorMessage"
+class="divide-y divide-rs-border"
+>
+        <tr>
+          <td
+            :colspan="Math.max(columns.length, 1)"
+            class="px-4 py-6"
+          >
+            <ErrorState
+              mode="inline"
+              :message="errorMessage"
+              :on-retry="onRetry"
+            />
+          </td>
+        </tr>
+      </tbody>
+
+      <tbody
+v-else-if="loading"
+class="divide-y divide-rs-border"
+>
         <tr>
           <td
             :colspan="Math.max(columns.length, 1)"
             class="px-4 py-6 text-rs-muted"
-            :class="variant === 'terminal' ? 'text-xs' : 'text-sm'"
+            :class="variant === 'terminal' ? 'text-body-sm' : 'text-body-sm'"
           >
             <slot name="loading">
-              <span role="status" aria-live="polite">Loading…</span>
+              <div
+                role="status"
+                aria-live="polite"
+                aria-label="Loading table"
+                class="space-y-2"
+              >
+                <SkeletonBlock
+                  width="full"
+                  height="12"
+                  :tone="skeletonTone"
+                />
+                <SkeletonBlock
+                  width="90%"
+                  height="12"
+                  :tone="skeletonTone"
+                />
+                <SkeletonBlock
+                  width="80%"
+                  height="12"
+                  :tone="skeletonTone"
+                />
+              </div>
             </slot>
           </td>
         </tr>
@@ -141,16 +206,22 @@ function hasSlot(name: string) {
           <td
             :colspan="Math.max(columns.length, 1)"
             class="px-4 py-6 text-rs-muted"
-            :class="variant === 'terminal' ? 'text-xs' : 'text-sm'"
+            :class="variant === 'terminal' ? 'text-body-sm' : 'text-body-sm'"
           >
-            <slot name="empty" :empty-text="emptyText">
+            <slot
+name="empty"
+:empty-text="emptyText"
+>
               {{ emptyText }}
             </slot>
           </td>
         </tr>
       </tbody>
 
-      <tbody v-else class="divide-y divide-rs-border">
+      <tbody
+v-else
+class="divide-y divide-rs-border"
+>
         <tr
           v-for="(row, rowIndex) in rows"
           :key="rowKeyFor(row, rowIndex)"

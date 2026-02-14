@@ -28,8 +28,8 @@ const start = async () => {
       requirements: {
         requirePlaneCDb: true,
         requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
+        requireQueues: false,
+        requireStorage: false,
       },
     })
 

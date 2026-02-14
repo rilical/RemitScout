@@ -1,19 +1,19 @@
 <template>
   <section class="py-12 sm:py-16 bg-neutral-50">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <p class="text-body-sm font-semibold uppercase tracking-wide text-neutral-500">
             Remit-Score breakdown
           </p>
-          <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900">
+          <h2 class="text-h3 font-bold text-neutral-900">
             How top providers score today
           </h2>
-          <p class="text-sm text-neutral-600">
+          <p class="text-body-sm text-neutral-600">
             Delivered value, reliability, speed, support, and trust in one view.
           </p>
         </div>
-        <div class="text-xs text-neutral-500">
+        <div class="text-body-sm text-neutral-500">
           Updated {{ updatedLabel }}
         </div>
       </div>
@@ -36,10 +36,25 @@
       </div>
 
       <div
-        v-else-if="!providers.length || error"
-        class="rounded-2xl border border-neutral-200 bg-white p-6 text-sm text-neutral-600"
+        v-else-if="error"
+        class="rounded-2xl border border-neutral-200 bg-surface p-6 text-body-sm text-neutral-600"
       >
-        Provider scores are unavailable right now. Try again in a moment.
+        <ErrorState
+          mode="inline"
+          :message="error?.message || 'Provider scores are unavailable right now. Try again in a moment.'"
+          :on-retry="refresh"
+        />
+      </div>
+
+      <div
+        v-else-if="providers.length === 0"
+        class="rounded-2xl border border-neutral-200 bg-surface p-6"
+      >
+        <EmptyState
+          mode="inline"
+          title="No providers available"
+          description="Provider scores are not available yet. Check back soon."
+        />
       </div>
 
       <div
@@ -55,17 +70,21 @@
             <article
               v-for="provider in providers"
               :key="provider.id"
-              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-white border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col snap-start"
+              class="flex-shrink-0 w-[280px] sm:w-[320px] bg-surface border border-neutral-200 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col snap-start"
             >
               <div class="flex items-center justify-between gap-3 px-6 pt-6">
                 <div class="flex items-center gap-3">
-                  <div class="h-10 w-10 rounded-full bg-white ring-1 ring-neutral-200 flex items-center justify-center overflow-hidden">
-                    <img
+                  <div class="h-10 w-10 rounded-full bg-surface ring-1 ring-neutral-200 flex items-center justify-center overflow-hidden">
+                    <NuxtImg
                       v-if="provider.logoUrl"
                       :src="provider.logoUrl"
                       :alt="provider.name"
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      format="webp"
                       class="h-8 w-8 object-contain"
-                    >
+                    />
                     <ProviderLogo
                       v-else
                       :slug="provider.slug"
@@ -74,10 +93,10 @@
                     />
                   </div>
                   <div>
-                    <p class="text-base font-semibold text-neutral-900">
+                    <p class="text-body font-semibold text-neutral-900">
                       {{ provider.name }}
                     </p>
-                    <p class="text-xs text-neutral-500">
+                    <p class="text-body-sm text-neutral-500">
                       {{ provider.typeLabel }}
                     </p>
                   </div>
@@ -94,7 +113,7 @@
                 <div
                   v-for="metric in provider.metrics"
                   :key="metric.label"
-                  class="flex items-center justify-between border-b border-neutral-100 pb-2 text-sm last:border-b-0 last:pb-0"
+                  class="flex items-center justify-between border-b border-neutral-100 pb-2 text-body-sm last:border-b-0 last:pb-0"
                 >
                   <span class="text-neutral-600">
                     {{ metric.label }}
@@ -108,7 +127,7 @@
               <div class="px-6 py-6 mt-auto">
                 <NuxtLink
                   :to="`/learn/providers/${provider.slug}`"
-                  class="block w-full rounded-lg border border-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-brand-600 hover:bg-brand-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+                  class="block w-full rounded-lg border border-brand-600 px-4 py-2.5 text-center text-body-sm font-semibold text-brand-600 hover:bg-brand-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
                 >
                   Read Full Review
                 </NuxtLink>
@@ -119,7 +138,7 @@
 
         <button
           v-if="canScrollLeft"
-          class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-surface border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
           aria-label="Previous providers"
           @click="scrollLeft"
         >
@@ -140,7 +159,7 @@
 
         <button
           v-if="canScrollRight"
-          class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
+          class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-surface border border-neutral-300 hover:border-brand-600 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 opacity-0 group-hover/section:opacity-100"
           aria-label="Next providers"
           @click="scrollRight"
         >
@@ -168,6 +187,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import ScoreBadge from '~/components/shared/ScoreBadge.vue'
+import { EmptyState, ErrorState } from '~/ui/states'
 
 type ProviderMetadata = {
   id: string
@@ -192,7 +212,7 @@ type MetricRow = {
 
 const { request } = useApi()
 
-const { data, pending, error } = await useAsyncData(
+const { data, pending, error, refresh } = await useAsyncData(
   'provider-metadata-carousel',
   () => request<{ data: ProviderMetadata[] }>('/providers/metadata'),
   { watch: [] },

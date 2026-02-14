@@ -1,14 +1,14 @@
 <template>
   <nav
     :class="[
-      'mb-6 flex items-center space-x-2 text-sm',
-      isDark ? 'text-white' : 'text-gray-500',
+      'mb-6 flex items-center space-x-2 text-body-sm',
+      isDark ? 'text-white' : 'text-neutral-500',
     ]"
     aria-label="Breadcrumb"
   >
     <NuxtLink
       to="/"
-      :class="isDark ? 'text-white hover:text-brand-400' : 'text-gray-500 hover:text-gray-700'"
+      :class="isDark ? 'text-white hover:text-brand-400' : 'text-neutral-500 hover:text-neutral-700'"
     >Home</NuxtLink>
     <svg
       class="h-4 w-4"
@@ -28,13 +28,13 @@
       <NuxtLink
         v-if="index < filteredItems.length - 1"
         :to="item.path"
-        :class="isDark ? 'text-white hover:text-brand-400' : 'text-gray-500 hover:text-gray-700'"
+        :class="isDark ? 'text-white hover:text-brand-400' : 'text-neutral-500 hover:text-neutral-700'"
       >
         {{ item.name }}
       </NuxtLink>
       <span
         v-else
-        :class="isDark ? 'font-medium text-white' : 'font-medium text-gray-900'"
+        :class="isDark ? 'font-medium text-white' : 'font-medium text-neutral-900'"
       >{{ item.name }}</span>
       <svg
         v-if="index < filteredItems.length - 1"

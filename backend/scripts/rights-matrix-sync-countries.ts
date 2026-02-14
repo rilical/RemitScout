@@ -172,25 +172,20 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
     })
 
     if (valid.length > 0) {
-      // Bulk upsert to avoid N+1 writes.
-      await query(
-        `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)
-         SELECT * FROM UNNEST(
-           $1::text[],
-           $2::text[][],
-           $3::text[][]
-         )
-         ON CONFLICT (provider_id) DO UPDATE SET
-           source_countries = EXCLUDED.source_countries,
-           destination_countries = EXCLUDED.destination_countries,
-           updated_at = NOW()`,
-        [
-          valid.map((e) => e.providerId),
-          valid.map((e) => e.sourceCountries),
-          valid.map((e) => e.destinationCountries),
-        ],
-        pool,
-      )
+      // NOTE: pg's array encoding for nested arrays is inconsistent across runtime/build configs.
+      // A simple per-provider upsert is deterministic and fast enough (~25 providers).
+      for (const entry of valid) {
+        await query(
+          `INSERT INTO silver.rights_matrix (provider_id, source_countries, destination_countries)
+           VALUES ($1, $2::text[], $3::text[])
+           ON CONFLICT (provider_id) DO UPDATE SET
+             source_countries = EXCLUDED.source_countries,
+             destination_countries = EXCLUDED.destination_countries,
+             updated_at = NOW()`,
+          [entry.providerId, entry.sourceCountries, entry.destinationCountries],
+          pool,
+        )
+      }
     }
 
     for (const entry of valid) {

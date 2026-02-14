@@ -10,7 +10,7 @@
     :highlights="highlights"
     :related="relatedLinks"
   >
-    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-rs-fg prose-a:font-semibold prose-a:text-brand-600">
       <p class="mb-6">
         Remit-Scout compares licensed money transfer providers. We keep the service free by
         earning revenue in a few clearly defined ways. None of these change how we score
@@ -19,7 +19,7 @@
 
       <h2
         id="revenue-streams"
-        class="mb-3 text-2xl font-bold text-gray-900"
+        class="mb-3 text-h3 font-bold text-neutral-900"
       >
         Revenue streams
       </h2>
@@ -34,7 +34,7 @@
 
       <h2
         id="editorial-guardrails"
-        class="mb-3 text-2xl font-bold text-gray-900"
+        class="mb-3 text-h3 font-bold text-neutral-900"
       >
         Editorial guardrails
       </h2>
@@ -47,7 +47,7 @@
 
       <h2
         id="ranking-policy"
-        class="mb-3 text-2xl font-bold text-gray-900"
+        class="mb-3 text-h3 font-bold text-neutral-900"
       >
         User-first ranking policy
       </h2>
@@ -56,16 +56,16 @@
         signals. If a provider we do not partner with beats a partner on cost or speed, it still
         appears higher.
       </p>
-      <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-        <strong class="text-emerald-900">Example:</strong>
-        <p class="text-emerald-800 mb-0">
+      <div class="rounded-lg border border-success-600 bg-success-600 p-4">
+        <strong class="text-success-600">Example:</strong>
+        <p class="text-success-600 mb-0">
           If Provider A (no affiliate link) pays the recipient more than Provider B (affiliate), Provider A ranks above Provider B for that corridor/amount.
         </p>
       </div>
 
       <h2
         id="conflict-checks"
-        class="mb-3 text-2xl font-bold text-gray-900"
+        class="mb-3 text-h3 font-bold text-neutral-900"
       >
         Conflict checks
       </h2>
@@ -77,7 +77,7 @@
 
       <h2
         id="questions"
-        class="mb-3 text-2xl font-bold text-gray-900"
+        class="mb-3 text-h3 font-bold text-neutral-900"
       >
         Questions?
       </h2>
@@ -149,11 +149,20 @@ const relatedLinks = [
   },
 ]
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'How We Make Money',
+    description: 'Learn how Remit-Scout earns revenue without affecting rankings or Remit-Score.',
+  },
+})
+
 setSeo({
   title: 'How We Make Money | Remit-Scout Transparency',
   description:
     'Learn how Remit-Scout earns revenue through affiliate links, ads, and partnerships without affecting rankings or Remit-Score.',
   canonical: `${siteUrl}/legal/how-we-make-money`,
+  ogImage: false,
   ogType: 'article',
   publishedTime: lastUpdatedIso,
   modifiedTime: lastUpdatedIso,

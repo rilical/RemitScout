@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto'
 import { context as otelContext, trace } from '@opentelemetry/api'
 import { redactSensitive } from './log-redactor'
-import { config } from './config'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -21,10 +20,13 @@ const normalizeLevel = (value?: string): LogLevel => {
 }
 
 const resolveLogLevel = (): LogLevel => {
-  if (config.logging.level) {
-    return normalizeLevel(config.logging.level)
+  // IMPORTANT: logger must not import `config` because many ECS/Lambda entrypoints
+  // resolve secrets/env vars at runtime before importing config. Importing config
+  // here freezes missing values (config is deep-frozen at module init).
+  if (process.env.LOG_LEVEL) {
+    return normalizeLevel(process.env.LOG_LEVEL)
   }
-  return config.env === 'production' ? 'info' : 'debug'
+  return process.env.NODE_ENV === 'production' ? 'info' : 'debug'
 }
 
 const serializeError = (error: unknown) => {
@@ -58,26 +60,28 @@ const getAwsLogContext = (): Record<string, unknown> => {
   const context: Record<string, unknown> = {}
 
   // Lambda context
-  if (config.runtime.lambdaFunctionName) {
-    context.lambda_function_name = config.runtime.lambdaFunctionName
-    context.lambda_function_version = config.runtime.lambdaFunctionVersion
+  if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    context.lambda_function_name = process.env.AWS_LAMBDA_FUNCTION_NAME
+    context.lambda_function_version = process.env.AWS_LAMBDA_FUNCTION_VERSION
   }
 
   // ECS context
-  if (config.runtime.ecsTaskArn) {
-    context.ecs_task_arn = config.runtime.ecsTaskArn
-    const arnParts = config.runtime.ecsTaskArn.split('/')
+  const ecsTaskArn = process.env.ECS_TASK_ARN
+  if (ecsTaskArn) {
+    context.ecs_task_arn = ecsTaskArn
+    const arnParts = ecsTaskArn.split('/')
     if (arnParts.length > 0) {
       context.ecs_task_id = arnParts[arnParts.length - 1]
     }
   }
-  if (config.runtime.ecsContainerName) {
-    context.ecs_container_name = config.runtime.ecsContainerName
+  if (process.env.ECS_CONTAINER_NAME) {
+    context.ecs_container_name = process.env.ECS_CONTAINER_NAME
   }
 
   // AWS general
-  if (config.aws.region) {
-    context.aws_region = config.aws.region
+  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION
+  if (region) {
+    context.aws_region = region
   }
 
   return context

@@ -40,13 +40,13 @@ const hasActions = computed(() => Boolean(slots.actions))
 const styles = computed(() => {
   if (props.variant === 'consumer') {
     return {
-      outer: 'overflow-hidden rounded-xl border border-slate-200 bg-white',
-      header: 'flex items-start justify-between gap-6 border-b border-slate-200 px-6 py-4',
-      title: 'text-base font-semibold text-slate-900',
-      subtitle: 'mt-1 text-sm text-slate-600',
-      rangePill: 'rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700',
+      outer: 'overflow-hidden rounded-xl border border-rs-border bg-surface',
+      header: 'flex items-start justify-between gap-6 border-b border-rs-border px-6 py-4',
+      title: 'text-h4 text-rs-fg',
+      subtitle: 'mt-1 text-body-sm text-rs-muted',
+      rangePill: 'rounded-full border border-rs-border bg-neutral-50 px-2.5 py-1 text-body-sm font-semibold text-neutral-700',
       body: 'px-6 py-5',
-      footer: 'border-t border-slate-200 bg-slate-50/60 px-6 py-2.5 text-slate-500',
+      footer: 'border-t border-rs-border bg-neutral-50/60 px-6 py-2.5 text-neutral-500',
       stateVariant: 'consumer' as const,
     }
   }
@@ -54,9 +54,9 @@ const styles = computed(() => {
   return {
     outer: 'overflow-hidden rounded-xl border border-neutral-700 bg-neutral-800',
     header: 'flex items-start justify-between gap-6 border-b border-neutral-700 px-6 py-4',
-    title: 'text-base font-semibold text-white',
-    subtitle: 'mt-1 text-sm text-neutral-400',
-    rangePill: 'rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-neutral-300',
+    title: 'text-h4 text-white',
+    subtitle: 'mt-1 text-body-sm text-neutral-400',
+    rangePill: 'rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-body-sm font-semibold text-neutral-300',
     body: 'px-6 py-5',
     footer: 'border-t border-neutral-700 bg-neutral-900/50 px-6 py-2.5 text-neutral-500',
     stateVariant: 'terminal' as const,
@@ -140,7 +140,7 @@ const styles = computed(() => {
 
     <footer :class="styles.footer">
       <div class="flex items-center justify-between gap-4">
-        <div class="text-xs">
+        <div class="text-body-sm">
           {{ updatedLabel }}
         </div>
         <slot name="footer" />

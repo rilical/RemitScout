@@ -123,7 +123,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'best-ways-send-money-philippines',
     emoji: '🇵🇭',
-    gradient: 'from-blue-100 to-red-100',
+    gradient: 'from-primary-100 to-danger-100',
     category: 'Country Guide',
   },
   {
@@ -133,7 +133,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'wise-vs-remitly-vs-worldremit',
     emoji: '⚖️',
-    gradient: 'from-purple-100 to-pink-100',
+    gradient: 'from-accent-100 to-primary-100',
     category: 'Comparison',
   },
   {
@@ -143,7 +143,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'avoid-hidden-fees',
     emoji: '💰',
-    gradient: 'from-emerald-100 to-teal-100',
+    gradient: 'from-success-100 to-success-200',
     category: 'Money Saving',
   },
   {
@@ -153,7 +153,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'cash-pickup-vs-bank-deposit',
     emoji: '🏦',
-    gradient: 'from-amber-100 to-orange-100',
+    gradient: 'from-warning-100 to-warning-200',
     category: 'How To',
   },
   {
@@ -163,7 +163,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'send-money-us-to-india-guide',
     emoji: '🇺🇸🇮🇳',
-    gradient: 'from-indigo-100 to-sky-100',
+    gradient: 'from-primary-100 to-accent-100',
     category: 'Country Guide',
   },
   {
@@ -173,7 +173,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'wise-remitly-western-union-review',
     emoji: '🧭',
-    gradient: 'from-lime-100 to-emerald-100',
+    gradient: 'from-success-100 to-primary-100',
     category: 'Comparison',
   },
   {
@@ -183,7 +183,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'travel-insurance',
     emoji: '🛡️',
-    gradient: 'from-cyan-100 to-blue-100',
+    gradient: 'from-primary-50 to-primary-200',
     category: 'Travel',
   },
   {
@@ -193,7 +193,7 @@ export const GUIDE_CARDS = [
     updated: 'May 2025',
     slug: 'usd-php-exchange-rate-guide',
     emoji: '⏱️',
-    gradient: 'from-rose-100 to-orange-100',
+    gradient: 'from-danger-100 to-warning-100',
     category: 'Exchange Rates',
   },
 ]

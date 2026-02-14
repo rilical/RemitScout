@@ -1,26 +1,29 @@
 <template>
-  <div class="min-h-screen bg-white pb-24 md:pb-0">
+  <PageContainer
+class="min-h-screen pb-24 md:pb-0"
+no-pad-y
+>
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
+      <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs :items="breadcrumbItems" />
 
         <div class="mt-12 max-w-4xl">
-          <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 whitespace-nowrap">
+          <h1 class="text-hero font-bold tracking-tight text-white mb-6 whitespace-nowrap">
             Remittance Intelligence.
           </h1>
 
-          <p class="text-xl text-white sm:text-2xl font-medium mb-6 leading-relaxed">
-            Banks profit from <span class="text-blue-600">confusion</span>.<br>We profit from <span class="text-blue-600">clarity</span>.
+          <p class="text-h4 text-white font-medium mb-6 leading-relaxed">
+            Banks profit from <span class="text-brand-600">confusion</span>.<br>We profit from <span class="text-brand-600">clarity</span>.
           </p>
 
-          <p class="text-lg text-slate-200 leading-relaxed mb-4 max-w-3xl">
+          <p class="text-body-lg text-neutral-200 leading-relaxed mb-4 max-w-3xl">
             Remit-Scout is a <strong class="font-semibold text-white">quantitative comparison engine</strong> for cross border capital. We aggregate real time FX data to expose the true cost of international transfers, stripping away hidden spreads to reveal the only metric that matters: <span class="font-semibold text-brand-400">Net Delivered Value</span>.
           </p>
 
-          <p class="text-base text-slate-300 leading-relaxed mb-8 max-w-3xl">
+          <p class="text-body text-neutral-300 leading-relaxed mb-8 max-w-3xl">
             Incubated at the <a
               href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
               target="_blank"
@@ -33,12 +36,12 @@
     </section>
 
     <!-- Who We Are -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+              <h2 class="text-h2 font-bold text-neutral-900 flex items-center gap-3 mb-6">
                 <svg
                   class="w-8 h-8 text-brand-600"
                   fill="none"
@@ -55,12 +58,12 @@
                 Who We Are
               </h2>
               <div class="space-y-6">
-                <p class="text-lg sm:text-xl leading-relaxed text-neutral-700">
+                <p class="text-body-lg leading-relaxed text-neutral-700">
                   <strong class="font-semibold text-brand-600">Remit-Scout</strong> is an independent comparison platform operated by <strong class="font-semibold text-neutral-900">Remit-Scout LLC</strong>.
                   We are committed to providing transparent, accurate, and unbiased information to help you make informed decisions about international money transfers.
                 </p>
 
-                <p class="text-lg sm:text-xl leading-relaxed text-neutral-700">
+                <p class="text-body-lg leading-relaxed text-neutral-700">
                   Trust is earned through transparency. That's why we make our data sources, ranking logic, and revenue model easy to inspect.
                   We publish detailed methodology, disclose affiliate relationships, and maintain editorial independence in our rankings.
                   Our goal is to help you save money and make better decisions, not to promote any particular provider.
@@ -73,7 +76,7 @@
                 <div
                   v-for="item in whoWeArePrinciples"
                   :key="item.title"
-                  class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+                  class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm"
                 >
                   <div class="flex items-start gap-3">
                     <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
@@ -83,10 +86,10 @@
                       />
                     </div>
                     <div>
-                      <h3 class="text-base font-semibold text-neutral-900">
+                      <h3 class="text-body font-semibold text-neutral-900">
                         {{ item.title }}
                       </h3>
-                      <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                      <p class="mt-1 text-body-sm leading-relaxed text-neutral-600">
                         {{ item.body }}
                       </p>
                     </div>
@@ -100,10 +103,10 @@
     </section>
 
     <!-- Our Story -->
-    <section class="py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-blue-700">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-white flex items-center justify-center gap-3 mb-3">
+          <h2 class="text-h2 font-bold text-white flex items-center justify-center gap-3 mb-3">
             <svg
               class="w-8 h-8 text-white"
               fill="none"
@@ -119,7 +122,7 @@
             </svg>
             Our Story
           </h2>
-          <p class="text-lg text-white/90 max-w-2xl mx-auto">
+          <p class="text-body-lg text-white/90 max-w-2xl mx-auto">
             How frustration with hidden fees became a mission for transparency
           </p>
         </div>
@@ -127,7 +130,7 @@
         <div class="max-w-5xl mx-auto">
           <div class="grid gap-8 lg:grid-cols-3">
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <svg
                     class="w-8 h-8 text-white"
@@ -144,21 +147,21 @@
                   </svg>
                 </div>
                 <div class="text-center mb-4">
-                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-body-sm font-semibold rounded-full">
                     <span>2022</span>
                   </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   The Discovery
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   When Omar first came to Carnegie Mellon, he realized that every time his family sent money from Jordan to the US, about <strong class="font-semibold text-white">$30 quietly disappeared</strong>: half from the sending bank, half from the receiving bank.
                 </p>
               </div>
             </div>
 
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <svg
                     class="w-8 h-8 text-white"
@@ -175,21 +178,21 @@
                   </svg>
                 </div>
                 <div class="text-center mb-4">
-                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-body-sm font-semibold rounded-full">
                     <span>The Realization</span>
                   </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   A Wider Problem
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   Omar noticed that this hidden fee problem impacts countless families who depend on remittances for essentials. For those sending money regularly, these fees add up to hundreds or even thousands of dollars each year.
                 </p>
               </div>
             </div>
 
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <svg
                     class="w-8 h-8 text-white"
@@ -212,14 +215,14 @@
                   </svg>
                 </div>
                 <div class="text-center mb-4">
-                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-sm font-semibold rounded-full">
+                  <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-500 text-white text-body-sm font-semibold rounded-full">
                     <span>2025-2026</span>
                   </span>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   Building the Solution
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   Omar built an MVP in 2025 and launched it for about a year. Now, with this new version launching in 2026, he and the team hope to solve the fee problem and help people keep more of their hard earned money where it belongs with their families.
                 </p>
               </div>
@@ -231,9 +234,9 @@
 
     <!-- Our Leadership -->
     <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+          <h2 class="text-h2 font-bold text-neutral-900 flex items-center gap-3 mb-6">
             <svg
               class="w-8 h-8 text-brand-600"
               fill="none"
@@ -249,13 +252,13 @@
             </svg>
             Our Leadership
           </h2>
-          <p class="leading-relaxed text-neutral-700 mb-8 text-lg">
+          <p class="leading-relaxed text-neutral-700 mb-8 text-body-lg">
             Remit-Scout was founded to solve a data problem, not just a money problem.<br>We treat remittance fees as a bug in the financial system. Our algorithm is the patch.
           </p>
 
           <div class="space-y-6">
             <div>
-              <div class="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm">
+              <div class="rounded-3xl border border-neutral-200 bg-surface p-6 sm:p-8 shadow-sm">
                 <div class="grid gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
                   <div class="flex flex-col items-center lg:items-start">
                     <div class="relative mb-6">
@@ -265,25 +268,30 @@
                         rel="noopener noreferrer"
                         class="block"
                       >
-                        <div class="absolute inset-2 rounded-3xl bg-gradient-to-br from-brand-400 via-brand-300 to-emerald-400 blur-xl opacity-60" />
-                        <img
-                          :src="founderHeadshotUrl"
-                          onerror="this.src='/images/about/omar-placeholder.jpg'; this.onerror=null;"
+                        <div class="absolute inset-2 rounded-3xl bg-gradient-to-br from-brand-400 via-brand-300 to-success-600 blur-xl opacity-60" />
+                        <NuxtImg
+                          :src="headshotSrc"
                           alt="Omar Ghabayen, Founder of Remit-Scout"
-                          class="relative w-48 h-48 lg:w-56 lg:h-56 rounded-3xl object-cover border-4 border-white shadow-2xl hover:opacity-90 transition-opacity cursor-pointer"
-                        >
+                          width="224"
+                          height="224"
+                          sizes="(min-width: 1024px) 224px, 192px"
+                          loading="eager"
+                          format="webp"
+                          class="relative w-48 h-48 lg:w-56 lg:h-56 rounded-3xl object-cover border-4 border-white shadow-2xl hover:opacity-90 motion-safe:transition-opacity cursor-pointer"
+                          @error="handleHeadshotError"
+                        />
                       </a>
                     </div>
                     <div class="text-center lg:text-left w-full">
                       <div class="flex items-center gap-3 mb-2 flex-wrap justify-center lg:justify-start">
-                        <h3 class="text-2xl font-bold text-neutral-900">
+                        <h3 class="text-h3 font-bold text-neutral-900">
                           Omar Ghabayen
                         </h3>
                         <a
                           href="https://www.linkedin.com/in/ghabayeno/"
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="text-neutral-700 hover:text-neutral-900 transition-colors"
+                          class="text-neutral-700 hover:text-neutral-900 motion-safe:transition-colors"
                           aria-label="LinkedIn"
                         >
                           <svg
@@ -295,10 +303,10 @@
                           </svg>
                         </a>
                       </div>
-                      <h4 class="inline-block mb-3 px-4 py-1.5 bg-brand-100 text-brand-700 text-xs font-semibold rounded-full uppercase tracking-wide">
+                      <h4 class="inline-block mb-3 px-4 py-1.5 bg-brand-100 text-brand-700 text-body-sm font-semibold rounded-full uppercase tracking-wide">
                         Founder of Remit-Scout
                       </h4>
-                      <div class="space-y-3 text-sm text-neutral-600">
+                      <div class="space-y-3 text-body-sm text-neutral-600">
                         <div class="flex items-center gap-3 justify-center lg:justify-start">
                           <svg
                             class="w-5 h-5 text-brand-600 flex-shrink-0"
@@ -349,27 +357,27 @@
 
                   <div class="space-y-6">
                     <div class="space-y-4">
-                      <h3 class="text-xl font-bold text-brand-600 mb-3">
+                      <h3 class="text-h4 font-bold text-brand-600 mb-3">
                         The Arbitrage Opportunity
                       </h3>
-                      <p class="text-lg leading-relaxed text-neutral-700">
+                      <p class="text-body-lg leading-relaxed text-neutral-700">
                         "During my time at Carnegie Mellon, I kept noticing something that didn't add up. When I'd check the rates for sending money between the US and Jordan, what they advertised almost never matched what actually landed in the recipient's account.
                       </p>
 
-                      <p class="text-lg leading-relaxed text-neutral-700">
+                      <p class="text-body-lg leading-relaxed text-neutral-700">
                         I dug deeper and found that intermediaries were quietly taking a cut through hidden FX markups—and the comparison sites everyone was using completely missed it. That's when it hit me: the whole 'low fee' pitch was a red herring. The real cost was always in the spread, hiding in plain sight.
                       </p>
 
-                      <p class="text-lg leading-relaxed text-neutral-700">
+                      <p class="text-body-lg leading-relaxed text-neutral-700">
                         So I built Remit-Scout to cut through the noise and answer one straightforward question: what's actually going to arrive? We're here to close that gap between what you send and what actually gets delivered."
                       </p>
                     </div>
 
-                    <p class="text-lg leading-relaxed text-brand-600 mb-6 font-medium">
+                    <p class="text-body-lg leading-relaxed text-brand-600 mb-6 font-medium">
                       "I believe global finance is complex as is. The decision shouldn't be."
                     </p>
 
-                    <p class="text-xs text-neutral-500">
+                    <p class="text-body-sm text-neutral-500">
                       Reviewed: {{ lastReviewedLabel }}
                     </p>
                   </div>
@@ -379,7 +387,7 @@
 
             <div>
               <div class="rounded-3xl border border-brand-700 bg-brand-600 p-6 sm:p-8 shadow-sm">
-                <h3 class="text-lg sm:text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <h3 class="text-body-lg font-bold text-white mb-2 flex items-center gap-2">
                   <svg
                     class="w-6 h-6 text-white"
                     fill="none"
@@ -395,10 +403,10 @@
                   </svg>
                   Data Integrity Protocol
                 </h3>
-                <p class="text-sm text-white/90 mb-5">
+                <p class="text-body-sm text-white/90 mb-5">
                   Our verification standards are absolute.
                 </p>
-                <ul class="space-y-3 text-sm text-white/95 mb-6">
+                <ul class="space-y-3 text-body-sm text-white/95 mb-6">
                   <li class="flex items-start gap-3">
                     <component
                       :is="getIconForEmoji('🧪')"
@@ -454,10 +462,10 @@
                 </ul>
 
                 <div class="mt-6 pt-6 border-t border-white/20">
-                  <h4 class="text-sm font-semibold text-white mb-3">
+                  <h4 class="text-body-sm font-semibold text-white mb-3">
                     Our commitment
                   </h4>
-                  <p class="text-sm leading-relaxed text-white/90">
+                  <p class="text-body-sm leading-relaxed text-white/90">
                     We're committed to <strong class="font-semibold text-white">editorial independence</strong>. Providers cannot pay to rank higher, and if we earn affiliate commissions, they're <span class="font-semibold text-white">fully disclosed</span> and never influence our rankings. Your trust is more valuable than any partnership.
                   </p>
                 </div>
@@ -469,10 +477,10 @@
     </section>
 
     <!-- What We Do -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+          <h2 class="text-h2 font-bold text-neutral-900 flex items-center gap-3 mb-6">
             <svg
               class="w-8 h-8 text-brand-600"
               fill="none"
@@ -489,15 +497,15 @@
             What We Do
           </h2>
           <div class="space-y-4 mb-8">
-            <p class="text-lg leading-relaxed text-neutral-700">
+            <p class="text-body-lg leading-relaxed text-neutral-700">
               We combine <strong class="font-semibold text-neutral-900">live pricing signals</strong> with <span class="font-semibold text-brand-600">clear explanations</span>, so you can choose a provider based on cost, speed, and reliability.
             </p>
 
-            <p class="text-base leading-relaxed text-neutral-600">
+            <p class="text-body leading-relaxed text-neutral-600">
               Providers advertise different things: some highlight low fees, others promote a great exchange rate, and many wrap both in marketing language that’s hard to compare.
             </p>
 
-            <p class="text-base leading-relaxed text-neutral-600">
+            <p class="text-body leading-relaxed text-neutral-600">
               We pull live quotes from provider APIs, partner feeds, and public quote flows where available, then normalize fees and FX markup into one comparable number:
               <span class="font-semibold text-brand-600">recipient gets</span>. We show total cost upfront, explain what’s driving differences, and rank by outcome, not hype.
             </p>
@@ -505,11 +513,11 @@
 
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-10">
             <NuxtLink
-              v-for="card in whatWeDoCards"
-              :key="card.title"
-              :to="card.to"
-              class="group flex flex-col h-full min-h-[200px] rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:border-brand-300 hover:shadow-lg"
-            >
+                v-for="card in whatWeDoCards"
+                :key="card.title"
+                :to="card.to"
+                class="group flex flex-col h-full min-h-[200px] rounded-2xl border border-neutral-200 bg-surface p-6 motion-safe:transition-all hover:border-brand-300 hover:shadow-lg"
+              >
               <div class="flex items-start gap-3 flex-1">
                 <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
                   <component
@@ -518,10 +526,10 @@
                   />
                 </div>
                 <div class="min-w-0 flex-1 flex flex-col">
-                  <h3 class="text-base font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2 leading-tight">
-                    {{ card.title }}
-                  </h3>
-                  <p class="text-sm leading-relaxed text-neutral-600 flex-1">
+                    <h3 class="text-body font-semibold text-neutral-900 group-hover:text-brand-600 motion-safe:transition-colors mb-2 leading-tight">
+                      {{ card.title }}
+                    </h3>
+                  <p class="text-body-sm leading-relaxed text-neutral-600 flex-1">
                     {{ card.body }}
                   </p>
                 </div>
@@ -531,45 +539,45 @@
 
           <div class="grid gap-8 lg:grid-cols-12 lg:items-stretch">
             <div class="lg:col-span-7 flex flex-col">
-              <h3 class="text-xl font-bold text-neutral-900 mb-6">
+              <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                 How comparisons work
               </h3>
               <ol class="space-y-6">
                 <li class="flex gap-4">
-                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-brand-600">
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-surface text-brand-600">
                     <GlobeAltIcon class="h-5 w-5" />
                   </div>
                   <div>
-                    <p class="text-base font-semibold text-neutral-900">
+                    <p class="text-body font-semibold text-neutral-900">
                       1) Collect quotes
                     </p>
-                    <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                    <p class="mt-1 text-body-sm leading-relaxed text-neutral-600">
                       We gather real-time quotes from multiple sources to compare providers side by side. Coverage varies by corridor and payment method.
                     </p>
                   </div>
                 </li>
                 <li class="flex gap-4">
-                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-brand-600">
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-surface text-brand-600">
                     <CalculatorIcon class="h-5 w-5" />
                   </div>
                   <div>
-                    <p class="text-base font-semibold text-neutral-900">
+                    <p class="text-body font-semibold text-neutral-900">
                       2) Normalize total cost
                     </p>
-                    <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                    <p class="mt-1 text-body-sm leading-relaxed text-neutral-600">
                       We translate <strong class="font-semibold text-neutral-900">fees + FX markup</strong> into comparable numbers so you can see <span class="font-semibold text-brand-600">what the recipient should receive</span>.
                     </p>
                   </div>
                 </li>
                 <li class="flex gap-4">
-                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-brand-600">
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-surface text-brand-600">
                     <EyeIcon class="h-5 w-5" />
                   </div>
                   <div>
-                    <p class="text-base font-semibold text-neutral-900">
+                    <p class="text-body font-semibold text-neutral-900">
                       3) Rank and explain
                     </p>
-                    <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                    <p class="mt-1 text-body-sm leading-relaxed text-neutral-600">
                       We rank results by outcome and explain what’s driving the difference: so you can choose based on your priorities.
                     </p>
                   </div>
@@ -581,11 +589,11 @@
               <div class="rounded-3xl border border-brand-700 bg-brand-600 p-6 sm:p-8 w-full flex flex-col">
                 <div class="flex items-center gap-3 mb-3">
                   <ExclamationTriangleIcon class="h-6 w-6 text-white flex-shrink-0" />
-                  <h3 class="text-base font-bold text-white">
+                  <h3 class="text-body font-bold text-white">
                     Important note
                   </h3>
                 </div>
-                <p class="text-sm leading-relaxed text-white/90 flex-1">
+                <p class="text-body-sm leading-relaxed text-white/90 flex-1">
                   Rates can change between quote and checkout due to promotional offers, verification requirements, payment method selection, and provider-specific rules. The final amount displayed during checkout may differ from the initial quote due to these factors. Always confirm the final amount on the provider's checkout screen before completing your transfer to ensure you're comfortable with the total cost and exchange rate applied.
                 </p>
               </div>
@@ -597,9 +605,9 @@
 
     <!-- Deep Dive -->
     <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3">
+          <h2 class="text-h2 font-bold text-neutral-900 flex items-center gap-3">
             <svg
               class="w-8 h-8 text-brand-600"
               fill="none"
@@ -621,11 +629,11 @@
 
           <div class="mt-8 grid gap-6 sm:grid-cols-2">
             <NuxtLink
-              v-for="item in deepDiveLinks"
-              :key="item.title"
-              :to="item.to"
-              class="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:border-brand-300 hover:shadow-lg"
-            >
+                v-for="item in deepDiveLinks"
+                :key="item.title"
+                :to="item.to"
+                class="group rounded-2xl border border-neutral-200 bg-surface p-6 motion-safe:transition-all hover:border-brand-300 hover:shadow-lg"
+              >
               <div class="flex items-start gap-3">
                 <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
                   <component
@@ -634,10 +642,10 @@
                   />
                 </div>
                 <div>
-                  <h3 class="text-base font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors">
-                    {{ item.title }}
-                  </h3>
-                  <p class="mt-1 text-sm leading-relaxed text-neutral-600">
+                    <h3 class="text-body font-semibold text-neutral-900 group-hover:text-brand-600 motion-safe:transition-colors">
+                      {{ item.title }}
+                    </h3>
+                  <p class="mt-1 text-body-sm leading-relaxed text-neutral-600">
                     {{ item.body }}
                   </p>
                 </div>
@@ -649,53 +657,53 @@
     </section>
 
     <!-- What We Do - Blue Section -->
-    <section class="py-16 lg:py-20 bg-gradient-to-br from-brand-600 via-blue-600 to-brand-700">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-gradient-to-br from-brand-600 via-brand-600 to-brand-700">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl text-center">
-          <h2 class="text-3xl font-bold text-white flex items-center justify-center gap-3 mb-6">
+          <h2 class="text-h2 font-bold text-white flex items-center justify-center gap-3 mb-6">
             What we don't compromise on
           </h2>
-          <p class="text-lg leading-relaxed text-white/95 mb-8 max-w-3xl mx-auto">
+          <p class="text-body-lg leading-relaxed text-white/95 mb-8 max-w-3xl mx-auto">
             We built Remit-Scout for people who send money internationally and want a straight answer. That means transparent sources, outcome-first rankings,
             and clear disclosure when we earn revenue.
           </p>
 
           <div class="grid gap-8 lg:grid-cols-3 mt-10">
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <CalculatorIcon class="w-8 h-8 text-white" />
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   Outcome-first ranking
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   We rank by <strong class="font-semibold text-white">what the recipient should receive</strong>, not a headline rate.
                 </p>
               </div>
             </div>
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <ShieldCheckIcon class="w-8 h-8 text-white" />
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   No pay-to-rank
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   Providers <strong class="font-semibold text-white">cannot buy placement</strong> in our organic results.
                 </p>
               </div>
             </div>
             <div class="relative">
-              <div class="rounded-3xl bg-gray-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
+              <div class="rounded-3xl bg-neutral-900 p-8 h-full flex flex-col outline-none shadow-none ring-0">
                 <div class="flex items-center justify-center w-16 h-16 rounded-full bg-brand-500 mb-6 mx-auto">
                   <ChartBarIcon class="w-8 h-8 text-white" />
                 </div>
-                <h3 class="text-xl font-bold text-white mb-4 text-center">
+                <h3 class="text-h4 font-bold text-white mb-4 text-center">
                   Live, comparable data
                 </h3>
-                <p class="text-base leading-relaxed text-white/90 text-center flex-1">
+                <p class="text-body leading-relaxed text-white/90 text-center flex-1">
                   We track <strong class="font-semibold text-white">{{ SITE_STATS.providers.display }} providers</strong> across {{ SITE_STATS.corridors.display }} corridors, normalized into a single outcome metric.
                 </p>
               </div>
@@ -707,9 +715,9 @@
 
     <!-- Read More / Blogs -->
     <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
-          <h2 class="text-3xl font-bold text-neutral-900 flex items-center gap-3 mb-6">
+          <h2 class="text-h2 font-bold text-neutral-900 flex items-center gap-3 mb-6">
             <svg
               class="w-8 h-8 text-brand-600"
               fill="none"
@@ -731,27 +739,27 @@
 
           <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
             <NuxtLink
-              v-for="guide in featuredGuides"
-              :key="guide.slug"
-              :to="guide.to"
-              class="group flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
-            >
+                v-for="guide in featuredGuides"
+                :key="guide.slug"
+                :to="guide.to"
+                class="group flex flex-col rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+              >
               <div class="flex items-center gap-2 mb-3">
-                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+                <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                   {{ guide.category }}
                 </span>
-                <span class="text-xs text-neutral-500">
+                <span class="text-body-sm text-neutral-500">
                   {{ guide.readTime }}
                 </span>
               </div>
-              <h3 class="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition-colors mb-2">
-                {{ guide.title }}
-              </h3>
-              <p class="text-sm text-neutral-600 leading-relaxed flex-1">
+                <h3 class="text-body-lg font-bold text-neutral-900 group-hover:text-brand-600 motion-safe:transition-colors mb-2">
+                  {{ guide.title }}
+                </h3>
+              <p class="text-body-sm text-neutral-600 leading-relaxed flex-1">
                 {{ guide.excerpt }}
               </p>
-              <div class="mt-4 flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:text-brand-700">
-                Read more
+              <div class="mt-4 flex items-center gap-2 text-body-sm font-semibold text-brand-600 group-hover:text-brand-700">
+                Read guide
                 <svg
                   class="h-4 w-4"
                   fill="none"
@@ -770,12 +778,12 @@
           </div>
 
           <div class="text-center">
-            <NuxtLink
-              to="/learn/money-transfer"
-              class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
-            >
-              Access the Library
-            </NuxtLink>
+              <NuxtLink
+                to="/learn/money-transfer"
+                class="inline-flex min-h-btn items-center justify-center rounded-xl bg-brand-600 px-6 text-body-sm font-semibold text-white shadow-sm motion-safe:transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+              >
+                Access the Library
+              </NuxtLink>
           </div>
         </div>
       </div>
@@ -787,10 +795,10 @@
     />
 
     <!-- Partnership Section -->
-    <section class="py-16 lg:py-20 bg-slate-900">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-neutral-900">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-4xl text-center">
-          <h2 class="text-3xl font-bold text-white mb-6 flex items-center justify-center gap-3">
+          <h2 class="text-h2 font-bold text-white mb-6 flex items-center justify-center gap-3">
             <svg
               class="w-8 h-8 text-white"
               fill="none"
@@ -806,16 +814,16 @@
             </svg>
             Provider Partnership
           </h2>
-          <p class="text-lg leading-relaxed text-slate-300 mb-6">
+          <p class="text-body-lg leading-relaxed text-neutral-300 mb-6">
             For licensed Money Service Businesses (MSBs) seeking high-intent volume.<br>Partner with Remit-Scout and beyond to access a qualified audience actively searching for liquidity.
           </p>
           <div class="flex flex-wrap justify-center gap-4">
-            <NuxtLink
-              to="/partnerships"
-              class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl bg-brand-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 focus:ring-offset-slate-900"
-            >
-              <span>Partnership Details</span>
-            </NuxtLink>
+              <NuxtLink
+                to="/partnerships"
+                class="inline-flex min-h-btn items-center justify-center gap-2 rounded-xl bg-brand-600 px-8 py-3 text-body font-semibold text-white shadow-sm motion-safe:transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 focus:ring-offset-rs-fg"
+              >
+                <span>Partnership Details</span>
+              </NuxtLink>
           </div>
         </div>
       </div>
@@ -823,20 +831,20 @@
 
     <!-- CTA -->
     <section class="py-16 sm:py-20 bg-brand-600">
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
+        <h2 class="text-h2 font-bold text-white mb-4">
           Ready to compare?
         </h2>
-        <p class="text-xl sm:text-2xl text-white/90 mb-8">
+        <p class="text-h4 text-white/90 mb-8">
           Find the best delivered outcome for your corridor
         </p>
-        <p class="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+        <p class="text-body-lg text-white/80 mb-10 max-w-2xl mx-auto">
           See exactly what your recipient will receive after all fees and exchange rates are applied. Start comparing now to find the best option for your transfer.
         </p>
-        <NuxtLink
-          to="/send-money"
-          class="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-600 font-bold text-lg rounded-xl hover:bg-neutral-50 hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-        >
+          <NuxtLink
+            to="/send-money"
+            class="inline-flex items-center gap-3 px-8 py-4 bg-surface text-brand-600 font-bold text-body-lg rounded-xl hover:bg-neutral-50 hover:shadow-xl transform hover:-translate-y-0.5 motion-safe:transition-all motion-safe:duration-200"
+          >
           <span>Get Started</span>
           <svg
             class="w-5 h-5"
@@ -854,7 +862,7 @@
         </NuxtLink>
       </div>
     </section>
-  </div>
+  </PageContainer>
 </template>
 
 <script setup lang="ts">
@@ -868,15 +876,23 @@ import {
   GlobeAltIcon,
   ShieldCheckIcon,
 } from '@heroicons/vue/24/outline'
-import { h } from 'vue'
+import { computed, h, ref } from 'vue'
 import ImpactStatsSection from '~/components/home/ImpactStatsSection.vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
+import PageContainer from '~/components/shared/PageContainer.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import { SITE_STATS } from '~/config/stats'
 import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
 
 const founderHeadshotUrl = '/webpacks/IMG_4439.webp'
+const headshotFailed = ref(false)
+const headshotSrc = computed(() =>
+  headshotFailed.value ? '/images/about/omar-placeholder.jpg' : founderHeadshotUrl,
+)
+const handleHeadshotError = () => {
+  headshotFailed.value = true
+}
 const lastReviewedLabel = 'December 14, 2025'
 const lastReviewedIso = '2025-12-14'
 
@@ -1040,17 +1056,26 @@ const getIconForEmoji = (emoji: string) => {
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' }),
     ]),
   }
-  return iconMap[emoji] || (() => h('span', { class: 'text-xl' }, emoji))
+  return iconMap[emoji] || (() => h('span', { class: 'text-h4' }, emoji))
 }
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 const canonicalUrl = `${siteUrl}/about`
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'About Remit-Scout',
+    description: 'How we compare providers, stay independent, and help families keep more when sending money abroad.',
+  },
+})
+
 setSeo({
   title: 'About Remit-Scout | Independent Money Transfer Comparisons',
-  description: 'Meet Remit-Scout: an independent platform built by expats to help migrants and international families compare money transfer costs, speed, and outcomes with transparent methodology.',
+  description: 'Meet Remit-Scout: an independent platform built by expats to help families compare transfer costs, speed, and outcomes with transparent methods.',
   canonical: canonicalUrl,
+  ogImage: false,
   ogType: 'article',
   publishedTime: lastReviewedIso,
   modifiedTime: lastReviewedIso,

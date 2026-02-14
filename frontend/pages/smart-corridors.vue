@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen bg-slate-50 px-6 py-10">
+  <div class="min-h-screen bg-neutral-50 px-6 py-10">
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="rounded-2xl bg-white p-6 shadow-sm">
+      <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-900">Smart corridors</h1>
-            <p class="mt-1 text-sm text-slate-500">
+            <h1 class="text-h3 font-semibold text-rs-fg">Smart corridors</h1>
+            <p class="mt-1 text-body-sm text-rs-muted">
               Smart Alerts are available for select major corridors we track continuously.
             </p>
           </div>
           <button
-            class="h-10 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+            class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-primary-300"
             :disabled="loading"
-            @click="load"
+            @click="fetchCorridors"
           >
             {{ loading ? 'Refreshing…' : 'Refresh' }}
           </button>
@@ -20,24 +20,34 @@
 
         <div class="mt-4 grid gap-3 md:grid-cols-3">
           <div class="md:col-span-2">
-            <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+            <label
+              for="smart-corridors-search"
+              class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2"
+            >
               Search
             </label>
             <input
+              id="smart-corridors-search"
               v-model="query"
               type="text"
               placeholder="Try: US-MX, USD, Mexico, tier_2…"
-              class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              aria-label="Search smart corridors"
+              class="h-11 w-full rounded-lg border border-neutral-300 bg-surface px-3 text-rs-fg focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
             >
           </div>
 
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+            <label
+              for="smart-corridors-source"
+              class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2"
+            >
               Source
             </label>
             <select
+              id="smart-corridors-source"
               v-model="sourceFilter"
-              class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              aria-label="Filter by source country"
+              class="h-11 w-full rounded-lg border border-neutral-300 bg-surface px-3 text-rs-fg focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
             >
               <option value="">All</option>
               <option
@@ -51,28 +61,29 @@
           </div>
         </div>
 
-        <p
+        <ErrorState
           v-if="error"
-          class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
-        >
-          {{ error }}
-        </p>
+          class="mt-4"
+          mode="card"
+          message="Failed to load corridor data"
+          :on-retry="fetchCorridors"
+        />
       </header>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="text-sm text-slate-600">
-            <span class="font-semibold text-slate-900">{{ filtered.length }}</span> shown
+          <div class="text-body-sm text-neutral-600">
+            <span class="font-semibold text-rs-fg">{{ filtered.length }}</span> shown
             <span v-if="data?.totalMacroCorridors">of {{ data.totalMacroCorridors }}</span>
           </div>
-          <div class="text-xs text-slate-500">
+          <div class="text-body-sm text-rs-muted">
             Status is derived from current historical coverage (data collection + signals).
           </div>
         </div>
 
         <div class="mt-4 overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="text-xs uppercase text-slate-400">
+          <table class="min-w-full text-body-sm">
+            <thead class="text-body-sm uppercase text-neutral-400">
               <tr>
                 <th class="py-2 text-left">Corridor</th>
                 <th class="py-2 text-left">From</th>
@@ -85,30 +96,30 @@
               <tr
                 v-for="row in filtered"
                 :key="row.corridorId"
-                class="border-t border-slate-100"
+                class="border-t border-neutral-100"
               >
-                <td class="py-2 font-mono text-xs text-slate-700">
+                <td class="py-2 font-mono text-body-sm text-neutral-700">
                   {{ row.corridorId }}
                 </td>
-                <td class="py-2 text-slate-600">
+                <td class="py-2 text-neutral-600">
                   {{ row.sourceCountry }} ({{ row.sourceCurrency }})
                 </td>
-                <td class="py-2 text-slate-600">
+                <td class="py-2 text-neutral-600">
                   {{ row.destCountry }} ({{ row.destCurrency }})
                 </td>
-                <td class="py-2 text-slate-600">
+                <td class="py-2 text-neutral-600">
                   {{ row.tier }}
                 </td>
                 <td class="py-2">
                   <span
                     v-if="row.smartAlertEligible"
-                    class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                    class="inline-flex items-center rounded-full bg-success-600 px-2 py-0.5 text-body-sm font-semibold text-success-600"
                   >
                     Available
                   </span>
                   <span
                     v-else
-                    class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                    class="inline-flex items-center rounded-full bg-warning-600 px-2 py-0.5 text-body-sm font-semibold text-warning-600"
                   >
                     Rolling out
                   </span>
@@ -117,17 +128,24 @@
               <tr v-if="!loading && filtered.length === 0">
                 <td
                   colspan="5"
-                  class="py-6 text-center text-sm text-slate-500"
+                  class="py-6"
                 >
-                  No corridors match your filters.
+                  <EmptyState
+                    mode="inline"
+                    title="No corridors match your filters"
+                    message="Try adjusting your search or filter criteria."
+                  />
                 </td>
               </tr>
               <tr v-if="loading">
                 <td
                   colspan="5"
-                  class="py-6 text-center text-sm text-slate-500"
+                  class="py-6"
                 >
-                  Loading…
+                  <LoadingState
+                    mode="inline"
+                    message="Loading corridors..."
+                  />
                 </td>
               </tr>
             </tbody>
@@ -139,6 +157,8 @@
 </template>
 
 <script setup lang="ts">
+import { EmptyState, ErrorState, LoadingState } from '~/ui/states'
+
 definePageMeta({ middleware: 'auth' })
 
 type MacroCorridor = {
@@ -202,7 +222,7 @@ const filtered = computed(() => {
   return list.slice(0, 250)
 })
 
-const load = async () => {
+const fetchCorridors = async () => {
   loading.value = true
   error.value = ''
   try {
@@ -227,6 +247,6 @@ const load = async () => {
 }
 
 onMounted(() => {
-  void load()
+  void fetchCorridors()
 })
 </script>

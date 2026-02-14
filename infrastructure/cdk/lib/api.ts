@@ -74,8 +74,17 @@ export type ApiOptions = {
   fxRateRefreshQueueMode?: string
   exportJobQueueUrl?: string
   exportJobQueueMode?: string
+  ingestFanoutQueueUrl?: string
+  ingestFanoutTier1QueueUrl?: string
+  ingestFanoutTier2QueueUrl?: string
+  notificationsQueueUrl?: string
+  opsAlertsQueueUrl?: string
+  goldLiveQueueUrl?: string
+  goldLiveQueueMode?: string
+  alertEvaluationQueueUrl?: string
   exportsBucketName?: string
   exportsPrefix?: string
+  bronzeBucketName?: string
   userAssetsBucketName?: string
   userAssetsPrefix?: string
   enableCloudFront?: boolean
@@ -100,6 +109,9 @@ export type ApiOptions = {
   planeAThrottleBurst?: number
   planeCThrottleRate?: number
   planeCThrottleBurst?: number
+  // Keep Plane A's corridor tiering/freshness logic consistent with Plane B ingestion.
+  // When set (typically dev/staging), Plane A should treat all corridors as tier_2.
+  planeBDisableTier1?: string
 }
 
 export type ApiResources = {
@@ -116,6 +128,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     ? RetentionDays.ONE_MONTH
     : RetentionDays.TWO_WEEKS
   const isDev = options.envName === 'dev'
+  const isStaging = options.envName === 'staging'
+  const isProd = options.envName === 'prod'
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
@@ -137,6 +151,60 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  const enforceJwtAuth =
+    options.enablePlaneAJwtAuth ??
+    (options.envName === 'prod' || options.envName === 'staging')
+  const jwtIssuer = options.planeAJwtIssuer
+    ?? process.env.PLANE_A_JWT_ISSUER
+  const jwtAudiences = (options.planeAJwtAudiences ?? [])
+    .filter(Boolean)
+    .reduce<string[]>((acc, value) => {
+      const trimmed = value.trim()
+      return trimmed ? [...acc, trimmed] : acc
+    }, [])
+    .concat(
+      (process.env.PLANE_A_JWT_AUDIENCES ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+    )
+  const resolveBinaryEnv = (value: string | undefined, fallback: '0' | '1'): '0' | '1' => {
+    const normalized = value?.trim()
+    if (normalized === '0' || normalized === '1') return normalized
+    return fallback
+  }
+  const apiKeyRequirement = resolveBinaryEnv(
+    process.env.PLANE_A_REQUIRE_API_KEY,
+    enforceJwtAuth ? '1' : '0',
+  )
+  const requireJwtValue = resolveBinaryEnv(
+    process.env.PLANE_A_REQUIRE_JWT,
+    enforceJwtAuth ? '1' : '0',
+  )
+
+  const dedupJwtAudiences = Array.from(new Set(jwtAudiences))
+    .filter((value) => value.trim().length > 0)
+    .map((value) => value.trim())
+  if (jwtIssuer?.trim()) {
+    planeAEnvironment.PLANE_A_JWT_ISSUER = jwtIssuer.trim()
+  }
+  if (dedupJwtAudiences.length > 0) {
+    planeAEnvironment.PLANE_A_JWT_AUDIENCES = dedupJwtAudiences.join(',')
+  }
+  if (enforceJwtAuth && !planeAEnvironment.PLANE_A_JWT_ISSUER && !options.planeAJwtIssuer) {
+    throw new Error('Plane A JWT auth enabled without PLANE_A_JWT_ISSUER')
+  }
+  if (enforceJwtAuth && dedupJwtAudiences.length === 0 && !options.planeAJwtAudiences) {
+    throw new Error('Plane A JWT auth enabled without PLANE_A_JWT_AUDIENCES')
+  }
+  planeAEnvironment.PLANE_A_REQUIRE_JWT = requireJwtValue
+  planeAEnvironment.PLANE_A_REQUIRE_API_KEY = apiKeyRequirement
+  if (process.env.PLANE_A_ENABLE_JWT_AUTH === '1') {
+    planeAEnvironment.PLANE_A_ENABLE_JWT_AUTH = '1'
+  } else if (enforceJwtAuth) {
+    planeAEnvironment.PLANE_A_ENABLE_JWT_AUTH = '1'
+  }
+
   Object.assign(planeAEnvironment, collectOandaThrottleEnv())
   const fxRateRefreshEnabled = process.env.FX_RATE_REFRESH_ENABLED
   if (fxRateRefreshEnabled !== undefined) {
@@ -144,16 +212,17 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   } else if (isDev) {
     planeAEnvironment.FX_RATE_REFRESH_ENABLED = '1'
   }
-  if (isDev) {
-    planeAEnvironment.DB_QUERY_TIMEOUT_MS =
-      process.env.DB_QUERY_TIMEOUT_MS || '60000'
-    planeAEnvironment.DB_CONNECTION_TIMEOUT_MS =
-      process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
-    planeAEnvironment.DB_POOL_MAX =
-      process.env.DB_POOL_MAX || '5'
-    planeAEnvironment.DB_POOL_MIN =
-      process.env.DB_POOL_MIN || '1'
-  }
+  // Keep dev conservative to avoid exhausting Aurora connections during crashloops/scaling.
+  const stageDefaultDbPoolMax = isProd || isStaging ? '8' : (isDev ? '2' : '5')
+  const stageDefaultDbPoolMin = isDev ? '0' : '1'
+  planeAEnvironment.DB_QUERY_TIMEOUT_MS =
+    process.env.DB_QUERY_TIMEOUT_MS || (isDev ? '60000' : '30000')
+  planeAEnvironment.DB_CONNECTION_TIMEOUT_MS =
+    process.env.DB_CONNECTION_TIMEOUT_MS || (isDev ? '20000' : '10000')
+  planeAEnvironment.DB_POOL_MAX =
+    process.env.DB_POOL_MAX || stageDefaultDbPoolMax
+  planeAEnvironment.DB_POOL_MIN =
+    process.env.DB_POOL_MIN || stageDefaultDbPoolMin
   if (options.planeADbHost) {
     planeAEnvironment.PLANE_A_DB_HOST = options.planeADbHost
   }
@@ -162,6 +231,33 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.planeADbName) {
     planeAEnvironment.PLANE_A_DB_NAME = options.planeADbName
+  }
+  if (options.ingestFanoutQueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_QUEUE_URL = options.ingestFanoutQueueUrl
+  }
+  if (options.ingestFanoutTier1QueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL = options.ingestFanoutTier1QueueUrl
+  }
+  if (options.ingestFanoutTier2QueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL = options.ingestFanoutTier2QueueUrl
+  }
+  if (options.notificationsQueueUrl) {
+    planeAEnvironment.PLANE_B_NOTIFICATIONS_QUEUE_URL = options.notificationsQueueUrl
+  }
+  if (options.opsAlertsQueueUrl) {
+    planeAEnvironment.PLANE_B_OPS_ALERT_QUEUE_URL = options.opsAlertsQueueUrl
+  }
+  if (options.goldLiveQueueUrl) {
+    planeAEnvironment.GOLD_LIVE_QUEUE_URL = options.goldLiveQueueUrl
+  }
+  if (options.goldLiveQueueMode) {
+    planeAEnvironment.GOLD_LIVE_QUEUE_MODE = options.goldLiveQueueMode
+  }
+  if (options.alertEvaluationQueueUrl) {
+    planeAEnvironment.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.bronzeBucketName) {
+    planeAEnvironment.BRONZE_S3_BUCKET = options.bronzeBucketName
   }
   if (options.quoteRefreshQueueUrl) {
     planeAEnvironment.QUOTE_REFRESH_QUEUE_URL = options.quoteRefreshQueueUrl
@@ -231,15 +327,21 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
-  if (isDev) {
-    planeCEnvironment.DB_QUERY_TIMEOUT_MS =
-      process.env.DB_QUERY_TIMEOUT_MS || '60000'
-    planeCEnvironment.DB_CONNECTION_TIMEOUT_MS =
-      process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
-    planeCEnvironment.DB_POOL_MAX =
-      process.env.DB_POOL_MAX || '5'
-    planeCEnvironment.DB_POOL_MIN =
-      process.env.DB_POOL_MIN || '1'
+  const cDefaultDbPoolMax = isProd || isStaging ? '8' : '5'
+  planeCEnvironment.DB_QUERY_TIMEOUT_MS =
+    process.env.DB_QUERY_TIMEOUT_MS || (isDev ? '60000' : '30000')
+  planeCEnvironment.DB_CONNECTION_TIMEOUT_MS =
+    process.env.DB_CONNECTION_TIMEOUT_MS || (isDev ? '20000' : '10000')
+  planeCEnvironment.DB_POOL_MAX =
+    process.env.DB_POOL_MAX || cDefaultDbPoolMax
+  planeCEnvironment.DB_POOL_MIN =
+    process.env.DB_POOL_MIN || '1'
+
+  // Ensure Plane A uses the same tier override as Plane B ingestion when dev/staging disables tier_1.
+  // Plane A relies on this env var indirectly via shared corridor tiering logic.
+  if (options.planeBDisableTier1) {
+    planeAEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
+    planeCEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
   }
 
   const otelLambdaLayer = options.otelLambdaLayerArn
@@ -503,18 +605,23 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     }
   }
 
-  const enablePlaneAJwtAuth = options.enablePlaneAJwtAuth ?? options.envName === 'prod'
-  const jwtIssuer = options.planeAJwtIssuer
-  const jwtAudiences = options.planeAJwtAudiences ?? []
-  const planeAJwtAuthorizer = enablePlaneAJwtAuth && jwtIssuer && jwtAudiences.length > 0
-    ? new HttpJwtAuthorizer('PlaneAJwtAuthorizer', jwtIssuer, {
-      jwtAudience: jwtAudiences,
+  const enablePlaneAJwtAuth =
+    options.enablePlaneAJwtAuth ??
+    (options.envName === 'prod' || options.envName === 'staging')
+  const planeJwtAuthorizerIssuer = options.planeAJwtIssuer ?? jwtIssuer
+  const resolvedJwtAudiences = dedupJwtAudiences
+  const planeAJwtAuthorizer = enablePlaneAJwtAuth && planeJwtAuthorizerIssuer && dedupJwtAudiences.length > 0
+    ? new HttpJwtAuthorizer('PlaneAJwtAuthorizer', planeJwtAuthorizerIssuer, {
+      jwtAudience: resolvedJwtAudiences,
     })
     : undefined
   if (enablePlaneAJwtAuth && !planeAJwtAuthorizer) {
-    Annotations.of(scope).addError(
-      'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.',
-    )
+    const jwtError =
+      'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.'
+    if (options.envName === 'prod' || options.envName === 'staging') {
+      throw new Error(jwtError)
+    }
+    Annotations.of(scope).addError(jwtError)
   }
   if ((options.disablePlaneAExecuteEndpoint ?? false) && (options.enableCloudFront ?? false)) {
     throw new Error('disablePlaneAExecuteEndpoint cannot be true when CloudFront is enabled')
@@ -538,12 +645,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     ...(publicMetricsEnabled ? ['/metrics'] : []),
     // Legacy tombstones
     '/api',
-    '/api/{proxy+}',
     // Public web experience (no auth)
     '/api/v1/quotes/current',
     '/api/v1/providers',
     '/api/v1/providers/metadata',
     '/api/v1/providers/metadata/{id}',
+    '/api/v1/billing/webhook',
     '/api/v1/corridor-currencies',
     '/api/v1/corridor-limits',
     '/api/v1/rates/spot',
@@ -554,7 +661,6 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/contact',
     '/api/v1/pulse/teaser',
     '/api/v1/bank-vs-specialist',
-    '/api/v1/billing/webhook',
     '/api/v1/alerts/unsubscribe',
     '/api/v1/alerts/corridor-eligibility',
     '/api/v1/alerts/macro-corridors',

@@ -1,9 +1,16 @@
+import type { FetchOptions } from 'ofetch'
+import type { paths } from '~/shared/lib/api/types'
 import type { Method, ProviderQuote } from '~/types/remit'
+
+const isAbortError = (error: unknown) => {
+  if (!error || typeof error !== 'object') return false
+  return (error as Record<string, unknown>).name === 'AbortError'
+}
 
 type ApiFetchOptions = {
   query?: Record<string, unknown>
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-  body?: BodyInit | Record<string, any> | null
+  body?: BodyInit | Record<string, unknown> | null
   headers?: Record<string, string>
   timeoutMs?: number
   validate?: (data: unknown) => unknown
@@ -11,22 +18,20 @@ type ApiFetchOptions = {
   retries?: number
 }
 
-type ProviderQuotesParams = {
+type ProvidersQuery = NonNullable<paths['/providers']['get']['parameters']['query']>
+type ProviderQuotesParams = Pick<ProvidersQuery, 'from' | 'to' | 'amount' | 'method'> & {
   from: string
   to: string
   amount: number
   method: Method
 }
 
-type ProviderQuotesResponse = {
+type ProvidersResponse200 = paths['/providers']['get']['responses']['200']['content']['application/json']
+type ProviderQuotesResponse = Omit<ProvidersResponse200, 'data'> & {
   data: ProviderQuote[]
-  updatedAt: string
-  corridor: string
-  amount: number
-  method: string
 }
 
-function joinBase(base: string, path: string) {
+export function joinBase(base: string, path: string) {
   // If path is already a full URL, return as-is
   if (/^https?:\/\//.test(path)) return path
 
@@ -43,28 +48,23 @@ function joinBase(base: string, path: string) {
   return `${cleanedBase}${cleanedPath}`
 }
 
-export const useApi = () => {
-  const config = useRuntimeConfig()
-  const { accessToken } = useAuth()
+type ApiClientDeps = {
+  base: string
+  fetcher: (input: string, init?: FetchOptions) => Promise<unknown>
+  getAccessToken?: () => string | null
+  makeRequestId?: () => string
+  getServerHeaders?: () => Record<string, string>
+  getCloudFrontRequestId?: () => string | undefined
+  logger?: { warn: (message: string, meta: Record<string, unknown>) => void }
+}
 
-  const base = import.meta.server
-    ? (config.apiBase || config.public.apiBase || '/api/v1')
-    : (config.public.apiBase || '/api/v1')
-
-  const makeRequestId = () => {
+export const createApiClient = (deps: ApiClientDeps) => {
+  const makeRequestId = deps.makeRequestId || (() => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID()
     }
     return `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
-  }
-
-  const getCloudFrontRequestId = (): string | undefined => {
-    if (import.meta.server) {
-      const headers = useRequestHeaders()
-      return headers['cloudfront-request-id'] as string | undefined
-    }
-    return undefined
-  }
+  })
 
   const retryWithBackoff = async <T>(
     fn: () => Promise<T>,
@@ -76,9 +76,13 @@ export const useApi = () => {
       try {
         return await fn()
       }
-      catch (error: any) {
+      catch (error: unknown) {
+        if (isAbortError(error)) {
+          throw error
+        }
         lastError = error
-        const statusCode = error?.statusCode || error?.response?.status
+        const err = error as { statusCode?: number, response?: { status?: number } }
+        const statusCode = err?.statusCode || err?.response?.status
         if (statusCode && statusCode >= 500 && attempt < maxRetries) {
           const delay = baseDelayMs * Math.pow(2, attempt)
           await new Promise(resolve => setTimeout(resolve, delay))
@@ -90,19 +94,11 @@ export const useApi = () => {
     throw lastError
   }
 
-  async function request<T = any>(path: string, options: ApiFetchOptions = {}) {
-    const url = joinBase(base, path)
+  async function request<T = unknown>(path: string, options: ApiFetchOptions = {}) {
+    const url = joinBase(deps.base, path)
     const requestId = options.headers?.['x-request-id'] || makeRequestId()
-    const cloudfrontRequestId = getCloudFrontRequestId()
-    const serverHeaders = import.meta.server
-      ? useRequestHeaders([
-          'cookie',
-          'authorization',
-          'x-forwarded-for',
-          'user-agent',
-          'cloudfront-request-id',
-        ])
-      : {}
+    const cloudfrontRequestId = deps.getCloudFrontRequestId?.()
+    const serverHeaders = deps.getServerHeaders?.() || {}
 
     const maxRetries = options.retries ?? 3
     const timeoutMs = options.timeoutMs ?? 10000
@@ -115,18 +111,18 @@ export const useApi = () => {
         ...options.headers,
       }
 
-      const hasAuthHeader
-        = 'authorization' in headers || 'Authorization' in headers
+      const hasAuthHeader = 'authorization' in headers || 'Authorization' in headers
+      const accessToken = deps.getAccessToken?.()
 
-      if (!import.meta.server && accessToken.value && !hasAuthHeader) {
-        headers.authorization = `Bearer ${accessToken.value}`
+      if (accessToken && !hasAuthHeader) {
+        headers.authorization = `Bearer ${accessToken}`
       }
 
       if (cloudfrontRequestId) {
         headers['x-cloudfront-request-id'] = cloudfrontRequestId
       }
 
-      const data = await $fetch(url as string, {
+      const data = await deps.fetcher(url as string, {
         method: options.method || 'GET',
         query: options.query as Record<string, string>,
         body: options.body ?? undefined,
@@ -143,15 +139,12 @@ export const useApi = () => {
     }
 
     try {
-      const data = await retryWithBackoff(
-        makeRequest,
-        maxRetries,
-        100,
-      )
-
-      return data
+      return await retryWithBackoff(makeRequest, maxRetries, 100)
     }
     catch (error: unknown) {
+      if (isAbortError(error)) {
+        throw error
+      }
       const apiError = error as {
         statusCode?: number
         response?: { status?: number }
@@ -160,13 +153,8 @@ export const useApi = () => {
         message?: string
       }
 
-      const statusCode
-        = apiError?.statusCode || apiError?.response?.status
-      const message
-        = apiError?.data?.message
-          || apiError?.statusMessage
-          || apiError?.message
-          || 'Request failed'
+      const statusCode = apiError?.statusCode || apiError?.response?.status
+      const message = apiError?.data?.message || apiError?.statusMessage || apiError?.message || 'Request failed'
       const wrapped = new Error(message) as Error & {
         statusCode?: number
         requestId?: string
@@ -180,29 +168,59 @@ export const useApi = () => {
         wrapped.cloudfrontRequestId = cloudfrontRequestId
       }
 
-      if (import.meta.dev) {
-        console.warn(`[api] ${url} failed`, {
-          statusCode,
-          requestId,
-          cloudfrontRequestId,
-          error: apiError?.data || error,
-        })
-      }
+      deps.logger?.warn(`${url} failed`, {
+        statusCode: statusCode ?? 0,
+        requestId,
+        cloudfrontRequestId: cloudfrontRequestId ?? '',
+        error: (apiError?.data as unknown as Record<string, unknown>) || { message: message },
+      })
 
       throw wrapped
     }
   }
 
-  // Convenience wrappers (adapt paths to your pipeline as needed)
   const getProviderQuotes = (params: ProviderQuotesParams) => {
-    return request<ProviderQuotesResponse>(
-      '/providers',
-      { query: params },
-    )
+    return request<ProviderQuotesResponse>('/providers', { query: params })
   }
 
-  return {
-    request,
-    getProviderQuotes,
+  return { request, getProviderQuotes }
+}
+
+export const useApi = () => {
+  const config = useRuntimeConfig()
+  // Avoid calling `useAuth()` here to prevent composable recursion (useAuth uses this API client for some calls).
+  const session = useState<{ access_token?: string } | null>('auth:session', () => null)
+
+  const base = import.meta.server
+    ? (config.apiBase || config.public.apiBase || '/api')
+    : (config.public.apiBase || '/api')
+
+  const getCloudFrontRequestId = (): string | undefined => {
+    if (import.meta.server) {
+      const headers = useRequestHeaders()
+      return headers['cloudfront-request-id'] as string | undefined
+    }
+    return undefined
   }
+
+  const getServerHeaders = () => import.meta.server
+    ? useRequestHeaders([
+        'cookie',
+        'authorization',
+        'x-forwarded-for',
+        'user-agent',
+        'cloudfront-request-id',
+      ])
+    : {}
+
+  return createApiClient({
+    base,
+    fetcher: $fetch as unknown as ApiClientDeps['fetcher'],
+    getAccessToken: () => session.value?.access_token ?? null,
+    getServerHeaders,
+    getCloudFrontRequestId,
+    logger: {
+      warn: (message, meta) => useLogger('api').warn(message, meta),
+    },
+  })
 }

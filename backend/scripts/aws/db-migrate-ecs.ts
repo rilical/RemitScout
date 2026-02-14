@@ -1,7 +1,6 @@
 import http from 'node:http'
 
 import { resolveDatabaseUrl } from '../../shared/aws-params'
-import { config } from '../../shared/config'
 import { initErrorTracking } from '../../shared/error-tracker'
 import { createLogger } from '../../shared/logger'
 
@@ -22,6 +21,7 @@ const stripSslMode = (value: string): string => {
 }
 
 const startHealthServer = async (): Promise<(() => Promise<void>)> => {
+  const { config } = await import('../../shared/config')
   const port = config.workers.health.port
   const server = http.createServer((req, res) => {
     const path = req.url?.split('?')[0] ?? ''

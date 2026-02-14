@@ -19,10 +19,10 @@
             />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-white">
+            <h2 class="text-h4 font-bold text-white">
               {{ category.label }}
             </h2>
-            <p class="text-sm text-neutral-400">
+            <p class="text-body-sm text-neutral-400">
               {{ getCategoryDescription(category.category) }}
             </p>
           </div>
@@ -74,7 +74,7 @@ const categories = computed(() => getAllCategories())
 
 function getChartInsight(chartId: string): string {
   const data = props.chartData[chartId]
-  return data?.insight || 'Loading...'
+  return data?.insight || ''
 }
 
 function getSparklineData(chartId: string) {

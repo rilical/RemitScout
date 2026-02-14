@@ -28,28 +28,28 @@ withDefaults(defineProps<Props>(), {
     <template #header>
       <Breadcrumbs :items="breadcrumbItems" />
 
-      <div class="rounded-3xl bg-white p-8 shadow-lg border border-neutral-200">
+      <div class="rounded-3xl bg-surface p-8 shadow-lg border border-neutral-200">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p class="text-sm uppercase tracking-wide font-semibold text-brand-600 mb-2">
+            <p class="text-body-sm uppercase tracking-wide font-semibold text-brand-600 mb-2">
               Exchange rate
             </p>
-            <h1 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3">
+            <h1 class="text-h2 font-bold text-neutral-900 mb-3">
               {{ pairLabel }} rate & transfer costs
             </h1>
-            <p class="text-lg text-neutral-600">
+            <p class="text-body-lg text-neutral-600">
               Check today’s mid-market {{ base }}/{{ quote }} rate, see typical provider markups, and learn how to keep more in {{ quote }} when you transfer.
             </p>
           </div>
 
           <div class="rounded-2xl bg-neutral-100 p-6 w-full lg:w-72">
-            <p class="text-sm text-neutral-600 mb-2">
+            <p class="text-body-sm text-neutral-600 mb-2">
               Mid-market rate
             </p>
-            <p class="text-3xl font-bold text-neutral-900 mb-1">
+            <p class="text-h2 font-bold text-neutral-900 mb-1">
               {{ midMarketRate }}
             </p>
-            <p class="text-xs text-neutral-500">
+            <p class="text-body-sm text-neutral-500">
               Updated hourly • For illustration
             </p>
             <div class="mt-4">
@@ -65,11 +65,11 @@ withDefaults(defineProps<Props>(), {
     </template>
 
     <div class="grid gap-6 lg:grid-cols-2">
-      <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-        <h2 class="text-xl font-bold text-neutral-900 mb-3">
+      <div class="rounded-2xl bg-surface p-6 border border-neutral-200 shadow-sm">
+        <h2 class="text-h4 font-bold text-neutral-900 mb-3">
           Provider markups
         </h2>
-        <p class="text-sm text-neutral-600 mb-4">
+        <p class="text-body-sm text-neutral-600 mb-4">
           We track how providers price {{ base }}/{{ quote }} relative to mid-market. Lower markup means your recipient keeps more.
         </p>
 
@@ -79,14 +79,14 @@ withDefaults(defineProps<Props>(), {
         />
       </div>
 
-      <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-        <h2 class="text-xl font-bold text-neutral-900 mb-3">
+      <div class="rounded-2xl bg-surface p-6 border border-neutral-200 shadow-sm">
+        <h2 class="text-h4 font-bold text-neutral-900 mb-3">
           When to send
         </h2>
-        <p class="text-sm text-neutral-600 mb-4">
+        <p class="text-body-sm text-neutral-600 mb-4">
           Timing and pay-in method both impact the real cost. Weekends often widen spreads; bank transfers are cheaper than cards.
         </p>
-        <ul class="space-y-2 text-sm text-neutral-700">
+        <ul class="space-y-2 text-body-sm text-neutral-700">
           <li class="flex items-start gap-2">
             <span class="text-brand-600 mt-0.5">•</span>
             Aim for weekday daytime transfers to avoid weekend FX buffers.
@@ -122,11 +122,11 @@ withDefaults(defineProps<Props>(), {
       </div>
     </div>
 
-    <div class="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm">
-      <h2 class="text-xl font-bold text-neutral-900 mb-3">
+    <div class="rounded-2xl bg-surface p-6 border border-neutral-200 shadow-sm">
+      <h2 class="text-h4 font-bold text-neutral-900 mb-3">
         Popular corridors using {{ base }}/{{ quote }}
       </h2>
-      <p class="text-sm text-neutral-600 mb-4">
+      <p class="text-body-sm text-neutral-600 mb-4">
         See full comparison results for the most common remittance paths that rely on this pair.
       </p>
       <div class="flex flex-wrap gap-3">
@@ -134,7 +134,7 @@ withDefaults(defineProps<Props>(), {
           v-for="corridor in corridorLinks"
           :key="corridor.href"
           :to="corridor.href"
-          class="rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-semibold text-neutral-900 hover:border-brand-300 hover:text-brand-700 transition"
+          class="rounded-full border border-neutral-200 bg-neutral-50 px-4 py-2 text-body-sm font-semibold text-neutral-900 hover:border-brand-300 hover:text-brand-700 transition"
         >
           {{ corridor.label }}
         </NuxtLink>

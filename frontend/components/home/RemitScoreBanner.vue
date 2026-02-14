@@ -1,7 +1,7 @@
 <template>
-  <section class="py-16 sm:py-20 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="bg-gradient-to-r from-brand-50 to-blue-50 border border-brand-200 rounded-xl p-6">
+  <section class="py-16 sm:py-20 bg-surface">
+    <div class="container">
+      <div class="bg-gradient-to-r from-brand-50 to-primary-50 border border-brand-200 rounded-xl p-6">
         <div class="flex items-start justify-between gap-4">
           <div class="flex items-start gap-4">
             <div class="flex-shrink-0">
@@ -22,16 +22,16 @@
               </div>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-neutral-900 mb-2">
+              <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
                 How We Score Providers
               </h3>
-              <p class="text-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
+              <p class="text-body-sm text-neutral-700 mb-3 max-w-3xl leading-relaxed">
                 <span class="font-semibold">Remit‑Score</span> (0–10) shows how much money your recipient actually gets after fees and exchange rates. We look at real quotes—not marketing claims—to calculate each score.
               </p>
-              <p class="text-sm text-neutral-600 mb-3 max-w-3xl leading-relaxed">
+              <p class="text-body-sm text-neutral-600 mb-3 max-w-3xl leading-relaxed">
                 Providers cannot pay to rank higher. Affiliate relationships do not influence scores. Every score reflects real transfer outcomes.
               </p>
-              <p class="text-sm text-neutral-600 mb-3 max-w-2xl">
+              <p class="text-body-sm text-neutral-600 mb-3 max-w-2xl">
                 <NuxtLink
                   to="/learn/providers"
                   class="font-medium text-brand-600 hover:text-brand-700 transition-colors underline"
@@ -41,7 +41,7 @@
               </p>
               <NuxtLink
                 to="/methodology"
-                class="inline-flex items-center text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+                class="inline-flex items-center text-body-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
               >
                 Learn how we calculate Remit-Score
                 <svg
@@ -62,7 +62,7 @@
           </div>
           <NuxtLink
             to="/methodology"
-            class="hidden sm:flex flex-shrink-0 px-4 py-2 bg-white border border-brand-300 hover:border-brand-600 text-brand-600 font-medium rounded-lg transition-colors text-sm"
+            class="hidden sm:flex flex-shrink-0 px-4 py-2 bg-surface border border-brand-300 hover:border-brand-600 text-brand-600 font-medium rounded-lg transition-colors text-body-sm"
           >
             View Details
           </NuxtLink>

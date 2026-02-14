@@ -35,7 +35,7 @@ Use `Icon` for any iconography in Phase 2 pages/domains.
 
 ```vue
 <Icon name="bolt" :size="20" />
-<Icon name="lock" :size="16" class="text-slate-500" />
+<Icon name="lock" :size="16" class="text-neutral-500" />
 ```
 
 Rules:

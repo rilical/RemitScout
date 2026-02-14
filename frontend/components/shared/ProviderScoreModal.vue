@@ -3,14 +3,21 @@
     <Transition name="modal">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+        class="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+        aria-label="Close dialog"
         @click.self="close"
+        @keydown.esc="close"
       >
         <div
-          class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full my-8 relative max-h-[calc(100vh-4rem)] overflow-hidden flex flex-col"
+          ref="modalRef"
+          class="bg-surface rounded-2xl shadow-2xl max-w-2xl w-full my-8 relative max-h-[calc(100vh-4rem)] overflow-hidden flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="provider-score-title"
+          tabindex="-1"
           @click.stop
         >
-          <div class="flex-shrink-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
+          <div class="flex-shrink-0 bg-surface border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
               <div class="flex h-16 w-16 items-center justify-center flex-shrink-0">
                 <ProviderLogo
@@ -21,10 +28,13 @@
                 />
               </div>
               <div>
-                <h2 class="text-xl font-bold text-neutral-900">
+                <h2
+                  id="provider-score-title"
+                  class="text-h4 font-bold text-neutral-900"
+                >
                   {{ providerName }}
                 </h2>
-                <p class="text-sm text-brand-600 font-semibold">
+                <p class="text-body-sm text-brand-600 font-semibold">
                   Remit-Score: {{ score.toFixed(1) }}
                 </p>
               </div>
@@ -53,26 +63,26 @@
           <div class="px-6 py-6 space-y-6 overflow-y-auto flex-1">
             <div class="text-center py-6">
               <div
-                class="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 bg-white shadow-lg mb-4"
+                class="inline-flex items-center justify-center w-20 h-20 rounded-full border-4 bg-surface shadow-lg mb-4"
                 :style="{ borderColor: scoreColor }"
               >
                 <span
                   :class="scoreTextClass"
-                  class="text-3xl font-bold"
+                  class="text-h2 font-bold"
                 >
                   {{ score.toFixed(1) }}
                 </span>
               </div>
-              <p class="text-lg font-semibold text-neutral-900 mb-1">
+              <p class="text-body-lg font-semibold text-neutral-900 mb-1">
                 {{ scoreLabel }}
               </p>
-              <p class="text-sm text-neutral-600">
+              <p class="text-body-sm text-neutral-600">
                 Overall rating based on 5 key metrics
               </p>
             </div>
 
             <div class="space-y-3">
-              <h3 class="text-lg font-bold text-neutral-900 mb-4">
+              <h3 class="text-body-lg font-bold text-neutral-900 mb-4">
                 Score Breakdown
               </h3>
               <div
@@ -94,7 +104,7 @@
 
           <div class="flex-shrink-0 bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex items-center justify-between gap-4">
             <button
-              class="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+              class="px-4 py-2 text-body-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
               @click="close"
             >
               Close
@@ -115,10 +125,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { getProviderScore } from '~/lib/providerScores'
-import ProviderLogo from '~/components/shared/ProviderLogo.vue'
-import { normalizeProviderSlug } from '~/composables/useProviderLogo'
+import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useFocusTrap } from '~/composables/useFocusTrap'
+  import { getProviderScore } from '~/lib/providerScores'
+  import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+  import { normalizeProviderSlug } from '~/composables/useProviderLogo'
 
 interface Props {
   isOpen: boolean
@@ -134,9 +145,30 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
+
 const close = () => {
   emit('update:isOpen', false)
 }
+
+watch(
+  () => props.isOpen,
+  async (open) => {
+    if (!open) {
+      deactivate()
+      return
+    }
+
+    await nextTick()
+    activate()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
+})
 
 const scoreColor = computed(() => {
   const score = props.score || 0
@@ -148,9 +180,9 @@ const scoreColor = computed(() => {
 
 const scoreTextClass = computed(() => {
   const score = props.score || 0
-  if (score >= 9.0) return 'text-green-600'
+  if (score >= 9.0) return 'text-success-600'
   if (score >= 8.0) return 'text-brand-600'
-  if (score >= 7.0) return 'text-yellow-600'
+  if (score >= 7.0) return 'text-warning-600'
   return 'text-neutral-600'
 })
 
@@ -245,13 +277,13 @@ const metrics = computed(() => {
 
   const getBadgeClass = (score: number, label: string) => {
     if (label === 'Elite') {
-      return 'bg-emerald-100 text-emerald-800'
+      return 'bg-success-600 text-success-600'
     }
     if (score >= 8.5) {
-      return 'bg-blue-100 text-blue-800'
+      return 'bg-primary-100 text-primary-800'
     }
     if (score >= 7.5) {
-      return 'bg-yellow-100 text-yellow-800'
+      return 'bg-warning-100 text-warning-800'
     }
     return 'bg-neutral-100 text-neutral-800'
   }
@@ -261,7 +293,7 @@ const metrics = computed(() => {
       label: 'Delivered Value',
       labelText: getMetricLabel(breakdown.deliveredValue, 'delivered'),
       badgeClass: getBadgeClass(deliveredValue, getMetricLabel(breakdown.deliveredValue, 'delivered')),
-      barClass: deliveredValue >= 8.5 ? 'bg-green-500' : deliveredValue >= 7.5 ? 'bg-brand-600' : 'bg-yellow-500',
+      barClass: deliveredValue >= 8.5 ? 'bg-success-500' : deliveredValue >= 7.5 ? 'bg-brand-600' : 'bg-warning-500',
       percentage: deliveredValue,
       description: `Effective cost (FX spread + fees) and quote accuracy`,
     },
@@ -269,7 +301,7 @@ const metrics = computed(() => {
       label: 'Reliability',
       labelText: getMetricLabel(breakdown.reliability, 'reliability'),
       badgeClass: getBadgeClass(reliability, getMetricLabel(breakdown.reliability, 'reliability')),
-      barClass: reliability >= 8.5 ? 'bg-green-500' : reliability >= 7.5 ? 'bg-brand-600' : 'bg-yellow-500',
+      barClass: reliability >= 8.5 ? 'bg-success-500' : reliability >= 7.5 ? 'bg-brand-600' : 'bg-warning-500',
       percentage: reliability,
       description: `On-time delivery rate and success rate`,
     },
@@ -277,7 +309,7 @@ const metrics = computed(() => {
       label: 'Speed',
       labelText: getMetricLabel(breakdown.frictionSpeed, 'speed'),
       badgeClass: getBadgeClass(frictionSpeed, getMetricLabel(breakdown.frictionSpeed, 'speed')),
-      barClass: frictionSpeed >= 8.5 ? 'bg-green-500' : frictionSpeed >= 7.5 ? 'bg-brand-600' : 'bg-yellow-500',
+      barClass: frictionSpeed >= 8.5 ? 'bg-success-500' : frictionSpeed >= 7.5 ? 'bg-brand-600' : 'bg-warning-500',
       percentage: frictionSpeed,
       description: `KYC friction and delivery speed`,
     },
@@ -285,7 +317,7 @@ const metrics = computed(() => {
       label: 'Support',
       labelText: getMetricLabel(breakdown.supportRefunds, 'support'),
       badgeClass: getBadgeClass(supportRefunds, getMetricLabel(breakdown.supportRefunds, 'support')),
-      barClass: supportRefunds >= 8.5 ? 'bg-green-500' : supportRefunds >= 7.5 ? 'bg-brand-600' : 'bg-yellow-500',
+      barClass: supportRefunds >= 8.5 ? 'bg-success-500' : supportRefunds >= 7.5 ? 'bg-brand-600' : 'bg-warning-500',
       percentage: supportRefunds,
       description: `Refund processing and dispute resolution`,
     },
@@ -293,7 +325,7 @@ const metrics = computed(() => {
       label: 'Trust & Safety',
       labelText: getMetricLabel(breakdown.trustSafety, 'trust'),
       badgeClass: getBadgeClass(trustSafety, getMetricLabel(breakdown.trustSafety, 'trust')),
-      barClass: trustSafety >= 8.5 ? 'bg-green-500' : trustSafety >= 7.5 ? 'bg-brand-600' : 'bg-yellow-500',
+      barClass: trustSafety >= 8.5 ? 'bg-success-500' : trustSafety >= 7.5 ? 'bg-brand-600' : 'bg-warning-500',
       percentage: trustSafety,
       description: `Licensing and regulatory compliance`,
     },
@@ -311,9 +343,9 @@ const providerSlug = computed(() => {
 })
 
 const getRatingTextClass = (badgeClass: string) => {
-  if (badgeClass.includes('emerald')) return 'text-emerald-700'
-  if (badgeClass.includes('blue')) return 'text-blue-700'
-  if (badgeClass.includes('yellow')) return 'text-yellow-700'
+  if (badgeClass.includes('success')) return 'text-success-600'
+  if (badgeClass.includes('primary') || badgeClass.includes('brand')) return 'text-brand-700'
+  if (badgeClass.includes('warning')) return 'text-warning-700'
   return 'text-neutral-600'
 }
 </script>
@@ -329,13 +361,13 @@ const getRatingTextClass = (badgeClass: string) => {
   opacity: 0;
 }
 
-.modal-enter-active .bg-white,
-.modal-leave-active .bg-white {
+.modal-enter-active .bg-surface,
+.modal-leave-active .bg-surface {
   transition: transform 0.3s ease;
 }
 
-.modal-enter-from .bg-white,
-.modal-leave-to .bg-white {
+.modal-enter-from .bg-surface,
+.modal-leave-to .bg-surface {
   transform: scale(0.95);
 }
 </style>

@@ -6,16 +6,16 @@ import type { Construct } from 'constructs'
 import type { QueueResources } from './queues'
 
 export type EcsServiceResources = {
-  planeBIngestService: FargateService
-  b2cRefreshService: FargateService
-  fxRateRefreshService: FargateService
-  ingestFanoutTier1Service: FargateService
-  ingestFanoutTier2Service: FargateService
-  goldLiveService: FargateService
-  notificationsQueueService: FargateService
-  opsAlertsQueueService: FargateService
-  alertEvaluationService: FargateService
-  exportWorkerService: FargateService
+  planeBIngestService?: FargateService
+  b2cRefreshService?: FargateService
+  fxRateRefreshService?: FargateService
+  ingestFanoutTier1Service?: FargateService
+  ingestFanoutTier2Service?: FargateService
+  goldLiveService?: FargateService
+  notificationsQueueService?: FargateService
+  opsAlertsQueueService?: FargateService
+  alertEvaluationService?: FargateService
+  exportWorkerService?: FargateService
 }
 
 export type EcsServiceOptions = {
@@ -59,6 +59,7 @@ export type EcsServiceOptions = {
   exportWorkerDesiredCount?: number
   queueWorkerSpotOnly?: boolean
   paused?: boolean
+  minimalMode?: boolean
 }
 
 export const createEcsServices = (
@@ -72,6 +73,7 @@ export const createEcsServices = (
   const fxRateRefreshServiceEnabled = options.fxRateRefreshServiceEnabled ?? true
   const alertEvaluationServiceEnabled = options.alertEvaluationServiceEnabled ?? false
   const exportServiceEnabled = options.exportServiceEnabled ?? false
+  const minimalMode = options.minimalMode === true
 
   const baseIngestDesired = isProd ? 1 : 0
   const baseQueueDesired = isProd ? 1 : 0
@@ -111,7 +113,9 @@ export const createEcsServices = (
   const exportWorkerDesired = isPaused
     ? 0
     : (options.exportWorkerDesiredCount ?? (isProd ? 1 : 0))
-
+  const minimalIngestFanoutTier2Desired = isPaused
+    ? 0
+    : (options.ingestFanoutTier2DesiredCount ?? 1)
   const spotOnly = options.queueWorkerSpotOnly ?? isDev
   const spotCapacityProviderStrategies = spotOnly
     ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
@@ -121,21 +125,86 @@ export const createEcsServices = (
           { capacityProvider: 'FARGATE_SPOT', weight: 2 },
         ]
       : [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }]
-
   const enableExecuteCommand = !isProd
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
   const minHealthyPercent = isDev ? 0 : undefined
   const maxHealthyPercent = isDev ? 200 : undefined
-
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
     rollback: true,
   }
-
   const tagManaged = (service: FargateService): void => {
     Tags.of(service).add('managed-by', 'ops-pause')
     Tags.of(service).add('environment', options.envName)
+  }
+
+  if (minimalMode) {
+    const minimalPlaneBIngestService = new FargateService(scope, 'PlaneBIngestService', {
+      cluster: options.cluster,
+      taskDefinition: options.planeBIngestTask,
+      desiredCount: planeBIngestDesired,
+      assignPublicIp: usePublicSubnets,
+      vpcSubnets: { subnetType },
+      securityGroups: [options.planeBSecurityGroup],
+      enableExecuteCommand,
+      circuitBreaker,
+      minHealthyPercent,
+      maxHealthyPercent,
+    })
+    tagManaged(minimalPlaneBIngestService)
+
+    const minimalIngestFanoutTier2Service = new FargateService(
+      scope,
+      'IngestFanoutTier2WorkerService',
+      {
+        cluster: options.cluster,
+        taskDefinition: options.ingestFanoutTier2Task,
+        desiredCount:
+          options.ingestFanoutMode === 'queue' && !isPaused
+            ? minimalIngestFanoutTier2Desired
+            : 0,
+        assignPublicIp: usePublicSubnets,
+        vpcSubnets: { subnetType },
+        securityGroups: [options.planeBSecurityGroup],
+        capacityProviderStrategies: spotCapacityProviderStrategies,
+        enableExecuteCommand,
+        circuitBreaker,
+        minHealthyPercent,
+        maxHealthyPercent,
+      },
+    )
+    tagManaged(minimalIngestFanoutTier2Service)
+
+    const shouldRunB2cRefresh =
+      b2cRefreshServiceEnabled &&
+      options.quoteRefreshMode === 'queue' &&
+      !isPaused &&
+      b2cRefreshDesired > 0
+    const minimalB2cRefreshService = shouldRunB2cRefresh
+      ? new FargateService(scope, 'B2cRefreshWorkerService', {
+          cluster: options.cluster,
+          taskDefinition: options.b2cRefreshTask,
+          desiredCount: b2cRefreshDesired,
+          assignPublicIp: usePublicSubnets,
+          vpcSubnets: { subnetType },
+          securityGroups: [options.planeBSecurityGroup],
+          capacityProviderStrategies: spotCapacityProviderStrategies,
+          enableExecuteCommand,
+          circuitBreaker,
+          minHealthyPercent,
+          maxHealthyPercent,
+        })
+      : undefined
+    if (minimalB2cRefreshService) {
+      tagManaged(minimalB2cRefreshService)
+    }
+
+    return {
+      planeBIngestService: minimalPlaneBIngestService,
+      b2cRefreshService: minimalB2cRefreshService,
+      ingestFanoutTier2Service: minimalIngestFanoutTier2Service,
+    }
   }
 
   const planeBIngestService = new FargateService(scope, 'PlaneBIngestService', {

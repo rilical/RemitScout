@@ -1,0 +1,9 @@
+{
+  "env": "dev",
+  "cluster": "remit-scout-dev",
+  "baseUrl": "https://vhugw1jucg.execute-api.us-east-1.amazonaws.com",
+  "focus": "b2b_tier2_cadence",
+  "durationHours": 4,
+  "pauseAtEnd": true
+}
+

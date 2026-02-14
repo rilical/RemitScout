@@ -1,7 +1,7 @@
 <template>
   <section
     id="hero-dual-tab"
-    class="relative bg-white py-16 sm:py-20 lg:py-24 min-h-[700px]"
+    class="relative bg-surface py-16 sm:py-20 lg:py-24 min-h-[700px]"
   >
     <div class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       <svg
@@ -125,21 +125,21 @@
       </svg>
     </div>
 
-    <div class="container-custom relative z-10 mx-auto max-w-7xl">
+    <div class="container relative z-10">
       <!-- Money Transfer Content -->
       <div class="grid grid-cols-1 items-stretch gap-8 lg:grid-cols-5 lg:gap-12">
         <div class="animate-fade-in-up delay-200 lg:col-span-3 flex flex-col">
           <h1
-            class="mb-4 text-4xl font-bold leading-tight text-neutral-900 sm:text-5xl lg:text-6xl"
+            class="mb-4 text-hero font-bold leading-tight text-neutral-900"
           >
             Send more home,<br><span class="text-brand-600">pay less</span> in fees.
           </h1>
-          <p class="mb-8 text-lg leading-relaxed text-neutral-600 sm:text-xl">
+          <p class="mb-8 text-body-lg leading-relaxed text-neutral-600">
             Compare current quotes, total fees, and estimated delivery times <span class="whitespace-nowrap">across {{ SITE_STATS.licensedProviders.display }} licensed providers.</span>
           </p>
 
           <div
-            class="animate-scale-in relative flex-1 flex flex-col rounded-3xl border border-neutral-200 bg-white p-4 sm:p-8 shadow-lg delay-300"
+            class="animate-scale-in relative flex-1 flex flex-col rounded-3xl border border-neutral-200 bg-surface p-4 sm:p-8 shadow-lg delay-300"
           >
             <form
               role="search"
@@ -156,7 +156,7 @@
                 >
                   <div
                     :class="[
-                      'flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all',
+                      'flex h-8 w-8 items-center justify-center rounded-full text-body-sm font-bold transition-all',
                       currentMobileStep >= step
                         ? 'bg-brand-600 text-white'
                         : 'bg-neutral-200 text-neutral-600',
@@ -182,7 +182,7 @@
                 <div>
                   <label
                     for="from-country"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                    class="mb-2 block text-body-sm font-semibold text-neutral-700"
                   >
                     <span class="mr-2">🛫</span>Sending from
                   </label>
@@ -198,7 +198,7 @@
                 <div>
                   <label
                     for="to-country"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                    class="mb-2 block text-body-sm font-semibold text-neutral-700"
                   >
                     <span class="mr-2">🛬</span>Receiving in
                   </label>
@@ -216,7 +216,7 @@
                   <button
                     type="button"
                     :disabled="!moneyForm.from || !moneyForm.to"
-                    class="w-full rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full rounded-lg bg-brand-600 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="currentMobileStep = 2"
                   >
                     Next →
@@ -232,7 +232,7 @@
                 <div>
                   <label
                     for="from-currency"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                    class="mb-2 block text-body-sm font-semibold text-neutral-700"
                   >
                     From currency
                   </label>
@@ -249,7 +249,7 @@
                 <div>
                   <label
                     for="to-currency"
-                    class="mb-2 block text-sm font-semibold text-neutral-700"
+                    class="mb-2 block text-body-sm font-semibold text-neutral-700"
                   >
                     To currency
                   </label>
@@ -270,7 +270,7 @@
                 <div class="flex gap-2 sm:hidden">
                   <button
                     type="button"
-                    class="flex-1 rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                    class="flex-1 rounded-lg border border-neutral-300 py-3 text-body-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
                     @click="currentMobileStep = 1"
                   >
                     ← Back
@@ -278,7 +278,7 @@
                   <button
                     type="button"
                     :disabled="!moneyForm.fromCurrency || !moneyForm.toCurrency"
-                    class="flex-1 rounded-lg bg-brand-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="flex-1 rounded-lg bg-brand-600 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="currentMobileStep = 3"
                   >
                     Next →
@@ -293,7 +293,7 @@
               >
                 <label
                   for="amount"
-                  class="mb-2 block text-sm font-semibold text-neutral-700"
+                  class="mb-2 block text-body-sm font-semibold text-neutral-700"
                 >
                   You send
                 </label>
@@ -304,13 +304,13 @@
                   :min="inputMin"
                   :max="inputMax"
                   step="0.01"
-                  class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+                  class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-neutral-900 placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                   :placeholder="amountPlaceholder"
                   @keydown="handleAmountKeydown"
                   @blur="handleAmountBlur"
                   @input="sanitizeAmountInput"
                 >
-                <p class="mt-1.5 text-xs text-gray-500">
+                <p class="mt-1.5 text-body-sm text-neutral-500">
                   Enter the amount you want to send
                 </p>
 
@@ -318,7 +318,7 @@
                 <div class="mt-4 sm:hidden">
                   <button
                     type="button"
-                    class="w-full rounded-lg border border-neutral-300 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                    class="w-full rounded-lg border border-neutral-300 py-3 text-body-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
                     @click="currentMobileStep = 2"
                   >
                     ← Back
@@ -336,11 +336,11 @@
               >
                 <div
                   v-if="formError"
-                  class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800"
+                  class="rounded-lg bg-danger-600 border border-danger-600 p-3 text-body-sm text-danger-600"
                 >
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                      class="h-5 w-5 flex-shrink-0 text-danger-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -357,11 +357,11 @@
                 </div>
                 <div
                   v-if="formSuccess"
-                  class="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800"
+                  class="rounded-lg bg-success-600 border border-success-600 p-3 text-body-sm text-success-600"
                 >
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-emerald-600"
+                      class="h-5 w-5 flex-shrink-0 text-success-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -386,10 +386,10 @@
                 aria-atomic="true"
                 class="mb-4"
               >
-                <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+                <div class="rounded-lg bg-danger-600 border border-danger-600 p-3 text-body-sm text-danger-600">
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                      class="h-5 w-5 flex-shrink-0 text-danger-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -454,7 +454,7 @@
             </form>
 
             <div class="mt-6 border-t border-neutral-200/50 pt-6">
-              <p class="text-xs text-neutral-600 sm:text-sm">
+              <p class="text-body-sm text-neutral-600">
                 Typical savings vs bank last month: 3–9%. Estimates include fees + exchange
                 margin.
               </p>
@@ -464,63 +464,63 @@
 
         <div class="animate-slide-in-right hidden delay-300 lg:col-span-2 lg:block">
           <div
-            class="flex h-full flex-col rounded-3xl border border-neutral-200 bg-white p-8 shadow-lg"
+            class="flex h-full flex-col rounded-3xl border border-neutral-200 bg-surface p-8 shadow-lg"
           >
-            <h3 class="mb-6 text-2xl font-bold text-neutral-900">
+            <h3 class="mb-6 text-h3 font-bold text-neutral-900">
               Why Remit-Scout?
             </h3>
 
             <div class="flex-1 space-y-6">
               <!-- Money Saved -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">
+                <p class="mb-1 text-body-sm text-neutral-600">
                   {{ SITE_STATS.totalSaved.label }}
                 </p>
-                <p class="text-4xl font-bold text-brand-600">
+                <p class="text-h1 font-bold text-brand-600">
                   {{ SITE_STATS.totalSaved.display }}
                 </p>
-                <p class="mt-1 text-xs text-neutral-600">
+                <p class="mt-1 text-body-sm text-neutral-600">
                   Since 2024
                 </p>
               </div>
 
               <!-- Providers Compared -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">
+                <p class="mb-1 text-body-sm text-neutral-600">
                   {{ SITE_STATS.providers.label }}
                 </p>
-                <p class="text-4xl font-bold text-brand-600">
+                <p class="text-h1 font-bold text-brand-600">
                   {{ SITE_STATS.providers.display }}
                 </p>
-                <p class="mt-1 text-xs text-neutral-600">
+                <p class="mt-1 text-body-sm text-neutral-600">
                   Licensed and regulated where available
                 </p>
               </div>
 
               <!-- Countries Covered -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">
+                <p class="mb-1 text-body-sm text-neutral-600">
                   {{ SITE_STATS.corridors.label }}
                 </p>
-                <p class="text-4xl font-bold text-brand-600">
+                <p class="text-h1 font-bold text-brand-600">
                   {{ SITE_STATS.corridors.display }}
                 </p>
-                <p class="mt-1 text-xs text-neutral-600">
+                <p class="mt-1 text-body-sm text-neutral-600">
                   Coverage varies by corridor
                 </p>
               </div>
 
               <!-- Average Savings -->
               <div class="border-b border-neutral-200 pb-6">
-                <p class="mb-1 text-xs text-neutral-600">
+                <p class="mb-1 text-body-sm text-neutral-600">
                   Average savings vs banks
                 </p>
-                <p class="text-4xl font-bold text-brand-600 tracking-tight">
+                <p class="text-h1 font-bold text-brand-600 tracking-tight">
                   <span class="inline-block bg-gradient-to-r from-brand-600 to-brand-700 bg-clip-text text-transparent">
                     9%
                   </span>
                 </p>
-                <p class="mt-1 text-xs text-neutral-600">
+                <p class="mt-1 text-body-sm text-neutral-600">
                   On many transfers
                 </p>
               </div>
@@ -542,10 +542,10 @@
                     />
                   </svg>
                   <div>
-                    <p class="text-sm font-semibold text-neutral-900">
+                    <p class="text-body-sm font-semibold text-neutral-900">
                       Independent rankings
                     </p>
-                    <p class="text-xs text-neutral-600">
+                    <p class="text-body-sm text-neutral-600">
                       No pay-to-rank. Results stay data-driven.
                     </p>
                   </div>
@@ -554,7 +554,7 @@
 
               <!-- Tagline -->
               <div class="pt-6 border-t border-neutral-200">
-                <p class="text-sm font-medium text-brand-600">
+                <p class="text-body-sm font-medium text-brand-600">
                   Money, made global.
                 </p>
               </div>

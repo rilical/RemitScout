@@ -38,7 +38,7 @@ const chromeClass = computed(() => {
   if (props.mode !== 'card') return ''
   return props.variant === 'terminal'
     ? 'border-neutral-700 bg-neutral-900'
-    : 'border-slate-200 bg-white'
+    : 'border-rs-border bg-surface'
 })
 
 const contentWrapperClass = computed(() => {
@@ -61,14 +61,14 @@ const contentWrapperClass = computed(() => {
       :class="contentWrapperClass"
     >
       <div
-        class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-50"
+        class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50"
         aria-hidden="true"
-        :class="props.variant === 'terminal' ? 'bg-neutral-800' : 'bg-slate-50'"
+        :class="props.variant === 'terminal' ? 'bg-neutral-800' : 'bg-neutral-50'"
       >
         <slot name="icon">
           <div
             class="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
-            :class="props.variant === 'terminal' ? 'border-neutral-600' : 'border-slate-300'"
+            :class="props.variant === 'terminal' ? 'border-neutral-600' : 'border-neutral-300'"
           />
         </slot>
       </div>
@@ -77,15 +77,15 @@ const contentWrapperClass = computed(() => {
         <h3
           v-if="props.title"
           :id="titleId"
-          class="text-sm font-semibold"
-          :class="props.variant === 'terminal' ? 'text-white' : 'text-slate-900'"
+          class="text-body-sm font-semibold"
+          :class="props.variant === 'terminal' ? 'text-white' : 'text-rs-fg'"
         >
           {{ props.title }}
         </h3>
         <p
           :id="descriptionId"
-          class="text-sm"
-          :class="props.variant === 'terminal' ? 'text-neutral-300' : 'text-slate-600'"
+          class="text-body-sm"
+          :class="props.variant === 'terminal' ? 'text-neutral-300' : 'text-rs-muted'"
         >
           {{ description }}
         </p>

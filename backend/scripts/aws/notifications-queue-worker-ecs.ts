@@ -28,12 +28,22 @@ export const handler = async (): Promise<void> => {
   ])
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const { config } = await import('../../shared/config')
+  const requireNotificationsQueue = config.queues.notifications.mode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      requireQueues: requireNotificationsQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue: false,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue: false,
+      requireNotificationsQueue,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
+      requireStorage: false,
     },
   })
 

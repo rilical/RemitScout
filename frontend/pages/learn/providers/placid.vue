@@ -1,24 +1,24 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
-        <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
+    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
+      <div class="mx-auto max-w-page px-page-x relative">
+        <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70 relative z-10">
           <NuxtLink
             to="/"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Home</NuxtLink>
           <span class="text-white/50">›</span>
           <NuxtLink
             to="/learn"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Learn</NuxtLink>
           <span class="text-white/50">›</span>
           <NuxtLink
             to="/learn/providers"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Placid Review</span>
@@ -28,13 +28,13 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="w-20 h-20 rounded-2xl bg-white p-3 shadow-xl">
-                <div class="w-full h-full rounded-xl bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+              <div class="w-20 h-20 rounded-2xl bg-surface p-3 shadow-xl">
+                <div class="w-full h-full rounded-xl bg-primary-500 flex items-center justify-center text-white text-h3 font-bold">
                   P
                 </div>
               </div>
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface/10 text-white text-body-sm font-medium mb-2">
                   <svg
                     class="w-4 h-4"
                     fill="currentColor"
@@ -44,23 +44,23 @@
                   </svg>
                   Provider Review
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
+                <h1 class="text-h1 font-bold text-white mb-2">
                   Placid Review
                 </h1>
-                <p class="text-xl text-slate-300">
+                <p class="text-h4 text-neutral-300">
                   Independent Remit-Scout Analysis
                 </p>
               </div>
             </div>
 
-            <p class="text-lg text-white/90 leading-relaxed mb-8">
+            <p class="text-body-lg text-white/90 leading-relaxed mb-8">
               A data-driven review based on real transfer outcomes - not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
             </p>
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 to="/send-money?provider=placid"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold shadow-lg motion-safe:transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg
@@ -80,7 +80,7 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold text-white transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold text-white motion-safe:transition-all"
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
@@ -103,9 +103,9 @@
 
           <!-- Right: Score Card -->
           <div class="flex justify-center lg:justify-end">
-            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
+            <div class="bg-surface rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">
                   REMIT-SCOUT SCORE
                 </div>
                 <RemitScoreRing :score="score" />
@@ -114,35 +114,35 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
@@ -150,9 +150,9 @@
                 </div>
               </div>
 
-              <div class="mt-6 pt-6 border-t border-slate-200 text-center">
+              <div class="mt-6 pt-6 border-t border-rs-border text-center">
                 <p
-                  class="text-xs"
+                  class="text-body-sm"
                   style="color: rgba(17, 24, 39, 1);"
                 >
                   Based on our independent methodology.<br>
@@ -170,38 +170,38 @@
     </section>
 
     <!-- Quick Stats Strip -->
-    <section class="bg-slate-50 border-y border-slate-200 py-6">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="bg-neutral-50 border-y border-rs-border py-6">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               US→Asia
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Core Focus
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               3 Markets
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Send From
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">
+            <div class="text-h2 font-bold text-success-600">
               10–60 Min
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Debit Speed
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               24/7
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Phone Support
             </div>
           </div>
@@ -212,15 +212,15 @@
     <!-- Main Content -->
     <section
       id="review"
-      class="py-16 bg-white"
+      class="py-16 bg-surface"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg
                     class="w-12 h-12 text-brand-600/20"
@@ -236,27 +236,27 @@
                     />
                   </svg>
                 </div>
-                <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
+                <p class="text-h4 text-neutral-800 leading-relaxed relative z-10 font-medium">
                   Placid's 8.2/10 starts with Delivered Value (40%): in its core US→Asia-style corridors, the product can be very competitive when fees are low/zero and the "you send / they receive" quote is clean. But the effective cost still lives in two places you have to actively watch: (1) the transfer fee (which varies by corridor/payment method/amount) and (2) the FX spread, since Placid explicitly states it can earn money when converting currencies.
                 </p>
               </div>
 
               <div class="mb-22">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-brand-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
-                <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                  <p class="text-lg text-slate-800 leading-relaxed italic m-0">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <p class="text-body-lg text-neutral-800 leading-relaxed italic m-0">
                     "Placid (8.2): Competitive US→Asia focus; good value in-core; breadth and trust-signal depth likely constrain."
                   </p>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-8">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-4 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -272,101 +272,101 @@
                   </svg>
                   Score Breakdown
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Here's how Placid performs across each category in our rubric:
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-primary-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-h3 shadow-md">
                     8.2
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <h3 class="text-h3 font-bold text-rs-fg mb-2 flex items-center gap-2">
                       Placid
                     </h3>
-                    <p class="text-sm text-black">
+                    <p class="text-body-sm text-black">
                       Remit-Score
                     </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Fees can be very low (sometimes $0) and promos may apply for first transfers. Transparent "total to pay" and "they receive" quoting. FX spread still matters—Placid explicitly states it may profit during currency conversion.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Reliability
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       20% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       First transfers and new funding methods can be slower due to identity and payment verification. Breadth constraint: primarily US/EU/Malaysia sending to South/Southeast Asia + Europe.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Friction & Speed
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Debit card funding can be fast—10–60 minutes for existing customers (60 minutes for new customers) for both cash pickup and bank deposit approvals. ACH funding can take several business days.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Support & Refunds
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Clear cancellation/refund paths (cancel if not disbursed; refund back to funding source), plus 24/7 phone support is repeatedly listed.
                     </div>
                   </div>
-                  <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="sm:col-span-2 p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Trust & Safety
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       10% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Placid publishes licensing details (helpful), but corridor breadth and brand-scale signals are narrower than global leaders—so trust "depth" is a limiting factor at the margin.
                     </div>
                   </div>
                 </div>
-                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
+                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -379,10 +379,10 @@
                       />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-2.5">
+                      <div class="font-semibold text-rs-fg mb-2.5">
                         Why 8.2 (not 9.0+):
                       </div>
-                      <div class="text-sm text-slate-700 leading-relaxed">
+                      <div class="text-body-sm text-neutral-700 leading-relaxed">
                         Placid scores well because Delivered Value can be strong in-core (transparent quoting, often low fees) and debit-funded transfers can be fast. The score is capped because effective cost can still vary (FX conversion profit model + corridor-dependent fees), and because breadth and trust-signal depth are inherently more limited than the global leaders.
                       </div>
                     </div>
@@ -390,57 +390,57 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Delivered Value (40%)
                   </h2>
                 </div>
-                <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                <p class="text-body-lg text-neutral-700 leading-relaxed mb-6">
                   Delivered Value is the main reason Placid lands at 8.2 instead of lower or higher: it can look excellent in-core, but you still need to verify the effective cost each time.
                 </p>
-                <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="mb-6 p-5 rounded-xl bg-neutral-50 border border-rs-border">
+                  <p class="font-semibold text-rs-fg mb-3 text-body">
                     Effective cost = fees + FX spread (and occasional downstream charges)
                   </p>
-                  <p class="text-slate-700 mb-3">
+                  <p class="text-neutral-700 mb-3">
                     Placid's own pages make the basic structure clear:
                   </p>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">1</span>
                       <span>Transfer fees vary by destination country, payment method, and amount; debit may carry a slightly higher fee for speed, while bank transfer (ACH) is positioned as lower-fee but slower.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">2</span>
                       <span>Placid explicitly states it may make money during currency conversion—i.e., it can convert at a rate higher or lower than the rate you receive, and that difference can create profit.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">3</span>
                       <span>Placid also notes that (rarely) the recipient's bank may impose additional charges for bank deposit that are beyond Placid's control.</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-3 mb-0">
+                  <p class="text-neutral-700 mt-3 mb-0">
                     So the data-first takeaway is: if you're comparing Placid to another provider, compare on delivered amount ("they receive") and total to pay, not just the headline fee.
                   </p>
                 </div>
 
-                <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">
+                <div class="p-6 rounded-xl border-2 border-success-600">
+                  <p class="font-semibold text-rs-fg mb-3">
                     "How often is it cheapest?"
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
+                  <p class="text-neutral-800 leading-relaxed mb-4">
                     We're not going to invent a "win-rate." What we can say from Placid's positioning and disclosures:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
+                  <ul class="space-y-2 text-neutral-700">
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -456,7 +456,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -474,33 +474,33 @@
                 </div>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p class="text-sm text-blue-800 m-0">
+              <div class="not-prose my-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p class="text-body-sm text-primary-800 m-0">
                   <strong>Quote vs delivered accuracy:</strong> Placid leans into "quote integrity" in a few places: The rates/fees page says the rate shown at the time of your transaction is the rate you'll receive and emphasizes "no hidden charges" (total shown includes fees). Its regulatory page states it guarantees the foreign exchange rate for all money transfer transactions. What can still change the real-world "received" experience: Recipient bank fees (rare, but explicitly acknowledged) and corridor-level partner limits and compliance checks, which can force rerouting or delays (not "price changes," but still affects the delivered experience).
                 </p>
               </div>
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Reliability & Success (20%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This category is about whether the provider can consistently produce a usable quote and then successfully complete the transfer — without surprises like sudden unavailability, frequent recalculations, or failed deliveries.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Quote success / availability
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid's own pages frame it as available primarily for senders in:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700 mb-3">
+                    <ul class="space-y-2.5 text-neutral-700 mb-3">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -550,18 +550,18 @@
                         <span>Malaysia</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       And online destination coverage is described as: "many countries in South & South-East Asia and Europe," with more countries available via agent network. This is exactly where the auditor note's "breadth" constraint comes from: if you're outside its send-from markets or need a corridor outside its online footprint, Placid may not be an option.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Pricing stability & data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid says:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -596,17 +596,17 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       "Success" caveats that matter
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid is transparent that speed and success can be affected by:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -622,7 +622,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -643,55 +643,55 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Friction & Speed (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This measures how quickly funds arrive in practice and how much effort is required (setup, verification, payment steps, payout complexity).
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       ETA / speed buckets (based on Placid's published guidance)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid's own guidance creates a practical split:
                     </p>
                     <div class="mb-4">
-                      <p class="font-semibold text-slate-900 mb-2">
+                      <p class="font-semibold text-rs-fg mb-2">
                         <strong>Debit card funded</strong>
                       </p>
-                      <p class="text-slate-700 mb-2">
+                      <p class="text-neutral-700 mb-2">
                         Help center: processing/approval shown as 60 minutes for new customers, and 10–60 minutes for existing customers (during normal business hours).
                       </p>
-                      <p class="text-slate-700 mb-0">
+                      <p class="text-neutral-700 mb-0">
                         Corridor FAQs and rates/fees page also describe debit-funded transfers as typically ~10–15 minutes.
                       </p>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-emerald-200">
-                      <p class="font-semibold text-slate-900 mb-2">
+                    <div class="mt-4 pt-4 border-t border-success-600">
+                      <p class="font-semibold text-rs-fg mb-2">
                         <strong>Bank account (ACH) funded</strong>
                       </p>
-                      <p class="text-slate-700 mb-2">
+                      <p class="text-neutral-700 mb-2">
                         Corridor FAQs and rates/fees page: typically 3–5 business days.
                       </p>
-                      <p class="text-slate-700 mb-0">
+                      <p class="text-neutral-700 mb-0">
                         Help center adds an important operational detail: it may take up to 7 business days to receive confirmation an ACH debit was successful, and Placid may delay processing accordingly.
                       </p>
                     </div>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Payout methods
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid's help content focuses on two main delivery options:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -706,7 +706,7 @@
                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">spotCash cash pickup</strong> (recipient can collect once processing is complete)</span>
+                        <span><strong class="text-rs-fg">spotCash cash pickup</strong> (recipient can collect once processing is complete)</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -722,15 +722,15 @@
                             d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Bank deposit</strong> (disbursed to the recipient's bank directly or via a partner for final credit)</span>
+                        <span><strong class="text-rs-fg">Bank deposit</strong> (disbursed to the recipient's bank directly or via a partner for final credit)</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery behavior
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       In practice, Placid behaves like many "debit-fast / ACH-slower" remitters: Debit is the "speed path," but it can require extra verification steps (card issuer verification, ID upload, etc.). ACH is the "value path," but it's bank-timed and can introduce multi-day uncertainty.
                     </p>
                   </div>
@@ -739,25 +739,25 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Support & Refunds (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This category is about what happens after something goes wrong: refunds, cancellations, dispute handling, and how hard it is to reach a human.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund / cancellation experience (as documented)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid provides multiple cancellation/refund statements across its pages:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -791,18 +791,18 @@
                         <span>Help center: you can cancel as long as funds have not been disbursed, and they state they will refund transfer amount and fees in full; they also describe a 30‑minute cancellation approach for bank-funded transfers before the bank debit is initiated.</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
+                    <p class="text-neutral-700 mt-3 mb-0">
                       The friction point to note: cancellation becomes harder or impossible once the payout process is already underway—so if you made an error, acting quickly matters.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Dispute handling / consumer complaint structure
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid publishes a fairly detailed "error resolution & complaints" page, including:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -836,15 +836,15 @@
                         <span>State-specific refund rights language (e.g., California and Washington) and references to federal consumer assistance contacts (CFPB phone and website).</span>
                       </li>
                     </ul>
-                    <p class="text-slate-700 mt-3 mb-0">
+                    <p class="text-neutral-700 mt-3 mb-0">
                       That's a positive "post-issue roadmap" for consumers, even if you hope you never need it.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Support access
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Placid offers 24/7 phone support (repeatedly listed across pages).
                     </p>
                   </div>
@@ -853,25 +853,25 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Trust & Safety (10%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     We keep this "where available" and verifiable.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Licensing / regulatory checks (where available)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Placid publishes concrete identifiers and licensing claims that you can independently cross-check:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -886,7 +886,7 @@
                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Policies page:</strong> Placid NK Corporation is registered with FinCEN as an MSB and lists an MSB registration number, plus an NMLS ID (1074458) and a list of state licenses.</span>
+                        <span><strong class="text-rs-fg">Policies page:</strong> Placid NK Corporation is registered with FinCEN as an MSB and lists an MSB registration number, plus an NMLS ID (1074458) and a list of state licenses.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -902,29 +902,29 @@
                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Legal & Regulatory page:</strong> EU entity details (including Banca d'Italia licensing information for Italy operations) and Malaysia licensing claim under Bank Negara Malaysia.</span>
+                        <span><strong class="text-rs-fg">Legal & Regulatory page:</strong> EU entity details (including Banca d'Italia licensing information for Italy operations) and Malaysia licensing claim under Bank Negara Malaysia.</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Why "trust-signal depth" can still constrain
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Even with published IDs and license lists, Placid is not a universal, everywhere-brand like the biggest global players. The trust picture can therefore depend more on: Your corridor (and which payout partner is used), whether you're comfortable self-verifying regulatory details via public registries (e.g., NMLS Consumer Access), and how much you weight brand-scale and third‑party coverage as trust signals.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
+                <p class="text-body-sm text-warning-600 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
-              <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+              <h2 class="text-h2 font-bold text-rs-fg mb-8 flex items-center gap-3">
                 <svg
                   class="w-7 h-7 text-brand-600"
                   fill="none"
@@ -942,10 +942,10 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -957,25 +957,25 @@
                     </svg>
                     Pros
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Delivered Value:</strong> Fees can be very low (sometimes shown as $0 in the calculator) and promos may apply for first transfers; Placid also emphasizes transparent "total to pay" and "they receive" quoting.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Friction & Speed:</strong> Debit card funding can be fast—help content shows 10–60 minutes for existing customers (and 60 minutes for new customers) for both cash pickup and bank deposit approvals.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Support & Refunds:</strong> Clear cancellation/refund paths (cancel if not disbursed; refund back to funding source), plus 24/7 phone support is repeatedly listed.</span>
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -987,30 +987,30 @@
                     </svg>
                     Cons
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Delivered Value:</strong> FX spread still matters—Placid explicitly states it may profit during currency conversion, so "low fee" isn't the full price picture.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Reliability & Success:</strong> First transfers and new funding methods can be slower due to identity and payment verification; Placid notes early transactions may take a day or two (or more) as it verifies you.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-600 font-bold">−</span>
                       <span><strong>Trust & Safety:</strong> Placid publishes licensing details (helpful), but corridor breadth and brand-scale signals are narrower than global leaders—so trust "depth" is a limiting factor at the margin.</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-22">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1024,10 +1024,10 @@
                     </svg>
                     Best For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1043,7 +1043,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1059,7 +1059,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1076,10 +1076,10 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1093,10 +1093,10 @@
                     </svg>
                     Not Ideal For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1112,7 +1112,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1128,7 +1128,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1146,10 +1146,10 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1165,71 +1165,71 @@
                   </svg>
                   How to Get the Best Rate with Placid
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Use this checklist to maximize "delivered value":
                 </p>
                 <div class="space-y-3">
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       1
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Compare funding methods (bank vs debit):</strong>
-                      <span class="text-slate-700">Placid positions bank (ACH) as lower-fee but slower, and debit as faster (sometimes with a small corridor fee).</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Compare funding methods (bank vs debit):</strong>
+                      <span class="text-neutral-700">Placid positions bank (ACH) as lower-fee but slower, and debit as faster (sometimes with a small corridor fee).</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       2
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Watch the FX rate like a hawk:</strong>
-                      <span class="text-slate-700">Placid explicitly may profit on currency conversion; compare the rate in the quote against a mid‑market reference before sending.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Watch the FX rate like a hawk:</strong>
+                      <span class="text-neutral-700">Placid explicitly may profit on currency conversion; compare the rate in the quote against a mid‑market reference before sending.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       3
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Check "they receive," not just the fee:</strong>
-                      <span class="text-slate-700">use the calculator output as your comparison point.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Check "they receive," not just the fee:</strong>
+                      <span class="text-neutral-700">use the calculator output as your comparison point.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       4
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">If you see a first‑transfer promo, read the conditions:</strong>
-                      <span class="text-slate-700">Placid states promos may apply to a first transfer and may depend on corridor/service type.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">If you see a first‑transfer promo, read the conditions:</strong>
+                      <span class="text-neutral-700">Placid states promos may apply to a first transfer and may depend on corridor/service type.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       5
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Choose the right payout method:</strong>
-                      <span class="text-slate-700">cash pickup can be immediate after processing; bank deposit can occasionally face recipient-bank charges.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Choose the right payout method:</strong>
+                      <span class="text-neutral-700">cash pickup can be immediate after processing; bank deposit can occasionally face recipient-bank charges.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       6
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Front-load verification:</strong>
-                      <span class="text-slate-700">Placid warns the first few transfers can take longer due to identity checks; do onboarding before you need urgent delivery.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Front-load verification:</strong>
+                      <span class="text-neutral-700">Placid warns the first few transfers can take longer due to identity checks; do onboarding before you need urgent delivery.</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1247,38 +1247,38 @@
                 </h2>
 
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 motion-safe:transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Remitly (9.1)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">When Remitly beats Placid:</strong> when you need very fast "Express" delivery, broader corridor coverage, or you place a higher weight on support experience.
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">When Remitly beats Placid:</strong> when you need very fast "Express" delivery, broader corridor coverage, or you place a higher weight on support experience.
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose Remitly over Placid when:</strong> Based on your Remit-Scout note, Remitly is strong on reliability and support, with the tradeoff that Express speed can cost more.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose Remitly over Placid when:</strong> Based on your Remit-Scout note, Remitly is strong on reliability and support, with the tradeoff that Express speed can cost more.
                     </p>
                   </div>
 
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 motion-safe:transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       XE Money (8.7)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">When XE Money beats Placid:</strong> when you want a strong all‑rounder with reliable quoting and you're okay with delivery that's often "bank‑timed."
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">When XE Money beats Placid:</strong> when you want a strong all‑rounder with reliable quoting and you're okay with delivery that's often "bank‑timed."
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose XE Money over Placid when:</strong> Based on your Remit-Scout note, XE is competitive but not always the cheapest—so it's a good "default option" when Placid doesn't cover your lane or you want a more general provider.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose XE Money over Placid when:</strong> Based on your Remit-Scout note, XE is competitive but not always the cheapest—so it's a good "default option" when Placid doesn't cover your lane or you want a more general provider.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1294,20 +1294,20 @@
                   </svg>
                   Bottom Line
                 </h2>
-                <div class="space-y-5 text-lg leading-relaxed text-slate-700">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                <div class="space-y-5 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Who should use Placid?
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       If you're sending from the US (or EU/Malaysia) to Placid's in-core Asia corridors, and you're willing to actively compare the final quote (fee + FX rate) rather than assuming "low fee = cheapest," Placid is a sensible choice.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Why the 8.2/10 is justified:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Placid scores well because Delivered Value can be strong in-core (transparent quoting, often low fees) and debit-funded transfers can be fast. The score is capped because effective cost can still vary (FX conversion profit model + corridor-dependent fees), and because breadth and trust-signal depth are inherently more limited than the global leaders—even though Placid does publish meaningful regulatory identifiers you can verify where available.
                     </p>
                   </div>
@@ -1320,16 +1320,16 @@
           <div class="lg:col-span-1">
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
-              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">
+              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-2">
                   Ready to Compare?
                 </h3>
-                <p class="text-sm text-slate-600 mb-4">
+                <p class="text-body-sm text-neutral-600 mb-4">
                   See how Placid stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
-                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
                 >
                   Compare Rates Now
                 </NuxtLink>
@@ -1342,48 +1342,48 @@
                 min-height="160px"
               />
               <!-- Quick Facts -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Quick Facts
                 </h3>
-                <dl class="space-y-3 text-sm">
+                <dl class="space-y-3 text-body-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Core Focus
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       US→Asia
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Send From
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       US, EU, Malaysia
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Debit Speed
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       10–60 min
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       ACH Speed
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       3–5 days
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Support
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       24/7 Phone
                     </dd>
                   </div>
@@ -1391,11 +1391,11 @@
               </div>
 
               <!-- Why Trust Us -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Why Trust This Review?
                 </h3>
-                <ul class="space-y-3 text-sm text-slate-700">
+                <ul class="space-y-3 text-body-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <svg
                       class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -1441,7 +1441,7 @@
                 </ul>
                 <NuxtLink
                   to="/methodology"
-                  class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  class="mt-4 inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
                   <svg
@@ -1461,42 +1461,42 @@
               </div>
 
               <!-- More Providers -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   More Provider Reviews
                 </h3>
                 <ul class="space-y-3">
                   <li>
                     <NuxtLink
                       to="/learn/providers/remitly"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/xe-money"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">XE</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-primary-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/wirebarley"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">WB</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">WB</div>
                       <span>WireBarley Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers"
-                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      class="flex items-center gap-3 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                     >
                       View all providers →
                     </NuxtLink>
@@ -1511,25 +1511,25 @@
 
     <!-- Final CTA -->
     <section
-      class="py-16 bg-blue-600"
+      class="py-16 bg-brand-600"
       style="background-color: rgba(37, 99, 235, 1);"
     >
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
         <h2
-          class="text-3xl font-bold mb-4"
+          class="text-h2 font-bold mb-4"
           style="color: rgba(255, 255, 255, 1);"
         >
           Ready to See How Placid Compares?
         </h2>
         <p
-          class="text-lg mb-8"
+          class="text-body-lg mb-8"
           style="color: rgba(255, 255, 255, 1);"
         >
           Enter your transfer details to see real-time rates from Placid and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
-          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-body-lg font-semibold shadow-lg motion-safe:transition-all"
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
@@ -1555,30 +1555,39 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
+import { getProviderLogoPath } from '~/composables/useProviderLogo'
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 const score = 8.2
 
-setSeo({
-  title: 'Placid Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
-  description: 'Independent Placid review with Remit-Score 8.2/10. Competitive US→Asia focus; good value in-core; breadth and trust-signal depth likely constrain. Detailed breakdown of fees, speed, and delivered value.',
-  canonical: `${siteUrl}/learn/providers/placid`,
-  ogImage: `${siteUrl}/og-images/provider-placid.jpg`,
+const providerName = 'Placid'
+const providerLogoUrl = `${siteUrl}${getProviderLogoPath('placid')}`
+
+defineOgImage({
+  component: 'OgImageProvider',
+  props: {
+    providerName,
+    remitScore: score,
+    logoUrl: providerLogoUrl,
+  },
 })
 
-const { addReviewSchema } = useStructuredData()
-const reviewBody = `Placid earns a Remit-Score of 8.2/10 based on our independent analysis. The provider has a competitive US→Asia focus with good value in core corridors, though breadth and trust-signal depth may be constraining factors. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+setSeo({
+  title: `Placid Review ${new Date().getFullYear()} - Remit-Score 8.2/10 | Remit-Scout`,
+  description: 'Independent Placid review with Remit-Score 8.2/10. Fees, exchange rates, delivery speed, and key pros/cons to compare before you send.',
+  canonical: `${siteUrl}/learn/providers/placid`,
+  ogImage: false,
+})
 
-addReviewSchema({
-  itemReviewed: 'Placid',
-  reviewBody,
-  author: 'Remit-Scout Editorial Team',
+const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+
+addAggregateRatingSchema({
+  name: 'Placid',
   ratingValue: score,
   bestRating: 10,
   worstRating: 1,
-  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [
@@ -1587,4 +1596,11 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Placid Review', path: '/learn/providers/placid' },
 ]
+
+addBreadcrumbSchema(
+  breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.path === '/' ? `${siteUrl}/` : `${siteUrl}${item.path}`,
+  })),
+)
 </script>

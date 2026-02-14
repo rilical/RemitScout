@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section with Search -->
-    <section class="relative overflow-hidden bg-gray-900 py-16 lg:py-24">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
+      <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs
           :items="breadcrumbItems"
           :dark="true"
@@ -12,7 +12,7 @@
 
         <div class="mt-12">
           <div class="text-center mb-12">
-            <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white shadow-md mb-6">
+            <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-surface/10 px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -28,10 +28,10 @@
               </svg>
               Guides & Reviews
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6">
+            <h1 class="text-hero font-bold tracking-tight text-white mb-6">
               Money Transfer <span class="text-brand-600">Guides</span>
             </h1>
-            <p class="text-xl text-white sm:text-2xl font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
+            <p class="text-h4 text-white font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
               Everything you need to send money smarter, compare providers, and avoid hidden fees.
             </p>
 
@@ -41,10 +41,10 @@
                 v-for="filter in filters"
                 :key="filter.key"
                 :class="[
-                  'px-4 py-2 rounded-full text-sm font-semibold transition-all',
+                  'px-4 py-2 rounded-full text-body-sm font-semibold motion-safe:transition-all',
                   activeFilter === filter.key
                     ? 'bg-brand-600 text-white shadow-md'
-                    : 'bg-white/10 border-2 border-white/20 text-white hover:border-brand-400 hover:bg-white/15',
+                    : 'bg-surface/10 border-2 border-white/20 text-white hover:border-brand-400 hover:bg-surface/15',
                 ]"
                 @click="activeFilter = filter.key"
               >
@@ -58,7 +58,7 @@
 
     <!-- How We Review Banner -->
     <section class="py-6 bg-neutral-50 border-b border-neutral-200">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <TrustBadgesRow
           :dark="false"
           :badges="reviewBadges"
@@ -68,16 +68,16 @@
     </section>
 
     <!-- Start Here Section -->
-    <section class="py-16 lg:py-20 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-600 shadow-md mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-surface px-4 py-2 text-body-sm font-semibold text-brand-600 shadow-md mb-6">
             New User Path
           </div>
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
             Start Here
           </h2>
-          <p class="text-lg text-neutral-600 max-w-2xl">
+          <p class="text-body-lg text-neutral-600 max-w-2xl">
             First-time visitor? Start with these essential guides to understand money transfers and avoid costly mistakes.
           </p>
         </div>
@@ -86,28 +86,28 @@
           <article
             v-for="guide in startHereGuides"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+              <span class="rounded-full bg-success-600 px-3 py-1.5 text-body-sm font-semibold text-success-600">
                 Beginner
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min read' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+              class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
             >
               Read guide
               <svg
@@ -131,12 +131,12 @@
 
     <!-- Category Grid -->
     <section class="py-16 lg:py-20 bg-neutral-50">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-brand-600 mb-4">
+          <h2 class="text-h2 font-bold text-brand-600 mb-4">
             Browse by Category
           </h2>
-          <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          <p class="text-body-lg text-neutral-600 max-w-2xl mx-auto">
             Explore our guides organized by topic to find exactly what you need
           </p>
         </div>
@@ -146,7 +146,7 @@
             v-for="cat in categories"
             :key="cat.key"
             type="button"
-            class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1 flex flex-col cursor-pointer text-left w-full h-full"
+            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1 flex flex-col cursor-pointer text-left w-full h-full"
             @click="scrollToSection(cat.key)"
           >
             <div
@@ -166,13 +166,13 @@
                 />
               </svg>
             </div>
-            <h3 class="text-lg font-bold text-neutral-900 mb-2 text-center">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 text-center">
               {{ cat.name }}
             </h3>
-            <p class="text-sm text-neutral-600 mb-4 flex-1 text-center">
+            <p class="text-body-sm text-neutral-600 mb-4 flex-1 text-center">
               {{ getCategoryArticleCount(cat.key) }} guides
             </p>
-            <span class="inline-flex items-center justify-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
+            <span class="inline-flex items-center justify-center gap-1 text-body-sm font-semibold text-brand-600 group-hover:gap-2 motion-safe:transition-all">
               Browse guides
               <svg
                 class="h-4 w-4"
@@ -196,9 +196,9 @@
     <!-- Money Transfer Basics Section -->
     <section
       id="money-transfer-basics"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
             <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -217,7 +217,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-h2 font-bold text-neutral-900">
                 Money Transfer Basics
               </h2>
               <p class="text-neutral-600 mt-1">
@@ -225,36 +225,36 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('money-transfer-basics')"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                 {{ guide.level || 'Beginner' }}
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -282,7 +282,7 @@
       id="fees-hidden-costs"
       class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
             <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -301,10 +301,10 @@
               </svg>
             </div>
             <div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-3 py-1 text-xs font-semibold text-brand-700 mb-2">
+              <div class="inline-flex items-center gap-2 rounded-full bg-brand-600/10 px-3 py-1 text-body-sm font-semibold text-brand-700 mb-2">
                 Pricing 101
               </div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-h2 font-bold text-neutral-900">
                 Fees & Hidden Costs
               </h2>
               <p class="text-neutral-600 mt-1">
@@ -312,36 +312,36 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('fees-hidden-costs')"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                 {{ guide.level || 'Intermediate' }}
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -367,9 +367,9 @@
     <!-- Provider Reviews Section -->
     <section
       id="provider-reviews"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
             <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -382,7 +382,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-h2 font-bold text-neutral-900">
                 Provider Reviews
               </h2>
               <p class="text-neutral-600 mt-1">
@@ -390,11 +390,11 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 mb-8">
-          <p class="text-sm text-neutral-700">
+          <p class="text-body-sm text-neutral-700">
             <strong class="font-semibold text-neutral-900">Note:</strong> Reviews are editorial; rankings come from data. See our <NuxtLink
               to="/methodology"
               class="text-brand-600 hover:text-brand-700 underline"
@@ -406,11 +406,11 @@
         <div class="mb-10">
           <NuxtLink
             to="/learn/providers"
-            class="group relative block overflow-hidden rounded-3xl border-2 border-neutral-200 bg-gradient-to-br from-white via-white to-brand-50 p-8 shadow-lg transition-all hover:shadow-2xl hover:border-brand-300 hover:-translate-y-1"
+            class="group relative block overflow-hidden rounded-3xl border-2 border-neutral-200 bg-gradient-to-br from-white via-white to-brand-50 p-8 shadow-lg motion-safe:transition-all hover:shadow-2xl hover:border-brand-300 hover:-translate-y-1"
           >
             <div class="relative z-10">
               <div class="flex items-center justify-between mb-4">
-                <div class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-md">
+                <div class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-body-sm font-bold text-white shadow-md">
                   <svg
                     class="h-4 w-4"
                     fill="none"
@@ -427,7 +427,7 @@
                   Full Provider Directory
                 </div>
                 <svg
-                  class="h-8 w-8 text-brand-600 transform transition-transform group-hover:translate-x-2"
+                  class="h-8 w-8 text-brand-600 transform motion-safe:transition-transform group-hover:translate-x-2"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -440,13 +440,13 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
+              <h3 class="text-h3 font-bold text-neutral-900 mb-3">
                 View All Providers & Read Full Reviews
               </h3>
-              <p class="text-base text-neutral-600 mb-6 leading-relaxed max-w-3xl">
+              <p class="text-body text-neutral-600 mb-6 leading-relaxed max-w-3xl">
                 Browse our complete directory of money transfer providers. Compare fees, exchange rates, transfer speeds, supported corridors, and read in-depth editorial reviews to find the best service for your needs.
               </p>
-              <div class="flex flex-wrap gap-4 text-sm">
+              <div class="flex flex-wrap gap-4 text-body-sm">
                 <div class="flex items-center gap-2 text-neutral-700">
                   <svg
                     class="h-5 w-5 text-brand-600"
@@ -499,7 +499,7 @@
             </div>
             <!-- Decorative Background Elements -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-blue-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2" />
           </NuxtLink>
         </div>
 
@@ -507,29 +507,29 @@
           <article
             v-for="guide in getArticlesByCategory('provider-reviews')"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                 Review
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '10 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -557,7 +557,7 @@
       id="speed-delivery"
       class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
             <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -576,7 +576,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-h2 font-bold text-neutral-900">
                 Speed & Delivery
               </h2>
               <p class="text-neutral-600 mt-1">
@@ -584,36 +584,36 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('speed-delivery')"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                 {{ guide.level || 'Beginner' }}
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -639,9 +639,9 @@
     <!-- Exchange Rates & Timing Section -->
     <section
       id="exchange-rates-timing"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <div class="flex items-center gap-4 mb-6">
             <div class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center">
@@ -660,7 +660,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-3xl font-bold text-neutral-900">
+              <h2 class="text-h2 font-bold text-neutral-900">
                 Exchange Rates & Timing
               </h2>
               <p class="text-neutral-600 mt-1">
@@ -668,36 +668,36 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-blue-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in getArticlesByCategory('exchange-rates-timing')"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700">
+              <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                 {{ guide.level || 'Intermediate' }}
               </span>
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -722,9 +722,9 @@
 
     <!-- Updated Recently Section -->
     <section class="py-16 lg:py-20 bg-brand-600">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-12">
-          <div class="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-white mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full bg-surface/20 backdrop-blur-sm px-4 py-2 text-body-sm font-semibold text-white mb-6">
             <svg
               class="h-4 w-4"
               fill="none"
@@ -740,10 +740,10 @@
             </svg>
             Updated in the last 30 days
           </div>
-          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 class="text-h2 font-bold text-white mb-4">
             Recently Updated
           </h2>
-          <p class="text-lg text-white/90 max-w-2xl">
+          <p class="text-body-lg text-white/90 max-w-2xl">
             International transfer info gets stale fast. Here are guides we've updated recently to ensure accuracy.
           </p>
         </div>
@@ -752,26 +752,26 @@
           <article
             v-for="guide in recentlyUpdatedGuides"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="text-xs text-neutral-500">
+              <span class="text-body-sm text-neutral-500">
                 {{ guide.readTime || '5 min' }}
               </span>
             </div>
             <NuxtLink
               :to="`/learn/${guide.slug}`"
-              class="block text-xl font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-3"
+              class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <span v-html="guide.title" />
+              <RichHtml tag="span" :content="guide.title" />
             </NuxtLink>
-            <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+            <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
             </p>
             <div class="flex items-center justify-end pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read
                 <svg
@@ -795,13 +795,13 @@
     </section>
 
     <!-- Read Our Guides Section -->
-    <section class="py-12 sm:py-16 bg-white">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-12 sm:py-16 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
             Read Our Guides
           </h2>
-          <p class="text-xl text-neutral-600 sm:text-2xl font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
+          <p class="text-h4 text-neutral-600 font-medium mb-8 leading-relaxed max-w-3xl mx-auto">
             Everything you need to know about international money transfers
           </p>
         </div>
@@ -811,24 +811,24 @@
             v-for="guide in startHereGuides"
             :key="guide.slug"
             :to="`/learn/${guide.slug}`"
-            class="group bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
+            class="group bg-surface rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl motion-safe:transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
           >
             <div class="p-6 flex flex-col flex-1">
               <div class="flex items-center gap-2 mb-3">
-                <span class="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                <span class="rounded-full bg-success-600 px-3 py-1.5 text-body-sm font-semibold text-success-600">
                   Beginner
                 </span>
-                <span class="text-xs text-neutral-500">
+                <span class="text-body-sm text-neutral-500">
                   {{ guide.readTime || '5 min read' }}
                 </span>
               </div>
-              <h3 class="text-lg font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
-                <span v-html="guide.title" />
+              <h3 class="text-body-lg font-bold text-neutral-900 mb-3 group-hover:text-brand-600 motion-safe:transition-colors">
+                <RichHtml tag="span" :content="guide.title" />
               </h3>
-              <p class="text-sm text-neutral-600 leading-relaxed mb-4 flex-1">
+              <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
                 {{ guide.excerpt }}
               </p>
-              <div class="flex items-center gap-2 text-sm font-semibold text-brand-600 group-hover:gap-3 transition-all">
+              <div class="flex items-center gap-2 text-body-sm font-semibold text-brand-600 group-hover:gap-3 motion-safe:transition-all">
                 <span>Read guide</span>
                 <svg
                   class="w-4 h-4"
@@ -851,16 +851,16 @@
     </section>
 
     <!-- Research & Intelligence Section (Institutional) -->
-    <section class="py-16 lg:py-20 bg-slate-900">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-neutral-900">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-12">
-          <p class="text-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
+          <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
             For Transparency & Research
           </p>
-          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          <h2 class="text-h2 font-bold text-white mb-4">
             Transparency & Research
           </h2>
-          <p class="text-lg text-slate-400 max-w-3xl">
+          <p class="text-body-lg text-neutral-400 max-w-3xl">
             Open methodology, corrections policy, and data collection practices behind every comparison.
           </p>
         </div>
@@ -868,7 +868,7 @@
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           <NuxtLink
             to="/research"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
+            class="group rounded-xl border border-neutral-700 bg-neutral-800/50 p-6 motion-safe:transition-all hover:border-brand-500/50 hover:bg-neutral-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
@@ -886,12 +886,12 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-white">Research & Data Practices</h3>
+              <h3 class="text-body-lg font-semibold text-white">Research & Data Practices</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4 flex-1">
+            <p class="text-body-sm text-neutral-400 mb-4 flex-1">
               Transparency around data collection practices and provider partnership guidelines.
             </p>
-            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
+            <div class="flex items-center gap-2 text-body-sm text-brand-600 font-medium group-hover:gap-3 motion-safe:transition-all">
               <span>Read research</span>
               <svg
                 class="w-4 h-4"
@@ -911,7 +911,7 @@
 
           <NuxtLink
             to="/methodology"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
+            class="group rounded-xl border border-neutral-700 bg-neutral-800/50 p-6 motion-safe:transition-all hover:border-brand-500/50 hover:bg-neutral-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
@@ -929,12 +929,12 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-white">Data Methodology</h3>
+              <h3 class="text-body-lg font-semibold text-white">Data Methodology</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4 flex-1">
+            <p class="text-body-sm text-neutral-400 mb-4 flex-1">
               Comprehensive documentation of our data collection, verification processes, and synthetic validation methodology.
             </p>
-            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
+            <div class="flex items-center gap-2 text-body-sm text-brand-600 font-medium group-hover:gap-3 motion-safe:transition-all">
               <span>Read documentation</span>
               <svg
                 class="w-4 h-4"
@@ -954,7 +954,7 @@
 
           <NuxtLink
             to="/corrections"
-            class="group rounded-xl border border-slate-700 bg-slate-800/50 p-6 transition-all hover:border-brand-500/50 hover:bg-slate-800 flex flex-col h-full"
+            class="group rounded-xl border border-neutral-700 bg-neutral-800/50 p-6 motion-safe:transition-all hover:border-brand-500/50 hover:bg-neutral-800 flex flex-col h-full"
           >
             <div class="flex items-center gap-3 mb-4">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
@@ -972,12 +972,12 @@
                   />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-white">Corrections Policy</h3>
+              <h3 class="text-body-lg font-semibold text-white">Corrections Policy</h3>
             </div>
-            <p class="text-sm text-slate-400 mb-4 flex-1">
+            <p class="text-body-sm text-neutral-400 mb-4 flex-1">
               How we handle data corrections, error reporting, and accuracy reviews across the site.
             </p>
-            <div class="flex items-center gap-2 text-sm text-brand-600 font-medium group-hover:gap-3 transition-all">
+            <div class="flex items-center gap-2 text-body-sm text-brand-600 font-medium group-hover:gap-3 motion-safe:transition-all">
               <span>Read corrections</span>
               <svg
                 class="w-4 h-4"
@@ -996,11 +996,11 @@
           </NuxtLink>
         </div>
 
-        <div class="mt-10 pt-8 border-t border-slate-700">
-          <div class="flex flex-wrap items-center gap-6 text-sm text-slate-500">
+        <div class="mt-10 pt-8 border-t border-neutral-700">
+          <div class="flex flex-wrap items-center gap-6 text-body-sm text-rs-muted">
             <div class="flex items-center gap-2">
               <svg
-                class="w-4 h-4 text-emerald-500"
+                class="w-4 h-4 text-success-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1016,7 +1016,7 @@
             </div>
             <div class="flex items-center gap-2">
               <svg
-                class="w-4 h-4 text-emerald-500"
+                class="w-4 h-4 text-success-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1032,7 +1032,7 @@
             </div>
             <div class="flex items-center gap-2">
               <svg
-                class="w-4 h-4 text-emerald-500"
+                class="w-4 h-4 text-success-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1059,7 +1059,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ChartBarIcon, DocumentTextIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
-import { setSeo } from '~/composables/useSeo'
+import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useArticles } from '~/composables/useArticles'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import TrustBadgesRow from '~/components/shared/TrustBadgesRow.vue'
@@ -1217,9 +1217,9 @@ const startHereGuides = computed(() => {
 const getTitleFromSlug = (slug: string): string => {
   const titles: Record<string, string> = {
     'why-compare-before-every-transfer': 'Why You Must Compare Before Every Transfer',
-    'hidden-exchange-rate-fees-explained': 'Hidden Fees Explained<br><span class="text-base font-normal">(FX Markup vs Fee)</span>',
-    'how-to-read-remittance-quote': 'How to Read a Quote<br><span class="text-base font-normal">("Recipient Gets")</span>',
-    'why-checkout-price-differs': 'Why Checkout Differs<br><span class="text-base font-normal">and What to Do</span>',
+    'hidden-exchange-rate-fees-explained': 'Hidden Fees Explained<br><span class="text-body font-normal">(FX Markup vs Fee)</span>',
+    'how-to-read-remittance-quote': 'How to Read a Quote<br><span class="text-body font-normal">("Recipient Gets")</span>',
+    'why-checkout-price-differs': 'Why Checkout Differs<br><span class="text-body font-normal">and What to Do</span>',
     'bank-transfer-vs-card-vs-cash-pickup': 'Bank Transfer vs Card vs Cash Pickup',
     'bank-transfer-vs-card-funding': 'Bank Transfer vs Card Funding: Which Is Cheaper (and When)?',
     'choose-right-delivery-method': 'Choose the Right Delivery Method: Bank Deposit vs Cash Pickup vs Mobile Money',
@@ -1308,9 +1308,33 @@ const scrollToSection = (sectionId: string) => {
   }
 }
 
-setSeo({
-  title: 'Money Transfer Guides & Reviews | Remit-Scout',
-  description:
-    'Comprehensive guides on money transfers, fees, hidden costs, provider reviews, and comparisons. Learn how to send money smarter and avoid costly mistakes.',
+const { public: { siteUrl } } = useRuntimeConfig()
+
+const seoTitle = 'Money Transfer Guides & Reviews | Remit-Scout'
+const seoDescription = 'Comprehensive guides on money transfers, fees, hidden costs, provider reviews, and comparisons. Learn how to send money smarter and avoid costly mistakes.'
+
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Learn',
+    description: seoDescription,
+  },
 })
+
+useServerSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+})
+
+setSeo({
+  title: seoTitle,
+  description: seoDescription,
+  canonical: `${siteUrl}/learn`,
+  ogImage: false,
+})
+
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Learn', url: `${siteUrl}/learn` },
+])
 </script>

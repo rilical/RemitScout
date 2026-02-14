@@ -1,11 +1,11 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-surface">
+    <div class="container">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+        <h2 class="text-h2 font-bold text-neutral-900 mb-4">
           Our comparisons cover <span class="text-brand-600">154+</span> countries
         </h2>
-        <p class="text-lg text-neutral-600 max-w-3xl mx-auto">
+        <p class="text-body-lg text-neutral-600 max-w-3xl mx-auto">
           Compare money transfer providers for any route worldwide. Find the best exchange rates, lowest fees, and fastest delivery options for your specific corridor.
         </p>
       </div>
@@ -15,10 +15,10 @@
           v-for="country in countries"
           :key="country.code"
           to="/send-money"
-          class="group bg-white rounded-xl border border-neutral-200 p-5 transition-all hover:border-neutral-300 hover:shadow-sm flex items-center justify-between"
+          class="group bg-surface rounded-xl border border-neutral-200 p-5 transition-all hover:border-neutral-300 hover:shadow-sm flex items-center justify-between"
         >
           <div class="flex items-center gap-4">
-            <span class="text-2xl">{{ getCountryFlag(country.code) }}</span>
+            <span class="text-h3">{{ getCountryFlag(country.code) }}</span>
             <div>
               <div class="font-semibold text-neutral-900">{{ country.name }}</div>
             </div>

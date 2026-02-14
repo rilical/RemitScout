@@ -1,5 +1,8 @@
+import { setResponseHeaders } from 'h3'
 import { proxyToBackend } from '~/server/utils/backendProxy'
 
 export default defineEventHandler(async (event) => {
-  return await proxyToBackend(event, '/offers')
+  const data = await proxyToBackend(event, '/offers')
+  setResponseHeaders(event, { 'cache-control': 'public, s-maxage=300, stale-while-revalidate=600' })
+  return data
 })

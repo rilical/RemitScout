@@ -1,21 +1,21 @@
 <template>
-  <div class="group rounded-xl border border-slate-200 bg-white p-5 hover:shadow-lg hover:border-brand-300 motion-safe:transition focus-within:ring-2 focus-within:ring-brand-600">
+  <div class="group rounded-xl border border-rs-border bg-surface p-5 hover:shadow-lg hover:border-brand-300 motion-safe:transition focus-within:ring-2 focus-within:ring-brand-600">
     <NuxtLink
       :to="countryPageUrl"
       class="flex items-center gap-4 mb-4"
     >
       <span
-        class="text-4xl"
+        class="text-h1"
         aria-hidden="true"
       >{{ country.flag }}</span>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
+        <p class="text-body-sm font-bold text-rs-fg group-hover:text-brand-600 transition-colors">
           {{ country.name }}
         </p>
-        <p class="text-xs text-slate-500 mt-0.5">Best ways to send money</p>
+        <p class="text-body-sm text-rs-muted mt-0.5">Best ways to send money</p>
       </div>
       <svg
-        class="h-5 w-5 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all flex-shrink-0"
+        class="h-5 w-5 text-neutral-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all flex-shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -31,12 +31,12 @@
 
     <div
       v-if="sourceLinks.length"
-      class="pt-4 border-t border-slate-200"
+      class="pt-4 border-t border-rs-border"
     >
-      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+      <p class="text-body-sm font-semibold uppercase tracking-wide text-rs-muted mb-2">
         Most Common Corridors
       </p>
-      <p class="text-sm font-medium text-brand-700 mb-3">
+      <p class="text-body-sm font-medium text-brand-700 mb-3">
         Send money to {{ country.name }} from…
       </p>
       <div class="space-y-1.5">
@@ -44,7 +44,7 @@
           v-for="link in sourceLinks"
           :key="link.to"
           :to="link.to"
-          class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border border-transparent hover:border-brand-200"
+          class="block rounded-lg px-3 py-2 text-body-sm font-medium text-neutral-700 hover:bg-brand-50 hover:text-brand-700 transition-colors border border-transparent hover:border-brand-200"
         >
           {{ link.label }}
         </NuxtLink>

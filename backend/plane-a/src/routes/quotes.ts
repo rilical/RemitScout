@@ -561,6 +561,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         request.user?.role === 'super_admin' ||
         (request.user?.email &&
           config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
+      const availableMethods = Array.from(new Set(expectedProviders)).sort()
       const quotesWithAffiliate = result.rows.map((row) => ({
         ...row,
         ...buildAffiliateInfo(row.provider_id),
@@ -573,9 +574,12 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         count: result.rowCount,
         requested_amount: requestedAmount,
         bucket_used: bucketSelection.bucket_used,
+        bucketUsed: bucketSelection.bucket_used,
         fee_bucket_used: bucketSelection.fee_bucket_used,
         approximate: bucketSelection.approximate,
         bucket_delta_pct: bucketSelection.delta_pct,
+        bucketDeltaPct: bucketSelection.delta_pct,
+        availableMethods,
         cache: {
           ttl_seconds: freshnessSeconds,
           age_seconds: cacheAgeSeconds,

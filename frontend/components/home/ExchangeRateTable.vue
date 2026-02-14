@@ -1,26 +1,26 @@
 <template>
-  <div class="py-16 bg-gray-50">
-    <div class="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+  <div class="py-16 bg-neutral-50">
+    <div class="mx-auto max-w-[1200px] px-page-x">
       <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">
+        <h2 class="text-h1 font-bold text-neutral-900 mb-4">
           {{ displayTitle }}
         </h2>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        <p class="text-h4 text-neutral-600 max-w-3xl mx-auto">
           {{ displaySubtitle }}
         </p>
       </div>
 
       <!-- Table Card (960×520) -->
       <div
-        class="mx-auto w-full max-w-[960px] rounded-2xl bg-white p-6 shadow-lg"
+        class="mx-auto w-full max-w-[960px] rounded-2xl bg-surface p-6 shadow-lg"
         style="height: 520px"
       >
         <!-- Currency Chips Row -->
-        <div class="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200">
+        <div class="flex flex-wrap gap-2 mb-6 pb-4 border-b border-neutral-200">
           <div
             v-for="currency in displayCurrencies"
             :key="currency"
-            class="rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700"
+            class="rounded-full border border-neutral-200 bg-neutral-100 px-3 py-1 text-body-sm font-medium text-neutral-700"
           >
             {{ currency }}
           </div>
@@ -28,21 +28,21 @@
 
         <!-- Exchange Rate Table with horizontal scroll on mobile -->
         <div class="overflow-x-auto">
-          <table class="min-w-full text-sm">
-            <caption class="mb-4 text-left text-xs text-gray-500">
+          <table class="min-w-full text-body-sm">
+            <caption class="mb-4 text-left text-body-sm text-neutral-500">
               {{ displayTableCaption }}
             </caption>
 
             <!-- Sticky Header -->
-            <thead class="sticky top-0 bg-white border-b border-gray-200">
+            <thead class="sticky top-0 bg-surface border-b border-neutral-200">
               <tr>
-                <th class="border-r border-gray-100 px-3 py-2 text-left font-medium text-gray-900">
+                <th class="border-r border-neutral-100 px-3 py-2 text-left font-medium text-neutral-900">
                   Currency
                 </th>
                 <th
                   v-for="colLabel in displayColumnLabels"
                   :key="colLabel"
-                  class="border-r border-gray-100 px-3 py-2 text-right font-medium text-gray-900 last:border-r-0"
+                  class="border-r border-neutral-100 px-3 py-2 text-right font-medium text-neutral-900 last:border-r-0"
                 >
                   {{ colLabel }}
                 </th>
@@ -54,15 +54,15 @@
               <tr
                 v-for="(row, rowIndex) in displayRates"
                 :key="displayRowLabels[rowIndex]"
-                class="border-b border-gray-100 transition-colors hover:bg-gray-50"
+                class="border-b border-neutral-100 transition-colors hover:bg-neutral-50"
               >
-                <td class="border-r border-gray-100 px-3 py-2 font-medium text-gray-900">
+                <td class="border-r border-neutral-100 px-3 py-2 font-medium text-neutral-900">
                   {{ displayRowLabels[rowIndex] }}
                 </td>
                 <td
                   v-for="(rate, colIndex) in row"
                   :key="colIndex"
-                  class="border-r border-gray-100 px-3 py-2 text-right text-gray-700 last:border-r-0"
+                  class="border-r border-neutral-100 px-3 py-2 text-right text-neutral-700 last:border-r-0"
                 >
                   {{ rate }}
                 </td>
@@ -72,7 +72,7 @@
         </div>
 
         <!-- Bottom Caption with Source and Last Updated -->
-        <div class="mt-4 flex items-center justify-between border-t border-gray-200 pt-4 text-xs text-gray-500">
+        <div class="mt-4 flex items-center justify-between border-t border-neutral-200 pt-4 text-body-sm text-neutral-500">
           <span>{{ displaySourceCaption }}</span>
           <span>{{ lastUpdatedLabel }}</span>
         </div>
@@ -80,12 +80,12 @@
 
       <!-- CTA Section -->
       <div class="text-center mt-8">
-        <p class="text-sm text-gray-500 mb-4">
+        <p class="text-body-sm text-neutral-500 mb-4">
           {{ displayDisclaimer }}
         </p>
         <NuxtLink
           to="/send-money/us-to-in"
-          class="inline-flex items-center rounded-lg border border-transparent bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
+          class="inline-flex items-center rounded-lg border border-transparent bg-primary-600 px-6 py-3 text-body font-medium text-white transition-colors hover:bg-primary-700"
         >
           {{ displayCtaText }}
         </NuxtLink>

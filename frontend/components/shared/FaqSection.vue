@@ -4,21 +4,21 @@
     class="py-16 lg:py-20 scroll-mt-20"
     :class="sectionClass"
   >
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="mx-auto max-w-4xl">
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
             {{ title }}
           </h2>
           <p
             v-if="subtitle"
-            class="text-lg text-neutral-600 max-w-2xl mx-auto"
+            class="text-body-lg text-neutral-600 max-w-2xl mx-auto"
           >
             {{ subtitle }}
           </p>
         </div>
 
-        <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
           <FaqAccordion :faqs="faqs" />
         </div>
 
@@ -28,7 +28,7 @@
         >
           <NuxtLink
             :to="ctaTo"
-            class="text-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 underline"
           >
             {{ ctaLabel }}
           </NuxtLink>

@@ -3,10 +3,10 @@
     <!-- Demo Gauge -->
     <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
       <div class="border-b border-neutral-700 px-6 py-4">
-        <h2 class="text-lg font-bold text-white">
+        <h2 class="text-body-lg font-bold text-white">
           Best Time to Send
         </h2>
-        <p class="text-sm text-neutral-400">
+        <p class="text-body-sm text-neutral-400">
           Example signal for an example corridor
         </p>
       </div>
@@ -39,11 +39,11 @@
               />
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <div class="text-4xl font-extrabold text-white font-mono">
+              <div class="text-h1 font-extrabold text-white font-mono">
                 {{ sendScore }}
               </div>
               <div
-                class="mt-1 text-xs font-semibold uppercase tracking-wider"
+                class="mt-1 text-body-sm font-semibold uppercase tracking-wider"
                 :class="ringTextClass"
               >
                 {{ label }}
@@ -54,7 +54,7 @@
             </div>
           </div>
 
-          <p class="mt-4 max-w-xs text-center text-sm text-neutral-300">
+          <p class="mt-4 max-w-xs text-center text-body-sm text-neutral-300">
             Example preview. Plus unlocks corridor timing signals and deeper history.
           </p>
         </div>
@@ -65,14 +65,14 @@
     <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
       <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
         <div>
-          <h2 class="text-lg font-bold text-white">
+          <h2 class="text-body-lg font-bold text-white">
             Sample Provider Quotes
           </h2>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             Example rates for {{ amountLabel }} ({{ fromCurrency }} → {{ toCurrency }})
           </p>
         </div>
-        <div class="text-sm">
+        <div class="text-body-sm">
           <span class="text-neutral-400">Mid-market:</span>
           <span class="ml-2 font-mono font-bold text-white">{{ midMarket.toFixed(4) }}</span>
         </div>
@@ -95,7 +95,7 @@
 
             <div class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold text-white"
+                class="flex h-10 w-10 items-center justify-center rounded-lg text-body-lg font-bold text-white"
                 :style="{ backgroundColor: quote.color + '30' }"
               >
                 {{ quote.provider.charAt(0) }}
@@ -104,7 +104,7 @@
                 <div class="font-semibold text-white">
                   {{ quote.provider }}
                 </div>
-                <div class="text-xs text-neutral-400">
+                <div class="text-body-sm text-neutral-400">
                   {{ quote.speed }}
                 </div>
               </div>
@@ -112,12 +112,12 @@
 
             <div class="text-right">
               <div
-                class="text-lg font-bold"
+                class="text-body-lg font-bold"
                 :class="index === 0 ? 'text-brand-600' : 'text-white'"
               >
                 {{ formatMoney(quote.recipientGets, { currency: toCurrency, maximumFractionDigits: 0 }) }}
               </div>
-              <div class="flex items-center justify-end gap-2 text-xs">
+              <div class="flex items-center justify-end gap-2 text-body-sm">
                 <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: fromCurrency, maximumFractionDigits: 2 }) }}</span>
                 <span class="text-neutral-600">•</span>
                 <span class="rounded bg-neutral-700 px-1.5 py-0.5 text-neutral-300">
@@ -130,10 +130,10 @@
 
         <div class="mt-4 border-t border-neutral-700 pt-4">
           <div class="flex items-center justify-between gap-3">
-            <div class="text-xs text-neutral-500">
+            <div class="text-body-sm text-neutral-500">
               Preview only. Quotes are shown as an example.
             </div>
-            <div class="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-semibold text-neutral-300">
+            <div class="rounded-lg bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-neutral-300">
               Compare all providers
             </div>
           </div>
@@ -180,9 +180,9 @@ const ringColor = computed(() => {
 })
 
 const ringTextClass = computed(() => {
-  if (sendScore >= 90) return 'text-emerald-400'
-  if (sendScore >= 80) return 'text-blue-400'
-  if (sendScore >= 70) return 'text-yellow-400'
+  if (sendScore >= 90) return 'text-success-600'
+  if (sendScore >= 80) return 'text-primary-400'
+  if (sendScore >= 70) return 'text-warning-400'
   return 'text-neutral-300'
 })
 </script>

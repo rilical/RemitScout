@@ -7,13 +7,13 @@
     >
       <div
         v-if="showHeader"
-        class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-100"
+        class="flex items-center justify-between px-4 py-2 bg-neutral-50 border-b border-neutral-100"
       >
-        <span class="text-xs text-slate-400 uppercase tracking-wide font-medium">{{ resolvedLabel }}</span>
+        <span class="text-body-sm text-neutral-400 uppercase tracking-wide font-medium">{{ resolvedLabel }}</span>
         <NuxtLink
           v-if="showRemoveLink"
           to="/plus"
-          class="text-xs text-blue-600 hover:text-blue-700 font-medium"
+          class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
         >
           Remove ads
         </NuxtLink>
@@ -68,7 +68,7 @@ const allowEzoic = computed(() => adsEnabled.value && marketingConsent.value)
 
 const containerClasses = computed(() => {
   return [
-    'bg-white rounded-xl border border-slate-200 overflow-hidden',
+    'bg-surface rounded-xl border border-rs-border overflow-hidden',
     props.containerClass,
     props.wrapperClass,
   ].filter(Boolean).join(' ')

@@ -1,33 +1,36 @@
 <template>
-  <footer class="bg-gray-900 text-white">
+  <footer class="bg-neutral-900 text-white">
     <div class="container mx-auto px-4 py-16">
       <div class="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 mb-12">
         <!-- Company Info -->
         <div class="lg:col-span-1">
           <div class="mb-6">
-            <img
+            <NuxtImg
               src="/png/SVG/LOGO.svg"
               alt="RemitScout"
-              class="h-20 w-auto mb-4"
-            >
-            <p class="text-base text-white font-bold mb-4">
+              width="64"
+              height="80"
+              loading="lazy"
+              class="h-20 w-auto mb-4 object-contain"
+            />
+            <p class="text-body text-white font-bold mb-4">
               Money, made global.
             </p>
-            <p class="text-sm text-white/80 leading-relaxed max-w-xs">
+            <p class="text-body-sm text-white/80 leading-relaxed max-w-xs">
               Compare rates and fees from 30+ licensed providers. Find the best deal for your international money transfer.
             </p>
           </div>
           <div class="mt-6 flex flex-wrap items-center gap-3">
             <a
               href="mailto:support@remit-scout.com"
-              class="text-white/80 hover:text-white transition-colors text-sm font-medium"
+              class="text-white/80 hover:text-white motion-safe:transition-colors text-body-sm font-medium"
             >
               support@remit-scout.com
             </a>
             <span class="text-white/30">•</span>
             <a
               href="mailto:partnership@remit-scout.com"
-              class="text-white/80 hover:text-white transition-colors text-sm font-medium"
+              class="text-white/80 hover:text-white motion-safe:transition-colors text-body-sm font-medium"
             >
               partnership@remit-scout.com
             </a>
@@ -36,14 +39,14 @@
 
         <!-- Services -->
         <div>
-          <h3 class="mb-5 text-base font-semibold text-white tracking-tight">
+          <h3 class="mb-5 text-body font-semibold text-white tracking-tight">
             Services
           </h3>
           <ul class="space-y-3">
             <li>
               <NuxtLink
                 to="/send-money"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Money Transfers
               </NuxtLink>
@@ -51,7 +54,7 @@
             <li v-if="pulseEnabled">
               <NuxtLink
                 to="/pulse"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Pulse
               </NuxtLink>
@@ -59,7 +62,7 @@
             <li>
               <NuxtLink
                 to="/learn/providers"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Provider Review
               </NuxtLink>
@@ -67,7 +70,7 @@
             <li>
               <NuxtLink
                 to="/media-kit"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Media Kit
               </NuxtLink>
@@ -77,14 +80,14 @@
 
         <!-- Company -->
         <div>
-          <h3 class="mb-5 text-base font-semibold text-white tracking-tight">
+          <h3 class="mb-5 text-body font-semibold text-white tracking-tight">
             Company
           </h3>
           <ul class="space-y-3">
             <li>
               <NuxtLink
                 to="/about"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 About Us
               </NuxtLink>
@@ -92,7 +95,7 @@
             <li>
               <NuxtLink
                 to="/contact"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Contact
               </NuxtLink>
@@ -100,7 +103,7 @@
             <li>
               <NuxtLink
                 to="/methodology"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Methodology
               </NuxtLink>
@@ -108,7 +111,7 @@
             <li>
               <NuxtLink
                 to="/partnerships"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Partnerships
               </NuxtLink>
@@ -116,7 +119,7 @@
             <li>
               <NuxtLink
                 to="/faq"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 FAQ
               </NuxtLink>
@@ -126,14 +129,14 @@
 
         <!-- Legal -->
         <div>
-          <h3 class="mb-5 text-base font-semibold text-white tracking-tight">
+          <h3 class="mb-5 text-body font-semibold text-white tracking-tight">
             Legal
           </h3>
           <ul class="space-y-3">
             <li>
               <NuxtLink
                 to="/legal/privacy"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Privacy Policy
               </NuxtLink>
@@ -141,7 +144,7 @@
             <li>
               <NuxtLink
                 to="/legal/terms"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Terms of Service
               </NuxtLink>
@@ -149,7 +152,7 @@
             <li>
               <NuxtLink
                 to="/cookies"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Cookie Policy
               </NuxtLink>
@@ -157,7 +160,7 @@
             <li>
               <button
                 type="button"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
                 @click="openCookiePreferences"
               >
                 Manage cookies
@@ -166,7 +169,7 @@
             <li>
               <NuxtLink
                 to="/legal/disclosure"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Affiliate Disclosure
               </NuxtLink>
@@ -174,7 +177,7 @@
             <li>
               <NuxtLink
                 to="/corrections"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Corrections
               </NuxtLink>
@@ -182,7 +185,7 @@
             <li>
               <NuxtLink
                 to="/legal/how-we-make-money"
-                class="text-gray-400 hover:text-white transition-colors text-sm"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 How We Make Money
               </NuxtLink>
@@ -198,7 +201,7 @@
       >
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div class="flex items-center gap-3">
-            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10">
+            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-surface/10">
               <svg
                 class="w-5 h-5 text-white/80"
                 fill="none"
@@ -214,10 +217,10 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm font-semibold text-white">
+              <h3 class="text-body-sm font-semibold text-white">
                 For Enterprise
               </h3>
-              <p class="text-xs text-white/60">
+              <p class="text-body-sm text-white/60">
                 Data products for enterprise & research
               </p>
             </div>
@@ -228,25 +231,25 @@
           >
             <NuxtLink
               to="/institutions/data-products"
-              class="text-sm text-gray-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
               Data Products
             </NuxtLink>
             <NuxtLink
               to="/institutions/api"
-              class="text-sm text-gray-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
               API
             </NuxtLink>
             <NuxtLink
               to="/institutions/compliance"
-              class="text-sm text-gray-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
               Compliance
             </NuxtLink>
             <NuxtLink
               to="/methodology"
-              class="text-sm text-gray-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
               Provenance
             </NuxtLink>
@@ -255,14 +258,14 @@
       </div>
 
       <div class="pt-8 border-t border-white/20">
-        <p class="text-xs text-white/60 leading-relaxed mb-6 max-w-3xl">
+        <p class="text-body-sm text-white/60 leading-relaxed mb-6 max-w-3xl">
           Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up.
           <br>
           Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
         </p>
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p class="text-sm text-white/70">
+          <p class="text-body-sm text-white/70">
             © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
           </p>
         </div>

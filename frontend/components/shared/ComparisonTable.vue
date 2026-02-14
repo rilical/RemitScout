@@ -15,10 +15,10 @@
           class="mr-3 h-8 w-8"
         />
         <div>
-          <div class="text-sm font-medium text-slate-900">
+          <div class="text-body-sm font-medium text-rs-fg">
             {{ asProvider(row).name }}
           </div>
-          <div class="text-sm text-slate-600">
+          <div class="text-body-sm text-neutral-600">
             {{ asProvider(row).countries }} countries
           </div>
         </div>
@@ -31,12 +31,12 @@
           :rating="asProvider(row).rating"
           size="sm"
         />
-        <span class="ml-2 text-sm text-slate-900">{{ asProvider(row).rating }}/5</span>
+        <span class="ml-2 text-body-sm text-rs-fg">{{ asProvider(row).rating }}/5</span>
       </div>
     </template>
 
     <template #cell-fees="{ row }">
-      <span class="text-sm text-slate-700">{{ asProvider(row).fees || 'N/A' }}</span>
+      <span class="text-body-sm text-neutral-700">{{ asProvider(row).fees || 'N/A' }}</span>
     </template>
 
     <template #cell-action="{ row }">

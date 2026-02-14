@@ -4,19 +4,20 @@
       v-if="shouldShow"
       class="fixed left-4 right-4 top-20 z-40 mx-auto max-w-xl"
     >
-      <div class="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-xl backdrop-blur">
+      <div class="rounded-2xl border border-rs-border bg-surface/95 p-5 shadow-xl backdrop-blur">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-sm font-semibold text-slate-900">
+            <p class="text-body-sm font-semibold text-rs-fg">
               Welcome back
             </p>
-            <p class="mt-1 text-sm text-slate-600">
+            <p class="mt-1 text-body-sm text-neutral-600">
               Want to check out your corridor again?
             </p>
           </div>
           <button
             type="button"
-            class="text-slate-400 hover:text-slate-600"
+            class="text-neutral-400 hover:text-neutral-600"
+            aria-label="Dismiss prompt"
             @click="dismiss"
           >
             <svg
@@ -35,17 +36,17 @@
           </button>
         </div>
 
-        <div class="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <div class="text-xl">
+        <div class="mt-4 flex items-center gap-3 rounded-xl border border-rs-border bg-neutral-50 px-4 py-3">
+          <div class="text-h4">
             <span>{{ fromFlag }}</span>
-            <span class="mx-2 text-slate-400">→</span>
+            <span class="mx-2 text-neutral-400">→</span>
             <span>{{ toFlag }}</span>
           </div>
           <div class="min-w-0">
-            <div class="truncate text-sm font-semibold text-slate-900">
+            <div class="truncate text-body-sm font-semibold text-rs-fg">
               {{ fromLabel }} → {{ toLabel }}
             </div>
-            <div class="truncate text-xs text-slate-500">
+            <div class="truncate text-body-sm text-rs-muted">
               View rates for this corridor again.
             </div>
           </div>
@@ -55,14 +56,14 @@
           <div class="flex gap-2">
             <button
               type="button"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+              class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700"
               @click="viewCorridor"
             >
               View corridor
             </button>
             <button
               type="button"
-              class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              class="rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               @click="dismiss"
             >
               Not now
@@ -71,7 +72,7 @@
 
           <NuxtLink
             to="/send-money"
-            class="text-sm font-semibold text-blue-600 hover:text-blue-700"
+            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
             @click="dismiss"
           >
             Choose a different corridor

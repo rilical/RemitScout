@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+      <h2 class="text-h4 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-5 w-5 text-blue-400"
+          class="h-5 w-5 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -19,23 +19,23 @@
       </h2>
       <select
         v-model="timeRange"
-        class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
+        class="rounded-xl border border-white/10 bg-surface/5 px-4 py-2 text-body-sm text-neutral-300 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer"
       >
         <option
           value="24h"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Last 24 hours
         </option>
         <option
           value="7d"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Last 7 days
         </option>
         <option
           value="30d"
-          class="bg-slate-800"
+          class="bg-neutral-800"
         >
           Last 30 days
         </option>
@@ -46,7 +46,7 @@
       <div
         v-for="card in feedCards"
         :key="card.id"
-        class="group rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 overflow-hidden transition-all duration-300 hover:border-white/20"
+        class="group rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 overflow-hidden transition-all duration-300 hover:border-white/20"
       >
         <div class="flex items-stretch">
           <div
@@ -58,7 +58,7 @@
               <div class="flex-1">
                 <div class="flex flex-wrap items-center gap-2 mb-3">
                   <span
-                    class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                    class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-body-sm font-semibold"
                     :class="card.impactClass"
                   >
                     <svg
@@ -75,10 +75,10 @@
                     </svg>
                     {{ card.impactLabel }}
                   </span>
-                  <span class="text-xs text-slate-500">{{ card.timestamp }}</span>
+                  <span class="text-body-sm text-rs-muted">{{ card.timestamp }}</span>
                 </div>
 
-                <h3 class="text-lg font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">
+                <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-primary-400 transition-colors">
                   {{ card.title }}
                 </h3>
 
@@ -86,7 +86,7 @@
                   <span
                     v-for="tag in card.tags"
                     :key="tag"
-                    class="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs font-medium text-slate-400"
+                    class="rounded-full bg-surface/5 border border-white/10 px-3 py-1 text-body-sm font-medium text-neutral-400"
                   >
                     {{ tag }}
                   </span>
@@ -132,18 +132,18 @@
               </div>
             </div>
 
-            <div class="rounded-xl bg-white/5 p-4 mb-4">
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <div class="rounded-xl bg-surface/5 p-4 mb-4">
+              <p class="text-body-sm font-semibold text-neutral-400 uppercase tracking-wider mb-2">
                 Why it matters
               </p>
               <ul class="space-y-2">
                 <li
                   v-for="reason in card.reasons"
                   :key="reason"
-                  class="flex items-start gap-2 text-sm text-slate-300"
+                  class="flex items-start gap-2 text-body-sm text-neutral-300"
                 >
                   <svg
-                    class="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5"
+                    class="h-4 w-4 text-primary-400 flex-shrink-0 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -163,7 +163,11 @@
             <div class="flex items-center justify-between pt-4 border-t border-white/5">
               <div class="flex gap-3">
                 <button
-                  class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                  type="button"
+                  class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+                  :id="`pulse-feed-details-toggle-${card.id}`"
+                  :aria-expanded="expandedCards.has(card.id)"
+                  :aria-controls="`pulse-feed-details-panel-${card.id}`"
                   @click="toggleDetails(card.id)"
                 >
                   <svg
@@ -189,7 +193,7 @@
                 </button>
               </div>
               <button
-                class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+                class="flex items-center gap-2 rounded-lg border border-white/10 bg-surface/5 px-3 py-1.5 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white"
                 @click="setAlert(card)"
               >
                 <svg
@@ -206,45 +210,48 @@
                   />
                 </svg>
                 Set alert
-                <span class="rounded bg-blue-500/20 px-1.5 py-0.5 text-xs font-bold text-blue-400">Plus</span>
+                <span class="rounded bg-primary-500/20 px-1.5 py-0.5 text-body-sm font-bold text-primary-400">Plus</span>
               </button>
             </div>
 
-            <div
-              v-if="expandedCards.has(card.id)"
-              class="mt-4 rounded-xl bg-slate-900/50 border border-white/5 p-4"
-            >
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                Provider comparison
-              </p>
+                <div
+                  v-if="expandedCards.has(card.id)"
+                  :id="`pulse-feed-details-panel-${card.id}`"
+                  class="mt-4 rounded-xl bg-neutral-900/50 border border-white/5 p-4"
+                  role="region"
+                  :aria-labelledby="`pulse-feed-details-toggle-${card.id}`"
+                >
+                  <p class="text-body-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
+                    Provider comparison
+                  </p>
               <div class="space-y-3">
                 <div
                   v-for="(provider, index) in card.providers"
                   :key="provider.name"
                   class="flex items-center justify-between p-3 rounded-lg"
-                  :class="index === 0 ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-white/5'"
+                  :class="index === 0 ? 'bg-success-600/10 border border-success-600/20' : 'bg-surface/5'"
                 >
                   <div class="flex items-center gap-3">
                     <span
-                      class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                      :class="index === 0 ? 'bg-emerald-500 text-white' : 'bg-white/10 text-slate-400'"
+                      class="w-6 h-6 rounded-full flex items-center justify-center text-body-sm font-bold"
+                      :class="index === 0 ? 'bg-success-600 text-white' : 'bg-surface/10 text-neutral-400'"
                     >
                       {{ index + 1 }}
                     </span>
                     <span class="font-medium text-white">{{ provider.name }}</span>
                   </div>
                   <div class="flex items-center gap-4">
-                    <span class="text-slate-300">{{ provider.recipientGets }}</span>
+                    <span class="text-neutral-300">{{ provider.recipientGets }}</span>
                     <span
-                      class="text-xs font-semibold px-2 py-0.5 rounded"
-                      :class="provider.change.startsWith('+') ? 'bg-emerald-500/20 text-emerald-400' : provider.change === 'Available' ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'"
+                      class="text-body-sm font-semibold px-2 py-0.5 rounded"
+                      :class="provider.change.startsWith('+') ? 'bg-success-600/20 text-success-600' : provider.change === 'Available' ? 'bg-primary-500/20 text-primary-400' : 'bg-danger-600/20 text-danger-600'"
                     >
                       {{ provider.change }}
                     </span>
                   </div>
                 </div>
               </div>
-              <p class="mt-4 text-xs text-slate-500 italic">
+              <p class="mt-4 text-body-sm text-rs-muted italic">
                 Note: Actual amounts may change at checkout based on payment method, KYC status, and timing.
               </p>
             </div>
@@ -278,11 +285,11 @@ const feedCards = ref([
     sparkline: '0,40 20,35 40,45 60,30 80,20 100,10',
     sparklineStart: 40,
     trendColor: '#10b981',
-    trendClass: 'bg-emerald-500',
+    trendClass: 'bg-success-600',
     gradientStart: '#10b981',
     impact: 'high',
     impactLabel: 'High impact',
-    impactClass: 'bg-emerald-500/20 text-emerald-400',
+    impactClass: 'bg-success-600/20 text-success-600',
     reasons: [
       'USD/MXN mid-rate moved 0.8% in recipients\' favor overnight',
       'Wise reduced their margin from 0.7% to 0.5% on this corridor',
@@ -301,11 +308,11 @@ const feedCards = ref([
     sparkline: '0,45 20,42 40,38 60,35 80,25 100,15',
     sparklineStart: 45,
     trendColor: '#3b82f6',
-    trendClass: 'bg-blue-500',
+    trendClass: 'bg-primary-500',
     gradientStart: '#3b82f6',
     impact: 'medium',
     impactLabel: 'New leader',
-    impactClass: 'bg-blue-500/20 text-blue-400',
+    impactClass: 'bg-primary-500/20 text-primary-400',
     reasons: [
       'Remitly launched a 72-hour promo: 0% fee for cash pickup',
       'Better exchange rate vs Wise by 0.3%',
@@ -324,11 +331,11 @@ const feedCards = ref([
     sparkline: '0,10 20,12 40,18 60,30 80,42 100,45',
     sparklineStart: 10,
     trendColor: '#ef4444',
-    trendClass: 'bg-red-500',
+    trendClass: 'bg-danger-600',
     gradientStart: '#ef4444',
     impact: 'warning',
     impactLabel: 'Service alert',
-    impactClass: 'bg-amber-500/20 text-amber-400',
+    impactClass: 'bg-warning-600/20 text-warning-600',
     reasons: [
       'Several providers experiencing API timeout issues',
       'Indian banking holiday may affect Monday deliveries',
@@ -352,6 +359,5 @@ const toggleDetails = (cardId: string) => {
 }
 
 const setAlert = (card: typeof feedCards.value[0]) => {
-  console.log('Set alert for', card.title)
 }
 </script>

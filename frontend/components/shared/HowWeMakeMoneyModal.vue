@@ -4,14 +4,16 @@
       <div
         v-if="isOpen"
         class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm px-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-label="Close dialog"
         @click.self="close"
       >
         <div
           ref="modalContent"
-          class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
+          class="relative w-full max-w-lg bg-surface rounded-2xl shadow-2xl p-6 sm:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+          tabindex="-1"
           @keydown.esc="close"
         >
           <button
@@ -36,7 +38,7 @@
 
           <h2
             id="modal-title"
-            class="text-2xl font-bold text-neutral-900 mb-4"
+            class="text-h3 font-bold text-neutral-900 mb-4"
           >
             {{ STR.methodology.h2 }}
           </h2>
@@ -84,7 +86,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 const { STR } = useStrings()
 
@@ -97,20 +100,31 @@ const emit = defineEmits<{
 }>()
 
 const modalContent = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalContent)
 
 const close = () => {
   emit('update:isOpen', false)
 }
 
-watch(() => props.isOpen, async (isOpen) => {
-  if (isOpen) {
+watch(
+  () => props.isOpen,
+  async (isOpen) => {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = isOpen ? 'hidden' : ''
+    }
+
+    if (!isOpen) {
+      deactivate()
+      return
+    }
+
     await nextTick()
-    modalContent.value?.focus()
-    document.body.style.overflow = 'hidden'
-  }
-  else {
-    document.body.style.overflow = ''
-  }
+    activate()
+  },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
 })
 </script>
 

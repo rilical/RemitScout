@@ -1,17 +1,17 @@
 <template>
   <section class="py-12 sm:py-16 bg-brand-600">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="text-center mb-8">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
+        <h2 class="text-h3 font-bold text-white mb-3">
           Execution Workflow.
         </h2>
-        <p class="text-base text-white/90 max-w-2xl mx-auto">
+        <p class="text-body text-white/90 max-w-2xl mx-auto">
           A three-stage audit of cross-border liquidity
         </p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
-        <div class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
+        <div class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
           <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <svg
               class="w-9 h-9 text-white"
@@ -28,16 +28,16 @@
             </svg>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
               1. Define Requirements
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               Input origin, destination, and capital amount to define the corridor.
             </p>
           </div>
         </div>
 
-        <div class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
+        <div class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
           <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <svg
               class="w-9 h-9 text-white"
@@ -54,16 +54,16 @@
             </svg>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
               2. Audit the Market
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               We aggregate real-time quotes, normalize FX Spread and fees, and rank by Net Delivered Value with tracked Data Latency.
             </p>
           </div>
         </div>
 
-        <div class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
+        <div class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-white/30 hover:border-white hover:shadow-2xl transition-all group">
           <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <svg
               class="w-9 h-9 text-white"
@@ -80,19 +80,19 @@
             </svg>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2 leading-tight break-words">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 leading-tight break-words">
               3. Select &amp; Execute
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               Choose the optimal provider and complete execution on their secure checkout.
             </p>
           </div>
         </div>
       </div>
 
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-5xl mx-auto">
+      <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-6 max-w-5xl mx-auto">
         <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-white flex items-center justify-center">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-surface flex items-center justify-center">
             <svg
               class="w-6 h-6 text-brand-600"
               fill="none"
@@ -111,7 +111,7 @@
             <h4 class="font-bold text-white mb-2">
               Independence and disclosure
             </h4>
-            <p class="text-white/95 text-sm leading-relaxed">
+            <p class="text-white/95 text-body-sm leading-relaxed">
               Providers cannot pay to rank higher. We may earn a commission when you use our links, but affiliate relationships do not affect rankings or Remit-Score calculations.
               <NuxtLink
                 to="/methodology"

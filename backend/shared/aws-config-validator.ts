@@ -13,11 +13,27 @@ export type ValidationResult = {
   error?: string
 }
 
+type QueueResource = 'quote_refresh'
+  | 'quote_refresh_dlq'
+  | 'fx_rate_refresh'
+  | 'fx_rate_refresh_dlq'
+  | 'exports'
+  | 'alert_evaluation'
+  | 'ops_alerts'
+  | 'ingest_fanout'
+  | 'ingest_fanout_tier1'
+  | 'ingest_fanout_tier2'
+  | 'notifications'
+
+type BucketResource = 'bronze_bucket' | 'exports_bucket'
+
 export type ValidationOptions = {
   skipS3?: boolean
   skipSQS?: boolean
   skipRedis?: boolean
   skipDatabase?: boolean
+  requiredQueues?: QueueResource[]
+  requiredBuckets?: BucketResource[]
 }
 
 /**
@@ -60,81 +76,146 @@ export const validateAwsConfig = async (
     }
   }
 
+  const includeBronzeBucket = (() => {
+    if (!options.skipS3) {
+      if (options.requiredBuckets && options.requiredBuckets.length > 0) {
+        return options.requiredBuckets.includes('bronze_bucket')
+      }
+      if (options.requiredBuckets && options.requiredBuckets.length === 0) {
+        return false
+      }
+      return true
+    }
+    return false
+  })()
+  const includeExportsBucket = (() => {
+    if (!options.skipS3) {
+      if (options.requiredBuckets && options.requiredBuckets.length > 0) {
+        return options.requiredBuckets.includes('exports_bucket')
+      }
+      if (options.requiredBuckets && options.requiredBuckets.length === 0) {
+        return false
+      }
+      return true
+    }
+    return false
+  })()
+
   // Validate S3 Bronze Storage
-  if (!options.skipS3 && config.storage.bronze.bucket) {
-    try {
-      const s3Client = new S3Client({})
-      await s3Client.send(
-        new HeadBucketCommand({
-          Bucket: config.storage.bronze.bucket,
-        }),
-      )
-      results.push({ service: 's3_bronze', valid: true })
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('s3_validation_failed', {
-        bucket: config.storage.bronze.bucket,
-        error: errorMessage,
-      })
+  if (includeBronzeBucket) {
+    if (config.storage.bronze.bucket) {
+      try {
+        const s3Client = new S3Client({})
+        await s3Client.send(
+          new HeadBucketCommand({
+            Bucket: config.storage.bronze.bucket,
+          }),
+        )
+        results.push({ service: 's3_bronze', valid: true })
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logger.error('s3_validation_failed', {
+          bucket: config.storage.bronze.bucket,
+          error: errorMessage,
+        })
+        results.push({
+          service: 's3_bronze',
+          valid: false,
+          error: errorMessage,
+        })
+      }
+    } else {
       results.push({
         service: 's3_bronze',
         valid: false,
-        error: errorMessage,
+        error: 'BRONZE_S3_BUCKET not configured',
       })
     }
-  } else if (!options.skipS3) {
-    results.push({
-      service: 's3_bronze',
-      valid: false,
-      error: 'BRONZE_S3_BUCKET not configured',
-    })
   }
 
   // Validate S3 Exports Storage
-  if (!options.skipS3 && config.storage.exports.bucket) {
-    try {
-      const s3Client = new S3Client({})
-      await s3Client.send(
-        new HeadBucketCommand({
-          Bucket: config.storage.exports.bucket,
-        }),
-      )
-      results.push({ service: 's3_exports', valid: true })
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      logger.error('s3_validation_failed', {
-        bucket: config.storage.exports.bucket,
-        error: errorMessage,
-      })
+  if (includeExportsBucket) {
+    if (config.storage.exports.bucket) {
+      try {
+        const s3Client = new S3Client({})
+        await s3Client.send(
+          new HeadBucketCommand({
+            Bucket: config.storage.exports.bucket,
+          }),
+        )
+        results.push({ service: 's3_exports', valid: true })
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logger.error('s3_validation_failed', {
+          bucket: config.storage.exports.bucket,
+          error: errorMessage,
+        })
+        results.push({
+          service: 's3_exports',
+          valid: false,
+          error: errorMessage,
+        })
+      }
+    } else {
       results.push({
         service: 's3_exports',
         valid: false,
-        error: errorMessage,
+        error: 'EXPORTS_S3_BUCKET not configured',
       })
     }
-  } else if (!options.skipS3) {
-    results.push({
-      service: 's3_exports',
-      valid: false,
-      error: 'EXPORTS_S3_BUCKET not configured',
-    })
   }
 
   // Validate SQS Queues
   if (!options.skipSQS) {
+    const shouldValidateQueue = (name: QueueResource): boolean => {
+      if (options.requiredQueues === undefined) return true
+      if (options.requiredQueues.length === 0) return false
+      return options.requiredQueues.includes(name)
+    }
+
     const queues = [
-      { name: 'quote_refresh', url: config.queues.quoteRefreshUrl },
-      { name: 'quote_refresh_dlq', url: config.queues.quoteRefreshDlqUrl },
-      { name: 'fx_rate_refresh', url: config.queues.fxRateRefreshUrl },
-      { name: 'fx_rate_refresh_dlq', url: config.queues.fxRateRefreshDlqUrl },
-      { name: 'exports', url: config.queues.exports.url },
-      { name: 'alert_evaluation', url: config.alerts.evaluation.queueUrl },
-      { name: 'ops_alerts', url: config.queues.opsAlerts.url },
-      { name: 'ingest_fanout', url: config.queues.ingestFanout.url },
-      { name: 'ingest_fanout_tier1', url: config.queues.ingestFanout.tier1Url },
-      { name: 'ingest_fanout_tier2', url: config.queues.ingestFanout.tier2Url },
-      { name: 'notifications', url: config.queues.notifications.url },
-    ]
+      shouldValidateQueue('quote_refresh') && {
+        name: 'quote_refresh' as const,
+        url: config.queues.quoteRefreshUrl,
+      },
+      shouldValidateQueue('quote_refresh_dlq') && {
+        name: 'quote_refresh_dlq' as const,
+        url: config.queues.quoteRefreshDlqUrl,
+      },
+      shouldValidateQueue('fx_rate_refresh') && {
+        name: 'fx_rate_refresh' as const,
+        url: config.queues.fxRateRefreshUrl,
+      },
+      shouldValidateQueue('fx_rate_refresh_dlq') && {
+        name: 'fx_rate_refresh_dlq' as const,
+        url: config.queues.fxRateRefreshDlqUrl,
+      },
+      shouldValidateQueue('exports') && { name: 'exports' as const, url: config.queues.exports.url },
+      shouldValidateQueue('alert_evaluation') && {
+        name: 'alert_evaluation' as const,
+        url: config.alerts.evaluation.queueUrl,
+      },
+      shouldValidateQueue('ops_alerts') && {
+        name: 'ops_alerts' as const,
+        url: config.queues.opsAlerts.url,
+      },
+      shouldValidateQueue('ingest_fanout') && {
+        name: 'ingest_fanout' as const,
+        url: config.queues.ingestFanout.url,
+      },
+      shouldValidateQueue('ingest_fanout_tier1') && {
+        name: 'ingest_fanout_tier1' as const,
+        url: config.queues.ingestFanout.tier1Url,
+      },
+      shouldValidateQueue('ingest_fanout_tier2') && {
+        name: 'ingest_fanout_tier2' as const,
+        url: config.queues.ingestFanout.tier2Url,
+      },
+      shouldValidateQueue('notifications') && {
+        name: 'notifications' as const,
+        url: config.queues.notifications.url,
+      },
+    ].filter(Boolean) as Array<{ name: QueueResource; url: string | undefined }>
 
     const sqsClient = new SQSClient({})
 

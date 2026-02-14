@@ -12,6 +12,7 @@ import { getMaxAmount, getMinAmount } from '../../../../shared/currency-limits'
 import { createTtlCache } from '../../../../shared/cache'
 import { recordQuoteRequest, recordSearch } from '../../../../shared/business-metrics'
 import { getCorridorTier, getTierSloMinutes } from '../../../../shared/corridor-tiers'
+import { normalizePayinMethod, normalizePayoutMethod } from '../../../../shared/normalize/payment-methods'
 import { normalizeProviderId } from '../../../../shared/provider-utils'
 import {
   DEFAULT_FALLBACK_TTL_SECONDS,
@@ -122,6 +123,7 @@ const logger = createLogger('plane-a.providers')
 let planeAPool: PlaneAContainer['pool']
 let fxRateRepository: PlaneAContainer['repositories']['fxRate']
 let latestQuoteRepository: PlaneAContainer['repositories']['latestQuote']
+let quoteRefreshRepository: PlaneAContainer['repositories']['quoteRefresh']
 let rightsMatrixRepository: PlaneAContainer['repositories']['rightsMatrix']
 let corridorPriorityRepository: PlaneAContainer['repositories']['corridorPriority']
 let corridorCapabilityRepository: PlaneAContainer['repositories']['corridorCapability']
@@ -314,6 +316,32 @@ type FrontendProviderQuote = {
   isAffiliate?: boolean
 }
 
+type ExcludedProviderReason = 'method_mismatch' | 'no_quotes' | 'capability' | 'rights'
+
+type ExcludedProviderDetails = {
+  maxAgeSeconds: number
+  bucketUsed: number
+  lastCollectedAt: string | null
+  ageSeconds: number | null
+  refreshAttempted: boolean
+  refreshRequestIds: string[]
+}
+
+type ExcludedProviderDetailed = {
+  provider: string
+  reason: ExcludedProviderReason
+  details: ExcludedProviderDetails
+}
+
+type ProvidersRefreshInfo = {
+  enabled: boolean
+  attempted: boolean
+  enqueued: boolean
+  providers: string[]
+  requestIds: string[]
+  dedupedProviders?: string[]
+}
+
 type ProvidersResponseBase = {
   data: FrontendProviderQuote[]
   updatedAt: string | null
@@ -332,6 +360,10 @@ type ProvidersResponseBase = {
     fresh: boolean
   }
   availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
+  availableMethodsByProvider?: Record<string, Array<'bank' | 'cash' | 'wallet' | 'airtime'>>
+  excludedProviders?: Array<{ provider: string; reason: ExcludedProviderReason }>
+  excludedProvidersDetailed?: ExcludedProviderDetailed[]
+  refresh?: ProvidersRefreshInfo
   indices?: CorridorIndices
   indicesReason?: string | null
   providerQuotes?: ProviderQuoteResponse[]
@@ -361,6 +393,9 @@ type CorridorIndices = {
 }
 
 const providersCache = createTtlCache<ProvidersResponseBase>({ namespace: 'plane_a:providers' })
+const providersRefreshDedupeCache = createTtlCache<boolean>({
+  namespace: 'plane_a:providers_refresh_dedupe',
+})
 const _PROVIDER_WEIGHT_MODEL = config.indices.providerWeightModel || DEFAULT_WEIGHT_MODEL
 
 const querySchema = z.object({
@@ -375,6 +410,17 @@ const querySchema = z.object({
   payin: z.string().optional(),
   payout: z.string().optional(),
   live: z.coerce.boolean().optional(),
+  refresh: z.preprocess((value) => {
+    if (value === undefined || value === null) return undefined
+    if (typeof value === 'boolean') return value
+    if (typeof value === 'number') return value !== 0
+    if (typeof value === 'string') {
+      const token = value.trim().toLowerCase()
+      if (token === '1' || token === 'true' || token === 'yes' || token === 'y') return true
+      if (token === '0' || token === 'false' || token === 'no' || token === 'n') return false
+    }
+    return value
+  }, z.boolean().optional()),
   include_provider_quotes: z.coerce.boolean().optional(),
 })
 
@@ -848,8 +894,10 @@ const providersGetSchema = {
       method: { type: 'string' },
       corridor_id: { type: 'string' },
       amount_bucket: { type: 'number' },
+      payin: { type: 'string' },
       payout: { type: 'string' },
       live: { type: 'boolean' },
+      refresh: { type: ['boolean', 'string', 'number'] },
       include_provider_quotes: { type: 'boolean' },
       // Historical param; tolerated.
       include_provider_quotes_v2: { type: 'boolean' },
@@ -882,6 +930,33 @@ const providersGetSchema = {
           required: ['ttl_seconds', 'age_seconds', 'fresh'],
         },
         availableMethods: { type: 'array', items: { type: 'string' } },
+        availableMethodsByProvider: { type: 'object', additionalProperties: { type: 'array', items: { type: 'string' } } },
+        excludedProviders: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              provider: { type: 'string' },
+              reason: { type: 'string' },
+            },
+            required: ['provider', 'reason'],
+            additionalProperties: true,
+          },
+        },
+        excludedProvidersDetailed: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              provider: { type: 'string' },
+              reason: { type: 'string' },
+              details: { type: 'object', additionalProperties: true },
+            },
+            required: ['provider', 'reason', 'details'],
+            additionalProperties: true,
+          },
+        },
+        refresh: { type: 'object', additionalProperties: true },
         indices: {},
         indicesReason: { type: ['string', 'null'] },
         data: { type: 'array', items: { type: 'object', additionalProperties: true } },
@@ -926,6 +1001,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
   planeAPool = pool
   fxRateRepository = repositories.fxRate
   latestQuoteRepository = repositories.latestQuote
+  quoteRefreshRepository = repositories.quoteRefresh
   rightsMatrixRepository = repositories.rightsMatrix
   corridorPriorityRepository = repositories.corridorPriority
   corridorCapabilityRepository = repositories.corridorCapability
@@ -948,9 +1024,15 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       amount_bucket,
       payout,
       live,
+      refresh,
       include_provider_quotes,
+      payin,
     } = parsed.data
-    const bypassCache = live === true
+    const bypassCache = live === true || refresh === true
+    const runtimeEnvName = (config.envName || '').trim().toLowerCase()
+    const isProdEnv = runtimeEnvName === 'prod'
+    const refreshEnabled =
+      refresh === true || (refresh === undefined && !isProdEnv)
     const includeProviderQuotes = include_provider_quotes === true
     const comparisonId = randomUUID()
     const start = new Date().toISOString()
@@ -1056,7 +1138,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const cacheTtlSeconds = maxAgeSeconds > 0
         ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
         : dynamicCacheTtlSeconds
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
+      const cacheKey = `providers:v2:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
@@ -1219,6 +1301,197 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         return methodValue === requestedMethod
       })
 
+      const availableMethodsByProvider: Record<string, Array<'bank' | 'cash' | 'wallet' | 'airtime'>> = {}
+      for (const [providerKey, methods] of methodsByProvider.entries()) {
+        availableMethodsByProvider[providerKey] = orderMethods(methods)
+      }
+
+      const excludedProvidersBySlug = new Map<string, ExcludedProviderReason>()
+
+      // Capability-based exclusions (only meaningful when capability gating is active).
+      if (capabilityProviderSet.size > 0) {
+        for (const providerId of supportedProviderSet.values()) {
+          if (capabilityProviderSet.has(providerId)) continue
+          const metadata = getProviderMetadata(providerId)
+          if (!metadata || metadata.type === 'BANK') continue
+          excludedProvidersBySlug.set(metadata.slug, 'capability')
+        }
+      }
+
+      const allowedProviderSlugs = new Set<string>()
+      const providerIdBySlug = new Map<string, string>()
+      const providerIdUniverse = new Set<string>([
+        ...supportedProviderSet.values(),
+        ...allowedProviderSet.values(),
+      ])
+      for (const providerId of providerIdUniverse.values()) {
+        const metadata = getProviderMetadata(providerId)
+        if (!metadata || metadata.type === 'BANK') continue
+        providerIdBySlug.set(metadata.slug, providerId)
+      }
+      for (const providerId of allowedProviderSet.values()) {
+        const metadata = getProviderMetadata(providerId)
+        if (!metadata || metadata.type === 'BANK') continue
+        allowedProviderSlugs.add(metadata.slug)
+      }
+
+      const providerHasAnyQuote = new Set<string>()
+      const providerHasRequestedMethod = new Set<string>()
+      if (allowedProviderSlugs.size > 0) {
+        for (const quote of quotes) {
+          const metadata = getProviderMetadata(quote.provider_id)
+          if (!metadata || metadata.type === 'BANK') continue
+          const slug = metadata.slug
+          providerHasAnyQuote.add(slug)
+          const methodValue = toAvailableMethod(quote.payout)
+          if (methodValue && methodValue === requestedMethod) {
+            providerHasRequestedMethod.add(slug)
+          }
+        }
+      }
+
+      for (const slug of allowedProviderSlugs.values()) {
+        if (!providerHasAnyQuote.has(slug)) {
+          excludedProvidersBySlug.set(slug, 'no_quotes')
+        } else if (requestedMethod && !providerHasRequestedMethod.has(slug)) {
+          // Only set method mismatch if a stronger exclusion isn't already recorded.
+          if (!excludedProvidersBySlug.has(slug)) {
+            excludedProvidersBySlug.set(slug, 'method_mismatch')
+          }
+        }
+      }
+
+      const excludedProviders = Array.from(excludedProvidersBySlug.entries())
+        .map(([provider, reason]) => ({ provider, reason }))
+        .sort((a, b) => a.provider.localeCompare(b.provider))
+
+      const noQuoteProviderSlugs = excludedProviders
+        .filter((entry) => entry.reason === 'no_quotes')
+        .map((entry) => entry.provider)
+
+      const refreshRequestIdsByProvider = new Map<string, string[]>()
+      const refreshDedupedProviders: string[] = []
+      const refreshRequestIds: string[] = []
+      const refreshAttemptedProviders = new Set<string>()
+
+      const payinMethod = normalizePayinMethod(payin ?? 'bank') || 'bank_transfer'
+      const payoutMethod = normalizePayoutMethod(requestedMethod) || 'bank_deposit'
+
+      if (refreshEnabled && noQuoteProviderSlugs.length > 0) {
+        const dedupeTtlMs = 90 * 1000
+        for (const slug of noQuoteProviderSlugs) {
+          const providerId = providerIdBySlug.get(slug)
+          if (!providerId) continue
+          const dedupeKey = `providers_refresh:${corridorId}:${bucketUsed}:${payinMethod}:${payoutMethod}:${providerId}`
+          const deduped = await providersRefreshDedupeCache.get(dedupeKey)
+          if (deduped !== null) {
+            refreshDedupedProviders.push(slug)
+            refreshAttemptedProviders.add(slug)
+            continue
+          }
+
+          await providersRefreshDedupeCache.set(dedupeKey, true, dedupeTtlMs)
+          refreshAttemptedProviders.add(slug)
+
+          try {
+            const requestId = await quoteRefreshRepository.enqueueRequest({
+              providerId,
+              corridorId,
+              amountBucket: bucketUsed,
+              payinMethod,
+              payoutMethod,
+            })
+            if (requestId) {
+              refreshRequestIds.push(requestId)
+              refreshRequestIdsByProvider.set(slug, [requestId])
+            }
+          } catch (error) {
+            logger.warn('providers_refresh_enqueue_failed', {
+              corridor_id: corridorId,
+              amount_bucket: bucketUsed,
+              provider: slug,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+
+        if (refreshRequestIds.length > 0 || refreshDedupedProviders.length > 0) {
+          logger.info('providers_refresh_attempted', {
+            corridor_id: corridorId,
+            amount_bucket: bucketUsed,
+            requested_method: requestedMethod,
+            requested_payin: payinMethod,
+            requested_payout: payoutMethod,
+            attempted: noQuoteProviderSlugs.length,
+            enqueued: refreshRequestIds.length,
+            deduped: refreshDedupedProviders.length,
+          })
+        }
+      }
+
+      const refreshInfo: ProvidersRefreshInfo | undefined = refreshEnabled
+        ? {
+            enabled: true,
+            attempted: noQuoteProviderSlugs.length > 0,
+            enqueued: refreshRequestIds.length > 0,
+            providers: noQuoteProviderSlugs,
+            requestIds: refreshRequestIds,
+            dedupedProviders: refreshDedupedProviders.length > 0 ? refreshDedupedProviders : undefined,
+          }
+        : undefined
+
+      let excludedProvidersDetailed: ExcludedProviderDetailed[] | undefined
+      const allowDetailedExclusions = !isProdEnv || refresh === true
+      if (excludedProviders.length > 0 && allowDetailedExclusions) {
+        try {
+          const lastCollected = await query<{ provider_id: string; last_collected_at: string | Date | null }>(
+            `SELECT provider_id,
+                    MAX(collected_at) AS last_collected_at
+               FROM silver.latest_quote_by_provider
+              WHERE corridor_id = $1
+                AND amount_bucket = $2
+              GROUP BY provider_id`,
+            [corridorId, bucketUsed],
+            planeAPool,
+          )
+
+          const lastCollectedByProviderId = new Map<string, string | null>()
+          for (const row of lastCollected.rows) {
+            const providerId = row.provider_id ? normalizeProviderId(row.provider_id) : ''
+            if (!providerId) continue
+            lastCollectedByProviderId.set(providerId, toIsoString(row.last_collected_at) ?? null)
+          }
+
+          excludedProvidersDetailed = excludedProviders.map(({ provider, reason }) => {
+            const providerId = providerIdBySlug.get(provider) ?? null
+            const lastCollectedAt = providerId ? (lastCollectedByProviderId.get(providerId) ?? null) : null
+            const ageSeconds = lastCollectedAt
+              ? Math.max(0, Math.round((Date.now() - new Date(lastCollectedAt).getTime()) / 1000))
+              : null
+            const requestIds = refreshRequestIdsByProvider.get(provider) ?? []
+            const refreshAttempted = refreshAttemptedProviders.has(provider)
+            return {
+              provider,
+              reason,
+              details: {
+                maxAgeSeconds,
+                bucketUsed,
+                lastCollectedAt,
+                ageSeconds,
+                refreshAttempted,
+                refreshRequestIds: requestIds,
+              },
+            }
+          })
+        } catch (error) {
+          logger.warn('providers_exclusion_details_failed', {
+            corridor_id: corridorId,
+            amount_bucket: bucketUsed,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+
       let midMarketRate: number | null = null
       let midMarketSource: string | null = null
       let midMarketUpdatedAt: string | null = null
@@ -1262,6 +1535,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             fresh: false,
           },
           availableMethods: orderMethods(availableMethods),
+          availableMethodsByProvider,
+          excludedProviders,
+          excludedProvidersDetailed,
+          refresh: refreshInfo,
           indicesReason: 'quotes_unavailable',
         }
       }
@@ -1496,6 +1773,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           fresh: cacheFresh,
         },
         availableMethods: orderMethods(availableMethods),
+        availableMethodsByProvider,
+        excludedProviders,
+        excludedProvidersDetailed,
+        refresh: refreshInfo,
         indices,
         indicesReason,
       }
@@ -1510,7 +1791,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         start,
       }
 
-      if (!bypassCache) {
+      const hasNoQuotes = noQuoteProviderSlugs.length > 0
+      if (!bypassCache && !hasNoQuotes) {
         const ttlMs = Math.max(0, cacheTtlSeconds * 1000)
         await providersCache.set(cacheKey, responseBase, ttlMs)
       }

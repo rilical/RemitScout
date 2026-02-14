@@ -3,19 +3,28 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <!-- Backdrop -->
       <div
-        class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+        class="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm"
+        aria-label="Close dialog"
         @click="$emit('close')"
       />
 
       <!-- Modal -->
-      <div class="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl">
+      <div
+        ref="modalRef"
+        class="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800 to-neutral-900 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="corridor-detail-title"
+        tabindex="-1"
+        @keydown.esc="$emit('close')"
+      >
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-white/10 px-6 py-5">
           <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-3xl">
+            <div class="flex items-center gap-2 text-h2">
               <span>{{ corridorData.fromFlag }}</span>
               <svg
-                class="h-5 w-5 text-slate-500"
+                class="h-5 w-5 text-rs-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -30,16 +39,20 @@
               <span>{{ corridorData.toFlag }}</span>
             </div>
             <div>
-              <h2 class="text-lg font-bold text-white">
+              <h2
+                id="corridor-detail-title"
+                class="text-body-lg font-bold text-white"
+              >
                 {{ corridorData.from }} → {{ corridorData.to }}
               </h2>
-              <p class="text-sm text-slate-400">
+              <p class="text-body-sm text-neutral-400">
                 Corridor snapshot
               </p>
             </div>
           </div>
           <button
-            class="rounded-lg p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+            class="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-surface/10 hover:text-white"
+            aria-label="Close dialog"
             @click="$emit('close')"
           >
             <svg
@@ -62,27 +75,27 @@
         <div class="p-6 space-y-6">
           <!-- Quick Stats -->
           <div class="grid grid-cols-3 gap-4">
-            <div class="rounded-xl bg-white/5 border border-white/5 p-4 text-center">
-              <div class="text-xs text-slate-500 mb-1">
+            <div class="rounded-xl bg-surface/5 border border-white/5 p-4 text-center">
+              <div class="text-body-sm text-rs-muted mb-1">
                 Best rate
               </div>
-              <div class="text-lg font-bold text-white">
+              <div class="text-body-lg font-bold text-white">
                 {{ corridorData.bestProvider }}
               </div>
             </div>
-            <div class="rounded-xl bg-white/5 border border-white/5 p-4 text-center">
-              <div class="text-xs text-slate-500 mb-1">
+            <div class="rounded-xl bg-surface/5 border border-white/5 p-4 text-center">
+              <div class="text-body-sm text-rs-muted mb-1">
                 Recipient gets
               </div>
-              <div class="text-lg font-bold text-emerald-400">
+              <div class="text-body-lg font-bold text-success-600">
                 {{ corridorData.recipientGets }}
               </div>
             </div>
-            <div class="rounded-xl bg-white/5 border border-white/5 p-4 text-center">
-              <div class="text-xs text-slate-500 mb-1">
+            <div class="rounded-xl bg-surface/5 border border-white/5 p-4 text-center">
+              <div class="text-body-sm text-rs-muted mb-1">
                 24h change
               </div>
-              <div class="text-lg font-bold text-emerald-400 flex items-center justify-center gap-1">
+              <div class="text-body-lg font-bold text-success-600 flex items-center justify-center gap-1">
                 <svg
                   class="h-4 w-4"
                   fill="none"
@@ -103,7 +116,7 @@
 
           <!-- Provider Comparison -->
           <div>
-            <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            <h3 class="text-body-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">
               Provider Comparison
             </h3>
             <div class="space-y-3">
@@ -111,12 +124,12 @@
                 v-for="(provider, index) in corridorData.providers"
                 :key="provider.name"
                 class="flex items-center justify-between p-4 rounded-xl"
-                :class="index === 0 ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-white/5 border border-white/5'"
+                :class="index === 0 ? 'bg-success-600/10 border border-success-600/20' : 'bg-surface/5 border border-white/5'"
               >
                 <div class="flex items-center gap-3">
                   <span
-                    class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
-                    :class="index === 0 ? 'bg-emerald-500 text-white' : 'bg-white/10 text-slate-400'"
+                    class="w-7 h-7 rounded-full flex items-center justify-center text-body-sm font-bold"
+                    :class="index === 0 ? 'bg-success-600 text-white' : 'bg-surface/10 text-neutral-400'"
                   >
                     {{ index + 1 }}
                   </span>
@@ -124,7 +137,7 @@
                     <div class="font-semibold text-white">
                       {{ provider.name }}
                     </div>
-                    <div class="text-xs text-slate-500">
+                    <div class="text-body-sm text-rs-muted">
                       {{ provider.speed }}
                     </div>
                   </div>
@@ -133,7 +146,7 @@
                   <div class="font-bold text-white">
                     {{ provider.recipientGets }}
                   </div>
-                  <div class="text-xs text-slate-400">
+                  <div class="text-body-sm text-neutral-400">
                     Fee: {{ provider.fee }}
                   </div>
                 </div>
@@ -143,7 +156,7 @@
 
           <!-- Actions -->
           <div class="flex gap-3 pt-4 border-t border-white/10">
-            <button class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/25">
+            <button class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-500/25">
               <svg
                 class="h-5 w-5"
                 fill="none"
@@ -159,7 +172,7 @@
               </svg>
               Compare now
             </button>
-            <button class="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
+            <button class="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-6 py-3 font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
               <svg
                 class="h-5 w-5"
                 fill="none"
@@ -175,7 +188,7 @@
               </svg>
               Save
             </button>
-            <button class="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
+            <button class="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-6 py-3 font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
               <svg
                 class="h-5 w-5"
                 fill="none"
@@ -199,7 +212,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 interface Props {
   corridor: {
@@ -213,6 +227,9 @@ const props = defineProps<Props>()
 defineEmits<{
   close: []
 }>()
+
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
 
 const corridorData = computed(() => ({
   from: props.corridor.from,
@@ -243,4 +260,13 @@ function getFlag(code: string): string {
   }
   return flags[code] || '🌍'
 }
+
+onMounted(async () => {
+  await nextTick()
+  activate()
+})
+
+onBeforeUnmount(() => {
+  deactivate()
+})
 </script>

@@ -1,34 +1,34 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-b from-neutral-50 via-white to-white py-16 lg:py-20">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs :items="breadcrumbItems" />
 
         <div class="mt-10 text-center">
-          <h1 class="text-4xl font-bold leading-tight sm:text-5xl mb-4">
+          <h1 class="text-h1 font-bold leading-tight mb-4">
             <span class="text-neutral-900">Supported</span>
             <span class="text-brand-600"> Money Transfer </span>
             <span class="text-neutral-900">Providers</span>
           </h1>
-          <p class="text-xl leading-relaxed text-neutral-600 mb-8">
+          <p class="text-h4 leading-relaxed text-neutral-600 mb-8">
             Compare trusted money transfer providers with Remit-Scout scores to find the best service for your needs.
             Our data-driven methodology evaluates providers based on delivered value, reliability, and transparency.
           </p>
 
           <!-- Understanding Remit-Scout Scores -->
-          <div class="bg-gray-900 border-2 border-gray-800 rounded-3xl p-8 lg:p-12">
+          <div class="bg-neutral-900 border-2 border-neutral-800 rounded-3xl p-8 lg:p-12">
             <div class="mb-8">
               <div class="w-full mb-6">
-                <h2 class="text-2xl font-bold text-white mb-3">
+                <h2 class="text-h3 font-bold text-white mb-3">
                   How We Score Providers
                 </h2>
-                <p class="text-base text-white/90 mb-4 leading-relaxed">
+                <p class="text-body text-white/90 mb-4 leading-relaxed">
                   Each provider gets a <span class="font-semibold text-brand-400">Remit-Score (0-10 scale)</span> based on real transfer data, not paid reviews. Scores like <span class="font-semibold text-white">9.5</span>, <span class="font-semibold text-white">8.4</span>, or <span class="font-semibold text-white">7.2</span> represent the overall quality and value you can expect when using that provider.
                 </p>
-                <p class="text-base text-white/90 mb-4 leading-relaxed">
+                <p class="text-body text-white/90 mb-4 leading-relaxed">
                   Our methodology prioritizes what matters most: <strong class="text-white">how much money actually reaches your recipient</strong>. We analyze fees, exchange rate markups, and the total delivered amount. Providers cannot pay to rank higher—the score reflects real value.
                 </p>
               </div>
@@ -36,14 +36,14 @@
 
             <!-- Rating Categories & Weights -->
             <div class="mb-10">
-              <h3 class="text-2xl font-bold text-white mb-8 text-center">
+              <h3 class="text-h3 font-bold text-white mb-8 text-center">
                 Rating Categories & Weights
               </h3>
 
               <div class="space-y-4 w-full">
                 <!-- Delivered Value - 40% -->
-                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-surface/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-surface/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
                       <svg
                         class="w-6 h-6 text-white"
@@ -61,26 +61,26 @@
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">
+                    <h4 class="font-bold text-white text-body-lg mb-2">
                       Delivered Value
                     </h4>
-                    <p class="text-sm text-white/80 leading-relaxed">
+                    <p class="text-body-sm text-white/80 leading-relaxed">
                       Effective cost (FX spread + fees), how often provider is cheapest, quote vs. actual delivery accuracy
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">
+                    <div class="text-h1 font-bold text-white mb-1">
                       40%
                     </div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    <div class="text-body-sm text-white/90 uppercase tracking-wider font-semibold">
                       Weight
                     </div>
                   </div>
                 </div>
 
                 <!-- Reliability & Success - 20% -->
-                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-surface/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-surface/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
                       <svg
                         class="w-6 h-6 text-white"
@@ -98,26 +98,26 @@
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">
+                    <h4 class="font-bold text-white text-body-lg mb-2">
                       Reliability & Success
                     </h4>
-                    <p class="text-sm text-white/80 leading-relaxed">
+                    <p class="text-body-sm text-white/80 leading-relaxed">
                       Quote success rate, data freshness, pricing stability (where available)
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">
+                    <div class="text-h1 font-bold text-white mb-1">
                       20%
                     </div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    <div class="text-body-sm text-white/90 uppercase tracking-wider font-semibold">
                       Weight
                     </div>
                   </div>
                 </div>
 
                 <!-- Friction & Speed - 15% -->
-                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-surface/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-surface/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
                       <svg
                         class="w-6 h-6 text-white"
@@ -135,26 +135,26 @@
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">
+                    <h4 class="font-bold text-white text-body-lg mb-2">
                       Friction & Speed
                     </h4>
-                    <p class="text-sm text-white/80 leading-relaxed">
+                    <p class="text-body-sm text-white/80 leading-relaxed">
                       ETA where available, speed buckets, observed delivery times on selected corridors
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">
+                    <div class="text-h1 font-bold text-white mb-1">
                       15%
                     </div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    <div class="text-body-sm text-white/90 uppercase tracking-wider font-semibold">
                       Weight
                     </div>
                   </div>
                 </div>
 
                 <!-- Support & Refunds - 15% -->
-                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-surface/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-surface/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
                       <svg
                         class="w-6 h-6 text-white"
@@ -172,26 +172,26 @@
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">
+                    <h4 class="font-bold text-white text-body-lg mb-2">
                       Support & Refunds
                     </h4>
-                    <p class="text-sm text-white/80 leading-relaxed">
+                    <p class="text-body-sm text-white/80 leading-relaxed">
                       Refund processing time, dispute resolution SLA, post-resolution satisfaction, chargeback rate
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">
+                    <div class="text-h1 font-bold text-white mb-1">
                       15%
                     </div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    <div class="text-body-sm text-white/90 uppercase tracking-wider font-semibold">
                       Weight
                     </div>
                   </div>
                 </div>
 
                 <!-- Trust & Safety - 10% -->
-                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-white/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div class="bg-white/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="flex w-full border-2 border-white/20 rounded-2xl bg-surface/10 overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div class="bg-surface/10 p-4 flex items-center justify-center flex-shrink-0 w-20">
                     <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
                       <svg
                         class="w-6 h-6 text-white"
@@ -209,18 +209,18 @@
                     </div>
                   </div>
                   <div class="flex-1 p-6 flex flex-col justify-center min-w-0">
-                    <h4 class="font-bold text-white text-lg mb-2">
+                    <h4 class="font-bold text-white text-body-lg mb-2">
                       Trust & Safety
                     </h4>
-                    <p class="text-sm text-white/80 leading-relaxed">
+                    <p class="text-body-sm text-white/80 leading-relaxed">
                       Public licensing checks where available, regulatory register verification
                     </p>
                   </div>
                   <div class="bg-brand-600 p-6 flex flex-col items-center justify-center flex-shrink-0 w-32">
-                    <div class="text-4xl font-bold text-white mb-1">
+                    <div class="text-h1 font-bold text-white mb-1">
                       10%
                     </div>
-                    <div class="text-xs text-white/90 uppercase tracking-wider font-semibold">
+                    <div class="text-body-sm text-white/90 uppercase tracking-wider font-semibold">
                       Weight
                     </div>
                   </div>
@@ -230,7 +230,7 @@
 
             <!-- Bottom Text -->
             <div class="border-t-2 border-white/20 pt-6">
-              <p class="text-base text-white/80 leading-relaxed">
+              <p class="text-body text-white/80 leading-relaxed">
                 Scores are computed from our quote dataset—fees, implied FX rate vs a mid-market reference, and delivered amount. We also factor in measurable signals like stated ETA, payment method support, and quote availability. Providers cannot pay to rank higher, and affiliate relationships do not influence score calculation.
               </p>
             </div>
@@ -244,7 +244,7 @@
       id="provider-cards"
       class="py-12 bg-neutral-50 scroll-mt-20"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ProviderCard
             v-for="provider in filteredProviders"
@@ -268,11 +268,11 @@
     <HelpFooter />
 
     <!-- Partnership Section -->
-    <section class="py-16 lg:py-20 bg-blue-600">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="py-16 lg:py-20 bg-brand-600">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-4xl text-center">
           <div class="flex items-center justify-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+            <div class="w-12 h-12 rounded-xl bg-surface/20 flex items-center justify-center">
               <svg
                 class="w-6 h-6 text-white"
                 fill="none"
@@ -287,29 +287,29 @@
                 />
               </svg>
             </div>
-            <h2 class="text-4xl lg:text-5xl font-bold text-white">
+            <h2 class="text-h1 font-bold text-white">
               Partner with Remit-Scout
             </h2>
           </div>
-          <p class="text-lg lg:text-xl leading-relaxed text-slate-200 mb-6">
+          <p class="text-body-lg leading-relaxed text-neutral-200 mb-6">
             Are you a <strong class="font-semibold text-white">licensed money transfer provider</strong> looking to reach expats and international families? We're always interested in <span class="font-semibold text-white">expanding our coverage</span> and helping more people make informed financial decisions.
           </p>
-          <p class="text-base lg:text-lg leading-relaxed text-slate-300 mb-4">
+          <p class="text-body-lg leading-relaxed text-neutral-300 mb-4">
             We work with providers who share our commitment to <strong class="font-semibold text-white">transparency</strong> and <span class="font-semibold text-white">outcome-based comparisons</span>. Whether you're a major remittance company or a digital-first startup, we're open to partnerships that help users make better choices.
           </p>
-          <p class="text-base lg:text-lg leading-relaxed text-slate-300 mb-10">
+          <p class="text-body-lg leading-relaxed text-neutral-300 mb-10">
             We maintain <strong class="font-semibold text-white">editorial independence</strong> in all partnerships. Providers cannot pay to rank higher, and all affiliate relationships are <span class="font-semibold text-white">fully disclosed</span> to our users. Your trust is more valuable than any partnership.
           </p>
           <div class="flex flex-wrap justify-center gap-4">
             <NuxtLink
               to="/contact"
-              class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-surface px-8 py-3.5 text-body font-semibold text-brand-600 shadow-lg transition-all hover:bg-primary-50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
             >
               <span>Get in touch</span>
             </NuxtLink>
             <NuxtLink
               to="/partnerships"
-              class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-8 py-3.5 text-base font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-white bg-surface px-8 py-3.5 text-body font-semibold text-brand-600 shadow-lg transition-all hover:bg-primary-50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-brand-600"
             >
               <span>Learn about our partnerships</span>
             </NuxtLink>
@@ -343,12 +343,20 @@ const breadcrumbItems = [
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Provider Reviews',
+    description: 'Compare trusted money transfer providers with independent Remit-Score ratings.',
+  },
+})
+
 setSeo({
-  title: 'Supported Money Transfer Providers | Remit-Scout Scores & Reviews | Remit-Scout',
+  title: 'Money Transfer Provider Reviews | Remit-Scout',
   description:
-    'Compare trusted money transfer providers with Remit-Scout scores and user reviews. Find the best service for your transfer needs with independent, data-driven ratings.',
+    'Compare trusted money transfer providers with Remit-Scout scores and reviews. Find the best service for your corridor with independent, data-driven ratings.',
   canonical: `${siteUrl}/learn/providers`,
-  ogImage: `${siteUrl}/images/og/providers.jpg`,
+  ogImage: false,
 })
 
 jsonLdBreadcrumb([
