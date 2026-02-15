@@ -6,7 +6,7 @@
  * - Coverage is rights + capability + payout-method compatibility (scheduler-like).
  *
  * Output:
- * - Writes markdown + JSON to ../artifacts/coverage-audit by default (repo root artifacts/).
+ * - Writes markdown + JSON to OUTPUT_DIR (defaults to /tmp/remit-scout-artifacts/coverage-audit).
  *
  * Notes:
  * - Rights matrix is provider-level (PK provider_id) with source/destination country arrays.
@@ -14,6 +14,7 @@
  */
 
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { createPool, query } from '../shared/db'
@@ -182,6 +183,7 @@ const inCountrySet = (set: string[] | null, code: string): boolean => {
 }
 
 export const runCorridorCoverageAudit = async (): Promise<void> => {
+  const runId = process.env.RUN_ID || null
   const sendCurrencies = new Set(
     (splitCsv(process.env.SEND_CURRENCIES).length ? splitCsv(process.env.SEND_CURRENCIES) : ['USD', 'AED', 'GBP', 'EUR'])
       .map(normalizeUpper),
@@ -192,7 +194,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
 
   const outputDir = process.env.OUTPUT_DIR
     ? path.resolve(process.env.OUTPUT_DIR)
-    : path.resolve(process.cwd(), '..', 'artifacts', 'coverage-audit')
+    : path.join(os.tmpdir(), 'remit-scout-artifacts', 'coverage-audit')
   ensureDir(outputDir)
 
   const pool = createPool(config.db.planeBUrl)
@@ -309,6 +311,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
 
     const jsonPayload = {
       generatedAt: nowIso,
+      runId,
       environment: config.envName || config.env,
       sendCurrencies: Array.from(sendCurrencies.values()).sort(),
       payoutMethod,
@@ -318,7 +321,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
       ...(includeDetails ? { corridors: details } : {}),
     }
 
-    const baseName = `coverage-audit-${(config.envName || config.env || 'env').toString()}-${nowIso.replace(/[:.]/g, '-')}`
+    const baseName = `coverage-audit-${(config.envName || config.env || 'env').toString()}-${nowIso.replace(/[:.]/g, '-')}${runId ? `-${runId}` : ''}`
     const jsonPath = path.join(outputDir, `${baseName}.json`)
     const mdPath = path.join(outputDir, `${baseName}.md`)
 
@@ -358,6 +361,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
     fs.writeFileSync(mdPath, mdLines.join('\n'))
 
     logger.info('coverage_audit_complete', {
+      run_id: runId,
       output_dir: outputDir,
       json: jsonPath,
       markdown: mdPath,
@@ -376,6 +380,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
 if (require.main === module) {
   runCorridorCoverageAudit().catch((error) => {
     logger.error('coverage_audit_failed', {
+      run_id: process.env.RUN_ID || null,
       error: error instanceof Error ? error.message : String(error),
     })
     process.exit(1)

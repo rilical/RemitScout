@@ -75,6 +75,8 @@ tools/aws-cli/
 .cache/
 .temp/
 backend/tmp/
+backend/tmp_*.ts
+backend/tmp-*.ts
 frontend/tmp/
 
 # CI/contract artifacts (local-only)

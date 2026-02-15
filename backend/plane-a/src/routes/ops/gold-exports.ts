@@ -418,9 +418,11 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
       )
 
       const lines = rowsResult.rows.map((row) => {
-        const payload = {
-          ...row,
-          created_at: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at ?? ''),
+        const payload: Record<string, unknown> = {
+          ...(row as Record<string, unknown>),
+          created_at: row.created_at instanceof Date
+            ? row.created_at.toISOString()
+            : String(row.created_at ?? ''),
         }
         return headers
           .map((key) => {
@@ -442,4 +444,3 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     }
   })
 }
-

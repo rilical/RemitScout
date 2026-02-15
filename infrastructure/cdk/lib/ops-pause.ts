@@ -68,7 +68,7 @@ export const createOpsPause = (
     handler: 'handler',
     runtime: Runtime.NODEJS_20_X,
     memorySize: 256,
-    timeout: Duration.minutes(2),
+    timeout: Duration.minutes(5),
     role: options.role,
     logRetention,
     environment: {
@@ -115,6 +115,12 @@ export const createOpsPause = (
   options.role.addToPolicy(new PolicyStatement({
     actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
     resources: [ecsServiceArn, ecsClusterArn],
+  }))
+  // OpsPause must also stop any orphaned scheduled ECS tasks (startedBy=events-rule/*) that
+  // are not controlled by service desiredCount (otherwise dev can keep spending while "paused").
+  options.role.addToPolicy(new PolicyStatement({
+    actions: ['ecs:ListTasks', 'ecs:DescribeTasks', 'ecs:StopTask'],
+    resources: ['*'],
   }))
   options.role.addToPolicy(new PolicyStatement({
     actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],

@@ -1,4 +1,10 @@
-import { ECSClient, UpdateServiceCommand } from '@aws-sdk/client-ecs'
+import {
+  DescribeTasksCommand,
+  ECSClient,
+  ListTasksCommand,
+  StopTaskCommand,
+  UpdateServiceCommand,
+} from '@aws-sdk/client-ecs'
 import {
   EventBridgeClient,
   DisableRuleCommand,
@@ -28,6 +34,15 @@ import { createLogger } from '../../shared/logger'
 const logger = createLogger('script.ops-pause')
 
 type PauseEvent = { paused?: boolean }
+
+const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
+  if (!Number.isFinite(chunkSize) || chunkSize <= 0) return [items]
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunks.push(items.slice(i, i + chunkSize))
+  }
+  return chunks
+}
 
 const parseJson = <T>(value: string | undefined, fallback: T): T => {
   if (!value) return fallback
@@ -62,6 +77,96 @@ const listRulesByPrefix = async (
     nextToken = response.NextToken
   } while (nextToken)
   return names
+}
+
+const listRunningTaskArns = async (
+  client: ECSClient,
+  cluster: string,
+): Promise<string[]> => {
+  const arns: string[] = []
+  let nextToken: string | undefined
+  do {
+    const response = await client.send(
+      new ListTasksCommand({
+        cluster,
+        desiredStatus: 'RUNNING',
+        nextToken,
+      }),
+    )
+    response.taskArns?.forEach((arn) => {
+      if (arn) arns.push(arn)
+    })
+    nextToken = response.nextToken
+  } while (nextToken)
+  return arns
+}
+
+const stopEventRuleStartedTasks = async (
+  client: ECSClient,
+  cluster: string,
+  options: { rulePrefix: string; reason: string },
+): Promise<{ matched: number; stopped: number }> => {
+  const running = await listRunningTaskArns(client, cluster)
+  if (running.length === 0) return { matched: 0, stopped: 0 }
+
+  const toStop: string[] = []
+  for (const chunk of chunkArray(running, 100)) {
+    try {
+      const response = await client.send(
+        new DescribeTasksCommand({ cluster, tasks: chunk }),
+      )
+      for (const task of response.tasks ?? []) {
+        const startedBy = task.startedBy ?? ''
+        // Orphan protection: scheduled ECS tasks launched by EventBridge are not controlled
+        // by ECS service desired counts, so they must be stopped explicitly on pause.
+        if (!startedBy.startsWith('events-rule/')) continue
+        if (task.taskArn) toStop.push(task.taskArn)
+      }
+    } catch (error) {
+      logger.warn('ecs_describe_tasks_failed', {
+        cluster,
+        error: String(error),
+      })
+    }
+  }
+
+  if (toStop.length === 0) return { matched: 0, stopped: 0 }
+
+  const concurrency = 10
+  let stopped = 0
+  for (let i = 0; i < toStop.length; i += concurrency) {
+    const batch = toStop.slice(i, i + concurrency)
+    const results = await Promise.allSettled(
+      batch.map((taskArn) =>
+        client.send(
+          new StopTaskCommand({
+            cluster,
+            task: taskArn,
+            reason: options.reason,
+          }),
+        ),
+      ),
+    )
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        stopped += 1
+      } else {
+        logger.warn('ecs_stop_task_failed', {
+          cluster,
+          error: String(result.reason),
+        })
+      }
+    }
+  }
+
+  logger.warn('ecs_stop_event_rule_tasks_complete', {
+    cluster,
+    rulePrefix: options.rulePrefix,
+    matched: toStop.length,
+    stopped,
+  })
+
+  return { matched: toStop.length, stopped }
 }
 
 const setRulesEnabled = async (
@@ -364,6 +469,13 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
       }
 
+      // Stop orphaned scheduled tasks (events-rule/*) before stopping the DB to avoid
+      // prolonged error noise and ongoing spend.
+      await stopEventRuleStartedTasks(ecs, ecsClusterName, {
+        rulePrefix,
+        reason: 'ops-pause: stop orphaned events-rule task',
+      })
+
       if (dbClusterId) {
         await stopDbCluster(rds, dbClusterId)
       }
@@ -418,8 +530,20 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
       // Only do this after the DB is reachable to avoid noisy "connection timeout" runs.
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
-      const rulesToEnable = allowlist.length > 0 ? allowlist : allRules
-      await setRulesEnabled(events, rulesToEnable, true)
+      const rulesToEnable =
+        allowlist.length > 0
+          ? allowlist
+          : (envName === 'dev' ? [] : allRules)
+      if (rulesToEnable.length === 0 && envName === 'dev') {
+        logger.warn('resume_allowlist_empty_dev', {
+          envName,
+          rulePrefix,
+          message:
+            'EVENT_RULE_ALLOWLIST is empty; leaving rules disabled to prevent runaway scheduled ECS tasks.',
+        })
+      } else {
+        await setRulesEnabled(events, rulesToEnable, true)
+      }
 
       const desiredMap = pauseEcs
         ? Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
@@ -434,8 +558,20 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
     } else {
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
-      const rulesToEnable = allowlist.length > 0 ? allowlist : allRules
-      await setRulesEnabled(events, rulesToEnable, true)
+      const rulesToEnable =
+        allowlist.length > 0
+          ? allowlist
+          : (envName === 'dev' ? [] : allRules)
+      if (rulesToEnable.length === 0 && envName === 'dev') {
+        logger.warn('resume_allowlist_empty_dev', {
+          envName,
+          rulePrefix,
+          message:
+            'EVENT_RULE_ALLOWLIST is empty; leaving rules disabled to prevent runaway scheduled ECS tasks.',
+        })
+      } else {
+        await setRulesEnabled(events, rulesToEnable, true)
+      }
     }
 
     const desiredMap = shouldPause && pauseEcs
@@ -445,6 +581,13 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         )
     if (pauseEcs || !shouldPause) {
       await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
+    }
+
+    if (shouldPause) {
+      await stopEventRuleStartedTasks(ecs, ecsClusterName, {
+        rulePrefix,
+        reason: 'ops-pause: stop orphaned events-rule task',
+      })
     }
   }
 

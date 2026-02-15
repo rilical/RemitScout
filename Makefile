@@ -14,7 +14,7 @@ DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' 
 DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
-.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
+.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
 
 pause-dev:
 	@echo "Pausing dev (CDK deploy with devPaused=true)"
@@ -96,6 +96,54 @@ ops-resume-dev:
 		/tmp/remit-scout-ops-resume-dev.json >/dev/null; \
 	cat /tmp/remit-scout-ops-resume-dev.json; \
 	rm -f /tmp/remit-scout-ops-resume-dev.json
+
+dev-sanitize:
+	@echo "Dev sanitize: stop orphaned EventBridge-started tasks + purge key queues"
+	@CLUSTER="remit-scout-dev"; \
+	TASKS=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-tasks \
+		--cluster "$$CLUSTER" \
+		--region $(AWS_REGION) \
+		--desired-status RUNNING \
+		| jq -r '.taskArns[]' | tr '\n' ' '); \
+	if [ -n "$$TASKS" ]; then \
+		ORPHANS=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-tasks \
+			--cluster "$$CLUSTER" \
+			--region $(AWS_REGION) \
+			--tasks $$TASKS \
+			| jq -r '.tasks[] | select((.startedBy // "") | startswith("events-rule/")) | .taskArn'); \
+		if [ -n "$$ORPHANS" ]; then \
+			echo "Stopping orphan tasks:"; \
+			echo "$$ORPHANS"; \
+			for arn in $$ORPHANS; do \
+				AWS_PROFILE=$(AWS_PROFILE) aws ecs stop-task \
+					--cluster "$$CLUSTER" \
+					--region $(AWS_REGION) \
+					--task "$$arn" \
+					--reason "dev-sanitize: orphaned events-rule task" >/dev/null; \
+			done; \
+		else \
+			echo "No orphan event-rule tasks running."; \
+		fi; \
+	else \
+		echo "No RUNNING tasks in $$CLUSTER."; \
+	fi; \
+	echo "Purging key dev queues (non-DLQ): ingest-fanout-tier2, gold-live, ops-alerts"; \
+	for suffix in ingest-fanout-tier2 gold-live ops-alerts; do \
+		NAME="remit-scout-dev-$$suffix"; \
+		URL=$$(AWS_PROFILE=$(AWS_PROFILE) aws sqs get-queue-url \
+			--queue-name "$$NAME" \
+			--region $(AWS_REGION) \
+			--query 'QueueUrl' \
+			--output text 2>/dev/null); \
+		if [ -n "$$URL" ] && [ "$$URL" != "None" ]; then \
+			AWS_PROFILE=$(AWS_PROFILE) aws sqs purge-queue --queue-url "$$URL" --region $(AWS_REGION) >/dev/null || true; \
+			echo "Purge requested: $$NAME"; \
+		else \
+			echo "Queue missing or inaccessible: $$NAME"; \
+		fi; \
+	done; \
+	echo "Snapshot:"; \
+	$(MAKE) status-dev
 
 status-dev:
 	@echo "ECS service counts (dev)"
