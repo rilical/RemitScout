@@ -50,6 +50,16 @@ const getConnectionErrorHelp = (error: unknown): string => {
 type MigrationTarget = { label: string; dbUrl: string }
 type MigrationRunOptions = { dryRun?: boolean }
 
+const resolveMigratorUrl = (baseUrl?: string): string | undefined => {
+  // CI/CD + ops best practice: migrations run with a privileged DB user, application runtime uses a restricted user.
+  // Local/dev can set a one-off migrator URL without changing runtime credentials.
+  const migrator =
+    process.env.DATABASE_URL_PLANE_B_MIGRATOR ||
+    process.env.DATABASE_URL_PLANE_C_MIGRATOR ||
+    process.env.DATABASE_URL_MIGRATOR
+  return (migrator && migrator.trim()) || baseUrl
+}
+
 export const applyMigrations = async (
   target: MigrationTarget,
   options: MigrationRunOptions = {},
@@ -112,11 +122,12 @@ export const applyMigrations = async (
 
 export const runMigrations = async (): Promise<void> => {
   const dryRun = process.argv.includes('--dry-run')
-  const planeBUrl = config.db.planeBUrl
+  const planeBUrl = resolveMigratorUrl(config.db.planeBUrl)
   if (!planeBUrl) {
     console.error('\n❌ Database connection string is not configured\n')
     console.error('Please set one of the following environment variables:')
     console.error('  - DATABASE_URL_PLANE_B (recommended)')
+    console.error('  - DATABASE_URL_PLANE_B_MIGRATOR (preferred for CI/CD migrations)')
     console.error('  - DATABASE_URL (fallback)')
     console.error('\nExample:')
     console.error('  export DATABASE_URL_PLANE_B="postgres://user:pass@localhost:5432/dbname"\n')
@@ -124,7 +135,7 @@ export const runMigrations = async (): Promise<void> => {
   }
 
   const targets: MigrationTarget[] = [{ label: 'plane-b', dbUrl: planeBUrl }]
-  const planeCUrl = config.db.planeCUrl
+  const planeCUrl = resolveMigratorUrl(config.db.planeCUrl)
   if (planeCUrl && planeCUrl !== planeBUrl) {
     targets.push({ label: 'plane-c', dbUrl: planeCUrl })
   }
@@ -159,6 +170,17 @@ const handleError = (error: unknown) => {
   }
   
   console.error('Migration failed:', errorMessage || 'Unknown error')
+  if (errorMessage.toLowerCase().includes('permission denied for schema')) {
+    console.error('\n❌ Permission denied while applying migrations.')
+    console.error(
+      'This usually means your DATABASE_URL_PLANE_B user is a restricted runtime user.\n' +
+        'Fix: run migrations with a privileged migrator connection string.\n',
+    )
+    console.error('Options:')
+    console.error('  - Set DATABASE_URL_PLANE_B_MIGRATOR to a superuser/migrator URL (recommended).')
+    console.error('  - Or grant schema privileges to the runtime user (less preferred).')
+    console.error('')
+  }
   const help = getConnectionErrorHelp({ message: errorMessage, toString: () => errorString })
   if (help) {
     console.error(help)

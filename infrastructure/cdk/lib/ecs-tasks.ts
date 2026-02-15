@@ -41,6 +41,8 @@ export type EcsTaskOptions = {
   roles: IamResources
   cpuArchitecture?: CpuArchitecture
   planeBDbSecretArn?: string
+  // Optional: privileged DB secret for migrations only. Do not share this with runtime workers.
+  planeBDbMigratorSecretArn?: string
   planeBDbSsmName?: string
   planeBDbHost?: string
   planeBDbPort?: string
@@ -178,6 +180,7 @@ export const createEcsTasks = (
   })
 
   const planeBDbSecretArn = options.planeBDbSecretArn
+  const planeBDbMigratorSecretArn = options.planeBDbMigratorSecretArn
   const planeBDbSsmName = options.planeBDbSsmName
   const planeBDbHost = options.planeBDbHost
   const planeBDbPort = options.planeBDbPort
@@ -1435,6 +1438,9 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      ...(planeBDbMigratorSecretArn
+        ? { PLANE_B_DB_MIGRATOR_SECRET_ARN: planeBDbMigratorSecretArn }
+        : {}),
       HEALTH_PORT: '8080',
     },
     ...secretsConfig,

@@ -72,6 +72,23 @@ export const handler = async (): Promise<void> => {
     jsonKeys: ['url', 'DATABASE_URL_PLANE_B', 'database_url'],
   })
 
+  // Optional: privileged migration credentials. When present, db-migrate.ts will prefer this URL.
+  // This lets CI/CD run migrations as a migrator user while app runtime uses a restricted user.
+  await resolveDatabaseUrl({
+    envVar: 'DATABASE_URL_PLANE_B_MIGRATOR',
+    secretArnEnv: 'PLANE_B_DB_MIGRATOR_SECRET_ARN',
+    ssmNameEnv: 'PLANE_B_DB_MIGRATOR_SSM_NAME',
+    hostEnv: 'PLANE_B_DB_MIGRATOR_HOST',
+    portEnv: 'PLANE_B_DB_MIGRATOR_PORT',
+    nameEnv: 'PLANE_B_DB_MIGRATOR_NAME',
+    usernameEnv: 'PLANE_B_DB_MIGRATOR_USERNAME',
+    passwordEnv: 'PLANE_B_DB_MIGRATOR_PASSWORD',
+    requireJson: true,
+    required: false,
+    sslModeEnv: 'PGSSLMODE',
+    jsonKeys: ['url', 'DATABASE_URL_PLANE_B_MIGRATOR', 'database_url'],
+  })
+
   const { runStartupChecks } = await import('../../shared/startup')
   await runStartupChecks({
     requirements: {
@@ -82,6 +99,11 @@ export const handler = async (): Promise<void> => {
   try {
     if (process.env.DATABASE_URL_PLANE_B) {
       process.env.DATABASE_URL_PLANE_B = stripSslMode(process.env.DATABASE_URL_PLANE_B)
+    }
+    if (process.env.DATABASE_URL_PLANE_B_MIGRATOR) {
+      process.env.DATABASE_URL_PLANE_B_MIGRATOR = stripSslMode(
+        process.env.DATABASE_URL_PLANE_B_MIGRATOR,
+      )
     }
     if (!process.env.DATABASE_URL_PLANE_C && process.env.DATABASE_URL_PLANE_B) {
       process.env.DATABASE_URL_PLANE_C = process.env.DATABASE_URL_PLANE_B

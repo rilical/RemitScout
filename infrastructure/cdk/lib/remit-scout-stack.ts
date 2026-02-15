@@ -243,13 +243,19 @@ export class RemitScoutStack extends Stack {
     const planeADbSsmName =
       this.node.tryGetContext('planeADbSsmName') ??
       process.env.PLANE_A_DB_SSM_NAME
-    const planeBDbSecretArn =
-      this.node.tryGetContext('planeBDbSecretArn') ??
-      process.env.PLANE_B_DB_SECRET_ARN ??
-      database.credentialsSecret.secretArn
-    const planeBDbSsmName =
-      this.node.tryGetContext('planeBDbSsmName') ??
-      process.env.PLANE_B_DB_SSM_NAME
+	    const planeBDbSecretArn =
+	      this.node.tryGetContext('planeBDbSecretArn') ??
+	      process.env.PLANE_B_DB_SECRET_ARN ??
+	      database.credentialsSecret.secretArn
+	    // Migrations should run with a privileged user (or RDS master secret) to avoid runtime-user DDL permissions.
+	    // Runtime Plane B workers can still use a restricted DB user via PLANE_B_DB_SECRET_ARN.
+	    const planeBDbMigratorSecretArn =
+	      this.node.tryGetContext('planeBDbMigratorSecretArn') ??
+	      process.env.PLANE_B_DB_MIGRATOR_SECRET_ARN ??
+	      database.credentialsSecret.secretArn
+	    const planeBDbSsmName =
+	      this.node.tryGetContext('planeBDbSsmName') ??
+	      process.env.PLANE_B_DB_SSM_NAME
     const planeCDbSecretArn =
       this.node.tryGetContext('planeCDbSecretArn') ??
       process.env.PLANE_C_DB_SECRET_ARN ??
@@ -839,18 +845,19 @@ export class RemitScoutStack extends Stack {
     const planeCDbPort = '5432'
     const planeCDbName = 'remit_scout'
 
-	    const tasks = createEcsTasks(this, {
-	      envName,
-	      minimalMode,
-	      cpuArchitecture,
-	      backendRepository: registry.backendRepository,
-	      imageTag,
-	      roles: iam,
-      planeBDbSecretArn,
-      planeBDbSsmName,
-      redisSecretArn,
-      redisSecretJsonKey,
-      redisSsmName,
+		    const tasks = createEcsTasks(this, {
+		      envName,
+		      minimalMode,
+		      cpuArchitecture,
+		      backendRepository: registry.backendRepository,
+		      imageTag,
+		      roles: iam,
+	      planeBDbSecretArn,
+	      planeBDbMigratorSecretArn,
+	      planeBDbSsmName,
+	      redisSecretArn,
+	      redisSecretJsonKey,
+	      redisSsmName,
       redisUrl,
       planeBDbHost,
       planeBDbPort,
