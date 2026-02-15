@@ -5245,8 +5245,11 @@ const checkAdminAccess = async (signal?: AbortSignal) => {
   if (adminAccessChecked.value) return
   let aborted = false
   try {
-    await request('/admin/users', { query: { limit: 1 }, signal })
-    hasAdminAccess.value = true
+    // Determine admin access via `/me` instead of probing `/admin/*` routes.
+    // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
+    // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
+    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { retries: 0, signal })
+    hasAdminAccess.value = Boolean(me?.user?.is_admin)
   }
  catch (error: any) {
     if (error?.name === 'AbortError') {
@@ -5255,7 +5258,7 @@ const checkAdminAccess = async (signal?: AbortSignal) => {
     }
     hasAdminAccess.value = false
   }
- finally {
+  finally {
     if (!aborted) {
       adminAccessChecked.value = true
     }
