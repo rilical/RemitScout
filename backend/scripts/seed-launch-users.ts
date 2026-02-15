@@ -26,7 +26,7 @@ const logger = createLogger('script.seed-launch-users')
 const launchUsers: LaunchUserSpec[] = [
   {
     email: 'omar@remit-scout.com',
-    appRole: 'admin',
+    appRole: 'super_admin',
     planCode: 'enterprise',
     passwordEnvKey: 'LAUNCH_PASSWORD_OMAR',
   },
