@@ -312,15 +312,16 @@
 
           <div class="rounded-2xl border border-rs-border bg-surface p-6 shadow-sm">
             <h3 class="text-body-lg font-semibold text-rs-fg">
-              Mid‑market reference
+              Mid-market reference
             </h3>
             <p class="mt-3 text-body-sm text-neutral-600">
-              Mid‑market rates are sourced from OANDA. We prefer daily rates from
+              Mid-market rates are sourced from OANDA. We prefer daily rates from
               <code class="bg-neutral-100 px-1 py-0.5 rounded">gold.fx_rate_history</code>
               and fall back to the latest
               <code class="bg-neutral-100 px-1 py-0.5 rounded">gold.fx_rates</code> entry.
             </p>
           </div>
+        </div>
 
         <div class="mt-8 rounded-2xl border border-rs-border bg-neutral-50 p-6">
           <h3 class="text-body-lg font-semibold text-rs-fg">

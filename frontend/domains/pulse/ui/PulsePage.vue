@@ -461,6 +461,20 @@
                 <span class="text-neutral-700">|</span>
                 <button
                   class="hover:text-white"
+                  @click="scrollToSection('indices-integrity')"
+                >
+                  Indices Integrity
+                </button>
+                <span class="text-neutral-700">|</span>
+                <button
+                  class="hover:text-white"
+                  @click="scrollToSection('coverage-by-currency')"
+                >
+                  Coverage by Currency
+                </button>
+                <span class="text-neutral-700">|</span>
+                <button
+                  class="hover:text-white"
                   @click="scrollToSection('dispersion')"
                 >
                   Pricing Dispersion
@@ -616,6 +630,54 @@
                   {{ executiveNote || 'Loading insight...' }}
                 </p>
               </div>
+            </div>
+          </section>
+
+          <!-- 1b. Indices Integrity (Gold export truth) -->
+          <section
+            id="indices-integrity"
+            class="mb-10 px-page-x"
+            :class="highlightedSection === 'indices-integrity' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
+          >
+            <div class="mx-auto max-w-page">
+              <div class="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 class="text-h3 font-bold text-white">
+                    Indices Integrity
+                  </h2>
+                  <p class="text-body-sm text-neutral-400">
+                    Confidence, coverage, and suppression signals sourced directly from Gold exports.
+                  </p>
+                </div>
+                <div class="text-body-sm text-neutral-500">
+                  {{ indicesIntegrityUpdatedLabel }}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <ChartPreviewCard
+                  v-for="chart in indicesIntegrityCharts"
+                  :key="chart.id"
+                  :metadata="chart"
+                  :insight="getIndicesIntegrityInsight(chart.id)"
+                  :sparkline-data="getIndicesIntegritySparkline(chart.id)"
+                  :updated-at="getIndicesIntegrityUpdatedAt(chart.id)"
+                  @view="navigateToChart"
+                  @share="handleShare"
+                  @embed="handleEmbed"
+                />
+              </div>
+            </div>
+          </section>
+
+          <!-- 1c. Coverage by Send Currency (macro readiness signal) -->
+          <section
+            id="coverage-by-currency"
+            class="mb-10 px-page-x"
+            :class="highlightedSection === 'coverage-by-currency' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
+          >
+            <div class="mx-auto max-w-page">
+              <PulseCoverageByCurrency :filters="legacyFilters" />
             </div>
           </section>
 
@@ -1046,7 +1108,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
+import { getChartsBatch, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
 import { Icon } from '~/ui'
@@ -1072,6 +1134,8 @@ const PulseBankComparison = defineAsyncComponent(() => import('~/components/puls
 const PulseOperationalCoverage = defineAsyncComponent(() => import('~/components/pulse/PulseOperationalCoverage.vue'))
 const PulseReliabilityCoverage = defineAsyncComponent(() => import('~/components/pulse/PulseReliabilityCoverage.vue'))
 const PulseArbitrageAlert = defineAsyncComponent(() => import('~/components/pulse/PulseArbitrageAlert.vue'))
+const PulseCoverageByCurrency = defineAsyncComponent(() => import('~/components/pulse/PulseCoverageByCurrency.vue'))
+const ChartPreviewCard = defineAsyncComponent(() => import('~/domains/pulse/ui/ChartPreviewCard.vue'))
 
 const { pulseEnabled } = useFeatureFlags()
 
@@ -1604,6 +1668,36 @@ const legacyFilters = computed<PulseFilters>(() => ({
 }))
 
 const chartData = ref<Record<string, ChartData | null>>({})
+
+const INDICES_INTEGRITY_CHART_IDS = [
+  'indices-confidence',
+  'indices-provider-count',
+  'indices-suppression',
+] as const
+
+const indicesIntegrityCharts = computed(() => {
+  const allowed = new Set(INDICES_INTEGRITY_CHART_IDS)
+  return pulseChartRegistry.filter(chart => allowed.has(chart.id as any))
+})
+
+const indicesIntegrityData = ref<Record<string, ChartData | null>>({})
+const indicesIntegrityLoading = ref(false)
+const indicesIntegrityLoadKey = computed(() => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}:indices_integrity`)
+const indicesIntegrityLoadedKey = ref<string | null>(null)
+
+const indicesIntegrityUpdatedAt = computed(() => {
+  const candidates = INDICES_INTEGRITY_CHART_IDS
+    .map((id) => indicesIntegrityData.value[id]?.metadata?.lastUpdated || null)
+    .filter((value): value is string => Boolean(value) && typeof value === 'string' && value.trim().length > 0)
+  if (candidates.length === 0) return null
+  return candidates.sort((a, b) => a.localeCompare(b))[candidates.length - 1]
+})
+
+const indicesIntegrityUpdatedLabel = computed(() => {
+  if (!indicesIntegrityUpdatedAt.value) return 'Warming up'
+  return `Updated ${formatUpdatedLabel(indicesIntegrityUpdatedAt.value)}`
+})
+
 const snapshotSummary = ref<PulseSnapshotSummary | null>(null)
 const chartLoadKey = computed(() => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}`)
 const chartLoadedKey = ref<string | null>(null)
@@ -1620,6 +1714,53 @@ const executiveNote = computed(() => {
   return `Dispersion is ${spread}. Leader is ${leader}. Volatility: ${volatility}. Quote success: ${success}.`
 })
 
+function getIndicesIntegrityInsight(chartId: string): string {
+  const data = indicesIntegrityData.value[chartId]
+  return data?.insight || ''
+}
+
+function getIndicesIntegritySparkline(chartId: string) {
+  const data = indicesIntegrityData.value[chartId]
+  if (!data || data.series.length === 0) return []
+  return data.series[0].points
+}
+
+function getIndicesIntegrityUpdatedAt(chartId: string): string | null {
+  const data = indicesIntegrityData.value[chartId]
+  const updatedAt = data?.metadata?.lastUpdated
+  return updatedAt && typeof updatedAt === 'string' && updatedAt.trim().length > 0 ? updatedAt : null
+}
+
+async function loadIndicesIntegrity() {
+  if (!isPlus.value) return
+  if (store.viewMode !== 'analyst') return
+  if (indicesIntegrityLoading.value) return
+
+  const key = indicesIntegrityLoadKey.value
+  if (indicesIntegrityLoadedKey.value === key) return
+
+  try {
+    indicesIntegrityLoading.value = true
+
+    const response = await getChartsBatch([...INDICES_INTEGRITY_CHART_IDS], legacyFilters.value, '90d')
+    const newData: Record<string, ChartData | null> = {}
+    for (const id of INDICES_INTEGRITY_CHART_IDS) {
+      newData[id] = null
+    }
+    for (const entry of response.charts || []) {
+      newData[entry.id] = entry.chart || null
+    }
+    indicesIntegrityData.value = newData
+    indicesIntegrityLoadedKey.value = key
+  }
+  catch (e) {
+    useLogger('PulsePage').error('Failed to load indices integrity', e)
+  }
+  finally {
+    indicesIntegrityLoading.value = false
+  }
+}
+
 async function loadChartData() {
   if (!isPlus.value) return
   if (store.viewMode !== 'analyst') return
@@ -1630,15 +1771,14 @@ async function loadChartData() {
   try {
     chartLoading.value = true
     const chartIds = pulseChartRegistry.map(c => c.id)
-    const promises = chartIds.map(async (id) => {
-      const data = await getChartData(id, legacyFilters.value)
-      return { id, data }
-    })
-
-    const results = await Promise.all(promises)
     const newData: Record<string, ChartData | null> = {}
-    for (const { id, data } of results) {
-      newData[id] = data
+    for (const id of chartIds) {
+      newData[id] = null
+    }
+
+    const response = await getChartsBatch(chartIds, legacyFilters.value, '30d')
+    for (const entry of response.charts || []) {
+      newData[entry.id] = entry.chart || null
     }
     chartData.value = newData
     chartLoadedKey.value = key
@@ -1752,6 +1892,7 @@ watch(
     void loadCoverageSummary()
     if (store.viewMode === 'analyst') {
       void loadSnapshotSummary()
+      void loadIndicesIntegrity()
       void setupDeepDivesObserver()
     }
   },
@@ -1773,6 +1914,7 @@ watch(
   () => {
     if (!isPlus.value) return
     loadSnapshotSummary()
+    loadIndicesIntegrity()
     loadChartData()
     loadCoverageSummary()
   },
@@ -1785,6 +1927,7 @@ watch(
     if (!isPlus.value) return
     if (mode === 'analyst') {
       loadSnapshotSummary()
+      loadIndicesIntegrity()
       loadCoverageSummary()
       void setupDeepDivesObserver()
       return
@@ -1817,6 +1960,7 @@ onMounted(async () => {
     void refreshTrackedCorridors()
     void loadScreener()
     loadSnapshotSummary()
+    loadIndicesIntegrity()
     loadChartData()
     loadCoverageSummary()
     void setupDeepDivesObserver()

@@ -6,7 +6,7 @@ const ALLOWED_PATH_PREFIXES = [
   '/offers', '/ads', '/bank-vs-specialist', '/geo', '/click',
   '/newsletter', '/recent-searches', '/billing',
   '/me', '/watchlist', '/alerts', '/exports',
-  '/sessions', '/telemetry', '/admin', '/ops', '/audit', '/analytics',
+  '/sessions', '/telemetry', '/admin', '/ops', '/audit', '/analytics', '/pulse',
 ] as const
 
 export default defineEventHandler(async (event) => {

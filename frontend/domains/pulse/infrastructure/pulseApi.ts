@@ -3,6 +3,8 @@
 
 export {
   getChartData,
+  getChartsBatch,
+  getCoverageByCurrency,
   getCorridors,
   getCorridorById,
   getCorridorBySlug,

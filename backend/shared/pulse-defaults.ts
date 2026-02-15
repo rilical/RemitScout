@@ -63,6 +63,9 @@ const chartCategoryMap: Record<string, ChartCategory> = {
   'provider-availability': 'availability',
   'data-freshness': 'availability',
   'corridor-liquidity': 'availability',
+  'indices-confidence': 'availability',
+  'indices-provider-count': 'availability',
+  'indices-suppression': 'availability',
 }
 
 const titleFromId = (id: string) => id
@@ -91,6 +94,28 @@ const chartOverrides: Record<string, Partial<ChartMetadata>> = {
     unitLabel: 'bps',
     description: 'Remittance Volatility Index in basis points.',
     sourceNotes: 'Gold indices · $500 bank bucket · updated daily.',
+  },
+  'indices-confidence': {
+    title: 'Indices Confidence (weight_confidence)',
+    unit: 'percent',
+    unitLabel: '%',
+    description: 'Confidence score (0-100) used by the Gold indices weighting pipeline.',
+    sourceNotes: 'Gold export · cdp_daily · updated daily.',
+  },
+  'indices-provider-count': {
+    title: 'Indices Provider Count (provider_count)',
+    unit: 'count',
+    unitLabel: '',
+    description: 'Provider coverage count used for Gold indices eligibility and suppression.',
+    sourceNotes: 'Gold export · cdp_daily · updated daily.',
+  },
+  'indices-suppression': {
+    title: 'Indices Suppression Flag (suppression_flag)',
+    type: 'bar',
+    unit: 'flag',
+    unitLabel: '',
+    description: 'Whether the index point is suppressed due to coverage/confidence constraints.',
+    sourceNotes: 'Gold export · cdp_daily · updated daily.',
   },
 }
 

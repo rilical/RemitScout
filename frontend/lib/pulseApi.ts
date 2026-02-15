@@ -194,6 +194,71 @@ export async function getChartData(
   return await request<ChartData>(`/pulse/charts/${chartId}`, { query: buildPulseQuery(filters, { range }) })
 }
 
+export type PulseChartSource = 'gold_export' | 'gold_cache' | 'none'
+
+export interface PulseChartsBatchItem {
+  id: string
+  dataAvailable: boolean
+  updatedAt: string | null
+  source: PulseChartSource
+  chart: ChartData
+}
+
+export interface PulseChartsBatchResponse {
+  success: true
+  updatedAt: string | null
+  dataAvailable: boolean
+  charts: PulseChartsBatchItem[]
+}
+
+export async function getChartsBatch(
+  chartIds: string[],
+  filters: PulseFilters,
+  range: TimeRange = '30d',
+): Promise<PulseChartsBatchResponse> {
+  const { request } = useApi()
+  return await request<PulseChartsBatchResponse>('/pulse/charts', {
+    query: buildPulseQuery(filters, {
+      range,
+      chart_ids: chartIds.join(','),
+    }),
+  })
+}
+
+export interface PulseCoverageByCurrencyRow {
+  sendCurrency: string
+  corridorsTotal: number
+  corridorsSuppressed: number
+  corridorsAvailable: number
+  corridorsWith3PlusProviders: number
+  corridorsWith1to2Providers: number
+  corridorsWith0Providers: number
+  weightConfidenceP10: number | null
+  weightConfidenceP50: number | null
+  weightConfidenceP90: number | null
+}
+
+export interface PulseCoverageByCurrencyResponse {
+  success: true
+  date: string | null
+  updatedAt: string | null
+  rows: PulseCoverageByCurrencyRow[]
+}
+
+export async function getCoverageByCurrency(
+  filters: PulseFilters,
+  sendCurrencies: string[] = ['USD', 'AED', 'GBP', 'EUR'],
+  amountBucket: number = 500,
+): Promise<PulseCoverageByCurrencyResponse> {
+  const { request } = useApi()
+  return await request<PulseCoverageByCurrencyResponse>('/pulse/coverage-by-currency', {
+    query: buildPulseQuery(filters, {
+      send_currencies: sendCurrencies.join(','),
+      amount_bucket: amountBucket,
+    }),
+  })
+}
+
 export async function getMethodCoverage(filters: PulseFilters): Promise<MethodCoverageRow[]> {
   const { request } = useApi()
   return await request<MethodCoverageRow[]>('/pulse/method-coverage', { query: buildPulseQuery(filters) })

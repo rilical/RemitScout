@@ -100,7 +100,10 @@ const workspaceRoot = join(projectRoot, '..')
 const localNodeModules = join(projectRoot, 'node_modules')
 const workspaceNodeModules = join(workspaceRoot, 'node_modules')
 const workspacePnpmStore = join(workspaceNodeModules, '.pnpm')
-const appManifestAliasPath = join(projectRoot, '.nuxt', 'manifest', 'meta', 'dev.json')
+// Nuxt's internal `import("#app-manifest")` exists in a dead branch but Vite still resolves it.
+// In this monorepo + pnpm setup, Nuxt doesn't always inject the alias for dev, so we provide one.
+// The stub exists in-repo (not in `.nuxt`) so it is always resolvable.
+const appManifestAliasPath = join(projectRoot, 'app-manifest-stub.ts')
 const defaultWatchIgnored = [
   '**/node_modules/**',
   '**/.pnpm/**',
@@ -388,7 +391,7 @@ export default defineNuxtConfig({
   // Vite Configuration
   vite: {
     // Nuxt's internal dynamic import("#app-manifest") can fail to resolve in this monorepo setup.
-    // Map it explicitly to the generated dev manifest JSON (nuxt prepare writes it).
+    // Map it explicitly to a local stub so Vite import-analysis doesn't error.
     resolve: {
       alias: {
         '#app-manifest': appManifestAliasPath,

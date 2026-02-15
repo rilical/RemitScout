@@ -30,10 +30,10 @@
             </label>
             <button
               class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700"
-              :disabled="loading"
+              :disabled="isLoading"
               @click="loadAnalytics"
             >
-              {{ loading ? 'Loading…' : 'Refresh' }}
+              {{ isLoading ? 'Loading…' : 'Refresh' }}
             </button>
           </div>
         </div>
@@ -405,11 +405,11 @@ setSeo({
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
 
-const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact, loading, error } = useAnalytics()
-const { formatMoney } = useRemittanceApi()
+	const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact } = useAnalytics()
+	const { formatMoney } = useRemittanceApi()
 
-const loading = ref(false)
-const error = ref<string | null>(null)
+	const isLoading = ref(false)
+	const error = ref<string | null>(null)
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -463,8 +463,8 @@ const formatConversionValues = (values?: Record<string, number> | null) => {
 }
 
 const loadAnalytics = async () => {
-  if (loading.value) return
-  loading.value = true
+  if (isLoading.value) return
+  isLoading.value = true
   error.value = null
   const range = {
     start_date: new Date(startDate.value).toISOString(),
@@ -502,12 +502,8 @@ const loadAnalytics = async () => {
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
   } finally {
-    loading.value = false
+    isLoading.value = false
   }
-}
-
-const refresh = () => {
-  void loadAnalytics()
 }
 
 const refresh = () => {

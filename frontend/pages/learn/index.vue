@@ -815,7 +815,7 @@
           >
             <div class="p-6 flex flex-col flex-1">
               <div class="flex items-center gap-2 mb-3">
-                <span class="rounded-full bg-success-600 px-3 py-1.5 text-body-sm font-semibold text-success-600">
+                <span class="rounded-full bg-success-600/15 border border-success-600/30 px-3 py-1.5 text-body-sm font-semibold text-success-600">
                   Beginner
                 </span>
                 <span class="text-body-sm text-neutral-500">
@@ -823,7 +823,10 @@
                 </span>
               </div>
               <h3 class="text-body-lg font-bold text-neutral-900 mb-3 group-hover:text-brand-600 motion-safe:transition-colors">
-                <RichHtml tag="span" :content="guide.title" />
+                <RichHtml
+                  tag="span"
+                  :content="guide.title"
+                />
               </h3>
               <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
                 {{ guide.excerpt }}
@@ -845,13 +848,16 @@
                 </svg>
               </div>
             </div>
-          </div>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
 
-    <!-- Research & Intelligence Section (Institutional) -->
-    <section class="py-16 lg:py-20 bg-neutral-900">
-      <div class="mx-auto max-w-page px-page-x">
-        <div class="mb-12">
-          <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
+	    <!-- Research & Intelligence Section (Institutional) -->
+	    <section class="py-16 lg:py-20 bg-neutral-900">
+	      <div class="mx-auto max-w-page px-page-x">
+	        <div class="mb-12">
+	          <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
             For Transparency & Research
           </p>
           <h2 class="text-h2 font-bold text-white mb-4">

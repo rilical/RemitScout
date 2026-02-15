@@ -713,30 +713,10 @@ const toastMessage = ref('')
 const limitState = ref<{ feature: 'watchlist' | 'alert', limit: number } | null>(null)
 const showSmartExplainer = ref(false)
 
-const modalRendered = computed(() => isOpen.value && Boolean(context.value))
+const shouldRenderModal = computed(() => isOpen.value && Boolean(context.value))
 
 watch(
-  () => modalRendered.value,
-  async (open) => {
-    if (!open) {
-      deactivate()
-      return
-    }
-
-    await nextTick()
-    activate()
-  },
-  { immediate: true },
-)
-
-onBeforeUnmount(() => {
-  deactivate()
-})
-
-const modalRendered = computed(() => isOpen.value && Boolean(context.value))
-
-watch(
-  () => modalRendered.value,
+  () => shouldRenderModal.value,
   async (open) => {
     if (!open) {
       deactivate()

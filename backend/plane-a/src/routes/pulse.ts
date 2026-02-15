@@ -7,6 +7,7 @@ import { createTtlCache } from '../../../shared/cache'
 import { buildChartData, pulseDefaults } from '../../../shared/pulse-defaults'
 import {
   PULSE_AMOUNTS,
+  PULSE_CHART_IDS,
   PULSE_PAYIN_METHODS,
   PULSE_PAYOUT_METHODS,
   buildPulseCacheKey,
@@ -27,7 +28,14 @@ const logger = createLogger('plane-a.pulse')
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
 const pulseCorridorsCache = createTtlCache({ namespace: 'plane_a:pulse_corridors' })
 const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
-const INDEX_CHART_IDS = new Set(['all-in-cost', 'fx-markup', 'volatility-pulse'])
+const INDEX_CHART_IDS = new Set([
+  'all-in-cost',
+  'fx-markup',
+  'volatility-pulse',
+  'indices-confidence',
+  'indices-provider-count',
+  'indices-suppression',
+])
 
 const arrow = '\u2192'
 
@@ -211,6 +219,13 @@ const parseCorridorIdsParam = (value: unknown): string[] => {
   return []
 }
 
+const parseChartIdsParam = (value: unknown): string[] => {
+  const raw = parseCorridorIdsParam(value)
+  return raw
+    .map((id) => id.trim())
+    .filter(Boolean)
+}
+
 const parseBooleanParam = (value: unknown, fallback: boolean) => {
   if (typeof value === 'boolean') return value
   if (typeof value === 'number') return value !== 0
@@ -258,32 +273,63 @@ const buildIndicesChartSeries = (
     rci_ratio: number | null
     rvi_bps: number | null
     mid_market_rate: number | null
+    weight_confidence: number | null
+    provider_count: number | null
     suppression_flag: boolean
+    suppression_reason?: string | null
   }>,
 ): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number }> }> => {
-  const points = rows
-    .filter((row) => !row.suppression_flag)
-    .map((row) => {
-      const date = row.date instanceof Date ? row.date : new Date(row.date)
-      const timestamp = Number.isNaN(date.getTime()) ? Date.now() : date.getTime()
+  const points: Array<{ t: number; v: number }> = []
 
-      if (chartId === 'all-in-cost') {
-        const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
-        return value !== null ? { t: timestamp, v: value } : null
-      }
-      if (chartId === 'fx-markup') {
-        if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) return null
-        const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
-        return Number.isFinite(value) ? { t: timestamp, v: value } : null
-      }
-      if (chartId === 'volatility-pulse') {
-        const value = row.rvi_bps
-        return value !== null ? { t: timestamp, v: value } : null
-      }
+  for (const row of rows) {
+    const date = row.date instanceof Date ? row.date : new Date(row.date)
+    const timestamp = Number.isNaN(date.getTime()) ? Date.now() : date.getTime()
 
-      return null
-    })
-    .filter((point): point is { t: number; v: number } => Boolean(point))
+    if (chartId === 'indices-suppression') {
+      points.push({ t: timestamp, v: row.suppression_flag ? 1 : 0 })
+      continue
+    }
+
+    if (chartId === 'indices-confidence') {
+      if (row.weight_confidence === null) continue
+      const value = row.weight_confidence * 100
+      if (!Number.isFinite(value)) continue
+      points.push({ t: timestamp, v: value })
+      continue
+    }
+
+    if (chartId === 'indices-provider-count') {
+      if (row.provider_count === null) continue
+      const value = row.provider_count
+      if (!Number.isFinite(value)) continue
+      points.push({ t: timestamp, v: value })
+      continue
+    }
+
+    // TEER/RCI/RVI indices points must not include suppressed days.
+    if (row.suppression_flag) continue
+
+    if (chartId === 'all-in-cost') {
+      const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
+      if (value === null) continue
+      points.push({ t: timestamp, v: value })
+      continue
+    }
+
+    if (chartId === 'fx-markup') {
+      if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) continue
+      const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
+      if (!Number.isFinite(value)) continue
+      points.push({ t: timestamp, v: value })
+      continue
+    }
+
+    if (chartId === 'volatility-pulse') {
+      const value = row.rvi_bps
+      if (value === null) continue
+      points.push({ t: timestamp, v: value })
+    }
+  }
 
   if (!points.length) return []
 
@@ -295,6 +341,28 @@ const buildIndicesChartSeries = (
       points,
     },
   ]
+}
+
+const buildSuppressionAnnotations = (rows: Array<{
+  date: Date | string
+  suppression_flag: boolean
+  suppression_reason?: string | null
+}>) => {
+  const out: Array<{ t: number; label: string; type: 'event' }> = []
+
+  for (const row of rows) {
+    if (!row.suppression_flag) continue
+    const date = row.date instanceof Date ? row.date : new Date(row.date)
+    const timestamp = Number.isNaN(date.getTime()) ? Date.now() : date.getTime()
+    const reason = typeof row.suppression_reason === 'string' ? row.suppression_reason.trim() : ''
+    out.push({
+      t: timestamp,
+      label: reason ? `Suppressed: ${reason}` : 'Suppressed',
+      type: 'event',
+    })
+  }
+
+  return out
 }
 
 const loadPulseEntry = async (
@@ -371,6 +439,7 @@ const loadIndicesChartData = async (
   })
 
   const series = buildIndicesChartSeries(chartId, rows)
+  const annotations = buildSuppressionAnnotations(rows)
   const lastUpdated = rows.reduce<Date | null>((latest, row) => {
     if (!row.created_at) return latest
     if (!latest || row.created_at > latest) return row.created_at
@@ -380,6 +449,7 @@ const loadIndicesChartData = async (
   const response = {
     ...fallback,
     series,
+    ...(annotations.length ? { annotations } : {}),
     metadata: {
       ...fallback.metadata,
       lastUpdated: lastUpdated ? lastUpdated.toISOString() : fallback.metadata.lastUpdated,
@@ -1297,10 +1367,106 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  app.get('/pulse/charts', guard, async (request) => {
+    const startTime = Date.now()
+    try {
+      const queryParams = (request.query ?? {}) as Record<string, unknown>
+
+      const chartIdsRaw = parseChartIdsParam(
+        queryParams.chart_ids ?? queryParams.chartIds ?? queryParams.chart_id ?? queryParams.chartId,
+      )
+      const chartIdsUnique = Array.from(new Set(chartIdsRaw))
+        .filter((value) => typeof value === 'string' && value.trim().length > 0)
+      const chartIds = chartIdsUnique.length > 0 ? chartIdsUnique : [...PULSE_CHART_IDS]
+
+      if (chartIds.length > 50) {
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'chart_ids_limit_exceeded',
+            limit: 50,
+            received: chartIds.length,
+          },
+        })
+      }
+
+      for (const id of chartIds) {
+        if (!/^[a-z0-9-]{1,64}$/i.test(id)) {
+          throw new ValidationError('Invalid request', {
+            details: {
+              error: 'invalid_chart_id',
+              chart_id: id,
+            },
+          })
+        }
+      }
+
+      const filters = buildPulseFilters(queryParams)
+
+      const charts = await Promise.all(chartIds.map(async (chartId) => {
+        if (INDEX_CHART_IDS.has(chartId)) {
+          const indices = await loadIndices(chartId, filters, queryParams)
+          const dataAvailable = Array.isArray(indices.series) && indices.series.length > 0
+          const updatedAt = indices.metadata?.lastUpdated || null
+          return {
+            id: chartId,
+            dataAvailable,
+            updatedAt: updatedAt || null,
+            source: 'gold_export' as const,
+            chart: {
+              ...indices,
+              dataAvailable,
+              updatedAt: updatedAt || null,
+              source: 'gold_export' as const,
+            },
+          }
+        }
+
+        const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, filters, null)
+        const normalized = normalizeChartPayload(chartId, payload, updatedAt)
+        const dataAvailable = Boolean(updatedAt)
+
+        return {
+          id: chartId,
+          dataAvailable,
+          updatedAt: updatedAt || null,
+          source: updatedAt ? ('gold_cache' as const) : ('none' as const),
+          chart: {
+            ...normalized,
+            dataAvailable,
+            updatedAt: updatedAt || null,
+            source: updatedAt ? ('gold_cache' as const) : ('none' as const),
+          },
+        }
+      }))
+
+      const updatedAt = charts.reduce<string | null>((latest, entry) => {
+        if (!entry.updatedAt) return latest
+        if (!latest) return entry.updatedAt
+        return entry.updatedAt > latest ? entry.updatedAt : latest
+      }, null)
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/charts', 200, durationSeconds)
+
+      return {
+        success: true as const,
+        updatedAt,
+        dataAvailable: charts.some((entry) => entry.dataAvailable),
+        charts,
+      }
+    } catch (error) {
+      const statusCode = (error as any)?.statusCode
+      const normalizedStatus = Number.isFinite(Number(statusCode)) ? Number(statusCode) : 500
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/charts', normalizedStatus >= 400 ? normalizedStatus : 500, durationSeconds)
+      throw error
+    }
+  })
+
   app.get('/pulse/charts/:chartId', guard, async (request, _reply) => {
     const chartId = (request.params as { chartId?: string }).chartId
     if (!chartId) {
-            throw new ValidationError('Invalid request', { details: { error: 'missing_chart_id' } })
+      throw new ValidationError('Invalid request', { details: { error: 'missing_chart_id' } })
     }
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     if (INDEX_CHART_IDS.has(chartId)) {
@@ -1318,6 +1484,152 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       dataAvailable: Boolean(updatedAt),
       updatedAt: updatedAt || null,
       source: updatedAt ? 'gold_cache' : 'none',
+    }
+  })
+
+  app.get('/pulse/coverage-by-currency', guard, async (request) => {
+    const startTime = Date.now()
+    try {
+      const queryParams = (request.query ?? {}) as Record<string, unknown>
+      const filters = buildPulseFilters(queryParams)
+
+      const sendCurrenciesRaw = parseCorridorIdsParam(queryParams.send_currencies)
+      const requestedCurrencies = (sendCurrenciesRaw.length ? sendCurrenciesRaw : ['USD', 'AED', 'GBP', 'EUR'])
+        .map((value) => String(value || '').trim().toUpperCase())
+        .filter(Boolean)
+      const sendCurrencies = Array.from(new Set(requestedCurrencies))
+        .filter((value) => /^[A-Z]{3}$/.test(value))
+        .slice(0, 10)
+
+      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup'])
+      const methodProfileParam = typeof queryParams.method_profile === 'string'
+        ? queryParams.method_profile.trim()
+        : null
+      const derivedMethodProfile = resolveIndicesMethodProfile(filters) || 'standard_bank'
+      const methodProfile = (methodProfileParam && allowedMethodProfiles.has(methodProfileParam))
+        ? (methodProfileParam as 'standard_bank' | 'standard_card' | 'cash_pickup')
+        : derivedMethodProfile
+
+      const amountBucketRaw = typeof queryParams.amount_bucket === 'string' || typeof queryParams.amount_bucket === 'number'
+        ? Number(queryParams.amount_bucket)
+        : null
+      const amountBucket = Number.isFinite(amountBucketRaw) && amountBucketRaw && amountBucketRaw > 0
+        ? Math.round(amountBucketRaw)
+        : INDICES_AMOUNT_BUCKET
+
+      const latestDateResult = await query<{ max_date: Date | null }>(
+        `SELECT MAX(date) AS max_date
+           FROM gold_export.cdp_daily
+          WHERE amount_bucket = $1
+            AND method_profile = $2`,
+        [amountBucket, methodProfile],
+        planeAPool,
+      )
+
+      const latestDate = latestDateResult.rows[0]?.max_date ?? null
+      if (!latestDate) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('GET', '/pulse/coverage-by-currency', 200, durationSeconds)
+        return {
+          success: true as const,
+          date: null,
+          updatedAt: null,
+          rows: [],
+        }
+      }
+
+      const updatedAtResult = await query<{ updated_at: Date | null }>(
+        `SELECT MAX(created_at) AS updated_at
+           FROM gold_export.cdp_daily
+          WHERE amount_bucket = $1
+            AND method_profile = $2
+            AND date = $3`,
+        [amountBucket, methodProfile, latestDate],
+        planeAPool,
+      )
+      const updatedAt = toIsoString(updatedAtResult.rows[0]?.updated_at) || null
+
+      const result = await query<{
+        send_currency: string
+        corridors_total: number
+        corridors_suppressed: number
+        corridors_available: number
+        corridors_with_3_plus_providers: number
+        corridors_with_1_to_2_providers: number
+        corridors_with_0_providers: number
+        weight_confidence_p10: number | null
+        weight_confidence_p50: number | null
+        weight_confidence_p90: number | null
+      }>(
+        `SELECT
+            SPLIT_PART(corridor_id, '-', 3) AS send_currency,
+            COUNT(*)::int AS corridors_total,
+            COUNT(*) FILTER (WHERE suppression_flag IS TRUE)::int AS corridors_suppressed,
+            COUNT(*) FILTER (WHERE suppression_flag IS FALSE)::int AS corridors_available,
+            COUNT(*) FILTER (WHERE COALESCE(provider_count, 0) >= 3)::int AS corridors_with_3_plus_providers,
+            COUNT(*) FILTER (WHERE COALESCE(provider_count, 0) BETWEEN 1 AND 2)::int AS corridors_with_1_to_2_providers,
+            COUNT(*) FILTER (WHERE COALESCE(provider_count, 0) = 0)::int AS corridors_with_0_providers,
+            percentile_cont(0.1) WITHIN GROUP (ORDER BY weight_confidence) FILTER (WHERE weight_confidence IS NOT NULL) AS weight_confidence_p10,
+            percentile_cont(0.5) WITHIN GROUP (ORDER BY weight_confidence) FILTER (WHERE weight_confidence IS NOT NULL) AS weight_confidence_p50,
+            percentile_cont(0.9) WITHIN GROUP (ORDER BY weight_confidence) FILTER (WHERE weight_confidence IS NOT NULL) AS weight_confidence_p90
+          FROM gold_export.cdp_daily
+         WHERE amount_bucket = $1
+           AND method_profile = $2
+           AND date = $3
+           AND SPLIT_PART(corridor_id, '-', 3) = ANY($4)
+         GROUP BY send_currency
+         ORDER BY send_currency ASC`,
+        [amountBucket, methodProfile, latestDate, sendCurrencies],
+        planeAPool,
+      )
+
+      const rowByCurrency = new Map(result.rows.map((row) => [row.send_currency.toUpperCase(), row]))
+      const rows = sendCurrencies.map((sendCurrency) => {
+        const row = rowByCurrency.get(sendCurrency.toUpperCase())
+        if (!row) {
+          return {
+            sendCurrency,
+            corridorsTotal: 0,
+            corridorsSuppressed: 0,
+            corridorsAvailable: 0,
+            corridorsWith3PlusProviders: 0,
+            corridorsWith1to2Providers: 0,
+            corridorsWith0Providers: 0,
+            weightConfidenceP10: null,
+            weightConfidenceP50: null,
+            weightConfidenceP90: null,
+          }
+        }
+
+        return {
+          sendCurrency,
+          corridorsTotal: Number(row.corridors_total) || 0,
+          corridorsSuppressed: Number(row.corridors_suppressed) || 0,
+          corridorsAvailable: Number(row.corridors_available) || 0,
+          corridorsWith3PlusProviders: Number(row.corridors_with_3_plus_providers) || 0,
+          corridorsWith1to2Providers: Number(row.corridors_with_1_to_2_providers) || 0,
+          corridorsWith0Providers: Number(row.corridors_with_0_providers) || 0,
+          weightConfidenceP10: row.weight_confidence_p10 !== null ? Number(row.weight_confidence_p10) : null,
+          weightConfidenceP50: row.weight_confidence_p50 !== null ? Number(row.weight_confidence_p50) : null,
+          weightConfidenceP90: row.weight_confidence_p90 !== null ? Number(row.weight_confidence_p90) : null,
+        }
+      })
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/coverage-by-currency', 200, durationSeconds)
+
+      return {
+        success: true as const,
+        date: latestDate.toISOString().slice(0, 10),
+        updatedAt,
+        rows,
+      }
+    } catch (error) {
+      const statusCode = (error as any)?.statusCode
+      const normalizedStatus = Number.isFinite(Number(statusCode)) ? Number(statusCode) : 500
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/coverage-by-currency', normalizedStatus >= 400 ? normalizedStatus : 500, durationSeconds)
+      throw error
     }
   })
 
