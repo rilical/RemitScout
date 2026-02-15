@@ -90,7 +90,7 @@
 
       <div
         v-else
-        class="flex flex-wrap gap-4"
+        class="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
         <div
           v-for="item in statItems"
@@ -220,7 +220,7 @@
 
       <div
         v-else
-        class="flex flex-wrap gap-4"
+        class="grid grid-cols-2 md:grid-cols-4 gap-4"
       >
         <div
           v-for="item in statItems"

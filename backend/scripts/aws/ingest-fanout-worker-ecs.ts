@@ -1,6 +1,7 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
+import { config } from '../../shared/config'
 
 const logger = createLogger('script.ingest-fanout-worker-ecs')
 

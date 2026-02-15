@@ -71,6 +71,8 @@ const formatCorridor = (m: PulseTeaserMover) => {
     countries: `${m.fromCountry} → ${m.toCountry}`,
   }
 }
+
+const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP', 'CAD/INR']
 </script>
 
 <template>
@@ -107,11 +109,12 @@ const formatCorridor = (m: PulseTeaserMover) => {
           </div>
         </div>
 
-        <div class="p-6 sm:p-8">
-          <div
-            v-if="pending"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+        <!-- Loading state -->
+        <div
+          v-if="pending"
+          class="p-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="n in 6"
               :key="n"
@@ -133,6 +136,7 @@ const formatCorridor = (m: PulseTeaserMover) => {
               />
             </div>
           </div>
+        </div>
 
           <div
             v-else-if="movers.length === 0"
@@ -148,11 +152,14 @@ const formatCorridor = (m: PulseTeaserMover) => {
               We do not show placeholder numbers. Once Gold Export has recent corridor buckets, the movers list will appear here.
             </p>
           </div>
+        </div>
 
-          <div
-            v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+        <!-- Live data grid -->
+        <div
+          v-else
+          class="p-4 sm:p-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="m in movers"
               :key="m.corridorId"

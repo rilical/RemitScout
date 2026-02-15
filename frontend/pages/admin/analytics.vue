@@ -408,6 +408,9 @@ const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue
 const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact, loading, error } = useAnalytics()
 const { formatMoney } = useRemittanceApi()
 
+const loading = ref(false)
+const error = ref<string | null>(null)
+
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
 const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -460,29 +463,51 @@ const formatConversionValues = (values?: Record<string, number> | null) => {
 }
 
 const loadAnalytics = async () => {
+  if (loading.value) return
+  loading.value = true
+  error.value = null
   const range = {
     start_date: new Date(startDate.value).toISOString(),
     end_date: new Date(endDate.value).toISOString(),
   }
 
-  const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = await Promise.all([
-    getPopularCorridors({ ...range, limit: 12 }),
-    getFavoriteProviders({ ...range, limit: 12 }),
-    getSessionMetrics(range),
-    getHeatmapData({ ...range, aggregation: 'country' }),
-    getSavingsMetrics(range),
-    getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
-    getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
-  ])
+  try {
+    const results = await Promise.allSettled([
+      getPopularCorridors({ ...range, limit: 12 }),
+      getFavoriteProviders({ ...range, limit: 12 }),
+      getSessionMetrics(range),
+      getHeatmapData({ ...range, aggregation: 'country' }),
+      getSavingsMetrics(range),
+      getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
+      getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
+    ])
 
-  popularCorridors.value = corridors?.corridors || []
-  favoriteProviders.value = providers?.providers || []
-  sessionMetrics.value = sessions || sessionMetrics.value
-  heatmap.value = heatmapRes?.heatmap || []
-  savingsSummary.value = savings?.summary || savingsSummary.value
-  userPatterns.value = patterns?.patterns || []
-  providerImpact.value = impact?.providers || []
-  providerCorridors.value = impact?.corridors || []
+    const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = results
+    popularCorridors.value = corridors.status === 'fulfilled' ? (corridors.value?.corridors || []) : []
+    favoriteProviders.value = providers.status === 'fulfilled' ? (providers.value?.providers || []) : []
+    sessionMetrics.value = sessions.status === 'fulfilled' && sessions.value ? sessions.value : sessionMetrics.value
+    heatmap.value = heatmapRes.status === 'fulfilled' ? (heatmapRes.value?.heatmap || []) : []
+    savingsSummary.value = savings.status === 'fulfilled' && savings.value?.summary ? savings.value.summary : savingsSummary.value
+    userPatterns.value = patterns.status === 'fulfilled' ? (patterns.value?.patterns || []) : []
+    providerImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers || []) : []
+    providerCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors || []) : []
+
+    const failures = results.filter(r => r.status === 'rejected')
+    if (failures.length === results.length) {
+      const reason = (failures[0] as PromiseRejectedResult).reason
+      error.value = reason?.message || 'All analytics endpoints failed to load.'
+    } else if (failures.length > 0) {
+      error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
+    }
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const refresh = () => {
+  void loadAnalytics()
 }
 
 const refresh = () => {

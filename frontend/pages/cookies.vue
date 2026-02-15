@@ -141,8 +141,12 @@
 <script setup lang="ts">
 import LegalPageShell from '~/components/legal/LegalPageShell.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { useCookiePreferencesModal } from '~/composables/useCookiePreferencesModal'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+const { open } = useCookiePreferencesModal()
+
+const openCookiePreferences = () => open()
 
 const lastUpdatedIso = '2026-02-09'
 const lastUpdatedLabel = 'February 9, 2026'

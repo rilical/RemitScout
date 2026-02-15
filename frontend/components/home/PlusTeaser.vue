@@ -29,7 +29,7 @@
         </p>
 
         <!-- Free vs Plus Comparison -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 min-w-0">
           <!-- Free Account -->
           <div class="rounded-xl border-2 border-neutral-600 p-8 bg-neutral-900">
             <div class="flex items-center gap-3 mb-6">
@@ -267,7 +267,7 @@
         <h3 class="text-h2 font-bold text-neutral-900 text-center mb-10">
           What You Get with Plus
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-0">
           <!-- Feature 1 -->
           <div class="bg-neutral-800 rounded-xl border-2 border-neutral-700 p-6 hover:border-brand-600 hover:shadow-lg transition-all flex flex-col">
             <div class="w-12 h-12 rounded-lg bg-brand-600 flex items-center justify-center mb-4">

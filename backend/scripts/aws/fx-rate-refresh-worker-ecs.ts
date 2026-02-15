@@ -8,6 +8,7 @@
 import { createLogger } from '../../shared/logger'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { formatError } from '../../shared/utils/error-handling'
+import { config } from '../../shared/config'
 
 const logger = createLogger('script.fx-rate-refresh-worker-ecs')
 

@@ -1,6 +1,9 @@
 export type AdPlacement =
   | 'compare_inline'
   | 'compare_sidebar'
+  | 'corridor_interstitial'
+  | 'corridor_below_faq'
+  | 'corridor_footer'
   | 'home_inline'
   | 'dashboard_inline'
   | 'blog_sidebar'
@@ -47,6 +50,21 @@ const PLACEMENT_CONFIG: Record<AdPlacement, PlacementConfig> = {
     containerClass: 'shadow-sm',
     showRemoveLink: true,
   },
+  corridor_interstitial: {
+    layout: 'horizontal',
+    containerClass: 'shadow-sm',
+    showRemoveLink: true,
+  },
+  corridor_below_faq: {
+    layout: 'horizontal',
+    containerClass: 'shadow-sm',
+    showRemoveLink: true,
+  },
+  corridor_footer: {
+    layout: 'horizontal',
+    containerClass: 'shadow-sm',
+    showRemoveLink: true,
+  },
   home_inline: {
     layout: 'horizontal',
     containerClass: 'shadow-sm',
@@ -89,6 +107,9 @@ const HOUSE_ADS: AdCreative[] = [
     placements: [
       'compare_inline',
       'compare_sidebar',
+      'corridor_interstitial',
+      'corridor_below_faq',
+      'corridor_footer',
       'home_inline',
       'dashboard_inline',
       'blog_sidebar',

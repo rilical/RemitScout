@@ -15,7 +15,7 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
           v-for="(guide, index) in guides"
           :key="index"
@@ -202,7 +202,7 @@ const getCategoryName = (key: string): string => {
 
 const guides = computed(() => {
   return allGuides.value
-    .slice(0, 8)
+    .slice(0, 6)
     .map(guide => ({
       title: guide.title || '',
       blurb: guide.excerpt || '',

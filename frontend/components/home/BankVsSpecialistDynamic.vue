@@ -129,14 +129,14 @@
       <!-- Side by Side Comparison Boxes -->
       <div
         v-else-if="comparison"
-        class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8"
       >
         <!-- Wells Fargo Box -->
         <div class="bg-surface rounded-3xl border-2 border-danger-600 p-8 shadow-xl hover:shadow-2xl transition-shadow">
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.bank.logoUrl"
-              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
+              class="h-24 w-24 flex-shrink-0 flex items-center justify-center overflow-visible"
             >
               <NuxtImg
                 :src="comparison.bank.logoUrl"
@@ -150,7 +150,7 @@
             </div>
             <div
               v-else
-              class="h-20 w-20 flex items-center justify-center flex-shrink-0"
+              class="h-24 w-24 flex-shrink-0 flex items-center justify-center overflow-visible"
             >
               <NuxtImg
                 src="/logos/wellsfargo.svg"
@@ -244,6 +244,7 @@
                   d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
                 />
               </svg>
+              </div>
             </div>
             <div>
               <h3 class="text-h3 font-bold text-neutral-900">
@@ -512,6 +513,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+import { normalizeProviderSlug, getProviderLogoPath } from '~/composables/useProviderLogo'
 
 const amount = 500
 
@@ -526,6 +528,17 @@ const { data, pending, error } = await useRemittanceApi().useBankVsSpecialist(
 )
 
 const comparison = computed(() => data.value?.data)
+
+const topProviderSlug = computed(() => {
+  const top = comparison.value?.top
+  if (!top) return ''
+  return normalizeProviderSlug(top.providerId || top.name)
+})
+
+const topProviderLogoSrc = computed(() => {
+  const slug = topProviderSlug.value
+  return slug ? getProviderLogoPath(slug) : ''
+})
 
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''

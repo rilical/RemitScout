@@ -157,6 +157,10 @@ const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
   if (!isConfigured.value) {
+    if (supabaseSuppressConfigError) {
+      await navigateTo('/sign-in')
+      return
+    }
     errorMessage.value = 'Supabase is not configured.'
     return
   }

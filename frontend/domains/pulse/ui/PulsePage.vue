@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-neutral-900">
-    <!-- Plus Gate: Show upgrade prompt if not Plus member -->
+    <!-- Public preview (no Plus required) -->
     <div
       v-if="!isPlus"
       class="min-h-screen flex items-center justify-center py-16 px-page-x"
@@ -184,7 +184,7 @@
                   :class="store.viewMode === 'sender' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'"
                   @click="setViewMode('sender')"
                 >
-                  Sender
+                  Decision
                 </button>
                 <button
                   type="button"
@@ -192,7 +192,7 @@
                   :class="store.viewMode === 'analyst' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'"
                   @click="setViewMode('analyst')"
                 >
-                  Analyst
+                  Deep Dive
                 </button>
               </div>
               <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-medium text-neutral-300">
@@ -435,13 +435,13 @@
               v-if="store.viewMode === 'sender'"
               class="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-body-sm text-neutral-300"
             >
-              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Analyst mode.
+              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Deep Dive.
               <button
                 type="button"
                 class="ml-2 inline-flex items-center gap-2 text-brand-600 hover:text-brand-500 font-semibold"
                 @click="setViewMode('analyst')"
               >
-                Switch to Analyst →
+                Switch to Deep Dive →
               </button>
             </div>
           </div>
@@ -1045,8 +1045,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow } from '~/types/pulse'
+import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
 import { Icon } from '~/ui'
@@ -1098,9 +1098,196 @@ const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdat
 
 const amountInput = ref(store.amount || 1000)
 
-const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
+const { data: trackedCorridorsData, refresh: refreshTrackedCorridors } = await useAsyncData(
+  'pulse-corridors',
+  async () => {
+    // Avoid Plus-gated calls for public preview SSR. We'll refresh client-side after entitlements hydrate.
+    if (!isPlus.value) return []
+    return await getCorridors()
+  },
+  { server: true },
+)
 const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.value || [])
 const selectedCorridorKey = ref<string>('')
+const decisionPanelRef = ref<HTMLElement | null>(null)
+
+// Screener state (Plus)
+const showAdvancedFilters = ref(false)
+
+const pickBestByCoverage = (candidates: CorridorOption[]): CorridorOption | undefined => {
+  if (candidates.length === 0) return undefined
+
+  let best = candidates[0]
+  let bestRank: [number, number, number] = [
+    best.isUsdOrigin ? 1 : 0,
+    typeof best.dataPoints === 'number' ? best.dataPoints : 0,
+    best.lastUpdated ? new Date(best.lastUpdated).getTime() : 0,
+  ]
+
+  for (const entry of candidates.slice(1)) {
+    const rank: [number, number, number] = [
+      entry.isUsdOrigin ? 1 : 0,
+      typeof entry.dataPoints === 'number' ? entry.dataPoints : 0,
+      entry.lastUpdated ? new Date(entry.lastUpdated).getTime() : 0,
+    ]
+
+    if (rank[0] !== bestRank[0]) {
+      if (rank[0] > bestRank[0]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[1] !== bestRank[1]) {
+      if (rank[1] > bestRank[1]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[2] > bestRank[2]) {
+      best = entry
+      bestRank = rank
+    }
+  }
+
+  return best
+}
+
+const watchlistTrackedCorridors = computed<CorridorOption[]>(() => {
+  if (!isPlus.value) return []
+  if (!trackedCorridors.value.length) return []
+
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
+
+  for (const item of watchlist.items.value) {
+    if (item.target.type !== 'corridor') continue
+    const from = item.target.from.toUpperCase()
+    const to = item.target.to.toUpperCase()
+    const key = `${from}-${to}`
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    const candidates = trackedCorridors.value.filter((c) => {
+      const src = (c.sourceCountry || '').toUpperCase()
+      const dst = (c.destCountry || '').toUpperCase()
+      return src === from && dst === to
+    })
+
+    const best = pickBestByCoverage(candidates)
+    if (best?.corridorId) out.push(best)
+    if (out.length >= 16) break
+  }
+
+  return out
+})
+
+const screenerCorridorIds = computed<string[]>(() => {
+  const ids = watchlistTrackedCorridors.value
+    .map(c => c.corridorId)
+    .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+  return Array.from(new Set(ids)).slice(0, 16)
+})
+
+const filtersForcedVisible = computed(() => !pulseScreenerEnabled.value || screenerCorridorIds.value.length === 0)
+const filtersVisible = computed(() => showAdvancedFilters.value || filtersForcedVisible.value)
+
+const toggleAdvancedFilters = () => {
+  showAdvancedFilters.value = !showAdvancedFilters.value
+}
+
+const screenerRows = ref<PulseScreenerRow[]>([])
+const screenerLoading = ref(false)
+const screenerError = ref<string | null>(null)
+const screenerUpdatedAt = ref<string | null>(null)
+
+const loadScreener = async () => {
+  if (!isPlus.value) return
+  if (!pulseScreenerEnabled.value) return
+
+  const corridorIds = screenerCorridorIds.value
+  if (corridorIds.length === 0) {
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+    screenerError.value = null
+    return
+  }
+
+  screenerLoading.value = true
+  screenerError.value = null
+
+  try {
+    const response = await getPulseScreener({
+      corridorIds,
+      timeframe: '7D',
+      amount: 1000,
+      payin: 'bank',
+      payout: 'bank',
+      includeMovers: true,
+    })
+    screenerRows.value = response.rows ?? []
+    screenerUpdatedAt.value = response.updatedAt ?? null
+  }
+  catch (error: any) {
+    screenerError.value = error?.message || 'Unable to load screener right now.'
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+  }
+  finally {
+    screenerLoading.value = false
+  }
+}
+
+const scrollToDecisionPanel = async () => {
+  if (!import.meta.client) return
+  await nextTick()
+  const el = decisionPanelRef.value || document.getElementById('decision')
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+async function handleScreenerSelect(corridorId: string) {
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
+
+  // Screener is a decision tool; force Decision mode to keep the UI predictable.
+  store.setViewMode('sender')
+
+  setCorridorFromOption(option)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+  await scrollToDecisionPanel()
+}
+
+type PulseTeaserMover = {
+  corridorId: string
+  fromCountry: string
+  toCountry: string
+  sendCurrency: string
+  recvCurrency: string
+  deltaPct: number
+  providerCount: number
+  timestampBucket: string
+}
+
+async function handleMoverSelect(mover: PulseTeaserMover) {
+  const optionById = trackedCorridors.value.find(c => c.corridorId === mover.corridorId)
+  const slug = `${mover.sendCurrency.toLowerCase()}-${mover.recvCurrency.toLowerCase()}`
+  const optionBySlug = getCorridorBySlug(slug) || trackedCorridors.value.find(c => (c.slug || c.value) === slug)
+  const option = optionById || optionBySlug
+  if (!option) return
+
+  store.setViewMode('sender')
+  setCorridorFromOption(option)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+  await scrollToDecisionPanel()
+}
+
+async function handleMoverAdded(mover: PulseTeaserMover) {
+  // Watchlist mutations will naturally refresh `screenerCorridorIds` and trigger `loadScreener`.
+  await handleMoverSelect(mover)
+}
 
 const selectedCorridorOption = computed<CorridorOption | null>(() => {
   const key = selectedCorridorKey.value
@@ -1192,7 +1379,7 @@ const initializeCorridorSelection = () => {
     option = getCorridorById(store.corridor.corridorId) || trackedCorridors.value.find(c => c.corridorId === store.corridor.corridorId)
   }
   if (!option) {
-    option = trackedCorridors.value[0]
+    option = watchlistTrackedCorridors.value[0] || trackedCorridors.value[0]
   }
 
   if (option) {
@@ -1555,6 +1742,33 @@ async function loadCoverageSummary() {
 }
 
 watch(
+  () => isPlus.value,
+  (plus) => {
+    if (!import.meta.client) return
+    if (!plus) return
+
+    // Entitlements hydrate client-side; refresh Plus-gated data once we know the plan.
+    void refreshTrackedCorridors()
+    void loadCoverageSummary()
+    if (store.viewMode === 'analyst') {
+      void loadSnapshotSummary()
+      void setupDeepDivesObserver()
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => [pulseScreenerEnabled.value, screenerCorridorIds.value.join(',')],
+  () => {
+    if (!import.meta.client) return
+    if (!isPlus.value) return
+    void loadScreener()
+  },
+  { immediate: true },
+)
+
+watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => {
     if (!isPlus.value) return
@@ -1598,8 +1812,10 @@ onMounted(async () => {
 
   initializeCorridorSelection()
 
-  // Avoid expensive Pulse API calls for non-Plus users (they see the upgrade gate).
+  // Avoid Plus-gated Pulse API calls for public preview users.
   if (isPlus.value) {
+    void refreshTrackedCorridors()
+    void loadScreener()
     loadSnapshotSummary()
     loadChartData()
     loadCoverageSummary()

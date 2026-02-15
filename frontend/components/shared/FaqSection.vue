@@ -54,11 +54,19 @@ withDefaults(defineProps<{
   ctaTo?: string | null
   ctaLabel?: string
   sectionClass?: string
+  hideFaqLabel?: boolean
+  titleClass?: string
+  subtitleClass?: string
+  ctaClass?: string
 }>(), {
   id: 'faq',
   subtitle: '',
   ctaTo: '/faq',
   ctaLabel: 'View all FAQs →',
   sectionClass: 'bg-neutral-50',
+  hideFaqLabel: false,
+  titleClass: 'text-neutral-900',
+  subtitleClass: 'text-neutral-600',
+  ctaClass: 'border-neutral-300 bg-surface text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400',
 })
 </script>

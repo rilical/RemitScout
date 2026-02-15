@@ -200,3 +200,35 @@ export interface PulseEventItem {
   description: string
   chartId?: string
 }
+
+export type PulseScreenerRow = {
+  corridorId: string
+  slug: string
+  label: string
+  fromFlag: string
+  toFlag: string
+  sourceCountry?: string
+  destCountry?: string
+  sourceCurrency?: string
+  destCurrency?: string
+
+  dataAvailable: boolean
+  updatedAt: string | null
+
+  smartSendLevel: 'great' | 'good' | 'fair' | 'wait' | null
+  bestProvider: string | null
+  bestRecipientGets: number | null
+  spreadRangeBps: number | null
+  providerCount: number | null
+  bankSavings: number | null
+  bankSavingsPercent: number | null
+
+  moverDeltaPct24h: number | null
+  moverTimestampBucket: string | null
+}
+
+export type PulseScreenerResponse = {
+  success: true
+  updatedAt: string | null
+  rows: PulseScreenerRow[]
+}

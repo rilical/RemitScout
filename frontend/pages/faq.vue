@@ -98,7 +98,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Getting started
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(gettingStartedFaqs)" />
             </div>
           </section>
@@ -111,7 +111,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Pricing, quotes, and accuracy
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(pricingFaqs)" />
             </div>
           </section>
@@ -124,7 +124,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Rankings and Remit‑Score
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(rankingsFaqs)" />
             </div>
           </section>
@@ -137,7 +137,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Providers, safety, and availability
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(providersFaqs)" />
             </div>
           </section>
@@ -150,7 +150,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Remit‑Scout Plus
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(plusFaqs)" />
             </div>
           </section>
@@ -163,7 +163,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Partnerships and how we make money
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(partnershipsFaqs)" />
             </div>
           </section>
@@ -176,7 +176,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Privacy and data
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(privacyFaqs)" />
             </div>
           </section>
@@ -189,7 +189,7 @@
             <h2 class="text-h2 font-bold text-neutral-900 mb-8">
               Reporting issues and support
             </h2>
-            <div class="space-y-4">
+            <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
               <FaqAccordion :faqs="filteredFaqs(reportingFaqs)" />
             </div>
           </section>
@@ -435,6 +435,32 @@
         </div>
       </section>
     </div>
+
+    <!-- Final CTA Section -->
+    <section class="py-16 sm:py-20 bg-neutral-900">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
+        <h2 class="text-h2 font-bold text-white mb-4">
+          Still have questions?
+        </h2>
+        <p class="text-body-lg text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+          If you can't find what you need here, contact us or report an issue — we read every message and use them to improve accuracy and clarity.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <NuxtLink
+            to="/contact"
+            class="inline-flex items-center gap-3 px-8 py-4 bg-brand-600 text-white font-bold text-body-lg rounded-xl hover:bg-brand-700 hover:shadow-xl motion-safe:transition-all duration-200"
+          >
+            Contact support
+          </NuxtLink>
+          <NuxtLink
+            to="/methodology"
+            class="inline-flex items-center gap-3 px-8 py-4 border-2 border-white/30 text-white font-bold text-body-lg rounded-xl hover:bg-white/10 motion-safe:transition-all duration-200"
+          >
+            Read Methodology
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
 
     <TrustMetricsStrip />
   </PageContainer>

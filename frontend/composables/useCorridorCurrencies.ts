@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { getCountryByCode } from '~/utils/countries-currencies'
+import { getCountryByCode, BASE_CURRENCIES } from '~/utils/countries-currencies'
 
 type CorridorCurrencyPair = {
   fromCurrency: string
@@ -104,6 +104,9 @@ export const useCorridorCurrencies = (
       result.push(...fromCurrencies.value)
     }
 
+    // Always include major currencies
+    result.push(...BASE_CURRENCIES)
+
     // Add fallback currency if available
     if (fromFallback.value) {
       result.push(fromFallback.value)
@@ -141,6 +144,9 @@ export const useCorridorCurrencies = (
     if (toCurrencies.value.length) {
       result.push(...toCurrencies.value)
     }
+
+    // Always include major currencies
+    result.push(...BASE_CURRENCIES)
 
     // Add fallback currency if available
     if (toFallback.value) {

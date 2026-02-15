@@ -274,9 +274,9 @@
                       class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -314,9 +314,9 @@
                       class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -354,9 +354,9 @@
                       class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -394,9 +394,9 @@
                       class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"

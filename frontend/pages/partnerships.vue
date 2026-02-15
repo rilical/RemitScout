@@ -526,7 +526,7 @@
           </div>
 
           <div class="grid gap-6 md:grid-cols-2 mb-10">
-            <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-white p-6">
+            <div class="rounded-2xl border-2 border-neutral-200 bg-surface p-6">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 mb-4">
                 <svg
                   class="w-6 h-6 text-white"
@@ -565,7 +565,7 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                   />
                 </svg>
               </div>
@@ -592,7 +592,13 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
               </div>
@@ -1673,6 +1679,7 @@
 import { ref } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
+import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
@@ -1742,6 +1749,33 @@ useHead({
   ],
 })
 
+const partnershipFaqs = [
+  {
+    question: 'Can providers pay to rank higher on Remit-Scout?',
+    answer: 'No. Providers cannot pay to change ranking order, Remit-Score, or sorting logic. Rankings are determined by comparison data (recipient gets, total cost, speed, trust signals) and our consistent methodology.',
+  },
+  {
+    question: 'How do affiliate partnerships work? Do I have to pay to be listed?',
+    answer: '<p><strong>No upfront costs.</strong> There\'s no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we\'ll list you for free.</p><p>Affiliate partnerships are optional. If we have an affiliate relationship, we only earn a commission when a user clicks through from Remit-Scout and completes a transfer with you. If you don\'t want an affiliate relationship, we\'ll still list you — you just won\'t pay any commissions.</p><p>Either way, your ranking is determined by pricing and service quality, not by whether we have an affiliate relationship.</p>',
+  },
+  {
+    question: 'What\'s the benefit to me if I don\'t want an affiliate relationship?',
+    answer: '<p>Even without an affiliate relationship, you still benefit from:</p><ul class="space-y-2 ml-4 list-disc"><li><strong>Free exposure:</strong> You appear in comparison results when users search your corridors.</li><li><strong>Fair ranking:</strong> If your pricing is competitive, you rank higher.</li><li><strong>Brand visibility:</strong> Users discover your service and build awareness.</li><li><strong>New customer acquisition:</strong> Users who click through become customers.</li></ul>',
+  },
+  {
+    question: 'Can I improve my ranking by paying more or having a stronger affiliate relationship?',
+    answer: '<p><strong>No.</strong> Our ranking algorithm is completely independent of commercial relationships. Rankings are determined solely by comparison data: what recipients receive, total cost, transfer speed, and trust signals. If you want to improve your ranking, improve your pricing and service quality — that\'s the only way.</p>',
+  },
+  {
+    question: 'What if my pricing changes or I notice an error in how I\'m listed?',
+    answer: '<p><strong>We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.</p><p>For pricing changes: If we have direct data feeds, updates are automatic. If we pull quotes manually, just let us know when pricing changes and we\'ll update our system.</p>',
+  },
+  {
+    question: 'How long does onboarding take? What\'s the process?',
+    answer: '<p>Most providers can be listed within <strong>1-2 weeks</strong> of initial contact:</p><ol class="space-y-2 ml-4 list-decimal"><li><strong>Initial contact:</strong> Fill out our provider inquiry form.</li><li><strong>Data sharing:</strong> Share pricing documentation or access to public quote flows.</li><li><strong>Integration:</strong> We integrate your data (usually 3-5 business days).</li><li><strong>Testing & verification:</strong> We test quotes and verify accuracy.</li><li><strong>Go live:</strong> You appear in comparison results.</li></ol>',
+  },
+]
+
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Partnerships', path: '/partnerships' },
@@ -1785,4 +1819,3 @@ p, span, div, h1, h2, h3, h4, h5, h6, a, li, td, th {
   hyphens: none !important;
 }
 </style>
-const { enterpriseEnabled } = useFeatureFlags()

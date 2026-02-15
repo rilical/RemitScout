@@ -677,8 +677,23 @@
       </div>
     </section>
 
+    <!-- Methodology FAQ -->
+    <FaqSection
+      id="methodology-faq"
+      title="Frequently Asked Questions"
+      subtitle="Your questions about our methodology, data collection, and how we ensure accuracy across all metrics"
+      :faqs="showYourWorkFaqs"
+      cta-to="/faq"
+      cta-label="View all FAQs"
+      section-class="bg-neutral-900"
+      :hide-faq-label="true"
+      title-class="text-white"
+      subtitle-class="text-white/80"
+      cta-class="border-2 border-white/30 bg-white text-brand-600 hover:bg-white/90 hover:border-white/50 font-semibold"
+    />
+
     <!-- Educational Example Section -->
-    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20 overflow-hidden">
+    <section class="py-16 lg:py-20 bg-neutral-50 scroll-mt-20">
       <BankVsSpecialistDynamic />
     </section>
 
@@ -735,10 +750,10 @@
                 1. Define Requirements
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-3 flex-1">
-                Input origin, destination, and capital amount. This defines the corridor and funding route for quote normalization across <NuxtLink
+                Tell us where you're sending money, where it's going, and how much. We'll pull live quotes from <NuxtLink
                   to="/learn/providers"
                   class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
-                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink>.
+                >{{ SITE_STATS.providers.display }} licensed providers</NuxtLink> for that route.
               </p>
               <p class="text-body-sm text-neutral-600">
                 Quote availability and Data Latency vary by corridor, provider, and payment method.
@@ -767,7 +782,7 @@
                 2. Audit the Market
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                Our engine aggregates and normalizes quotes in real-time, then ranks by Net Delivered Value with context on FX Spread, execution fees, settlement speed, and quote integrity.
+                We collect and normalize every quote, then rank by what your recipient actually receives — factoring in fees, exchange rate markup, speed, and reliability.
               </p>
             </div>
           </div>
@@ -793,7 +808,7 @@
                 3. Select &amp; Execute
               </h3>
               <p class="text-neutral-700 leading-relaxed mb-4 flex-1">
-                Choose the optimal provider and bridge directly to their secure checkout. Confirm Net Delivered Value at execution.
+                Pick the best option and go directly to the provider's checkout. Verify the final amount before you confirm.
               </p>
               <div class="rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div class="flex items-start gap-2">
@@ -1759,9 +1774,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
-import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import FaqSection from '~/components/shared/FaqSection.vue'
 import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
 import ImpactStatsSection from '~/components/home/ImpactStatsSection.vue'
+import LatestGuides from '~/components/home/LatestGuides.vue'
 import QuickLinksGrid from '~/components/shared/QuickLinksGrid.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { SITE_STATS } from '~/config/stats'

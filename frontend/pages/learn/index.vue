@@ -141,7 +141,7 @@
           </p>
         </div>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch max-w-4xl mx-auto">
           <button
             v-for="cat in categories"
             :key="cat.key"
@@ -845,10 +845,7 @@
                 </svg>
               </div>
             </div>
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
+          </div>
 
     <!-- Research & Intelligence Section (Institutional) -->
     <section class="py-16 lg:py-20 bg-neutral-900">
@@ -1107,7 +1104,6 @@ const activeFilter = ref('all')
 const filters = [
   { key: 'all', label: 'All Topics' },
   { key: 'fees', label: 'Fees' },
-  { key: 'speed', label: 'Speed' },
   { key: 'reviews', label: 'Reviews' },
   { key: 'exchange-rates', label: 'Exchange Rates' },
 ]
@@ -1130,12 +1126,6 @@ const categories = [
     name: 'Provider Reviews',
     icon: 'star',
     color: 'yellow',
-  },
-  {
-    key: 'speed-delivery',
-    name: 'Speed & Delivery',
-    icon: 'lightning',
-    color: 'orange',
   },
   {
     key: 'exchange-rates-timing',
@@ -1180,14 +1170,12 @@ const articleMapping: Record<string, string[]> = {
     'how-to-read-remittance-quote',
     'bank-transfer-vs-card-funding',
     'choose-right-delivery-method',
+    'how-fast-is-international-money-transfer',
   ],
   'fees-hidden-costs': [
     'hidden-exchange-rate-fees-explained',
     'promo-codes-intro-rates',
     'why-checkout-price-differs',
-  ],
-  'speed-delivery': [
-    'how-fast-is-international-money-transfer',
   ],
   'exchange-rates-timing': [
     'how-exchange-rates-work',
@@ -1272,7 +1260,6 @@ const filteredGuides = computed(() => {
   if (activeFilter.value !== 'all') {
     const filterMap: Record<string, string[]> = {
       'fees': ['fees-hidden-costs'],
-      'speed': ['speed-delivery'],
       'reviews': ['provider-reviews'],
       'exchange-rates': ['exchange-rates-timing'],
     }

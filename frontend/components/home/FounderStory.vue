@@ -34,11 +34,11 @@
             </p>
 
             <p>
-              Back home in Jordan, $30 goes even further. It's <span class="font-semibold text-brand-600">a family's weekly groceries</span>, or <span class="font-semibold">three days of wages</span> for many workers. Omar realized: what seems like pocket change in one country can make a real difference in another.
+              Back home in Jordan, $30 goes even further. It's <span class="font-semibold text-brand-600">a family's weekly groceries</span>, or <span class="font-semibold text-brand-600">three days of wages</span> for many workers. Omar realized: what seems like pocket change in one country can make a real difference in another.
             </p>
 
             <p>
-              That frustration led to building <span class="font-semibold text-brand-600">Remit-Scout</span>, a completely transparent comparison platform where <span class="font-semibold">providers cannot pay to rank higher</span>. We just show you which option gets the most money to your recipient, because every dollar matters when you're sending money home.
+              That frustration led to building <span class="font-semibold text-brand-600">Remit-Scout</span>, a completely transparent comparison platform where <span class="font-semibold text-brand-600">providers cannot pay to rank higher</span>. We just show you which option gets the most money to your recipient, because every dollar matters when you're sending money home.
             </p>
           </div>
 

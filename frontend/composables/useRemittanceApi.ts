@@ -180,7 +180,7 @@ export const useRemittanceApi = () => {
       `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive.value ? 'live' : 'cached'}`
     ))
     const resolvedKey = computed(() => String(unref(key)))
-    const watchSources = [from, to, amount, method, fromCurrency, toCurrency, live].filter(isRef)
+    const watchSources = [from, to, amount, fromCurrency, toCurrency, live].filter(isRef)
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
       : optionWatch === false

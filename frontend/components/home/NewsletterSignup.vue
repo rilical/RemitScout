@@ -4,7 +4,7 @@
       <div class="bg-surface rounded-3xl border-2 border-neutral-200 p-8 sm:p-12 text-center shadow-lg">
         <div class="mb-4">
           <svg
-            class="w-12 h-12 text-brand-600 mx-auto"
+            class="w-12 h-12 text-white/80 mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -39,7 +39,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-8 py-4 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-8 py-4 bg-white text-brand-600 font-semibold rounded-xl hover:bg-white/90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ isSubmitting ? 'Subscribing...' : 'Subscribe' }}
             </button>

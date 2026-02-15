@@ -5,42 +5,12 @@ import { CenteredPage, Icon } from '~/ui'
 const previewFailed = ref(false)
 
 const features = [
-  {
-    icon: 'bookmark',
-    title: 'Watchlist',
-    body: 'Save your corridors and see rate changes without searching again.',
-    meta: 'Free: 3 corridors. Plus: 16 corridors.',
-  },
-  {
-    icon: 'bell-alert',
-    title: 'Rate alerts',
-    body: 'Get notified when your target rate is hit.',
-    meta: 'Free: 1 alert. Plus: 16 alerts.',
-  },
-  {
-    icon: 'clock',
-    title: 'History',
-    body: 'Understand the range before you send.',
-    meta: 'Free: 30 days. Plus: 365 days.',
-  },
-  {
-    icon: 'arrows-right-left',
-    title: 'Comparison',
-    body: 'Compare providers with fees and FX markup included.',
-    meta: 'Always free.',
-  },
-  {
-    icon: 'arrow-down-tray',
-    title: 'Export',
-    body: 'Download your history as CSV or PDF when you need records.',
-    meta: 'Plus only.',
-  },
-  {
-    icon: 'lock',
-    title: 'Ad-free',
-    body: 'Remove ads and sponsored placements in product surfaces.',
-    meta: 'Plus only.',
-  },
+  { icon: 'bookmark', title: 'Watchlist', body: 'Save your corridors and see rate changes without searching again.', meta: 'Free: 3 corridors. Plus: 16 corridors.' },
+  { icon: 'bell-alert', title: 'Rate alerts', body: 'Get notified when your target rate is hit.', meta: 'Free: 1 alert. Plus: 16 alerts.' },
+  { icon: 'clock', title: 'History', body: 'Understand the range before you send.', meta: 'Free: 30 days. Plus: 365 days.' },
+  { icon: 'arrows-right-left', title: 'Comparison', body: 'Compare providers with fees and FX markup included.', meta: 'Always free.' },
+  { icon: 'arrow-down-tray', title: 'Export', body: 'Download your history as CSV or PDF when you need records.', meta: 'Plus only.' },
+  { icon: 'chart-bar', title: 'Pulse access', body: 'Live market intelligence: volatility signals, spread tracking, and provider shifts.', meta: 'Plus only.' },
 ] as const
 </script>
 
@@ -100,8 +70,6 @@ const features = [
             No credit card required
           </p>
         </div>
-
-        <!-- Preview -->
         <div class="relative">
           <div class="absolute -inset-8 rounded-3xl bg-primary-500/20 blur-3xl" />
           <div class="relative overflow-hidden rounded-2xl border border-white/25 bg-surface shadow-2xl">
@@ -182,13 +150,7 @@ const features = [
       </CenteredPage>
     </section>
 
-    <!-- Features -->
-    <CenteredPage
-      as="section"
-      max-width="6xl"
-      padding-y="lg"
-      section-gap-class="space-y-10"
-    >
+    <CenteredPage as="section" max-width="6xl" padding-y="lg" section-gap-class="space-y-10">
       <header class="text-center">
         <h2 class="text-h3 font-bold text-rs-fg">
           Everything you need, without the noise
@@ -197,7 +159,6 @@ const features = [
           Build a watchlist, set alerts, and compare providers with total cost in view.
         </p>
       </header>
-
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="f in features"
@@ -366,6 +327,7 @@ class="text-white"
             </NuxtLink>
           </div>
         </div>
+        <p class="text-center text-body-sm text-neutral-300 mt-8">All plans include access to compare 30+ providers • Cancel anytime</p>
       </div>
     </section>
 

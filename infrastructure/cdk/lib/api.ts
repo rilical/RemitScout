@@ -344,6 +344,13 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeCEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
   }
 
+  // Ensure Plane A uses the same tier override as Plane B ingestion when dev/staging disables tier_1.
+  // Plane A relies on this env var indirectly via shared corridor tiering logic.
+  if (options.planeBDisableTier1) {
+    planeAEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
+    planeCEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
+  }
+
   const otelLambdaLayer = options.otelLambdaLayerArn
     ? LayerVersion.fromLayerVersionArn(scope, 'ApiOtelLambdaLayer', options.otelLambdaLayerArn)
     : undefined

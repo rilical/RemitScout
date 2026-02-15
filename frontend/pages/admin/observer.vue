@@ -900,11 +900,17 @@ const loadObserver = async () => {
       })
     }
 
+    const extractReason = (result: PromiseSettledResult<unknown>) => {
+      if (result.status !== 'rejected') return null
+      const err = result.reason as { statusCode?: number, message?: string }
+      if (err?.statusCode === 404) return '404 — check BFF proxy allowlist'
+      return err?.message || 'unknown error'
+    }
     const failures = [
-      indicesResult.status === 'rejected' ? 'indices health' : null,
-      sweepResult.status === 'rejected' ? 'B2B sweep status' : null,
-      summaryResult.status === 'rejected' ? 'observer summary' : null,
-      providerResults.status === 'rejected' ? 'provider checks' : null,
+      indicesResult.status === 'rejected' ? `indices health (${extractReason(indicesResult)})` : null,
+      sweepResult.status === 'rejected' ? `B2B sweep status (${extractReason(sweepResult)})` : null,
+      summaryResult.status === 'rejected' ? `observer summary (${extractReason(summaryResult)})` : null,
+      providerResults.status === 'rejected' ? `provider checks (${extractReason(providerResults)})` : null,
     ].filter(Boolean)
     if (failures.length > 0) {
       error.value = `Some observer panels failed to load: ${failures.join(', ')}`

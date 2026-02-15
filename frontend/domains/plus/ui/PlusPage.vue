@@ -232,6 +232,7 @@
               </p>
               <div class="text-hero font-bold text-white mb-1">
                 <span v-if="pricingLoading">—</span>
+                <span v-else-if="billingInterval === 'year' && billedAnnuallyMonthlyPrice">{{ billedAnnuallyMonthlyPrice }}</span>
                 <span v-else-if="plusPriceDisplay">{{ plusPriceDisplay }}</span>
                 <span v-else>Pricing at checkout</span>
               </div>
@@ -242,7 +243,7 @@
                 v-if="billedAnnuallyMonthlyDisplay"
                 class="mt-1 text-body-sm text-white/80"
               >
-                {{ billedAnnuallyMonthlyDisplay }}
+                {{ plusPriceDisplay }} per year, billed annually
               </p>
               <p class="mt-2 text-body-sm text-white/80">
                 <span v-if="trialDays > 0">{{ trialDays }}-day free trial • Cancel anytime</span>
@@ -723,6 +724,9 @@
             No credit card required for free account
           </p>
         </div>
+        <p class="mt-6 text-body-sm text-neutral-400">
+          No credit card required for free account
+        </p>
       </div>
     </section>
 
@@ -735,28 +739,18 @@
         <p class="text-h4 text-white/90 mb-8">
           Our team is here to help you get the most out of Remit-Scout
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-wrap items-center justify-center gap-4">
           <NuxtLink
             to="/send-money"
             class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-surface hover:bg-primary-50 text-brand-600 rounded-xl text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
-            <Icon
-              name="document-text"
-              :size="20"
-              class="text-current"
-            />
-            <span>Compare Now</span>
+            Compare Now
           </NuxtLink>
           <NuxtLink
             to="/contact"
             class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-surface hover:bg-primary-50 text-brand-600 rounded-xl text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
-            <Icon
-              name="chat-bubble"
-              :size="20"
-              class="text-current"
-            />
-            <span>Contact Us</span>
+            Contact Us
           </NuxtLink>
         </div>
       </div>
@@ -767,6 +761,7 @@
 <script setup lang="ts">
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import FaqSection from '~/components/shared/FaqSection.vue'
 import { CenteredPage, Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
@@ -776,9 +771,8 @@ const { enterpriseEnabled } = useFeatureFlags()
 const billingActions = useBilling()
 const checkoutLoading = computed(() => billingActions.checkoutLoading.value)
 const portalLoading = computed(() => billingActions.portalLoading.value)
-const pulseCtaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pulse'))
 
-const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'month')
+const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'year')
 
 type BillingPricingResponse = {
   success: true
@@ -809,18 +803,14 @@ const formatMoney = (amount: number | null | undefined, currency: string | null 
 }
 
 const plusPriceDisplay = computed(() => formatMoney(selectedPrice.value?.amount, selectedPrice.value?.currency))
-const plusPriceSuffix = computed(() => (billingInterval.value === 'year' ? 'per year' : 'per month'))
 
-const billedAnnuallyMonthlyDisplay = computed(() => {
+const billedAnnuallyMonthlyPrice = computed(() => {
   if (billingInterval.value !== 'year') return null
   const annualAmount = pricing.value?.plus.year.amount
   const currency = pricing.value?.plus.year.currency
   if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
   if (!currency) return null
-  const monthly = annualAmount / 12
-  const formatted = formatMoney(monthly, currency)
-  if (!formatted) return null
-  return `${formatted} / month billed annually`
+  return formatMoney(annualAmount / 12, currency)
 })
 
 const annualSavingsPct = computed(() => {
@@ -857,6 +847,13 @@ async function handleUpgrade() {
 
   alert(checkoutResult.error || 'Unable to start checkout.')
 }
+
+const plusFaqs = [
+  { question: 'How do I cancel my subscription?', answer: 'You can cancel anytime from your account settings. Your Plus features will remain active until the end of your billing period.' },
+  { question: 'Does Plus change how rates are ranked?', answer: 'No. Plus is purely a subscription for enhanced features. All rankings and comparisons remain 100% data-driven and identical for free and Plus users.' },
+  { question: 'What payment methods do you accept?', answer: 'We accept all major credit cards, debit cards, and PayPal. All payments are processed securely through Stripe.' },
+  { question: 'Can I switch between plans?', answer: 'Yes. You can upgrade to Plus anytime. If you downgrade to Free, you\'ll keep Plus features until the end of your billing period.' },
+]
 
 useHead({
   title: 'Plus - Never Miss the Perfect Rate | Remit-Scout',

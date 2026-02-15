@@ -230,10 +230,10 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                         />
                       </svg>
-                      Locked
+                      Plus only
                     </span>
                     <span
                       v-else
@@ -254,9 +254,155 @@
                 <template #option="{ option }">
                   <div
                     v-if="option.value === 'sendScore'"
-                    class="flex items-center gap-2 w-full"
+                    class="w-full relative"
                   >
-                    <div class="flex items-center gap-2 flex-1">
+                    <!-- Locked state: two-line layout -->
+                    <template v-if="option.locked">
+                      <div class="absolute inset-0 rounded bg-neutral-50/80 backdrop-blur-[1px] pointer-events-none" />
+                      <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <svg
+                            class="w-4 h-4 flex-shrink-0 text-neutral-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                          <span class="text-neutral-400">{{ option.label }}</span>
+                        </div>
+                        <svg
+                          class="w-3.5 h-3.5 text-neutral-300 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
+                      <div class="relative flex items-center gap-3 mt-1 ml-6">
+                        <NuxtLink
+                          to="/plus"
+                          class="text-body-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors relative z-10"
+                          @mousedown.stop
+                          @click.stop="close"
+                        >
+                          Upgrade to Plus
+                        </NuxtLink>
+                        <span class="text-neutral-300">·</span>
+                        <button
+                          type="button"
+                          class="text-body-sm text-neutral-500 hover:text-brand-700 transition-colors relative z-10"
+                          @mousedown.stop
+                          @click.stop="showSmartExplainer = !showSmartExplainer"
+                        >
+                          What's this?
+                        </button>
+                      </div>
+                    </template>
+                    <!-- Unavailable state -->
+                    <div
+                      v-else-if="option.unavailable"
+                      class="flex items-center justify-between"
+                    >
+                      <div class="flex items-center gap-2">
+                        <svg
+                          class="w-4 h-4 flex-shrink-0 text-neutral-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                          />
+                        </svg>
+                        <span class="text-neutral-400">{{ option.label }}</span>
+                      </div>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-medium text-warning-700 flex-shrink-0"
+                        :title="option.unavailableReason"
+                      >
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        {{ option.unavailableLabel || 'No data' }}
+                      </span>
+                    </div>
+                    <!-- Available (Plus user) -->
+                    <div
+                      v-else
+                      class="flex items-center justify-between"
+                    >
+                      <div class="flex items-center gap-2">
+                        <svg
+                          class="w-4 h-4 flex-shrink-0 text-brand-700"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                          />
+                        </svg>
+                        <span class="font-semibold text-brand-800">{{ option.label }}</span>
+                      </div>
+                      <span class="inline-flex items-center gap-1 rounded-full bg-brand-700 px-2 py-0.5 text-body-sm font-bold text-white flex-shrink-0">
+                        <svg
+                          class="w-3 h-3"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        Plus
+                      </span>
+                    </div>
+                  </div>
+                  <span v-else>{{ option.label }}</span>
+                </template>
+              </UniversalDropdown>
+
+              <!-- Smart Alert Explainer -->
+              <Transition
+                enter-active-class="transition-all duration-200 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-96"
+                leave-active-class="transition-all duration-150 ease-in"
+                leave-from-class="opacity-100 max-h-96"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div
+                  v-if="showSmartExplainer"
+                  class="mt-2 overflow-hidden rounded-lg border border-brand-200 bg-brand-50 p-4"
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
                       <svg
                         class="w-4 h-4 text-accent-600"
                         fill="none"
@@ -327,9 +473,9 @@
                       Plus
                     </span>
                   </div>
-                  <span v-else>{{ option.label }}</span>
-                </template>
-              </UniversalDropdown>
+                </div>
+              </Transition>
+
               <div
                 v-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'not_offered'"
                 class="mt-2 rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-body-sm text-neutral-700"
@@ -565,6 +711,27 @@ const successToastRef = ref<{ show: () => void, hide: () => void } | null>(null)
 const toastTitle = ref('')
 const toastMessage = ref('')
 const limitState = ref<{ feature: 'watchlist' | 'alert', limit: number } | null>(null)
+const showSmartExplainer = ref(false)
+
+const modalRendered = computed(() => isOpen.value && Boolean(context.value))
+
+watch(
+  () => modalRendered.value,
+  async (open) => {
+    if (!open) {
+      deactivate()
+      return
+    }
+
+    await nextTick()
+    activate()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
+})
 
 const modalRendered = computed(() => isOpen.value && Boolean(context.value))
 
@@ -1068,15 +1235,25 @@ const showCurrency = computed(() => (
   && metric.value !== 'rate'
   && metric.value !== 'midMarketRate'
 ))
-const valueStep = computed(() => (isSmartMetric.value ? 1 : 0.01))
+const valueStep = computed(() => {
+  if (isSmartMetric.value) return 1
+  if (metric.value === 'rate' || metric.value === 'midMarketRate') return 0.0001
+  return 0.01
+})
 const valueMin = computed(() => (isSmartMetric.value ? 0 : undefined))
 const valueMax = computed(() => (isSmartMetric.value ? 100 : undefined))
 const formLocked = computed(() => !metricReady.value)
 
+const roundForMetric = (raw: number, metricValue: AlertRule['metric']) => {
+  if (metricValue === 'sendScore') return Math.round(raw)
+  if (metricValue === 'rate' || metricValue === 'midMarketRate') return Math.round(raw * 10000) / 10000
+  return Math.round(raw * 100) / 100
+}
+
 const defaultValueForMetric = (metricValue: AlertRule['metric']) => {
   if (metricValue === 'sendScore') return 90
   if (metricValue === 'rate' || metricValue === 'midMarketRate') {
-    return currentRateValue.value ?? 0
+    return roundForMetric(currentRateValue.value ?? 0, metricValue)
   }
   return 0
 }
@@ -1199,6 +1376,7 @@ watch(
     if (!open) {
       error.value = ''
       limitState.value = null
+      showSmartExplainer.value = false
       document.body.style.overflow = ''
       return
     }
@@ -1253,7 +1431,7 @@ watch(currencyOptions, () => {
 watch(currentRateValue, (rate) => {
   if (initializing.value || isEditing.value) return
   if (metric.value === 'rate' && rate !== null) {
-    value.value = rate
+    value.value = roundForMetric(rate, 'rate')
   }
 })
 

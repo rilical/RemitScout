@@ -48,7 +48,7 @@
                 />
               </svg>
             </li>
-            <li class="text-white font-medium">
+            <li class="text-white font-medium" aria-current="page">
               {{ content.from }} to {{ content.to }}
             </li>
           </ol>
@@ -57,6 +57,9 @@
         <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
           <!-- Left: Corridor Info -->
           <div>
+            <!-- SR-only H1 for SEO -->
+            <h1 class="sr-only">Send money from {{ content.from }} to {{ content.to }}</h1>
+            
             <!-- Corridor Header -->
             <div class="flex items-center gap-6 mb-4">
               <div class="flex items-center gap-3">
@@ -519,7 +522,7 @@
             :available-to-currencies="availableToCurrencies"
             :available-from-currencies="availableFromCurrencies"
             :available-methods="availableMethods"
-            :methods-loading="isRefreshQueued"
+            :methods-loading="isRefreshQueued && !lastKnownMethods.length"
             @update="handleBarUpdate"
             @sort="handleSort"
             @save="handleSave"
@@ -661,7 +664,7 @@
             :aria-busy="(quotesPending || quoteRefreshPending) ? 'true' : 'false'"
           >
             <template
-              v-for="(row, index) in sortedProviders"
+              v-for="(row, index) in enrichedProviders"
               :key="row.provider"
             >
               <div
@@ -676,7 +679,7 @@
                     <!-- Square logo container with border similar to TrueCostCard -->
                     <div class="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center flex-shrink-0 rounded-xl border border-white/20 bg-surface p-3">
                       <ProviderLogo
-                        :slug="getProviderSlug(row) || ''"
+                        :slug="row._slug || ''"
                         :alt="row.provider"
                         size="small"
                         class="object-contain"
@@ -776,7 +779,7 @@
                                 : 'text-neutral-700',
                           ]"
                         >
-                          {{ getRateComparison(row.fxRate).text }}
+                          {{ row._rateComparison.text }}
                         </span>
                       </div>
                     </div>
@@ -789,12 +792,12 @@
                 >
                   <div class="lg:col-span-3">
                     <TrueCostCard
-                      :upfront-fee="getProviderTrueCost(row, index).upfrontFee"
-                      :hidden-markup="getProviderTrueCost(row, index).hiddenMarkup"
-                      :total-cost="getProviderTrueCost(row, index).totalCost"
-                      :total-cost-percent="getProviderTrueCost(row, index).totalCostPercent"
-                      :spread-bps="getProviderTrueCost(row, index).spreadBps"
-                      :hidden-markup-percent="getProviderTrueCost(row, index).hiddenMarkupPercent"
+                      :upfront-fee="row._trueCost.upfrontFee"
+                      :hidden-markup="row._trueCost.hiddenMarkup"
+                      :total-cost="row._trueCost.totalCost"
+                      :total-cost-percent="row._trueCost.totalCostPercent"
+                      :spread-bps="row._trueCost.spreadBps"
+                      :hidden-markup-percent="row._trueCost.hiddenMarkupPercent"
                       :amount="displayAmount"
                       :provider-rate="row.fxRate"
                       :mid-market-rate="midMarketRate"
@@ -951,7 +954,7 @@
 
     <!-- ZONE B: Insights -->
     <section
-      v-if="hasApiQuotes && !showRefreshGate"
+      v-if="hasApiQuotes && !shouldBlockResults"
       id="insights"
       class="bg-surface border-b border-rs-border scroll-mt-20"
     >
@@ -1008,6 +1011,12 @@
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
+                  <NuxtLink
+                    to="/indices-methodology#teer"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    Read full methodology →
+                  </NuxtLink>
                 </div>
               </details>
             </div>
@@ -1050,6 +1059,12 @@
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>RVI (bps) measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
+                  <NuxtLink
+                    to="/indices-methodology#rvi"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    Read full methodology →
+                  </NuxtLink>
                 </div>
               </details>
             </div>
@@ -1092,6 +1107,12 @@
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
                   <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
+                  <NuxtLink
+                    to="/indices-methodology#rci"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    Read full methodology →
+                  </NuxtLink>
                 </div>
               </details>
             </div>
@@ -1598,8 +1619,146 @@
       title="Frequently Asked Questions"
       :subtitle="`Common questions about sending money from ${content.from} to ${content.to}.`"
       :faqs="corridorFaqsAccordion"
-      section-class="bg-neutral-50"
+      section-class="bg-neutral-900"
+      title-class="text-white"
+      subtitle-class="text-white/80"
+      hide-faq-label
+      cta-class="border-2 border-white/30 bg-white text-brand-600 hover:bg-white/90 hover:border-white/50 font-semibold"
+      cta-label="View all FAQs"
     />
+
+    <!-- Ad: Interstitial -->
+    <div
+      v-if="!isPlus"
+      class="container py-6"
+    >
+      <AdPlacement
+        placement="corridor_interstitial"
+        :corridor-id="corridorId"
+        wrapper-class="rounded-xl"
+        min-height="120px"
+      />
+    </div>
+
+    <!-- Learn More About Transfers -->
+    <section class="bg-brand-600 text-white py-16 lg:py-20">
+      <div class="container">
+        <div class="mx-auto max-w-4xl text-center mb-10">
+          <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-body-sm font-semibold mb-4">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+            Guides
+          </span>
+          <h2 class="text-h2 font-bold mb-3">
+            Learn More About Transfers
+          </h2>
+          <p class="text-body-lg text-white/80 max-w-2xl mx-auto">
+            Master the fundamentals of international money transfers to save more on every transaction.
+          </p>
+        </div>
+        <div class="mx-auto max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4">
+          <NuxtLink
+            to="/learn/why-compare-before-every-transfer"
+            class="group flex items-start gap-4 p-5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 motion-safe:transition-all"
+          >
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-white mb-1.5">
+                Why You Must Compare Before Every Transfer
+              </h3>
+              <p class="text-body-sm text-white/70 leading-relaxed">
+                Even on the same transfer, the difference between providers can be hundreds of dollars.
+              </p>
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/learn/hidden-exchange-rate-fees-explained"
+            class="group flex items-start gap-4 p-5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 motion-safe:transition-all"
+          >
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-white mb-1.5">
+                Hidden Fees Explained (FX Markup vs Fee)
+              </h3>
+              <p class="text-body-sm text-white/70 leading-relaxed">
+                Learn the difference between FX markup and transfer fees, and why "no fee" doesn't mean no cost.
+              </p>
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/learn/how-to-read-remittance-quote"
+            class="group flex items-start gap-4 p-5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 motion-safe:transition-all"
+          >
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-white mb-1.5">
+                How to Read a Quote ("Recipient Gets")
+              </h3>
+              <p class="text-body-sm text-white/70 leading-relaxed">
+                Understand what "Recipient Gets" really means and how to compare quotes effectively.
+              </p>
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/learn/best-time-to-send-money"
+            class="group flex items-start gap-4 p-5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 motion-safe:transition-all"
+          >
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-white mb-1.5">
+                Best Time to Send Money
+              </h3>
+              <p class="text-body-sm text-white/70 leading-relaxed">
+                Practical guidance on when to send money, without over-optimizing for rate movements.
+              </p>
+            </div>
+          </NuxtLink>
+        </div>
+        <div class="mt-8 text-center">
+          <NuxtLink
+            to="/learn/money-transfer"
+            class="inline-flex items-center gap-2 text-white font-semibold hover:text-white/80 motion-safe:transition-colors"
+          >
+            View all guides
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ad: Below FAQ -->
+    <div
+      v-if="!isPlus"
+      class="container py-6"
+    >
+      <AdPlacement
+        placement="corridor_below_faq"
+        :corridor-id="corridorId"
+        wrapper-class="rounded-xl"
+        min-height="120px"
+      />
+    </div>
 
     <!-- Provider Reviews -->
     <section
@@ -1608,6 +1767,19 @@
     >
       <FeaturedProvidersDynamic />
     </section>
+
+    <!-- Ad: Footer -->
+    <div
+      v-if="!isPlus"
+      class="container py-6"
+    >
+      <AdPlacement
+        placement="corridor_footer"
+        :corridor-id="corridorId"
+        wrapper-class="rounded-xl"
+        min-height="120px"
+      />
+    </div>
 
     <!-- Popular Corridors -->
     <CorridorsGridDynamic dark />
@@ -2092,7 +2264,6 @@ const shouldBlockResults = computed(() => {
   if (searchInitiated.value && !hasApiQuotes.value) return true
   return false
 })
-const showRefreshGate = computed(() => shouldBlockResults.value)
 const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
 const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
 const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
@@ -2123,8 +2294,8 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
   displayAmount,
   payoutMethod,
   {
-    key: `${currentRoute.fullPath}-${payoutMethod.value}`, // Include method in key for caching per method
-    watch: [fromCountryCode, toCountryCode, displayAmount, payoutMethod, providersLive],
+    key: currentRoute.fullPath,
+    watch: [fromCountryCode, toCountryCode, displayAmount, providersLive],
     server: true,
     lazy: false,
     fromCurrency: fromCurrencyCode,
@@ -2147,7 +2318,7 @@ const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
 const refreshRingRadius = 28
 const refreshRingCircumference = 2 * Math.PI * refreshRingRadius
 const refreshProgress = computed(() => {
-  if (!showRefreshGate.value || refreshTimeoutSeconds <= 0) return 0
+  if (!shouldBlockResults.value || refreshTimeoutSeconds <= 0) return 0
   const raw = Math.round((refreshElapsedSeconds.value / refreshTimeoutSeconds) * 100)
   return Math.min(100, Math.max(0, raw))
 })
@@ -2376,15 +2547,14 @@ const fallbackContent: CorridorContent = {
 const baseContent = computed(() => corridorContent[corridorKey.value] || fallbackContent)
 const providerMethodsMap = ref<Map<string, Set<Method>>>(new Map())
 
+const lastKnownMethods = ref<Method[]>([])
+
 watch([fromCountryCode, toCountryCode], () => {
   providerMethodsMap.value = new Map()
+  lastKnownMethods.value = []
 })
 
 const availableMethods = computed<Method[]>(() => {
-  if (refreshGateActive.value) {
-    return []
-  }
-
   const responseMethods = Array.isArray((quotesData.value as { availableMethods?: string[] } | null)?.availableMethods)
     ? (quotesData.value as { availableMethods?: string[] }).availableMethods ?? []
     : []
@@ -2399,12 +2569,21 @@ const availableMethods = computed<Method[]>(() => {
   }
   responseMethods.forEach(addMethod)
   quoteMethods.forEach(addMethod)
+
   if (combined.size === 0) {
+    if (lastKnownMethods.value.length) return lastKnownMethods.value
     return quotesPending.value ? [] : ['bank']
   }
 
   const ordered = supportedMethods.filter(method => combined.has(method))
   return ordered.length ? ordered : Array.from(combined)
+})
+
+// Update lastKnownMethods when availableMethods changes
+watch(availableMethods, (methods) => {
+  if (methods.length > 0) {
+    lastKnownMethods.value = methods
+  }
 })
 
 const providerQuotes = computed(() => {
@@ -2414,6 +2593,20 @@ const providerQuotes = computed(() => {
 
   const allQuotes = (quotesData.value?.data || []) as ProviderQuote[]
 
+  // Filter by selected payout method - only show providers that support this method
+  const selectedMethod = normalizeMethod(payoutMethod.value) ?? payoutMethod.value
+  const filtered = allQuotes.filter((quote) => {
+    const methods = Array.isArray(quote.methods) ? quote.methods : []
+    if (!methods.length) return true
+    return methods.some(method => normalizeMethod(method) === selectedMethod)
+  })
+  return filtered.length ? filtered : allQuotes
+})
+
+// Update provider methods map when quotes change
+watch(() => quotesData.value?.data, (data) => {
+  const allQuotes = (data || []) as ProviderQuote[]
+  
   // Update provider methods map with methods from current quotes
   // This ensures we capture all methods even if discovery hasn't completed
   allQuotes.forEach((quote) => {
@@ -2429,16 +2622,7 @@ const providerQuotes = computed(() => {
       })
     }
   })
-
-  // Filter by selected payout method - only show providers that support this method
-  const selectedMethod = normalizeMethod(payoutMethod.value) ?? payoutMethod.value
-  const filtered = allQuotes.filter((quote) => {
-    const methods = Array.isArray(quote.methods) ? quote.methods : []
-    if (!methods.length) return true
-    return methods.some(method => normalizeMethod(method) === selectedMethod)
-  })
-  return filtered.length ? filtered : allQuotes
-})
+}, { immediate: true })
 const ratedQuotes = computed(() => attachRatings(providerQuotes.value) as Array<ProviderQuote & { score?: number }>)
 const apiUpdatedAt = computed(() => quotesData.value?.updatedAt)
 const apiUpdatedAtMs = computed(() => {
@@ -2901,7 +3085,7 @@ const rateChanges = computed(() => {
       changes.push({ label: '7D', value: formatPercentChange(pct) })
     }
   }
-  const monthRate = getRateForDaysAgo(historyRangeDays)
+  const monthRate = getRateForDaysAgo(30)
   if (Number.isFinite(monthRate ?? Number.NaN)) {
     const pct = ((latest - Number(monthRate)) / Number(monthRate)) * 100
     if (Number.isFinite(pct)) {
@@ -3062,8 +3246,12 @@ const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.val
 
 const currentRows = computed(() => hasApiQuotes.value ? apiRows.value : content.value.table.rows)
 
+const rawIndices = computed(() => {
+  return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+})
+
 const corridorIndices = computed(() => {
-  const indices = (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
+  const indices = rawIndices.value
   if (!indices) return null
   if (indices.suppressionFlag) return null
   return indices
@@ -3075,20 +3263,25 @@ const indicesReason = computed(() => {
 
 const indicesUnavailableMessage = computed(() => {
   if (corridorIndices.value) return ''
+  const goldCount = rawIndices.value?.providerCount ?? null
   switch (indicesReason.value) {
     case 'unsupported_method':
       return 'Indices are available for bank transfers only.'
     case 'bucket_mismatch':
       return 'Indices are available for $500 bank transfers only.'
     case 'gold_indices_unavailable':
-      return 'Indices are not yet available for this corridor.'
+      return 'Indices are not yet available for this corridor. The Gold indices job may not have run yet.'
     case 'suppressed':
+    case 'insufficient_coverage':
       return 'Indices are temporarily unavailable due to insufficient coverage.'
+    case 'insufficient_providers':
+      return goldCount !== null
+        ? `Gold indices found ${goldCount} eligible B2B provider(s) for this corridor — at least 3 are required. The page may show more providers because indices use B2B quotes at the $500 bank bucket only.`
+        : 'Indices require at least 3 eligible B2B providers for this corridor at the $500 bank bucket.'
+    case 'quotes_unavailable':
+      return 'Indices are not yet available for this corridor.'
     default:
-      if (indicesReason.value) {
-        return `Indices are unavailable: ${indicesReason.value}.`
-      }
-      return 'Indices are available for $500 bank transfers only.'
+      return 'Indices are not available for this corridor.'
   }
 })
 
@@ -3365,6 +3558,19 @@ const recommendations = computed<Recommendation[]>(() => {
 
 const scrollToProvider = (providerName: string) => {
   if (typeof window === 'undefined') return
+  
+  // Try to scroll to the specific provider element
+  const providerSlug = providerName.toLowerCase().replace(/\s+/g, '-')
+  const providerElement = document.getElementById(`provider-${providerSlug}`)
+  
+  if (providerElement) {
+    const offset = 120
+    const top = providerElement.getBoundingClientRect().top + window.scrollY - offset
+    window.scrollTo({ top, behavior: 'smooth' })
+    return
+  }
+  
+  // Fallback to compare section
   const compareSection = document.getElementById('compare')
   if (compareSection) {
     const offset = 120
@@ -3518,6 +3724,22 @@ const sortedProviders = computed(() => {
     return rows.sort((a, b) => Number.parseFloat(b.score) - Number.parseFloat(a.score))
   }
   return rows
+})
+
+// Pre-compute expensive row data to avoid repeated calculations in template
+type EnrichedTableRow = TableRow & {
+  _trueCost: TrueCostBreakdown
+  _rateComparison: { text: string, isBetter: boolean, isWorse: boolean }
+  _slug: string | null
+}
+
+const enrichedProviders = computed<EnrichedTableRow[]>(() => {
+  return sortedProviders.value.map((row, index) => ({
+    ...row,
+    _trueCost: getProviderTrueCost(row, index),
+    _rateComparison: getRateComparison(row.fxRate ?? 0),
+    _slug: getProviderSlug(row),
+  }))
 })
 
 const recipientRange = computed(() => {
@@ -3955,7 +4177,7 @@ const isRefreshQueued = computed(() => {
   return false
 })
 
-watch(showRefreshGate, (active) => {
+watch(shouldBlockResults, (active) => {
   if (!import.meta.client) return
   if (active) {
     if (!refreshGateStartedAt.value) {
@@ -3970,7 +4192,7 @@ watch(showRefreshGate, (active) => {
 }, { immediate: true })
 
 watch(refreshStatus, () => {
-  if (!showRefreshGate.value) return
+  if (!shouldBlockResults.value) return
   updateRefreshElapsed()
 })
 
@@ -4290,9 +4512,10 @@ const handleLimitRemove = async (id: string) => {
   }
 }
 
-function openScoreModal(row: TableRow) {
+function openScoreModal(row: TableRow | EnrichedTableRow) {
+  const slug = '_slug' in row ? row._slug : getProviderSlug(row)
   selectedProvider.value = {
-    providerId: row.providerId || getProviderSlug(row) || undefined,
+    providerId: row.providerId || slug || undefined,
     providerName: row.provider,
     score: Number.parseFloat(row.score),
   }

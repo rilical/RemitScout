@@ -12,9 +12,6 @@
     <!-- 4b. Remit-Score explanation -->
     <RemitScoreBanner />
 
-    <!-- Funnel: Pulse + Plus (above fold CTA) -->
-    <PlusPulseStrip />
-
     <!-- EEAT: Transparency Strip (how we compare) -->
     <TransparencyStrip />
 
@@ -124,7 +121,6 @@
 import { ref, defineAsyncComponent } from 'vue'
 import HeroDualTab from '~/components/home/HeroDualTab.vue'
 import RemitScoreBanner from '~/components/home/RemitScoreBanner.vue'
-import PlusPulseStrip from '~/components/home/PlusPulseStrip.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
 import PageContainer from '~/components/shared/PageContainer.vue'

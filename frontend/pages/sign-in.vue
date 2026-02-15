@@ -231,6 +231,13 @@ const errorMessage = ref<string | null>(null)
 const email = ref('')
 const password = ref('')
 
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    navigateTo(redirect)
+  }
+}, { immediate: true })
+
 async function handleSignOut() {
   await signOut()
 }

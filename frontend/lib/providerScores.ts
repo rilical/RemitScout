@@ -315,7 +315,8 @@ export const PROVIDER_SCORES: Record<string, ProviderScore> = {
 }
 
 export function getProviderScore(providerId: string): ProviderScore | null {
-  return PROVIDER_SCORES[providerId.toLowerCase()] || null
+  const key = providerId.toLowerCase()
+  return PROVIDER_SCORES[key] || getProviderScoreBySlug(key) || null
 }
 
 export function getProviderScoreBySlug(slug: string): ProviderScore | null {

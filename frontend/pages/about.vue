@@ -28,7 +28,7 @@ no-pad-y
               href="https://www.cmu.edu/swartz-center-for-entrepreneurship/"
               target="_blank"
               rel="noopener noreferrer"
-              class="font-medium text-brand-400 underline decoration-brand-400/30 hover:text-brand-300 hover:decoration-brand-300"
+              class="font-medium text-brand-600 underline decoration-brand-600/30 hover:text-brand-500 hover:decoration-brand-500"
             >Swartz Center for Entrepreneurship, CMU</a>.
           </p>
         </div>
@@ -789,10 +789,7 @@ no-pad-y
       </div>
     </section>
 
-    <ImpactStatsSection
-      variant="cards"
-      :show-header-icon="true"
-    />
+    <TrustMetricsStrip />
 
     <!-- Partnership Section -->
     <section class="py-16 lg:py-20 bg-neutral-900">

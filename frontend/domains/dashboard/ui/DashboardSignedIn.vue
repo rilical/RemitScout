@@ -2486,7 +2486,7 @@ class="mb-6 rounded-xl border border-warning-600 bg-warning-600 px-4 py-3 text-b
                 </button>
               </div>
 
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-3 sm:grid-cols-2">
                 <input
                   v-model="apiKeyName"
                   type="text"
@@ -2508,6 +2508,22 @@ class="mb-6 rounded-xl border border-warning-600 bg-warning-600 px-4 py-3 text-b
                 >
                   Create Key
                 </button>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <label
+                  v-for="scope in availableScopes"
+                  :key="scope.value"
+                  class="inline-flex items-center gap-1.5 text-body-sm text-neutral-700 cursor-pointer select-none"
+                >
+                  <input
+                    v-model="apiKeyScopes"
+                    type="checkbox"
+                    :value="scope.value"
+                    class="rounded border-rs-border text-brand-600 focus:ring-brand-200"
+                  >
+                  <span class="font-mono text-[11px]">{{ scope.value }}</span>
+                </label>
               </div>
 
               <p
@@ -2606,6 +2622,39 @@ class="mt-1 text-[11px] text-success-600"
 	                  </div>
 	                </template>
 	              </DataTable>
+
+              <div class="rounded-lg border border-rs-border p-4 space-y-3">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between text-body-sm font-semibold text-rs-fg"
+                  @click="showApiReference = !showApiReference"
+                >
+                  <span>API Reference</span>
+                  <Icon :name="showApiReference ? 'chevron-up' : 'chevron-down'" :size="16" class="text-neutral-400" />
+                </button>
+                  <div v-if="showApiReference" class="space-y-3 text-body-sm">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-rs-muted">
+                      <span>Rate limit</span><span class="text-rs-fg font-medium">600 req/min</span>
+                      <span>Max keys</span><span class="text-rs-fg font-medium">{{ activeApiKeyCount }}/{{ maxApiKeys }}</span>
+                      <span>API tier</span><span class="text-rs-fg font-medium">Tier {{ apiTier || 2 }} (all corridors)</span>
+                      <span>Auth header</span><span class="text-rs-fg font-mono text-[11px]">X-API-Key: &lt;token&gt;</span>
+                    </div>
+                    <div class="border-t border-rs-border pt-3">
+                      <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-2">Endpoints</div>
+                      <div class="space-y-1 font-mono text-[11px]">
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/series</span> <span class="text-neutral-400">— Time series (TEER, RCI, RVI)</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/latest</span> <span class="text-neutral-400">— Latest index point</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/corridors</span> <span class="text-neutral-400">— Available corridors</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/health</span> <span class="text-neutral-400">— Health check</span></div>
+                        <div><span class="text-success-700">POST</span> <span class="text-neutral-600">/api/v1/exports</span> <span class="text-neutral-400">— Create export</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/exports</span> <span class="text-neutral-400">— List exports</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/exports/:id/download</span> <span class="text-neutral-400">— Download export</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/providers</span> <span class="text-neutral-400">— Provider list</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/quotes</span> <span class="text-neutral-400">— Corridor quotes</span></div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
 	            </div>
 
             <div class="bg-surface rounded-xl border border-rs-border p-6 space-y-4">
@@ -2732,6 +2781,117 @@ style="height: 240px;"
               </div>
             </div>
           </div>
+
+          <!-- Data Exports -->
+          <div class="mt-6 bg-surface rounded-xl border border-rs-border p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-body font-semibold text-rs-fg">Data Exports</h3>
+                <p class="text-body-sm text-rs-muted">Create and download bulk data exports (CSV or PDF).</p>
+              </div>
+              <button
+                type="button"
+                class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                :disabled="exportJobsLoading"
+                @click="fetchExportJobs"
+              >
+                Refresh
+              </button>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-4">
+              <select
+                v-model="exportJobType"
+                class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+              >
+                <option value="history">Quote History</option>
+                <option value="watchlist">Watchlist</option>
+                <option value="alerts">Alerts</option>
+                <option value="all">All Data</option>
+              </select>
+              <select
+                v-model="exportFormat"
+                class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+              >
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+              </select>
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="exportDateFrom"
+                  type="date"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  placeholder="From"
+                >
+                <span class="text-neutral-400">–</span>
+                <input
+                  v-model="exportDateTo"
+                  type="date"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  placeholder="To"
+                >
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-60"
+                :disabled="exportCreating"
+                @click="createExportJob"
+              >
+                {{ exportCreating ? 'Creating…' : 'Create Export' }}
+              </button>
+            </div>
+
+            <p
+              v-if="exportJobsError"
+              class="text-body-sm text-danger-600"
+            >
+              {{ exportJobsError }}
+            </p>
+
+            <DataTable
+              variant="consumer"
+              caption="Export jobs"
+              :columns="exportJobTableColumns"
+              :rows="exportJobs"
+              :row-key="exportJobTableRowKey"
+              :loading="exportJobsLoading"
+              :empty="{ title: 'No exports yet', message: 'Create an export to get started.' }"
+            >
+              <template #cell-jobType="{ row }">
+                <span class="text-rs-fg capitalize">{{ exportJobFromRow(row).jobType }}</span>
+              </template>
+
+              <template #cell-status="{ row }">
+                <span
+                  class="rounded-full px-2 py-0.5 text-body-sm"
+                  :class="exportStatusClasses(exportJobFromRow(row).status)"
+                >{{ exportJobFromRow(row).status }}</span>
+              </template>
+
+              <template #cell-createdAt="{ row }">
+                <span class="text-body-sm text-rs-muted">{{ formatDate(exportJobFromRow(row).createdAt) }}</span>
+              </template>
+
+              <template #row-actions="{ row }">
+                <button
+                  v-if="exportJobFromRow(row).status === 'done'"
+                  type="button"
+                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                  @click="downloadExport(exportJobFromRow(row).id)"
+                >
+                  Download
+                </button>
+                <span
+                  v-else-if="exportJobFromRow(row).status === 'failed'"
+                  class="text-body-sm text-danger-600"
+                >Failed</span>
+                <span
+                  v-else
+                  class="text-body-sm text-neutral-400"
+                >Pending</span>
+              </template>
+            </DataTable>
+          </div>
         </div>
 
         <!-- Ops Tab -->
@@ -2753,7 +2913,8 @@ style="height: 240px;"
             </div>
           </div>
 
-          <div class="space-y-6">
+          <!-- Provider Health List -->
+          <div class="space-y-4">
             <div
 v-for="provider in opsProviders"
 :key="provider.id"
@@ -2794,7 +2955,17 @@ class="bg-surface rounded-xl border border-rs-border overflow-hidden"
                     :disabled="opsLoading[provider.id]"
                     @click="loadOpsHealth(provider.id)"
                   >
-                    {{ opsLoading[provider.id] ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsLoading[provider.id]"
+                      class="h-3.5 w-3.5 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsLoading[provider.id] ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
               </div>
@@ -2844,17 +3015,14 @@ class="px-6 py-6 text-body-sm text-rs-muted"
                   <table class="min-w-full text-body-sm">
                     <thead class="bg-neutral-50 text-neutral-600">
                       <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Corridor</th>
-                        <th class="px-4 py-3 text-left font-semibold">Attempt</th>
-                        <th class="px-4 py-3 text-left font-semibold">Quote age (min)</th>
-                        <th class="px-4 py-3 text-left font-semibold">Payin</th>
-                        <th class="px-4 py-3 text-left font-semibold">Payout</th>
-                        <th class="px-4 py-3 text-left font-semibold">Send</th>
-                        <th class="px-4 py-3 text-left font-semibold">Fee</th>
-                        <th class="px-4 py-3 text-left font-semibold">Promo fee</th>
-                        <th class="px-4 py-3 text-left font-semibold">Rate</th>
-                        <th class="px-4 py-3 text-left font-semibold">Delivery (min)</th>
-                        <th class="px-4 py-3 text-left font-semibold">Flags</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Corridor</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Status</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Quote age</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Pay</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Send</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Fee</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Rate</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Delivery</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2875,15 +3043,8 @@ class="font-medium"
                             age {{ corridor.last_attempt_age_minutes ?? 'n/a' }} | http {{ corridor.last_attempt_http_status ?? 'n/a' }}
                           </div>
                         </td>
-                        <td class="px-4 py-3">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ corridor.payin ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ corridor.payout ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.send_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.fee_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.promotional_fee_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.implied_fx_rate, 6) }}</td>
-                        <td class="px-4 py-3">
-                          {{ corridor.delivery_time_min_minutes ?? 'n/a' }} - {{ corridor.delivery_time_max_minutes ?? 'n/a' }}
+                        <td class="px-3 py-2 text-right tabular-nums" :class="(corridor.last_quote_age_minutes ?? 999) > 120 ? 'text-warning-600 font-medium' : 'text-neutral-600'">
+                          {{ corridor.last_quote_age_minutes ?? '—' }}<span class="text-neutral-400">m</span>
                         </td>
                         <td class="px-4 py-3 text-body-sm text-rs-muted">
                           {{ formatOpsFlags(corridor.quality_flags) }}
@@ -2891,6 +3052,30 @@ class="font-medium"
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                <div
+                  v-if="getHiddenCorridorCount(provider.id) > 0"
+                  class="border-t border-neutral-100 px-5 py-2 text-center"
+                >
+                  <button
+                    type="button"
+                    class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                    @click="toggleProviderExpanded(provider.id)"
+                  >
+                    {{ isProviderExpanded(provider.id) ? 'Show less' : `Show ${getHiddenCorridorCount(provider.id)} more corridors` }}
+                  </button>
+                </div>
+                <div
+                  v-else-if="isProviderExpanded(provider.id) && (opsState[provider.id]?.corridors?.length ?? 0) > OPS_CORRIDOR_PREVIEW_LIMIT"
+                  class="border-t border-neutral-100 px-5 py-2 text-center"
+                >
+                  <button
+                    type="button"
+                    class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                    @click="toggleProviderExpanded(provider.id)"
+                  >
+                    Show less
+                  </button>
                 </div>
               </div>
             </div>
@@ -2966,6 +3151,58 @@ class="text-body-sm text-warning-600"
                     </p>
                   </div>
                 </div>
+                <div class="mt-5 border-t border-neutral-100 pt-4">
+                  <h4 class="text-body-sm font-semibold text-rs-fg">Plan management</h4>
+                  <p class="text-body-sm text-rs-muted">Grant or revoke plan access by email.</p>
+                  <div class="mt-3 grid gap-2">
+                    <input
+                      v-model="adminPlanEmail"
+                      type="email"
+                      placeholder="user@example.com"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                    <select
+                      v-model="adminPlanSelection"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                      <option value="free">Free</option>
+                      <option value="plus">Plus</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                    <input
+                      v-if="adminPlanSelection === 'enterprise'"
+                      v-model="adminPlanNotes"
+                      type="text"
+                      placeholder="Notes (company name, deal terms...)"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:cursor-not-allowed disabled:bg-neutral-400"
+                      :disabled="adminPlanLoading || !adminPlanEmail"
+                      @click="handleAdminPlanGrant"
+                    >
+                      {{ adminPlanLoading ? 'Updating...' : 'Set plan' }}
+                    </button>
+                    <p
+                      v-if="adminPlanSuccess"
+                      class="text-body-sm text-success-600"
+                    >
+                      {{ adminPlanSuccess }}
+                    </p>
+                    <p
+                      v-else-if="adminPlanError"
+                      class="text-body-sm text-warning-600"
+                    >
+                      {{ adminPlanError }}
+                    </p>
+                  </div>
+                  <p class="mt-2 text-body-sm text-neutral-400">
+                    <NuxtLink to="/admin/enterprise" class="font-semibold text-brand-600 hover:text-brand-700">
+                      Enterprise console →
+                    </NuxtLink>
+                  </p>
+                </div>
               </div>
 
               <div class="bg-surface rounded-xl border border-rs-border p-6 lg:col-span-2">
@@ -2991,10 +3228,10 @@ v-model="telemetryMetric"
 class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
 >
                       <option
-v-for="metric in telemetryMetricOptions"
-:key="metric.id"
-:value="metric.id"
->{{ metric.label }}</option>
+                        v-for="metric in telemetryMetricOptions"
+                        :key="metric.id"
+                        :value="metric.id"
+                      >{{ metric.label }}</option>
                     </select>
                   </label>
                   <label class="text-body-sm text-rs-muted">
@@ -3004,10 +3241,10 @@ v-model.number="telemetryHours"
 class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
 >
                       <option
-v-for="option in telemetryHourOptions"
-:key="option"
-:value="option"
->{{ option }}</option>
+                        v-for="option in telemetryHourOptions"
+                        :key="option"
+                        :value="option"
+                      >{{ option }}h</option>
                     </select>
                   </label>
                 </div>
@@ -3065,37 +3302,12 @@ class="overflow-auto"
                       <table class="min-w-full text-body-sm">
                         <thead class="text-body-sm uppercase text-neutral-400">
                           <tr>
-                            <th
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-left"
->
-From
-</th>
-                            <th
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-left"
->
-To
-</th>
-                            <th
-v-if="telemetryMetric === 'popular_corridors'"
-class="py-2 text-left"
->
-Corridor
-</th>
-                            <th
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-left"
->
-Provider
-</th>
-                            <th
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-left"
->
-Corridor
-</th>
-                            <th class="py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
+                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">From</th>
+                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">To</th>
+                            <th v-if="telemetryMetric === 'popular_corridors'" class="px-3 py-2 text-left">Corridor</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Provider</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Corridor</th>
+                            <th class="px-3 py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3165,7 +3377,17 @@ class="py-3 text-center text-body-sm text-neutral-400"
                     :disabled="opsAnalyticsLoading"
                     @click="loadOpsAnalytics"
                   >
-                    {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsAnalyticsLoading"
+                      class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
                 <p
@@ -3240,7 +3462,17 @@ class="font-semibold text-brand-600 hover:text-brand-700"
                     :disabled="opsAuditLoading"
                     @click="loadOpsAudit"
                   >
-                    {{ opsAuditLoading ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsAuditLoading"
+                      class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsAuditLoading ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
                 <p
@@ -3256,10 +3488,10 @@ class="mt-4 overflow-auto"
                   <table class="min-w-full text-body-sm">
                     <thead class="text-body-sm uppercase text-neutral-400">
                       <tr>
-                        <th class="py-2 text-left">Time</th>
-                        <th class="py-2 text-left">Action</th>
-                        <th class="py-2 text-left">Actor</th>
-                        <th class="py-2 text-left">Severity</th>
+                        <th class="px-3 py-2 text-left">Time</th>
+                        <th class="px-3 py-2 text-left">Action</th>
+                        <th class="px-3 py-2 text-left">Actor</th>
+                        <th class="px-3 py-2 text-left">Severity</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3306,7 +3538,17 @@ class="font-semibold text-brand-600 hover:text-brand-700"
                 :disabled="opsAnalyticsLoading"
                 @click="loadOpsAnalytics"
               >
-                {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+                <svg
+                  v-if="opsAnalyticsLoading"
+                  class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
               </button>
             </div>
             <p
@@ -3361,7 +3603,7 @@ class="mt-4 space-y-6"
                       </thead>
                       <tbody>
                         <tr
-v-for="row in opsRevenueRows.slice(0, 8)"
+v-for="(row, idx) in opsRevenueRows.slice(0, 8)"
 :key="`${row.provider_id}-${row.corridor_id || 'none'}`"
 class="border-t border-neutral-100"
 >
@@ -3397,7 +3639,7 @@ No affiliate click data yet.
                       </thead>
                       <tbody>
                         <tr
-v-for="row in opsProviderImpact.slice(0, 8)"
+v-for="(row, idx) in opsProviderImpact.slice(0, 8)"
 :key="row.provider_id"
 class="border-t border-neutral-100"
 >
@@ -3436,7 +3678,7 @@ No conversion data yet.
                     </thead>
                     <tbody>
                       <tr
-v-for="row in opsProviderCorridors.slice(0, 8)"
+v-for="(row, idx) in opsProviderCorridors.slice(0, 8)"
 :key="`${row.provider_id}-${row.corridor_id || 'none'}`"
 class="border-t border-neutral-100"
 >
@@ -4516,6 +4758,27 @@ type ApiKeyCreateResponse = {
   token: string
 }
 
+type ExportJobRecord = {
+  id: string
+  jobType: string
+  status: 'queued' | 'running' | 'done' | 'failed'
+  createdAt: string
+  startedAt: string | null
+  finishedAt: string | null
+  expiresAt: string | null
+  error: string | null
+}
+
+type ExportJobListResponse = {
+  success: boolean
+  jobs: ExportJobRecord[]
+}
+
+type ExportJobCreateResponse = {
+  success: boolean
+  job: { id: string; status: string; jobType: string; createdAt: string }
+}
+
 const historyDaysByTimeframe: Record<string, number> = {
   '7d': 7,
   '30d': 30,
@@ -4537,7 +4800,7 @@ const formatRateValue = (value: number | null | undefined) => {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—'
   return formatNumber(value, {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
+    maximumFractionDigits: 4,
   })
 }
 
@@ -4668,10 +4931,20 @@ const apiKeysLoading = ref(false)
 const apiKeysError = ref<string | null>(null)
 const apiKeysLoaded = ref(false)
 const apiKeyName = ref('')
-const apiKeyTier = ref<'2' | '3'>('2')
+const apiKeyScopes = ref<string[]>(['indices:read', 'corridors:read'])
 const apiKeyToken = ref<string | null>(null)
 const apiKeyTokenLabel = ref<string | null>(null)
 const apiKeyCopyStatus = ref<string | null>(null)
+const maxApiKeys = 5
+
+const availableScopes = [
+  { value: 'indices:read', label: 'Indices' },
+  { value: 'corridors:read', label: 'Corridors' },
+  { value: 'exports:read', label: 'Exports' },
+] as const
+
+const activeApiKeyCount = computed(() => apiKeys.value.filter(k => !k.revoked_at).length)
+const showApiReference = ref(false)
 
 const apiKeyFromRow = (row: unknown): ApiKeyRecord => row as ApiKeyRecord
 
@@ -4703,9 +4976,6 @@ const embedIndices = [
 ] as const
 
 type EmbedIndexKey = typeof embedIndices[number]['key']
-
-const tier2CadenceLabel = computed(() => 3)
-const tier3CadenceLabel = computed(() => 24)
 
 const embedSiteOrigin = computed(() => {
   if (runtimeConfig.public?.siteUrl) return runtimeConfig.public.siteUrl
@@ -4758,9 +5028,10 @@ const embedCodes = computed(() => {
 })
 
 const toApiKeyErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error) return error.message
-  if (typeof error === 'string') return error
-  return fallback
+  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+  if (/429|too many|rate.?limit/i.test(raw)) return 'Rate limited — wait a moment then press Refresh.'
+  if (/api_key_limit_reached/i.test(raw)) return `Maximum of ${maxApiKeys} active keys reached. Revoke a key before creating a new one.`
+  return raw || fallback
 }
 
 const copyApiKeyToken = async () => {
@@ -4820,12 +5091,12 @@ const createEnterpriseApiKey = async () => {
   apiKeyToken.value = null
   apiKeyTokenLabel.value = null
   try {
-    const tierScope = apiKeyTier.value === '3' ? 'tier:3' : 'tier:2'
+    const scopes = apiKeyScopes.value.length > 0 ? [...apiKeyScopes.value] : ['indices:read', 'corridors:read']
     const response = await request<ApiKeyCreateResponse>('/me/api-keys', {
       method: 'POST',
       body: {
         name: apiKeyName.value.trim() || undefined,
-        scopes: [tierScope, 'indices:read'],
+        scopes,
       },
     })
     apiKeys.value = [response.api_key, ...apiKeys.value.filter(key => key.key_id !== response.api_key.key_id)]
@@ -4833,7 +5104,6 @@ const createEnterpriseApiKey = async () => {
     apiKeyTokenLabel.value = response.api_key.key_prefix
     embedApiKey.value = response.token
     apiKeyName.value = ''
-    apiKeyTier.value = '2'
   }
  catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to create API key.')
@@ -4883,6 +5153,84 @@ const revokeEnterpriseApiKey = async (key: ApiKeyRecord) => {
   }
  finally {
     apiKeysLoading.value = false
+  }
+}
+
+const exportJobs = ref<ExportJobRecord[]>([])
+const exportJobsLoading = ref(false)
+const exportJobsError = ref<string | null>(null)
+const exportJobsLoaded = ref(false)
+const exportJobType = ref<'history' | 'watchlist' | 'alerts' | 'all'>('history')
+const exportFormat = ref<'csv' | 'pdf'>('csv')
+const exportDateFrom = ref('')
+const exportDateTo = ref('')
+const exportCreating = ref(false)
+
+const exportJobTableColumns: DataTableColumn[] = [
+  { key: 'jobType', label: 'Type' },
+  { key: 'status', label: 'Status' },
+  { key: 'createdAt', label: 'Created' },
+  { key: 'actions', label: '', align: 'right', widthClass: 'w-28' },
+]
+
+const exportJobTableRowKey = (row: unknown, rowIndex: number) => {
+  return (row as ExportJobRecord).id || String(rowIndex)
+}
+
+const exportJobFromRow = (row: unknown): ExportJobRecord => row as ExportJobRecord
+
+const fetchExportJobs = async () => {
+  if (exportJobsLoading.value) return
+  exportJobsLoading.value = true
+  exportJobsError.value = null
+  try {
+    const response = await request<ExportJobListResponse>('/exports')
+    exportJobs.value = response.jobs ?? []
+    exportJobsLoaded.value = true
+  }
+  catch (error) {
+    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+    exportJobsError.value = /429|too many|rate.?limit/i.test(raw) ? 'Rate limited — wait a moment then press Refresh.' : (raw || 'Unable to load exports.')
+  }
+  finally {
+    exportJobsLoading.value = false
+  }
+}
+
+const createExportJob = async () => {
+  if (exportCreating.value) return
+  exportCreating.value = true
+  exportJobsError.value = null
+  try {
+    const body: Record<string, unknown> = {
+      jobType: exportJobType.value,
+      format: exportFormat.value,
+    }
+    if (exportDateFrom.value) body.dateFrom = exportDateFrom.value
+    if (exportDateTo.value) body.dateTo = exportDateTo.value
+    await request<ExportJobCreateResponse>('/exports', { method: 'POST', body })
+    await fetchExportJobs()
+  }
+  catch (error) {
+    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+    exportJobsError.value = raw || 'Unable to create export.'
+  }
+  finally {
+    exportCreating.value = false
+  }
+}
+
+const downloadExport = (jobId: string) => {
+  const baseUrl = runtimeConfig.public?.apiBase || '/api/v1'
+  window.open(`${baseUrl}/exports/${jobId}/download`, '_blank')
+}
+
+const exportStatusClasses = (status: string) => {
+  switch (status) {
+    case 'done': return 'bg-success-100 text-success-700'
+    case 'failed': return 'bg-danger-100 text-danger-700'
+    case 'running': return 'bg-brand-100 text-brand-700'
+    default: return 'bg-neutral-100 text-neutral-600'
   }
 }
 
@@ -5120,6 +5468,7 @@ const opsProviders = [
   { id: 'bossmoney', label: 'BOSS Money', endpoint: '/ops/bossmoney/health' },
   { id: 'sendwave', label: 'Sendwave', endpoint: '/ops/sendwave/health' },
   { id: 'mukuru', label: 'Mukuru', endpoint: '/ops/mukuru/health' },
+  { id: 'wellsfargo', label: 'Wells Fargo', endpoint: '/ops/wellsfargo/health' },
 ] as const
 
 type OpsProviderId = typeof opsProviders[number]['id']
@@ -5162,6 +5511,13 @@ const adminRoleSelection = ref<'user' | 'admin' | 'super_admin'>('user')
 const adminRoleLoading = ref(false)
 const adminRoleError = ref<string | null>(null)
 const adminRoleSuccess = ref<string | null>(null)
+
+const adminPlanEmail = ref('')
+const adminPlanSelection = ref<'free' | 'plus' | 'enterprise'>('free')
+const adminPlanNotes = ref('')
+const adminPlanLoading = ref(false)
+const adminPlanError = ref<string | null>(null)
+const adminPlanSuccess = ref<string | null>(null)
 
 function buildOpsRecord<T>(factory: () => T): Record<OpsProviderId, T> {
   return opsProviders.reduce((acc, provider) => {
@@ -5212,6 +5568,90 @@ const opsAuditLogs = ref<OpsAuditLog[]>([])
 const opsAuditHasLoaded = ref(false)
 
 const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
+
+const opsLastRefreshedAt = ref<string | null>(null)
+const opsExpandedProviders = ref<Set<string>>(new Set())
+const OPS_CORRIDOR_PREVIEW_LIMIT = 5
+
+const toggleProviderExpanded = (providerId: string) => {
+  const next = new Set(opsExpandedProviders.value)
+  if (next.has(providerId)) {
+    next.delete(providerId)
+  } else {
+    next.add(providerId)
+  }
+  opsExpandedProviders.value = next
+}
+
+const isProviderExpanded = (providerId: string) => opsExpandedProviders.value.has(providerId)
+
+const getVisibleCorridors = (providerId: string) => {
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
+  if (isProviderExpanded(providerId) || corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) {
+    return corridors
+  }
+  return corridors.slice(0, OPS_CORRIDOR_PREVIEW_LIMIT)
+}
+
+const getHiddenCorridorCount = (providerId: string) => {
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
+  if (corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) return 0
+  return corridors.length - OPS_CORRIDOR_PREVIEW_LIMIT
+}
+
+const opsSummary = computed(() => {
+  let total = 0
+  let healthy = 0
+  let stale = 0
+  let errored = 0
+  let totalCorridors = 0
+  let staleCorridors = 0
+
+  for (const provider of opsProviders) {
+    total++
+    const state = opsState.value[provider.id]
+    const error = opsErrors.value[provider.id]
+    if (error) {
+      errored++
+      continue
+    }
+    if (!state) continue
+    const corridorCount = state.summary?.corridor_count ?? 0
+    const staleCount = state.summary?.stale_count ?? 0
+    totalCorridors += corridorCount
+    staleCorridors += staleCount
+    if (staleCount === 0) {
+      healthy++
+    } else {
+      stale++
+    }
+  }
+
+  const loaded = healthy + stale + errored
+  const status: 'ok' | 'warning' | 'critical' | 'unknown' =
+    loaded === 0 ? 'unknown'
+    : errored > 2 || staleCorridors > totalCorridors * 0.3 ? 'critical'
+    : errored > 0 || staleCorridors > 0 ? 'warning'
+    : 'ok'
+
+  return { total, healthy, stale, errored, loaded, totalCorridors, staleCorridors, status }
+})
+
+const opsStatusColor = computed(() => {
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'text-success-600 bg-success-50'
+  if (s === 'warning') return 'text-warning-700 bg-warning-50'
+  if (s === 'critical') return 'text-danger-600 bg-danger-50'
+  return 'text-neutral-500 bg-neutral-50'
+})
+
+const opsStatusLabel = computed(() => {
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'All Healthy'
+  if (s === 'warning') return 'Degraded'
+  if (s === 'critical') return 'Critical'
+  return 'Not Loaded'
+})
 
 const opsAutoRefreshMs = 60_000
 const opsInsightsRefreshMs = 300_000
@@ -5324,12 +5764,18 @@ const attemptStatusClass = (success: boolean | null) => {
 }
 
 const toOpsErrorMessage = (error: unknown) => {
-  const candidate = error as { statusCode?: number, status?: number, message?: string, data?: { message?: string } }
+  const candidate = error as { statusCode?: number, status?: number, message?: string, data?: { message?: string, error?: string } }
   const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
     return 'Admin access required to view ops data.'
   }
-  return candidate?.data?.message ?? candidate?.message ?? 'Unable to load ops data.'
+  if (status === 404) {
+    return 'Endpoint not found — check BFF proxy allowlist and backend route registration.'
+  }
+  const detail = candidate?.data?.message ?? candidate?.data?.error
+  if (detail) return detail
+  if (candidate?.message && candidate.message !== 'fetch failed') return candidate.message
+  return 'Unable to load ops data.'
 }
 
 const telemetryLatest = computed(() => {
@@ -5439,6 +5885,7 @@ const loadOpsHealth = async (providerId: OpsProviderId) => {
 const refreshAllOps = async () => {
   opsHasLoaded.value = true
   await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+  opsLastRefreshedAt.value = new Date().toISOString()
 }
 
 const handleAdminRoleUpdate = async () => {
@@ -5465,6 +5912,36 @@ const handleAdminRoleUpdate = async () => {
   }
  finally {
     adminRoleLoading.value = false
+  }
+}
+
+const handleAdminPlanGrant = async () => {
+  const email = adminPlanEmail.value.trim()
+  if (!email) {
+    adminPlanError.value = 'Enter a user email to update.'
+    return
+  }
+  adminPlanLoading.value = true
+  adminPlanError.value = null
+  adminPlanSuccess.value = null
+  try {
+    await request('/admin/plans/grant', {
+      method: 'POST',
+      body: {
+        email,
+        plan_code: adminPlanSelection.value,
+        ...(adminPlanSelection.value === 'enterprise' && adminPlanNotes.value
+          ? { notes: adminPlanNotes.value }
+          : {}),
+      },
+    })
+    adminPlanSuccess.value = `Plan "${adminPlanSelection.value}" granted to ${email}.`
+  }
+ catch (error) {
+    adminPlanError.value = toOpsErrorMessage(error)
+  }
+ finally {
+    adminPlanLoading.value = false
   }
 }
 
@@ -5506,7 +5983,7 @@ const loadOpsAnalytics = async () => {
   opsAnalyticsError.value = null
   const range = buildOpsDateRange(7)
   try {
-    const [corridors, providers, impact, revenue] = await Promise.all([
+    const results = await Promise.allSettled([
       request<{ corridors: OpsAnalyticsCorridor[] }>('/analytics/corridors', {
         query: { ...range, limit: 6 },
       }),
@@ -5520,11 +5997,18 @@ const loadOpsAnalytics = async () => {
         query: { ...range, limit: 10 },
       }),
     ])
-    opsPopularCorridors.value = corridors?.corridors ?? []
-    opsFavoriteProviders.value = providers?.providers ?? []
-    opsProviderImpact.value = impact?.providers ?? []
-    opsProviderCorridors.value = impact?.corridors ?? []
-    opsRevenueRows.value = revenue?.revenue ?? []
+    const [corridors, providers, impact, revenue] = results
+    opsPopularCorridors.value = corridors.status === 'fulfilled' ? (corridors.value?.corridors ?? []) : []
+    opsFavoriteProviders.value = providers.status === 'fulfilled' ? (providers.value?.providers ?? []) : []
+    opsProviderImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers ?? []) : []
+    opsProviderCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors ?? []) : []
+    opsRevenueRows.value = revenue.status === 'fulfilled' ? (revenue.value?.revenue ?? []) : []
+    const failures = results.filter(r => r.status === 'rejected')
+    if (failures.length === results.length) {
+      opsAnalyticsError.value = toOpsErrorMessage((failures[0] as PromiseRejectedResult).reason)
+    } else if (failures.length > 0) {
+      opsAnalyticsError.value = `${failures.length} of ${results.length} analytics endpoints failed to load.`
+    }
   }
  catch (error) {
     opsAnalyticsError.value = toOpsErrorMessage(error)
@@ -5570,22 +6054,37 @@ watch(() => activeTab.value, (tab) => {
   if (tab === 'ops' && !hasAdminAccess.value) {
     return
   }
-  if (tab === 'ops' && !opsHasLoaded.value) {
-    void refreshAllOps()
-  }
-  if (tab === 'ops' && !telemetryHasLoaded.value) {
+  if (tab === 'ops') {
+    if (!opsHasLoaded.value) {
+      void refreshAllOps()
+    }
     void loadTelemetryAnalytics()
-  }
-  if (tab === 'ops' && !opsAnalyticsHasLoaded.value) {
     void loadOpsAnalytics()
-  }
-  if (tab === 'ops' && !opsAuditHasLoaded.value) {
     void loadOpsAudit()
   }
   if (tab === 'enterprise' && isEnterprise.value && !apiKeysLoaded.value) {
-    void fetchApiKeys()
+    setTimeout(() => void fetchApiKeys(), 400)
   }
 })
+
+useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
+  if (activeTab.value !== 'ops') return
+  await loadTelemetryAnalytics(signal)
+})
+
+useAbortableWatch(
+  isAuthenticated,
+  async (loggedIn, signal) => {
+    adminAccessChecked.value = false
+    if (loggedIn) {
+      await checkAdminAccess(signal)
+      return
+    }
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
+  },
+  { immediate: true },
+)
 
 useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
   if (activeTab.value !== 'ops') return

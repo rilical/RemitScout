@@ -1,8 +1,12 @@
 <template>
   <ClientOnly>
-    <div
-      v-if="shouldShow"
-      class="fixed left-4 right-4 top-20 z-40 mx-auto max-w-xl"
+    <Transition
+      enter-active-class="motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
     >
       <div class="rounded-2xl border border-rs-border bg-surface/95 p-5 shadow-xl backdrop-blur">
         <div class="flex items-start justify-between gap-4">
@@ -66,7 +70,7 @@
               class="rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               @click="dismiss"
             >
-              Not now
+              Dismiss
             </button>
           </div>
 
@@ -79,7 +83,7 @@
           </NuxtLink>
         </div>
       </div>
-    </div>
+    </Transition>
   </ClientOnly>
 </template>
 

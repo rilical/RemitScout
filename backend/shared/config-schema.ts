@@ -96,7 +96,12 @@ const addMissing = (
     code: z.ZodIssueCode.custom,
     path,
     message: envVar,
-  })
+})
+
+const shouldRequire = (
+  overrideValue: boolean | undefined,
+  defaultValue: boolean,
+) => overrideValue ?? defaultValue
 }
 
 const shouldRequire = (

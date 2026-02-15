@@ -37,7 +37,7 @@
           </div>
         </div>
 
-        <!-- Services -->
+        <!-- Product -->
         <div>
           <h3 class="mb-5 text-body font-semibold text-white tracking-tight">
             Services
@@ -48,7 +48,15 @@
                 to="/send-money"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
-                Money Transfers
+                Compare Rates
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/learn/providers"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+              >
+                Provider Reviews
               </NuxtLink>
             </li>
             <li v-if="pulseEnabled">
@@ -118,10 +126,26 @@
             </li>
             <li>
               <NuxtLink
+                to="/contact"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+              >
+                Contact
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
                 to="/faq"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 FAQ
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/media-kit"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+              >
+                Media Kit
               </NuxtLink>
             </li>
           </ul>
@@ -179,7 +203,7 @@
                 to="/corrections"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
-                Corrections
+                How We Make Money
               </NuxtLink>
             </li>
             <li>
@@ -187,7 +211,7 @@
                 to="/legal/how-we-make-money"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
-                How We Make Money
+                Corrections
               </NuxtLink>
             </li>
           </ul>
@@ -276,16 +300,10 @@
 
 <script setup lang="ts">
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
-import { useCookiePreferencesModal } from '~/composables/useCookiePreferencesModal'
 
 defineEmits<{
   'open-modal': []
 }>()
 
 const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
-const { open } = useCookiePreferencesModal()
-
-const openCookiePreferences = () => {
-  open()
-}
 </script>

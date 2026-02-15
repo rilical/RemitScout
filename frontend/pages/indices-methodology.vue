@@ -321,7 +321,6 @@
               <code class="bg-neutral-100 px-1 py-0.5 rounded">gold.fx_rates</code> entry.
             </p>
           </div>
-        </div>
 
         <div class="mt-8 rounded-2xl border border-rs-border bg-neutral-50 p-6">
           <h3 class="text-body-lg font-semibold text-rs-fg">
@@ -344,7 +343,7 @@
         <p class="mt-4 text-body text-neutral-300">
           Enterprise customers can access TEER™, RCI™, and RVI™ via API and scheduled exports.
         </p>
-        <div class="mt-6 flex justify-center gap-4">
+        <div class="flex flex-wrap justify-center gap-4">
           <NuxtLink
             to="/contact"
             class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body-sm font-semibold text-white hover:bg-brand-500"
@@ -385,6 +384,17 @@ const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Methodology', path: '/methodology' },
   { name: 'Indices Methodology', path: '/indices-methodology' },
+]
+
+const weightParams = [
+  { label: '\u03B1 (frequency)', value: '0.4' },
+  { label: '\u03B2 (stability)', value: '0.4' },
+  { label: '\u03B3 (recency)', value: '0.2' },
+  { label: 'Half-life', value: '180 min' },
+  { label: 'Min days', value: '3' },
+  { label: 'Min providers', value: '3' },
+  { label: 'Min quotes', value: '500' },
+  { label: 'Confidence', value: '0\u20131' },
 ]
 
 const formulaWeightingRaw = String.raw`\begin{aligned}

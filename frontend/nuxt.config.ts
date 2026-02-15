@@ -312,6 +312,7 @@ export default defineNuxtConfig({
         'NUXT_PUBLIC_SUPABASE_ANON_KEY',
         'SUPABASE_PUBLISHABLE_KEY',
       ) || '',
+      supabaseSuppressConfigError: process.env.NUXT_PUBLIC_SUPABASE_SUPPRESS_CONFIG_ERROR === '1',
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
@@ -322,6 +323,11 @@ export default defineNuxtConfig({
         const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
         // Default ON. Pre-alpha: Pulse should be visible for marketing and gated by entitlements.
         // Set NUXT_PUBLIC_PULSE_ENABLED=0 to hard-disable.
+        return flag !== undefined ? parseEnvFlag(flag) : true
+      })(),
+      pulseScreenerEnabled: (() => {
+        const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_SCREENER_ENABLED', 'PUBLIC_PULSE_SCREENER_ENABLED')
+        // Frontend-only rollout guard for the screener-first Pulse experience.
         return flag !== undefined ? parseEnvFlag(flag) : true
       })(),
       enterpriseEnabled: (() => {
