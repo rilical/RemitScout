@@ -38,5 +38,16 @@ export const useCountries = () => {
 
 export const useCountry = (code: string) => {
   const { request } = useApi()
-  return useAsyncData(`country-${code}`, () => request(`/countries/${code}`))
+  return useAsyncData<{
+    name?: string
+    code?: string
+    currency?: string
+    providers?: number
+    avgTransferTime?: string
+    bankingHours?: string
+    weekendProcessing?: string
+  }>(
+    `country-${code}`,
+    () => request(`/countries/${code}`),
+  )
 }

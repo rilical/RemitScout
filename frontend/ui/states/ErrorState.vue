@@ -43,8 +43,8 @@ const modeClass = computed(() => {
 const chromeClass = computed(() => {
   if (props.mode !== 'card') return ''
   return props.variant === 'terminal'
-    ? 'border-red-500/30 bg-red-500/10'
-    : 'border-red-200 bg-red-50'
+    ? 'border-danger-500/30 bg-danger-500/10'
+    : 'border-danger-200 bg-danger-50'
 })
 
 const contentWrapperClass = computed(() => {
@@ -54,8 +54,8 @@ const contentWrapperClass = computed(() => {
 
 const retryButtonClass = computed(() => {
   return props.variant === 'terminal'
-    ? 'rounded border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-100 hover:bg-red-500/20'
-    : 'rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700'
+    ? 'rounded border border-danger-500/40 bg-danger-500/10 px-3 py-1.5 text-body-sm font-semibold text-danger-100 hover:bg-danger-500/20'
+    : 'rounded-lg bg-danger-600 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-danger-700'
 })
 </script>
 
@@ -80,23 +80,23 @@ const retryButtonClass = computed(() => {
         <h3
           v-if="hasTitle"
           :id="titleId"
-          class="text-sm font-semibold"
-          :class="props.variant === 'terminal' ? 'text-red-100' : 'text-red-900'"
+          class="text-body-sm font-semibold"
+          :class="props.variant === 'terminal' ? 'text-danger-100' : 'text-danger-900'"
         >
           {{ props.title }}
         </h3>
         <p
           :id="descriptionId"
-          class="mt-1 text-sm"
-          :class="props.variant === 'terminal' ? 'text-red-200' : 'text-red-800'"
+          class="mt-1 text-body-sm"
+          :class="props.variant === 'terminal' ? 'text-danger-200' : 'text-danger-800'"
         >
           {{ description }}
         </p>
         <p
           v-if="props.details"
           :id="description ? undefined : descriptionId"
-          class="mt-2 text-xs"
-          :class="props.variant === 'terminal' ? 'text-red-300' : 'text-red-700'"
+          class="mt-2 text-body-sm"
+          :class="props.variant === 'terminal' ? 'text-danger-300' : 'text-danger-700'"
         >
           {{ props.details }}
         </p>

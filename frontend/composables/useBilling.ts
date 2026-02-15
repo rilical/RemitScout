@@ -11,6 +11,14 @@ export const useBilling = () => {
   const { request } = useApi()
   const { refreshPlan } = useEntitlements()
 
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (error && typeof error === 'object' && 'message' in error) {
+      const message = (error as Record<string, unknown>).message
+      if (typeof message === 'string' && message.trim()) return message
+    }
+    return fallback
+  }
+
   const checkoutLoading = useState<boolean>('billing:checkout:loading', () => false)
   const portalLoading = useState<boolean>('billing:portal:loading', () => false)
   const error = useState<string | null>('billing:error', () => null)
@@ -36,8 +44,8 @@ export const useBilling = () => {
 
       return { ok: true, url: response.url, sessionId: response.session_id }
     }
-    catch (err: any) {
-      const message = err?.message || 'Unable to start checkout'
+    catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to start checkout')
       error.value = message
       return { ok: false, error: message }
     }
@@ -68,8 +76,8 @@ export const useBilling = () => {
 
       return { ok: true, url: response.url }
     }
-    catch (err: any) {
-      const message = err?.message || 'Unable to open billing portal'
+    catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to open billing portal')
       error.value = message
       return { ok: false, error: message }
     }
@@ -92,8 +100,8 @@ export const useBilling = () => {
       await refreshPlan()
       return { ok: true }
     }
-    catch (err: any) {
-      const message = err?.message || 'Unable to verify checkout'
+    catch (err: unknown) {
+      const message = getErrorMessage(err, 'Unable to verify checkout')
       error.value = message
       return { ok: false, error: message }
     }

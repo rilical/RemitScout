@@ -1,89 +1,135 @@
 import type { Ref } from 'vue'
 import { computed, isRef, unref } from 'vue'
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
+import type { paths } from '~/shared/lib/api/types'
 import { getProviderScore } from '~/lib/providerScores'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
+
+type ProviderIndices = {
+  teer: number | null
+  rvi_bps: number | null
+  rci: number | null
+  providerCount: number
+  amount: number
+  midMarketRate: number | null
+  weights: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  source?: 'gold'
+  updatedAt?: string | null
+  indicesBucket?: number
+  methodProfile?: string
+  suppressionFlag?: boolean
+  suppressionReason?: string | null
+}
+
+type ProvidersResponse = {
+  comparisonId?: string
+  start?: string
+  updatedAt: string | null
+  corridor: string
+  amount: number
+  method?: string | null
+  bucketUsed?: number
+  approximate?: boolean
+  bucketDeltaPct?: number | null
+  midMarketRate?: number | null
+  midMarketSource?: string | null
+  midMarketUpdatedAt?: string | null
+  cache?: {
+    ttl_seconds: number
+    age_seconds: number
+    fresh: boolean
+  }
+  availableMethods?: string[]
+  indicesReason?: string | null
+  message?: string
+  data: ProviderQuote[]
+  providerQuotes?: ProviderQuote[]
+  indices?: ProviderIndices
+  error?: { code: string, message: string }
+}
+
+type RecentSearchesResponse = paths['/recent-searches']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
+  ? R
+  : { data: RecentSearch[], updatedAt: string }
+
+type PopularCorridorsResponse = paths['/popular-corridors']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
+  ? R
+  : { data: CorridorPopularity[], updatedAt: string }
+
+type BankVsSpecialistResponse = paths['/bank-vs-specialist']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
+  ? R
+  : { data: BankVsSpecialist }
 
 // API composables for dynamic data fetching
 export const useRemittanceApi = () => {
   const { request } = useApi()
   const fallbackUpdatedAt = () => new Date().toISOString()
-  const providersSuccessCache = new Map<string, {
-    data: ProviderQuote[]
-    updatedAt: string
-    corridor: string
-    amount: number
-    method: string
-    bucketUsed?: number
-    approximate?: boolean
-    midMarketRate?: number | null
-    midMarketSource?: string | null
-    midMarketUpdatedAt?: string | null
-    availableMethods?: string[]
-    indicesReason?: string | null
-    indices?: {
-      teer: number | null
-      rvi_bps: number | null
-      rci: number | null
-      providerCount: number
-      amount: number
-      midMarketRate: number | null
-      weights: string
-      weightConfidence?: number | null
-      weightWindowDays?: number | null
-      source?: 'gold'
-      updatedAt?: string | null
-      indicesBucket?: number
-      methodProfile?: string
-      suppressionFlag?: boolean
-      suppressionReason?: string | null
-    }
-  }>()
+  const providersSuccessCache = new Map<string, ProvidersResponse>()
 
-  const useRecentSearches = (limit = 12, options: Record<string, any> = {}) => {
-    const key = options.key || `recent-searches-${limit}`
+  const getStatusCode = (error: unknown): number | undefined => {
+    if (!error || typeof error !== 'object') return undefined
+    const code = (error as Record<string, unknown>).statusCode
+    return typeof code === 'number' ? code : undefined
+  }
+
+  const getErrorData = (error: unknown): Record<string, unknown> | undefined => {
+    if (!error || typeof error !== 'object') return undefined
+    const data = (error as Record<string, unknown>).data
+    if (!data || typeof data !== 'object') return undefined
+    return data as Record<string, unknown>
+  }
+
+  const useRecentSearches = (limit = 12, options: Record<string, unknown> = {}) => {
+    const key = typeof options.key === 'string' ? options.key : `recent-searches-${limit}`
+    const { key: _ignoredKey, ...asyncOptions } = options
     return useAsyncData(
       key,
       async () => {
         try {
-          return await request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } })
+          return await request<RecentSearchesResponse>('/recent-searches', { query: { limit } })
         }
-        catch (error: any) {
-          if (error?.statusCode === 401 || error?.statusCode === 403) {
+        catch (error: unknown) {
+          const statusCode = getStatusCode(error)
+          if (statusCode === 401 || statusCode === 403) {
             return { data: [], updatedAt: new Date().toISOString() }
           }
           throw error
         }
       },
-      { watch: [], ...options },
+      { watch: [], ...(asyncOptions as any) },
     )
   }
 
-  const usePopularCorridors = (options: Record<string, any> = {}) => {
-    const key = options.key || 'popular-corridors'
+  const usePopularCorridors = (options: Record<string, unknown> = {}) => {
+    const key = typeof options.key === 'string' ? options.key : 'popular-corridors'
+    const { key: _ignoredKey, ...asyncOptions } = options
     return useAsyncData(
       key,
       async () => {
         try {
-          return await request<{ data: CorridorPopularity[], updatedAt: string }>('/popular-corridors')
+          return await request<PopularCorridorsResponse>('/popular-corridors')
         }
-        catch (error: any) {
-          if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
+        catch (error: unknown) {
+          const statusCode = getStatusCode(error)
+          if (statusCode === 401 || statusCode === 403 || statusCode === 500) {
             return { data: [], updatedAt: fallbackUpdatedAt() }
           }
           throw error
         }
       },
-      { watch: [], ...options },
+      { watch: [], ...(asyncOptions as any) },
     )
   }
 
-  const useBankVsSpecialist = (from = 'US', to = 'MX', amount = 500, options: Record<string, any> = {}) => {
-    const key = options.key || `bank-vs-specialist-${from}-${to}-${amount}`
+  const useBankVsSpecialist = (from = 'US', to = 'MX', amount = 500, options: Record<string, unknown> = {}) => {
+    const key = typeof options.key === 'string' ? options.key : `bank-vs-specialist-${from}-${to}-${amount}`
+    const { key: _ignoredKey, ...asyncOptions } = options
     return useAsyncData(
       key,
-      () => request<{ data: BankVsSpecialist }>('/bank-vs-specialist', {
+      () => request<BankVsSpecialistResponse>('/bank-vs-specialist', {
         query: { from, to, amount },
       }),
       {
@@ -106,7 +152,7 @@ export const useRemittanceApi = () => {
 
           return data
         },
-        ...options,
+        ...(asyncOptions as any),
       },
     )
   }
@@ -116,9 +162,10 @@ export const useRemittanceApi = () => {
     to: string | Ref<string> = 'PH',
     amount: number | Ref<number> = 500,
     method: string | Ref<string> = 'bank',
-    options: Record<string, any> = {},
+    options: Record<string, unknown> = {},
   ) => {
     const {
+      key: optionKey,
       watch: optionWatch,
       fromCurrency,
       toCurrency,
@@ -127,17 +174,19 @@ export const useRemittanceApi = () => {
     } = options
     const resolveOption = (value: unknown) => (isRef(value) ? unref(value) : value)
     const resolvedLive = computed(() => resolveOption(live) === true)
-    const key = options.key || computed(() => (
-      `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${unref(method)}-${resolvedLive.value ? 'live' : 'cached'}`
+    const key = typeof optionKey === 'string'
+      ? optionKey
+      : computed(() => (
+      `providers-${unref(from)}-${unref(to)}-${resolveOption(fromCurrency) || 'auto'}-${resolveOption(toCurrency) || 'auto'}-${unref(amount)}-${resolvedLive.value ? 'live' : 'cached'}`
     ))
     const resolvedKey = computed(() => String(unref(key)))
-    const watchSources = [from, to, amount, method, fromCurrency, toCurrency, live].filter(isRef)
+    const watchSources = [from, to, amount, fromCurrency, toCurrency, live].filter(isRef)
     const watch = Array.isArray(optionWatch)
       ? [...optionWatch, ...watchSources]
       : optionWatch === false
         ? []
         : (watchSources.length ? watchSources : undefined)
-    return useAsyncData(
+    return useAsyncData<ProvidersResponse>(
       key,
       async () => {
         try {
@@ -161,38 +210,7 @@ export const useRemittanceApi = () => {
             }
           }
           const isLive = resolvedLive.value
-          const response = await request<{
-            data: ProviderQuote[]
-            updatedAt: string
-            corridor: string
-            amount: number
-            method: string
-            bucketUsed?: number
-            approximate?: boolean
-            midMarketRate?: number | null
-            midMarketSource?: string | null
-            midMarketUpdatedAt?: string | null
-            availableMethods?: string[]
-            indicesReason?: string | null
-            indices?: {
-              teer: number | null
-              rvi_bps: number | null
-              rci: number | null
-              providerCount: number
-              amount: number
-              midMarketRate: number | null
-              weights: string
-              weightConfidence?: number | null
-              weightWindowDays?: number | null
-              source?: 'gold'
-              updatedAt?: string | null
-              indicesBucket?: number
-              methodProfile?: string
-              suppressionFlag?: boolean
-              suppressionReason?: string | null
-            }
-            error?: { code: string, message: string }
-          }>(
+          const response = await request<ProvidersResponse>(
             '/providers',
             {
               query: {
@@ -209,13 +227,18 @@ export const useRemittanceApi = () => {
           providersSuccessCache.set(resolvedKey.value, response)
           return response
         }
-        catch (error: any) {
-          if (import.meta.dev) {
-            console.warn('[remittance] providers unavailable', error)
-          }
-          const errorData = error?.data
-          const errorCode = errorData?.error || 'unavailable'
-          const errorMessage = errorData?.details?.[0]?.message || errorData?.message || 'Provider data unavailable.'
+        catch (error: unknown) {
+          if (import.meta.dev) useLogger('remittance').warn('providers unavailable', error)
+          const errorData = getErrorData(error)
+          const errorCode = typeof errorData?.error === 'string' ? errorData.error : 'unavailable'
+          const details = errorData?.details
+          const firstDetail = Array.isArray(details) && details[0] && typeof details[0] === 'object'
+            ? details[0] as Record<string, unknown>
+            : undefined
+          const detailMessage = typeof firstDetail?.message === 'string' ? firstDetail.message : undefined
+          const errorMessage = detailMessage
+            || (typeof errorData?.message === 'string' ? errorData.message : undefined)
+            || 'Provider data unavailable.'
           const cached = providersSuccessCache.get(resolvedKey.value)
           if (cached) {
             return {
@@ -373,6 +396,6 @@ export const useRemittanceApi = () => {
   }
 }
 
-export const usePopularCorridors = (options: Record<string, any> = {}) => {
+export const usePopularCorridors = (options: Record<string, unknown> = {}) => {
   return useRemittanceApi().usePopularCorridors(options)
 }

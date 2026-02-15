@@ -1,8 +1,8 @@
 <template>
   <section class="py-12 sm:py-16 bg-brand-600">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h2 class="text-h2 font-bold text-white mb-4">
           Trust & independence
         </h2>
       </div>
@@ -11,9 +11,9 @@
         <div>
           <div class="space-y-6">
             <div class="flex items-start gap-4">
-              <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+              <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                 <svg
-                  class="w-8 h-8 text-blue-600"
+                  class="w-8 h-8 text-brand-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -37,7 +37,7 @@
             </div>
 
             <div class="flex items-start gap-4">
-              <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+              <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                 <svg
                   class="w-8 h-8 text-brand-600"
                   fill="none"
@@ -63,9 +63,9 @@
             </div>
 
             <div class="flex items-start gap-4">
-              <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+              <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                 <svg
-                  class="w-8 h-8 text-emerald-600"
+                  class="w-8 h-8 text-success-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -89,7 +89,7 @@
             </div>
 
             <div class="flex items-start gap-4">
-              <div class="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+              <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
                 <svg
                   class="w-8 h-8 text-brand-600"
                   fill="none"
@@ -121,7 +121,7 @@
               to="/methodology"
               class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
             >
-              <span class="text-sm font-semibold">Find out more about how we pick our providers</span>
+              <span class="text-body-sm font-semibold">Find out more about how we pick our providers</span>
               <svg
                 class="w-4 h-4 group-hover:translate-x-1 transition-transform"
                 fill="none"
@@ -141,12 +141,12 @@
 
         <div>
           <div class="bg-neutral-50 rounded-2xl border border-neutral-200 p-6 sm:p-8">
-            <h3 class="text-xl font-bold text-neutral-900 mb-6">
+            <h3 class="text-h4 font-bold text-neutral-900 mb-6">
               Compliance & Security
             </h3>
 
             <div class="space-y-4">
-              <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
+              <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
                 <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                   <svg
                     class="w-4 h-4 text-white"
@@ -169,7 +169,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
+              <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
                 <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                   <svg
                     class="w-4 h-4 text-white"
@@ -192,7 +192,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
+              <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
                 <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                   <svg
                     class="w-4 h-4 text-white"
@@ -215,7 +215,7 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 p-4 bg-white rounded-xl">
+              <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
                 <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
                   <svg
                     class="w-4 h-4 text-white"
@@ -239,7 +239,7 @@
               </div>
             </div>
 
-            <p class="mt-6 text-xs text-neutral-500">
+            <p class="mt-6 text-body-sm text-neutral-500">
               Regulation applies to providers. We don't handle your money.
             </p>
           </div>

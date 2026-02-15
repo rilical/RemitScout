@@ -28,7 +28,7 @@
               />
             </svg>
           </div>
-          <h3 class="text-xl font-bold text-white mb-2">
+          <h3 class="text-h4 font-bold text-white mb-2">
             {{ title || 'Plus Feature' }}
           </h3>
           <p class="text-neutral-400 mb-4">
@@ -56,7 +56,7 @@
           <div class="mt-4">
             <button
               v-if="showLearnMore"
-              class="text-sm text-neutral-400 hover:text-white transition-colors"
+              class="text-body-sm text-neutral-400 hover:text-white transition-colors"
               @click="$emit('learn-more')"
             >
               Learn more about Plus →

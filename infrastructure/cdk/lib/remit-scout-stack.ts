@@ -152,6 +152,11 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('enableCostGuardrails') ??
           process.env.ENABLE_COST_GUARDRAILS,
       ) ?? true
+    const devMinimalInfra =
+      toOptionalBool(
+        this.node.tryGetContext('devMinimalInfra') ??
+          process.env.DEV_MINIMAL_INFRA,
+      ) ?? false
     const costAlertEmails = toList(
       this.node.tryGetContext('costAlertEmails') ??
         process.env.COST_ALERT_EMAILS,
@@ -439,6 +444,83 @@ export class RemitScoutStack extends Stack {
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
     ) ?? (envName === 'dev' ? 1 : undefined)
     const planeBQueueWorkerDesiredCount = rawPlaneBQueueWorkerDesiredCount
+    const planeBDbPoolMax =
+      toOptionalNumber(
+        this.node.tryGetContext('planeBDbPoolMax') ??
+          process.env.PLANE_B_DB_POOL_MAX,
+      ) ?? (envName === 'prod' ? 5 : 5)
+    const planeBDbPoolMin =
+      toOptionalNumber(
+        this.node.tryGetContext('planeBDbPoolMin') ??
+          process.env.PLANE_B_DB_POOL_MIN,
+      ) ?? (envName === 'prod' ? 1 : 1)
+    if (planeBDbPoolMax < 1 || planeBDbPoolMin < 0 || planeBDbPoolMin > planeBDbPoolMax) {
+      throw new Error(
+        'Invalid Plane B DB pool sizing. Ensure PLANE_B_DB_POOL_MAX >= PLANE_B_DB_POOL_MIN and both are valid integers.',
+      )
+    }
+
+    const shouldRequireQuoteRefreshQueue = quoteRefreshQueueMode !== 'off' && b2cRefreshServiceEnabled
+    const shouldRequireFxRateRefreshQueue =
+      fxRateRefreshQueueMode !== 'off' && fxRateRefreshServiceEnabled
+    const shouldRequireExportJobQueue = exportJobQueueMode !== 'off' && exportServiceEnabled
+    const shouldRequireIngestFanoutQueue = ingestFanoutMode !== 'off'
+    const shouldRequireNotificationsQueue = notificationsMode !== 'off'
+    const shouldRequireOpsAlertsQueue = opsAlertsMode !== 'off'
+    const shouldRequireGoldLiveQueue = goldLiveQueueMode !== 'off'
+    const shouldRequireAlertEvaluationQueue = alertEvaluationServiceEnabled
+
+    const queueWorkerRequiredConfig: Array<[string, string | undefined]> = []
+    if (shouldRequireQuoteRefreshQueue) {
+      queueWorkerRequiredConfig.push(['QUOTE_REFRESH_QUEUE_URL', queues.quoteRefreshQueue?.queueUrl])
+    }
+    if (shouldRequireFxRateRefreshQueue) {
+      queueWorkerRequiredConfig.push(['FX_RATE_REFRESH_QUEUE_URL', queues.fxRateRefreshQueue?.queueUrl])
+    }
+    if (shouldRequireExportJobQueue) {
+      queueWorkerRequiredConfig.push(['EXPORT_JOB_QUEUE_URL', queues.exportJobQueue?.queueUrl])
+      queueWorkerRequiredConfig.push(['EXPORTS_S3_BUCKET', storage.exportsBucket?.bucketName])
+    }
+    if (shouldRequireIngestFanoutQueue) {
+      queueWorkerRequiredConfig.push([
+        'PLANE_B_INGEST_FANOUT_QUEUE_URL',
+        queues.ingestFanoutQueue?.queueUrl,
+      ])
+      queueWorkerRequiredConfig.push([
+        'PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL',
+        queues.ingestFanoutTier2Queue?.queueUrl,
+      ])
+    }
+    if (shouldRequireNotificationsQueue) {
+      queueWorkerRequiredConfig.push([
+        'PLANE_B_NOTIFICATIONS_QUEUE_URL',
+        queues.notificationsQueue?.queueUrl,
+      ])
+    }
+    if (shouldRequireOpsAlertsQueue) {
+      queueWorkerRequiredConfig.push([
+        'PLANE_B_OPS_ALERT_QUEUE_URL',
+        queues.opsAlertsQueue?.queueUrl,
+      ])
+    }
+    if (shouldRequireGoldLiveQueue) {
+      queueWorkerRequiredConfig.push(['GOLD_LIVE_QUEUE_URL', queues.goldLiveQueue?.queueUrl])
+    }
+    if (shouldRequireAlertEvaluationQueue) {
+      queueWorkerRequiredConfig.push([
+        'ALERT_EVALUATION_QUEUE_URL',
+        queues.alertEvaluationQueue?.queueUrl,
+      ])
+    }
+    const missingQueueWorkerConfig = queueWorkerRequiredConfig
+      .filter(([, value]) => !value || !value.trim())
+      .map(([name]) => name)
+    if (missingQueueWorkerConfig.length > 0) {
+      throw new Error(
+        `Missing required worker runtime configuration: ${missingQueueWorkerConfig.join(', ')}.`
+          + ' Ensure required queues/buckets/secrets are in place before deploy.',
+      )
+    }
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
         process.env.PLANE_B_QUEUE_WORKER_MAX,
@@ -509,6 +591,9 @@ export class RemitScoutStack extends Stack {
         : envName === 'dev'
           ? ['omar@remit-scout.com']
           : []
+    if ((envName === 'staging' || envName === 'prod') && planeAAdminEmails.length === 0) {
+      throw new Error('PLANE_A_ADMIN_EMAILS is required in staging and production.')
+    }
     const planeAB2cMaxBucketDeltaPct =
       toOptionalNumber(
         this.node.tryGetContext('planeAB2cMaxBucketDeltaPct') ??
@@ -638,6 +723,7 @@ export class RemitScoutStack extends Stack {
       process.env.OTEL_LAMBDA_LAYER_ARN
     const slackWebhookUrl =
       this.node.tryGetContext('slackWebhookUrl') ??
+      process.env.ALERT_SLACK_WEBHOOK_URL ??
       process.env.SLACK_WEBHOOK_URL
     const slackWorkspaceId =
       this.node.tryGetContext('slackWorkspaceId') ??
@@ -694,18 +780,40 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('opsPauseRuleAllowlist') ??
         process.env.OPS_PAUSE_RULE_ALLOWLIST,
     )
+    const hardStopEnabled = envName !== 'prod'
+    const minimalMode = envName === 'dev' && devMinimalInfra
+
+    const devNightlyPauseEnabled = envName === 'dev'
+      ? (toOptionalBool(
+          this.node.tryGetContext('devNightlyPauseEnabled') ??
+            process.env.DEV_NIGHTLY_PAUSE_ENABLED,
+        ) ?? false)
+      : false
+    const devNightlyPauseCron =
+      this.node.tryGetContext('devNightlyPauseCron') ??
+      process.env.DEV_NIGHTLY_PAUSE_CRON ??
+      'cron(0 0 * * ? *)'
+    const devNightlyPauseTimezone =
+      this.node.tryGetContext('devNightlyPauseTimezone') ??
+      process.env.DEV_NIGHTLY_PAUSE_TIMEZONE ??
+      'America/New_York'
+
+    // OpsPause resume behavior:
+    // - prod: keep a minimal allowlist by default
+    // - dev: enable all rules by default (closer to prod behavior for readiness tests)
+    // - dev minimal infra: keep resume low-noise/low-cost
     const resolvedOpsPauseAllowlist = opsPauseAllowlist.length > 0
       ? opsPauseAllowlist
       : (envName === 'prod'
         ? ['telemetry-analytics', 'session-cleanup', 'audit-log-cleanup']
         : (envName === 'dev'
-          ? [
-              // Dev default: keep resume low-noise/low-cost. OpsPause will still disable *all* rules on pause.
-              'alert-evaluation-worker',
-              'alert-evaluation-weekly',
-            ]
+          ? (minimalMode
+            ? [
+                'alert-evaluation-worker',
+                'alert-evaluation-weekly',
+              ]
+            : [])
           : []))
-    const hardStopEnabled = envName !== 'prod'
 
     const compute = createCompute(this, {
       envName,
@@ -738,6 +846,7 @@ export class RemitScoutStack extends Stack {
       planeBDbHost,
       planeBDbPort,
       planeBDbName,
+      alertsSlackWebhookUrl: slackWebhookUrl,
       planeCDbSecretArn,
       planeCDbSsmName,
       planeCDbHost,
@@ -746,8 +855,10 @@ export class RemitScoutStack extends Stack {
       sentrySecretArn,
       sentrySecretJsonKey,
       quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+      quoteRefreshDlqUrl: queues.quoteRefreshDlq.queueUrl,
       quoteRefreshQueueMode,
       fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+      fxRateRefreshDlqUrl: queues.fxRateRefreshDlq.queueUrl,
       fxRateRefreshQueueMode,
       ingestFanoutQueueTier1Url: queues.ingestFanoutQueue.queueUrl,
       ingestFanoutQueueTier2Url: queues.ingestFanoutTier2Queue.queueUrl,
@@ -789,6 +900,8 @@ export class RemitScoutStack extends Stack {
       ingestFanoutMode,
       notificationsMode,
       opsAlertsMode,
+      planeBDbPoolMax: String(planeBDbPoolMax),
+      planeBDbPoolMin: String(planeBDbPoolMin),
     })
 
     const api = createApi(this, {
@@ -806,8 +919,17 @@ export class RemitScoutStack extends Stack {
       exportJobQueueMode,
       exportsBucketName: storage.exportsBucket.bucketName,
       exportsPrefix,
+      ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
+      ingestFanoutTier1QueueUrl: queues.ingestFanoutQueue.queueUrl,
+      ingestFanoutTier2QueueUrl: queues.ingestFanoutTier2Queue.queueUrl,
+      notificationsQueueUrl: queues.notificationsQueue.queueUrl,
+      opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
+      goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
+      goldLiveQueueMode,
+      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
       userAssetsBucketName: storage.userAssetsBucket.bucketName,
       userAssetsPrefix,
+      bronzeBucketName: storage.bronzeBucket.bucketName,
       planeADbSecretArn,
       planeADbSecretJsonKey,
       planeADbSsmName,
@@ -823,6 +945,7 @@ export class RemitScoutStack extends Stack {
       sentrySecretJsonKey,
       planeAAdminEmails,
       planeAB2cMaxBucketDeltaPct,
+      planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
       planeACorsOrigins,
       planeACorsAllowedHeaders,
       planeACorsAllowedMethods,
@@ -983,6 +1106,7 @@ export class RemitScoutStack extends Stack {
         ? (exportWorkerDesiredCount ?? 0)
         : 0,
       queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
+      minimalMode,
       paused: devPaused,
     })
 
@@ -1003,25 +1127,30 @@ export class RemitScoutStack extends Stack {
         ? `https://${api.planeACloudFront.distributionDomainName}`
         : api.planeAApi.apiEndpoint
 
-    // Create CloudWatch Synthetics canaries
-    const synthetics = createSynthetics(this, {
-      envName,
-      planeABaseUrl,
-      alertsTopic: snsSubscriptions.criticalTopic,
-    })
+    let monitoring: Awaited<ReturnType<typeof createMonitoring>> | undefined
+    let synthetics: Awaited<ReturnType<typeof createSynthetics>> | undefined
 
-    // Create monitoring with SNS topics from subscriptions
-    const monitoring = createMonitoring(this, {
-      envName,
-      queues,
-      api,
-      ecs: ecsServices,
-      database,
-      cache,
-      criticalTopic: snsSubscriptions.criticalTopic,
-      warningTopic: snsSubscriptions.warningTopic,
-      opsTopic: snsSubscriptions.opsTopic,
-    })
+    if (!minimalMode && envName !== 'dev') {
+      // Create CloudWatch Synthetics canaries
+      synthetics = createSynthetics(this, {
+        envName,
+        planeABaseUrl,
+        alertsTopic: snsSubscriptions.criticalTopic,
+      })
+
+      // Create monitoring with SNS topics from subscriptions
+      monitoring = createMonitoring(this, {
+        envName,
+        queues,
+        api,
+        ecs: ecsServices,
+        database,
+        cache,
+        criticalTopic: snsSubscriptions.criticalTopic,
+        warningTopic: snsSubscriptions.warningTopic,
+        opsTopic: snsSubscriptions.opsTopic,
+      })
+    }
 
     const pipeline = pipelineEnabled
       ? createPipeline(this, {
@@ -1098,6 +1227,7 @@ export class RemitScoutStack extends Stack {
       alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
       alertEvaluationServiceEnabled,
       exportServiceEnabled,
+      minimalMode,
       planeBDbHost,
       planeBDbPort,
       planeBDbName,
@@ -1125,33 +1255,31 @@ export class RemitScoutStack extends Stack {
     const exportWorkerBaseline = exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
+    const managedEcsServiceNames: string[] = []
+    const managedEcsBaselines: Record<string, number> = {}
+
+    const addManagedService = (service: { serviceName: string } | undefined, baseline: number): void => {
+      if (!service) return
+      managedEcsServiceNames.push(service.serviceName)
+      managedEcsBaselines[service.serviceName] = baseline
+    }
+
+    addManagedService(ecsServices.planeBIngestService, planeBIngestBaseline)
+    addManagedService(ecsServices.b2cRefreshService, b2cRefreshBaseline)
+    addManagedService(ecsServices.fxRateRefreshService, fxRateRefreshBaseline)
+    addManagedService(ecsServices.ingestFanoutTier1Service, ingestFanoutTier1Baseline)
+    addManagedService(ecsServices.ingestFanoutTier2Service, ingestFanoutTier2Baseline)
+    addManagedService(ecsServices.goldLiveService, goldLiveBaseline)
+    addManagedService(ecsServices.notificationsQueueService, notificationsBaseline)
+    addManagedService(ecsServices.opsAlertsQueueService, opsAlertsBaseline)
+    addManagedService(ecsServices.alertEvaluationService, alertEvaluationBaseline)
+    addManagedService(ecsServices.exportWorkerService, exportWorkerBaseline)
+
     const opsPause = createOpsPause(this, {
       envName,
       clusterName: compute.cluster.clusterName,
-      ecsServiceNames: [
-        ecsServices.planeBIngestService.serviceName,
-        ecsServices.b2cRefreshService.serviceName,
-        ecsServices.fxRateRefreshService.serviceName,
-        ecsServices.ingestFanoutTier1Service.serviceName,
-        ecsServices.ingestFanoutTier2Service.serviceName,
-        ecsServices.goldLiveService.serviceName,
-        ecsServices.notificationsQueueService.serviceName,
-        ecsServices.opsAlertsQueueService.serviceName,
-        ecsServices.alertEvaluationService.serviceName,
-        ecsServices.exportWorkerService.serviceName,
-      ],
-      ecsBaselineDesired: {
-        [ecsServices.planeBIngestService.serviceName]: planeBIngestBaseline,
-        [ecsServices.b2cRefreshService.serviceName]: b2cRefreshBaseline,
-        [ecsServices.fxRateRefreshService.serviceName]: fxRateRefreshBaseline,
-        [ecsServices.ingestFanoutTier1Service.serviceName]: ingestFanoutTier1Baseline,
-        [ecsServices.ingestFanoutTier2Service.serviceName]: ingestFanoutTier2Baseline,
-        [ecsServices.goldLiveService.serviceName]: goldLiveBaseline,
-        [ecsServices.notificationsQueueService.serviceName]: notificationsBaseline,
-        [ecsServices.opsAlertsQueueService.serviceName]: opsAlertsBaseline,
-        [ecsServices.alertEvaluationService.serviceName]: alertEvaluationBaseline,
-        [ecsServices.exportWorkerService.serviceName]: exportWorkerBaseline,
-      },
+      ecsServiceNames: managedEcsServiceNames,
+      ecsBaselineDesired: managedEcsBaselines,
       eventRulePrefix: `remit-scout-${envName}-`,
       eventRuleAllowlist: resolvedOpsPauseAllowlist,
       hardStopEnabled,
@@ -1171,7 +1299,7 @@ export class RemitScoutStack extends Stack {
       role: iam.opsPauseLambdaRole,
     })
 
-    if (envName === 'dev') {
+    if (envName === 'dev' && devNightlyPauseEnabled) {
       const nightlyPauseDlq = new Queue(this, 'DevNightlyPauseSchedulerDlq', {
         queueName: `remit-scout-${envName}-nightly-pause-scheduler-dlq`,
         retentionPeriod: Duration.days(14),
@@ -1185,8 +1313,8 @@ export class RemitScoutStack extends Stack {
 
       new CfnSchedule(this, 'DevNightlyPauseSchedule', {
         name: `remit-scout-${envName}-nightly-pause`,
-        scheduleExpression: 'cron(0 0 * * ? *)',
-        scheduleExpressionTimezone: 'America/New_York',
+        scheduleExpression: devNightlyPauseCron,
+        scheduleExpressionTimezone: devNightlyPauseTimezone,
         flexibleTimeWindow: { mode: 'OFF' },
         state: 'ENABLED',
         target: {
@@ -1424,14 +1552,16 @@ export class RemitScoutStack extends Stack {
         })
       }
     }
-    new CfnOutput(this, 'CloudWatchDashboardName', {
-      value: monitoring.dashboard.dashboardName,
-      description: 'CloudWatch dashboard name',
-    })
-    new CfnOutput(this, 'CloudWatchAlertsTopicArn', {
-      value: monitoring.criticalTopic.topicArn,
-      description: 'SNS topic for CloudWatch alarms',
-    })
+    if (monitoring) {
+      new CfnOutput(this, 'CloudWatchDashboardName', {
+        value: monitoring.dashboard.dashboardName,
+        description: 'CloudWatch dashboard name',
+      })
+      new CfnOutput(this, 'CloudWatchAlertsTopicArn', {
+        value: monitoring.criticalTopic.topicArn,
+        description: 'SNS topic for CloudWatch alarms',
+      })
+    }
     new CfnOutput(this, 'CriticalAlertsTopicArn', {
       value: snsSubscriptions.criticalTopic.topicArn,
       description: 'SNS topic for critical alerts',
@@ -1444,7 +1574,7 @@ export class RemitScoutStack extends Stack {
       value: snsSubscriptions.opsTopic.topicArn,
       description: 'SNS topic for ops alerts',
     })
-    if (synthetics.canaries.length > 0) {
+    if (synthetics?.canaries.length) {
       new CfnOutput(this, 'SyntheticsCanaryNames', {
         value: synthetics.canaries.map((c) => c.name!).join(','),
         description: 'CloudWatch Synthetics canary names',

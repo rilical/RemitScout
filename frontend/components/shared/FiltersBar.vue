@@ -1,11 +1,11 @@
 <template>
-  <div class="mb-6 rounded-lg bg-white p-4 shadow-md">
+  <div class="mb-6 rounded-lg bg-surface p-4 shadow-md">
     <div class="flex flex-wrap items-center gap-4">
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">Region</label>
+        <label class="mb-1 block text-body-sm font-medium text-neutral-700">Region</label>
         <select
           v-model="filters.region"
-          class="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="rounded-md border border-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">
             All Regions
@@ -23,10 +23,10 @@
       </div>
 
       <div>
-        <label class="mb-1 block text-sm font-medium text-gray-700">Rating</label>
+        <label class="mb-1 block text-body-sm font-medium text-neutral-700">Rating</label>
         <select
           v-model="filters.rating"
-          class="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="rounded-md border border-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="0">
             All Ratings
@@ -41,7 +41,7 @@
       </div>
 
       <div class="flex flex-wrap gap-2">
-        <label class="text-sm font-medium text-gray-700">Features:</label>
+        <label class="text-body-sm font-medium text-neutral-700">Features:</label>
         <label
           v-for="feature in features"
           :key="feature.id"
@@ -51,9 +51,9 @@
             v-model="filters.features"
             :value="feature.id"
             type="checkbox"
-            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
           >
-          <span class="ml-2 text-sm text-gray-700">{{ feature.name }}</span>
+          <span class="ml-2 text-body-sm text-neutral-700">{{ feature.name }}</span>
         </label>
       </div>
     </div>

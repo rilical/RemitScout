@@ -12,9 +12,6 @@
     <!-- 4b. Remit-Score explanation -->
     <RemitScoreBanner />
 
-    <!-- Funnel: Pulse + Plus (above fold CTA) -->
-    <PlusPulseStrip />
-
     <!-- EEAT: Transparency Strip (how we compare) -->
     <TransparencyStrip />
 
@@ -25,52 +22,85 @@
     <IndependenceBadge />
 
     <!-- 6. Popular corridor chips -->
-    <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
+    <AsyncErrorBoundary skeleton-height="160">
+      <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
+    </AsyncErrorBoundary>
 
     <!-- Educational comparison: Bank vs Specialist -->
-    <BankVsSpecialistDynamic />
+    <AsyncErrorBoundary skeleton-height="220">
+      <BankVsSpecialistDynamic />
+    </AsyncErrorBoundary>
 
     <!-- 7. How it works (3 steps) -->
-    <HowItWorks />
+    <AsyncErrorBoundary skeleton-height="220">
+      <HowItWorks />
+    </AsyncErrorBoundary>
 
     <!-- 8. The story behind Remit-Scout (Omar's story) -->
-    <FounderStory />
+    <AsyncErrorBoundary skeleton-height="260">
+      <FounderStory />
+    </AsyncErrorBoundary>
 
     <!-- EEAT: Why prices vary (user education) -->
-    <WhyPricesVary />
+    <AsyncErrorBoundary skeleton-height="220">
+      <WhyPricesVary />
+    </AsyncErrorBoundary>
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
-    <PulseTeaserSection v-if="pulseEnabled" />
+    <AsyncErrorBoundary
+      v-if="pulseEnabled"
+      skeleton-height="220"
+    >
+      <PulseTeaserSection />
+    </AsyncErrorBoundary>
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
-    <InstitutionalTeaser v-if="enterpriseEnabled" />
+    <AsyncErrorBoundary
+      v-if="enterpriseEnabled"
+      skeleton-height="180"
+    >
+      <InstitutionalTeaser />
+    </AsyncErrorBoundary>
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
-    <PlusTeaser />
+    <AsyncErrorBoundary skeleton-height="180">
+      <PlusTeaser />
+    </AsyncErrorBoundary>
 
     <!-- 11. Testimonials (3 short, real quotes) -->
-    <TestimonialsCarousel />
+    <AsyncErrorBoundary skeleton-height="240">
+      <TestimonialsCarousel />
+    </AsyncErrorBoundary>
 
     <!-- 12. Education / Resources cards -->
-    <LatestGuides />
+    <AsyncErrorBoundary skeleton-height="240">
+      <LatestGuides />
+    </AsyncErrorBoundary>
 
     <!-- Travel Tools as part of resources -->
-    <TravelToolsSection />
+    <AsyncErrorBoundary skeleton-height="240">
+      <TravelToolsSection />
+    </AsyncErrorBoundary>
 
     <!-- 13. Countries coverage grid (154 countries) -->
-    <CountryGrid />
+    <AsyncErrorBoundary skeleton-height="300">
+      <CountryGrid />
+    </AsyncErrorBoundary>
 
     <!-- 14. FAQ (accordion, 5-7 items) -->
-    <HomeFaq />
+    <AsyncErrorBoundary skeleton-height="240">
+      <HomeFaq />
+    </AsyncErrorBoundary>
 
     <!-- 15. Newsletter signup (AFTER FAQ, before final CTA) -->
-    <NewsletterSignup />
-
-    <!-- EEAT: Help Footer (report issues, methodology, contact) -->
-    <HelpFooter />
+    <AsyncErrorBoundary skeleton-height="180">
+      <NewsletterSignup />
+    </AsyncErrorBoundary>
 
     <!-- 16. Final CTA band -->
-    <CtaBanner />
+    <AsyncErrorBoundary skeleton-height="180">
+      <CtaBanner />
+    </AsyncErrorBoundary>
 
     <!-- 17. Footer (handled by layout) -->
 
@@ -86,31 +116,32 @@
 import { ref, defineAsyncComponent } from 'vue'
 import HeroDualTab from '~/components/home/HeroDualTab.vue'
 import RemitScoreBanner from '~/components/home/RemitScoreBanner.vue'
-import PlusPulseStrip from '~/components/home/PlusPulseStrip.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
-import HowItWorks from '~/components/home/HowItWorks.vue'
-import FounderStory from '~/components/home/FounderStory.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import TransparencyStrip from '~/components/home/TransparencyStrip.vue'
-import WhyPricesVary from '~/components/home/WhyPricesVary.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
-import HelpFooter from '~/components/home/HelpFooter.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
-import PulseTeaserSection from '~/components/home/PulseTeaserSection.vue'
-import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
-import PlusTeaser from '~/components/home/PlusTeaser.vue'
 import { setSeo, jsonLdSiteNavigation } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 
-// SEO-critical components: import directly for SSR
+// Above-fold components: import directly for SSR
 import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic.vue'
-import CorridorsGridDynamic from '~/components/home/CorridorsGridDynamic.vue'
-import BankVsSpecialistDynamic from '~/components/home/BankVsSpecialistDynamic.vue'
-import CountryGrid from '~/components/home/CountryGrid.vue'
-import HomeFaq from '~/components/home/HomeFaq.vue'
-import TestimonialsCarousel from '~/components/home/TestimonialsCarousel.vue'
 
-// Below-fold components: can stay async for code-splitting
+// Below-fold components: async for code-splitting
+const HowItWorks = defineAsyncComponent(() => import('~/components/home/HowItWorks.vue'))
+const FounderStory = defineAsyncComponent(() => import('~/components/home/FounderStory.vue'))
+const WhyPricesVary = defineAsyncComponent(() => import('~/components/home/WhyPricesVary.vue'))
+const PulseTeaserSection = defineAsyncComponent(() => import('~/components/home/PulseTeaserSection.vue'))
+const InstitutionalTeaser = defineAsyncComponent(() => import('~/components/home/InstitutionalTeaser.vue'))
+const PlusTeaser = defineAsyncComponent(() => import('~/components/home/PlusTeaser.vue'))
+const CorridorsGridDynamic = defineAsyncComponent(() => import('~/components/home/CorridorsGridDynamic.vue'))
+const BankVsSpecialistDynamic = defineAsyncComponent(() => import('~/components/home/BankVsSpecialistDynamic.vue'))
+const TestimonialsCarousel = defineAsyncComponent(() => import('~/components/home/TestimonialsCarousel.vue'))
+const CountryGrid = defineAsyncComponent(() => import('~/components/home/CountryGrid.vue'))
+const HomeFaq = defineAsyncComponent(() => import('~/components/home/HomeFaq.vue'))
+
+// Below-fold components: async for code-splitting
 const TravelToolsSection = defineAsyncComponent(() => import('~/components/home/TravelToolsSection.vue'))
 const LatestGuides = defineAsyncComponent(() => import('~/components/home/LatestGuides.vue'))
 const CtaBanner = defineAsyncComponent(() => import('~/components/home/CtaBanner.vue'))
@@ -129,10 +160,27 @@ const handleCorridorSelected = (data: { from: string, to: string }) => {
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
+const seoTitle = 'Remit-Scout, Compare International Money Transfer Services & Save on Fees'
+const seoDescription = 'Compare current quotes, fees, and estimated delivery times across 30+ licensed providers. Find a better way to support family abroad.'
+
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Compare Money Transfers',
+    description: 'Live rates, fees, and delivery times across 30+ licensed providers.',
+  },
+})
+
+useServerSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+})
+
 setSeo({
-  title: 'Remit-Scout, Compare International Money Transfer Services & Save on Fees',
-  description: 'Compare current quotes, fees, and estimated delivery times across 30+ licensed providers. Find a better way to support family abroad.',
+  title: seoTitle,
+  description: seoDescription,
   canonical: `${siteUrl}/`,
+  ogImage: false,
 })
 
 useHead({

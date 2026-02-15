@@ -99,8 +99,11 @@ export const handler = async (): Promise<number> => {
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      // B2C refresh worker only needs Plane B DB + Redis + quote refresh queue.
+      // Requiring *all* queues/storage blocks the worker when unrelated env vars
+      // (exports queue/bucket, etc.) are intentionally absent from its task definition.
+      requireQueues: false,
+      requireStorage: false,
     },
   })
 

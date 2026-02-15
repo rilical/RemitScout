@@ -20,5 +20,5 @@ await navigateTo(
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50" />
+  <div class="min-h-screen bg-neutral-50" />
 </template>

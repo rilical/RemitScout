@@ -26,6 +26,14 @@ type MarketingEventNames = {
   meta: string
 }
 
+type WindowFunction = (...args: unknown[]) => void
+
+const getWindowFunction = (key: 'gtag' | 'fbq'): WindowFunction | undefined => {
+  if (typeof window === 'undefined') return undefined
+  const candidate = (window as unknown as Record<string, unknown>)[key]
+  return typeof candidate === 'function' ? candidate as WindowFunction : undefined
+}
+
 type SearchEventInput = {
   corridorId: string
   amount?: number
@@ -179,7 +187,7 @@ export const useMarketingAnalytics = () => {
   const sendGa4Event = (eventName: string, params?: Record<string, unknown>) => {
     if (!import.meta.client || !ga4Id || typeof window === 'undefined') return
     if (!analyticsConsent.value) return
-    const gtag = (window as any).gtag as ((...args: any[]) => void) | undefined
+    const gtag = getWindowFunction('gtag')
     if (!gtag) return
     gtag('event', eventName, params || {})
   }
@@ -187,7 +195,7 @@ export const useMarketingAnalytics = () => {
   const sendMetaPixelEvent = (eventName: string, params: Record<string, unknown>, eventId: string) => {
     if (!import.meta.client || !metaPixelId || typeof window === 'undefined') return
     if (!marketingConsent.value) return
-    const fbq = (window as any).fbq as ((...args: any[]) => void) | undefined
+    const fbq = getWindowFunction('fbq')
     if (!fbq) return
     const trackType = metaStandardEvents.has(eventName) ? 'track' : 'trackCustom'
     fbq(trackType, eventName, params, { eventID: eventId })
@@ -405,7 +413,7 @@ export const useMarketingAnalytics = () => {
 
   const trackPageView = async () => {
     if (!import.meta.client) return
-    const gtag = (window as any).gtag as ((...args: any[]) => void) | undefined
+    const gtag = getWindowFunction('gtag')
     if (analyticsConsent.value && ga4Id && gtag) {
       gtag('event', 'page_view', { page_path: route.fullPath })
     }

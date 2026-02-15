@@ -1,9 +1,9 @@
 <template>
   <section class="py-16 sm:py-20 bg-brand-600">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <!-- Header -->
       <div class="text-center mb-12">
-        <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full mb-6">
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-surface/20 backdrop-blur-sm border border-white/30 rounded-full mb-6">
           <svg
             class="w-5 h-5 text-white"
             fill="none"
@@ -17,19 +17,19 @@
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <span class="text-sm font-semibold text-white">Remit-Scout Pulse</span>
+          <span class="text-body-sm font-semibold text-white">Remit-Scout Pulse</span>
         </div>
-        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h2 class="text-h2 font-bold text-white mb-4">
           Real-Time Market Intelligence
         </h2>
-        <p class="text-lg text-white/90 max-w-3xl mx-auto leading-relaxed break-words">
+        <p class="text-body-lg text-white/90 max-w-3xl mx-auto leading-relaxed break-words">
           Live exchange rates across 150+ corridors. Track when rates move up or down. Set alerts to catch the perfect moment to transfer.
         </p>
       </div>
 
       <!-- What is Pulse - 3 Feature Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
+        <div class="bg-surface rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md motion-safe:transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
             <svg
               class="w-7 h-7 text-white"
@@ -45,15 +45,15 @@
               />
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+          <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
             Live Exchange Rates
           </h3>
-          <p class="text-sm text-neutral-700 leading-relaxed">
+          <p class="text-body-sm text-neutral-700 leading-relaxed">
             Get instant access to real-time exchange rates across 150+ popular corridors. Our system pulls live data from multiple providers and updates every few minutes, so you always see the current market rate before you send money.
           </p>
         </div>
 
-        <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
+        <div class="bg-surface rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md motion-safe:transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
             <svg
               class="w-7 h-7 text-white"
@@ -69,15 +69,15 @@
               />
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+          <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
             Trend Analysis
           </h3>
-          <p class="text-sm text-neutral-700 leading-relaxed">
+          <p class="text-body-sm text-neutral-700 leading-relaxed">
             Analyze historical rate movements to spot patterns and identify the best times to transfer. See which corridors are gaining or losing value over days, weeks, or months, so you can time your transfers for maximum savings.
           </p>
         </div>
 
-        <div class="bg-white rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md transition-all">
+        <div class="bg-surface rounded-xl border-2 border-neutral-200 p-6 hover:border-brand-300 shadow-md motion-safe:transition-all">
           <div class="w-14 h-14 rounded-xl bg-brand-600 flex items-center justify-center mb-4">
             <svg
               class="w-7 h-7 text-white"
@@ -93,10 +93,10 @@
               />
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-neutral-900 mb-2">
+          <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
             Smart Alerts
           </h3>
-          <p class="text-sm text-neutral-700 leading-relaxed">
+          <p class="text-body-sm text-neutral-700 leading-relaxed">
             Set custom rate targets for any corridor and get instant email notifications the moment your target rate is reached. Never miss an opportunity to send when rates are favorable, even when you're not actively checking.
           </p>
         </div>
@@ -104,11 +104,11 @@
 
       <!-- Top Mover Exchange Rate History -->
       <div class="mb-12">
-        <div class="bg-white rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
+        <div class="bg-surface rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
           <div class="flex items-center justify-between mb-6">
             <div>
               <div class="flex items-center gap-3 mb-2">
-                <span class="text-4xl">🇺🇸</span>
+                <span class="text-h1">🇺🇸</span>
                 <svg
                   class="w-5 h-5 text-neutral-400"
                   fill="none"
@@ -122,20 +122,20 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-4xl">🇵🇭</span>
+                <span class="text-h1">🇵🇭</span>
                 <div class="ml-3">
-                  <h3 class="text-2xl font-bold text-neutral-900">
+                  <h3 class="text-h3 font-bold text-neutral-900">
                     US to PH Exchange Rate History
                   </h3>
-                  <p class="text-sm text-neutral-600 mt-1">
+                  <p class="text-body-sm text-neutral-600 mt-1">
                     Top mover today • +2.3% in the last 24 hours
                   </p>
                 </div>
               </div>
               <div class="flex items-baseline gap-3 mt-4">
-                <span class="text-4xl font-bold text-neutral-900">56.82</span>
-                <span class="text-lg text-neutral-600">PHP per USD</span>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700 border border-green-300">
+                <span class="text-h1 font-bold text-neutral-900">56.82</span>
+                <span class="text-body-lg text-neutral-600">PHP per USD</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-body-sm font-semibold bg-success-100 text-success-700 border border-success-300">
                   <svg
                     class="w-4 h-4 mr-1"
                     fill="none"
@@ -157,12 +157,12 @@
 
           <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-6 mt-6">
             <div class="flex items-center justify-between mb-4">
-              <h4 class="text-lg font-semibold text-neutral-900">
+              <h4 class="text-body-lg font-semibold text-neutral-900">
                 Last 30 Days
               </h4>
               <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-2 text-xs text-neutral-600">
-                  <span class="w-4 h-0.5 bg-green-500 rounded" />
+                <span class="inline-flex items-center gap-2 text-body-sm text-neutral-600">
+                  <span class="w-4 h-0.5 bg-success-500 rounded" />
                   <span>USD-PHP</span>
                 </span>
               </div>
@@ -214,13 +214,13 @@
                 :cy="point.y"
                 r="4"
                 fill="rgb(34, 197, 94)"
-                class="opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                class="opacity-0 hover:opacity-100 motion-safe:transition-opacity cursor-pointer"
               >
                 <title>{{ formatChartTooltip(point.value, point.date) }}</title>
               </circle>
             </svg>
 
-            <div class="flex justify-between text-sm text-neutral-600 mt-4">
+            <div class="flex justify-between text-body-sm text-neutral-600 mt-4">
               <span>{{ chartDateLabels[0] }}</span>
               <span>{{ chartDateLabels[Math.floor(chartDateLabels.length / 2)] }}</span>
               <span>{{ chartDateLabels[chartDateLabels.length - 1] }}</span>
@@ -232,23 +232,23 @@
       <!-- Today's Movers - Full Width -->
       <div class="mb-12">
         <!-- Today's Movers - Expanded -->
-        <div class="bg-white rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
+        <div class="bg-surface rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h3 class="text-2xl font-bold text-neutral-900">
+              <h3 class="text-h3 font-bold text-neutral-900">
                 Today's Movers
               </h3>
-              <p class="text-sm text-neutral-600">
+              <p class="text-body-sm text-neutral-600">
                 Top rate changes in the last 24 hours
               </p>
             </div>
-            <div class="text-xs text-neutral-500">
+            <div class="text-body-sm text-neutral-500">
               Last updated 5 minutes ago
             </div>
           </div>
 
           <!-- Table Header -->
-          <div class="grid grid-cols-5 gap-4 pb-4 border-b border-neutral-200 text-xs font-semibold text-neutral-600 uppercase tracking-wider">
+          <div class="grid grid-cols-5 gap-4 pb-4 border-b border-neutral-200 text-body-sm font-semibold text-neutral-600 uppercase tracking-wider">
             <div class="col-span-2">
               Corridor
             </div>
@@ -263,9 +263,9 @@
 
           <!-- Table Rows -->
           <div class="space-y-3 mt-4">
-            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
+            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-surface motion-safe:transition-all">
               <div class="col-span-2 flex items-center gap-3">
-                <span class="text-3xl">🇺🇸</span>
+                <span class="text-h2">🇺🇸</span>
                 <svg
                   class="w-4 h-4 text-neutral-400"
                   fill="none"
@@ -279,34 +279,34 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-3xl">🇵🇭</span>
+                <span class="text-h2">🇵🇭</span>
                 <div class="ml-2">
-                  <span class="text-base font-semibold text-neutral-900">US to PH</span>
-                  <div class="text-xs text-neutral-600">
+                  <span class="text-body font-semibold text-neutral-900">US to PH</span>
+                  <div class="text-body-sm text-neutral-600">
                     Philippines Peso
                   </div>
                 </div>
               </div>
               <div class="text-center">
-                <span class="text-xl font-bold text-green-600">+2.3%</span>
+                <span class="text-h4 font-bold text-success-600">+2.3%</span>
               </div>
               <div class="text-center">
-                <span class="text-base font-semibold text-neutral-900">56.82</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body font-semibold text-neutral-900">56.82</span>
+                <div class="text-body-sm text-neutral-600">
                   PHP per USD
                 </div>
               </div>
               <div>
-                <span class="text-sm font-medium text-neutral-900">Remitly</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body-sm font-medium text-neutral-900">Remitly</span>
+                <div class="text-body-sm text-neutral-600">
                   0.8% fee
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
+            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-surface motion-safe:transition-all">
               <div class="col-span-2 flex items-center gap-3">
-                <span class="text-3xl">🇬🇧</span>
+                <span class="text-h2">🇬🇧</span>
                 <svg
                   class="w-4 h-4 text-neutral-400"
                   fill="none"
@@ -320,34 +320,34 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-3xl">🇮🇳</span>
+                <span class="text-h2">🇮🇳</span>
                 <div class="ml-2">
-                  <span class="text-base font-semibold text-neutral-900">GB to IN</span>
-                  <div class="text-xs text-neutral-600">
+                  <span class="text-body font-semibold text-neutral-900">GB to IN</span>
+                  <div class="text-body-sm text-neutral-600">
                     Indian Rupee
                   </div>
                 </div>
               </div>
               <div class="text-center">
-                <span class="text-xl font-bold text-red-600">-1.8%</span>
+                <span class="text-h4 font-bold text-danger-600">-1.8%</span>
               </div>
               <div class="text-center">
-                <span class="text-base font-semibold text-neutral-900">103.45</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body font-semibold text-neutral-900">103.45</span>
+                <div class="text-body-sm text-neutral-600">
                   INR per GBP
                 </div>
               </div>
               <div>
-                <span class="text-sm font-medium text-neutral-900">Wise</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body-sm font-medium text-neutral-900">Wise</span>
+                <div class="text-body-sm text-neutral-600">
                   0.6% fee
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
+            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-surface motion-safe:transition-all">
               <div class="col-span-2 flex items-center gap-3">
-                <span class="text-3xl">🇨🇦</span>
+                <span class="text-h2">🇨🇦</span>
                 <svg
                   class="w-4 h-4 text-neutral-400"
                   fill="none"
@@ -361,34 +361,34 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-3xl">🇲🇽</span>
+                <span class="text-h2">🇲🇽</span>
                 <div class="ml-2">
-                  <span class="text-base font-semibold text-neutral-900">CA to MX</span>
-                  <div class="text-xs text-neutral-600">
+                  <span class="text-body font-semibold text-neutral-900">CA to MX</span>
+                  <div class="text-body-sm text-neutral-600">
                     Mexican Peso
                   </div>
                 </div>
               </div>
               <div class="text-center">
-                <span class="text-xl font-bold text-green-600">+1.5%</span>
+                <span class="text-h4 font-bold text-success-600">+1.5%</span>
               </div>
               <div class="text-center">
-                <span class="text-base font-semibold text-neutral-900">14.32</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body font-semibold text-neutral-900">14.32</span>
+                <div class="text-body-sm text-neutral-600">
                   MXN per CAD
                 </div>
               </div>
               <div>
-                <span class="text-sm font-medium text-neutral-900">XE</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body-sm font-medium text-neutral-900">XE</span>
+                <div class="text-body-sm text-neutral-600">
                   1.2% fee
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
+            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-surface motion-safe:transition-all">
               <div class="col-span-2 flex items-center gap-3">
-                <span class="text-3xl">🇦🇺</span>
+                <span class="text-h2">🇦🇺</span>
                 <svg
                   class="w-4 h-4 text-neutral-400"
                   fill="none"
@@ -402,34 +402,34 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-3xl">🇻🇳</span>
+                <span class="text-h2">🇻🇳</span>
                 <div class="ml-2">
-                  <span class="text-base font-semibold text-neutral-900">AU to VN</span>
-                  <div class="text-xs text-neutral-600">
+                  <span class="text-body font-semibold text-neutral-900">AU to VN</span>
+                  <div class="text-body-sm text-neutral-600">
                     Vietnamese Dong
                   </div>
                 </div>
               </div>
               <div class="text-center">
-                <span class="text-xl font-bold text-green-600">+0.9%</span>
+                <span class="text-h4 font-bold text-success-600">+0.9%</span>
               </div>
               <div class="text-center">
-                <span class="text-base font-semibold text-neutral-900">16,234</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body font-semibold text-neutral-900">16,234</span>
+                <div class="text-body-sm text-neutral-600">
                   VND per AUD
                 </div>
               </div>
               <div>
-                <span class="text-sm font-medium text-neutral-900">Wise</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body-sm font-medium text-neutral-900">Wise</span>
+                <div class="text-body-sm text-neutral-600">
                   0.7% fee
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-white transition-all">
+            <div class="grid grid-cols-5 gap-4 items-center p-4 bg-neutral-50 rounded-lg border border-neutral-200 hover:border-brand-300 hover:bg-surface motion-safe:transition-all">
               <div class="col-span-2 flex items-center gap-3">
-                <span class="text-3xl">🇩🇪</span>
+                <span class="text-h2">🇩🇪</span>
                 <svg
                   class="w-4 h-4 text-neutral-400"
                   fill="none"
@@ -443,26 +443,26 @@
                     d="M9 5l7 7-7 7"
                   />
                 </svg>
-                <span class="text-3xl">🇹🇷</span>
+                <span class="text-h2">🇹🇷</span>
                 <div class="ml-2">
-                  <span class="text-base font-semibold text-neutral-900">DE to TR</span>
-                  <div class="text-xs text-neutral-600">
+                  <span class="text-body font-semibold text-neutral-900">DE to TR</span>
+                  <div class="text-body-sm text-neutral-600">
                     Turkish Lira
                   </div>
                 </div>
               </div>
               <div class="text-center">
-                <span class="text-xl font-bold text-red-600">-2.1%</span>
+                <span class="text-h4 font-bold text-danger-600">-2.1%</span>
               </div>
               <div class="text-center">
-                <span class="text-base font-semibold text-neutral-900">36.15</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body font-semibold text-neutral-900">36.15</span>
+                <div class="text-body-sm text-neutral-600">
                   TRY per EUR
                 </div>
               </div>
               <div>
-                <span class="text-sm font-medium text-neutral-900">Remitly</span>
-                <div class="text-xs text-neutral-600">
+                <span class="text-body-sm font-medium text-neutral-900">Remitly</span>
+                <div class="text-body-sm text-neutral-600">
                   1.5% fee
                 </div>
               </div>
@@ -473,14 +473,16 @@
 
       <!-- Market Statistics Carousel -->
       <div class="relative mb-12">
-        <div class="bg-white rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
+        <div class="bg-surface rounded-2xl border-2 border-neutral-200 p-8 shadow-lg">
           <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-neutral-900">
+            <h3 class="text-h4 font-bold text-neutral-900">
               Market Insights
             </h3>
             <div class="flex gap-2">
               <button
-                class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-all border border-neutral-300"
+                type="button"
+                class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center motion-safe:transition-all border border-neutral-300"
+                aria-label="Previous market insight"
                 @click="previousStat"
               >
                 <svg
@@ -498,7 +500,9 @@
                 </svg>
               </button>
               <button
-                class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center transition-all border border-neutral-300"
+                type="button"
+                class="w-10 h-10 rounded-lg bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center motion-safe:transition-all border border-neutral-300"
+                aria-label="Next market insight"
                 @click="nextStat"
               >
                 <svg
@@ -529,17 +533,17 @@
                 :key="`stat-${currentStatIndex}`"
                 class="bg-neutral-50 rounded-xl border border-neutral-200 p-6"
               >
-                <h4 class="text-lg font-bold text-neutral-900 mb-4">
+                <h4 class="text-body-lg font-bold text-neutral-900 mb-4">
                   {{ rotatingStats[currentStatIndex].title }}
                 </h4>
-                <div class="text-5xl font-bold text-neutral-900 mb-2">
+                <div class="text-hero font-bold text-neutral-900 mb-2">
                   {{ rotatingStats[currentStatIndex].value }}
                 </div>
-                <p class="text-sm text-neutral-600 mb-4">
+                <p class="text-body-sm text-neutral-600 mb-4">
                   {{ rotatingStats[currentStatIndex].description }}
                 </p>
                 <div
-                  class="flex items-center gap-2 text-sm"
+                  class="flex items-center gap-2 text-body-sm"
                   :class="rotatingStats[currentStatIndex].trendClass"
                 >
                   <svg
@@ -560,11 +564,11 @@
                   <template v-else>
                     <span
                       v-if="rotatingStats[currentStatIndex].flag1"
-                      class="text-2xl"
+                      class="text-h3"
                     >{{ rotatingStats[currentStatIndex].flag1 }}</span>
                     <span v-if="rotatingStats[currentStatIndex].flag2">
                       <span class="ml-2">to</span>
-                      <span class="text-2xl ml-2">{{ rotatingStats[currentStatIndex].flag2 }}</span>
+                      <span class="text-h3 ml-2">{{ rotatingStats[currentStatIndex].flag2 }}</span>
                     </span>
                     <span
                       v-if="rotatingStats[currentStatIndex].flagText"
@@ -577,31 +581,31 @@
 
             <!-- Static stats (always visible) -->
             <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-6">
-              <h4 class="text-lg font-bold text-neutral-900 mb-4">
+              <h4 class="text-body-lg font-bold text-neutral-900 mb-4">
                 Rate Updates
               </h4>
-              <div class="text-5xl font-bold text-neutral-900 mb-2">
+              <div class="text-hero font-bold text-neutral-900 mb-2">
                 4,287
               </div>
-              <p class="text-sm text-neutral-600 mb-4">
+              <p class="text-body-sm text-neutral-600 mb-4">
                 Searches processed today
               </p>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 Updates every 5 minutes
               </div>
             </div>
 
             <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-6">
-              <h4 class="text-lg font-bold text-neutral-900 mb-4">
+              <h4 class="text-body-lg font-bold text-neutral-900 mb-4">
                 Providers Tracked
               </h4>
-              <div class="text-5xl font-bold text-neutral-900 mb-2">
+              <div class="text-hero font-bold text-neutral-900 mb-2">
                 30+
               </div>
-              <p class="text-sm text-neutral-600 mb-4">
+              <p class="text-body-sm text-neutral-600 mb-4">
                 Money transfer services monitored
               </p>
-              <div class="text-xs text-neutral-500">
+              <div class="text-body-sm text-neutral-500">
                 Wise, Remitly, XE, and more
               </div>
             </div>
@@ -613,11 +617,11 @@
       <div class="text-center">
         <NuxtLink
           to="/pulse"
-          class="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-white/90 text-brand-600 rounded-lg font-semibold transition-all group shadow-lg"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-surface hover:bg-surface/90 text-brand-600 rounded-lg font-semibold motion-safe:transition-all group shadow-lg"
         >
           <span>Explore Pulse</span>
           <svg
-            class="w-5 h-5 group-hover:translate-x-1 transition-transform"
+            class="w-5 h-5 group-hover:translate-x-1 motion-safe:transition-transform"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -646,7 +650,7 @@ const rotatingStats = [
     title: 'Market Average',
     value: '3.2%',
     description: 'Average markup across all providers',
-    trendClass: 'text-green-600',
+    trendClass: 'text-success-600',
     trendIcon: true,
     trendText: '0.4% better than last week',
   },
@@ -664,7 +668,7 @@ const rotatingStats = [
     title: 'Active Corridors',
     value: '152',
     description: 'Live rate tracking right now',
-    trendClass: 'text-green-600',
+    trendClass: 'text-success-600',
     trendIcon: true,
     trendText: '8 new corridors this month',
   },

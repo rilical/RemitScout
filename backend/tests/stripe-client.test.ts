@@ -22,7 +22,7 @@ describe('stripe-client', () => {
     const { getStripeClient } = await loadModule('sk_test')
     const client = getStripeClient()
 
-    expect(StripeMock).toHaveBeenCalledWith('sk_test', { apiVersion: '2025-12-15.clover' })
+    expect(StripeMock).toHaveBeenCalledWith('sk_test', { apiVersion: '2026-01-28.clover' })
     expect(client).toEqual({ live: true })
   })
 

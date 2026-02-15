@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-brand-600 flex items-center justify-center px-6 py-12">
     <div class="max-w-md w-full text-center">
-      <div class="bg-white rounded-2xl p-8 shadow-xl">
+      <div class="bg-surface rounded-2xl p-8 shadow-xl">
         <div class="flex flex-col items-center gap-6 mb-8">
           <div class="flex flex-col items-center gap-4">
             <ProviderLogo
@@ -12,33 +12,36 @@
             />
             <span
               v-else
-              class="text-4xl font-bold text-slate-600"
+              class="text-h1 font-bold text-neutral-600"
             >
               {{ provider?.name?.slice(0, 1) || '?' }}
             </span>
-            <div class="text-xl font-normal text-slate-300 my-2">
+            <div class="text-h4 font-normal text-neutral-300 my-2">
               X
             </div>
             <div>
-              <img
+              <NuxtImg
                 src="/png/SVG/FULL_LOGO.svg"
                 alt="Remit-Scout"
-                class="h-16 w-auto mx-auto"
-              >
+                width="271"
+                height="64"
+                loading="lazy"
+                class="h-16 w-auto mx-auto object-contain"
+              />
             </div>
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-slate-900 mb-2">
+            <h1 class="text-h3 font-bold text-rs-fg mb-2">
               Redirecting to {{ provider?.name || 'Provider' }}
             </h1>
-            <p class="text-sm text-slate-600">
+            <p class="text-body-sm text-neutral-600">
               Opening in <span class="font-semibold">{{ secondsRemaining }}</span> seconds
             </p>
           </div>
         </div>
 
         <div class="mb-6">
-          <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div class="h-2 w-full overflow-hidden rounded-full bg-neutral-200">
             <div
               class="h-full rounded-full bg-brand-600 transition-[width] duration-300 ease-out"
               :style="{ width: `${progressPct}%` }"
@@ -49,7 +52,7 @@
         <div class="flex flex-col gap-3">
           <button
             type="button"
-            class="w-full rounded-lg bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+            class="w-full rounded-lg bg-brand-600 px-5 py-3 text-body-sm font-semibold text-white transition hover:bg-brand-700"
             :disabled="!targetUrl"
             @click="redirectNow"
           >
@@ -57,7 +60,7 @@
           </button>
           <NuxtLink
             to="/send-money"
-            class="w-full rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            class="w-full rounded-lg border border-neutral-300 px-5 py-3 text-body-sm font-semibold text-neutral-700 transition hover:bg-neutral-50"
           >
             Back to compare
           </NuxtLink>
@@ -66,7 +69,7 @@
 
       <div
         v-if="!targetUrl"
-        class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+        class="mt-6 rounded-xl border border-warning-600 bg-warning-600 p-4 text-body-sm text-warning-600"
       >
         We could not determine a valid destination URL for this provider. Please go back and try another link.
       </div>
@@ -82,11 +85,22 @@ import { useTelemetry } from '~/composables/useTelemetry'
 import { useSession } from '~/composables/useSession'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { useProviderVisits } from '~/composables/useProviderVisits'
+import { setSeo } from '~/composables/useSeo'
 import { extractUtmParams } from '~/lib/outbound'
 
 definePageMeta({ layout: 'blank' })
 
 const route = useRoute()
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+
+setSeo({
+  title: 'Redirecting | Remit-Scout',
+  description: 'Redirecting to an external provider site.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
+
 const { request } = useApi()
 const { trackClick } = useTelemetry()
 const { ensureSession } = useSession()

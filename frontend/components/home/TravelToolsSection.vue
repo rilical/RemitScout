@@ -1,14 +1,14 @@
 <template>
   <section class="py-20 sm:py-28 bg-brand-600">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="max-w-6xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-12">
-          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 class="text-h2 font-bold text-white mb-4">
             Don't Make These<br>
             Money Transfer Mistakes
           </h2>
-          <p class="text-xl text-white/90 max-w-3xl mx-auto">
+          <p class="text-h4 text-white/90 max-w-3xl mx-auto">
             These common errors can cost you hundreds of dollars. Here's how to avoid them.
           </p>
         </div>
@@ -16,7 +16,7 @@
         <!-- Mistake Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <!-- Mistake 1: Only looking at fees -->
-          <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
+          <div class="bg-surface rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
                 <svg
@@ -34,17 +34,17 @@
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-2">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-2">
                   Only Looking at Fees
                 </h3>
                 <p class="text-neutral-700 mb-3">
                   "Zero fee" doesn't mean zero cost. Providers hide profit in exchange rate markups that often cost more than the fee.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                  <p class="text-body-sm font-semibold text-brand-900 mb-1">
                     How to avoid:
                   </p>
-                  <p class="text-sm text-brand-800">
+                  <p class="text-body-sm text-brand-800">
                     Compare the "recipient gets" amount—that shows the true total cost including hidden markup.
                   </p>
                 </div>
@@ -53,7 +53,7 @@
           </div>
 
           <!-- Mistake 2: Not comparing rates -->
-          <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
+          <div class="bg-surface rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
                 <svg
@@ -71,17 +71,17 @@
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-2">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-2">
                   Not Comparing Before Every Transfer
                 </h3>
                 <p class="text-neutral-700 mb-3">
                   Exchange rates change daily. The best provider last month might not be the best today.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                  <p class="text-body-sm font-semibold text-brand-900 mb-1">
                     How to avoid:
                   </p>
-                  <p class="text-sm text-brand-800">
+                  <p class="text-body-sm text-brand-800">
                     Always compare rates before sending. Use our tool to see live quotes from multiple providers side-by-side.
                   </p>
                 </div>
@@ -90,7 +90,7 @@
           </div>
 
           <!-- Mistake 3: Using bank out of habit -->
-          <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
+          <div class="bg-surface rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
                 <svg
@@ -108,17 +108,17 @@
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-2">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-2">
                   Using Your Bank Out of Habit
                 </h3>
                 <p class="text-neutral-700 mb-3">
                   Banks typically charge 3-5% more in hidden exchange rate markups because they know customers don't compare.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                  <p class="text-body-sm font-semibold text-brand-900 mb-1">
                     How to avoid:
                   </p>
-                  <p class="text-sm text-brand-800">
+                  <p class="text-body-sm text-brand-800">
                     Compare your bank's rate to money transfer specialists. Most specialists beat banks by 3-7x.
                   </p>
                 </div>
@@ -127,7 +127,7 @@
           </div>
 
           <!-- Mistake 4: Not verifying final quote -->
-          <div class="bg-white rounded-2xl p-6 shadow-xl border-2 border-brand-200">
+          <div class="bg-surface rounded-2xl p-6 shadow-xl border-2 border-brand-200">
             <div class="flex items-start gap-4">
               <div class="flex-shrink-0 w-12 h-12 bg-brand-100 rounded-full flex items-center justify-center">
                 <svg
@@ -145,17 +145,17 @@
                 </svg>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold text-neutral-900 mb-2">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-2">
                   Not Verifying the Final Quote
                 </h3>
                 <p class="text-neutral-700 mb-3">
                   Checkout prices can differ from initial quotes due to promo rates, verification, or rate changes.
                 </p>
                 <div class="bg-brand-50 rounded-lg p-3 border-2 border-brand-200">
-                  <p class="text-sm font-semibold text-brand-900 mb-1">
+                  <p class="text-body-sm font-semibold text-brand-900 mb-1">
                     How to avoid:
                   </p>
-                  <p class="text-sm text-brand-800">
+                  <p class="text-body-sm text-brand-800">
                     Review the final quote at checkout. If it differs significantly, compare other providers.
                   </p>
                 </div>
@@ -165,7 +165,7 @@
         </div>
 
         <!-- Beginner Guide CTA -->
-        <div class="bg-white rounded-2xl p-8 md:p-10 shadow-2xl">
+        <div class="bg-surface rounded-2xl p-8 md:p-10 shadow-2xl">
           <div class="flex flex-col md:flex-row items-center gap-8">
             <div class="flex-shrink-0">
               <svg
@@ -183,15 +183,15 @@
               </svg>
             </div>
             <div class="flex-1 text-center md:text-left">
-              <h3 class="text-3xl font-bold text-neutral-900 mb-3">
+              <h3 class="text-h2 font-bold text-neutral-900 mb-3">
                 First time sending money?
               </h3>
-              <p class="text-lg text-neutral-700 mb-6 leading-relaxed">
+              <p class="text-body-lg text-neutral-700 mb-6 leading-relaxed">
                 Start with our beginner guides. Learn how exchange rates work, avoid hidden fees, and make your first transfer with confidence. Everything is free and written in plain language.
               </p>
               <NuxtLink
                 to="/learn/money-transfer"
-                class="inline-flex items-center gap-3 px-8 py-4 bg-brand-600 text-white font-bold text-lg rounded-xl hover:bg-brand-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                class="inline-flex items-center gap-3 px-8 py-4 bg-brand-600 text-white font-bold text-body-lg rounded-xl hover:bg-brand-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
               >
                 <span>Read Beginner Guides</span>
                 <svg

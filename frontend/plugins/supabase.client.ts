@@ -12,9 +12,7 @@ export default defineNuxtPlugin((): SupabasePluginReturn => {
   const supabaseAnonKey = String(config.public.supabaseAnonKey || '')
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (import.meta.dev) {
-      console.warn('[supabase] Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY')
-    }
+    useLogger('supabase').warn('Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY')
     return { provide: { supabase: null } }
   }
 

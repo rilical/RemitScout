@@ -1,5 +1,5 @@
 <template>
-  <nav class="sticky top-16 z-40 bg-white border-b border-slate-200 shadow-sm">
+  <nav class="sticky top-16 z-40 bg-surface border-b border-rs-border shadow-sm">
     <div class="mx-auto max-w-6xl px-4">
       <div class="flex items-center justify-between h-12">
         <div class="flex items-center gap-1">
@@ -8,21 +8,21 @@
             :key="item.id"
             type="button"
             :class="[
-              'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+              'px-4 py-2 text-body-sm font-medium rounded-lg transition-colors',
               activeSection === item.id
                 ? 'bg-brand-50 text-brand-700'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
+                : 'text-neutral-600 hover:text-rs-fg hover:bg-neutral-50',
             ]"
             @click="scrollTo(item.id)"
           >
             {{ item.label }}
           </button>
         </div>
-        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500">
+        <div class="hidden sm:flex items-center gap-2 text-body-sm text-rs-muted">
           <span class="inline-flex items-center gap-1.5">
             <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-600 opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-success-600" />
             </span>
             <span>Updated {{ lastUpdated }}</span>
           </span>

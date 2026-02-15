@@ -1,160 +1,141 @@
 <template>
   <div class="min-h-screen bg-neutral-900">
-    <!-- Plus Gate: Show upgrade prompt if not Plus member -->
+    <!-- Public preview (no Plus required) -->
     <div
       v-if="!isPlus"
-      class="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8"
+      class="min-h-screen py-12 px-page-x"
     >
-      <div class="max-w-2xl w-full text-center">
-        <div class="mb-8 flex justify-center">
-          <div class="flex h-24 w-24 items-center justify-center rounded-full bg-blue-500/20">
-            <Icon
-              name="lock"
-              :size="24"
-              class="text-blue-400"
-            />
+      <div class="mx-auto max-w-page">
+        <div class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-2xl">
+            <div class="mb-3 text-[11px] font-mono uppercase tracking-widest text-neutral-500">
+              Pulse Preview
+            </div>
+            <h1 class="text-hero font-bold text-white leading-tight">
+              Pulse for Remittance Markets
+            </h1>
+            <p class="mt-3 text-body-lg text-neutral-300 leading-relaxed">
+              A market-screener-first view of what is moving across corridors, with honest timestamps.
+            </p>
+            <p class="mt-2 text-body-sm text-neutral-400">
+              Public preview shows corridor moves only. Plus unlocks Smart Send, best-provider snapshots, and spread risk.
+            </p>
           </div>
-        </div>
-        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
-          Pulse is Included with Plus
-        </h1>
-        <p class="text-xl text-neutral-300 mb-8 max-w-xl mx-auto">
-          Stop guessing. Pulse helps you time your transfer and notifies you when there is a good window, without ads.
-        </p>
-        <div class="bg-neutral-800 rounded-2xl border border-neutral-700 p-8 mb-8">
-          <h2 class="text-2xl font-bold text-white mb-6">
-            What you get with Plus:
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-            <div class="flex items-start gap-3">
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <NuxtLink
+              to="/plus"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-body font-bold text-white hover:bg-brand-600 transition-colors shadow-lg hover:shadow-xl"
+            >
               <Icon
-                name="check"
-                :size="24"
-                class="text-blue-400 flex-shrink-0 mt-0.5"
+                name="sparkles"
+                :size="20"
+                class="text-current"
               />
-              <div>
-                <div class="font-semibold text-white">
-                  Remit-Pulse Dashboard
-                </div>
-                <div class="text-sm text-neutral-400">
-                  Full access to market analytics
-                </div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <Icon
-                name="check"
-                :size="24"
-                class="text-blue-400 flex-shrink-0 mt-0.5"
-              />
-              <div>
-                <div class="font-semibold text-white">
-                  365-Day History
-                </div>
-                <div class="text-sm text-neutral-400">
-                  Extended historical data access
-                </div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <Icon
-                name="check"
-                :size="24"
-                class="text-blue-400 flex-shrink-0 mt-0.5"
-              />
-              <div>
-                <div class="font-semibold text-white">
-                  Data Exports
-                </div>
-                <div class="text-sm text-neutral-400">
-                  CSV/PDF exports for analysis
-                </div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <Icon
-                name="check"
-                :size="24"
-                class="text-blue-400 flex-shrink-0 mt-0.5"
-              />
-              <div>
-                <div class="font-semibold text-white">
-                  16 watchlist corridors + 16 alerts
-                </div>
-                <div class="text-sm text-neutral-400">
-                  Practical limits that match server enforcement
-                </div>
-              </div>
-            </div>
-            <div class="flex items-start gap-3">
-              <Icon
-                name="check"
-                :size="24"
-                class="text-blue-400 flex-shrink-0 mt-0.5"
-              />
-              <div>
-                <div class="font-semibold text-white">
-                  Ad-free experience
-                </div>
-                <div class="text-sm text-neutral-400">
-                  Pulse and comparisons without ads
-                </div>
-              </div>
-            </div>
+              Unlock Plus
+            </NuxtLink>
+            <NuxtLink
+              to="/sign-in"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-6 py-3 text-body font-semibold text-white hover:bg-neutral-700 transition-colors"
+            >
+              Sign in
+            </NuxtLink>
           </div>
         </div>
 
-        <div class="mb-8">
-          <PulseTeaserCard />
-        </div>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <NuxtLink
-            to="/plus"
-            class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-500 px-8 py-4 text-lg font-bold text-white hover:bg-blue-600 transition-colors shadow-lg hover:shadow-xl"
-          >
-            <Icon
-              name="sparkles"
-              :size="20"
-              class="text-current"
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div class="lg:col-span-7">
+            <PulseMoversList
+              variant="public"
+              :limit="10"
             />
-            Upgrade to Plus
-          </NuxtLink>
-          <NuxtLink
-            to="/"
-            class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-8 py-4 text-lg font-semibold text-white hover:bg-neutral-700 transition-colors"
-          >
-            Back to Home
-          </NuxtLink>
+          </div>
+
+          <div class="lg:col-span-5 space-y-6">
+            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <h2 class="text-body-lg font-bold text-white">
+                  Your Watchlist Screener
+                </h2>
+                <span class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-neutral-300">
+                  Locked
+                </span>
+              </div>
+              <p class="text-body-sm text-neutral-400 mb-4">
+                Plus ranks your watchlist corridors and shows the best provider, spread risk, and freshness.
+              </p>
+              <div class="space-y-3 opacity-70 blur-[1.5px] select-none pointer-events-none">
+                <div
+                  v-for="n in 4"
+                  :key="n"
+                  class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="text-body-sm font-semibold text-white">
+                      🇺🇸 USD → PHP
+                    </div>
+                    <div class="rounded-lg bg-neutral-800 px-2.5 py-1 text-[11px] font-bold text-neutral-200 border border-neutral-700">
+                      Great
+                    </div>
+                  </div>
+                  <div class="mt-2 text-body-sm text-neutral-400">
+                    Best: Provider • Gets: PHP 56,000
+                  </div>
+                  <div class="mt-3 grid grid-cols-2 gap-3 text-[10px] font-mono uppercase tracking-wider text-neutral-600">
+                    <div>Spread (bps)</div>
+                    <div class="text-right">
+                      Updated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-primary-500/40 bg-gradient-to-br from-primary-500/15 to-neutral-800 p-6 shadow-lg">
+              <h2 class="text-body-lg font-bold text-white">
+                Unlock Pulse Plus
+              </h2>
+              <p class="mt-2 text-body-sm text-neutral-300">
+                Get the screener, deep dives, alerts, and snapshot exports. No ads.
+              </p>
+              <NuxtLink
+                to="/plus"
+                class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-primary-500 px-6 py-3 text-body font-bold text-white hover:bg-brand-600 transition-colors shadow-lg hover:shadow-xl"
+              >
+                Upgrade to Plus
+              </NuxtLink>
+              <div class="mt-4 text-body-sm text-neutral-400">
+                Enterprise teams: <NuxtLink
+                  to="/institutions/data-products"
+                  class="text-primary-400 hover:text-primary-300 underline"
+                >API & exports</NuxtLink>
+              </div>
+            </div>
+          </div>
         </div>
-        <p class="mt-6 text-sm text-neutral-400">
-          Already a Plus member? <NuxtLink
-            to="/sign-in"
-            class="text-blue-400 hover:text-blue-300 underline"
-          >Sign in</NuxtLink>
-        </p>
       </div>
     </div>
 
     <!-- Pulse Content: Only show if Plus member -->
     <div v-else>
       <div class="border-b border-neutral-700 bg-neutral-800">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div class="container py-12 lg:py-16">
           <!-- Data Status Badge (no fabricated freshness) -->
           <div class="flex items-center gap-4 mb-8">
             <div
               class="flex items-center gap-2.5 rounded-full border px-4 py-2"
-              :class="store.lastUpdated ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-neutral-900 border-neutral-700'"
+              :class="store.lastUpdated ? 'bg-success-600/15 border-success-600/30' : 'bg-neutral-900 border-neutral-700'"
             >
               <span
                 class="inline-flex h-2.5 w-2.5 rounded-full"
-                :class="store.lastUpdated ? 'bg-emerald-500' : 'bg-neutral-500'"
+                :class="store.lastUpdated ? 'bg-success-600' : 'bg-neutral-500'"
                 aria-hidden="true"
               />
-              <span class="text-xs font-semibold text-white">
+              <span class="text-body-sm font-semibold text-white">
                 {{ pulseUpdatedBadgeLabel }}
               </span>
             </div>
-            <span class="text-sm text-neutral-400">Market analytics for remittance pricing</span>
+            <span class="text-body-sm text-neutral-400">Market analytics for remittance pricing</span>
           </div>
 
           <!-- Main Header Content -->
@@ -162,14 +143,14 @@
             <!-- Title and Description -->
             <div class="flex-1 space-y-4">
               <div>
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+                <h1 class="text-hero font-bold text-white mb-4 leading-tight">
                   <span class="text-white">Remit</span><span class="text-brand-600">-</span><span class="text-brand-600">Pulse</span>
                 </h1>
-                <p class="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed">
+                <p class="text-body-lg text-neutral-300 max-w-2xl leading-relaxed">
                   Market intelligence for remittance pricing. Track spreads, markups, provider performance, volatility, and reliability across corridors and payment methods.
                 </p>
               </div>
-              <p class="text-sm text-neutral-400 max-w-2xl">
+              <p class="text-body-sm text-neutral-400 max-w-2xl">
                 Built for analysts, researchers, and enterprise teams who need accurate, up-to-date pricing data.
               </p>
             </div>
@@ -180,28 +161,28 @@
               <div class="flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 p-1">
                 <button
                   type="button"
-                  class="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors"
+                  class="rounded-lg px-4 py-2 text-body-sm font-bold uppercase tracking-wider transition-colors"
                   :class="store.viewMode === 'sender' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'"
                   @click="setViewMode('sender')"
                 >
-                  Sender
+                  Decision
                 </button>
                 <button
                   type="button"
-                  class="rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors"
+                  class="rounded-lg px-4 py-2 text-body-sm font-bold uppercase tracking-wider transition-colors"
                   :class="store.viewMode === 'analyst' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-800'"
                   @click="setViewMode('analyst')"
                 >
-                  Analyst
+                  Deep Dive
                 </button>
               </div>
-              <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-medium text-neutral-300">
+              <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-medium text-neutral-300">
                 Verified Pipeline v2.4.1
               </span>
               <div class="flex flex-col gap-3">
                 <NuxtLink
                   to="/institutions/data-products"
-                  class="inline-flex items-center gap-2.5 rounded-xl border-2 border-blue-500 bg-blue-500 px-6 py-3 text-base font-semibold text-white hover:bg-blue-600 hover:border-blue-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
+                  class="inline-flex items-center gap-2.5 rounded-xl border-2 border-primary-500 bg-primary-500 px-6 py-3 text-body font-semibold text-white hover:bg-brand-600 hover:border-brand-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
                 >
                   Enterprise
                   <Icon
@@ -212,7 +193,7 @@
                 </NuxtLink>
                 <NuxtLink
                   to="/methodology"
-                  class="inline-flex items-center gap-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-500 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-600 hover:border-emerald-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
+                  class="inline-flex items-center gap-2.5 rounded-xl border-2 border-success-600 bg-success-600 px-6 py-3 text-body font-semibold text-white hover:bg-success-600 hover:border-success-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
                 >
                   Methodology
                   <Icon
@@ -228,29 +209,78 @@
       </div>
 
       <div class="py-8">
-        <!-- Filter Form Section -->
-        <div class="mb-8 px-4 sm:px-6 lg:px-8">
-          <div class="mx-auto max-w-7xl">
+        <!-- Screener-first (Plus) -->
+        <div class="mb-8 px-page-x">
+          <div class="mx-auto max-w-page grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div
+              v-if="pulseScreenerEnabled"
+              class="lg:col-span-7"
+            >
+              <PulseScreener
+                :rows="screenerRows"
+                :loading="screenerLoading"
+                :error="screenerError"
+                :selected-corridor-id="store.corridor.corridorId || null"
+                @select="handleScreenerSelect"
+              />
+            </div>
+
+            <div :class="pulseScreenerEnabled ? 'lg:col-span-5' : 'lg:col-span-12'">
+              <PulseMoversList
+                variant="plus"
+                :limit="10"
+                :selected-corridor-id="store.corridor.corridorId || null"
+                @select="handleMoverSelect"
+                @added="handleMoverAdded"
+              />
+            </div>
+          </div>
+
+          <div class="mx-auto max-w-page mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="text-body-sm text-neutral-400">
+              Tip: Click a screener row or mover to load the decision panel below.
+              <span
+                v-if="pulseScreenerEnabled && screenerUpdatedAt"
+                class="ml-2 text-neutral-500"
+              >Screener {{ formatUpdatedLabel(screenerUpdatedAt) }}</span>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              :disabled="filtersForcedVisible"
+              @click="toggleAdvancedFilters"
+            >
+              {{ filtersForcedVisible ? 'Filters (required)' : (filtersVisible ? 'Hide filters' : 'Show filters') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Advanced Filters (optional) -->
+        <div
+          v-if="filtersVisible"
+          class="mb-8 px-page-x"
+        >
+          <div class="mx-auto max-w-page">
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
               <div class="mb-4">
-                <h2 class="text-lg font-bold text-white mb-1">
-                  Configure Your Analysis
+                <h2 class="text-body-lg font-bold text-white mb-1">
+                  Advanced Filters
                 </h2>
-                <p class="text-sm text-neutral-400">
-                  Select a tracked corridor, amount, and timeframe
+                <p class="text-body-sm text-neutral-400">
+                  Override the selected corridor, amount, and timeframe.
                 </p>
               </div>
 
               <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-end">
                 <!-- Tracked Corridor -->
                 <div class="lg:col-span-10">
-                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-400">
                     Tracked corridor
                   </label>
                   <div class="relative">
                     <select
                       v-model="selectedCorridorKey"
-                      class="h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-10 text-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      class="h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-10 text-body-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
                       :disabled="trackedCorridors.length === 0"
                       @change="handleCorridorSelect"
                     >
@@ -273,13 +303,13 @@
                   </div>
                   <p
                     v-if="trackedCorridors.length === 0"
-                    class="mt-2 text-xs text-neutral-400"
+                    class="mt-2 text-body-sm text-neutral-400"
                   >
                     No tracked corridors are available right now.
                   </p>
                   <p
                     v-else-if="corridorCoverageLabel"
-                    class="mt-2 text-xs text-neutral-400"
+                    class="mt-2 text-body-sm text-neutral-400"
                   >
                     {{ corridorCoverageLabel }}
                   </p>
@@ -287,7 +317,7 @@
 
                 <!-- Amount Input -->
                 <div class="lg:col-span-2">
-                  <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-400">
                     Amount
                   </label>
                   <div class="relative">
@@ -296,7 +326,7 @@
                       type="number"
                       min="1"
                       step="1"
-                      class="h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-4 text-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+                      class="h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-4 text-body-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                       placeholder="1000"
                       @input="handleAmountInput"
                     >
@@ -306,14 +336,14 @@
 
               <!-- Timeframe Toggle -->
               <div class="mt-4">
-                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-400">
                   Timeframe
                 </label>
                 <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
                   <button
                     v-for="tf in timeframes"
                     :key="tf"
-                    class="flex-1 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors"
+                    class="flex-1 rounded-md px-3 py-2.5 text-body-sm font-semibold transition-colors"
                     :class="store.timeframe === tf
                       ? 'bg-brand-600 text-white'
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
@@ -325,7 +355,7 @@
               </div>
 
               <!-- Coverage Summary -->
-              <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-700 pt-4 text-xs text-neutral-400">
+              <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-700 pt-4 text-body-sm text-neutral-400">
                 <span>{{ summary ? `${formatCount(summary.quotesInRange)} quotes in range` : 'Loading coverage...' }}</span>
                 <span class="text-neutral-600">|</span>
                 <span>{{ summary ? `${summary.providersIncluded} providers included` : '-' }}</span>
@@ -349,8 +379,12 @@
         </div>
 
         <!-- Sender-First Pulse -->
-        <div class="mb-10 px-4 sm:px-6 lg:px-8">
-          <div class="mx-auto max-w-7xl">
+        <div
+          id="decision"
+          ref="decisionPanelRef"
+          class="mb-10 px-page-x"
+        >
+          <div class="mx-auto max-w-page">
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <PulseSmartGauge />
               <PulseMarketQuotes />
@@ -360,10 +394,10 @@
             <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
               <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div class="text-sm font-semibold text-white">
+                  <div class="text-body-sm font-semibold text-white">
                     Actions
                   </div>
-                  <div class="text-xs text-neutral-400">
+                  <div class="text-body-sm text-neutral-400">
                     Compare now, set a smart alert, and export a snapshot for your records.
                   </div>
                 </div>
@@ -371,33 +405,33 @@
                 <div class="flex flex-wrap items-center gap-2">
                   <NuxtLink
                     :to="compareCorridorUrl"
-                    class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 transition-colors"
+                    class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors"
                   >
                     Compare quotes
                   </NuxtLink>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-800 transition-colors"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
                     @click="handleAddToWatchlist"
                   >
                     Add to watchlist
                   </button>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-800 transition-colors"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
                     @click="handleCreateAlert"
                   >
                     Create alert
                   </button>
                   <NuxtLink
                     :to="{ path: '/dashboard', query: { tab: 'account', section: 'notifications' } }"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-800 transition-colors"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
                   >
                     Enable notifications
                   </NuxtLink>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     :disabled="snapshotExporting"
                     @click="downloadSnapshotCsv"
                   >
@@ -408,7 +442,7 @@
 
               <div
                 v-if="actionError || actionStatus || snapshotExportError || snapshotExportStatus"
-                class="mt-3 text-xs"
+                class="mt-3 text-body-sm"
               >
                 <p
                   v-if="actionError"
@@ -433,15 +467,15 @@
 
             <div
               v-if="store.viewMode === 'sender'"
-              class="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-sm text-neutral-300"
+              class="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-body-sm text-neutral-300"
             >
-              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Analyst mode.
+              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Deep Dive.
               <button
                 type="button"
                 class="ml-2 inline-flex items-center gap-2 text-brand-600 hover:text-brand-500 font-semibold"
                 @click="setViewMode('analyst')"
               >
-                Switch to Analyst →
+                Switch to Deep Dive →
               </button>
             </div>
           </div>
@@ -449,9 +483,9 @@
 
         <div v-if="store.viewMode === 'analyst'">
           <!-- Navigation Bar -->
-          <div class="sticky top-[72px] z-40 -mx-4 sm:-mx-6 lg:-mx-8 mb-6 border-b border-neutral-800 bg-neutral-900/95 backdrop-blur">
-            <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-              <div class="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+          <div class="sticky top-[72px] z-sticky -mx-page-x mb-6 border-b border-neutral-800 bg-neutral-900/95 backdrop-blur">
+            <div class="container flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
+              <div class="flex flex-wrap items-center gap-3 text-body-sm text-neutral-400">
                 <button
                   class="hover:text-white"
                   @click="scrollToSection('snapshot')"
@@ -517,7 +551,7 @@
               </div>
               <div class="flex items-center gap-2">
                 <button
-                  class="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700"
+                  class="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700"
                   @click="scrollToSection('exports')"
                 >
                   Download
@@ -528,20 +562,20 @@
           <!-- 1. Market Snapshot - Overview KPIs -->
           <section
             id="snapshot"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'snapshot' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 class="text-2xl font-bold text-white">
+                  <h2 class="text-h3 font-bold text-white">
                     Market Snapshot
                   </h2>
-                  <p class="text-sm text-neutral-400">
+                  <p class="text-body-sm text-neutral-400">
                     Executive summary for the selected corridor and timeframe.
                   </p>
                 </div>
-                <div class="flex items-center gap-3 text-xs text-neutral-500">
+                <div class="flex items-center gap-3 text-body-sm text-neutral-500">
                   <label class="flex items-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1">
                     <span class="text-neutral-400">Metric</span>
                     <select
@@ -564,18 +598,18 @@
                   class="rounded-xl border border-neutral-700 bg-neutral-800 p-4 text-left transition-colors hover:border-brand-600/60"
                   @click="handleKpiClick(kpi.id)"
                 >
-                  <div class="flex items-center justify-between text-xs text-neutral-500">
+                  <div class="flex items-center justify-between text-body-sm text-neutral-500">
                     <span class="whitespace-nowrap overflow-hidden text-ellipsis">{{ kpi.label }}</span>
                     <span
                       class="text-neutral-600 flex-shrink-0 ml-1"
                       :title="kpi.tooltip"
                     >(i)</span>
                   </div>
-                  <div class="mt-2 text-2xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">
+                  <div class="mt-2 text-h3 font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">
                     {{ kpi.value }}
                   </div>
                   <div
-                    class="mt-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis"
+                    class="mt-1 text-body-sm whitespace-nowrap overflow-hidden text-ellipsis"
                     :class="getDeltaClass(kpi.deltaType)"
                   >
                     {{ kpi.delta }}
@@ -587,18 +621,32 @@
                     :key="`kpi-skeleton-${i}`"
                     class="rounded-xl border border-neutral-700 bg-neutral-800 p-4"
                   >
-                    <div class="h-4 w-24 rounded bg-neutral-700" />
-                    <div class="mt-3 h-6 w-20 rounded bg-neutral-700" />
-                    <div class="mt-2 h-3 w-28 rounded bg-neutral-700" />
+                    <SkeletonBlock
+                      width="6rem"
+                      height="16"
+                      tone="dark"
+                    />
+                    <SkeletonBlock
+                      class="mt-3"
+                      width="5rem"
+                      height="24"
+                      tone="dark"
+                    />
+                    <SkeletonBlock
+                      class="mt-2"
+                      width="7rem"
+                      height="12"
+                      tone="dark"
+                    />
                   </div>
                 </template>
               </div>
 
               <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                <div class="text-xs uppercase tracking-wider text-neutral-500 mb-2">
+                <div class="text-body-sm uppercase tracking-wider text-neutral-500 mb-2">
                   Executive Note
                 </div>
-                <p class="text-sm text-neutral-200">
+                <p class="text-body-sm text-neutral-200">
                   {{ executiveNote || 'Loading insight...' }}
                 </p>
               </div>
@@ -608,15 +656,15 @@
           <!-- 2. Pricing Analysis - Main Charts -->
           <section
             id="dispersion"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'dispersion' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Pricing Analysis
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   Effective rates, market spread, and pricing dispersion over time.
                 </p>
               </div>
@@ -642,15 +690,15 @@
           <!-- 3. Provider Benchmarking -->
           <section
             id="competition"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'competition' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Provider Benchmarking
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   Leaderboard and win-share timeline across providers.
                 </p>
               </div>
@@ -664,15 +712,15 @@
           <!-- 4. Bank vs Specialist Comparison -->
           <section
             id="bank-gap"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'bank-gap' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Bank vs Specialist Comparison
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   See how traditional banks compare to specialist providers.
                 </p>
               </div>
@@ -683,10 +731,10 @@
           <!-- 4.5. Operational Coverage -->
           <section
             id="operational-coverage"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'operational-coverage' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <PulseOperationalCoverage />
             </div>
           </section>
@@ -694,15 +742,15 @@
           <!-- 5. Reliability & Coverage -->
           <section
             id="reliability"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'reliability' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Reliability & Coverage
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   Quote success rates, method support, and data freshness.
                 </p>
               </div>
@@ -713,15 +761,15 @@
           <!-- 6. Risk & Anomalies -->
           <section
             id="risk"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'risk' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-4">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Risk & Anomalies
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   Event feed with anomaly signals and recommended actions.
                 </p>
               </div>
@@ -744,15 +792,15 @@
           <section
             id="deep-dives"
             ref="deepDivesRef"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'deep-dives' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="mb-6">
-                <h2 class="text-2xl font-bold text-white">
+                <h2 class="text-h3 font-bold text-white">
                   Deep Dives
                 </h2>
-                <p class="text-sm text-neutral-400">
+                <p class="text-body-sm text-neutral-400">
                   Historical analysis and detailed chart breakdowns.
                 </p>
               </div>
@@ -770,30 +818,30 @@
           <!-- 8. Exports & Integrations -->
           <section
             id="exports"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
+            class="mb-10 px-page-x"
             :class="highlightedSection === 'exports' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
                 <div class="border-b border-neutral-700 px-6 py-4">
-                  <h2 class="text-lg font-bold text-white">
+                  <h2 class="text-body-lg font-bold text-white">
                     Exports & Integrations
                   </h2>
-                  <p class="text-sm text-neutral-400">
+                  <p class="text-body-sm text-neutral-400">
                     Use Pulse data in reports, workflows, and pricing systems.
                   </p>
                 </div>
                 <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-2">
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
-                    <div class="text-sm font-semibold text-white">
+                    <div class="text-body-sm font-semibold text-white">
                       Download Snapshot
                     </div>
-                    <p class="mt-1 text-xs text-neutral-400">
+                    <p class="mt-1 text-body-sm text-neutral-400">
                       CSV export for the selected corridor. Plus exports are capped at 30 days.
                     </p>
                     <button
                       type="button"
-                      class="mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      class="mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       :disabled="snapshotExporting"
                       @click="downloadSnapshotCsv"
                     >
@@ -813,13 +861,13 @@
                     </p>
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
-                    <div class="text-sm font-semibold text-white">
+                    <div class="text-body-sm font-semibold text-white">
                       Embed Charts
                     </div>
-                    <p class="mt-1 text-xs text-neutral-400">
+                    <p class="mt-1 text-body-sm text-neutral-400">
                       Share corridor charts with attribution and timestamps.
                     </p>
-                    <button class="mt-3 w-full rounded-lg border border-neutral-600 px-3 py-2 text-xs font-semibold text-white">
+                    <button class="mt-3 w-full rounded-lg border border-neutral-600 px-3 py-2 text-body-sm font-semibold text-white">
                       Get Embed Code
                     </button>
                   </div>
@@ -831,25 +879,25 @@
           <!-- 8b. Enterprise Access -->
           <section
             id="enterprise"
-            class="mb-10 px-4 sm:px-6 lg:px-8"
-            :class="highlightedSection === 'enterprise' ? 'ring-1 ring-blue-500/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
+            class="mb-10 px-page-x"
+            :class="highlightedSection === 'enterprise' ? 'ring-1 ring-primary-500/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
-              <div class="rounded-xl border border-blue-500/40 bg-gradient-to-br from-blue-500/15 to-neutral-800 overflow-hidden">
-                <div class="border-b border-blue-500/40 px-6 py-4">
+            <div class="mx-auto max-w-page">
+              <div class="rounded-xl border border-primary-500/40 bg-gradient-to-br from-primary-500/15 to-neutral-800 overflow-hidden">
+                <div class="border-b border-primary-500/40 px-6 py-4">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/30">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500/30">
                       <Icon
                         name="building-library"
                         :size="20"
-                        class="text-blue-400"
+                        class="text-primary-400"
                       />
                     </div>
                     <div>
-                      <h2 class="text-lg font-bold text-white">
+                      <h2 class="text-body-lg font-bold text-white">
                         Enterprise Access
                       </h2>
-                      <p class="text-sm text-neutral-400">
+                      <p class="text-body-sm text-neutral-400">
                         API, webhooks, extended history, and advanced signals for enterprise teams
                       </p>
                     </div>
@@ -861,13 +909,13 @@
                       <Icon
                         name="document-text"
                         :size="16"
-                        class="text-blue-400"
+                        class="text-primary-400"
                       />
-                      <div class="text-sm font-semibold text-white">
+                      <div class="text-body-sm font-semibold text-white">
                         API Access
                       </div>
                     </div>
-                    <p class="text-xs text-neutral-400">
+                    <p class="text-body-sm text-neutral-400">
                       RESTful API for programmatic access to current and historical pricing data
                     </p>
                   </div>
@@ -876,13 +924,13 @@
                       <Icon
                         name="share"
                         :size="16"
-                        class="text-blue-400"
+                        class="text-primary-400"
                       />
-                      <div class="text-sm font-semibold text-white">
+                      <div class="text-body-sm font-semibold text-white">
                         Webhooks
                       </div>
                     </div>
-                    <p class="text-xs text-neutral-400">
+                    <p class="text-body-sm text-neutral-400">
                       Event notifications for price changes, anomalies, and market shifts
                     </p>
                   </div>
@@ -891,13 +939,13 @@
                       <Icon
                         name="clock"
                         :size="16"
-                        class="text-blue-400"
+                        class="text-primary-400"
                       />
-                      <div class="text-sm font-semibold text-white">
+                      <div class="text-body-sm font-semibold text-white">
                         Extended History
                       </div>
                     </div>
-                    <p class="text-xs text-neutral-400">
+                    <p class="text-body-sm text-neutral-400">
                       Access to multi-year historical data for trend analysis and backtesting
                     </p>
                   </div>
@@ -906,21 +954,21 @@
                       <Icon
                         name="chart-bar"
                         :size="16"
-                        class="text-blue-400"
+                        class="text-primary-400"
                       />
-                      <div class="text-sm font-semibold text-white">
+                      <div class="text-body-sm font-semibold text-white">
                         Advanced Signals
                       </div>
                     </div>
-                    <p class="text-xs text-neutral-400">
+                    <p class="text-body-sm text-neutral-400">
                       Additional market signals, volatility metrics, and predictive indicators
                     </p>
                   </div>
                 </div>
-                <div class="border-t border-blue-500/40 px-6 py-4">
+                <div class="border-t border-primary-500/40 px-6 py-4">
                   <NuxtLink
                     to="/institutions/data-products"
-                    class="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-600 transition-colors"
+                    class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-body-sm font-semibold text-white hover:bg-brand-600 transition-colors"
                   >
                     Learn More About Enterprise Access
                     <Icon
@@ -937,22 +985,22 @@
           <!-- 9. Methodology & Data Notes -->
           <section
             id="methodology"
-            class="px-4 sm:px-6 lg:px-8 mb-10"
+            class="px-page-x mb-10"
             :class="highlightedSection === 'methodology' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
-            <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-page">
               <PulseDataNotes />
             </div>
           </section>
 
           <!-- 10. Report Discrepancy -->
-          <section class="py-12 sm:py-16 bg-slate-900 w-full">
-            <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <section class="py-12 sm:py-16 bg-neutral-900 w-full">
+            <div class="container">
               <div class="text-center mb-8">
-                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
+                <h2 class="text-h3 font-bold text-white mb-3">
                   See something that doesn't look right?
                 </h2>
-                <p class="text-base text-slate-300 max-w-2xl mx-auto">
+                <p class="text-body text-neutral-300 max-w-2xl mx-auto">
                   If you notice a mismatch between our displayed quote and checkout, we want to know.
                   We investigate every report and update our data pipeline accordingly.
                 </p>
@@ -961,7 +1009,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 <NuxtLink
                   to="/contact"
-                  class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-slate-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
+                  class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-neutral-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
                 >
                   <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Icon
@@ -971,10 +1019,10 @@
                     />
                   </div>
                   <div class="text-center">
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                    <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
                       Report a rate issue
                     </h3>
-                    <p class="text-sm text-neutral-600">
+                    <p class="text-body-sm text-neutral-600">
                       Spotted a discrepancy between our quote and your checkout? Let us know so we can investigate and improve our data.
                     </p>
                   </div>
@@ -982,9 +1030,9 @@
 
                 <NuxtLink
                   to="/methodology"
-                  class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-slate-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
+                  class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-neutral-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
                 >
-                  <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Icon
                       name="book-open"
                       :size="24"
@@ -992,10 +1040,10 @@
                     />
                   </div>
                   <div class="text-center">
-                    <h3 class="text-lg font-bold text-neutral-900 mb-2">
+                    <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
                       View our methodology
                     </h3>
-                    <p class="text-sm text-neutral-600">
+                    <p class="text-body-sm text-neutral-600">
                       See exactly how we collect quotes, calculate scores, and ensure data quality across all providers.
                     </p>
                   </div>
@@ -1029,10 +1077,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow } from '~/types/pulse'
+import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
 import { Icon } from '~/ui'
@@ -1043,10 +1091,23 @@ import { useWatchlist } from '~/composables/useWatchlist'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { useExports } from '~/composables/useExports'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { getCorridorUrl } from '~/utils/country-slugs'
 
-const { pulseEnabled } = useFeatureFlags()
+const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
+const PulseSmartGauge = defineAsyncComponent(() => import('~/components/pulse/PulseSmartGauge.vue'))
+const PulseMarketQuotes = defineAsyncComponent(() => import('~/components/pulse/PulseMarketQuotes.vue'))
+const PulseHeroChart = defineAsyncComponent(() => import('~/components/pulse/PulseHeroChart.vue'))
+const PulseMarketDepth = defineAsyncComponent(() => import('~/components/pulse/PulseMarketDepth.vue'))
+const PulseProviderLeaderboard = defineAsyncComponent(() => import('~/components/pulse/PulseProviderLeaderboard.vue'))
+const PulseProviderHeatmap = defineAsyncComponent(() => import('~/components/pulse/PulseProviderHeatmap.vue'))
+const PulseBankComparison = defineAsyncComponent(() => import('~/components/pulse/PulseBankComparison.vue'))
+const PulseOperationalCoverage = defineAsyncComponent(() => import('~/components/pulse/PulseOperationalCoverage.vue'))
+const PulseReliabilityCoverage = defineAsyncComponent(() => import('~/components/pulse/PulseReliabilityCoverage.vue'))
+const PulseArbitrageAlert = defineAsyncComponent(() => import('~/components/pulse/PulseArbitrageAlert.vue'))
+
+const { pulseEnabled, pulseScreenerEnabled } = useFeatureFlags()
 
 if (!pulseEnabled.value) {
   await navigateTo('/plus', { redirectCode: 302 })
@@ -1071,9 +1132,196 @@ const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdat
 
 const amountInput = ref(store.amount || 1000)
 
-const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
+const { data: trackedCorridorsData, refresh: refreshTrackedCorridors } = await useAsyncData(
+  'pulse-corridors',
+  async () => {
+    // Avoid Plus-gated calls for public preview SSR. We'll refresh client-side after entitlements hydrate.
+    if (!isPlus.value) return []
+    return await getCorridors()
+  },
+  { server: true },
+)
 const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.value || [])
 const selectedCorridorKey = ref<string>('')
+const decisionPanelRef = ref<HTMLElement | null>(null)
+
+// Screener state (Plus)
+const showAdvancedFilters = ref(false)
+
+const pickBestByCoverage = (candidates: CorridorOption[]): CorridorOption | undefined => {
+  if (candidates.length === 0) return undefined
+
+  let best = candidates[0]
+  let bestRank: [number, number, number] = [
+    best.isUsdOrigin ? 1 : 0,
+    typeof best.dataPoints === 'number' ? best.dataPoints : 0,
+    best.lastUpdated ? new Date(best.lastUpdated).getTime() : 0,
+  ]
+
+  for (const entry of candidates.slice(1)) {
+    const rank: [number, number, number] = [
+      entry.isUsdOrigin ? 1 : 0,
+      typeof entry.dataPoints === 'number' ? entry.dataPoints : 0,
+      entry.lastUpdated ? new Date(entry.lastUpdated).getTime() : 0,
+    ]
+
+    if (rank[0] !== bestRank[0]) {
+      if (rank[0] > bestRank[0]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[1] !== bestRank[1]) {
+      if (rank[1] > bestRank[1]) {
+        best = entry
+        bestRank = rank
+      }
+      continue
+    }
+    if (rank[2] > bestRank[2]) {
+      best = entry
+      bestRank = rank
+    }
+  }
+
+  return best
+}
+
+const watchlistTrackedCorridors = computed<CorridorOption[]>(() => {
+  if (!isPlus.value) return []
+  if (!trackedCorridors.value.length) return []
+
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
+
+  for (const item of watchlist.items.value) {
+    if (item.target.type !== 'corridor') continue
+    const from = item.target.from.toUpperCase()
+    const to = item.target.to.toUpperCase()
+    const key = `${from}-${to}`
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    const candidates = trackedCorridors.value.filter((c) => {
+      const src = (c.sourceCountry || '').toUpperCase()
+      const dst = (c.destCountry || '').toUpperCase()
+      return src === from && dst === to
+    })
+
+    const best = pickBestByCoverage(candidates)
+    if (best?.corridorId) out.push(best)
+    if (out.length >= 16) break
+  }
+
+  return out
+})
+
+const screenerCorridorIds = computed<string[]>(() => {
+  const ids = watchlistTrackedCorridors.value
+    .map(c => c.corridorId)
+    .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+  return Array.from(new Set(ids)).slice(0, 16)
+})
+
+const filtersForcedVisible = computed(() => !pulseScreenerEnabled.value || screenerCorridorIds.value.length === 0)
+const filtersVisible = computed(() => showAdvancedFilters.value || filtersForcedVisible.value)
+
+const toggleAdvancedFilters = () => {
+  showAdvancedFilters.value = !showAdvancedFilters.value
+}
+
+const screenerRows = ref<PulseScreenerRow[]>([])
+const screenerLoading = ref(false)
+const screenerError = ref<string | null>(null)
+const screenerUpdatedAt = ref<string | null>(null)
+
+const loadScreener = async () => {
+  if (!isPlus.value) return
+  if (!pulseScreenerEnabled.value) return
+
+  const corridorIds = screenerCorridorIds.value
+  if (corridorIds.length === 0) {
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+    screenerError.value = null
+    return
+  }
+
+  screenerLoading.value = true
+  screenerError.value = null
+
+  try {
+    const response = await getPulseScreener({
+      corridorIds,
+      timeframe: '7D',
+      amount: 1000,
+      payin: 'bank',
+      payout: 'bank',
+      includeMovers: true,
+    })
+    screenerRows.value = response.rows ?? []
+    screenerUpdatedAt.value = response.updatedAt ?? null
+  }
+  catch (error: any) {
+    screenerError.value = error?.message || 'Unable to load screener right now.'
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+  }
+  finally {
+    screenerLoading.value = false
+  }
+}
+
+const scrollToDecisionPanel = async () => {
+  if (!import.meta.client) return
+  await nextTick()
+  const el = decisionPanelRef.value || document.getElementById('decision')
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+async function handleScreenerSelect(corridorId: string) {
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
+
+  // Screener is a decision tool; force Decision mode to keep the UI predictable.
+  store.setViewMode('sender')
+
+  setCorridorFromOption(option)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+  await scrollToDecisionPanel()
+}
+
+type PulseTeaserMover = {
+  corridorId: string
+  fromCountry: string
+  toCountry: string
+  sendCurrency: string
+  recvCurrency: string
+  deltaPct: number
+  providerCount: number
+  timestampBucket: string
+}
+
+async function handleMoverSelect(mover: PulseTeaserMover) {
+  const optionById = trackedCorridors.value.find(c => c.corridorId === mover.corridorId)
+  const slug = `${mover.sendCurrency.toLowerCase()}-${mover.recvCurrency.toLowerCase()}`
+  const optionBySlug = getCorridorBySlug(slug) || trackedCorridors.value.find(c => (c.slug || c.value) === slug)
+  const option = optionById || optionBySlug
+  if (!option) return
+
+  store.setViewMode('sender')
+  setCorridorFromOption(option)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+  await scrollToDecisionPanel()
+}
+
+async function handleMoverAdded(mover: PulseTeaserMover) {
+  // Watchlist mutations will naturally refresh `screenerCorridorIds` and trigger `loadScreener`.
+  await handleMoverSelect(mover)
+}
 
 const selectedCorridorOption = computed<CorridorOption | null>(() => {
   const key = selectedCorridorKey.value
@@ -1165,7 +1413,7 @@ const initializeCorridorSelection = () => {
     option = getCorridorById(store.corridor.corridorId) || trackedCorridors.value.find(c => c.corridorId === store.corridor.corridorId)
   }
   if (!option) {
-    option = trackedCorridors.value[0]
+    option = watchlistTrackedCorridors.value[0] || trackedCorridors.value[0]
   }
 
   if (option) {
@@ -1430,7 +1678,7 @@ async function loadChartData() {
     chartLoadedKey.value = key
   }
   catch (e) {
-    console.error('Failed to load chart data:', e)
+    useLogger('PulsePage').error('Failed to load chart data', e)
   }
   finally {
     chartLoading.value = false
@@ -1447,7 +1695,7 @@ async function loadSnapshotSummary() {
     }
   }
   catch (e) {
-    console.error('Failed to load snapshot summary:', e)
+    useLogger('PulsePage').error('Failed to load snapshot summary', e)
   }
 }
 
@@ -1466,7 +1714,7 @@ function handleEmbed(chartId: string) {
 }
 
 function getDeltaClass(deltaType: PulseDeltaType) {
-  if (deltaType === 'positive') return 'text-emerald-400'
+  if (deltaType === 'positive') return 'text-success-600'
   if (deltaType === 'negative') return 'text-danger-600'
   return 'text-neutral-400'
 }
@@ -1523,9 +1771,36 @@ async function loadCoverageSummary() {
     }
   }
   catch (e) {
-    console.error('Failed to load coverage summary:', e)
+    useLogger('PulsePage').error('Failed to load coverage summary', e)
   }
 }
+
+watch(
+  () => isPlus.value,
+  (plus) => {
+    if (!import.meta.client) return
+    if (!plus) return
+
+    // Entitlements hydrate client-side; refresh Plus-gated data once we know the plan.
+    void refreshTrackedCorridors()
+    void loadCoverageSummary()
+    if (store.viewMode === 'analyst') {
+      void loadSnapshotSummary()
+      void setupDeepDivesObserver()
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => [pulseScreenerEnabled.value, screenerCorridorIds.value.join(',')],
+  () => {
+    if (!import.meta.client) return
+    if (!isPlus.value) return
+    void loadScreener()
+  },
+  { immediate: true },
+)
 
 watch(
   () => [store.corridor, store.timeframe, store.amount],
@@ -1571,8 +1846,10 @@ onMounted(async () => {
 
   initializeCorridorSelection()
 
-  // Avoid expensive Pulse API calls for non-Plus users (they see the upgrade gate).
+  // Avoid Plus-gated Pulse API calls for public preview users.
   if (isPlus.value) {
+    void refreshTrackedCorridors()
+    void loadScreener()
     loadSnapshotSummary()
     loadChartData()
     loadCoverageSummary()

@@ -10,23 +10,23 @@
     :highlights="highlights"
     :related="relatedLinks"
   >
-    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:font-semibold prose-a:text-blue-600">
-      <p class="mb-6 text-lg leading-relaxed">
-        At <strong class="text-blue-600">Remit-Scout</strong> (operated by <strong class="text-blue-600">Remit-Scout LLC</strong>),
+    <div class="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-rs-fg prose-a:font-semibold prose-a:text-brand-600">
+      <p class="mb-6 text-body-lg leading-relaxed">
+        At <strong class="text-brand-600">Remit-Scout</strong> (operated by <strong class="text-brand-600">Remit-Scout LLC</strong>),
         transparency is fundamental to our mission.
         This Disclosure Policy explains how we maintain our independence, how we may earn compensation,
         and our commitment to providing unbiased, accurate information about money transfer services.
       </p>
 
-      <div class="my-8 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-6">
-        <h3 class="mb-2 text-lg font-semibold text-blue-900">
+      <div class="my-8 rounded-lg border-l-4 border-primary-500 bg-primary-50 p-6">
+        <h3 class="mb-2 text-body-lg font-semibold text-primary-900">
           Our Commitment to You
         </h3>
-        <p class="text-blue-800">
+        <p class="text-primary-800">
           We are an independent comparison platform built by expats, for expats. Our founder,
           <NuxtLink
             to="/about"
-            class="font-semibold underline hover:text-blue-900"
+            class="font-semibold underline hover:text-primary-900"
           >Omar Ghabayen</NuxtLink>,
           created Remit-Scout after losing $30 per transfer while sending money home from Carnegie Mellon University.
           This personal experience drives our commitment to transparency and helping you keep more of your money.
@@ -35,69 +35,69 @@
 
       <h2
         id="our-independence"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Our Independence
       </h2>
       <p class="mb-6 leading-relaxed">
-        <strong class="text-blue-600">Remit-Scout</strong> operates independently and is not owned by,
+        <strong class="text-brand-600">Remit-Scout</strong> operates independently and is not owned by,
         affiliated with, or controlled by any money transfer provider. Our recommendations, rankings,
         and reviews are based on objective analysis of real-time data, periodic spot-check transfers, and
         comprehensive evaluation criteria. Learn more about our
         <NuxtLink
           to="/methodology"
-          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+          class="text-brand-600 hover:text-brand-700 underline font-semibold"
         >testing methodology</NuxtLink>
         and how we compare providers.
       </p>
 
       <h2
         id="how-we-make-money"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         How We Make Money
       </h2>
       <p class="mb-4 leading-relaxed">
-        To keep <strong class="text-blue-600">Remit-Scout</strong> free for users, we generate revenue through
+        To keep <strong class="text-brand-600">Remit-Scout</strong> free for users, we generate revenue through
         clearly disclosed partnerships. For complete details, see our
         <NuxtLink
           to="/legal/how-we-make-money"
-          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+          class="text-brand-600 hover:text-brand-700 underline font-semibold"
         >How We Make Money</NuxtLink> page.
       </p>
 
-      <h3 class="mb-3 text-xl font-semibold text-gray-900">
+      <h3 class="mb-3 text-h4 font-semibold text-neutral-900">
         Revenue Sources
       </h3>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
         <li>
-          <strong class="text-blue-600">Affiliate Commissions:</strong> When you click on provider links
+          <strong class="text-brand-600">Affiliate Commissions:</strong> When you click on provider links
           and sign up for services through our platform, we may receive a commission. This does not affect
           our rankings, reviews, or editorial content.
         </li>
         <li>
-          <strong class="text-blue-600">Remit-Scout Plus:</strong> We offer an optional paid membership that may provide
+          <strong class="text-brand-600">Remit-Scout Plus:</strong> We offer an optional paid membership that may provide
           additional features and an ad-free experience. Membership does not affect our rankings, reviews, or comparison results.
         </li>
         <li>
-          <strong class="text-blue-600">Advertising Partnerships:</strong> We may display advertisements
+          <strong class="text-brand-600">Advertising Partnerships:</strong> We may display advertisements
           from money transfer providers and related services. All ads are clearly marked. If you subscribe to
-          <strong class="text-blue-600">Remit-Scout Plus</strong>, we may remove certain advertising placements.
+          <strong class="text-brand-600">Remit-Scout Plus</strong>, we may remove certain advertising placements.
         </li>
         <li>
-          <strong class="text-blue-600">Sponsored Content:</strong> Occasionally, we may publish sponsored
+          <strong class="text-brand-600">Sponsored Content:</strong> Occasionally, we may publish sponsored
           articles or content, which is always clearly labeled as "Sponsored" or "Advertisement."
         </li>
       </ul>
 
-      <div class="my-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
-        <h3 class="mb-3 text-lg font-semibold text-gray-900">
+      <div class="my-8 rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+        <h3 class="mb-3 text-body-lg font-semibold text-neutral-900">
           What This Means for You
         </h3>
         <ul class="space-y-2 leading-relaxed">
           <li class="flex items-start">
             <svg
-              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
+              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -107,11 +107,11 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span><strong class="text-blue-600">Rankings are never for sale.</strong> Providers cannot pay to improve their position in our comparisons.</span>
+            <span><strong class="text-brand-600">Rankings are never for sale.</strong> Providers cannot pay to improve their position in our comparisons.</span>
           </li>
           <li class="flex items-start">
             <svg
-              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
+              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -121,11 +121,11 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span><strong class="text-blue-600">Editorial independence is protected.</strong> Our content team operates separately from business development.</span>
+            <span><strong class="text-brand-600">Editorial independence is protected.</strong> Our content team operates separately from business development.</span>
           </li>
           <li class="flex items-start">
             <svg
-              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
+              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -135,11 +135,11 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span><strong class="text-blue-600">All affiliate relationships are disclosed.</strong> You'll see clear labels wherever affiliate links appear.</span>
+            <span><strong class="text-brand-600">All affiliate relationships are disclosed.</strong> You'll see clear labels wherever affiliate links appear.</span>
           </li>
           <li class="flex items-start">
             <svg
-              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-blue-600"
+              class="mr-2 mt-1 h-5 w-5 flex-shrink-0 text-brand-600"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -149,14 +149,14 @@
                 clip-rule="evenodd"
               />
             </svg>
-            <span><strong class="text-blue-600">Plus does not change rankings.</strong> Subscribing may remove ads, but comparison results remain data-driven.</span>
+            <span><strong class="text-brand-600">Plus does not change rankings.</strong> Subscribing may remove ads, but comparison results remain data-driven.</span>
           </li>
         </ul>
       </div>
 
       <h2
         id="review-process"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Our Review Process
       </h2>
@@ -165,15 +165,15 @@
         data, structured quote capture, and periodic spot-check transfers on selected corridors. Learn more in our
         <NuxtLink
           to="/methodology"
-          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+          class="text-brand-600 hover:text-brand-700 underline font-semibold"
         >methodology</NuxtLink>.
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-        <li><strong class="text-blue-600">Delivered value:</strong> The amount received after fees and FX markup, using timestamped quotes</li>
-        <li><strong class="text-blue-600">Reliability & data quality:</strong> Quote availability, data freshness, and stability (where available)</li>
-        <li><strong class="text-blue-600">Friction & speed:</strong> Speed buckets and observed delivery performance on selected corridors (where available)</li>
-        <li><strong class="text-blue-600">Coverage:</strong> Corridor availability and payout methods</li>
-        <li><strong class="text-blue-600">User feedback:</strong> Community reviews and reported issues, moderated for authenticity</li>
+        <li><strong class="text-brand-600">Delivered value:</strong> The amount received after fees and FX markup, using timestamped quotes</li>
+        <li><strong class="text-brand-600">Reliability & data quality:</strong> Quote availability, data freshness, and stability (where available)</li>
+        <li><strong class="text-brand-600">Friction & speed:</strong> Speed buckets and observed delivery performance on selected corridors (where available)</li>
+        <li><strong class="text-brand-600">Coverage:</strong> Corridor availability and payout methods</li>
+        <li><strong class="text-brand-600">User feedback:</strong> Community reviews and reported issues, moderated for authenticity</li>
       </ul>
       <p class="mb-6 leading-relaxed">
         Providers cannot pay to improve their position in our comparisons. Commercial relationships (affiliate links, ads, or
@@ -182,7 +182,7 @@
 
       <h2
         id="editorial-independence"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Editorial Independence
       </h2>
@@ -194,13 +194,13 @@
         our objectivity. Learn more about our
         <NuxtLink
           to="/about"
-          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+          class="text-brand-600 hover:text-brand-700 underline font-semibold"
         >team and mission</NuxtLink>.
       </p>
 
       <h2
         id="partnership-standards"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Partnership Standards
       </h2>
@@ -217,7 +217,7 @@
 
       <h2
         id="data-sources"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Data Sources and Accuracy
       </h2>
@@ -225,24 +225,24 @@
         We collect data from multiple sources to ensure accuracy:
       </p>
       <ul class="mb-6 list-inside list-disc space-y-2 leading-relaxed">
-        <li><strong class="text-blue-600">Provider APIs / partner feeds:</strong> When available, structured data direct from providers</li>
-        <li><strong class="text-blue-600">Public quote flow capture:</strong> Structured capture from provider quote flows where applicable</li>
-        <li><strong class="text-blue-600">Spot-check transfers:</strong> Periodic real transfer tests on selected corridors and methods</li>
-        <li><strong class="text-blue-600">Regulatory registers:</strong> Public licensing/registration sources where applicable</li>
-        <li><strong class="text-blue-600">User submissions:</strong> Reviews and reported issues from our community</li>
+        <li><strong class="text-brand-600">Provider APIs / partner feeds:</strong> When available, structured data direct from providers</li>
+        <li><strong class="text-brand-600">Public quote flow capture:</strong> Structured capture from provider quote flows where applicable</li>
+        <li><strong class="text-brand-600">Spot-check transfers:</strong> Periodic real transfer tests on selected corridors and methods</li>
+        <li><strong class="text-brand-600">Regulatory registers:</strong> Public licensing/registration sources where applicable</li>
+        <li><strong class="text-brand-600">User submissions:</strong> Reviews and reported issues from our community</li>
       </ul>
       <p class="mb-6 leading-relaxed">
         Rates and fees can change quickly. We show timestamped data captured at a specific moment, but the provider checkout
         experience is always the final source of truth. See our <NuxtLink
           to="/methodology"
-          class="text-blue-600 hover:text-blue-700 underline font-semibold"
+          class="text-brand-600 hover:text-brand-700 underline font-semibold"
         >methodology</NuxtLink>
         for details on quote freshness, confidence scoring, and limitations.
       </p>
 
       <h2
         id="user-reviews"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         User Reviews and Feedback
       </h2>
@@ -254,7 +254,7 @@
 
       <h2
         id="sponsored-content"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Sponsored Content
       </h2>
@@ -267,7 +267,7 @@
 
       <h2
         id="conflicts-of-interest"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Conflicts of Interest
       </h2>
@@ -279,7 +279,7 @@
 
       <h2
         id="policy-updates"
-        class="mb-4 text-2xl font-bold text-gray-900"
+        class="mb-4 text-h3 font-bold text-neutral-900"
       >
         Updates to This Policy
       </h2>
@@ -291,19 +291,19 @@
     </div>
 
     <template #sidebar>
-      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-        <h3 class="text-sm font-semibold text-blue-900">
+      <div class="rounded-2xl border border-primary-200 bg-primary-50 p-5">
+        <h3 class="text-body-sm font-semibold text-primary-900">
           Questions about disclosure?
         </h3>
-        <p class="mt-2 text-sm text-blue-800 leading-relaxed">
+        <p class="mt-2 text-body-sm text-primary-800 leading-relaxed">
           If you have questions about partnerships, affiliate relationships, or editorial independence, visit our
           <NuxtLink
             to="/faq"
-            class="font-semibold underline hover:text-blue-900"
+            class="font-semibold underline hover:text-primary-900"
           >FAQ</NuxtLink>
           or <NuxtLink
             to="/contact"
-            class="font-semibold underline hover:text-blue-900"
+            class="font-semibold underline hover:text-primary-900"
           >contact us</NuxtLink>.
         </p>
       </div>
@@ -371,11 +371,20 @@ const relatedLinks = [
   },
 ]
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Affiliate & Disclosure Policy',
+    description: 'Learn how Remit-Scout stays independent, transparent, and funded.',
+  },
+})
+
 setSeo({
-  title: 'Affiliate & Disclosure Policy | Transparency & Independence | Remit-Scout',
+  title: 'Affiliate & Disclosure Policy | Remit-Scout',
   description:
-    'Learn about Remit-Scout\'s disclosure policy, affiliate relationships, and how we maintain editorial independence while providing unbiased money transfer comparisons.',
+    'Learn how Remit-Scout is funded, what affiliate links mean, and how we maintain editorial independence while comparing money transfer providers.',
   canonical: `${siteUrl}/legal/disclosure`,
+  ogImage: false,
   ogType: 'article',
   publishedTime: lastUpdatedIso,
   modifiedTime: lastUpdatedIso,

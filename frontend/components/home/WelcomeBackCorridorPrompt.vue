@@ -1,84 +1,76 @@
 <template>
   <ClientOnly>
-    <div
-      v-if="shouldShow"
-      class="fixed left-4 right-4 top-20 z-40 mx-auto max-w-xl"
+    <Transition
+      enter-active-class="motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
     >
-      <div class="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-xl backdrop-blur">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="text-sm font-semibold text-slate-900">
+      <div
+        v-if="shouldShow"
+        class="fixed right-4 bottom-6 z-40 w-80"
+      >
+        <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl">
+          <div class="flex items-start justify-between gap-3">
+            <p class="text-body-sm font-semibold text-neutral-900">
               Welcome back
             </p>
-            <p class="mt-1 text-sm text-slate-600">
-              Want to check out your corridor again?
-            </p>
-          </div>
-          <button
-            type="button"
-            class="text-slate-400 hover:text-slate-600"
-            @click="dismiss"
-          >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <div class="text-xl">
-            <span>{{ fromFlag }}</span>
-            <span class="mx-2 text-slate-400">→</span>
-            <span>{{ toFlag }}</span>
-          </div>
-          <div class="min-w-0">
-            <div class="truncate text-sm font-semibold text-slate-900">
-              {{ fromLabel }} → {{ toLabel }}
-            </div>
-            <div class="truncate text-xs text-slate-500">
-              View rates for this corridor again.
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex gap-2">
             <button
               type="button"
-              class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+              class="text-neutral-400 hover:text-neutral-600"
+              aria-label="Dismiss prompt"
+              @click="dismiss"
+            >
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="mt-3 flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2.5">
+            <div class="text-body-lg flex-shrink-0">
+              <span>{{ fromFlag }}</span>
+              <span class="mx-1 text-neutral-400">→</span>
+              <span>{{ toFlag }}</span>
+            </div>
+            <div class="min-w-0">
+              <div class="truncate text-body-sm font-semibold text-neutral-900">
+                {{ fromLabel }} → {{ toLabel }}
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
               @click="viewCorridor"
             >
               View corridor
             </button>
             <button
               type="button"
-              class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              class="rounded-lg border border-neutral-200 px-3 py-2 text-body-sm font-semibold text-neutral-600 hover:bg-neutral-50 transition-colors"
               @click="dismiss"
             >
-              Not now
+              Dismiss
             </button>
           </div>
-
-          <NuxtLink
-            to="/send-money"
-            class="text-sm font-semibold text-blue-600 hover:text-blue-700"
-            @click="dismiss"
-          >
-            Choose a different corridor
-          </NuxtLink>
         </div>
       </div>
-    </div>
+    </Transition>
   </ClientOnly>
 </template>
 

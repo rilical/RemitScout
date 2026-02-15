@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-page-x">
     <div class="w-full max-w-md">
       <!-- Logo/Header -->
       <div class="text-center mb-8">
@@ -7,29 +7,32 @@
           to="/"
           class="inline-block"
         >
-          <img
+          <NuxtImg
             src="/png/SVG/LOGO.svg"
             alt="RemitScout"
-            class="h-10 w-auto mx-auto mb-4"
-          >
+            width="32"
+            height="40"
+            loading="eager"
+            class="h-10 w-auto mx-auto mb-4 object-contain"
+          />
         </NuxtLink>
-        <h1 class="text-3xl font-bold text-slate-900">
+        <h1 class="text-h2 font-bold text-rs-fg">
           Welcome back
         </h1>
-        <p class="mt-2 text-sm text-slate-600">
+        <p class="mt-2 text-body-sm text-neutral-600">
           Sign in to access your watchlist, alerts, and more
         </p>
       </div>
 
       <!-- Main Card -->
-      <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+      <div class="rounded-2xl border border-rs-border bg-surface p-8 shadow-xl">
         <!-- Success Message -->
         <div
           v-if="isLoggedIn"
-          class="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-4 text-center"
+          class="rounded-xl border-2 border-success-600 bg-success-50 px-4 py-4 text-center"
         >
           <svg
-            class="w-12 h-12 text-emerald-600 mx-auto mb-2"
+            class="w-12 h-12 text-success-600 mx-auto mb-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -41,15 +44,15 @@
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p class="text-sm font-semibold text-emerald-900 mb-1">
+          <p class="text-body-sm font-semibold text-success-700 mb-1">
             Signed in successfully
           </p>
-          <p class="text-sm text-emerald-700">
+          <p class="text-body-sm text-success-700">
             {{ user?.email }}
           </p>
           <button
             type="button"
-            class="mt-4 text-sm font-semibold text-emerald-700 hover:text-emerald-800 underline"
+            class="mt-4 text-body-sm font-semibold text-success-700 hover:text-success-800 underline"
             @click="handleSignOut"
           >
             Sign out
@@ -60,7 +63,7 @@
         <div v-else>
           <div
             v-if="errorMessage"
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            class="mb-4 rounded-lg border-2 border-danger-600 bg-danger-50 px-4 py-3 text-body-sm text-danger-700"
           >
             {{ errorMessage }}
           </div>
@@ -72,7 +75,7 @@
             <div>
               <label
                 for="email"
-                class="block text-sm font-semibold text-slate-700 mb-2"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
               >
                 Email
               </label>
@@ -82,14 +85,14 @@
                 type="email"
                 autocomplete="email"
                 required
-                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                 placeholder="you@example.com"
               >
             </div>
             <div>
               <label
                 for="password"
-                class="block text-sm font-semibold text-slate-700 mb-2"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
               >
                 Password
               </label>
@@ -100,13 +103,13 @@
                 autocomplete="current-password"
                 required
                 minlength="8"
-                class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                 placeholder="Your password"
               >
               <div class="mt-2 flex items-center justify-between">
                 <NuxtLink
                   to="/forgot-password"
-                  class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   Forgot password?
                 </NuxtLink>
@@ -115,7 +118,7 @@
 
             <button
               type="submit"
-              class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+              class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
               :disabled="loading"
             >
               {{ loading ? 'Signing in…' : 'Sign in' }}
@@ -124,18 +127,18 @@
 
           <!-- Divider -->
           <div class="my-6 flex items-center gap-4">
-            <div class="h-px flex-1 bg-slate-200" />
-            <div class="text-xs font-semibold text-slate-500">
+            <div class="h-px flex-1 bg-neutral-200" />
+            <div class="text-body-sm font-semibold text-rs-muted">
               OR
             </div>
-            <div class="h-px flex-1 bg-slate-200" />
+            <div class="h-px flex-1 bg-neutral-200" />
           </div>
 
           <!-- Social Login Buttons -->
           <div class="space-y-3">
             <button
               type="button"
-              class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+              class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-all"
               :disabled="loading"
               @click="handleSocialSignIn('google')"
             >
@@ -171,11 +174,11 @@
         v-if="!isLoggedIn"
         class="mt-6 text-center"
       >
-        <p class="text-sm text-slate-600">
+        <p class="text-body-sm text-neutral-600">
           Don't have an account?
           <NuxtLink
             to="/sign-up"
-            class="font-semibold text-blue-600 hover:text-blue-700"
+            class="font-semibold text-brand-600 hover:text-brand-700"
           >
             Sign up for free
           </NuxtLink>
@@ -183,24 +186,24 @@
       </div>
 
       <!-- Quick Links -->
-      <div class="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500">
+      <div class="mt-8 flex items-center justify-center gap-6 text-body-sm text-rs-muted">
         <NuxtLink
           to="/about"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           About
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/contact"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Contact Us
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/plus"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Remit-Scout Plus
         </NuxtLink>
@@ -210,13 +213,30 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+
 const { user, isLoggedIn, signOut, signIn, signInWithOAuth } = useAuth()
 const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Sign in | Remit-Scout',
+  description: 'Sign in to access your Remit-Scout dashboard, watchlist, and alerts.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
 
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const email = ref('')
 const password = ref('')
+
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    navigateTo(redirect)
+  }
+}, { immediate: true })
 
 async function handleSignOut() {
   await signOut()
@@ -249,11 +269,4 @@ async function handleSocialSignIn(provider: 'google') {
     errorMessage.value = result.error || `Unable to sign in with ${provider}.`
   }
 }
-
-useHead({
-  title: 'Sign in | Remit-Scout',
-  meta: [
-    { name: 'robots', content: 'noindex, nofollow' },
-  ],
-})
 </script>

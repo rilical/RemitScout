@@ -1,12 +1,12 @@
 <template>
-  <section :class="['relative py-12 sm:py-16', props.dark ? 'bg-gray-900' : 'bg-white']">
+  <section :class="['relative py-12 sm:py-16', props.dark ? 'bg-neutral-900' : 'bg-surface']">
     <!-- Content -->
-    <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 container">
       <div class="text-center animate-fade-in-up mb-8">
-        <h2 :class="['text-3xl sm:text-4xl font-bold mb-4', props.dark ? 'text-white' : 'text-neutral-900']">
+        <h2 :class="['text-h2 font-bold mb-4', props.dark ? 'text-white' : 'text-neutral-900']">
           Popular Corridors Searched Today
         </h2>
-        <p :class="['text-lg sm:text-xl max-w-3xl mx-auto', props.dark ? 'text-white/70' : 'text-neutral-600']">
+        <p :class="['text-body-lg max-w-3xl mx-auto', props.dark ? 'text-white/70' : 'text-neutral-600']">
           Join thousands who trust Remit-Scout to find the best transfer rates.
         </p>
       </div>
@@ -31,13 +31,13 @@
               :class="[
                 'group w-full rounded-xl border-2 p-6 text-left transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2',
                 props.dark
-                  ? 'border-gray-800 bg-gray-800/50 hover:border-gray-700'
-                  : 'border-neutral-200 bg-white hover:border-brand-600',
+                  ? 'border-neutral-800 bg-neutral-800/50 hover:border-neutral-700'
+                  : 'border-neutral-200 bg-surface hover:border-brand-600',
               ]"
               @click="handleCorridorClick(corridor)"
             >
               <div class="flex items-center gap-3 mb-4">
-                <span class="text-3xl">{{ getCountryFlag(corridor.from) }}</span>
+                <span class="text-h2">{{ getCountryFlag(corridor.from) }}</span>
                 <svg
                   :class="[
                     'h-5 w-5 transition-colors',
@@ -54,16 +54,16 @@
                     d="M17 8l4 4m0 0l-4 4m4-4H3"
                   />
                 </svg>
-                <span class="text-3xl">{{ getCountryFlag(corridor.to) }}</span>
+                <span class="text-h2">{{ getCountryFlag(corridor.to) }}</span>
               </div>
 
-              <div :class="['font-bold text-lg mb-2', props.dark ? 'text-white' : 'text-neutral-900']">
+              <div :class="['font-bold text-body-lg mb-2', props.dark ? 'text-white' : 'text-neutral-900']">
                 {{ corridor.from }} → {{ corridor.to }}
               </div>
 
               <div
                 v-if="corridor.count24h"
-                :class="['flex items-center gap-2 text-sm', props.dark ? 'text-white/60' : 'text-neutral-600']"
+                :class="['flex items-center gap-2 text-body-sm', props.dark ? 'text-white/60' : 'text-neutral-600']"
               >
                 <svg
                   class="h-4 w-4 text-brand-600"
@@ -82,7 +82,7 @@
               </div>
 
               <div :class="['mt-4 opacity-0 group-hover:opacity-100 transition-opacity', props.dark ? 'text-white' : 'text-brand-600']">
-                <span class="text-sm font-semibold">Compare now →</span>
+                <span class="text-body-sm font-semibold">Compare now →</span>
               </div>
             </button>
           </div>
@@ -95,7 +95,7 @@
             :class="[
               'p-2 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
               props.dark
-                ? 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                ? 'border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800'
                 : 'border-neutral-300 hover:border-brand-600 hover:bg-brand-50',
             ]"
             aria-label="Previous slide"
@@ -124,9 +124,9 @@
               :class="[
                 'h-2 rounded-full transition-all',
                 currentSlide === slide - 1
-                  ? props.dark ? 'w-8 bg-white' : 'w-8 bg-brand-600'
+                  ? props.dark ? 'w-8 bg-surface' : 'w-8 bg-brand-600'
                   : props.dark
-                    ? 'w-2 bg-gray-700 hover:bg-gray-600'
+                    ? 'w-2 bg-neutral-700 hover:bg-neutral-600'
                     : 'w-2 bg-neutral-300 hover:bg-brand-400',
               ]"
               :aria-label="`Go to slide ${slide}`"
@@ -139,7 +139,7 @@
             :class="[
               'p-2 rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
               props.dark
-                ? 'border-gray-700 hover:border-gray-600 hover:bg-gray-800'
+                ? 'border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800'
                 : 'border-neutral-300 hover:border-brand-600 hover:bg-brand-50',
             ]"
             aria-label="Next slide"
@@ -165,10 +165,10 @@
       <div
         v-else
         :class="[
-          'rounded-xl border p-6 text-center text-sm',
+          'rounded-xl border p-6 text-center text-body-sm',
           props.dark
-            ? 'border-gray-800 bg-gray-800/50 text-white/70'
-            : 'border-neutral-200 bg-white text-neutral-600',
+            ? 'border-neutral-800 bg-neutral-800/50 text-white/70'
+            : 'border-neutral-200 bg-surface text-neutral-600',
         ]"
       >
         <p v-if="pending">

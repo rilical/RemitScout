@@ -1,13 +1,10 @@
 <template>
-  <div class="animate-pulse">
-    <div
-      class="mb-2 h-4 rounded bg-gray-200"
-      :style="{ width: width + '%' }"
-    />
-  </div>
+  <SkeletonBlock :width="`${width}%`" />
 </template>
 
 <script setup lang="ts">
+import SkeletonBlock from './SkeletonBlock.vue'
+
 interface Props {
   width?: number
 }

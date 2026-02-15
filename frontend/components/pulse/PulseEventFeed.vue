@@ -1,10 +1,10 @@
 <template>
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden flex flex-col h-full">
     <div class="border-b border-neutral-700 px-6 py-4">
-      <h2 class="text-lg font-bold text-white">
+      <h2 class="text-body-lg font-bold text-white">
         Market Events
       </h2>
-      <p class="text-sm text-neutral-400">
+      <p class="text-body-sm text-neutral-400">
         Spikes, outages, and anomalies detected in this corridor
       </p>
     </div>
@@ -35,7 +35,7 @@
               :class="getSeverityColor(event.severity)"
             />
             <div>
-              <div class="flex items-center gap-2 text-sm text-neutral-500">
+              <div class="flex items-center gap-2 text-body-sm text-neutral-500">
                 <span>{{ formatTimestamp(event.timestamp) }}</span>
                 <span
                   class="uppercase tracking-wider text-[10px]"
@@ -44,10 +44,10 @@
                   {{ event.severity.toUpperCase() }}
                 </span>
               </div>
-              <div class="text-sm font-semibold text-white">
+              <div class="text-body-sm font-semibold text-white">
                 {{ event.title }}
               </div>
-              <div class="text-xs text-neutral-400">
+              <div class="text-body-sm text-neutral-400">
                 {{ event.description }}
               </div>
             </div>
@@ -56,7 +56,7 @@
           <button
             v-if="event.chartId"
             type="button"
-            class="shrink-0 rounded-md border border-neutral-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-700"
+            class="shrink-0 rounded-md border border-neutral-600 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-700"
             @click="$emit('view', event.chartId)"
           >
             View
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <div class="border-t border-neutral-700 px-6 py-3 text-xs text-neutral-500">
+    <div class="border-t border-neutral-700 px-6 py-3 text-body-sm text-neutral-500">
       Events are derived from automated quote monitoring and anomaly detection.
     </div>
   </div>
@@ -88,13 +88,13 @@ defineEmits<{
 
 function getSeverityColor(level: PulseEventItem['severity']) {
   if (level === 'high') return 'bg-danger-600'
-  if (level === 'medium') return 'bg-amber-500'
+  if (level === 'medium') return 'bg-warning-600'
   return 'bg-brand-600'
 }
 
 function getSeverityText(level: PulseEventItem['severity']) {
   if (level === 'high') return 'text-danger-600'
-  if (level === 'medium') return 'text-amber-400'
+  if (level === 'medium') return 'text-warning-600'
   return 'text-brand-600'
 }
 
@@ -108,7 +108,7 @@ async function loadData() {
     events.value = await getPulseEventFeed(store.corridor, store.timeframe)
   }
   catch (e) {
-    console.error('Failed to load event feed:', e)
+    useLogger('PulseEventFeed').error('Failed to load event feed', e)
   }
   finally {
     loading.value = false

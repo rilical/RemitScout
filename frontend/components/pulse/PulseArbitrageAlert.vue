@@ -20,10 +20,10 @@
           />
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">
+          <h2 class="text-body-lg font-bold text-white">
             Spread Anomaly Signal
           </h2>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             Detects abnormal pricing dispersion
           </p>
         </div>
@@ -36,7 +36,7 @@
           class="inline-flex h-2.5 w-2.5 rounded-full bg-brand-600"
           aria-hidden="true"
         />
-        <span class="text-xs font-bold text-brand-600 uppercase">Active</span>
+        <span class="text-body-sm font-bold text-brand-600 uppercase">Active</span>
       </div>
     </div>
 
@@ -64,12 +64,12 @@
               :size="20"
               class="text-brand-600"
             />
-            <span class="text-sm font-bold text-brand-600">ANOMALY DETECTED</span>
+            <span class="text-body-sm font-bold text-brand-600">ANOMALY DETECTED</span>
           </div>
-          <h3 class="text-2xl font-bold text-white mb-2">
+          <h3 class="text-h3 font-bold text-white mb-2">
             {{ data.provider }} is {{ data.savingsPercent.toFixed(1) }}% under market
           </h3>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             relative to the corridor average
           </p>
         </div>
@@ -77,18 +77,18 @@
         <!-- Stats -->
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="rounded-lg bg-neutral-900 p-4 text-center">
-            <div class="text-xs text-neutral-500 mb-1">
+            <div class="text-body-sm text-neutral-500 mb-1">
               Current Rate
             </div>
-            <div class="text-xl font-mono font-bold text-brand-600">
+            <div class="text-h4 font-mono font-bold text-brand-600">
               {{ data.currentRate.toFixed(4) }}
             </div>
           </div>
           <div class="rounded-lg bg-neutral-900 p-4 text-center">
-            <div class="text-xs text-neutral-500 mb-1">
+            <div class="text-body-sm text-neutral-500 mb-1">
               Average Rate
             </div>
-            <div class="text-xl font-mono font-bold text-white">
+            <div class="text-h4 font-mono font-bold text-white">
               {{ data.averageRate.toFixed(4) }}
             </div>
           </div>
@@ -96,17 +96,17 @@
 
         <!-- Percentile Bar -->
         <div class="mb-6">
-          <div class="flex justify-between text-xs text-neutral-500 mb-2">
+          <div class="flex justify-between text-body-sm text-neutral-500 mb-2">
             <span>Rate Distribution</span>
             <span>{{ data.percentile }}th percentile</span>
           </div>
           <div class="relative h-4 w-full rounded-full bg-neutral-700 overflow-hidden">
             <div
-              class="absolute inset-y-0 left-0 bg-gradient-to-r from-danger-600 via-amber-500 to-brand-600"
+              class="absolute inset-y-0 left-0 bg-gradient-to-r from-danger-600 via-warning-600 to-brand-600"
               style="width: 100%"
             />
             <div
-              class="absolute top-1/2 -translate-y-1/2 h-6 w-1 bg-white rounded shadow-lg"
+              class="absolute top-1/2 -translate-y-1/2 h-6 w-1 bg-surface rounded shadow-lg"
               :style="{ left: `${data.percentile}%` }"
             />
           </div>
@@ -118,7 +118,7 @@
 
         <!-- Recommendation -->
         <div class="rounded-lg bg-brand-600/10 border border-brand-600/30 p-4">
-          <p class="text-sm text-neutral-300">
+          <p class="text-body-sm text-neutral-300">
             {{ data.recommendation }}
           </p>
         </div>
@@ -126,13 +126,13 @@
         <div class="mt-auto pt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
-            class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-700"
+            class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-bold text-white transition-colors hover:bg-brand-700"
           >
             Create Monitor
           </button>
           <button
             type="button"
-            class="flex items-center justify-center gap-2 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-neutral-700"
+            class="flex items-center justify-center gap-2 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-700"
           >
             View Details
           </button>
@@ -152,22 +152,22 @@
               class="text-neutral-400"
             />
           </div>
-          <h3 class="text-xl font-semibold text-white mb-3">
+          <h3 class="text-h4 font-semibold text-white mb-3">
             No Anomalies Detected
           </h3>
-          <p class="text-sm text-neutral-400 max-w-xs mx-auto mb-6">
+          <p class="text-body-sm text-neutral-400 max-w-xs mx-auto mb-6">
             Pricing dispersion is within normal corridor ranges.
           </p>
 
           <div class="mt-auto w-full max-w-xs">
             <div class="rounded-lg bg-neutral-900 p-4 mb-6">
-              <div class="text-xs text-neutral-500 mb-2">
+              <div class="text-body-sm text-neutral-500 mb-2">
                 Current Spread Status
               </div>
-              <div class="text-lg font-bold text-white mb-1">
+              <div class="text-body-lg font-bold text-white mb-1">
                 Normal Range
               </div>
-              <div class="text-xs text-neutral-400">
+              <div class="text-body-sm text-neutral-400">
                 Market conditions are stable
               </div>
             </div>
@@ -177,7 +177,7 @@
         <div class="mt-auto pt-4">
           <button
             type="button"
-            class="flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-600"
+            class="flex items-center justify-center gap-2 w-full rounded-lg border border-neutral-600 bg-neutral-700 px-6 py-3 text-body-sm font-semibold text-white transition-colors hover:bg-neutral-600"
           >
             <Icon
               name="bell-alert"
@@ -231,7 +231,7 @@ async function loadData() {
     }
   }
   catch (e) {
-    console.error('Failed to load arbitrage data:', e)
+    useLogger('PulseArbitrageAlert').error('Failed to load arbitrage data', e)
   }
   finally {
     loading.value = false

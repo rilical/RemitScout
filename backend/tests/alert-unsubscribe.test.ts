@@ -5,6 +5,13 @@ const originalEnv = { ...process.env }
 const loadModule = async (secret: string, tokenExpiryHours = 720) => {
   vi.doMock('../shared/config', () => ({
     config: {
+      logging: {
+        level: 'error',
+      },
+      runtime: {},
+      aws: {
+        region: 'us-east-1',
+      },
       alerts: {
         unsubscribe: {
           secret,

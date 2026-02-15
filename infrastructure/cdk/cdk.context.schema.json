@@ -163,6 +163,18 @@
       "type": "boolean",
       "description": "Pause dev ECS services and EventBridge schedules when true"
     },
+    "devNightlyPauseEnabled": {
+      "type": "boolean",
+      "description": "Dev-only: enable the nightly auto-pause schedule (default: false)"
+    },
+    "devNightlyPauseTimezone": {
+      "type": "string",
+      "description": "Dev-only: timezone for the nightly auto-pause schedule (e.g., America/New_York)"
+    },
+    "devNightlyPauseCron": {
+      "type": "string",
+      "description": "Dev-only: cron() expression for the nightly auto-pause schedule (e.g., cron(0 0 * * ? *))"
+    },
     "goldIndicesLookbackDays": {
       "type": "string",
       "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"

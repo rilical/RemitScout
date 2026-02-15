@@ -38,14 +38,14 @@ onBeforeUnmount(() => {
 <template>
   <div class="relative user-menu">
     <button
-      class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      class="flex items-center gap-2 rounded-md px-2 py-1.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
       @click.stop="toggleUserMenu"
     >
       <span class="hidden sm:inline">
         {{ user?.name || 'Account' }}
       </span>
       <svg
-        class="h-4 w-4 text-slate-600 transition-transform"
+        class="h-4 w-4 text-neutral-600 transition-transform"
         :class="{ 'rotate-180': userMenuOpen }"
         fill="none"
         stroke="currentColor"
@@ -70,21 +70,21 @@ onBeforeUnmount(() => {
     >
       <div
         v-if="userMenuOpen"
-        class="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200 bg-white shadow-lg z-50 py-1"
+        class="absolute right-0 mt-2 w-56 rounded-lg border border-rs-border bg-surface shadow-lg z-50 py-1"
         @click.stop
       >
-        <div class="px-4 py-3 border-b border-slate-100">
+        <div class="px-4 py-3 border-b border-neutral-100">
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-slate-900 truncate">
+            <div class="text-body-sm font-semibold text-rs-fg truncate">
               {{ user?.name }}
             </div>
-            <div class="text-xs text-slate-500 truncate">
+            <div class="text-body-sm text-rs-muted truncate">
               {{ user?.email }}
             </div>
           </div>
           <div
             v-if="isPlus"
-            class="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
+            class="mt-2 inline-flex items-center gap-1 rounded-full bg-success-600 px-2 py-0.5 text-body-sm font-medium text-white"
           >
             <svg
               class="h-3 w-3"
@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
         <div class="py-1">
           <NuxtLink
             to="/dashboard"
-            class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            class="flex items-center gap-3 px-4 py-2 text-body-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
             @click="closeUserMenu"
           >
             <svg
@@ -127,7 +127,7 @@ onBeforeUnmount(() => {
 
           <NuxtLink
             to="/dashboard?tab=account"
-            class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            class="flex items-center gap-3 px-4 py-2 text-body-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
             @click="closeUserMenu"
           >
             <svg
@@ -153,9 +153,9 @@ onBeforeUnmount(() => {
           </NuxtLink>
         </div>
 
-        <div class="border-t border-slate-100 py-1">
+        <div class="border-t border-neutral-100 py-1">
           <button
-            class="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+            class="w-full flex items-center gap-3 px-4 py-2 text-body-sm text-neutral-700 hover:bg-neutral-50 transition-colors text-left"
             @click="handleSignOut"
           >
             <svg

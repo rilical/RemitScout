@@ -6,12 +6,13 @@
   --rs-space-stack: 1.5rem;
 
   /* Color (semantic) */
-  --rs-color-bg: #f8fafc;
-  --rs-color-surface: #ffffff;
-  --rs-color-fg: #0f172a;
-  --rs-color-muted: #475569;
-  --rs-color-border: #e2e8f0;
-  --rs-color-brand: #2563eb;
+  /* Store as RGB triplets so Tailwind can apply opacity modifiers via `rgb(var(--token) / <alpha-value>)`. */
+  --rs-color-bg: 248 250 252;
+  --rs-color-surface: 255 255 255;
+  --rs-color-fg: 15 23 42;
+  --rs-color-muted: 71 85 105;
+  --rs-color-border: 226 232 240;
+  --rs-color-brand: 37 99 235;
 
   /* Radii */
   --rs-radius-md: 12px;
@@ -20,7 +21,43 @@
 
 @media (min-width: 768px) {
   :root {
-    --rs-space-page-x: 2rem;
+    --rs-space-page-x: 1.5rem;
     --rs-space-page-y: 2.5rem;
   }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --rs-space-page-x: 2rem;
+  }
+}
+
+.text-body-sm { @apply text-scale-1 leading-5; }
+.text-body { @apply text-scale-2 leading-6; }
+.text-body-lg { @apply text-scale-3 leading-7; }
+.text-h4 { @apply text-scale-2 font-semibold leading-6; }
+.text-h3 { @apply text-scale-3 font-semibold leading-7; }
+.text-h2 { @apply text-scale-4 font-bold leading-8; }
+.text-h1 { @apply text-scale-5 font-bold leading-9 tracking-tight; }
+.text-hero { @apply text-scale-6 font-bold leading-none tracking-tight; }
+
+.px-page-x { padding-left: var(--rs-space-page-x); padding-right: var(--rs-space-page-x); }
+.py-page-y { padding-top: var(--rs-space-page-y); padding-bottom: var(--rs-space-page-y); }
+.gap-gutter { gap: var(--rs-space-gutter, 24px); }
+.space-y-stack > :not([hidden]) ~ :not([hidden]) { margin-top: var(--rs-space-stack); }
+
+@media (min-width: 768px) {
+  .text-h4 { @apply text-scale-3; }
+  .text-h3 { @apply text-scale-4; }
+  .text-h2 { @apply text-scale-5; }
+  .text-h1 { @apply text-scale-6; }
+  .text-hero { @apply text-scale-7; }
+}
+
+@media (min-width: 1280px) {
+  .text-h4 { @apply text-scale-4 leading-7; }
+  .text-h3 { @apply text-scale-5 leading-8; }
+  .text-h2 { @apply text-scale-6 leading-9; }
+  .text-h1 { @apply text-scale-7 leading-10; }
+  .text-hero { @apply text-scale-8; }
 }

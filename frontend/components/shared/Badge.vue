@@ -1,6 +1,6 @@
 <template>
   <span
-    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-body-sm font-medium"
     :class="badgeClasses"
   >
     <slot />
@@ -21,11 +21,11 @@ const props = withDefaults(defineProps<Props>(), {
 const badgeClasses = computed(() => {
   const variants = {
     primary: 'bg-primary-100 text-primary-800',
-    secondary: 'bg-gray-100 text-gray-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    danger: 'bg-red-100 text-red-800',
-    outline: 'border border-gray-300 text-gray-700',
+    secondary: 'bg-neutral-100 text-neutral-800',
+    success: 'bg-success-100 text-success-800',
+    warning: 'bg-warning-100 text-warning-800',
+    danger: 'bg-danger-100 text-danger-800',
+    outline: 'border border-neutral-300 text-neutral-700',
   }
   return variants[props.variant]
 })

@@ -96,7 +96,12 @@ const addMissing = (
     code: z.ZodIssueCode.custom,
     path,
     message: envVar,
-  })
+})
+
+const shouldRequire = (
+  overrideValue: boolean | undefined,
+  defaultValue: boolean,
+) => overrideValue ?? defaultValue
 }
 
 const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
@@ -138,18 +143,58 @@ const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
       addMissing(ctx, 'REDIS_URL', ['redis', 'url'])
     }
     if (requirements.requireQueues) {
-      if (!cfg.queues.quoteRefreshUrl) addMissing(ctx, 'QUOTE_REFRESH_QUEUE_URL', ['queues', 'quoteRefreshUrl'])
-      if (!cfg.queues.fxRateRefreshUrl) addMissing(ctx, 'FX_RATE_REFRESH_QUEUE_URL', ['queues', 'fxRateRefreshUrl'])
-      if (!cfg.queues.exports.url) addMissing(ctx, 'EXPORT_JOB_QUEUE_URL', ['queues', 'exports', 'url'])
-      if (!cfg.queues.ingestFanout.url) addMissing(ctx, 'PLANE_B_INGEST_FANOUT_QUEUE_URL', ['queues', 'ingestFanout', 'url'])
-      if (!cfg.queues.notifications.url) addMissing(ctx, 'PLANE_B_NOTIFICATIONS_QUEUE_URL', ['queues', 'notifications', 'url'])
-      if (!cfg.queues.opsAlerts.url) addMissing(ctx, 'PLANE_B_OPS_ALERT_QUEUE_URL', ['queues', 'opsAlerts', 'url'])
-      if (!cfg.queues.goldLive.url) addMissing(ctx, 'GOLD_LIVE_QUEUE_URL', ['queues', 'goldLive', 'url'])
-      if (!cfg.alerts.evaluation.queueUrl) addMissing(ctx, 'ALERT_EVALUATION_QUEUE_URL', ['alerts', 'evaluation', 'queueUrl'])
+      const requireQuoteRefreshQueue = shouldRequire(
+        requirements.requireQuoteRefreshQueue,
+        true,
+      )
+      const requireFxRateRefreshQueue = shouldRequire(
+        requirements.requireFxRateRefreshQueue,
+        true,
+      )
+      const requireExportJobQueue = shouldRequire(requirements.requireExportJobQueue, true)
+      const requireIngestFanoutQueue = shouldRequire(requirements.requireIngestFanoutQueue, true)
+      const requireNotificationsQueue = shouldRequire(requirements.requireNotificationsQueue, true)
+      const requireOpsAlertsQueue = shouldRequire(requirements.requireOpsAlertsQueue, true)
+      const requireGoldLiveQueue = shouldRequire(requirements.requireGoldLiveQueue, true)
+      const requireAlertEvaluationQueue = shouldRequire(
+        requirements.requireAlertEvaluationQueue,
+        true,
+      )
+
+      if (requireQuoteRefreshQueue && !cfg.queues.quoteRefreshUrl) {
+        addMissing(ctx, 'QUOTE_REFRESH_QUEUE_URL', ['queues', 'quoteRefreshUrl'])
+      }
+      if (requireFxRateRefreshQueue && !cfg.queues.fxRateRefreshUrl) {
+        addMissing(ctx, 'FX_RATE_REFRESH_QUEUE_URL', ['queues', 'fxRateRefreshUrl'])
+      }
+      if (requireExportJobQueue && !cfg.queues.exports.url) {
+        addMissing(ctx, 'EXPORT_JOB_QUEUE_URL', ['queues', 'exports', 'url'])
+      }
+      if (requireIngestFanoutQueue && !cfg.queues.ingestFanout.url) {
+        addMissing(ctx, 'PLANE_B_INGEST_FANOUT_QUEUE_URL', ['queues', 'ingestFanout', 'url'])
+      }
+      if (requireNotificationsQueue && !cfg.queues.notifications.url) {
+        addMissing(ctx, 'PLANE_B_NOTIFICATIONS_QUEUE_URL', ['queues', 'notifications', 'url'])
+      }
+      if (requireOpsAlertsQueue && !cfg.queues.opsAlerts.url) {
+        addMissing(ctx, 'PLANE_B_OPS_ALERT_QUEUE_URL', ['queues', 'opsAlerts', 'url'])
+      }
+      if (requireGoldLiveQueue && !cfg.queues.goldLive.url) {
+        addMissing(ctx, 'GOLD_LIVE_QUEUE_URL', ['queues', 'goldLive', 'url'])
+      }
+      if (requireAlertEvaluationQueue && !cfg.alerts.evaluation.queueUrl) {
+        addMissing(ctx, 'ALERT_EVALUATION_QUEUE_URL', ['alerts', 'evaluation', 'queueUrl'])
+      }
     }
     if (requirements.requireStorage) {
-      if (!cfg.storage.bronze.bucket) addMissing(ctx, 'BRONZE_S3_BUCKET', ['storage', 'bronze', 'bucket'])
-      if (!cfg.storage.exports.bucket) addMissing(ctx, 'EXPORTS_S3_BUCKET', ['storage', 'exports', 'bucket'])
+      const requireBronzeBucket = shouldRequire(requirements.requireBronzeBucket, true)
+      const requireExportsBucket = shouldRequire(requirements.requireExportsBucket, true)
+      if (requireBronzeBucket && !cfg.storage.bronze.bucket) {
+        addMissing(ctx, 'BRONZE_S3_BUCKET', ['storage', 'bronze', 'bucket'])
+      }
+      if (requireExportsBucket && !cfg.storage.exports.bucket) {
+        addMissing(ctx, 'EXPORTS_S3_BUCKET', ['storage', 'exports', 'bucket'])
+      }
     }
     if (requirements.requireAlerts) {
       if (!cfg.alerts.slackWebhookUrl) addMissing(ctx, 'ALERT_SLACK_WEBHOOK_URL', ['alerts', 'slackWebhookUrl'])

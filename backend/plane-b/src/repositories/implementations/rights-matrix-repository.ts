@@ -101,8 +101,10 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
 
   async upsertProviderRights(input: RightsMatrixUpsertInput): Promise<void> {
     await query(
-      `INSERT INTO silver.rights_matrix (provider_id, allowed_collect, allowed_b2c, allowed_b2b, notes)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO silver.rights_matrix
+        (provider_id, allowed_collect, allowed_b2c, allowed_b2b, notes,
+         allowed_in_rvi, allowed_in_rci, allowed_in_teer, allowed_resell_b2b, status)
+       VALUES ($1, $2, $3, $4, $5, true, true, true, true, 'production')
        ON CONFLICT (provider_id) DO UPDATE SET
          allowed_collect = EXCLUDED.allowed_collect,
          allowed_b2c = EXCLUDED.allowed_b2c,

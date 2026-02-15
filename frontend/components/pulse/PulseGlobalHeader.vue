@@ -1,6 +1,6 @@
 <template>
   <div class="sticky top-0 z-50 bg-neutral-900 border-b border-neutral-700">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
         <!-- Left: Corridor Selector -->
         <div class="flex items-center gap-4">
@@ -9,18 +9,18 @@
               class="flex items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2.5 text-left transition-colors hover:border-brand-600"
               @click="showCorridorDropdown = !showCorridorDropdown"
             >
-              <span class="text-2xl">{{ store.corridor.fromFlag }}</span>
+              <span class="text-h3">{{ store.corridor.fromFlag }}</span>
               <Icon
                 name="arrow-right"
                 :size="16"
                 class="text-neutral-500"
               />
-              <span class="text-2xl">{{ store.corridor.toFlag }}</span>
+              <span class="text-h3">{{ store.corridor.toFlag }}</span>
               <div class="ml-2">
-                <div class="text-sm font-semibold text-white">
+                <div class="text-body-sm font-semibold text-white">
                   {{ store.corridor.label }}
                 </div>
-                <div class="text-xs text-neutral-400">
+                <div class="text-body-sm text-neutral-400">
                   {{ store.corridor.from }} to {{ store.corridor.to }}
                 </div>
               </div>
@@ -38,7 +38,7 @@
               class="absolute left-0 top-full z-50 mt-2 w-80 rounded-xl border border-neutral-700 bg-neutral-800 shadow-xl"
             >
               <div class="p-2">
-                <div class="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <div class="mb-2 px-2 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
                   Tracked Corridors
                 </div>
                 <button
@@ -48,18 +48,18 @@
                   :class="{ 'bg-brand-600/20': corridor.slug === store.corridor.slug }"
                   @click="selectCorridor(corridor)"
                 >
-                  <span class="text-xl">{{ corridor.fromFlag }}</span>
+                  <span class="text-h4">{{ corridor.fromFlag }}</span>
                   <Icon
                     name="arrow-right"
                     :size="16"
                     class="text-neutral-500"
                   />
-                  <span class="text-xl">{{ corridor.toFlag }}</span>
+                  <span class="text-h4">{{ corridor.toFlag }}</span>
                   <div class="flex-1">
-                    <div class="text-sm font-medium text-white">
+                    <div class="text-body-sm font-medium text-white">
                       {{ corridor.label }}
                     </div>
-                    <div class="text-xs text-neutral-400">
+                    <div class="text-body-sm text-neutral-400">
                       {{ corridor.from }}
                     </div>
                   </div>
@@ -78,7 +78,7 @@
           <div class="relative">
             <select
               :value="store.amount"
-              class="h-10 rounded-lg border border-neutral-600 bg-neutral-800 px-4 pr-8 text-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
+              class="h-10 rounded-lg border border-neutral-600 bg-neutral-800 px-4 pr-8 text-body-sm font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="handleAmountChange"
             >
               <option :value="100">
@@ -115,7 +115,7 @@
           <button
             v-for="tf in timeframes"
             :key="tf"
-            class="rounded-md px-4 py-2 text-sm font-semibold transition-colors"
+            class="rounded-md px-4 py-2 text-body-sm font-semibold transition-colors"
             :class="store.timeframe === tf
               ? 'bg-brand-600 text-white'
               : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
@@ -126,7 +126,7 @@
         </div>
 
         <!-- Right: Freshness -->
-        <div class="flex items-center gap-2 text-sm text-neutral-400">
+        <div class="flex items-center gap-2 text-body-sm text-neutral-400">
           <span
             v-if="hasLastUpdated"
             class="relative flex h-2 w-2"
@@ -256,7 +256,7 @@ async function loadSummary() {
     }
   }
   catch (e) {
-    console.error('Failed to load coverage summary:', e)
+    useLogger('PulseGlobalHeader').error('Failed to load coverage summary', e)
   }
 }
 

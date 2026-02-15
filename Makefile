@@ -7,22 +7,52 @@ OPS_PAUSE_FN_PREFIX ?= remit-scout-dev-OpsPauseControllerFunction
 COMMUNICATIONS_SECRET_NAME ?= remit-scout/dev/communications
 COMMUNICATIONS_SECRET_ARN ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws secretsmanager describe-secret --region $(AWS_REGION) --secret-id $(COMMUNICATIONS_SECRET_NAME) --query ARN --output text 2>/dev/null)
 
-.PHONY: pause-dev resume-dev status-dev ops-pause-dev ops-resume-dev db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
+# Single source of truth for dev pause/resume behavior (ops allowlist + nightly auto-pause).
+DEV_RUNTIME_CONFIG ?= ops/dev-runtime.json
+OPS_PAUSE_RULE_ALLOWLIST ?= $(shell jq -r '.opsPauseRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
+DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "false")
+DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
+DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
+
+.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
 
 pause-dev:
 	@echo "Pausing dev (CDK deploy with devPaused=true)"
 	@cd infrastructure/cdk && \
-		export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
-		eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
-		npx cdk deploy -c env=dev -c devPaused=true --require-approval never
+			export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)" SHARED_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+			npx cdk deploy -c env=dev -c devPaused=true \
+				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
+				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
+				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
+				--require-approval never
 	@$(MAKE) ops-pause-dev
 
 resume-dev:
 	@echo "Resuming dev (CDK deploy with devPaused=false)"
 	@cd infrastructure/cdk && \
-		export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
-		eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
-		npx cdk deploy -c env=dev -c devPaused=false --require-approval never
+			export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)" SHARED_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+			npx cdk deploy -c env=dev -c devPaused=false \
+				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
+				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
+				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
+				--require-approval never
+	@$(MAKE) ops-resume-dev
+
+resume-dev-minimal:
+	@echo "Resuming dev in minimal infra mode (reduced resource footprint)"
+	@cd infrastructure/cdk && \
+			export AWS_SDK_LOAD_CONFIG=1 AWS_PROFILE=$(AWS_PROFILE) CDK_DEFAULT_ACCOUNT=$(CDK_DEFAULT_ACCOUNT) CDK_DEFAULT_REGION=$(CDK_DEFAULT_REGION) COMMUNICATIONS_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)" SHARED_SECRET_ARN="$(COMMUNICATIONS_SECRET_ARN)"; \
+			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
+			npx cdk deploy -c env=dev -c devPaused=false -c devMinimalInfra=true \
+				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
+				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
+				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
+				--require-approval never
 	@$(MAKE) ops-resume-dev
 
 ops-pause-dev:
@@ -36,6 +66,8 @@ ops-pause-dev:
 		exit 1; \
 	fi; \
 	AWS_PROFILE=$(AWS_PROFILE) aws lambda invoke \
+		--cli-connect-timeout 10 \
+		--cli-read-timeout 300 \
 		--region $(AWS_REGION) \
 		--cli-binary-format raw-in-base64-out \
 		--function-name "$$FN" \
@@ -55,6 +87,8 @@ ops-resume-dev:
 		exit 1; \
 	fi; \
 	AWS_PROFILE=$(AWS_PROFILE) aws lambda invoke \
+		--cli-connect-timeout 10 \
+		--cli-read-timeout 300 \
 		--region $(AWS_REGION) \
 		--cli-binary-format raw-in-base64-out \
 		--function-name "$$FN" \

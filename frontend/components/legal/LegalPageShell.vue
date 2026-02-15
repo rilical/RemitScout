@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <section class="relative overflow-hidden border-b border-blue-600 bg-blue-600">
-      <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+  <div class="min-h-screen bg-neutral-50">
+    <section class="relative overflow-hidden border-b border-brand-600 bg-brand-600">
+      <div class="container py-10 lg:py-14">
         <Breadcrumbs
           :items="breadcrumbItems"
           :dark="true"
@@ -9,20 +9,20 @@
 
         <div class="mt-6">
           <div>
-            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            <h1 class="text-h1 text-white">
               {{ title }}
             </h1>
             <p
               v-if="subtitle"
-              class="mt-4 text-lg text-white/90"
+              class="mt-4 text-body-lg text-white/90"
             >
               {{ subtitle }}
             </p>
 
-            <div class="mt-6 flex flex-wrap gap-3 text-sm text-white">
+            <div class="mt-6 flex flex-wrap gap-3 text-body-sm text-white">
               <div
                 v-if="lastUpdatedLabel"
-                class="inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-1"
+                class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-3 py-1"
               >
                 <span class="font-semibold text-white">Last updated</span>
                 <time
@@ -38,18 +38,18 @@
     </section>
 
     <section class="py-10 lg:py-12">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="container">
         <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <article class="rounded-2xl bg-white p-8 shadow-lg border border-slate-200 lg:p-12">
+          <article class="rounded-2xl bg-surface p-8 shadow-lg border border-rs-border lg:p-12">
             <slot />
           </article>
 
           <aside class="space-y-6">
             <div
               v-if="related?.length"
-              class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200/70"
+              class="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-neutral-200/70"
             >
-              <h2 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              <h2 class="text-body-sm font-semibold uppercase tracking-[0.2em] text-rs-muted">
                 Related
               </h2>
               <div class="mt-4 space-y-3">
@@ -57,12 +57,12 @@
                   v-for="item in related"
                   :key="item.to"
                   :to="item.to"
-                  class="block rounded-xl border border-slate-200 p-3 transition hover:border-blue-400 hover:shadow-sm"
+                  class="block rounded-xl border border-rs-border p-3 transition hover:border-primary-400 hover:shadow-sm"
                 >
-                  <div class="text-sm font-semibold text-slate-900">
+                  <div class="text-body-sm font-semibold text-rs-fg">
                     {{ item.title }}
                   </div>
-                  <div class="mt-1 text-xs text-slate-600">
+                  <div class="mt-1 text-body-sm text-neutral-600">
                     {{ item.description }}
                   </div>
                 </NuxtLink>

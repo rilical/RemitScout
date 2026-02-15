@@ -4,7 +4,7 @@
       v-for="item in items"
       :key="item.title"
       :to="item.to"
-      class="group rounded-2xl border-2 border-neutral-200 bg-white p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
+      class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:border-brand-300 hover:shadow-lg hover:-translate-y-1"
     >
       <div class="mb-3">
         <component
@@ -15,7 +15,7 @@
       <h4 class="font-semibold text-neutral-900 mb-2">
         {{ item.title }}
       </h4>
-      <p class="text-sm text-neutral-600">
+      <p class="text-body-sm text-neutral-600">
         {{ item.description }}
       </p>
     </NuxtLink>

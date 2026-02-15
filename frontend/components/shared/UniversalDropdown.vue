@@ -8,10 +8,10 @@
       type="button"
       :disabled="disabled"
       :class="[
-        'w-full min-w-0 rounded-lg border px-3 py-2 text-sm text-left flex items-center justify-between transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-        isOpen ? 'border-blue-500 ring-2 ring-blue-500' : 'border-slate-300 hover:border-slate-400',
-        disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'bg-white text-slate-900',
+        'w-full min-w-0 rounded-lg border px-3 py-2 text-body-sm text-left flex items-center justify-between transition-colors',
+        'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+        isOpen ? 'border-primary-500 ring-2 ring-primary-500' : 'border-neutral-300 hover:border-neutral-400',
+        disabled ? 'bg-neutral-50 text-neutral-400 cursor-not-allowed' : 'bg-surface text-rs-fg',
         buttonClass,
       ]"
       :aria-expanded="isOpen"
@@ -33,7 +33,7 @@
         </slot>
       </span>
       <svg
-        class="ml-2 h-5 w-5 flex-shrink-0 text-slate-400 transition-transform duration-200"
+        class="ml-2 h-5 w-5 flex-shrink-0 text-neutral-400 transition-transform duration-200"
         :class="{ 'rotate-180': isOpen }"
         fill="none"
         stroke="currentColor"
@@ -60,7 +60,7 @@
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="fixed z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-xl"
+          class="fixed z-overlay mt-1 max-h-60 w-full overflow-auto rounded-lg border border-rs-border bg-surface py-1 shadow-xl"
           :style="dropdownStyle"
           role="listbox"
           :aria-labelledby="labelId"
@@ -70,18 +70,13 @@
             :key="getOptionValue(option, index)"
             type="button"
             :class="[
-              'w-full px-3 py-2 text-sm text-left flex items-center transition-all',
+              'w-full px-3 py-2 text-body-sm text-left flex items-center transition-all',
               isOptionDisabled(option)
-                ? 'text-slate-400 cursor-not-allowed'
+                ? 'text-neutral-400 cursor-not-allowed'
                 : isSelected(option, index)
-                  ? getOptionValue(option, index) === 'sendScore'
-                    ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 text-purple-900 font-semibold'
-                    : 'bg-blue-50 text-blue-600 font-medium'
-                  : 'text-slate-900 hover:bg-slate-50',
-              index === highlightedIndex && !isSelected(option, index) && !isOptionDisabled(option) ? 'bg-slate-50' : '',
-              getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) && !isOptionDisabled(option)
-                ? 'hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50'
-                : '',
+                  ? 'bg-primary-50 text-brand-600 font-medium'
+                  : 'text-rs-fg hover:bg-neutral-50',
+              index === highlightedIndex && !isSelected(option, index) && !isOptionDisabled(option) ? 'bg-neutral-50' : '',
             ]"
             role="option"
             :aria-selected="isSelected(option, index)"
@@ -100,7 +95,7 @@
           </button>
           <div
             v-if="normalizedOptions.length === 0"
-            class="px-3 py-2 text-sm text-slate-500 text-center"
+            class="px-3 py-2 text-body-sm text-rs-muted text-center"
           >
             No options available
           </div>

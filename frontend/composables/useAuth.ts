@@ -28,7 +28,7 @@ type SignUpInput = {
   password: string
 }
 
-const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
+export const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
   if (!supabaseUser) return false
   const confirmedAt
     = supabaseUser.email_confirmed_at
@@ -37,7 +37,7 @@ const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
   return Boolean(confirmedAt)
 }
 
-const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+export const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
   if (!supabaseUser) return null
   const metadata = supabaseUser.user_metadata || {}
   const email = supabaseUser.email || ''
@@ -56,7 +56,7 @@ const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
 
 export const useAuth = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || '/api/v1'
+  const { request } = useApi()
 
   const user = useState<User | null>('auth:user', () => null)
   const session = useState<Session | null>('auth:session', () => null)
@@ -92,16 +92,6 @@ export const useAuth = () => {
       return window.location.origin
     }
     return ''
-  }
-
-  const buildApiUrl = (path: string) => {
-    if (/^https?:\/\//.test(path)) return path
-    const cleanedBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase
-    const cleanedPath = path.startsWith('/') ? path : `/${path}`
-    if (cleanedPath === cleanedBase || cleanedPath.startsWith(`${cleanedBase}/`)) {
-      return cleanedPath
-    }
-    return `${cleanedBase}${cleanedPath}`
   }
 
   const ensureHydrated = async () => {
@@ -348,20 +338,19 @@ export const useAuth = () => {
     }
 
     try {
-      await $fetch(buildApiUrl('/me/password'), {
+      await request('/me/password', {
         method: 'POST',
         body: {
           current_password: currentPassword,
           new_password: newPassword,
         },
-        headers: {
-          authorization: `Bearer ${accessToken.value}`,
-        },
+        retries: 0,
       })
       return { ok: true }
     }
     catch (error: unknown) {
       const apiError = error as {
+        statusCode?: number
         data?: { error?: string, message?: string }
         message?: string
       }
@@ -373,8 +362,11 @@ export const useAuth = () => {
         lastError.value = 'Password updates are unavailable right now.'
       }
       else {
-        lastError.value = apiError?.data?.message || apiError?.message || 'Unable to update password.'
+        lastError.value = apiError?.data?.message
+          || apiError?.message
+          || (apiError?.statusCode ? `Unable to update password (${apiError.statusCode}).` : 'Unable to update password.')
       }
+
       return { ok: false, error: lastError.value }
     }
   }

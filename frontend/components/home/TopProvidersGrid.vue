@@ -1,11 +1,11 @@
 <template>
-  <div class="py-16 bg-white">
-    <div class="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+  <div class="py-16 bg-surface">
+    <div class="mx-auto max-w-[1200px] px-page-x">
       <div class="text-center mb-12">
-        <h2 class="text-4xl font-bold text-gray-900 mb-4">
+        <h2 class="text-h1 font-bold text-neutral-900 mb-4">
           {{ title }}
         </h2>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        <p class="text-h4 text-neutral-600 max-w-3xl mx-auto">
           {{ subtitle }}
         </p>
       </div>
@@ -15,7 +15,7 @@
         <div
           v-for="provider in displayProviders"
           :key="provider.slug"
-          class="group relative rounded-2xl border border-gray-200 bg-white p-6 shadow-md transition-shadow hover:shadow-lg"
+          class="group relative rounded-2xl border border-neutral-200 bg-surface p-6 shadow-md transition-shadow hover:shadow-lg"
         >
           <!-- Provider Logo (96×32) -->
           <div class="mb-4">
@@ -54,11 +54,11 @@
           <div class="space-y-2">
             <NuxtLink
               :to="`/learn/providers/${provider.slug}`"
-              class="block w-full rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
+              class="block w-full rounded-lg bg-primary-600 px-4 py-2 text-center text-body-sm font-medium text-white transition-colors hover:bg-primary-700"
             >
               Read review
             </NuxtLink>
-            <button class="block w-full rounded-lg border border-primary-600 px-4 py-2 text-center text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50">
+            <button class="block w-full rounded-lg border border-primary-600 px-4 py-2 text-center text-body-sm font-medium text-primary-600 transition-colors hover:bg-primary-50">
               Go to {{ provider.name }}
             </button>
           </div>
@@ -69,7 +69,7 @@
       <div class="text-center mt-12">
         <NuxtLink
           to="/learn/providers"
-          class="inline-flex items-center rounded-lg border border-transparent bg-primary-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-primary-700"
+          class="inline-flex items-center rounded-lg border border-transparent bg-primary-600 px-6 py-3 text-body font-medium text-white transition-colors hover:bg-primary-700"
         >
           {{ viewAllText }}
         </NuxtLink>

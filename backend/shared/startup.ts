@@ -120,6 +120,72 @@ export const runStartupChecks = async (params: {
   awsValidation?: ValidationOptions
 } = {}): Promise<void> => {
   const requirements = params.requirements ?? {}
+  const queueShouldValidate = requirements.requireQueues === true
+  const storageShouldValidate = requirements.requireStorage === true
+
+  const resolveRequiredQueues = (): ValidationOptions['requiredQueues'] => {
+    const queueRequirements = new Set<NonNullable<ValidationOptions['requiredQueues']>[number]>()
+
+    if (!queueShouldValidate) {
+      return Array.from(queueRequirements)
+    }
+
+    const requireQuoteRefreshQueue = requirements.requireQuoteRefreshQueue ?? true
+    const requireFxRateRefreshQueue = requirements.requireFxRateRefreshQueue ?? true
+    const requireExportJobQueue = requirements.requireExportJobQueue ?? true
+    const requireIngestFanoutQueue = requirements.requireIngestFanoutQueue ?? true
+    const requireNotificationsQueue = requirements.requireNotificationsQueue ?? true
+    const requireOpsAlertsQueue = requirements.requireOpsAlertsQueue ?? true
+    const requireAlertEvaluationQueue = requirements.requireAlertEvaluationQueue ?? true
+
+    if (requireQuoteRefreshQueue) {
+      queueRequirements.add('quote_refresh')
+      queueRequirements.add('quote_refresh_dlq')
+    }
+    if (requireFxRateRefreshQueue) {
+      queueRequirements.add('fx_rate_refresh')
+      queueRequirements.add('fx_rate_refresh_dlq')
+    }
+    if (requireExportJobQueue) {
+      queueRequirements.add('exports')
+    }
+    if (requireIngestFanoutQueue) {
+      queueRequirements.add('ingest_fanout')
+      queueRequirements.add('ingest_fanout_tier1')
+      queueRequirements.add('ingest_fanout_tier2')
+    }
+    if (requireNotificationsQueue) {
+      queueRequirements.add('notifications')
+    }
+    if (requireOpsAlertsQueue) {
+      queueRequirements.add('ops_alerts')
+    }
+    if (requireAlertEvaluationQueue) {
+      queueRequirements.add('alert_evaluation')
+    }
+
+    return Array.from(queueRequirements)
+  }
+
+  const resolveRequiredBuckets = (): ValidationOptions['requiredBuckets'] => {
+    const bucketRequirements = new Set<NonNullable<ValidationOptions['requiredBuckets']>[number]>()
+
+    if (!storageShouldValidate) {
+      return Array.from(bucketRequirements)
+    }
+
+    const requireBronzeBucket = requirements.requireBronzeBucket ?? true
+    const requireExportsBucket = requirements.requireExportsBucket ?? true
+
+    if (requireBronzeBucket) {
+      bucketRequirements.add('bronze_bucket')
+    }
+    if (requireExportsBucket) {
+      bucketRequirements.add('exports_bucket')
+    }
+
+    return Array.from(bucketRequirements)
+  }
 
   validateConfigOrDie(requirements)
   assertRuntimeConfig(requirements)
@@ -144,6 +210,8 @@ export const runStartupChecks = async (params: {
         requirements.requirePlaneB ||
         requirements.requirePlaneCDb
       ),
+      ...(requirements.requireQueues ? { requiredQueues: resolveRequiredQueues() } : {}),
+      ...(requirements.requireStorage ? { requiredBuckets: resolveRequiredBuckets() } : {}),
       ...params.awsValidation,
     }
 

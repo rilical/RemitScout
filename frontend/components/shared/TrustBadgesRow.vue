@@ -21,8 +21,8 @@
       :class="ctaClass"
     >
       <component
-        v-if="cta.icon"
         :is="cta.icon"
+        v-if="cta.icon"
         :class="iconClass"
       />
       {{ cta.label }}
@@ -57,14 +57,14 @@ const props = withDefaults(defineProps<Props>(), {
 
 const pillClass = computed(() => {
   return props.dark
-    ? 'inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700'
-    : 'inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200'
+    ? 'inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-body-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700'
+    : 'inline-flex items-center gap-2 rounded-full bg-surface px-4 py-2 text-body-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200'
 })
 
 const ctaClass = computed(() => {
   return props.dark
-    ? 'inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700 hover:bg-neutral-700'
-    : 'inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50'
+    ? 'inline-flex items-center gap-2 rounded-full bg-neutral-800 px-4 py-2 text-body-sm font-medium text-neutral-200 shadow-sm ring-1 ring-neutral-700 hover:bg-neutral-700'
+    : 'inline-flex items-center gap-2 rounded-full bg-surface px-4 py-2 text-body-sm font-medium text-neutral-700 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50'
 })
 
 const iconClass = computed(() => 'w-4 h-4 text-brand-600')

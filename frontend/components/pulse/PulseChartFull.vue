@@ -5,10 +5,10 @@
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <!-- Chart Info -->
         <div>
-          <div class="mb-1 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <div class="mb-1 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
             {{ chartData?.metadata.categoryLabel }}
           </div>
-          <h2 class="text-2xl font-bold text-white">
+          <h2 class="text-h3 font-bold text-white">
             {{ chartData?.metadata.title }}
           </h2>
           <p
@@ -26,7 +26,7 @@
             <button
               v-for="r in ranges"
               :key="r.value"
-              class="relative flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+              class="relative flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
               :class="[
                 selectedRange === r.value
                   ? 'bg-brand-600 text-white'
@@ -58,7 +58,7 @@
           <!-- View Toggle -->
           <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
             <button
-              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
               :class="viewMode === 'chart' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
               @click="viewMode = 'chart'"
             >
@@ -78,7 +78,7 @@
               Chart
             </button>
             <button
-              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+              class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium transition-colors"
               :class="viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-700'"
               @click="viewMode = 'table'"
             >
@@ -138,14 +138,18 @@
         v-else-if="viewMode === 'chart'"
         class="min-h-[320px]"
       >
-        <component
-          :is="chartComponent"
+        <AsyncErrorBoundary
           v-if="chartComponent && chartData"
-          :series="chartData.series"
-          :unit="chartData.metadata.unit"
-          :unit-label="chartData.metadata.unitLabel"
-          :rows="matrixRows"
-        />
+          skeleton-height="320"
+        >
+          <component
+            :is="chartComponent"
+            :series="chartData.series"
+            :unit="chartData.metadata.unit"
+            :unit-label="chartData.metadata.unitLabel"
+            :rows="matrixRows"
+          />
+        </AsyncErrorBoundary>
         <div
           v-else
           class="flex h-80 items-center justify-center text-neutral-400"
@@ -156,17 +160,19 @@
 
       <!-- Table View -->
       <div v-else>
-        <PulseTableView
-          :chart-id="chartId"
-          :filters="filters"
-          :range="selectedRange"
-          :is-plus="isPlus"
-        />
+        <AsyncErrorBoundary skeleton-height="240">
+          <PulseTableView
+            :chart-id="chartId"
+            :filters="filters"
+            :range="selectedRange"
+            :is-plus="isPlus"
+          />
+        </AsyncErrorBoundary>
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-between border-t border-neutral-700 px-6 py-4 text-sm">
+    <div class="flex items-center justify-between border-t border-neutral-700 px-6 py-4 text-body-sm">
       <div class="flex items-center gap-4 text-neutral-400">
         <span v-if="chartData?.metadata.lastUpdated">
           Updated {{ formatLastUpdated(chartData.metadata.lastUpdated) }}
@@ -271,17 +277,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, markRaw } from 'vue'
-import PulseLineChart from './PulseLineChart.vue'
-import PulseBarChart from './PulseBarChart.vue'
-import PulseStackedChart from './PulseStackedChart.vue'
-import PulseScatterChart from './PulseScatterChart.vue'
-import PulseMatrixTable from './PulseMatrixTable.vue'
-import PulseTableView from './PulseTableView.vue'
+import { ref, computed, watch, onMounted, markRaw, defineAsyncComponent } from 'vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
 import { formatDate } from '~/shared/lib/format'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
+
+const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'))
+const PulseBarChart = defineAsyncComponent(() => import('./PulseBarChart.vue'))
+const PulseStackedChart = defineAsyncComponent(() => import('./PulseStackedChart.vue'))
+const PulseScatterChart = defineAsyncComponent(() => import('./PulseScatterChart.vue'))
+const PulseMatrixTable = defineAsyncComponent(() => import('./PulseMatrixTable.vue'))
+const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue'))
 
 interface Props {
   chartId: string
@@ -353,7 +361,7 @@ async function loadData() {
     }
   }
   catch (e) {
-    console.error('Failed to load chart data:', e)
+    useLogger('PulseChartFull').error('Failed to load chart data', e)
   }
   finally {
     loading.value = false

@@ -83,10 +83,17 @@ export const handler = async (): Promise<number> => {
       requirePlaneB: true,
       requirePlaneCDb: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      // Gold-live only needs Plane B + Plane C + Redis + gold-live queue.
+      // Do not hard-require every queue/bucket (exports, alerts eval, etc).
+      requireQueues: false,
+      requireStorage: false,
     },
   })
+
+  const goldLiveMode = process.env.GOLD_LIVE_QUEUE_MODE || 'off'
+  if (goldLiveMode === 'queue' && !process.env.GOLD_LIVE_QUEUE_URL) {
+    throw new Error('GOLD_LIVE_QUEUE_URL required when GOLD_LIVE_QUEUE_MODE=queue')
+  }
 
   const { runGoldLiveWorker } = await import('../gold-live-worker')
   return await runGoldLiveWorker()

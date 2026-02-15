@@ -1,12 +1,15 @@
 <template>
-  <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 overflow-hidden">
+  <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 overflow-hidden">
     <button
-      class="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-white/5"
+      id="pulse-methodology-button"
+      class="flex w-full items-center justify-between px-6 py-5 text-left motion-safe:transition-colors hover:bg-surface/5"
+      :aria-expanded="expanded ? 'true' : 'false'"
+      aria-controls="pulse-methodology-panel"
       @click="expanded = !expanded"
     >
-      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+      <h2 class="text-body-lg font-bold text-white flex items-center gap-2">
         <svg
-          class="h-5 w-5 text-blue-400"
+          class="h-5 w-5 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -21,7 +24,7 @@
         How Pulse Works
       </h2>
       <svg
-        class="h-5 w-5 text-slate-400 transition-transform duration-300"
+        class="h-5 w-5 text-neutral-400 motion-safe:transition-transform motion-safe:duration-300"
         :class="{ 'rotate-180': expanded }"
         fill="none"
         stroke="currentColor"
@@ -38,14 +41,17 @@
 
     <div
       v-show="expanded"
+      id="pulse-methodology-panel"
+      role="region"
+      aria-labelledby="pulse-methodology-button"
       class="px-6 pb-6 space-y-6"
     >
       <div class="grid gap-6 md:grid-cols-2">
-        <div class="rounded-xl bg-white/5 border border-white/5 p-5">
+        <div class="rounded-xl bg-surface/5 border border-white/5 p-5">
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/20">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/20">
               <svg
-                class="h-5 w-5 text-blue-400"
+                class="h-5 w-5 text-primary-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -62,16 +68,16 @@
               Data Sources
             </h3>
           </div>
-          <p class="text-sm text-slate-400 leading-relaxed">
+          <p class="text-body-sm text-neutral-400 leading-relaxed">
             We capture quotes from provider APIs, partner feeds, and public-facing quote tools. All timestamps reflect when the quote was captured, not when you view this page.
           </p>
         </div>
 
-        <div class="rounded-xl bg-white/5 border border-white/5 p-5">
+        <div class="rounded-xl bg-surface/5 border border-white/5 p-5">
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-success-600/20">
               <svg
-                class="h-5 w-5 text-emerald-400"
+                class="h-5 w-5 text-success-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -88,27 +94,27 @@
               Update Frequency
             </h3>
           </div>
-          <ul class="space-y-2 text-sm text-slate-400">
+          <ul class="space-y-2 text-body-sm text-neutral-400">
             <li class="flex items-center gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span class="h-1.5 w-1.5 rounded-full bg-success-600" />
               High-volume corridors: every 5–15 min
             </li>
             <li class="flex items-center gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-blue-500" />
+              <span class="h-1.5 w-1.5 rounded-full bg-primary-500" />
               Medium corridors: every 30 min
             </li>
             <li class="flex items-center gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span class="h-1.5 w-1.5 rounded-full bg-warning-600" />
               Low-volume: hourly or on-demand
             </li>
           </ul>
         </div>
 
-        <div class="rounded-xl bg-white/5 border border-white/5 p-5">
+        <div class="rounded-xl bg-surface/5 border border-white/5 p-5">
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/20">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-600/20">
               <svg
-                class="h-5 w-5 text-purple-400"
+                class="h-5 w-5 text-accent-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -125,16 +131,16 @@
               What "Recipient Gets" Includes
             </h3>
           </div>
-          <p class="text-sm text-slate-400 leading-relaxed">
+          <p class="text-body-sm text-neutral-400 leading-relaxed">
             The recipient amount includes all disclosed fees and the exchange rate margin (FX spread). It represents the best available quote at the time of capture.
           </p>
         </div>
 
-        <div class="rounded-xl bg-white/5 border border-white/5 p-5">
+        <div class="rounded-xl bg-surface/5 border border-white/5 p-5">
           <div class="flex items-center gap-3 mb-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-warning-600/20">
               <svg
-                class="h-5 w-5 text-amber-400"
+                class="h-5 w-5 text-warning-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -151,18 +157,18 @@
               Why Checkout May Differ
             </h3>
           </div>
-          <ul class="space-y-2 text-sm text-slate-400">
+          <ul class="space-y-2 text-body-sm text-neutral-400">
             <li class="flex items-start gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-slate-500 mt-1.5 flex-shrink-0" />
-              <span><strong class="text-slate-300">Payment method:</strong> Card vs bank affects fees</span>
+              <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mt-1.5 flex-shrink-0" />
+              <span><strong class="text-neutral-300">Payment method:</strong> Card vs bank affects fees</span>
             </li>
             <li class="flex items-start gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-slate-500 mt-1.5 flex-shrink-0" />
-              <span><strong class="text-slate-300">KYC status:</strong> Verified users may get better rates</span>
+              <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mt-1.5 flex-shrink-0" />
+              <span><strong class="text-neutral-300">KYC status:</strong> Verified users may get better rates</span>
             </li>
             <li class="flex items-start gap-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-slate-500 mt-1.5 flex-shrink-0" />
-              <span><strong class="text-slate-300">Timing:</strong> FX rates change throughout the day</span>
+              <span class="h-1.5 w-1.5 rounded-full bg-neutral-500 mt-1.5 flex-shrink-0" />
+              <span><strong class="text-neutral-300">Timing:</strong> FX rates change throughout the day</span>
             </li>
           </ul>
         </div>
@@ -171,7 +177,7 @@
       <div class="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10">
         <NuxtLink
           to="/methodology"
-          class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
         >
           Full methodology
           <svg
@@ -188,10 +194,10 @@
             />
           </svg>
         </NuxtLink>
-        <span class="text-slate-600">•</span>
+        <span class="text-neutral-600">•</span>
         <NuxtLink
           to="/corrections"
-          class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
         >
           Corrections policy
           <svg
@@ -208,10 +214,10 @@
             />
           </svg>
         </NuxtLink>
-        <span class="text-slate-600">•</span>
+        <span class="text-neutral-600">•</span>
         <NuxtLink
           to="/legal/how-we-make-money"
-          class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
         >
           How we make money
           <svg
@@ -230,10 +236,10 @@
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
+      <div class="rounded-xl bg-primary-500/10 border border-primary-500/20 p-4">
         <div class="flex items-start gap-3">
           <svg
-            class="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5"
+            class="h-5 w-5 text-primary-400 flex-shrink-0 mt-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -245,7 +251,7 @@
               d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
             />
           </svg>
-          <div class="text-sm text-slate-300">
+          <div class="text-body-sm text-neutral-300">
             <strong class="text-white">Rankings are independent:</strong> We may earn a commission when you click provider links, but this never affects our rankings, which are based solely on recipient value, speed, and reliability.
           </div>
         </div>

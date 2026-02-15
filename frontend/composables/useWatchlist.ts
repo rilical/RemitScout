@@ -86,6 +86,7 @@ export const useWatchlist = () => {
   const { limits } = useEntitlements()
   const { isLoggedIn } = useAuth()
   const { request } = useApi()
+  const toast = useToast()
   let syncPromise: Promise<WatchlistSyncResult> | null = null
 
   const { state: items, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<WatchlistItem[]>(
@@ -125,12 +126,12 @@ export const useWatchlist = () => {
         hydrated.value = true
       }
       else {
-        console.warn('Failed to fetch watchlist from backend:', response)
+        useLogger('watchlist').warn('Failed to fetch watchlist from backend', response)
         hydrated.value = true
       }
     }
     catch (error) {
-      console.error('Error fetching watchlist from backend:', error)
+      useLogger('watchlist').error('Error fetching watchlist from backend', error)
       hydrated.value = true
     }
     finally {
@@ -160,11 +161,11 @@ export const useWatchlist = () => {
           serverItems = response.items
         }
         else {
-          console.warn('Failed to fetch watchlist from backend:', response)
+          useLogger('watchlist').warn('Failed to fetch watchlist from backend', response)
         }
       }
       catch (error) {
-        console.error('Error fetching watchlist from backend:', error)
+        useLogger('watchlist').error('Error fetching watchlist from backend', error)
         hydrated.value = true
         syncing.value = false
         return { idMap }
@@ -198,7 +199,7 @@ export const useWatchlist = () => {
           }
         }
         catch (error) {
-          console.error('Error syncing local watchlist item to backend:', error)
+          useLogger('watchlist').error('Error syncing local watchlist item to backend', error)
         }
       }
 
@@ -268,7 +269,7 @@ export const useWatchlist = () => {
       }
     }
     catch (error) {
-      console.error(`Error syncing ${operation} to backend:`, error)
+      useLogger('watchlist').error(`Error syncing ${operation} to backend`, error)
     }
   }
 
@@ -315,7 +316,8 @@ export const useWatchlist = () => {
         return await saveToBackend(normalized, label)
       }
       catch (error) {
-        console.error('Error saving watchlist item to backend:', error)
+        useLogger('watchlist').error('Error saving watchlist item to backend', error)
+        toast.error('Failed to save watchlist item. Please try again.')
         return {
           message: 'Unable to save watchlist item right now.',
           status: 'error',

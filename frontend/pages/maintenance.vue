@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50 flex items-center justify-center px-page-x">
     <div class="max-w-2xl w-full text-center">
       <!-- Logo -->
       <div class="mb-8">
@@ -7,11 +7,14 @@
           to="/"
           class="inline-block"
         >
-          <img
+          <NuxtImg
             src="/logos/remit-scout.svg"
             alt="Remit-Scout"
-            class="h-12 w-auto mx-auto"
-          >
+            width="200"
+            height="48"
+            loading="lazy"
+            class="h-12 w-auto mx-auto object-contain"
+          />
         </NuxtLink>
       </div>
 
@@ -41,16 +44,16 @@
       </div>
 
       <!-- Heading -->
-      <h1 class="text-4xl sm:text-5xl font-bold text-neutral-900 mb-4">
+      <h1 class="text-h1 font-bold text-neutral-900 mb-4">
         We're performing maintenance
       </h1>
 
-      <p class="text-xl text-neutral-600 mb-8 max-w-xl mx-auto">
+      <p class="text-h4 text-neutral-600 mb-8 max-w-xl mx-auto">
         Remit-Scout is temporarily unavailable while we make improvements to serve you better.
       </p>
 
       <!-- Info Box -->
-      <div class="bg-white rounded-2xl border-2 border-primary-200 p-8 shadow-lg mb-8">
+      <div class="bg-surface rounded-2xl border-2 border-primary-200 p-8 shadow-lg mb-8">
         <div class="space-y-4 text-left">
           <div class="flex items-start gap-4">
             <div class="flex-shrink-0">
@@ -141,7 +144,7 @@
       <!-- Refresh Button -->
       <button
         type="button"
-        class="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
+        class="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-body font-semibold text-white shadow-lg transition-all hover:bg-primary-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2"
         @click="refreshPage"
       >
         <svg
@@ -161,7 +164,7 @@
       </button>
 
       <!-- Footer -->
-      <p class="mt-8 text-sm text-neutral-500">
+      <p class="mt-8 text-body-sm text-neutral-500">
         Thank you for your patience
       </p>
     </div>
@@ -169,21 +172,19 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Maintenance | Remit-Scout',
+  description: 'Remit-Scout is temporarily unavailable for maintenance. We\'ll be back shortly.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
+
 const refreshPage = () => {
   window.location.reload()
 }
-
-useHead({
-  title: 'Maintenance | Remit-Scout',
-  meta: [
-    {
-      name: 'description',
-      content: 'Remit-Scout is temporarily unavailable for maintenance. We\'ll be back shortly.',
-    },
-    {
-      name: 'robots',
-      content: 'noindex, nofollow',
-    },
-  ],
-})
 </script>

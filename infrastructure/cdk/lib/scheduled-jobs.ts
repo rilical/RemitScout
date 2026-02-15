@@ -19,43 +19,43 @@ import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
 
 export type ScheduledJobsResources = {
-  goldFxRatesFunction: IFunction
-  goldFxRatesRule: Rule
-  exportWorkerFunction: IFunction
-  exportWorkerRule: Rule
-  alertEvaluationSchedulerFunction: IFunction
-  alertEvaluationWeeklyRule: Rule
-  alertEvaluationDailyRule: Rule
-  alertEvaluationWorkerFunction: IFunction
-  alertEvaluationWorkerRule: Rule
-  alertCorridorRefreshFunction: IFunction
-  alertCorridorRefreshRule: Rule
-  smartAlertsFunction: IFunction
-  smartAlertsRule: Rule
-  telemetryAnalyticsFunction: IFunction
-  telemetryAnalyticsRule: Rule
-  sessionCleanupFunction: IFunction
-  sessionCleanupRule: Rule
-  bankVsSpecialistRefreshFunction: IFunction
-  bankVsSpecialistRefreshRule: Rule
-  auditLogCleanupFunction: IFunction
-  auditLogCleanupRule: Rule
-  goldPopularCorridorsRule: Rule
-  goldPulseCacheRule: Rule
-  goldPublisherRule: Rule
-  goldIndicesRule: Rule
-  dataHealthSloFunction: IFunction
-  dataHealthSloRule: Rule
-  goldReconciliationRule: Rule
-  b2cRetryFailedRule: Rule
-  b2cQueueCleanupRule: Rule
-  stoplistAutoResumeRule: Rule
-  rightsMatrixSyncCountriesRule: Rule
-  b2cRefreshRule: Rule
-  fxRateRefreshRule: Rule
+  goldFxRatesFunction?: IFunction
+  goldFxRatesRule?: Rule
+  exportWorkerFunction?: IFunction
+  exportWorkerRule?: Rule
+  alertEvaluationSchedulerFunction?: IFunction
+  alertEvaluationWeeklyRule?: Rule
+  alertEvaluationDailyRule?: Rule
+  alertEvaluationWorkerFunction?: IFunction
+  alertEvaluationWorkerRule?: Rule
+  alertCorridorRefreshFunction?: IFunction
+  alertCorridorRefreshRule?: Rule
+  smartAlertsFunction?: IFunction
+  smartAlertsRule?: Rule
+  telemetryAnalyticsFunction?: IFunction
+  telemetryAnalyticsRule?: Rule
+  sessionCleanupFunction?: IFunction
+  sessionCleanupRule?: Rule
+  bankVsSpecialistRefreshFunction?: IFunction
+  bankVsSpecialistRefreshRule?: Rule
+  auditLogCleanupFunction?: IFunction
+  auditLogCleanupRule?: Rule
+  goldPopularCorridorsRule?: Rule
+  goldPulseCacheRule?: Rule
+  goldPublisherRule?: Rule
+  goldIndicesRule?: Rule
+  dataHealthSloFunction?: IFunction
+  dataHealthSloRule?: Rule
+  goldReconciliationRule?: Rule
+  b2cRetryFailedRule?: Rule
+  b2cQueueCleanupRule?: Rule
+  stoplistAutoResumeRule?: Rule
+  rightsMatrixSyncCountriesRule?: Rule
+  b2cRefreshRule?: Rule
+  fxRateRefreshRule?: Rule
   b2bSweepSchedulerRule: Rule
-  oandaSyncFunction: IFunction
-  oandaSyncRule: Rule
+  oandaSyncFunction?: IFunction
+  oandaSyncRule?: Rule
 }
 
 export type ScheduledJobsOptions = {
@@ -112,6 +112,7 @@ export type ScheduledJobsOptions = {
   planeCDbHost?: string
   planeCDbPort?: string
   planeCDbName?: string
+  minimalMode?: boolean
 }
 
 const tagManagedRule = (rule: Rule, envName: string): void => {
@@ -223,6 +224,35 @@ export const createScheduledJobs = (
   const otelEndpoint = options.otelLambdaLayerArn
     ? 'http://127.0.0.1:4318/v1/traces'
     : undefined
+  const minimalMode = options.minimalMode === true
+
+  if (minimalMode) {
+    const b2bSweepSchedulerRule = new Rule(scope, 'B2bSweepSchedulerSchedule', {
+      ruleName: ruleName('b2b-sweep-scheduler'),
+      schedule: Schedule.rate(Duration.minutes(1)),
+      description: 'Runs the B2B sweep scheduler every minute to enqueue due tier runs.',
+      enabled: rulesEnabled,
+    })
+    tagManagedRule(b2bSweepSchedulerRule, options.envName)
+
+    b2bSweepSchedulerRule.addTarget(
+      new EcsTask({
+        cluster: options.cluster,
+        taskDefinition: options.b2bSweepSchedulerTask,
+        subnetSelection: {
+          subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS,
+        },
+        securityGroups: [options.planeBSecurityGroup],
+        taskCount: 1,
+        platformVersion: FargatePlatformVersion.LATEST,
+        assignPublicIp: isDev,
+      }),
+    )
+
+    return {
+      b2bSweepSchedulerRule,
+    }
+  }
 
   const exportWorkerIntervalMinutes = isDev ? 5 : 1
   const alertEvaluationIntervalMinutes = isDev ? 15 : 1

@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6">
-      <h2 class="mb-2 text-2xl font-bold text-white flex items-center gap-2">
+      <h2 class="mb-2 text-h3 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-6 w-6 text-blue-400"
+          class="h-6 w-6 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -17,16 +17,18 @@
         </svg>
         Market Insights
       </h2>
-      <p class="text-slate-400">
+      <p class="text-neutral-400">
         Data-driven articles and explainers about what's happening in the remittance market
       </p>
     </div>
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <article
+      <NuxtLink
         v-for="insight in insights"
         :key="insight.id"
-        class="group rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 overflow-hidden transition-all duration-300 hover:border-white/20 hover:scale-[1.02] cursor-pointer"
+        to="/learn"
+        class="group rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 overflow-hidden transition-all duration-300 hover:border-white/20 hover:scale-[1.02] cursor-pointer"
+        :aria-label="`Read insight: ${insight.title}`"
       >
         <div
           class="h-1 w-full"
@@ -36,24 +38,24 @@
         <div class="p-6">
           <div class="mb-4 flex items-center gap-3">
             <span
-              class="rounded-lg px-3 py-1.5 text-xs font-semibold"
+              class="rounded-lg px-3 py-1.5 text-body-sm font-semibold"
               :class="insight.categoryClass"
             >
               {{ insight.category }}
             </span>
-            <span class="text-xs text-slate-500">{{ insight.date }}</span>
+            <span class="text-body-sm text-rs-muted">{{ insight.date }}</span>
           </div>
 
-          <h3 class="mb-3 text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+          <h3 class="mb-3 text-body-lg font-bold text-white group-hover:text-primary-400 transition-colors">
             {{ insight.title }}
           </h3>
 
-          <p class="mb-5 text-sm text-slate-400 leading-relaxed">
+          <p class="mb-5 text-body-sm text-neutral-400 leading-relaxed">
             {{ insight.excerpt }}
           </p>
 
           <div class="flex items-center justify-between pt-4 border-t border-white/5">
-            <div class="flex items-center gap-2 text-xs text-slate-500">
+            <div class="flex items-center gap-2 text-body-sm text-rs-muted">
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -69,8 +71,8 @@
               </svg>
               {{ insight.readTime }}
             </div>
-            <button class="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 group-hover:gap-2">
-              Read more
+            <span class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 group-hover:gap-2">
+              Read insight
               <svg
                 class="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                 fill="none"
@@ -84,16 +86,16 @@
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </button>
+            </span>
           </div>
         </div>
-      </article>
+      </NuxtLink>
     </div>
 
     <div class="mt-8 text-center">
       <NuxtLink
         to="/learn"
-        class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+        class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-6 py-3 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white"
       >
         View all insights
         <svg
@@ -121,8 +123,8 @@ const insights = [
     title: 'Why USD→MXN rates jumped 2% this week',
     excerpt: 'Understanding the Federal Reserve\'s latest policy decision and its impact on remittance corridors to Mexico. Here\'s what senders should know.',
     category: 'Market Analysis',
-    categoryClass: 'bg-blue-500/20 text-blue-400',
-    barClass: 'bg-blue-500',
+    categoryClass: 'bg-primary-500/20 text-primary-400',
+    barClass: 'bg-primary-500',
     date: 'Today',
     readTime: '3 min read',
   },
@@ -131,8 +133,8 @@ const insights = [
     title: 'Cash pickup vs bank transfer: When does speed matter?',
     excerpt: 'A data-driven look at delivery times, costs, and when paying extra for instant transfer actually makes sense for your situation.',
     category: 'Guide',
-    categoryClass: 'bg-emerald-500/20 text-emerald-400',
-    barClass: 'bg-emerald-500',
+    categoryClass: 'bg-success-600/20 text-success-600',
+    barClass: 'bg-success-600',
     date: 'Yesterday',
     readTime: '5 min read',
   },
@@ -141,8 +143,8 @@ const insights = [
     title: 'Promo codes decoded: Are intro rates worth it?',
     excerpt: 'We analyzed 847 provider promos to show you the real value after fees and FX spreads are factored in. The results may surprise you.',
     category: 'Research',
-    categoryClass: 'bg-purple-500/20 text-purple-400',
-    barClass: 'bg-purple-500',
+    categoryClass: 'bg-accent-600/20 text-accent-600',
+    barClass: 'bg-accent-600',
     date: '2 days ago',
     readTime: '4 min read',
   },
@@ -151,8 +153,8 @@ const insights = [
     title: 'Weekend rates: What we learned from 6 months of data',
     excerpt: 'Why Friday afternoon might be the worst time to send money, and when you should wait until Monday for better rates.',
     category: 'Insights',
-    categoryClass: 'bg-amber-500/20 text-amber-400',
-    barClass: 'bg-amber-500',
+    categoryClass: 'bg-warning-600/20 text-warning-600',
+    barClass: 'bg-warning-600',
     date: '3 days ago',
     readTime: '6 min read',
   },

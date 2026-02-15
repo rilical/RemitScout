@@ -10,18 +10,28 @@
     >
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        class="fixed inset-0 z-modal flex items-center justify-center p-4"
+        aria-label="Close dialog"
         @click.self="close"
+        @keydown.esc="close"
       >
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+        <div class="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" />
 
         <!-- Modal -->
-        <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div
+          ref="modalRef"
+          class="relative w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-prompt-title"
+          tabindex="-1"
+        >
           <!-- Close button -->
           <button
             type="button"
-            class="absolute right-4 top-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            class="absolute right-4 top-4 p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            aria-label="Close dialog"
             @click="close"
           >
             <svg
@@ -58,23 +68,26 @@
 
           <!-- Content -->
           <div class="text-center mb-6">
-            <h3 class="text-xl font-bold text-slate-900 mb-2">
+            <h3
+              id="auth-prompt-title"
+              class="text-h4 font-bold text-rs-fg mb-2"
+            >
               {{ title }}
             </h3>
-            <p class="text-slate-600">
+            <p class="text-neutral-600">
               {{ message }}
             </p>
           </div>
 
           <!-- Features list -->
-          <div class="bg-slate-50 rounded-xl p-4 mb-6">
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <div class="bg-neutral-50 rounded-xl p-4 mb-6">
+            <p class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-3">
               With a free account you can:
             </p>
             <ul class="space-y-2">
-              <li class="flex items-center gap-2 text-sm text-slate-700">
+              <li class="flex items-center gap-2 text-body-sm text-neutral-700">
                 <svg
-                  class="w-4 h-4 text-emerald-500 flex-shrink-0"
+                  class="w-4 h-4 text-success-600 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -88,9 +101,9 @@
                 </svg>
                 Save corridors to your watchlist
               </li>
-              <li class="flex items-center gap-2 text-sm text-slate-700">
+              <li class="flex items-center gap-2 text-body-sm text-neutral-700">
                 <svg
-                  class="w-4 h-4 text-emerald-500 flex-shrink-0"
+                  class="w-4 h-4 text-success-600 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -104,9 +117,9 @@
                 </svg>
                 Set rate alerts for your favorite routes
               </li>
-              <li class="flex items-center gap-2 text-sm text-slate-700">
+              <li class="flex items-center gap-2 text-body-sm text-neutral-700">
                 <svg
-                  class="w-4 h-4 text-emerald-500 flex-shrink-0"
+                  class="w-4 h-4 text-success-600 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -134,14 +147,14 @@
             </button>
             <button
               type="button"
-              class="w-full h-12 rounded-xl border-2 border-slate-200 font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              class="w-full h-12 rounded-xl border-2 border-rs-border font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
               @click="handleSignUp"
             >
               Create free account
             </button>
           </div>
 
-          <p class="mt-4 text-center text-xs text-slate-500">
+          <p class="mt-4 text-center text-body-sm text-rs-muted">
             No credit card required. Free forever.
           </p>
         </div>
@@ -151,6 +164,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useFocusTrap } from '~/composables/useFocusTrap'
+
 const props = withDefaults(defineProps<{
   isOpen: boolean
   title?: string
@@ -166,11 +182,32 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
+
 const redirectUrl = computed(() => {
   if (typeof window !== 'undefined') {
     return encodeURIComponent(window.location.pathname + window.location.search)
   }
   return ''
+})
+
+watch(
+  () => props.isOpen,
+  async (open) => {
+    if (!open) {
+      deactivate()
+      return
+    }
+
+    await nextTick()
+    activate()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
 })
 
 function close() {

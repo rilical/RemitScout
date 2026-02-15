@@ -1,6 +1,6 @@
 <template>
   <div class="sticky top-0 z-40 bg-neutral-800 border-b border-neutral-700">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 py-4">
         <!-- Filters -->
         <div class="flex flex-wrap items-center gap-3">
@@ -9,7 +9,7 @@
             <label class="sr-only">Corridor</label>
             <select
               v-model="localFilters.corridor"
-              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer min-w-[180px]"
+              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer min-w-[180px]"
               @change="updateFilters"
             >
               <option
@@ -41,7 +41,7 @@
             <label class="sr-only">Amount</label>
             <select
               v-model="localFilters.amount"
-              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
+              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
               <option
@@ -83,7 +83,7 @@
             <label class="sr-only">Funding Method</label>
             <select
               v-model="localFilters.fundingMethod"
-              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
+              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
               <option
@@ -119,7 +119,7 @@
             <label class="sr-only">Payout Method</label>
             <select
               v-model="localFilters.payoutMethod"
-              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
+              class="h-10 rounded-lg border border-neutral-600 bg-neutral-700 pl-4 pr-10 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600 appearance-none cursor-pointer"
               @change="updateFilters"
             >
               <option
@@ -152,7 +152,7 @@
         </div>
 
         <!-- Last Updated -->
-        <div class="flex items-center gap-2 text-sm text-neutral-400">
+        <div class="flex items-center gap-2 text-body-sm text-neutral-400">
           <span
             class="inline-flex h-2 w-2 rounded-full"
             :class="props.lastUpdated ? 'bg-brand-600' : 'bg-neutral-500'"
@@ -167,14 +167,14 @@
         v-if="corridorInfo && localFilters.corridor !== 'global'"
         class="pb-4 lg:hidden"
       >
-        <div class="flex items-center gap-2 text-lg font-semibold text-white">
-          <span class="text-2xl">{{ corridorInfo.fromFlag }}</span>
+        <div class="flex items-center gap-2 text-body-lg font-semibold text-white">
+          <span class="text-h3">{{ corridorInfo.fromFlag }}</span>
           <Icon
             name="arrow-right"
             :size="16"
             class="text-neutral-500"
           />
-          <span class="text-2xl">{{ corridorInfo.toFlag }}</span>
+          <span class="text-h3">{{ corridorInfo.toFlag }}</span>
           <span class="ml-2">{{ corridorInfo.label }}</span>
         </div>
       </div>

@@ -7,16 +7,17 @@
         role="dialog"
         aria-modal="true"
         aria-labelledby="save-alert-title"
+        aria-label="Close dialog"
         @click.self="close"
       >
         <div
           ref="modalContent"
-          class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 sm:p-8"
+          class="relative w-full max-w-4xl bg-surface rounded-2xl shadow-2xl p-6 sm:p-8"
           tabindex="-1"
           @keydown.esc="close"
         >
           <button
-            class="absolute right-4 top-4 text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1"
+            class="absolute right-4 top-4 text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg p-1"
             aria-label="Close modal"
             @click="close"
           >
@@ -37,18 +38,18 @@
 
           <h2
             id="save-alert-title"
-            class="text-2xl font-bold text-neutral-900"
+            class="text-h3 font-bold text-neutral-900"
           >
             {{ isEditing ? 'Edit alert' : 'Set an alert' }}
           </h2>
-          <p class="mt-2 text-sm text-blue-600">
+          <p class="mt-2 text-body-sm text-brand-600">
             This also saves the item to your watchlist.
           </p>
 
           <div class="mt-6 space-y-4">
             <!-- Corridor Selector -->
             <div v-if="showCorridorSelector">
-              <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+              <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                 Corridor
               </label>
               <div class="flex items-center gap-2">
@@ -61,7 +62,7 @@
                     placeholder="Type to search..."
                   />
                 </div>
-                <div class="flex items-center text-slate-400">
+                <div class="flex items-center text-neutral-400">
                   <svg
                     class="w-5 h-5"
                     fill="none"
@@ -89,10 +90,10 @@
               <!-- Current Rate Preview -->
               <div
                 v-if="ratePairAvailable"
-                class="mt-2 flex items-center justify-between text-sm"
+                class="mt-2 flex items-center justify-between text-body-sm"
               >
-                <span class="text-blue-600">Current rate:</span>
-                <span class="font-medium text-blue-700">1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}</span>
+                <span class="text-brand-600">Current rate:</span>
+                <span class="font-medium text-brand-700">1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}</span>
               </div>
               <!-- Corridor Coverage Indicator -->
               <div
@@ -101,7 +102,7 @@
               >
                 <div
                   v-if="corridorEligibility.isMacroCorridor"
-                  class="flex items-center gap-1.5 text-xs text-emerald-600"
+                  class="flex items-center gap-1.5 text-body-sm text-success-600"
                 >
                   <svg
                     class="w-3.5 h-3.5"
@@ -115,11 +116,11 @@
                     />
                   </svg>
                   <span class="font-medium">Popular corridor</span>
-                  <span class="text-emerald-500">— rates updated frequently</span>
+                  <span class="text-success-600">— rates updated frequently</span>
                 </div>
                 <div
                   v-else
-                  class="flex items-center gap-1.5 text-xs text-slate-500"
+                  class="flex items-center gap-1.5 text-body-sm text-rs-muted"
                 >
                   <svg
                     class="w-3.5 h-3.5"
@@ -135,14 +136,14 @@
                     />
                   </svg>
                   <span>Less common corridor</span>
-                  <span class="text-slate-400">— rates refreshed on demand</span>
+                  <span class="text-neutral-400">— rates refreshed on demand</span>
                 </div>
               </div>
               <div
                 v-else-if="eligibilityLoading"
                 class="mt-2"
               >
-                <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                <div class="flex items-center gap-1.5 text-body-sm text-neutral-400">
                   <svg
                     class="w-3.5 h-3.5 animate-spin"
                     fill="none"
@@ -168,16 +169,16 @@
             </div>
 
             <div v-else>
-              <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+              <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                 Target
               </label>
-              <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div class="text-sm font-semibold text-slate-900">
+              <div class="rounded-xl border border-rs-border bg-neutral-50 px-4 py-3">
+                <div class="text-body-sm font-semibold text-rs-fg">
                   {{ targetLabel }}
                 </div>
                 <div
                   v-if="ratePairAvailable"
-                  class="mt-1 text-xs text-slate-600"
+                  class="mt-1 text-body-sm text-neutral-600"
                 >
                   1 {{ ratePairBase }} = {{ currentRateLabel }} {{ ratePairQuote }}
                 </div>
@@ -185,7 +186,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+              <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                 Metric
               </label>
               <UniversalDropdown
@@ -200,7 +201,7 @@
                     class="flex items-center gap-2 w-full"
                   >
                     <svg
-                      class="w-4 h-4 text-purple-600 flex-shrink-0"
+                      class="w-4 h-4 text-brand-700 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -212,12 +213,12 @@
                         d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                       />
                     </svg>
-                    <span class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                    <span class="font-semibold text-brand-800">
                       {{ option?.label }}
                     </span>
                     <span
                       v-if="option?.locked"
-                      class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs font-semibold text-slate-600 ml-auto"
+                      class="inline-flex items-center gap-1 rounded-full bg-brand-100 px-1.5 py-0.5 text-body-sm font-semibold text-brand-700 ml-auto"
                     >
                       <svg
                         class="w-3 h-3"
@@ -229,14 +230,14 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                         />
                       </svg>
-                      Locked
+                      Plus only
                     </span>
                     <span
                       v-else
-                      class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-1.5 py-0.5 text-xs font-bold text-white ml-auto"
+                      class="inline-flex items-center gap-1 rounded-full bg-brand-700 px-1.5 py-0.5 text-body-sm font-bold text-white ml-auto"
                     >
                       <svg
                         class="w-3 h-3"
@@ -253,11 +254,157 @@
                 <template #option="{ option }">
                   <div
                     v-if="option.value === 'sendScore'"
-                    class="flex items-center gap-2 w-full"
+                    class="w-full relative"
                   >
-                    <div class="flex items-center gap-2 flex-1">
+                    <!-- Locked state: two-line layout -->
+                    <template v-if="option.locked">
+                      <div class="absolute inset-0 rounded bg-neutral-50/80 backdrop-blur-[1px] pointer-events-none" />
+                      <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <svg
+                            class="w-4 h-4 flex-shrink-0 text-neutral-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                          <span class="text-neutral-400">{{ option.label }}</span>
+                        </div>
+                        <svg
+                          class="w-3.5 h-3.5 text-neutral-300 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
+                      <div class="relative flex items-center gap-3 mt-1 ml-6">
+                        <NuxtLink
+                          to="/plus"
+                          class="text-body-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors relative z-10"
+                          @mousedown.stop
+                          @click.stop="close"
+                        >
+                          Upgrade to Plus
+                        </NuxtLink>
+                        <span class="text-neutral-300">·</span>
+                        <button
+                          type="button"
+                          class="text-body-sm text-neutral-500 hover:text-brand-700 transition-colors relative z-10"
+                          @mousedown.stop
+                          @click.stop="showSmartExplainer = !showSmartExplainer"
+                        >
+                          What's this?
+                        </button>
+                      </div>
+                    </template>
+                    <!-- Unavailable state -->
+                    <div
+                      v-else-if="option.unavailable"
+                      class="flex items-center justify-between"
+                    >
+                      <div class="flex items-center gap-2">
+                        <svg
+                          class="w-4 h-4 flex-shrink-0 text-neutral-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                          />
+                        </svg>
+                        <span class="text-neutral-400">{{ option.label }}</span>
+                      </div>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-medium text-warning-700 flex-shrink-0"
+                        :title="option.unavailableReason"
+                      >
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        {{ option.unavailableLabel || 'No data' }}
+                      </span>
+                    </div>
+                    <!-- Available (Plus user) -->
+                    <div
+                      v-else
+                      class="flex items-center justify-between"
+                    >
+                      <div class="flex items-center gap-2">
+                        <svg
+                          class="w-4 h-4 flex-shrink-0 text-brand-700"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                          />
+                        </svg>
+                        <span class="font-semibold text-brand-800">{{ option.label }}</span>
+                      </div>
+                      <span class="inline-flex items-center gap-1 rounded-full bg-brand-700 px-2 py-0.5 text-body-sm font-bold text-white flex-shrink-0">
+                        <svg
+                          class="w-3 h-3"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        Plus
+                      </span>
+                    </div>
+                  </div>
+                  <span v-else>{{ option.label }}</span>
+                </template>
+              </UniversalDropdown>
+
+              <!-- Smart Alert Explainer -->
+              <Transition
+                enter-active-class="transition-all duration-200 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-96"
+                leave-active-class="transition-all duration-150 ease-in"
+                leave-from-class="opacity-100 max-h-96"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div
+                  v-if="showSmartExplainer"
+                  class="mt-2 overflow-hidden rounded-lg border border-brand-200 bg-brand-50 p-4"
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
                       <svg
-                        class="w-4 h-4 text-purple-600"
+                        class="w-5 h-5 text-brand-700"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -269,74 +416,63 @@
                           d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                         />
                       </svg>
-                      <span :class="option.unavailable ? 'text-slate-400' : 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600'">
-                        {{ option.label }}
-                      </span>
                     </div>
-                    <span
-                      v-if="option.unavailable"
-                      class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
-                      :title="option.unavailableReason"
-                    >
-                      <svg
-                        class="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                        />
-                      </svg>
-                      {{ option.unavailableLabel || 'No data' }}
-                    </span>
-                    <span
-                      v-else-if="option.locked"
-                      class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600"
-                    >
-                      <svg
-                        class="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 11V7a4 4 0 118 0v4m-4 4h-4a2 2 0 01-2-2v-2a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2h-4"
-                        />
-                      </svg>
-                      Locked
-                    </span>
-                    <span
-                      v-else
-                      class="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-2 py-0.5 text-xs font-bold text-white"
-                    >
-                      <svg
-                        class="w-3 h-3"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      Plus
-                    </span>
+                    <div class="flex-1 min-w-0">
+                      <h4 class="text-body-sm font-semibold text-brand-800">How Smart Alerts work</h4>
+                      <p class="mt-1 text-body-sm text-brand-700/90">
+                        Smart Alerts go beyond simple thresholds. Instead of triggering on a single rate value, they analyse
+                        historical patterns across all providers for your corridor to calculate a
+                        <strong class="font-semibold text-brand-800">SendScore</strong> — a composite measure of how good the current deal is relative to the norm.
+                      </p>
+                      <ul class="mt-2 space-y-1 text-body-sm text-brand-700/90">
+                        <li class="flex items-start gap-2">
+                          <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-brand-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                          </svg>
+                          <span>Compares rates, fees, and speed across every provider we track</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-brand-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                          </svg>
+                          <span>Learns what "normal" looks like over 21+ days of data</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <svg class="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-brand-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                          </svg>
+                          <span>Notifies you when the SendScore crosses your threshold (e.g. "alert me when the deal is in the top 10%")</span>
+                        </li>
+                      </ul>
+                      <div class="mt-3 flex items-center gap-3">
+                        <NuxtLink
+                          to="/plus"
+                          class="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-brand-800 transition-colors"
+                          @click="close"
+                        >
+                          Upgrade to Plus
+                        </NuxtLink>
+                        <button
+                          type="button"
+                          class="text-body-sm font-medium text-brand-600 hover:text-brand-800"
+                          @click="showSmartExplainer = false"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <span v-else>{{ option.label }}</span>
-                </template>
-              </UniversalDropdown>
+                </div>
+              </Transition>
+
               <div
                 v-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'not_offered'"
-                class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+                class="mt-2 rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-body-sm text-neutral-700"
               >
-                <span class="block text-slate-700">{{ SMART_NOT_OFFERED_COPY }}</span>
+                <span class="block text-neutral-700">{{ SMART_NOT_OFFERED_COPY }}</span>
                 <NuxtLink
                   to="/smart-corridors"
-                  class="mt-1 inline-flex text-xs font-semibold text-blue-700 hover:text-blue-800"
+                  class="mt-1 inline-flex text-body-sm font-semibold text-brand-700 hover:text-primary-800"
                 >
                   See supported Smart corridors
                 </NuxtLink>
@@ -344,21 +480,21 @@
 
               <div
                 v-if="target.type === 'corridor' && quoteCoverageCopy"
-                class="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+                class="mt-2 rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-body-sm text-neutral-700"
               >
                 {{ quoteCoverageCopy }}
               </div>
 
               <div
                 v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'rolling_out'"
-                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
+                class="mt-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-body-sm text-warning-800"
               >
                 {{ smartRollingOutCopy }}
               </div>
 
               <div
                 v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'available'"
-                class="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800"
+                class="mt-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-body-sm text-success-700"
               >
                 {{ SMART_AVAILABLE_COPY }}
               </div>
@@ -366,7 +502,7 @@
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <div>
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                   Condition
                 </label>
                 <UniversalDropdown
@@ -379,22 +515,26 @@
               </div>
 
               <div class="sm:col-span-2">
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                <label
+                  for="save-alert-value"
+                  class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2"
+                >
                   Value
                 </label>
                 <input
+                  id="save-alert-value"
                   v-model.number="value"
                   type="number"
                   :step="valueStep"
                   :min="valueMin"
                   :max="valueMax"
                   :disabled="formLocked"
-                  class="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  class="h-11 w-full rounded-lg border border-neutral-300 bg-surface px-3 text-rs-fg focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed"
                 >
               </div>
 
               <div v-if="showCurrency">
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                   Currency
                 </label>
                 <UniversalDropdown
@@ -406,11 +546,11 @@
                 />
               </div>
               <div v-else>
-                <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+                <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                   Currency
                 </label>
                 <div
-                  class="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-400 flex items-center"
+                  class="h-11 w-full rounded-lg border border-rs-border bg-neutral-50 px-3 text-body-sm text-neutral-400 flex items-center"
                 >
                   Not required
                 </div>
@@ -418,7 +558,7 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">
+              <label class="block text-body-sm font-semibold uppercase tracking-wide text-neutral-600 mb-2">
                 Frequency
               </label>
               <UniversalDropdown
@@ -428,49 +568,49 @@
                 button-class="h-11"
                 :disabled="formLocked"
               />
-              <p class="mt-2 text-xs text-slate-500">
+              <p class="mt-2 text-body-sm text-rs-muted">
                 Free plans are weekly. Plus unlocks daily alerts.
               </p>
             </div>
 
-            <div
+            <ErrorState
               v-if="error"
-              class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
-            >
-              {{ error }}
-            </div>
+              mode="inline"
+              variant="consumer"
+              :message="error"
+            />
 
             <div
               v-if="limitState"
-              class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              class="rounded-xl border border-rs-border bg-neutral-50 px-4 py-3 text-body-sm text-neutral-700"
             >
               <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-slate-800">{{ limitTitle }}</span>
-                <span class="text-xs text-slate-500">{{ limitCount }}/{{ limitState.limit }}</span>
+                <span class="font-semibold text-neutral-800">{{ limitTitle }}</span>
+                <span class="text-body-sm text-rs-muted">{{ limitCount }}/{{ limitState.limit }}</span>
               </div>
               <div
                 v-if="limitItems.length"
-                class="mb-3 rounded-lg border border-slate-200 bg-white max-h-40 overflow-y-auto"
+                class="mb-3 rounded-lg border border-rs-border bg-surface max-h-40 overflow-y-auto"
               >
                 <div
                   v-for="item in limitItems"
                   :key="item.id"
-                  class="flex items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
+                  class="flex items-center justify-between gap-3 border-b border-neutral-100 px-3 py-2 last:border-b-0"
                 >
                   <div class="min-w-0">
-                    <div class="text-sm font-medium text-slate-800 truncate">
+                    <div class="text-body-sm font-medium text-neutral-800 truncate">
                       {{ item.label }}
                     </div>
                     <div
                       v-if="item.meta"
-                      class="text-xs text-slate-500 truncate"
+                      class="text-body-sm text-rs-muted truncate"
                     >
                       {{ item.meta }}
                     </div>
                   </div>
                   <button
                     type="button"
-                    class="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                    class="text-body-sm font-semibold text-danger-600 hover:text-danger-600"
                     @click="handleLimitRemove(item.id)"
                   >
                     Remove
@@ -481,14 +621,14 @@
                 <button
                   v-if="!isPlus"
                   type="button"
-                  class="h-10 flex-1 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors"
+                  class="h-10 flex-1 rounded-lg bg-brand-600 text-white text-body-sm font-semibold hover:bg-brand-700 transition-colors"
                   @click="handleUpgrade"
                 >
                   Upgrade to Plus
                 </button>
                 <button
                   type="button"
-                  class="h-10 flex-1 rounded-lg border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition-colors"
+                  class="h-10 flex-1 rounded-lg border border-neutral-300 text-neutral-700 text-body-sm font-semibold hover:bg-neutral-100 transition-colors"
                   @click="handleManage"
                 >
                   {{ manageLabel }}
@@ -500,7 +640,7 @@
           <div class="mt-6 flex items-center justify-end gap-3">
             <button
               type="button"
-              class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              class="rounded-lg border border-rs-border bg-surface px-4 py-2 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               @click="close"
             >
               Cancel
@@ -508,7 +648,7 @@
             <button
               type="button"
               :disabled="formLocked"
-              class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed"
+              class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:bg-neutral-300 disabled:text-rs-muted disabled:cursor-not-allowed"
               @click="save"
             >
               {{ isEditing ? 'Update alert' : 'Create alert' }}
@@ -527,14 +667,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import type { AlertComparator, AlertFrequency, AlertRule, WatchTarget } from '~/types/tracking'
 import type { Method } from '~/types/remit'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import SuccessToast from '~/components/shared/SuccessToast.vue'
+import { ErrorState } from '~/ui/states'
 import { COUNTRIES, getCountryByCode, getCurrencyDisplay } from '~/utils/countries-currencies'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 const { isOpen, context, close: closeModal } = useSaveAlertModal()
 const alerts = useAlerts()
@@ -551,12 +693,34 @@ watch(() => route.fullPath, () => {
 })
 
 const modalContent = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalContent)
 const error = ref<string>('')
 const initializing = ref(false)
 const successToastRef = ref<{ show: () => void, hide: () => void } | null>(null)
 const toastTitle = ref('')
 const toastMessage = ref('')
 const limitState = ref<{ feature: 'watchlist' | 'alert', limit: number } | null>(null)
+const showSmartExplainer = ref(false)
+
+const modalRendered = computed(() => isOpen.value && Boolean(context.value))
+
+watch(
+  () => modalRendered.value,
+  async (open) => {
+    if (!open) {
+      deactivate()
+      return
+    }
+
+    await nextTick()
+    activate()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
+})
 
 const metric = ref<AlertRule['metric']>('rate')
 const comparator = ref<AlertComparator>('gte')
@@ -1040,15 +1204,25 @@ const showCurrency = computed(() => (
   && metric.value !== 'rate'
   && metric.value !== 'midMarketRate'
 ))
-const valueStep = computed(() => (isSmartMetric.value ? 1 : 0.01))
+const valueStep = computed(() => {
+  if (isSmartMetric.value) return 1
+  if (metric.value === 'rate' || metric.value === 'midMarketRate') return 0.0001
+  return 0.01
+})
 const valueMin = computed(() => (isSmartMetric.value ? 0 : undefined))
 const valueMax = computed(() => (isSmartMetric.value ? 100 : undefined))
 const formLocked = computed(() => !metricReady.value)
 
+const roundForMetric = (raw: number, metricValue: AlertRule['metric']) => {
+  if (metricValue === 'sendScore') return Math.round(raw)
+  if (metricValue === 'rate' || metricValue === 'midMarketRate') return Math.round(raw * 10000) / 10000
+  return Math.round(raw * 100) / 100
+}
+
 const defaultValueForMetric = (metricValue: AlertRule['metric']) => {
   if (metricValue === 'sendScore') return 90
   if (metricValue === 'rate' || metricValue === 'midMarketRate') {
-    return currentRateValue.value ?? 0
+    return roundForMetric(currentRateValue.value ?? 0, metricValue)
   }
   return 0
 }
@@ -1171,6 +1345,7 @@ watch(
     if (!open) {
       error.value = ''
       limitState.value = null
+      showSmartExplainer.value = false
       document.body.style.overflow = ''
       return
     }
@@ -1225,7 +1400,7 @@ watch(currencyOptions, () => {
 watch(currentRateValue, (rate) => {
   if (initializing.value || isEditing.value) return
   if (metric.value === 'rate' && rate !== null) {
-    value.value = rate
+    value.value = roundForMetric(rate, 'rate')
   }
 })
 

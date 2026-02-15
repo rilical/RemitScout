@@ -7,5 +7,6 @@ export {
   getCorridorById,
   getCorridorBySlug,
   getPulseCoverageSummary,
+  getPulseScreener,
   getPulseSnapshotSummary,
 } from '~/lib/pulseApi'

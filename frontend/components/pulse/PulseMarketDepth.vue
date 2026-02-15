@@ -11,19 +11,19 @@
           />
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">
+          <h2 class="text-body-lg font-bold text-white">
             Market Spread
           </h2>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             Best-to-worst pricing dispersion
           </p>
         </div>
       </div>
       <div class="text-right">
-        <div class="text-xs text-neutral-500">
+        <div class="text-body-sm text-neutral-500">
           Providers
         </div>
-        <div class="text-xl font-bold text-white">
+        <div class="text-h4 font-bold text-white">
           {{ data?.providerCount || 0 }}
         </div>
       </div>
@@ -33,12 +33,17 @@
     <div class="p-6">
       <div
         v-if="loading"
-        class="flex h-40 items-center justify-center"
+        class="flex h-40 w-full items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
       >
-        <div class="flex items-center gap-3 text-neutral-400">
-          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
-          Loading...
-        </div>
+        <SkeletonBlock
+          width="full"
+          height="10rem"
+          tone="dark"
+        />
+        <span class="sr-only">Loading chart</span>
       </div>
 
       <div
@@ -51,19 +56,19 @@
           <div class="flex items-center justify-between rounded-lg bg-brand-600/10 border border-brand-600/30 px-4 py-3">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600">
-                <span class="text-xs font-bold text-white">1</span>
+                <span class="text-body-sm font-bold text-white">1</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">
+                <div class="text-body-sm font-semibold text-white">
                   Best Price
                 </div>
-                <div class="text-xs text-neutral-400">
+                <div class="text-body-sm text-neutral-400">
                   {{ data?.bestProvider }}
                 </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-brand-600">
+              <div class="text-body-lg font-mono font-bold text-brand-600">
                 {{ formatRate(data?.bestRate) }}
               </div>
             </div>
@@ -73,19 +78,19 @@
           <div class="flex items-center justify-between rounded-lg bg-neutral-700/50 px-4 py-3">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-600">
-                <span class="text-xs font-bold text-white">2</span>
+                <span class="text-body-sm font-bold text-white">2</span>
               </div>
               <div>
-                <div class="text-sm font-semibold text-white">
+                <div class="text-body-sm font-semibold text-white">
                   Runner-up
                 </div>
-                <div class="text-xs text-neutral-400">
+                <div class="text-body-sm text-neutral-400">
                   {{ data?.secondBestProvider }}
                 </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-white">
+              <div class="text-body-lg font-mono font-bold text-white">
                 {{ formatRate(data?.secondBestRate) }}
               </div>
             </div>
@@ -95,9 +100,9 @@
           <div class="flex items-center justify-between rounded-lg bg-neutral-700/30 px-4 py-2">
             <div class="flex items-center gap-3">
               <div class="flex h-6 w-6 items-center justify-center">
-                <span class="text-xs text-neutral-500">-</span>
+                <span class="text-body-sm text-neutral-500">-</span>
               </div>
-              <div class="text-sm text-neutral-400">
+              <div class="text-body-sm text-neutral-400">
                 Median Rate
               </div>
             </div>
@@ -119,16 +124,16 @@
               />
             </div>
             <div>
-              <div class="text-sm font-semibold text-white">
+              <div class="text-body-sm font-semibold text-white">
                   Worst Price
                 </div>
-                <div class="text-xs text-neutral-400">
+                <div class="text-body-sm text-neutral-400">
                   {{ data?.worstProvider }}
                 </div>
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-mono font-bold text-danger-600">
+              <div class="text-body-lg font-mono font-bold text-danger-600">
                 {{ formatRate(data?.worstRate) }}
               </div>
             </div>
@@ -139,18 +144,18 @@
         <div class="mt-6 rounded-lg bg-neutral-900 p-4">
           <div class="flex items-center justify-between">
             <div>
-              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm font-medium text-neutral-500 uppercase tracking-wider">
                 Market Spread
               </div>
-              <div class="text-2xl font-bold text-white">
+              <div class="text-h3 font-bold text-white">
                 {{ spreadRangeBpsDisplay }}
               </div>
             </div>
             <div class="text-right">
-              <div class="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <div class="text-body-sm font-medium text-neutral-500 uppercase tracking-wider">
                 Range
               </div>
-              <div class="text-lg font-mono text-neutral-300">
+              <div class="text-body-lg font-mono text-neutral-300">
                 {{ formatRate(data?.spreadRange) }}
               </div>
             </div>
@@ -178,7 +183,7 @@
               class="text-brand-600 flex-shrink-0 mt-0.5"
             />
             <div>
-              <p class="text-sm text-neutral-300">
+              <p class="text-body-sm text-neutral-300">
                 {{ analystInsight }}
               </p>
             </div>
@@ -201,6 +206,7 @@ import type { MarketDepth } from '~/types/remit'
 import { getMarketDepthData } from '~/lib/pulseApi'
 import { Icon } from '~/ui'
 import { formatNumber } from '~/shared/lib/format'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 const store = usePulseStore()
 
@@ -244,7 +250,7 @@ async function loadData() {
     data.value = await getMarketDepthData(store.corridor)
   }
   catch (e) {
-    console.error('Failed to load market depth:', e)
+    useLogger('PulseMarketDepth').error('Failed to load market depth', e)
   }
   finally {
     loading.value = false

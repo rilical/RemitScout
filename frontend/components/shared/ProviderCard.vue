@@ -1,5 +1,5 @@
 <template>
-  <div class="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all hover:border-brand-500 hover:shadow-2xl">
+  <div class="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-surface motion-safe:transition-all hover:border-brand-500 hover:shadow-2xl">
     <!-- Header Section with Gradient Background -->
     <div class="relative bg-gradient-to-br from-neutral-50 via-white to-brand-50/30 px-6 py-6">
       <!-- Logo and Name -->
@@ -13,7 +13,7 @@
           />
         </div>
         <div>
-          <h3 class="text-2xl font-bold tracking-tight text-neutral-900">
+          <h3 class="text-h3 font-bold tracking-tight text-neutral-900">
             {{ provider?.name }}
           </h3>
         </div>
@@ -22,12 +22,12 @@
       <!-- Remit-Scout Score Badge -->
       <div class="flex items-center gap-4">
         <div
-          class="relative flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full border-4 bg-white shadow-lg transition-transform group-hover:scale-105"
+          class="relative flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full border-4 bg-surface shadow-lg motion-safe:transition-transform group-hover:scale-105"
           :style="{ borderColor: scoreColor }"
         >
           <div class="text-center">
             <div
-              class="text-3xl font-bold leading-none"
+              class="text-h2 font-bold leading-none"
               :class="scoreTextClass"
             >
               {{ scoreDisplay }}
@@ -35,20 +35,20 @@
           </div>
           <!-- Score Ring Animation -->
           <div
-            class="absolute inset-0 rounded-full opacity-0 transition-opacity group-hover:opacity-100"
+            class="absolute inset-0 rounded-full opacity-0 motion-safe:transition-opacity group-hover:opacity-100"
             :style="{ background: `radial-gradient(circle, ${scoreColor}15 0%, transparent 70%)` }"
           />
         </div>
         <div class="flex flex-col gap-1">
           <span
-            class="text-sm font-bold uppercase tracking-wider"
+            class="text-body-sm font-bold uppercase tracking-wider"
             :class="scoreTextClass"
           >Remit-Scout Score</span>
-          <span class="text-xs font-medium text-neutral-500">Scored on 0-10 scale</span>
+          <span class="text-body-sm font-medium text-neutral-500">Scored on 0-10 scale</span>
           <div class="mt-1 flex items-center gap-1">
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200">
               <div
-                class="h-full transition-all duration-500"
+                class="h-full motion-safe:transition-all motion-safe:duration-500"
                 :class="scoreTextClass.replace('text-', 'bg-')"
                 :style="{ width: `${(props.provider?.score || 0) * 10}%` }"
               />
@@ -61,7 +61,7 @@
     <!-- Content Section -->
     <div class="px-6 py-6">
       <!-- Description -->
-      <p class="mb-6 line-clamp-3 text-base leading-relaxed text-neutral-600">
+      <p class="mb-6 line-clamp-3 text-body leading-relaxed text-neutral-600">
         {{ provider?.description }}
       </p>
 
@@ -69,18 +69,18 @@
       <div class="flex gap-3">
         <NuxtLink
           :to="`/learn/providers/${provider?.slug}`"
-          class="flex-1 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-md transition-all hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          class="flex-1 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-3.5 text-center text-body-sm font-semibold text-white shadow-md motion-safe:transition-all hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Read Review
         </NuxtLink>
         <NuxtLink
           v-if="provider?.affiliateUrl || provider?.url"
           :to="outboundUrl"
-          class="flex items-center justify-center gap-2 rounded-xl border-2 border-neutral-300 bg-white px-6 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          class="flex items-center justify-center gap-2 rounded-xl border-2 border-neutral-300 bg-surface px-6 py-3.5 text-body-sm font-semibold text-neutral-700 motion-safe:transition-all hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Visit
           <svg
-            class="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+            class="h-4 w-4 motion-safe:transition-transform group-hover:translate-x-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -98,7 +98,7 @@
 
     <!-- Hover Accent Line -->
     <div
-      class="absolute bottom-0 left-0 h-1 w-0 transition-all duration-300 group-hover:w-full"
+      class="absolute bottom-0 left-0 h-1 w-0 motion-safe:transition-all motion-safe:duration-300 group-hover:w-full"
       :style="{ backgroundColor: scoreColor }"
     />
   </div>
@@ -163,9 +163,9 @@ const scoreColor = computed(() => {
 
 const scoreTextClass = computed(() => {
   const score = props.provider?.score || 0
-  if (score >= 9.0) return 'text-green-600'
-  if (score >= 8.0) return 'text-blue-600'
-  if (score >= 7.0) return 'text-yellow-600'
+  if (score >= 9.0) return 'text-success-600'
+  if (score >= 8.0) return 'text-brand-600'
+  if (score >= 7.0) return 'text-warning-600'
   return 'text-neutral-600'
 })
 

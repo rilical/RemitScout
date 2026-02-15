@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+      <h2 class="text-h4 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-5 w-5 text-blue-400"
+          class="h-5 w-5 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -17,29 +17,29 @@
         </svg>
         Provider Leaderboard
       </h2>
-      <div class="text-sm text-slate-400">
+      <div class="text-body-sm text-neutral-400">
         {{ providers.length }} providers tracked
       </div>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40">
+    <div class="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40">
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-white/10">
-              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <th class="px-6 py-4 text-left text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
                 Provider
               </th>
-              <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <th class="px-6 py-4 text-center text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
                 Value Score
               </th>
-              <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <th class="px-6 py-4 text-center text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
                 Speed
               </th>
-              <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <th class="px-6 py-4 text-center text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
                 Reliability
               </th>
-              <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <th class="px-6 py-4 text-left text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
                 Notes
               </th>
             </tr>
@@ -48,27 +48,27 @@
             <tr
               v-for="(provider, index) in providers"
               :key="provider.id"
-              class="group transition-colors hover:bg-white/5"
+              class="group transition-colors hover:bg-surface/5"
             >
               <td class="px-6 py-5">
                 <div class="flex items-center gap-4">
                   <span
-                    class="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold"
-                    :class="index < 3 ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white' : 'bg-white/10 text-slate-400'"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-body-sm font-bold"
+                    :class="index < 3 ? 'bg-gradient-to-br from-warning-600 to-warning-600 text-white' : 'bg-surface/10 text-neutral-400'"
                   >
                     {{ index + 1 }}
                   </span>
                   <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
+                    class="flex h-10 w-10 items-center justify-center rounded-xl text-h4"
                     :class="provider.bgClass"
                   >
                     {{ provider.emoji }}
                   </div>
                   <div>
-                    <div class="font-semibold text-white group-hover:text-blue-400 transition-colors">
+                    <div class="font-semibold text-white group-hover:text-primary-400 transition-colors">
                       {{ provider.name }}
                     </div>
-                    <div class="text-xs text-slate-500">
+                    <div class="text-body-sm text-rs-muted">
                       {{ provider.countries }} countries
                     </div>
                   </div>
@@ -77,19 +77,19 @@
               <td class="px-6 py-5">
                 <div class="flex flex-col items-center">
                   <div
-                    class="mb-1 text-xl font-bold"
+                    class="mb-1 text-h4 font-bold"
                     :class="provider.valueColor"
                   >
                     {{ provider.valueIndex }}
                   </div>
-                  <div class="text-xs text-slate-500">
+                  <div class="text-body-sm text-rs-muted">
                     {{ provider.valueLabel }}
                   </div>
                 </div>
               </td>
               <td class="px-6 py-5 text-center">
                 <span
-                  class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  class="inline-flex items-center rounded-full px-3 py-1 text-body-sm font-semibold"
                   :class="provider.speedClass"
                 >
                   {{ provider.speed }}
@@ -97,10 +97,10 @@
               </td>
               <td class="px-6 py-5">
                 <div class="flex flex-col items-center gap-2">
-                  <div class="text-sm font-semibold text-white">
+                  <div class="text-body-sm font-semibold text-white">
                     {{ provider.reliability }}%
                   </div>
-                  <div class="h-1.5 w-20 overflow-hidden rounded-full bg-white/10">
+                  <div class="h-1.5 w-20 overflow-hidden rounded-full bg-surface/10">
                     <div
                       class="h-full rounded-full transition-all duration-500"
                       :class="provider.reliabilityColor"
@@ -114,7 +114,7 @@
                   <span
                     v-for="note in provider.notes"
                     :key="note"
-                    class="inline-flex items-center rounded-lg bg-white/5 border border-white/10 px-2.5 py-1 text-xs text-slate-300"
+                    class="inline-flex items-center rounded-lg bg-surface/5 border border-white/10 px-2.5 py-1 text-body-sm text-neutral-300"
                   >
                     {{ note }}
                   </span>
@@ -134,75 +134,75 @@ const providers = [
     id: 'wise',
     name: 'Wise',
     emoji: '💸',
-    bgClass: 'bg-emerald-500/20',
+    bgClass: 'bg-success-600/20',
     countries: 80,
     valueIndex: '9.8',
     valueLabel: 'Excellent',
-    valueColor: 'text-emerald-400',
+    valueColor: 'text-success-600',
     speed: 'Minutes–2d',
-    speedClass: 'bg-blue-500/20 text-blue-400',
+    speedClass: 'bg-primary-500/20 text-primary-400',
     reliability: 99,
-    reliabilityColor: 'bg-emerald-500',
+    reliabilityColor: 'bg-success-600',
     notes: ['Transparent pricing', 'Real mid-rate'],
   },
   {
     id: 'remitly',
     name: 'Remitly',
     emoji: '🚀',
-    bgClass: 'bg-blue-500/20',
+    bgClass: 'bg-primary-500/20',
     countries: 135,
     valueIndex: '9.5',
     valueLabel: 'Excellent',
-    valueColor: 'text-emerald-400',
+    valueColor: 'text-success-600',
     speed: '15min–2d',
-    speedClass: 'bg-emerald-500/20 text-emerald-400',
+    speedClass: 'bg-success-600/20 text-success-600',
     reliability: 98,
-    reliabilityColor: 'bg-emerald-500',
+    reliabilityColor: 'bg-success-600',
     notes: ['Promo detected', 'Cash pickup strong'],
   },
   {
     id: 'xe',
     name: 'XE Money',
     emoji: '💱',
-    bgClass: 'bg-purple-500/20',
+    bgClass: 'bg-accent-600/20',
     countries: 130,
     valueIndex: '8.9',
     valueLabel: 'Very Good',
-    valueColor: 'text-blue-400',
+    valueColor: 'text-primary-400',
     speed: '1–4 days',
-    speedClass: 'bg-amber-500/20 text-amber-400',
+    speedClass: 'bg-warning-600/20 text-warning-600',
     reliability: 97,
-    reliabilityColor: 'bg-emerald-500',
+    reliabilityColor: 'bg-success-600',
     notes: ['Large amounts'],
   },
   {
     id: 'xoom',
     name: 'Xoom',
     emoji: '⚡',
-    bgClass: 'bg-amber-500/20',
+    bgClass: 'bg-warning-600/20',
     countries: 160,
     valueIndex: '8.7',
     valueLabel: 'Very Good',
-    valueColor: 'text-blue-400',
+    valueColor: 'text-primary-400',
     speed: 'Min–days',
-    speedClass: 'bg-blue-500/20 text-blue-400',
+    speedClass: 'bg-primary-500/20 text-primary-400',
     reliability: 96,
-    reliabilityColor: 'bg-emerald-500',
+    reliabilityColor: 'bg-success-600',
     notes: ['PayPal backed'],
   },
   {
     id: 'worldremit',
     name: 'WorldRemit',
     emoji: '🌍',
-    bgClass: 'bg-teal-500/20',
+    bgClass: 'bg-accent-600/20',
     countries: 150,
     valueIndex: '8.4',
     valueLabel: 'Good',
-    valueColor: 'text-slate-300',
+    valueColor: 'text-neutral-300',
     speed: 'Min–days',
-    speedClass: 'bg-blue-500/20 text-blue-400',
+    speedClass: 'bg-primary-500/20 text-primary-400',
     reliability: 95,
-    reliabilityColor: 'bg-amber-500',
+    reliabilityColor: 'bg-warning-600',
     notes: ['Wide coverage'],
   },
 ]

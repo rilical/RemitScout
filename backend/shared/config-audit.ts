@@ -15,6 +15,11 @@ type AuditItem = {
 const isEmptyString = (value: unknown): boolean =>
   typeof value === 'string' && value.trim().length === 0
 
+const shouldRequire = (
+  overrideValue: boolean | undefined,
+  defaultValue: boolean,
+) => overrideValue ?? defaultValue
+
 export const auditConfig = (
   requirements: RuntimeConfigRequirements = {},
 ): ConfigAuditResult => {
@@ -31,19 +36,33 @@ export const auditConfig = (
   add('REDIS_URL', config.redis.url, Boolean(requirements.requireRedis))
 
   if (requirements.requireQueues) {
-    add('QUOTE_REFRESH_QUEUE_URL', config.queues.quoteRefreshUrl, true)
-    add('FX_RATE_REFRESH_QUEUE_URL', config.queues.fxRateRefreshUrl, true)
-    add('EXPORT_JOB_QUEUE_URL', config.queues.exports.url, true)
-    add('PLANE_B_INGEST_FANOUT_QUEUE_URL', config.queues.ingestFanout.url, true)
-    add('PLANE_B_NOTIFICATIONS_QUEUE_URL', config.queues.notifications.url, true)
-    add('PLANE_B_OPS_ALERT_QUEUE_URL', config.queues.opsAlerts.url, true)
-    add('GOLD_LIVE_QUEUE_URL', config.queues.goldLive.url, true)
-    add('ALERT_EVALUATION_QUEUE_URL', config.alerts.evaluation.queueUrl, true)
+    const requireQuoteRefreshQueue = shouldRequire(requirements.requireQuoteRefreshQueue, true)
+    const requireFxRateRefreshQueue = shouldRequire(requirements.requireFxRateRefreshQueue, true)
+    const requireExportJobQueue = shouldRequire(requirements.requireExportJobQueue, true)
+    const requireIngestFanoutQueue = shouldRequire(requirements.requireIngestFanoutQueue, true)
+    const requireNotificationsQueue = shouldRequire(requirements.requireNotificationsQueue, true)
+    const requireOpsAlertsQueue = shouldRequire(requirements.requireOpsAlertsQueue, true)
+    const requireGoldLiveQueue = shouldRequire(requirements.requireGoldLiveQueue, true)
+    const requireAlertEvaluationQueue = shouldRequire(
+      requirements.requireAlertEvaluationQueue,
+      true,
+    )
+
+    add('QUOTE_REFRESH_QUEUE_URL', config.queues.quoteRefreshUrl, requireQuoteRefreshQueue)
+    add('FX_RATE_REFRESH_QUEUE_URL', config.queues.fxRateRefreshUrl, requireFxRateRefreshQueue)
+    add('EXPORT_JOB_QUEUE_URL', config.queues.exports.url, requireExportJobQueue)
+    add('PLANE_B_INGEST_FANOUT_QUEUE_URL', config.queues.ingestFanout.url, requireIngestFanoutQueue)
+    add('PLANE_B_NOTIFICATIONS_QUEUE_URL', config.queues.notifications.url, requireNotificationsQueue)
+    add('PLANE_B_OPS_ALERT_QUEUE_URL', config.queues.opsAlerts.url, requireOpsAlertsQueue)
+    add('GOLD_LIVE_QUEUE_URL', config.queues.goldLive.url, requireGoldLiveQueue)
+    add('ALERT_EVALUATION_QUEUE_URL', config.alerts.evaluation.queueUrl, requireAlertEvaluationQueue)
   }
 
   if (requirements.requireStorage) {
-    add('BRONZE_S3_BUCKET', config.storage.bronze.bucket, true)
-    add('EXPORTS_S3_BUCKET', config.storage.exports.bucket, true)
+    const requireBronzeBucket = shouldRequire(requirements.requireBronzeBucket, true)
+    const requireExportsBucket = shouldRequire(requirements.requireExportsBucket, true)
+    add('BRONZE_S3_BUCKET', config.storage.bronze.bucket, requireBronzeBucket)
+    add('EXPORTS_S3_BUCKET', config.storage.exports.bucket, requireExportsBucket)
   }
 
   if (requirements.requireAlerts) {
@@ -91,4 +110,3 @@ export const auditConfig = (
     warnings: Array.from(new Set(warnings.filter((w) => !missing.includes(w)))),
   }
 }
-

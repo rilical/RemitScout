@@ -1,10 +1,10 @@
 <template>
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
     <div class="border-b border-neutral-700 px-6 py-4">
-      <h2 class="text-lg font-bold text-white">
+      <h2 class="text-body-lg font-bold text-white">
         Provider Leaderboard
       </h2>
-      <p class="text-sm text-neutral-400">
+      <p class="text-body-sm text-neutral-400">
         Ranked by delivered amount for {{ store.corridor.label }} | {{ amountDisplay }}
       </p>
     </div>
@@ -24,8 +24,8 @@
         v-else
         class="overflow-x-auto"
       >
-        <table class="min-w-full text-sm">
-          <thead class="text-xs uppercase tracking-wider text-neutral-500">
+        <table class="min-w-full text-body-sm">
+          <thead class="text-body-sm uppercase tracking-wider text-neutral-500">
             <tr>
               <th class="px-3 py-2 text-left">
                 Rank
@@ -76,7 +76,7 @@
                 <div class="font-semibold text-white">
                   {{ sendMoney(row.totalCost) }}
                 </div>
-                <div class="text-xs text-neutral-500">
+                <div class="text-body-sm text-neutral-500">
                   {{ row.totalCostBps }} bps
                 </div>
               </td>
@@ -101,7 +101,7 @@
       </div>
     </div>
 
-    <div class="border-t border-neutral-700 px-6 py-3 text-xs text-neutral-500">
+    <div class="border-t border-neutral-700 px-6 py-3 text-body-sm text-neutral-500">
       Winner = highest delivered amount at the selected amount and method.
     </div>
 
@@ -136,7 +136,7 @@ async function loadData() {
     rows.value = await getProviderBenchmarkingData(store.corridor, store.timeframe, store.amount)
   }
   catch (e) {
-    console.error('Failed to load provider benchmarking data:', e)
+    useLogger('PulseProviderLeaderboard').error('Failed to load provider benchmarking data', e)
   }
   finally {
     loading.value = false

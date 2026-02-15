@@ -1056,7 +1056,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const cacheTtlSeconds = maxAgeSeconds > 0
         ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
         : dynamicCacheTtlSeconds
-      const cacheKey = `providers:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
+      const cacheKey = `providers:${corridorId}:${amountBucket}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
@@ -1214,11 +1214,6 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         methodsByProvider.get(key)!.add(methodValue)
       }
 
-      const filteredQuotes = quotes.filter((quote) => {
-        const methodValue = toAvailableMethod(quote.payout)
-        return methodValue === requestedMethod
-      })
-
       let midMarketRate: number | null = null
       let midMarketSource: string | null = null
       let midMarketUpdatedAt: string | null = null
@@ -1236,7 +1231,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      if (!filteredQuotes.length) {
+      if (!quotes.length) {
         const message = 'Quotes are being collected for this corridor. Please try again shortly.'
         return {
           comparisonId,
@@ -1266,7 +1261,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      const providerQuotes = groupQuotesByProvider(filteredQuotes)
+      const providerQuotes = groupQuotesByProvider(quotes)
       const providerQuotesPayload = includeProviderQuotes
         ? providerQuotes.map((pq) => ({
             psp: pq.psp,
@@ -1405,9 +1400,9 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       let latestCollectedAt: string | null = null
-      if (filteredQuotes.length) {
+      if (quotes.length) {
         let latestTs = 0
-        for (const quote of filteredQuotes) {
+        for (const quote of quotes) {
           if (!quote.collected_at) continue
           const ts = new Date(quote.collected_at).getTime()
           if (Number.isFinite(ts) && ts > latestTs) {

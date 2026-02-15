@@ -52,6 +52,13 @@ function handleClickOutside() {
   // Reserved for future use
 }
 
+const isActive = (to: string) => {
+  if (to === '/') return route.path === '/'
+  return route.path === to || route.path.startsWith(`${to}/`)
+}
+
+const ariaCurrent = (to: string) => (isActive(to) ? 'page' : undefined)
+
 onMounted(() => {
   window.addEventListener('scroll', onScroll)
   document.addEventListener('click', handleClickOutside)
@@ -72,31 +79,39 @@ watch(() => route.path, () => {
 <template>
   <header
     :class="[
-      'sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur motion-safe:transition-shadow',
+      'sticky top-0 z-50 border-b border-rs-border bg-surface/80 backdrop-blur motion-safe:transition-shadow',
       scrolled ? 'shadow-[0_1px_12px_rgba(0,0,0,0.05)]' : 'shadow-none',
     ]"
   >
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="container h-16 flex items-center justify-between">
       <!-- Left: Logo + Navigation -->
       <div class="flex items-center gap-6">
         <NuxtLink
           to="/"
-          class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+          class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
         >
-          <img
+          <NuxtImg
             v-if="isPlus && !logoError"
             :src="logoPlusSrc"
             alt="Remit-Scout Plus logo"
+            width="40"
+            height="40"
+            loading="eager"
+            preload
             class="h-10 w-10 object-contain flex-shrink-0"
             @error="handleLogoError"
-          >
-          <img
+          />
+          <NuxtImg
             v-else
             :src="logoRegularSrc"
             alt="Remit-Scout logo"
+            width="40"
+            height="40"
+            loading="eager"
+            preload
             class="h-10 w-10 object-contain flex-shrink-0"
-          >
-          <span class="text-lg font-bold text-neutral-900 whitespace-nowrap">
+          />
+          <span class="text-body-lg font-bold text-neutral-900 whitespace-nowrap">
             Remit-Scout
             <span
               v-if="isPlus && !logoError"
@@ -113,7 +128,8 @@ watch(() => route.path, () => {
           <!-- Dashboard -->
           <NuxtLink
             to="/dashboard"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            :aria-current="ariaCurrent('/dashboard')"
           >
             Dashboard
           </NuxtLink>
@@ -121,7 +137,8 @@ watch(() => route.path, () => {
           <!-- Compare -->
           <NuxtLink
             to="/send-money"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            :aria-current="ariaCurrent('/send-money')"
           >
             Compare
           </NuxtLink>
@@ -129,7 +146,8 @@ watch(() => route.path, () => {
           <!-- Providers -->
           <NuxtLink
             to="/learn/providers"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            :aria-current="ariaCurrent('/learn/providers')"
           >
             Providers
           </NuxtLink>
@@ -138,7 +156,8 @@ watch(() => route.path, () => {
           <NuxtLink
             v-if="pulseEnabled"
             to="/pulse"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            :aria-current="ariaCurrent('/pulse')"
           >
             Pulse
           </NuxtLink>
@@ -146,7 +165,8 @@ watch(() => route.path, () => {
           <!-- Guides -->
           <NuxtLink
             to="/learn"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            :aria-current="ariaCurrent('/learn')"
           >
             Guides
           </NuxtLink>
@@ -154,7 +174,7 @@ watch(() => route.path, () => {
           <!-- Enterprise (Hidden - activate in future) -->
           <!-- <NuxtLink
             to="/institutions"
-            class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             Enterprise
           </NuxtLink> -->
@@ -167,13 +187,13 @@ watch(() => route.path, () => {
         <template v-if="!isAuthenticated">
           <NuxtLink
             to="/sign-in"
-            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 rounded-md hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             Sign in
           </NuxtLink>
           <NuxtLink
             to="/plus"
-            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-body-sm font-medium text-white text-center rounded-md bg-brand-600 hover:bg-brand-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             Get Plus
           </NuxtLink>
@@ -184,7 +204,7 @@ watch(() => route.path, () => {
           <NuxtLink
             v-if="!isPlus"
             to="/plus"
-            class="hidden sm:inline-flex items-center px-3 py-1.5 text-sm font-medium text-white text-center rounded-md bg-blue-600 hover:bg-blue-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            class="hidden sm:inline-flex items-center px-3 py-1.5 text-body-sm font-medium text-white text-center rounded-md bg-brand-600 hover:bg-brand-700 border border-transparent motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             Get Plus
           </NuxtLink>
@@ -195,7 +215,7 @@ watch(() => route.path, () => {
 
         <!-- Mobile menu button -->
         <button
-          class="md:hidden inline-flex items-center rounded-md border border-slate-200 p-2 hover:bg-slate-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          class="md:hidden inline-flex items-center rounded-md border border-rs-border p-2 hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'"
           :aria-expanded="mobileMenuOpen"
           @click="toggleMobileMenu"
@@ -260,31 +280,37 @@ watch(() => route.path, () => {
       >
         <div
           v-if="mobileMenuOpen"
-          class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white shadow-xl overflow-y-auto md:hidden"
+          class="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-surface shadow-xl overflow-y-auto md:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <div class="flex items-center justify-between border-b border-slate-200 px-4 py-4">
+          <div class="flex items-center justify-between border-b border-rs-border px-4 py-4">
             <NuxtLink
               to="/"
-              class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-              @click="closeMobileMenu"
-            >
-              <img
+            class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
+            @click="closeMobileMenu"
+          >
+              <NuxtImg
                 v-if="isPlus && !logoError"
                 :src="logoPlusSrc"
                 alt="Remit-Scout Plus logo"
+                width="40"
+                height="40"
+                loading="lazy"
                 class="h-10 w-10 object-contain flex-shrink-0"
                 @error="handleLogoError"
-              >
-              <img
+              />
+              <NuxtImg
                 v-else
                 :src="logoRegularSrc"
                 alt="Remit-Scout logo"
+                width="40"
+                height="40"
+                loading="lazy"
                 class="h-10 w-10 object-contain flex-shrink-0"
-              >
-              <span class="text-base font-bold text-neutral-900 whitespace-nowrap">
+              />
+              <span class="text-body font-bold text-neutral-900 whitespace-nowrap">
                 Remit-Scout
                 <span
                   v-if="isPlus && !logoError"
@@ -293,7 +319,7 @@ watch(() => route.path, () => {
               </span>
             </NuxtLink>
             <button
-              class="rounded-md p-2 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="rounded-md p-2 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Close menu"
               @click="closeMobileMenu"
             >
@@ -316,7 +342,8 @@ watch(() => route.path, () => {
           <div class="px-4 py-6 space-y-2">
             <NuxtLink
               to="/dashboard"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
+              :aria-current="ariaCurrent('/dashboard')"
             >
               <span>Dashboard</span>
               <span aria-hidden="true">→</span>
@@ -324,7 +351,8 @@ watch(() => route.path, () => {
 
             <NuxtLink
               to="/send-money"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
+              :aria-current="ariaCurrent('/send-money')"
             >
               <span>Compare</span>
               <span aria-hidden="true">→</span>
@@ -332,7 +360,8 @@ watch(() => route.path, () => {
 
             <NuxtLink
               to="/learn/providers"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
+              :aria-current="ariaCurrent('/learn/providers')"
             >
               <span>Providers</span>
               <span aria-hidden="true">→</span>
@@ -342,7 +371,8 @@ watch(() => route.path, () => {
             <NuxtLink
               v-if="pulseEnabled"
               to="/pulse"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
+              :aria-current="ariaCurrent('/pulse')"
             >
               <span>Pulse</span>
               <span aria-hidden="true">→</span>
@@ -350,7 +380,8 @@ watch(() => route.path, () => {
 
             <NuxtLink
               to="/learn"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
+              :aria-current="ariaCurrent('/learn')"
             >
               <span>Guides</span>
               <span aria-hidden="true">→</span>
@@ -359,25 +390,25 @@ watch(() => route.path, () => {
             <!-- Enterprise (Hidden - activate in future) -->
             <!-- <NuxtLink
               to="/institutions"
-              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+              class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
             >
               <span>Enterprise</span>
               <span aria-hidden="true">→</span>
             </NuxtLink> -->
 
-            <div class="my-3 border-t border-slate-200" />
+            <div class="my-3 border-t border-rs-border" />
 
             <template v-if="!isAuthenticated">
               <NuxtLink
                 to="/sign-in"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
               >
                 <span>Sign in</span>
                 <span aria-hidden="true">→</span>
               </NuxtLink>
               <NuxtLink
                 to="/plus"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
               >
                 <span>Get Plus</span>
                 <span aria-hidden="true">→</span>
@@ -388,7 +419,7 @@ watch(() => route.path, () => {
               <NuxtLink
                 v-if="!isPlus"
                 to="/plus"
-                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 motion-safe:transition"
+                class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
               >
                 <span>Get Plus</span>
                 <span aria-hidden="true">→</span>
@@ -397,10 +428,10 @@ watch(() => route.path, () => {
           </div>
 
           <!-- Mobile Footer CTA -->
-          <div class="border-t border-slate-200 p-4">
+          <div class="border-t border-rs-border p-4">
             <NuxtLink
               :to="compareUrl"
-              class="flex items-center justify-center w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 motion-safe:transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              class="flex items-center justify-center w-full rounded-md bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               Compare providers
             </NuxtLink>

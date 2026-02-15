@@ -3,13 +3,13 @@
     <table class="w-full border-collapse">
       <thead>
         <tr>
-          <th class="py-3 px-4 text-left text-sm font-semibold text-neutral-300 bg-neutral-800 sticky left-0">
+          <th class="py-3 px-4 text-left text-body-sm font-semibold text-neutral-300 bg-neutral-800 sticky left-0">
             Provider
           </th>
           <th
             v-for="method in methods"
             :key="method.key"
-            class="py-3 px-4 text-center text-sm font-semibold text-neutral-300 bg-neutral-800"
+            class="py-3 px-4 text-center text-body-sm font-semibold text-neutral-300 bg-neutral-800"
           >
             <div class="flex flex-col items-center gap-1">
               <component
@@ -19,7 +19,7 @@
               <span>{{ method.label }}</span>
             </div>
           </th>
-          <th class="py-3 px-4 text-center text-sm font-semibold text-neutral-300 bg-neutral-800">
+          <th class="py-3 px-4 text-center text-body-sm font-semibold text-neutral-300 bg-neutral-800">
             Speed
           </th>
         </tr>
@@ -33,7 +33,7 @@
           <td class="py-4 px-4 sticky left-0 bg-neutral-900">
             <div class="flex items-center gap-3">
               <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-700">
-                <span class="text-sm font-bold text-white">{{ row.provider.charAt(0) }}</span>
+                <span class="text-body-sm font-bold text-white">{{ row.provider.charAt(0) }}</span>
               </div>
               <span class="font-medium text-white">{{ row.provider }}</span>
             </div>
@@ -85,7 +85,7 @@
             </div>
           </td>
           <td class="py-4 px-4 text-center">
-            <span class="inline-flex items-center justify-center gap-1 rounded-full bg-brand-600/10 px-3 py-1 text-xs font-medium text-brand-600 min-w-[110px]">
+            <span class="inline-flex items-center justify-center gap-1 rounded-full bg-brand-600/10 px-3 py-1 text-body-sm font-medium text-brand-600 min-w-[110px]">
               <svg
                 class="h-3 w-3 flex-shrink-0"
                 fill="none"
@@ -113,10 +113,10 @@
         :key="`summary-${method.key}`"
         class="rounded-lg border border-neutral-700 bg-neutral-800 p-3"
       >
-        <div class="text-2xl font-bold text-white">
+        <div class="text-h3 font-bold text-white">
           {{ getMethodCount(method.key) }}
         </div>
-        <div class="text-xs text-neutral-400">
+        <div class="text-body-sm text-neutral-400">
           providers support {{ method.label.toLowerCase() }}
         </div>
       </div>

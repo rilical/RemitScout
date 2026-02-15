@@ -1,5 +1,6 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
+import { config } from '../../shared/config'
 
 export const handler = async (): Promise<void> => {
   await resolveDatabaseUrl({
@@ -28,13 +29,22 @@ export const handler = async (): Promise<void> => {
   ])
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
   await runStartupChecks({
     requirements: {
       requirePlaneA: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
-      requireAlerts: true,
+      requireQueues: requireAlertEvaluationQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue: false,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue: false,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue,
+      requireStorage: false,
+      requireAlerts: false,
     },
   })
 

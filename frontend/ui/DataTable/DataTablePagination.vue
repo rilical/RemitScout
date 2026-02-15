@@ -43,8 +43,8 @@ const isTerminal = computed(() => props.variant === 'terminal')
 
 const buttonClass = computed(() => {
   return isTerminal.value
-    ? 'flex h-8 min-w-[2rem] items-center justify-center rounded border border-neutral-700 px-2 text-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
-    : 'flex h-8 min-w-[2rem] items-center justify-center rounded border border-slate-300 px-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50'
+    ? 'flex h-8 min-w-[2rem] items-center justify-center rounded border border-neutral-700 px-2 text-body-sm font-medium text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
+    : 'flex h-8 min-w-[2rem] items-center justify-center rounded border border-neutral-300 px-2 text-body-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50'
 })
 
 function setPage(next: number) {
@@ -56,8 +56,8 @@ function setPage(next: number) {
 <template>
   <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div
-      class="text-xs"
-      :class="isTerminal ? 'text-neutral-400' : 'text-slate-600'"
+      class="text-body-sm"
+      :class="isTerminal ? 'text-neutral-400' : 'text-rs-muted'"
     >
       <template v-if="pagination.total === 0">
         Showing 0 rows
@@ -81,11 +81,11 @@ function setPage(next: number) {
         v-for="p in visiblePages"
         :key="p"
         type="button"
-        class="flex h-8 min-w-[2rem] items-center justify-center rounded px-2 text-sm font-medium transition-colors"
+        class="flex h-8 min-w-[2rem] items-center justify-center rounded px-2 text-body-sm font-medium transition-colors"
         :class="[
           p === pagination.page
-            ? (isTerminal ? 'bg-brand-600 text-white' : 'bg-slate-900 text-white')
-            : (isTerminal ? 'text-neutral-300 hover:bg-neutral-800 hover:text-white' : 'text-slate-700 hover:bg-slate-50'),
+            ? (isTerminal ? 'bg-brand-600 text-white' : 'bg-neutral-900 text-white')
+            : (isTerminal ? 'text-neutral-300 hover:bg-neutral-800 hover:text-white' : 'text-neutral-700 hover:bg-neutral-50'),
         ]"
         @click="setPage(p)"
       >

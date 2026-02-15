@@ -1,37 +1,37 @@
 <template>
   <div
     class="min-h-screen p-4"
-    :class="theme === 'dark' ? 'bg-neutral-900' : 'bg-white'"
+    :class="theme === 'dark' ? 'bg-neutral-900' : 'bg-surface'"
   >
     <!-- Chart Container -->
     <div
       class="rounded-xl overflow-hidden"
-      :class="theme === 'dark' ? 'border border-neutral-700 bg-neutral-800' : 'border border-gray-200 bg-gray-50'"
+      :class="theme === 'dark' ? 'border border-neutral-700 bg-neutral-800' : 'border border-neutral-200 bg-neutral-50'"
     >
       <!-- Header -->
       <div
         class="px-4 py-3 border-b"
-        :class="theme === 'dark' ? 'border-neutral-700' : 'border-gray-200'"
+        :class="theme === 'dark' ? 'border-neutral-700' : 'border-neutral-200'"
       >
         <div class="flex items-center justify-between">
           <div>
             <h1
-              class="text-lg font-bold"
-              :class="theme === 'dark' ? 'text-white' : 'text-gray-900'"
+              class="text-body-lg font-bold"
+              :class="theme === 'dark' ? 'text-white' : 'text-neutral-900'"
             >
               {{ chartMeta?.title }}
             </h1>
             <p
               v-if="insight"
-              class="text-sm"
-              :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-600'"
+              class="text-body-sm"
+              :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
             >
               {{ insight }}
             </p>
           </div>
           <div
-            class="text-xs"
-            :class="theme === 'dark' ? 'text-neutral-500' : 'text-gray-500'"
+            class="text-body-sm"
+            :class="theme === 'dark' ? 'text-neutral-500' : 'text-neutral-500'"
           >
             {{ corridorLabel }} · ${{ filters.amount }}
           </div>
@@ -42,52 +42,47 @@
       <div class="p-4">
         <div
           v-if="loading"
-          class="flex h-64 items-center justify-center"
+          class="flex h-64 w-full items-center justify-center"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading chart"
         >
-          <div
-            class="flex items-center gap-2"
-            :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
-          >
-            <svg
-              class="h-5 w-5 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              />
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Loading...
-          </div>
+          <SkeletonBlock
+            width="full"
+            height="16rem"
+            :tone="theme === 'dark' ? 'dark' : 'light'"
+          />
+          <span class="sr-only">Loading chart</span>
         </div>
-        <component
-          :is="chartComponent"
+        <div
+          v-else-if="loadError"
+          class="flex h-64 items-center justify-center text-body-sm"
+          :class="theme === 'dark' ? 'text-neutral-300' : 'text-neutral-700'"
+        >
+          {{ loadError }}
+        </div>
+        <AsyncErrorBoundary
           v-else-if="chartComponent && chartData"
-          :series="chartData.series"
-          :unit="chartData.metadata.unit"
-          :unit-label="chartData.metadata.unitLabel"
-          :rows="matrixRows"
-        />
+          skeleton-height="320"
+        >
+          <component
+            :is="chartComponent"
+            :series="chartData.series"
+            :unit="chartData.metadata.unit"
+            :unit-label="chartData.metadata.unitLabel"
+            :rows="matrixRows"
+          />
+        </AsyncErrorBoundary>
       </div>
 
       <!-- Footer Attribution -->
       <div
         class="flex items-center justify-between px-4 py-3 border-t"
-        :class="theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-gray-200 bg-gray-100'"
+        :class="theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-neutral-200 bg-neutral-100'"
       >
         <div
-          class="flex items-center gap-2 text-xs"
-          :class="theme === 'dark' ? 'text-neutral-400' : 'text-gray-500'"
+          class="flex items-center gap-2 text-body-sm"
+          :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
         >
           <span>Updated {{ formatLastUpdated(lastUpdated) }}</span>
         </div>
@@ -95,7 +90,7 @@
           :href="fullChartUrl"
           target="_blank"
           rel="noopener"
-          class="flex items-center gap-1.5 text-xs font-medium transition-colors"
+          class="flex items-center gap-1.5 text-body-sm font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"
         >
           <svg
@@ -113,17 +108,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, markRaw } from 'vue'
+import { ref, computed, onMounted, watchEffect, markRaw, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow, AmountBucket } from '~/types/pulse'
 import { getChartById } from '~/lib/pulseChartRegistry'
 import { getChartData, getMethodCoverage, getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
-import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import PulseBarChart from '~/components/pulse/PulseBarChart.vue'
 import PulseStackedChart from '~/components/pulse/PulseStackedChart.vue'
 import PulseScatterChart from '~/components/pulse/PulseScatterChart.vue'
 import PulseMatrixTable from '~/components/pulse/PulseMatrixTable.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+
+const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
 
 const { pulseEnabled } = useFeatureFlags()
 
@@ -137,6 +137,9 @@ definePageMeta({
 
 const route = useRoute()
 const config = useRuntimeConfig()
+const siteUrl = config.public.siteUrl || 'https://remit-scout.com'
+const embedUrl = computed(() => `${siteUrl}${route.path}`)
+const { addVideoObjectSchema } = useStructuredData()
 
 const chartId = computed(() => route.params.chartId as string)
 const theme = computed(() => (route.query.theme as 'dark' | 'light') || 'dark')
@@ -157,6 +160,7 @@ const chartData = ref<ChartData | null>(null)
 const matrixRows = ref<MethodCoverageRow[]>([])
 const lastUpdated = ref('')
 const insight = ref('')
+const loadError = ref<string | null>(null)
 
 const chartMeta = computed(() => getChartById(chartId.value))
 
@@ -173,6 +177,29 @@ const fullChartUrl = computed(() => {
   if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount))
   const queryStr = params.toString()
   return `/pulse/charts/${chartId.value}${queryStr ? '?' + queryStr : ''}`
+})
+
+watchEffect(() => {
+  const title = chartMeta.value?.title
+    ? `Embed: ${chartMeta.value.title} | Remit-Scout`
+    : 'Embed: Pulse Chart | Remit-Scout'
+  const description = 'Embeddable Remit-Scout Pulse chart.'
+
+  setSeo({
+    title,
+    description,
+    canonical: embedUrl.value,
+    noindex: true,
+  })
+
+  addVideoObjectSchema({
+    name: title,
+    description,
+    thumbnailUrl: `${siteUrl}/og-image.png`,
+    uploadDate: new Date().toISOString(),
+    contentUrl: `${siteUrl}${fullChartUrl.value}`,
+    embedUrl: embedUrl.value,
+  })
 })
 
 const chartComponent = computed(() => {
@@ -207,6 +234,7 @@ function formatLastUpdated(timestamp: string): string {
 
 onMounted(async () => {
   try {
+    loadError.value = null
     if (chartMeta.value?.type === 'matrix') {
       matrixRows.value = await getMethodCoverage(filters.value)
     }
@@ -217,7 +245,7 @@ onMounted(async () => {
     }
   }
   catch (e) {
-    console.error('Failed to load embed chart:', e)
+    loadError.value = 'Unable to load chart data.'
   }
   finally {
     loading.value = false

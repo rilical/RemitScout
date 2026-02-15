@@ -29,6 +29,7 @@ const start = async () => {
   let isShutdownRequested = () => false
   let smartAlertsTimer: ReturnType<typeof setInterval> | null = null
   let smartAlertsRunning = false
+  const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
 
   try {
     // Fail-fast validation for required runtime config. For ECS, also validates AWS connectivity.
@@ -39,9 +40,8 @@ const start = async () => {
         requireRedis: true,
         requireQueues: true,
         requireStorage: true,
-        requireSupabase: true,
-        requireStripe: true,
-        requireJwtSecret: config.planeA.requireJwt,
+        requireSupabase: isProdLikeEnv,
+        requireStripe: isProdLikeEnv,
       },
     })
 

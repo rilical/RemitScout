@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-slate-50 px-6 py-10">
+  <div class="min-h-screen bg-neutral-50 px-6 py-10">
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="rounded-2xl bg-white p-6 shadow-sm">
+      <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-900">Observer Console</h1>
-            <p class="text-sm text-slate-500">
+            <h1 class="text-h3 font-semibold text-rs-fg">Observer Console</h1>
+            <p class="text-body-sm text-rs-muted">
               AWS-first launch observation for Silver, Gold, alerts, and exports.
             </p>
           </div>
           <div class="flex flex-col gap-2 sm:flex-row">
             <button
-              class="h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
               :disabled="ensuring"
               title="Creates silver.alert_notification_attempt (dev/staging only)"
               @click="ensureAuditTable"
@@ -19,7 +19,7 @@
               {{ ensuring ? 'Ensuring…' : 'Ensure email audit table' }}
             </button>
             <button
-              class="h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100"
+              class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
               :disabled="evaluating"
               title="Admin-only dev helper: evaluate alerts now (ignores schedule constraints)"
               @click="runAlertEvaluation"
@@ -27,7 +27,7 @@
               {{ evaluating ? 'Evaluating…' : 'Run alert evaluation' }}
             </button>
             <button
-              class="h-10 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-primary-300"
               :disabled="loading"
               @click="loadObserver"
             >
@@ -35,20 +35,22 @@
             </button>
           </div>
         </div>
-        <div class="mt-3 text-xs text-slate-500">
+        <div class="mt-3 text-body-sm text-rs-muted">
           Last refresh: {{ formatTimestamp(lastRefresh) }}
         </div>
-        <p
+        <ErrorState
           v-if="error"
-          class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700"
-        >
-          {{ error }}
-        </p>
+          class="mt-4"
+          mode="card"
+          :title="error?.startsWith('Some observer') ? 'Partial load failure' : 'Something went wrong'"
+          :message="error || 'Failed to load data'"
+          :on-retry="refresh"
+        />
       </header>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">AWS click-paths</h2>
-        <p class="text-xs text-slate-500">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">AWS click-paths</h2>
+        <p class="text-body-sm text-rs-muted">
           Open these directly in AWS Console for visual monitoring.
         </p>
         <div class="mt-4 grid gap-3 md:grid-cols-2">
@@ -58,70 +60,70 @@
             :href="link.href"
             target="_blank"
             rel="noopener noreferrer"
-            class="rounded-xl border border-slate-200 p-4 hover:border-blue-200 hover:bg-blue-50"
+            class="rounded-xl border border-rs-border p-4 hover:border-primary-200 hover:bg-primary-50"
           >
-            <div class="text-sm font-semibold text-slate-900">{{ link.label }}</div>
-            <div class="mt-1 text-xs text-slate-500">{{ link.description }}</div>
+            <div class="text-body-sm font-semibold text-rs-fg">{{ link.label }}</div>
+            <div class="mt-1 text-body-sm text-rs-muted">{{ link.description }}</div>
           </a>
         </div>
       </section>
 
       <section class="grid gap-6 lg:grid-cols-3">
-        <div class="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
-          <h2 class="text-lg font-semibold text-slate-900">Indices health</h2>
-          <p class="text-xs text-slate-500">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm lg:col-span-2">
+          <h2 class="text-body-lg font-semibold text-rs-fg">Indices health</h2>
+          <p class="text-body-sm text-rs-muted">
             Source: <code>/api/v1/ops/indices/health</code>
           </p>
           <div
             v-if="indicesHealth"
             class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
           >
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Status</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">{{ indicesHealth.status }}</div>
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Status</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ indicesHealth.status }}</div>
             </div>
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Available ratio</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Available ratio</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">
                 {{ formatPercent(indicesHealth.summary?.available_ratio) }}
               </div>
             </div>
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Suppressed ratio</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Suppressed ratio</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">
                 {{ formatPercent(indicesHealth.summary?.suppressed_ratio) }}
               </div>
             </div>
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Min provider count</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Min provider count</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">
                 {{ formatNumber(indicesHealth.summary?.min_provider_count, 0) }}
               </div>
             </div>
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Weight confidence p10</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Weight confidence p10</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">
                 {{ formatNumber(indicesHealth.summary?.weight_confidence_p10, 3) }}
               </div>
             </div>
-            <div class="rounded-lg border border-slate-100 p-3">
-              <div class="text-xs uppercase text-slate-400">Latest Gold date</div>
-              <div class="mt-1 text-lg font-semibold text-slate-900">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Latest Gold date</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">
                 {{ indicesHealth.summary?.latest_date || 'n/a' }}
               </div>
             </div>
           </div>
           <p
             v-else
-            class="mt-4 text-sm text-slate-500"
+            class="mt-4 text-body-sm text-rs-muted"
           >
             No indices health data yet.
           </p>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">B2B cadence</h2>
-          <p class="text-xs text-slate-500">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">B2B cadence</h2>
+          <p class="text-body-sm text-rs-muted">
             Source: <code>/api/v1/ops/b2b-sweep-status</code>
           </p>
           <div
@@ -131,34 +133,34 @@
             <div
               v-for="tier in b2bSweepStatus.schedule"
               :key="tier.priorityTier"
-              class="rounded-lg border border-slate-100 p-3"
+              class="rounded-lg border border-neutral-100 p-3"
             >
-              <div class="text-sm font-semibold text-slate-900">{{ tier.priorityTier }}</div>
-              <div class="mt-1 text-xs text-slate-500">
+              <div class="text-body-sm font-semibold text-rs-fg">{{ tier.priorityTier }}</div>
+              <div class="mt-1 text-body-sm text-rs-muted">
                 providers={{ tier.providers }}, enabled={{ tier.anyEnabled ? 'yes' : 'no' }}
               </div>
-              <div class="text-xs text-slate-500">
+              <div class="text-body-sm text-rs-muted">
                 drift={{ tier.driftMinutes ?? 'n/a' }} min
               </div>
             </div>
           </div>
           <p
             v-else
-            class="mt-4 text-sm text-slate-500"
+            class="mt-4 text-body-sm text-rs-muted"
           >
             No sweep status data yet.
           </p>
         </div>
       </section>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Provider spot-check</h2>
-        <p class="text-xs text-slate-500">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">Provider spot-check</h2>
+        <p class="text-body-sm text-rs-muted">
           These are key provider health endpoints to confirm stale/fresh quote windows.
         </p>
         <div class="mt-4 overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="text-xs uppercase text-slate-400">
+          <table class="min-w-full text-body-sm">
+            <thead class="text-body-sm uppercase text-neutral-400">
               <tr>
                 <th class="py-2 text-left">Provider</th>
                 <th class="py-2 text-right">Corridors</th>
@@ -171,18 +173,18 @@
               <tr
                 v-for="row in providerChecks"
                 :key="row.providerId"
-                class="border-t border-slate-100"
+                class="border-t border-neutral-100"
               >
-                <td class="py-2 text-slate-700">{{ row.providerLabel }}</td>
-                <td class="py-2 text-right text-slate-600">{{ row.corridorCount ?? 'n/a' }}</td>
-                <td class="py-2 text-right text-slate-600">{{ row.staleCount ?? 'n/a' }}</td>
-                <td class="py-2 text-right text-slate-600">{{ row.freshWindowMinutes ?? 'n/a' }}</td>
-                <td class="py-2 text-slate-500">{{ formatTimestamp(row.timestamp) }}</td>
+                <td class="py-2 text-neutral-700">{{ row.providerLabel }}</td>
+                <td class="py-2 text-right text-neutral-600">{{ row.corridorCount ?? 'n/a' }}</td>
+                <td class="py-2 text-right text-neutral-600">{{ row.staleCount ?? 'n/a' }}</td>
+                <td class="py-2 text-right text-neutral-600">{{ row.freshWindowMinutes ?? 'n/a' }}</td>
+                <td class="py-2 text-rs-muted">{{ formatTimestamp(row.timestamp) }}</td>
               </tr>
               <tr v-if="providerChecks.length === 0">
                 <td
                   colspan="5"
-                  class="py-3 text-center text-xs text-slate-400"
+                  class="py-3 text-center text-body-sm text-neutral-400"
                 >
                   No provider checks yet.
                 </td>
@@ -192,9 +194,9 @@
         </div>
       </section>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Latest Silver activity</h2>
-        <p class="text-xs text-slate-500">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">Latest Silver activity</h2>
+        <p class="text-body-sm text-rs-muted">
           Source: <code>/api/v1/ops/observer/summary</code>
         </p>
 
@@ -203,11 +205,11 @@
           class="mt-4 space-y-6"
         >
           <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-xl border border-slate-100 p-4">
-              <div class="text-sm font-semibold text-slate-900">Watchlist items</div>
+            <div class="rounded-xl border border-neutral-100 p-4">
+              <div class="text-body-sm font-semibold text-rs-fg">Watchlist items</div>
               <div class="mt-2 overflow-auto">
-                <table class="min-w-full text-sm">
-                  <thead class="text-xs uppercase text-slate-400">
+                <table class="min-w-full text-body-sm">
+                  <thead class="text-body-sm uppercase text-neutral-400">
                     <tr>
                       <th class="py-2 text-left">Updated</th>
                       <th class="py-2 text-left">User</th>
@@ -219,17 +221,17 @@
                     <tr
                       v-for="row in observerSummary.latest.watchlist_items"
                       :key="row.id"
-                      class="border-t border-slate-100"
+                      class="border-t border-neutral-100"
                     >
-                      <td class="py-2 text-xs text-slate-500">{{ formatTimestamp(row.updated_at) }}</td>
-                      <td class="py-2 text-xs text-slate-500">{{ row.user_id.slice(0, 8) }}…</td>
-                      <td class="py-2 text-slate-700">{{ row.target_type }}</td>
-                      <td class="py-2 text-slate-700">{{ row.label || '—' }}</td>
+                      <td class="py-2 text-body-sm text-rs-muted">{{ formatTimestamp(row.updated_at) }}</td>
+                      <td class="py-2 text-body-sm text-rs-muted">{{ row.user_id.slice(0, 8) }}…</td>
+                      <td class="py-2 text-neutral-700">{{ row.target_type }}</td>
+                      <td class="py-2 text-neutral-700">{{ row.label || '—' }}</td>
                     </tr>
                     <tr v-if="observerSummary.latest.watchlist_items.length === 0">
                       <td
                         colspan="4"
-                        class="py-3 text-center text-xs text-slate-400"
+                        class="py-3 text-center text-body-sm text-neutral-400"
                       >
                         No watchlist items yet.
                       </td>
@@ -239,11 +241,11 @@
               </div>
             </div>
 
-            <div class="rounded-xl border border-slate-100 p-4">
-              <div class="text-sm font-semibold text-slate-900">Alerts</div>
+            <div class="rounded-xl border border-neutral-100 p-4">
+              <div class="text-body-sm font-semibold text-rs-fg">Alerts</div>
               <div class="mt-2 overflow-auto">
-                <table class="min-w-full text-sm">
-                  <thead class="text-xs uppercase text-slate-400">
+                <table class="min-w-full text-body-sm">
+                  <thead class="text-body-sm uppercase text-neutral-400">
                     <tr>
                       <th class="py-2 text-left">Updated</th>
                       <th class="py-2 text-left">Metric</th>
@@ -256,26 +258,26 @@
                     <tr
                       v-for="row in observerSummary.latest.alerts"
                       :key="row.id"
-                      class="border-t border-slate-100"
+                      class="border-t border-neutral-100"
                     >
-                      <td class="py-2 text-xs text-slate-500">{{ formatTimestamp(row.updated_at) }}</td>
-                      <td class="py-2 text-slate-700">{{ row.metric }}</td>
-                      <td class="py-2 text-slate-700">
+                      <td class="py-2 text-body-sm text-rs-muted">{{ formatTimestamp(row.updated_at) }}</td>
+                      <td class="py-2 text-neutral-700">{{ row.metric }}</td>
+                      <td class="py-2 text-neutral-700">
                         {{ row.comparator }} {{ row.threshold }}
                         <span
                           v-if="row.currency"
-                          class="text-xs text-slate-500"
+                          class="text-body-sm text-rs-muted"
                         >
                           {{ row.currency }}
                         </span>
                       </td>
-                      <td class="py-2 text-xs text-slate-500">{{ row.user_id.slice(0, 8) }}…</td>
-                      <td class="py-2 text-slate-700">{{ row.enabled ? 'yes' : 'no' }}</td>
+                      <td class="py-2 text-body-sm text-rs-muted">{{ row.user_id.slice(0, 8) }}…</td>
+                      <td class="py-2 text-neutral-700">{{ row.enabled ? 'yes' : 'no' }}</td>
                     </tr>
                     <tr v-if="observerSummary.latest.alerts.length === 0">
                       <td
                         colspan="5"
-                        class="py-3 text-center text-xs text-slate-400"
+                        class="py-3 text-center text-body-sm text-neutral-400"
                       >
                         No alerts yet.
                       </td>
@@ -286,11 +288,11 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-100 p-4">
-            <div class="text-sm font-semibold text-slate-900">Alert events</div>
+          <div class="rounded-xl border border-neutral-100 p-4">
+            <div class="text-body-sm font-semibold text-rs-fg">Alert events</div>
             <div class="mt-2 overflow-auto">
-              <table class="min-w-full text-sm">
-                <thead class="text-xs uppercase text-slate-400">
+              <table class="min-w-full text-body-sm">
+                <thead class="text-body-sm uppercase text-neutral-400">
                   <tr>
                     <th class="py-2 text-left">Triggered</th>
                     <th class="py-2 text-left">Alert</th>
@@ -303,18 +305,18 @@
                   <tr
                     v-for="row in observerSummary.latest.alert_events"
                     :key="row.id"
-                    class="border-t border-slate-100"
+                    class="border-t border-neutral-100"
                   >
-                    <td class="py-2 text-xs text-slate-500">{{ formatTimestamp(row.triggered_at) }}</td>
-                    <td class="py-2 text-xs text-slate-500">{{ row.alert_id.slice(0, 8) }}…</td>
-                    <td class="py-2 text-slate-700">{{ row.value ?? '—' }}</td>
-                    <td class="py-2 text-slate-700">{{ row.notification_status ?? '—' }}</td>
-                    <td class="py-2 text-xs text-slate-500">{{ row.message || '—' }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">{{ formatTimestamp(row.triggered_at) }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">{{ row.alert_id.slice(0, 8) }}…</td>
+                    <td class="py-2 text-neutral-700">{{ row.value ?? '—' }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.notification_status ?? '—' }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">{{ row.message || '—' }}</td>
                   </tr>
                   <tr v-if="observerSummary.latest.alert_events.length === 0">
                     <td
                       colspan="5"
-                      class="py-3 text-center text-xs text-slate-400"
+                      class="py-3 text-center text-body-sm text-neutral-400"
                     >
                       No alert events yet.
                     </td>
@@ -324,14 +326,14 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-100 p-4">
-            <div class="text-sm font-semibold text-slate-900">Email send attempts (audit)</div>
-            <div class="mt-1 text-xs text-slate-500">
+          <div class="rounded-xl border border-neutral-100 p-4">
+            <div class="text-body-sm font-semibold text-rs-fg">Email send attempts (audit)</div>
+            <div class="mt-1 text-body-sm text-rs-muted">
               Enable via <code>ALERTS_NOTIFICATION_AUDIT=1</code> (optional <code>..._CONTENT</code>, <code>..._PII</code>).
             </div>
             <div class="mt-2 overflow-auto">
-              <table class="min-w-full text-sm">
-                <thead class="text-xs uppercase text-slate-400">
+              <table class="min-w-full text-body-sm">
+                <thead class="text-body-sm uppercase text-neutral-400">
                   <tr>
                     <th class="py-2 text-left">Time</th>
                     <th class="py-2 text-left">Status</th>
@@ -344,22 +346,22 @@
                   <tr
                     v-for="row in observerSummary.latest.notification_attempts"
                     :key="row.id"
-                    class="border-t border-slate-100"
+                    class="border-t border-neutral-100"
                   >
-                    <td class="py-2 text-xs text-slate-500">{{ formatTimestamp(row.created_at) }}</td>
-                    <td class="py-2 text-slate-700">{{ row.status }}</td>
-                    <td class="py-2 text-xs text-slate-500">
+                    <td class="py-2 text-body-sm text-rs-muted">{{ formatTimestamp(row.created_at) }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.status }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">
                       {{ row.to_email || (row.to_email_hash ? `${row.to_email_hash.slice(0, 10)}…` : '—') }}
                     </td>
-                    <td class="py-2 text-slate-700">{{ row.subject || '—' }}</td>
-                    <td class="py-2 text-xs text-slate-500">
+                    <td class="py-2 text-neutral-700">{{ row.subject || '—' }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">
                       {{ row.skip_reason || row.error || '—' }}
                     </td>
                   </tr>
                   <tr v-if="observerSummary.latest.notification_attempts.length === 0">
                     <td
                       colspan="5"
-                      class="py-3 text-center text-xs text-slate-400"
+                      class="py-3 text-center text-body-sm text-neutral-400"
                     >
                       No notification attempts recorded.
                     </td>
@@ -369,11 +371,11 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-100 p-4">
-            <div class="text-sm font-semibold text-slate-900">Latest quote records</div>
+          <div class="rounded-xl border border-neutral-100 p-4">
+            <div class="text-body-sm font-semibold text-rs-fg">Latest quote records</div>
             <div class="mt-2 overflow-auto">
-              <table class="min-w-full text-sm">
-                <thead class="text-xs uppercase text-slate-400">
+              <table class="min-w-full text-body-sm">
+                <thead class="text-body-sm uppercase text-neutral-400">
                   <tr>
                     <th class="py-2 text-left">Created</th>
                     <th class="py-2 text-left">Provider</th>
@@ -386,18 +388,18 @@
                   <tr
                     v-for="row in observerSummary.latest.quotes"
                     :key="`${row.provider_id}:${row.corridor_id}:${row.created_at}`"
-                    class="border-t border-slate-100"
+                    class="border-t border-neutral-100"
                   >
-                    <td class="py-2 text-xs text-slate-500">{{ formatTimestamp(row.created_at) }}</td>
-                    <td class="py-2 text-slate-700">{{ row.provider_id }}</td>
-                    <td class="py-2 text-slate-700">{{ row.corridor_id }}</td>
-                    <td class="py-2 text-slate-700">{{ row.amount_bucket }}</td>
-                    <td class="py-2 text-slate-700">{{ row.status }}</td>
+                    <td class="py-2 text-body-sm text-rs-muted">{{ formatTimestamp(row.created_at) }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.provider_id }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.corridor_id }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.amount_bucket }}</td>
+                    <td class="py-2 text-neutral-700">{{ row.status }}</td>
                   </tr>
                   <tr v-if="observerSummary.latest.quotes.length === 0">
                     <td
                       colspan="5"
-                      class="py-3 text-center text-xs text-slate-400"
+                      class="py-3 text-center text-body-sm text-neutral-400"
                     >
                       No quote records yet.
                     </td>
@@ -407,15 +409,15 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-slate-100 p-4">
-            <div class="text-sm font-semibold text-slate-900">DB fallback queues</div>
-            <p class="mt-1 text-xs text-slate-500">
+          <div class="rounded-xl border border-neutral-100 p-4">
+            <div class="text-body-sm font-semibold text-rs-fg">DB fallback queues</div>
+            <p class="mt-1 text-body-sm text-rs-muted">
               Counts from <code>silver.quote_refresh_request</code> and <code>silver.fx_rate_refresh_request</code>.
             </p>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-lg border border-slate-100 p-3">
-                <div class="text-xs uppercase text-slate-400">Quote refresh</div>
-                <div class="mt-2 space-y-1 text-sm text-slate-700">
+              <div class="rounded-lg border border-neutral-100 p-3">
+                <div class="text-body-sm uppercase text-neutral-400">Quote refresh</div>
+                <div class="mt-2 space-y-1 text-body-sm text-neutral-700">
                   <div
                     v-for="row in observerSummary.queues.quote_refresh"
                     :key="row.status"
@@ -424,12 +426,17 @@
                     <span>{{ row.status }}</span>
                     <span class="font-semibold">{{ row.count }}</span>
                   </div>
-                  <div v-if="observerSummary.queues.quote_refresh.length === 0" class="text-xs text-slate-400">n/a</div>
+                  <div
+v-if="observerSummary.queues.quote_refresh.length === 0"
+class="text-body-sm text-neutral-400"
+>
+n/a
+</div>
                 </div>
               </div>
-              <div class="rounded-lg border border-slate-100 p-3">
-                <div class="text-xs uppercase text-slate-400">FX refresh</div>
-                <div class="mt-2 space-y-1 text-sm text-slate-700">
+              <div class="rounded-lg border border-neutral-100 p-3">
+                <div class="text-body-sm uppercase text-neutral-400">FX refresh</div>
+                <div class="mt-2 space-y-1 text-body-sm text-neutral-700">
                   <div
                     v-for="row in observerSummary.queues.fx_rate_refresh"
                     :key="row.status"
@@ -438,7 +445,12 @@
                     <span>{{ row.status }}</span>
                     <span class="font-semibold">{{ row.count }}</span>
                   </div>
-                  <div v-if="observerSummary.queues.fx_rate_refresh.length === 0" class="text-xs text-slate-400">n/a</div>
+                  <div
+v-if="observerSummary.queues.fx_rate_refresh.length === 0"
+class="text-body-sm text-neutral-400"
+>
+n/a
+</div>
                 </div>
               </div>
             </div>
@@ -447,15 +459,15 @@
 
         <p
           v-else
-          class="mt-4 text-sm text-slate-500"
+          class="mt-4 text-body-sm text-rs-muted"
         >
           Observer summary unavailable yet (migrations/permissions/config may still be applying).
         </p>
       </section>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">CSV paths (no CLI)</h2>
-        <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-slate-700">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">CSV paths (no CLI)</h2>
+        <ul class="mt-4 list-disc space-y-2 pl-5 text-body-sm text-neutral-700">
           <li>RDS Query Editor v2: run SQL from <code>docs/runbooks/sql/observer-pack.sql</code> and click <strong>Export to CSV</strong>.</li>
           <li>Product export flow: create export via <code>/api/v1/exports</code>, then download from Exports UI.</li>
           <li>S3 export artifacts: open <code>remit-scout-exports-dev</code> and download generated files under the <code>exports/</code> prefix.</li>
@@ -466,7 +478,22 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
+import { setSeo } from '~/composables/useSeo'
+
 definePageMeta({ middleware: ['auth', 'admin'] })
+
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Admin: Observer | Remit-Scout',
+  description: 'Admin observer dashboard.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
+
+const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
 
 type IndicesHealthResponse = {
   status: string
@@ -745,11 +772,17 @@ const loadObserver = async () => {
       })
     }
 
+    const extractReason = (result: PromiseSettledResult<unknown>) => {
+      if (result.status !== 'rejected') return null
+      const err = result.reason as { statusCode?: number, message?: string }
+      if (err?.statusCode === 404) return '404 — check BFF proxy allowlist'
+      return err?.message || 'unknown error'
+    }
     const failures = [
-      indicesResult.status === 'rejected' ? 'indices health' : null,
-      sweepResult.status === 'rejected' ? 'B2B sweep status' : null,
-      summaryResult.status === 'rejected' ? 'observer summary' : null,
-      providerResults.status === 'rejected' ? 'provider checks' : null,
+      indicesResult.status === 'rejected' ? `indices health (${extractReason(indicesResult)})` : null,
+      sweepResult.status === 'rejected' ? `B2B sweep status (${extractReason(sweepResult)})` : null,
+      summaryResult.status === 'rejected' ? `observer summary (${extractReason(summaryResult)})` : null,
+      providerResults.status === 'rejected' ? `provider checks (${extractReason(providerResults)})` : null,
     ].filter(Boolean)
     if (failures.length > 0) {
       error.value = `Some observer panels failed to load: ${failures.join(', ')}`
@@ -763,6 +796,10 @@ const loadObserver = async () => {
   finally {
     loading.value = false
   }
+}
+
+const refresh = () => {
+  void loadObserver()
 }
 
 onMounted(loadObserver)

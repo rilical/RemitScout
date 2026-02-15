@@ -2,6 +2,7 @@ import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
 import { createShutdownHandler } from '../../shared/shutdown'
+import { config } from '../../shared/config'
 
 const logger = createLogger('script.plane-b-ingest-ecs')
 
@@ -43,12 +44,21 @@ export const handler = async (): Promise<void> => {
   ])
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      requireQueues: requireIngestFanoutQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue: false,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
+      requireStorage: false,
     },
   })
 

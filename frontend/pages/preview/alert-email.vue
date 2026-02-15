@@ -1,27 +1,27 @@
 <template>
-  <div class="min-h-screen bg-gray-100 py-8">
-    <div class="mx-auto max-w-4xl px-4">
+  <div class="min-h-screen bg-neutral-100 py-8">
+    <div class="mx-auto max-w-4xl px-page-x">
       <div class="mb-8">
         <NuxtLink
           to="/dashboard"
-          class="text-brand-600 hover:underline text-sm font-medium"
+          class="text-brand-600 hover:underline text-body-sm font-medium"
         >
           ← Back to dashboard
         </NuxtLink>
-        <h1 class="mt-2 text-2xl font-bold text-neutral-800">
+        <h1 class="mt-2 text-h3 font-bold text-neutral-800">
           Alert email preview
         </h1>
-        <p class="mt-1 text-sm text-neutral-600">
+        <p class="mt-1 text-body-sm text-neutral-600">
           This is the full email users receive when a rate alert fires.
         </p>
       </div>
 
       <div
-        class="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg"
+        class="overflow-hidden rounded-xl border border-neutral-200 bg-surface shadow-lg"
         style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;"
       >
         <div
-          class="p-4 text-sm text-neutral-500 border-b border-neutral-200 bg-neutral-50"
+          class="p-4 text-body-sm text-neutral-500 border-b border-neutral-200 bg-neutral-50"
         >
           <strong>From:</strong> Remit-Scout Alerts &lt;support@remit-scout.com&gt; · <strong>Subject:</strong> Rate Alert: {{ sampleMessage }}
         </div>
@@ -31,7 +31,7 @@
           style="background-color: #f4f6fb;"
         >
           <div
-            class="mx-auto max-w-[600px] rounded-2xl border border-[#e6edf5] bg-white shadow-lg overflow-hidden"
+            class="mx-auto max-w-[600px] rounded-2xl border border-[#e6edf5] bg-surface shadow-lg overflow-hidden"
             style="max-width: 600px; background: #ffffff; border: 1px solid #e6edf5; border-radius: 16px; box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);"
           >
             <div
@@ -39,19 +39,19 @@
               style="background: #1d4ed8; color: #ffffff; padding: 28px 32px;"
             >
               <div
-                class="text-xs uppercase tracking-widest opacity-85"
+                class="text-body-sm uppercase tracking-widest opacity-85"
                 style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85;"
               >
                 Remit-Scout
               </div>
               <div
-                class="mt-1.5 text-2xl font-bold"
+                class="mt-1.5 text-h3 font-bold"
                 style="font-size: 24px; font-weight: 700; margin-top: 6px;"
               >
                 Rate Alert
               </div>
               <div
-                class="mt-2 text-sm opacity-85"
+                class="mt-2 text-body-sm opacity-85"
                 style="font-size: 13px; margin-top: 8px; opacity: 0.85;"
               >
                 {{ summaryTarget }}
@@ -154,7 +154,7 @@
               >
                 <NuxtLink
                   to="/dashboard?tab=alerts"
-                  class="inline-block rounded-[10px] bg-[#1d4ed8] px-5 py-3 text-sm font-semibold text-white no-underline"
+                  class="inline-block rounded-[10px] bg-[#1d4ed8] px-5 py-3 text-body-sm font-semibold text-white no-underline"
                   style="display: inline-block; padding: 12px 20px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 14px; background: #1d4ed8; border-radius: 10px;"
                 >
                   View Alert
@@ -162,7 +162,7 @@
               </div>
 
               <div
-                class="mt-5 border-t border-[#e6edf5] pt-4 text-xs text-[#6b7785] leading-relaxed"
+                class="mt-5 border-t border-[#e6edf5] pt-4 text-body-sm text-[#6b7785] leading-relaxed"
                 style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e6edf5; font-size: 12px; color: #6b7785; line-height: 1.6;"
               >
                 <div>
@@ -194,12 +194,20 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+
 definePageMeta({
   layout: 'default',
 })
 
-useHead({
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
   title: 'Alert email preview | Remit-Scout',
+  description: 'Preview of the rate alert email template.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
 })
 
 const sampleMessage = 'Recipient gets crossed above 1,200 USD. The best provider for USD → MXN (bank) now delivers at least this amount.'

@@ -1,17 +1,17 @@
 <template>
   <section
-    class="bg-gray-50 py-12"
+    class="bg-neutral-50 py-12"
     aria-labelledby="benefits-heading"
   >
     <div class="container mx-auto px-4">
       <div class="mb-8 text-center">
         <h2
           id="benefits-heading"
-          class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl"
+          class="mb-4 text-h3 font-bold text-neutral-900"
         >
           Why choose Remit-Scout?
         </h2>
-        <p class="mx-auto max-w-2xl text-lg text-gray-600">
+        <p class="mx-auto max-w-2xl text-body-lg text-neutral-600">
           We're committed to helping you find the best money transfer deals with complete
           transparency.
         </p>
@@ -21,7 +21,7 @@
         <!-- Independent & unbiased -->
         <div class="group text-center">
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-shadow group-hover:shadow-md"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface shadow-sm transition-shadow group-hover:shadow-md"
           >
             <svg
               class="h-8 w-8 text-primary-600"
@@ -37,10 +37,10 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+          <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
             Independent & unbiased
           </h3>
-          <p class="text-sm leading-relaxed text-gray-600">
+          <p class="text-body-sm leading-relaxed text-neutral-600">
             We don't favor any provider. Our recommendations are based purely on data and user
             reviews.
           </p>
@@ -49,7 +49,7 @@
         <!-- Updated every 10 minutes -->
         <div class="group text-center">
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-shadow group-hover:shadow-md"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface shadow-sm transition-shadow group-hover:shadow-md"
           >
             <svg
               class="h-8 w-8 text-primary-600"
@@ -65,10 +65,10 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+          <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
             Updated every 10 minutes
           </h3>
-          <p class="text-sm leading-relaxed text-gray-600">
+          <p class="text-body-sm leading-relaxed text-neutral-600">
             Exchange rates and fees are refreshed continuously to ensure you get the most current
             data.
           </p>
@@ -77,7 +77,7 @@
         <!-- 30+ trusted providers -->
         <div class="group text-center">
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-shadow group-hover:shadow-md"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface shadow-sm transition-shadow group-hover:shadow-md"
           >
             <svg
               class="h-8 w-8 text-primary-600"
@@ -93,10 +93,10 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+          <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
             30+ trusted providers
           </h3>
-          <p class="text-sm leading-relaxed text-gray-600">
+          <p class="text-body-sm leading-relaxed text-neutral-600">
             Compare rates from all major money transfer companies, including Wise, Western Union,
             and Remitly.
           </p>
@@ -105,7 +105,7 @@
         <!-- Mobile-first, fast -->
         <div class="group text-center">
           <div
-            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm transition-shadow group-hover:shadow-md"
+            class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface shadow-sm transition-shadow group-hover:shadow-md"
           >
             <svg
               class="h-8 w-8 text-primary-600"
@@ -121,10 +121,10 @@
               />
             </svg>
           </div>
-          <h3 class="mb-2 text-lg font-semibold text-gray-900">
+          <h3 class="mb-2 text-body-lg font-semibold text-neutral-900">
             Mobile-first, fast
           </h3>
-          <p class="text-sm leading-relaxed text-gray-600">
+          <p class="text-body-sm leading-relaxed text-neutral-600">
             Optimized for all devices with lightning-fast loading and intuitive mobile experience.
           </p>
         </div>

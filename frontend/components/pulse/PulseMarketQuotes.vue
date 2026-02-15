@@ -3,14 +3,14 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">
+        <h2 class="text-body-lg font-bold text-white">
           Provider Quotes
         </h2>
-        <p class="text-sm text-neutral-400">
+        <p class="text-body-sm text-neutral-400">
           Quote snapshot for {{ amountLabel }} ({{ store.corridor.fromCode }} → {{ store.corridor.toCode }})
         </p>
       </div>
-      <div class="flex items-center gap-2 text-sm">
+      <div class="flex items-center gap-2 text-body-sm">
         <span class="text-neutral-400">Mid-market:</span>
         <span class="font-mono font-bold text-white">{{ midMarketRateDisplay }}</span>
         <span class="text-neutral-500">{{ store.corridor.toCode }}/{{ store.corridor.fromCode }}</span>
@@ -50,7 +50,7 @@
           <!-- Promo Badge -->
           <div
             v-if="quote.isPromo"
-            class="absolute -top-2 left-3 rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-bold text-black uppercase"
+            class="absolute -top-2 left-3 rounded-full bg-warning-500 px-2 py-0.5 text-[10px] font-bold text-black uppercase"
           >
             Promo
           </div>
@@ -58,7 +58,7 @@
           <div class="flex items-center gap-3">
             <!-- Provider Logo Placeholder -->
             <div
-              class="flex h-10 w-10 items-center justify-center rounded-lg text-lg font-bold text-white"
+              class="flex h-10 w-10 items-center justify-center rounded-lg text-body-lg font-bold text-white"
               :style="{ backgroundColor: quote.color + '30' }"
             >
               {{ quote.provider.charAt(0) }}
@@ -67,7 +67,7 @@
               <div class="font-semibold text-white">
                 {{ quote.provider }}
               </div>
-              <div class="text-xs text-neutral-400">
+              <div class="text-body-sm text-neutral-400">
                 {{ quote.speed }}
               </div>
             </div>
@@ -75,12 +75,12 @@
 
           <div class="text-right">
             <div
-              class="text-lg font-bold"
+              class="text-body-lg font-bold"
               :class="index === 0 ? 'text-brand-600' : 'text-white'"
             >
               {{ formatMoney(quote.recipientGets, { currency: store.corridor.toCode, maximumFractionDigits: 0 }) }}
             </div>
-            <div class="flex items-center justify-end gap-2 text-xs">
+            <div class="flex items-center justify-end gap-2 text-body-sm">
               <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: store.corridor.fromCode, maximumFractionDigits: 2 }) }}</span>
               <span class="text-neutral-600">•</span>
               <span
@@ -95,7 +95,7 @@
       </div>
       <div
         v-else
-        class="flex h-24 items-center justify-center text-sm text-neutral-500"
+        class="flex h-24 items-center justify-center text-body-sm text-neutral-500"
       >
         No quotes available yet.
       </div>
@@ -105,7 +105,7 @@
         v-if="store.viewMode === 'analyst' && data"
         class="mt-6 border-t border-neutral-700 pt-4"
       >
-        <div class="grid grid-cols-3 gap-4 text-sm">
+        <div class="grid grid-cols-3 gap-4 text-body-sm">
           <div>
             <div class="text-neutral-500 mb-1">
               Best vs Worst
@@ -138,7 +138,7 @@
     <div class="border-t border-neutral-700 px-6 py-3">
       <NuxtLink
         :to="compareCorridorUrl"
-        class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+        class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white transition-colors hover:bg-brand-700"
       >
         <Icon
           name="arrow-right"
@@ -218,7 +218,7 @@ async function loadData() {
     data.value = await getMarketSnapshot(store.corridor, store.amount)
   }
   catch (e) {
-    console.error('Failed to load market snapshot:', e)
+    useLogger('PulseMarketQuotes').error('Failed to load market snapshot', e)
   }
   finally {
     loading.value = false

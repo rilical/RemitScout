@@ -1,5 +1,8 @@
+import { setResponseHeaders } from 'h3'
 import { proxyToBackend } from '~/server/utils/backendProxy'
 
 export default defineEventHandler(async (event) => {
-  return await proxyToBackend(event, '/newsletter/subscribe')
+  const data = await proxyToBackend(event, '/newsletter/subscribe')
+  setResponseHeaders(event, { 'cache-control': 'no-store' })
+  return data
 })

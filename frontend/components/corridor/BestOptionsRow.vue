@@ -7,18 +7,18 @@
       class="group relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-md"
       :class="[
         option.type === 'value'
-          ? 'border-emerald-400 bg-emerald-50 hover:border-emerald-500'
-          : 'border-slate-200 bg-white hover:border-brand-300',
+          ? 'border-success-600 bg-success-600 hover:border-success-600'
+          : 'border-rs-border bg-surface hover:border-brand-300',
       ]"
       @click="$emit('select', option.providerId)"
     >
       <div class="flex items-start justify-between mb-2">
         <span
-          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold"
+          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-body-sm font-semibold"
           :class="[
             option.type === 'value'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-100 text-slate-700',
+              ? 'bg-success-600 text-white'
+              : 'bg-neutral-100 text-neutral-700',
           ]"
         >
           <component
@@ -27,24 +27,24 @@
           />
           {{ option.label }}
         </span>
-        <span class="text-xs text-slate-500">{{ option.score }}/10</span>
+        <span class="text-body-sm text-rs-muted">{{ option.score }}/10</span>
       </div>
 
       <div class="mb-1">
-        <span class="text-lg font-bold text-slate-900">{{ option.provider }}</span>
+        <span class="text-body-lg font-bold text-rs-fg">{{ option.provider }}</span>
       </div>
 
       <div class="flex items-baseline gap-2 mb-2">
         <span
-          class="text-xl font-bold"
-          :class="option.type === 'value' ? 'text-emerald-600' : 'text-brand-600'"
+          class="text-h4 font-bold"
+          :class="option.type === 'value' ? 'text-success-600' : 'text-brand-600'"
         >
           {{ option.recipientGets }}
         </span>
-        <span class="text-sm text-slate-500">{{ option.currency }}</span>
+        <span class="text-body-sm text-rs-muted">{{ option.currency }}</span>
       </div>
 
-      <div class="flex items-center gap-3 text-xs text-slate-500">
+      <div class="flex items-center gap-3 text-body-sm text-rs-muted">
         <span class="flex items-center gap-1">
           <svg
             class="w-3 h-3"
@@ -81,7 +81,7 @@
 
       <div class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
         <svg
-          class="w-5 h-5 text-slate-400"
+          class="w-5 h-5 text-neutral-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

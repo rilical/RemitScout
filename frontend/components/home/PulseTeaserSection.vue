@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useEntitlements } from '~/composables/useEntitlements'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 type PulseTeaserMover = {
   corridorId: string
@@ -70,129 +71,172 @@ const formatCorridor = (m: PulseTeaserMover) => {
     countries: `${m.fromCountry} → ${m.toCountry}`,
   }
 }
+
+const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP', 'CAD/INR']
 </script>
 
 <template>
-  <section class="py-14 sm:py-16 bg-gradient-to-b from-white via-white to-slate-50">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div class="p-6 sm:p-8 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
-                <span class="h-2 w-2 rounded-full bg-emerald-400" />
-                Pulse teaser (real data)
-              </div>
-              <h2 class="mt-4 text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-                What’s Moving Right Now
-              </h2>
-              <p class="mt-2 text-sm sm:text-base text-white/80 max-w-2xl">
-                Latest corridor moves from Gold Export. No demos, no made-up numbers.
-              </p>
-              <p class="mt-3 text-xs text-white/60">
-                <span v-if="updatedAt">Updated {{ formatTimestamp(updatedAt) }} UTC</span>
-                <span v-else>Warming up (no Gold Export data yet)</span>
-                <span class="mx-2">•</span>
-                Last {{ windowHours }} hours
-              </p>
-            </div>
+  <section class="py-14 sm:py-16 bg-neutral-900">
+    <div class="container">
+      <!-- Terminal header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-h2 font-extrabold text-white leading-tight">
+            Remit-Scout Pulse
+          </h2>
+          <p class="mt-1 text-body-sm text-neutral-400">
+            <span v-if="updatedAt">Updated {{ formatTimestamp(updatedAt) }} UTC</span>
+            <span v-else>Awaiting Gold Export data</span>
+            <span class="mx-2 text-neutral-600">|</span>
+            Last {{ windowHours }}h window
+          </p>
+        </div>
+        <NuxtLink
+          to="/pulse"
+          class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-bold text-white hover:bg-brand-700 transition"
+        >
+          {{ ctaLabel }}
+        </NuxtLink>
+      </div>
 
-            <NuxtLink
-              to="/pulse"
-              class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-bold text-slate-900 hover:bg-slate-100 transition"
-            >
-              {{ ctaLabel }}
-            </NuxtLink>
-          </div>
+      <!-- Terminal body -->
+      <div class="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden">
+        <!-- Status bar -->
+        <div class="flex items-center gap-3 px-4 py-2 border-b border-neutral-800 bg-neutral-900/80">
+          <span
+            class="h-2 w-2 rounded-full"
+            :class="movers.length > 0 ? 'bg-success-500' : 'bg-warning-500 animate-pulse'"
+          />
+          <span class="text-[11px] font-mono uppercase tracking-widest text-neutral-500">
+            {{ movers.length > 0 ? 'LIVE' : 'STANDBY' }}
+          </span>
+          <span class="text-[11px] font-mono text-neutral-600 ml-auto">
+            CORRIDORS: {{ movers.length }} | SRC: GOLD EXPORT
+          </span>
         </div>
 
-        <div class="p-6 sm:p-8">
-          <div
-            v-if="pending"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+        <!-- Loading state -->
+        <div
+          v-if="pending"
+          class="p-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="n in 6"
               :key="n"
-              class="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+              class="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4"
             >
-              <div class="h-4 w-28 bg-slate-200 rounded mb-3 animate-pulse" />
-              <div class="h-8 w-40 bg-slate-200 rounded mb-2 animate-pulse" />
-              <div class="h-3 w-24 bg-slate-200 rounded animate-pulse" />
+              <SkeletonBlock
+                width="5rem"
+                height="12"
+                class="mb-3 !bg-neutral-700"
+              />
+              <SkeletonBlock
+                width="8rem"
+                height="24"
+                class="mb-2 !bg-neutral-700"
+              />
+              <SkeletonBlock
+                width="4rem"
+                height="10"
+                class="!bg-neutral-700"
+              />
             </div>
           </div>
+        </div>
 
-          <div
-            v-else-if="movers.length === 0"
-            class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center"
-          >
-            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white font-black">
-              P
+        <!-- Empty / warming up — terminal placeholder grid -->
+        <div
+          v-else-if="movers.length === 0"
+          class="p-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div
+              v-for="(pair, idx) in placeholderPairs"
+              :key="idx"
+              class="rounded-lg border border-neutral-800 bg-neutral-800/30 p-4"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <div class="text-[11px] font-mono uppercase tracking-wider text-neutral-600">
+                  {{ pair }}
+                </div>
+                <div class="text-[11px] font-mono text-neutral-700">
+                  --
+                </div>
+              </div>
+              <div class="h-8 flex items-end gap-px mb-2">
+                <div
+                  v-for="bar in 12"
+                  :key="bar"
+                  class="flex-1 bg-neutral-800 rounded-sm"
+                  :style="{ height: `${8 + ((idx * 7 + bar * 13) % 92)}%`, opacity: 0.3 }"
+                />
+              </div>
+              <div class="flex justify-between text-[10px] font-mono text-neutral-700">
+                <span>AVG --</span>
+                <span>CHG --%</span>
+              </div>
             </div>
-            <div class="text-lg font-bold text-slate-900">
-              Pulse is warming up
-            </div>
-            <p class="mt-2 text-sm text-slate-600 max-w-xl mx-auto">
-              We do not show placeholder numbers. Once Gold Export has recent corridor buckets, the movers list will appear here.
+          </div>
+          <div class="mt-4 text-center">
+            <p class="text-[11px] font-mono text-neutral-600 uppercase tracking-wider">
+              Awaiting live corridor data from Gold Export pipeline
             </p>
           </div>
+        </div>
 
-          <div
-            v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+        <!-- Live data grid -->
+        <div
+          v-else
+          class="p-4 sm:p-6"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="m in movers"
               :key="m.corridorId"
-              class="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md hover:-translate-y-0.5 transition"
+              class="rounded-lg border border-neutral-800 bg-neutral-800/40 p-4 hover:bg-neutral-800/60 transition"
             >
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    Corridor
+                  <div class="text-[11px] font-mono uppercase tracking-wider text-neutral-500">
+                    {{ formatCorridor(m).label }}
                   </div>
                   <div class="mt-1 flex items-center gap-2">
-                    <span class="text-xl">{{ formatCorridor(m).fromFlag }}</span>
-                    <span class="text-slate-400">→</span>
-                    <span class="text-xl">{{ formatCorridor(m).toFlag }}</span>
-                    <span class="text-sm font-bold text-slate-900">
-                      {{ formatCorridor(m).label }}
-                    </span>
-                  </div>
-                  <div class="mt-1 text-xs text-slate-500">
-                    {{ formatCorridor(m).countries }}
+                    <span class="text-h4">{{ formatCorridor(m).fromFlag }}</span>
+                    <span class="text-neutral-600 font-mono">&rarr;</span>
+                    <span class="text-h4">{{ formatCorridor(m).toFlag }}</span>
                   </div>
                 </div>
 
                 <div
-                  class="rounded-xl px-3 py-2 text-xs font-bold"
-                  :class="m.deltaPct > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : (m.deltaPct < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-50 text-slate-700 border border-slate-200')"
+                  class="rounded px-2 py-1 text-body-sm font-mono font-bold"
+                  :class="m.deltaPct > 0 ? 'bg-success-600/15 text-success-400' : (m.deltaPct < 0 ? 'bg-danger-600/15 text-danger-400' : 'bg-neutral-800 text-neutral-400')"
                 >
                   {{ formatPct(m.deltaPct) }}
                 </div>
               </div>
 
-              <div class="mt-4 grid grid-cols-2 gap-3">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                    Current avg
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <div>
+                  <div class="text-[10px] font-mono uppercase tracking-wider text-neutral-600">
+                    AVG RATE
                   </div>
-                  <div class="mt-1 text-sm font-bold text-slate-900">
+                  <div class="mt-0.5 text-body-sm font-mono font-bold text-white">
                     {{ m.currentAvgRate.toFixed(4) }}
                   </div>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                    Providers
+                <div>
+                  <div class="text-[10px] font-mono uppercase tracking-wider text-neutral-600">
+                    PROVIDERS
                   </div>
-                  <div class="mt-1 text-sm font-bold text-slate-900">
+                  <div class="mt-0.5 text-body-sm font-mono font-bold text-white">
                     {{ m.providerCount }}
                   </div>
                 </div>
               </div>
 
-              <div class="mt-4 text-[11px] text-slate-500">
-                Bucket {{ formatTimestamp(m.timestampBucket) }} UTC
+              <div class="mt-3 text-[10px] font-mono text-neutral-600">
+                {{ formatTimestamp(m.timestampBucket) }} UTC
               </div>
             </div>
           </div>

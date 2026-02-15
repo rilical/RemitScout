@@ -44,6 +44,8 @@ export type EcsTaskOptions = {
   planeBDbHost?: string
   planeBDbPort?: string
   planeBDbName?: string
+  quoteRefreshDlqUrl?: string
+  fxRateRefreshDlqUrl?: string
   planeADbSecretArn?: string
   planeADbSsmName?: string
   planeADbHost?: string
@@ -64,6 +66,7 @@ export type EcsTaskOptions = {
   redisSecretJsonKey?: string
   redisSsmName?: string
   redisUrl?: string
+  alertsSlackWebhookUrl?: string
   proxyResidentialSecretArn?: string
   proxyResidentialSecretJsonKey?: string
   proxyResidentialSsmName?: string
@@ -97,6 +100,8 @@ export type EcsTaskOptions = {
   ingestFanoutMode?: string
   notificationsMode?: string
   opsAlertsMode?: string
+  planeBDbPoolMax?: string
+  planeBDbPoolMin?: string
 }
 
 export const createEcsTasks = (
@@ -139,7 +144,7 @@ export const createEcsTasks = (
   const workerHealthCheck: HealthCheck = {
     command: [
       'CMD-SHELL',
-      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/readyz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/health\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
     ],
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
@@ -193,8 +198,10 @@ export const createEcsTasks = (
   const sentrySecretArn = options.sentrySecretArn
   const sentrySecretJsonKey = options.sentrySecretJsonKey
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
+  const quoteRefreshDlqUrl = options.quoteRefreshDlqUrl
   const quoteRefreshQueueMode = options.quoteRefreshQueueMode
   const fxRateRefreshQueueUrl = options.fxRateRefreshQueueUrl
+  const fxRateRefreshDlqUrl = options.fxRateRefreshDlqUrl
   const fxRateRefreshQueueMode = options.fxRateRefreshQueueMode
   const ingestFanoutQueueTier1Url = options.ingestFanoutQueueTier1Url
   const ingestFanoutQueueTier2Url = options.ingestFanoutQueueTier2Url
@@ -220,7 +227,16 @@ export const createEcsTasks = (
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
 
-    if (planeBDbSecretArn) {
+    // Prefer injecting full DB URLs via SSM when available. This avoids runtime URL construction
+    // and prevents early `config` evaluation from freezing missing DB settings.
+    if (planeBDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'PlaneBEcsDatabaseParameter',
+        planeBDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
+    } else if (planeBDbSecretArn) {
       const secret = Secret.fromSecretCompleteArn(
         scope,
         'PlaneBEcsDatabaseSecret',
@@ -228,13 +244,6 @@ export const createEcsTasks = (
       )
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(secret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(secret, 'password')
-    } else if (planeBDbSsmName) {
-      const parameter = StringParameter.fromStringParameterName(
-        scope,
-        'PlaneBEcsDatabaseParameter',
-        planeBDbSsmName,
-      )
-      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     }
 
     if (redisSecretArn) {
@@ -300,7 +309,14 @@ export const createEcsTasks = (
   const buildGoldLiveSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
 
-    if (planeBDbSecretArn) {
+    if (planeBDbSsmName) {
+      const parameter = StringParameter.fromStringParameterName(
+        scope,
+        'GoldLivePlaneBDatabaseParameter',
+        planeBDbSsmName,
+      )
+      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
+    } else if (planeBDbSecretArn) {
       const planeBSecret = Secret.fromSecretCompleteArn(
         scope,
         'GoldLivePlaneBDatabaseSecret',
@@ -308,13 +324,6 @@ export const createEcsTasks = (
       )
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(planeBSecret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(planeBSecret, 'password')
-    } else if (planeBDbSsmName) {
-      const parameter = StringParameter.fromStringParameterName(
-        scope,
-        'GoldLivePlaneBDatabaseParameter',
-        planeBDbSsmName,
-      )
-      secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     }
 
     if (planeCDbSecretArn) {
@@ -365,6 +374,8 @@ export const createEcsTasks = (
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
+  const planeBDbPoolMax = options.planeBDbPoolMax ?? '5'
+  const planeBDbPoolMin = options.planeBDbPoolMin ?? '1'
   if (!isProd) {
     sharedEnv.QUOTE_REFRESH_DB_FALLBACK = '1'
   }
@@ -379,10 +390,6 @@ export const createEcsTasks = (
       process.env.DB_QUERY_TIMEOUT_MS || '120000'
     sharedEnv.DB_CONNECTION_TIMEOUT_MS =
       process.env.DB_CONNECTION_TIMEOUT_MS || '20000'
-    sharedEnv.DB_POOL_MAX =
-      process.env.DB_POOL_MAX || '10'
-    sharedEnv.DB_POOL_MIN =
-      process.env.DB_POOL_MIN || '2'
     sharedEnv.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE =
       process.env.PLANE_B_B2B_CORRIDOR_PROVIDER_BATCH_SIZE || '1'
     sharedEnv.PLANE_B_B2B_RPM_SAFETY_FACTOR =
@@ -399,6 +406,12 @@ export const createEcsTasks = (
       process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS || '3600'
     sharedEnv.SLO_FRESHNESS_P95_TIER2_THRESHOLD =
       process.env.SLO_FRESHNESS_P95_TIER2_THRESHOLD || '21600'
+  }
+  if (!sharedEnv.DB_POOL_MAX) {
+    sharedEnv.DB_POOL_MAX = planeBDbPoolMax
+  }
+  if (!sharedEnv.DB_POOL_MIN) {
+    sharedEnv.DB_POOL_MIN = planeBDbPoolMin
   }
   if (process.env.DB_DISABLE_STATEMENT_TIMEOUT) {
     sharedEnv.DB_DISABLE_STATEMENT_TIMEOUT = process.env.DB_DISABLE_STATEMENT_TIMEOUT
@@ -453,14 +466,62 @@ export const createEcsTasks = (
   if (quoteRefreshQueueUrl) {
     sharedEnv.QUOTE_REFRESH_QUEUE_URL = quoteRefreshQueueUrl
   }
+  if (quoteRefreshDlqUrl) {
+    sharedEnv.QUOTE_REFRESH_DLQ_URL = quoteRefreshDlqUrl
+  }
   if (quoteRefreshQueueMode) {
     sharedEnv.QUOTE_REFRESH_QUEUE_MODE = quoteRefreshQueueMode
   }
   if (fxRateRefreshQueueUrl) {
     sharedEnv.FX_RATE_REFRESH_QUEUE_URL = fxRateRefreshQueueUrl
   }
+  if (fxRateRefreshDlqUrl) {
+    sharedEnv.FX_RATE_REFRESH_DLQ_URL = fxRateRefreshDlqUrl
+  }
   if (fxRateRefreshQueueMode) {
     sharedEnv.FX_RATE_REFRESH_QUEUE_MODE = fxRateRefreshQueueMode
+  }
+  if (options.exportJobQueueUrl) {
+    sharedEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportJobQueueMode) {
+    sharedEnv.EXPORT_JOB_QUEUE_MODE = options.exportJobQueueMode
+  }
+  if (options.alertEvaluationQueueUrl) {
+    sharedEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportsBucketName) {
+    sharedEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  if (options.exportsPrefix) {
+    sharedEnv.EXPORTS_S3_PREFIX = options.exportsPrefix
+  }
+  if (options.alertsSlackWebhookUrl) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = options.alertsSlackWebhookUrl
+  } else if (process.env.ALERT_SLACK_WEBHOOK_URL) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = process.env.ALERT_SLACK_WEBHOOK_URL
+  } else if (process.env.SLACK_WEBHOOK_URL) {
+    sharedEnv.ALERT_SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+  }
+  const hydrateAlertWorkerEnv = (target: Record<string, string>): void => {
+    if (!target.ALERT_EVALUATION_QUEUE_URL && options.alertEvaluationQueueUrl) {
+      target.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+    }
+    if (!target.EXPORT_JOB_QUEUE_URL && options.exportJobQueueUrl) {
+      target.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+    }
+    if (!target.EXPORTS_S3_BUCKET && options.exportsBucketName) {
+      target.EXPORTS_S3_BUCKET = options.exportsBucketName
+    }
+    if (!target.ALERT_SLACK_WEBHOOK_URL) {
+      if (options.alertsSlackWebhookUrl) {
+        target.ALERT_SLACK_WEBHOOK_URL = options.alertsSlackWebhookUrl
+      } else if (process.env.ALERT_SLACK_WEBHOOK_URL) {
+        target.ALERT_SLACK_WEBHOOK_URL = process.env.ALERT_SLACK_WEBHOOK_URL
+      } else if (process.env.SLACK_WEBHOOK_URL) {
+        target.ALERT_SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL
+      }
+    }
   }
   if (ingestFanoutMode) {
     sharedEnv.PLANE_B_INGEST_FANOUT_QUEUE_MODE = ingestFanoutMode
@@ -676,7 +737,6 @@ export const createEcsTasks = (
       ...sharedEnv,
       B2C_REFRESH_LIMIT: b2cRefreshLimit,
       B2C_REFRESH_CONCURRENCY: b2cRefreshConcurrency,
-      B2C_REFRESH_HEALTH_ENABLED: '0',
       B2C_REFRESH_LOOP_JITTER_MS:
         process.env.B2C_REFRESH_LOOP_JITTER_MS || defaultLoopJitterMs,
       B2C_REFRESH_MESSAGE_JITTER_MS:
@@ -979,13 +1039,35 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const notificationsEnv = {
+  const notificationsEnv: Record<string, string> = {
     ...sharedEnv,
     NOTIFICATIONS_QUEUE_LOOP_JITTER_MS:
       process.env.NOTIFICATIONS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS:
       process.env.NOTIFICATIONS_QUEUE_MESSAGE_JITTER_MS || defaultMessageJitterMs,
   }
+  if (!notificationsEnv.PLANE_B_DB_HOST && planeBDbHost) {
+    notificationsEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (!notificationsEnv.PLANE_B_DB_PORT && planeBDbPort) {
+    notificationsEnv.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (!notificationsEnv.PLANE_B_DB_NAME && planeBDbName) {
+    notificationsEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (!notificationsEnv.PLANE_B_DB_SECRET_ARN && planeBDbSecretArn) {
+    notificationsEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
+  }
+  if (options.alertEvaluationQueueUrl) {
+    notificationsEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportJobQueueUrl) {
+    notificationsEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportsBucketName) {
+    notificationsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  hydrateAlertWorkerEnv(notificationsEnv)
   notificationsQueueTask.addContainer('NotificationsQueueWorkerContainer', {
     image,
     command: resolveCommand(
@@ -1046,13 +1128,35 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  const opsAlertsEnv = {
+  const opsAlertsEnv: Record<string, string> = {
     ...sharedEnv,
     OPS_ALERTS_QUEUE_LOOP_JITTER_MS:
       process.env.OPS_ALERTS_QUEUE_LOOP_JITTER_MS || defaultLoopJitterMs,
     OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS:
       process.env.OPS_ALERTS_QUEUE_MESSAGE_JITTER_MS || defaultMessageJitterMs,
   }
+  if (!opsAlertsEnv.PLANE_B_DB_HOST && planeBDbHost) {
+    opsAlertsEnv.PLANE_B_DB_HOST = planeBDbHost
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_PORT && planeBDbPort) {
+    opsAlertsEnv.PLANE_B_DB_PORT = planeBDbPort
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_NAME && planeBDbName) {
+    opsAlertsEnv.PLANE_B_DB_NAME = planeBDbName
+  }
+  if (!opsAlertsEnv.PLANE_B_DB_SECRET_ARN && planeBDbSecretArn) {
+    opsAlertsEnv.PLANE_B_DB_SECRET_ARN = planeBDbSecretArn
+  }
+  if (options.alertEvaluationQueueUrl) {
+    opsAlertsEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.exportJobQueueUrl) {
+    opsAlertsEnv.EXPORT_JOB_QUEUE_URL = options.exportJobQueueUrl
+  }
+  if (options.exportsBucketName) {
+    opsAlertsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
+  hydrateAlertWorkerEnv(opsAlertsEnv)
   opsAlertsQueueTask.addContainer('OpsAlertsQueueWorkerContainer', {
     image,
     command: resolveCommand(
@@ -1144,6 +1248,7 @@ export const createEcsTasks = (
   if (options.communicationsSecretArn) {
     alertEvaluationEnv.COMMUNICATIONS_SECRET_ARN = options.communicationsSecretArn
   }
+  hydrateAlertWorkerEnv(alertEvaluationEnv)
   alertEvaluationTask.addContainer('AlertEvaluationWorkerContainer', {
     image,
     command: resolveCommand(

@@ -1,23 +1,23 @@
 <template>
-  <div class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-    <h3 class="mb-1 text-xl font-bold text-neutral-900">
+  <div class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
+    <h3 class="mb-1 text-h4 font-bold text-neutral-900">
       {{ category.title }}
     </h3>
-    <p class="mb-4 text-sm text-neutral-600">
+    <p class="mb-4 text-body-sm text-neutral-600">
       {{ category.description }}
     </p>
     <div class="space-y-3">
       <div
         v-for="(faq, index) in category.faqs"
         :key="index"
-        class="rounded-xl border border-neutral-200 bg-white transition-all"
+        class="rounded-xl border border-neutral-200 bg-surface transition-all"
         :class="openFaqs.includes(index) ? 'shadow-md' : ''"
       >
         <button
           class="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-600"
           @click="toggleFaq(index)"
         >
-          <span class="pr-4 text-base font-semibold text-neutral-800">{{ faq.question }}</span>
+          <span class="pr-4 text-body font-semibold text-neutral-800">{{ faq.question }}</span>
           <svg
             class="h-5 w-5 flex-shrink-0 transform text-neutral-400 transition-transform duration-200"
             :class="{ 'rotate-180': openFaqs.includes(index) }"
@@ -33,16 +33,16 @@
             />
           </svg>
         </button>
-        <div
+        <RichHtml
           v-if="openFaqs.includes(index)"
           class="prose prose-sm max-w-none px-5 pb-4 text-neutral-600"
-          v-html="faq.answer"
+          :content="faq.answer"
         />
       </div>
     </div>
     <NuxtLink
       :to="category.link"
-      class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700"
+      class="mt-4 inline-flex items-center gap-2 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
     >
       <span>Explore all {{ category.count }} articles</span>
       <svg

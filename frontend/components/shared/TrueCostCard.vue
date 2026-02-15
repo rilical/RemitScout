@@ -5,8 +5,8 @@
       compact ? '' : 'shadow-sm',
       darkBackground
         ? isBest
-          ? 'border-white/30 bg-white/10'
-          : 'border-white/20 bg-white/5'
+          ? 'border-white/30 bg-surface/10'
+          : 'border-white/20 bg-surface/5'
         : isBest
           ? 'border-brand-600 bg-brand-50/20'
           : 'border-neutral-200 bg-neutral-50',
@@ -31,11 +31,11 @@
             d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
           />
         </svg>
-        <span class="text-sm font-bold text-neutral-900 uppercase tracking-wide">True Cost Breakdown</span>
+        <span class="text-body-sm font-bold text-neutral-900 uppercase tracking-wide">True Cost Breakdown</span>
       </div>
       <button
         type="button"
-        class="group flex items-center gap-1 text-xs text-neutral-500 hover:text-brand-600 transition-colors"
+        class="group flex items-center gap-1 text-body-sm text-neutral-500 hover:text-brand-600 transition-colors"
         @click="showTooltip = !showTooltip"
       >
         <svg
@@ -58,7 +58,7 @@
     <!-- Tooltip -->
     <div
       v-if="showTooltip && !compact"
-      class="border-b border-neutral-200 bg-blue-50 px-4 py-3 text-xs text-blue-800"
+      class="border-b border-neutral-200 bg-primary-50 px-4 py-3 text-body-sm text-primary-800"
     >
       <p class="mb-1 font-semibold">
         Hidden Exchange Rate Markup
@@ -69,7 +69,7 @@
       </p>
       <button
         type="button"
-        class="mt-2 text-blue-600 hover:underline font-medium"
+        class="mt-2 text-brand-600 hover:underline font-medium"
         @click="showTooltip = false"
       >
         Got it
@@ -82,14 +82,14 @@
       <div class="flex items-center justify-between mb-3">
         <div class="flex-1">
           <div class="flex items-center gap-2">
-            <span :class="['font-medium text-sm', darkBackground ? 'text-white' : 'text-neutral-900']">
+            <span :class="['font-medium text-body-sm', darkBackground ? 'text-white' : 'text-neutral-900']">
               Upfront Fee
             </span>
             <span
               v-if="hasPromo && promoInfo"
               :class="[
                 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
-                darkBackground ? 'bg-emerald-500/30 text-emerald-200 border border-white' : 'bg-emerald-100 text-emerald-700',
+                darkBackground ? 'bg-success-600/20 text-success-400 border border-success-500/40' : 'bg-success-50 text-success-700 border border-success-200',
               ]"
             >
               <svg
@@ -113,7 +113,7 @@
           </div>
         </div>
         <span
-          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-base' : 'text-sm']"
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-body' : 'text-body-sm']"
         >
           {{ formatCurrency(upfrontFee) }}
         </span>
@@ -122,7 +122,7 @@
       <!-- Hidden Markup Row -->
       <div class="flex items-center justify-between mb-3">
         <div class="flex-1">
-          <div :class="['font-medium text-sm mb-0.5', darkBackground ? 'text-white' : 'text-neutral-900']">
+          <div :class="['font-medium text-body-sm mb-0.5', darkBackground ? 'text-white' : 'text-neutral-900']">
             Hidden FX Markup
           </div>
           <div :class="['text-[10px]', darkBackground ? 'text-white/60' : 'text-neutral-500']">
@@ -130,7 +130,7 @@
           </div>
         </div>
         <span
-          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-base' : 'text-sm']"
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-body' : 'text-body-sm']"
         >
           {{ formatCurrency(hiddenMarkup) }}
         </span>
@@ -142,12 +142,12 @@
       <!-- Total Cost Row -->
       <div class="flex items-center justify-between mb-4">
         <span
-          :class="['font-bold uppercase tracking-wide', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-sm' : 'text-sm']"
+          :class="['font-bold uppercase tracking-wide', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-body-sm' : 'text-body-sm']"
         >
           Total Cost
         </span>
         <span
-          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-xl' : 'text-lg']"
+          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-h4' : 'text-body-lg']"
         >
           {{ formatCurrency(displayTotalCost) }}
         </span>
@@ -231,30 +231,30 @@ const markupSeverity = computed(() => getMarkupSeverity(props.spreadBps))
 
 const costSeverityTextClass = computed(() => {
   const classes: Record<string, string> = {
-    low: 'text-emerald-600',
-    medium: 'text-amber-600',
-    high: 'text-orange-600',
-    extreme: 'text-rose-600',
+    low: 'text-success-600',
+    medium: 'text-warning-600',
+    high: 'text-warning-600',
+    extreme: 'text-danger-600',
   }
   return classes[costSeverity.value]
 })
 
 const markupSeverityClass = computed(() => {
   const classes: Record<string, string> = {
-    excellent: 'bg-emerald-500',
-    good: 'bg-amber-400',
-    fair: 'bg-orange-500',
-    poor: 'bg-rose-500',
+    excellent: 'bg-success-600',
+    good: 'bg-warning-600',
+    fair: 'bg-warning-500',
+    poor: 'bg-danger-600',
   }
   return classes[markupSeverity.value]
 })
 
 const markupBadgeClass = computed(() => {
   const classes: Record<string, string> = {
-    excellent: 'bg-emerald-100 text-emerald-700',
-    good: 'bg-amber-100 text-amber-700',
-    fair: 'bg-orange-100 text-orange-700',
-    poor: 'bg-rose-100 text-rose-700',
+    excellent: 'bg-success-600/10 text-success-600',
+    good: 'bg-warning-600/10 text-warning-600',
+    fair: 'bg-warning-100 text-warning-700',
+    poor: 'bg-danger-600/10 text-danger-600',
   }
   return classes[markupSeverity.value]
 })

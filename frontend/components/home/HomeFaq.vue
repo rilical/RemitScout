@@ -1,8 +1,8 @@
 <template>
-  <section class="py-12 sm:py-16 bg-slate-900">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-brand-50">
+    <div class="mx-auto max-w-4xl px-page-x">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h2 class="text-h2 font-bold text-neutral-900 mb-4">
           Frequently Asked Questions
         </h2>
       </div>
@@ -11,16 +11,19 @@
         <div
           v-for="(faq, index) in faqs"
           :key="index"
-          class="rounded-xl border border-neutral-200 bg-white overflow-hidden transition-all"
+          class="rounded-xl border border-neutral-200 bg-surface overflow-hidden motion-safe:transition-all"
           :class="openFaqs.includes(index) ? 'shadow-md' : ''"
         >
           <button
-            class="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-neutral-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-600"
+            :id="`home-faq-button-${index}`"
+            class="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-neutral-50 motion-safe:transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-600"
+            :aria-expanded="openFaqs.includes(index) ? 'true' : 'false'"
+            :aria-controls="`home-faq-panel-${index}`"
             @click="toggleFaq(index)"
           >
-            <span class="font-semibold text-neutral-900 text-base sm:text-lg pr-4">{{ faq.question }}</span>
+            <span class="font-semibold text-neutral-900 text-body-lg pr-4">{{ faq.question }}</span>
             <svg
-              class="h-5 w-5 flex-shrink-0 transform text-neutral-400 transition-transform duration-200"
+              class="h-5 w-5 flex-shrink-0 transform text-neutral-400 motion-safe:transition-transform motion-safe:duration-200"
               :class="{ 'rotate-180': openFaqs.includes(index) }"
               fill="none"
               stroke="currentColor"
@@ -37,15 +40,19 @@
           <div
             v-if="openFaqs.includes(index)"
             class="px-6 pb-5 text-neutral-600 leading-relaxed border-t border-neutral-100 pt-4"
-            v-html="faq.answer"
-          />
+            :id="`home-faq-panel-${index}`"
+            role="region"
+            :aria-labelledby="`home-faq-button-${index}`"
+          >
+            <RichHtml :content="faq.answer" />
+          </div>
         </div>
       </div>
 
       <div class="mt-8 text-center">
         <NuxtLink
           to="/faq"
-          class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-8 py-4 text-lg font-semibold text-white hover:bg-brand-700 transition-colors shadow-lg"
+          class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-8 py-4 text-body-lg font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors shadow-lg"
         >
           View More Questions
           <svg

@@ -58,13 +58,13 @@ const plusAnnualMonthlyEquivalentDisplay = computed(() => {
 </script>
 
 <template>
-  <section class="py-10 sm:py-12 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-10 sm:py-12 bg-surface">
+    <div class="container">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Pulse -->
         <div
           v-if="pulseEnabled"
-          class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6 sm:p-8 shadow-sm"
+          class="rounded-2xl border border-rs-border bg-gradient-to-br from-neutral-50 via-white to-neutral-100 p-6 sm:p-8 shadow-sm"
         >
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -72,57 +72,57 @@ const plusAnnualMonthlyEquivalentDisplay = computed(() => {
                 <BoltIcon class="h-5 w-5 text-brand-700" />
               </div>
               <div>
-                <div class="text-sm font-semibold text-slate-600">
+                <div class="text-body-sm font-semibold text-neutral-600">
                   Remit-Scout Pulse
                 </div>
-                <div class="text-2xl font-extrabold text-slate-900 leading-tight">
+                <div class="text-h3 font-extrabold text-rs-fg leading-tight">
                   Market moves, in plain English
                 </div>
               </div>
             </div>
             <NuxtLink
               to="/pulse"
-              class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
+              class="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition"
             >
               {{ pulseCtaLabel }}
             </NuxtLink>
           </div>
 
-          <p class="mt-4 text-sm sm:text-base text-slate-700 leading-relaxed">
+          <p class="mt-4 text-body-sm text-neutral-700 leading-relaxed">
             Pulse shows volatility, spreads, and provider shifts across corridors so users can time transfers and analysts can spot anomalies.
           </p>
 
           <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div class="rounded-xl border border-rs-border bg-surface p-4">
+              <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wide">
                 Volatility
               </div>
-              <div class="mt-1 text-sm font-semibold text-slate-900">
+              <div class="mt-1 text-body-sm font-semibold text-rs-fg">
                 RVI (bps)
               </div>
-              <div class="mt-1 text-xs text-slate-600">
+              <div class="mt-1 text-body-sm text-neutral-600">
                 Comparable across corridors.
               </div>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div class="rounded-xl border border-rs-border bg-surface p-4">
+              <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wide">
                 Cost
               </div>
-              <div class="mt-1 text-sm font-semibold text-slate-900">
+              <div class="mt-1 text-body-sm font-semibold text-rs-fg">
                 RCI
               </div>
-              <div class="mt-1 text-xs text-slate-600">
+              <div class="mt-1 text-body-sm text-neutral-600">
                 Hidden fee pressure, quantified.
               </div>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div class="rounded-xl border border-rs-border bg-surface p-4">
+              <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wide">
                 Rate
               </div>
-              <div class="mt-1 text-sm font-semibold text-slate-900">
+              <div class="mt-1 text-body-sm font-semibold text-rs-fg">
                 TEER
               </div>
-              <div class="mt-1 text-xs text-slate-600">
+              <div class="mt-1 text-body-sm text-neutral-600">
                 Effective delivery vs mid-market.
               </div>
             </div>
@@ -130,22 +130,25 @@ const plusAnnualMonthlyEquivalentDisplay = computed(() => {
         </div>
 
         <!-- Plus -->
-        <div class="rounded-2xl border border-blue-200 bg-blue-600 p-6 sm:p-8 shadow-sm">
+        <div class="rounded-2xl border border-primary-200 bg-brand-600 p-6 sm:p-8 shadow-sm">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <img
+              <NuxtImg
                 src="/png/SVG/LOGO_PLUS.svg"
                 alt="Remit-Scout Plus"
+                width="40"
+                height="40"
+                loading="lazy"
                 class="h-10 w-10 object-contain"
-              >
+              />
               <div>
-                <div class="text-sm font-semibold text-white/80">
+                <div class="text-body-sm font-semibold text-white/80">
                   Remit-Scout Plus
                 </div>
-                <div class="text-2xl font-extrabold text-white leading-tight">
+                <div class="text-h3 font-extrabold text-white leading-tight">
                   Alerts and history that actually save money
                 </div>
-                <div class="mt-2 text-xs font-semibold text-white/90">
+                <div class="mt-2 text-body-sm font-semibold text-white/90">
                   <span v-if="plusMonthlyDisplay">{{ plusMonthlyDisplay }}/mo</span>
                   <span v-else>Pricing at checkout</span>
                   <span v-if="plusAnnualMonthlyEquivalentDisplay"> • {{ plusAnnualMonthlyEquivalentDisplay }}</span>
@@ -154,31 +157,31 @@ const plusAnnualMonthlyEquivalentDisplay = computed(() => {
             </div>
             <NuxtLink
               to="/plus"
-              class="inline-flex items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition"
+              class="inline-flex items-center justify-center rounded-xl bg-surface px-4 py-2.5 text-body-sm font-semibold text-brand-700 hover:bg-primary-50 transition"
               :class="isPlus ? 'opacity-80' : ''"
             >
               {{ plusCtaLabel }}
             </NuxtLink>
           </div>
 
-          <p class="mt-4 text-sm sm:text-base text-white/90 leading-relaxed">
+          <p class="mt-4 text-body-sm text-white/90 leading-relaxed">
             Plus monitors corridors 24/7, sends instant rate alerts, unlocks Pulse, enables exports, and removes ads.
           </p>
 
           <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="rounded-xl bg-white/10 border border-white/20 p-4">
-              <div class="text-xs font-semibold text-white/80 uppercase tracking-wide">
+            <div class="rounded-xl bg-surface/10 border border-white/20 p-4">
+              <div class="text-body-sm font-semibold text-white/80 uppercase tracking-wide">
                 16 smart alerts
               </div>
-              <div class="mt-1 text-sm font-semibold text-white">
+              <div class="mt-1 text-body-sm font-semibold text-white">
                 Eligible corridors only
               </div>
             </div>
-            <div class="rounded-xl bg-white/10 border border-white/20 p-4">
-              <div class="text-xs font-semibold text-white/80 uppercase tracking-wide">
+            <div class="rounded-xl bg-surface/10 border border-white/20 p-4">
+              <div class="text-body-sm font-semibold text-white/80 uppercase tracking-wide">
                 Exports
               </div>
-              <div class="mt-1 text-sm font-semibold text-white">
+              <div class="mt-1 text-body-sm font-semibold text-white">
                 CSV and PDF, investor-grade
               </div>
             </div>

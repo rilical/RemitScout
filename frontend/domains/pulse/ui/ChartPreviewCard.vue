@@ -4,7 +4,7 @@
   >
     <div
       v-if="isGated"
-      class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-xs font-semibold text-brand-600"
+      class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-body-sm font-semibold text-brand-600"
     >
       <Icon
         name="lock"
@@ -15,17 +15,41 @@
     </div>
 
     <div class="p-5">
-      <div class="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+      <div class="mb-3 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
         {{ metadata.categoryLabel }}
       </div>
 
-      <h3 class="mb-2 text-lg font-bold text-white group-hover:text-brand-600 transition-colors">
+      <h3 class="mb-2 text-body-lg font-bold text-white group-hover:text-brand-600 transition-colors">
         {{ metadata.title }}
       </h3>
 
-      <p class="mb-4 text-sm text-neutral-400">
+      <p
+        v-if="insight"
+        class="mb-4 text-body-sm text-neutral-400"
+      >
         {{ insight }}
       </p>
+      <div
+        v-else
+        class="mb-4"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
+      >
+        <div class="space-y-2">
+          <SkeletonBlock
+width="90%"
+height="0.875rem"
+tone="dark"
+/>
+          <SkeletonBlock
+width="75%"
+height="0.875rem"
+tone="dark"
+/>
+        </div>
+        <span class="sr-only">Loading chart</span>
+      </div>
 
       <p
         v-if="updatedAtLabel"
@@ -73,6 +97,20 @@
           />
         </svg>
         <div
+          v-else-if="!insight"
+          class="flex h-full w-full items-center"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading chart"
+        >
+          <SkeletonBlock
+width="full"
+height="4rem"
+tone="dark"
+/>
+          <span class="sr-only">Loading chart</span>
+        </div>
+        <div
           v-else
           class="flex h-full items-center justify-center"
         >
@@ -95,7 +133,7 @@
 
     <div class="flex items-center justify-between border-t border-neutral-700 px-5 py-3">
       <button
-        class="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
+        class="text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
         @click="$emit('view', metadata.id)"
       >
         <Icon
@@ -107,13 +145,13 @@
       </button>
       <div class="flex items-center gap-3">
         <button
-          class="text-sm text-neutral-400 hover:text-white transition-colors"
+          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
           @click="$emit('share', metadata.id)"
         >
           Share
         </button>
         <button
-          class="text-sm text-neutral-400 hover:text-white transition-colors"
+          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
           @click="$emit('embed', metadata.id)"
         >
           Embed
@@ -128,6 +166,7 @@ import { computed } from 'vue'
 import type { ChartMetadata, ChartPoint } from '~/types/pulse'
 import { Icon, EmptyState } from '~/ui'
 import { formatUpdatedLabel } from '~/shared/lib/format'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 interface Props {
   metadata: ChartMetadata

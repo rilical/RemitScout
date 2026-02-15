@@ -1,57 +1,37 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-surface">
+    <div class="container">
       <div class="text-center mb-12">
         <NuxtLink
           to="/learn"
           class="group"
         >
-          <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-3 group-hover:text-brand-600 transition-colors">
             Read Our Guides
           </h2>
         </NuxtLink>
-        <p class="text-lg text-neutral-600">
+        <p class="text-body-lg text-neutral-600">
           Everything you need to know about international money transfers
         </p>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
           v-for="(guide, index) in guides"
           :key="index"
           :to="`/learn/${guide.slug}`"
-          class="group bg-white rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          class="group bg-surface rounded-2xl border-2 border-neutral-200 overflow-hidden hover:border-brand-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col"
         >
-          <!-- Content -->
-          <div class="p-6">
-            <h3 class="text-lg font-bold text-neutral-900 mb-3 leading-snug group-hover:text-brand-600 transition-colors">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-3 leading-snug break-words group-hover:text-brand-600 transition-colors">
               {{ guide.title }}
             </h3>
 
-            <p class="text-sm text-neutral-600 mb-4 leading-relaxed line-clamp-2">
+            <p class="text-body-sm text-neutral-600 mb-4 leading-relaxed line-clamp-3">
               {{ guide.blurb }}
             </p>
 
-            <div class="flex items-center gap-2 text-xs text-neutral-500 mb-4">
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>{{ guide.readTime }}</span>
-              <span>·</span>
-              <span>{{ guide.updated }}</span>
-            </div>
-
-            <div class="flex items-center text-sm font-semibold text-brand-600 group-hover:gap-2 transition-all">
+            <div class="flex items-center text-body-sm font-semibold text-brand-600 group-hover:gap-2 transition-all mt-auto">
               <span>Read guide</span>
               <svg
                 class="w-4 h-4 group-hover:translate-x-1 transition-transform"
@@ -202,7 +182,7 @@ const getCategoryName = (key: string): string => {
 
 const guides = computed(() => {
   return allGuides.value
-    .slice(0, 8)
+    .slice(0, 6)
     .map(guide => ({
       title: guide.title || '',
       blurb: guide.excerpt || '',

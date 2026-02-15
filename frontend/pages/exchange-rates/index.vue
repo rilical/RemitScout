@@ -1,16 +1,16 @@
 <template>
   <div class="min-h-screen bg-neutral-50 py-12 sm:py-16">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-6xl px-page-x">
       <Breadcrumbs :items="breadcrumbItems" />
 
       <div class="rounded-3xl bg-gradient-to-r from-brand-600 to-brand-500 text-white p-8 shadow-lg mb-10">
-        <p class="text-sm uppercase tracking-wide font-semibold text-brand-50 mb-2">
+        <p class="text-body-sm uppercase tracking-wide font-semibold text-brand-50 mb-2">
           FX center
         </p>
-        <h1 class="text-3xl sm:text-4xl font-bold mb-3">
+        <h1 class="text-h2 font-bold mb-3">
           Best exchange rates by currency pair
         </h1>
-        <p class="text-lg text-brand-50 max-w-3xl">
+        <p class="text-body-lg text-brand-50 max-w-3xl">
           Check today’s mid-market rate, see how providers price each pair, and learn when to send to keep more in your recipient’s currency.
         </p>
         <div class="mt-6 flex flex-wrap gap-3">
@@ -18,7 +18,7 @@
             v-for="pair in highlightedPairs"
             :key="pair.href"
             :to="pair.href"
-            class="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15 transition"
+            class="rounded-xl bg-surface/10 px-4 py-2 text-body-sm font-semibold hover:bg-surface/15 transition"
           >
             {{ pair.label }}
           </NuxtLink>
@@ -29,20 +29,20 @@
         <div
           v-for="bundle in pairBundles"
           :key="bundle.base"
-          class="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+          class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm"
         >
           <div class="flex items-center justify-between mb-3">
             <div>
-              <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">
+              <p class="text-body-sm uppercase tracking-wide font-semibold text-brand-600">
                 {{ bundle.kicker }}
               </p>
-              <h2 class="text-xl font-bold text-neutral-900">
+              <h2 class="text-h4 font-bold text-neutral-900">
                 {{ bundle.title }}
               </h2>
             </div>
-            <span class="text-2xl">{{ bundle.emoji }}</span>
+            <span class="text-h3">{{ bundle.emoji }}</span>
           </div>
-          <p class="text-sm text-neutral-600 mb-4">
+          <p class="text-body-sm text-neutral-600 mb-4">
             {{ bundle.copy }}
           </p>
           <div class="space-y-2">
@@ -50,25 +50,25 @@
               v-for="pair in bundle.pairs"
               :key="pair.href"
               :to="pair.href"
-              class="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2 text-sm font-semibold text-neutral-900 hover:border-brand-300 hover:text-brand-700 hover:shadow-sm transition"
+              class="flex items-center justify-between rounded-lg border border-neutral-200 px-3 py-2 text-body-sm font-semibold text-neutral-900 hover:border-brand-300 hover:text-brand-700 hover:shadow-sm transition"
             >
               <span>{{ pair.label }}</span>
-              <span class="text-xs text-neutral-500">{{ pair.note }}</span>
+              <span class="text-body-sm text-neutral-500">{{ pair.note }}</span>
             </NuxtLink>
           </div>
         </div>
       </div>
 
-      <div class="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <div class="mt-10 rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p class="text-xs uppercase tracking-wide font-semibold text-brand-600">
+            <p class="text-body-sm uppercase tracking-wide font-semibold text-brand-600">
               Why it matters
             </p>
-            <h3 class="text-xl font-bold text-neutral-900">
+            <h3 class="text-h4 font-bold text-neutral-900">
               Rates plus fees = real transfer cost
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               We explain mid-market vs. provider markup, weekend spreads, and best payment/payout combinations.
             </p>
           </div>
@@ -98,9 +98,17 @@
 </template>
 
 <script setup lang="ts">
-import { setSeo } from '~/composables/useSeo'
+import { jsonLdBreadcrumb, setSeo } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Exchange Rates',
+    description: 'Track mid-market FX pairs and understand how provider fees and markups affect real transfer cost.',
+  },
+})
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
@@ -172,10 +180,15 @@ const pairBundles = [
 ]
 
 setSeo({
-  title: 'Best Exchange Rates for Remittances | Live USD, GBP, CAD, EUR Pairs | Remit-Scout',
+  title: 'Exchange Rates for Remittances | Remit-Scout',
   description:
     'See live FX pairs for USD, GBP, CAD, and EUR to top remittance destinations. Understand mid-market vs. provider fees before you send.',
   canonical: `${siteUrl}/exchange-rates`,
-  ogImage: `${siteUrl}/images/og/exchange-rates.jpg`,
+  ogImage: false,
 })
+
+jsonLdBreadcrumb([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Exchange Rates', url: `${siteUrl}/exchange-rates` },
+])
 </script>

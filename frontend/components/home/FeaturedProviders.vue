@@ -1,17 +1,17 @@
 <template>
   <section
-    class="bg-gray-50 py-12"
+    class="bg-neutral-50 py-12"
     aria-labelledby="providers-heading"
   >
     <div class="container mx-auto px-4">
       <div class="mb-8 text-center">
         <h2
           id="providers-heading"
-          class="mb-4 text-2xl font-bold text-gray-900 md:text-3xl"
+          class="mb-4 text-h3 font-bold text-neutral-900"
         >
           Popular money transfer providers
         </h2>
-        <p class="mx-auto max-w-2xl text-lg text-gray-600">
+        <p class="mx-auto max-w-2xl text-body-lg text-neutral-600">
           Trusted by millions worldwide for fast, secure international money transfers.
         </p>
       </div>
@@ -24,10 +24,22 @@
         <div
           v-for="i in 6"
           :key="i"
-          class="flex h-20 animate-pulse items-center justify-center rounded-lg bg-white p-6"
+          class="flex h-20 animate-pulse items-center justify-center rounded-lg bg-surface p-6"
         >
-          <div class="h-8 w-16 rounded bg-gray-200" />
+          <div class="h-8 w-16 rounded bg-neutral-200" />
         </div>
+      </div>
+
+      <!-- Error state -->
+      <div
+        v-else-if="error"
+        class="mt-8"
+      >
+        <ErrorState
+          mode="card"
+          message="Unable to load featured providers"
+          :on-retry="refresh"
+        />
       </div>
 
       <!-- Providers grid -->
@@ -39,7 +51,7 @@
           v-for="provider in providers"
           :key="provider.id"
           :to="`/learn/providers/${provider.slug}`"
-          class="group flex items-center justify-center rounded-lg bg-white p-6 transition-all duration-200 hover:shadow-lg"
+          class="group flex items-center justify-center rounded-lg bg-surface p-6 transition-all duration-200 hover:shadow-lg"
           :aria-label="`View ${provider.name} reviews and rates`"
         >
           <div class="relative">
@@ -58,28 +70,12 @@
             <!-- Rating badge -->
             <div
               v-if="provider.rating"
-              class="absolute -right-2 -top-2 rounded-full bg-primary-600 px-1.5 py-0.5 text-xs font-medium text-white"
+              class="absolute -right-2 -top-2 rounded-full bg-primary-600 px-1.5 py-0.5 text-body-sm font-medium text-white"
             >
               {{ provider.rating }}
             </div>
           </div>
         </NuxtLink>
-      </div>
-
-      <!-- Error state -->
-      <div
-        v-if="error"
-        class="mt-8 text-center"
-      >
-        <p class="mb-4 text-gray-600">
-          Unable to load providers. Please try again later.
-        </p>
-        <button
-          class="btn-secondary"
-          @click="retry"
-        >
-          Retry
-        </button>
       </div>
 
       <!-- View all link -->
@@ -112,6 +108,7 @@
 // Import shared components and composables
 import { NuxtImg } from '#components'
 import { useProviders } from '~/composables/useProviders'
+import { ErrorState } from '~/ui/states'
 
 interface Provider {
   id: string
@@ -151,7 +148,7 @@ const fetchProviders = async () => {
     }))
   }
   catch (err) {
-    console.error('Failed to fetch providers:', err)
+    useLogger('FeaturedProviders').error('Failed to fetch providers', err)
     error.value = true
   }
   finally {
@@ -168,22 +165,16 @@ const handleImageError = (event: Event | string) => {
 
   // Show fallback text
   const fallback = document.createElement('div')
-  fallback.className = 'text-gray-400 text-sm font-medium'
+  fallback.className = 'text-neutral-400 text-body-sm font-medium'
   fallback.textContent = target.alt?.replace(' logo', '') || 'Provider'
   target.parentElement?.appendChild(fallback)
 }
 
 // Retry function
-const retry = () => {
-  fetchProviders()
+const refresh = () => {
+  void fetchProviders()
 }
 
 // Initialize
 await fetchProviders()
 </script>
-
-<style scoped>
-.btn-secondary {
-  @apply rounded-lg bg-gray-100 px-6 py-2 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
-}
-</style>

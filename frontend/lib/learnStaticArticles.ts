@@ -21,7 +21,7 @@ export const LEARN_STATIC_ARTICLES: LearnStaticArticle[] = [
   },
   {
     slug: 'hidden-exchange-rate-fees-explained',
-    title: 'Hidden Fees Explained<br><span class="text-base font-normal">(FX Markup vs Fee)</span>',
+    title: 'Hidden Fees Explained<br><span class="text-body font-normal">(FX Markup vs Fee)</span>',
     excerpt: 'Learn the difference between FX markup and transfer fees, and why "no fee" doesn\'t mean no cost.',
     categoryKey: 'fees-hidden-costs',
     readTime: '6 min read',
@@ -30,7 +30,7 @@ export const LEARN_STATIC_ARTICLES: LearnStaticArticle[] = [
   },
   {
     slug: 'how-exchange-rates-work',
-    title: 'How Exchange Rates Work<br><span class="text-base font-normal">(and why they change)</span>',
+    title: 'How Exchange Rates Work<br><span class="text-body font-normal">(and why they change)</span>',
     excerpt: 'Mid-market vs send rate, FX spreads, and the levers that move your transfer price.',
     categoryKey: 'exchange-rates-timing',
     readTime: '6 min read',
@@ -39,7 +39,7 @@ export const LEARN_STATIC_ARTICLES: LearnStaticArticle[] = [
   },
   {
     slug: 'how-to-read-remittance-quote',
-    title: 'How to Read a Quote<br><span class="text-base font-normal">("Recipient Gets")</span>',
+    title: 'How to Read a Quote<br><span class="text-body font-normal">("Recipient Gets")</span>',
     excerpt: 'Understand what "Recipient Gets" really means and how to compare quotes effectively.',
     categoryKey: 'money-transfer-basics',
     readTime: '5 min read',
@@ -48,7 +48,7 @@ export const LEARN_STATIC_ARTICLES: LearnStaticArticle[] = [
   },
   {
     slug: 'why-checkout-price-differs',
-    title: 'Why Checkout Differs<br><span class="text-base font-normal">and What to Do</span>',
+    title: 'Why Checkout Differs<br><span class="text-body font-normal">and What to Do</span>',
     excerpt: 'Why the final price at checkout might differ from the quote, and what you can do about it.',
     categoryKey: 'fees-hidden-costs',
     readTime: '4 min read',

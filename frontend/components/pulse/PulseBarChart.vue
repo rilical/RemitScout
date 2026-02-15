@@ -37,7 +37,7 @@
             :y="label.y + 4"
             text-anchor="end"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             {{ label.text }}
           </text>
@@ -55,7 +55,7 @@
             :y="height - padding.bottom + 16"
             text-anchor="middle"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             {{ label.text }}
           </text>
@@ -99,10 +99,10 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">
+        <div class="mb-1 text-body-sm text-neutral-400">
           {{ hoveredBar.date }}
         </div>
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-2 text-body-sm">
           <span
             class="h-2 w-2 rounded-full"
             :style="{ backgroundColor: hoveredBar.color }"
@@ -113,7 +113,7 @@
     </div>
 
     <!-- Legend -->
-    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-neutral-400">
+    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-body-sm text-neutral-400">
       <div class="flex items-center gap-2">
         <span class="h-3 w-3 rounded bg-brand-600" />
         <span>Daily volatility</span>

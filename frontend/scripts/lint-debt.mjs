@@ -122,6 +122,23 @@ for (const prefix of DISALLOWED_PREFIXES) {
   }
 }
 
+// Design-system guard: disallow raw Tailwind color palettes in Vue template class strings.
+// Use semantic tokens from tailwind.config.js instead (neutral/primary/brand/success/warning/danger/accent/rs.*).
+{
+  const re = /\b(?:slate|gray|blue|emerald|amber|rose|red|violet|purple)-[0-9]{2,3}\b/
+  const classLike = /\b(?:class=|:class=|class:)\b/
+  for (const f of files) {
+    if (!/\.vue$/.test(f)) continue
+    const ls = splitLines(readText(f))
+    for (let i = 0; i < ls.length; i += 1) {
+      const line = ls[i]
+      if (!classLike.test(line)) continue
+      if (!re.test(line)) continue
+      violations.push({ rule: 'raw_tailwind_color', filePath: f, line: i + 1, text: line.trim() })
+    }
+  }
+}
+
 if (violations.length) {
   const counts = new Map()
   for (const v of violations) counts.set(v.rule, (counts.get(v.rule) ?? 0) + 1)

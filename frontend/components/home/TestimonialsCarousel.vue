@@ -1,11 +1,11 @@
 <template>
-  <section class="py-12 sm:py-16 bg-gradient-to-r from-blue-600 to-blue-700">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-brand-600">
+    <div class="container">
       <div class="text-center mb-12">
-        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h2 class="text-h2 font-bold text-white mb-4">
           What people are saying
         </h2>
-        <p class="text-lg text-white/90">
+        <p class="text-body-lg text-white/90">
           Real stories from people who saved money on their transfers
         </p>
       </div>
@@ -15,9 +15,9 @@
           <div
             v-for="(testimonial, index) in testimonials"
             :key="index"
-            class="bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col"
+            class="bg-surface rounded-2xl border border-neutral-200 p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col"
           >
-            <div class="flex items-start gap-1 mb-5 text-amber-400">
+            <div class="flex items-start gap-1 mb-5 text-warning-600">
               <svg
                 v-for="star in 5"
                 :key="star"
@@ -28,18 +28,18 @@
               </svg>
             </div>
 
-            <p class="text-neutral-700 mb-8 leading-relaxed text-base flex-grow">
+            <p class="text-neutral-700 mb-8 leading-relaxed text-body flex-grow">
               "{{ testimonial.quote }}"
             </p>
 
             <div class="border-t border-neutral-200 pt-5">
-              <div class="font-bold text-neutral-900 text-base">
+              <div class="font-bold text-neutral-900 text-body">
                 {{ testimonial.name }}
               </div>
-              <div class="text-sm text-neutral-600 mt-1.5">
+              <div class="text-body-sm text-neutral-600 mt-1.5">
                 {{ testimonial.corridor }}
               </div>
-              <div class="text-xs text-neutral-500 mt-1">
+              <div class="text-body-sm text-neutral-500 mt-1">
                 {{ testimonial.useCase }}
               </div>
             </div>
@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <p class="mt-8 text-center text-xs text-white/80">
+      <p class="mt-8 text-center text-body-sm text-white/80">
         {{ STR.testimonials.note }}
       </p>
     </div>

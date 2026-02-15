@@ -18,10 +18,10 @@
 
       <template #cell-provider="{ row }">
         <div class="flex items-center gap-2">
-          <div class="flex h-6 w-6 items-center justify-center rounded bg-neutral-700 text-xs font-bold text-white">
+          <div class="flex h-6 w-6 items-center justify-center rounded bg-neutral-700 text-body-sm font-bold text-white">
             {{ (row as TableRow).provider.charAt(0) }}
           </div>
-          <span class="text-sm font-medium text-white">{{ (row as TableRow).provider }}</span>
+          <span class="text-body-sm font-medium text-white">{{ (row as TableRow).provider }}</span>
         </div>
       </template>
 
@@ -43,7 +43,7 @@
 
       <template #cell-markupBps="{ row }">
         <span
-          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-body-sm font-medium"
           :class="getMarkupClass((row as TableRow).markupBps)"
         >
           {{ (row as TableRow).markupBps }} bps
@@ -52,7 +52,7 @@
 
       <template #cell-provenance="{ row }">
         <span
-          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-body-sm font-medium"
           :class="getProvenanceClass((row as TableRow).provenance)"
         >
           <span
@@ -67,7 +67,7 @@
     <!-- Pagination & Export -->
     <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <!-- Row info -->
-      <div class="text-sm text-neutral-400">
+      <div class="text-body-sm text-neutral-400">
         Showing {{ startRow }}–{{ endRow }} of {{ totalRows }} rows
         <span
           v-if="!isPlus && totalRows > freeRowLimit"
@@ -80,8 +80,10 @@
       <!-- Pagination -->
       <div class="flex items-center gap-2">
         <button
+          type="button"
           class="flex h-8 w-8 items-center justify-center rounded border border-neutral-700 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="currentPage === 1"
+          aria-label="Previous page"
           @click="currentPage--"
         >
           <Icon
@@ -95,7 +97,7 @@
           <button
             v-for="page in visiblePages"
             :key="page"
-            class="flex h-8 min-w-[2rem] items-center justify-center rounded px-2 text-sm font-medium transition-colors"
+            class="flex h-8 min-w-[2rem] items-center justify-center rounded px-2 text-body-sm font-medium transition-colors"
             :class="page === currentPage ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:bg-neutral-700 hover:text-white'"
             @click="currentPage = page"
           >
@@ -104,8 +106,10 @@
         </div>
 
         <button
+          type="button"
           class="flex h-8 w-8 items-center justify-center rounded border border-neutral-700 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="currentPage >= totalPages"
+          aria-label="Next page"
           @click="currentPage++"
         >
           <Icon
@@ -118,7 +122,7 @@
 
       <!-- Export -->
       <button
-        class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+        class="flex items-center gap-2 rounded-lg px-4 py-2 text-body-sm font-medium transition-colors"
         :class="isPlus ? 'bg-brand-600 text-white hover:bg-brand-700' : 'bg-neutral-700 text-neutral-400 cursor-not-allowed'"
         :disabled="!isPlus"
         @click="isPlus && exportCsv()"
@@ -153,14 +157,14 @@
           <p class="font-semibold text-brand-600">
             Unlock full history with Plus
           </p>
-          <p class="mt-1 text-sm text-neutral-400">
+          <p class="mt-1 text-body-sm text-neutral-400">
             Get access to 365 days of data, full table access, and CSV export.
           </p>
           <NuxtLink
             to="/plus"
-            class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"
+            class="mt-2 inline-flex items-center gap-1 text-body-sm font-medium text-brand-600 hover:text-brand-700"
           >
-            Learn more
+            Learn more about Plus
             <Icon
               name="chevron-right"
               :size="16"
@@ -277,7 +281,7 @@ async function loadData() {
     )
   }
   catch (e) {
-    console.error('Failed to load table data:', e)
+    useLogger('PulseTableView').error('Failed to load table data', e)
     errorMessage.value = 'Failed to load table data. Please try again.'
   }
   finally {

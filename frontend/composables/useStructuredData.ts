@@ -22,6 +22,12 @@ interface ProviderOffer {
   exchangeRate?: string
 }
 
+interface CorridorProvider {
+  name: string
+  slug?: string
+  logo?: string
+}
+
 export const useStructuredData = () => {
   const { public: { siteUrl, siteName } } = useRuntimeConfig()
 
@@ -52,6 +58,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:organization',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -77,6 +84,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:website-search',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -98,6 +106,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:breadcrumb',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -121,6 +130,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:faq',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -158,6 +168,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:provider-list',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -204,6 +215,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:article',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -236,6 +248,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:esim-product',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -274,6 +287,42 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:esim-aggregate-offer',
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // Exchange rate specification schema
+  const addExchangeRateSchema = (params: {
+    baseCurrency: string
+    quoteCurrency: string
+    rate: number | string
+    provider?: string
+    lastUpdated?: string
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'ExchangeRateSpecification',
+      'currency': `${params.baseCurrency}-${params.quoteCurrency}`,
+      'currentExchangeRate': {
+        '@type': 'MonetaryAmount',
+        'currency': params.quoteCurrency,
+        'value': Number(params.rate),
+      },
+      ...(params.provider
+? { provider: {
+        '@type': 'Organization',
+        'name': params.provider,
+      } }
+: {}),
+      ...(params.lastUpdated ? { validFrom: params.lastUpdated } : {}),
+    }
+
+    useHead({
+      script: [{
+        key: 'jsonld:exchange-rate',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -309,6 +358,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:remittance-service',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -348,6 +398,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:financial-product',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -395,6 +446,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:review',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -428,6 +480,109 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:howto',
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // Aggregate rating schema for provider/review score surfaces
+  const addAggregateRatingSchema = (params: {
+    name: string
+    ratingValue: number
+    bestRating?: number
+    worstRating?: number
+    ratingCount?: number
+    reviewCount?: number
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'AggregateRating',
+      'itemReviewed': {
+        '@type': 'Organization',
+        'name': params.name,
+      },
+      'ratingValue': params.ratingValue,
+      'bestRating': params.bestRating || 10,
+      'worstRating': params.worstRating || 1,
+      ...(params.ratingCount !== undefined ? { ratingCount: params.ratingCount } : {}),
+      ...(params.reviewCount !== undefined ? { reviewCount: params.reviewCount } : {}),
+    }
+
+    useHead({
+      script: [{
+        key: 'jsonld:aggregate-rating',
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  // Video schema for embedded content pages
+  const addVideoObjectSchema = (params: {
+    name: string
+    description: string
+    thumbnailUrl: string
+    uploadDate: string
+    contentUrl: string
+    embedUrl: string
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      'name': params.name,
+      'description': params.description,
+      'thumbnailUrl': params.thumbnailUrl,
+      'uploadDate': params.uploadDate,
+      'contentUrl': params.contentUrl,
+      'embedUrl': params.embedUrl,
+    }
+
+    useHead({
+      script: [{
+        key: 'jsonld:video',
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(schema),
+      }],
+    })
+  }
+
+  const addRemittanceCorridorSchema = (params: {
+    from: string
+    to: string
+    providers: CorridorProvider[]
+    bestRate: string
+    lastUpdated?: string
+  }) => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      'name': `Money transfer from ${params.from} to ${params.to}`,
+      'areaServed': [
+        { '@type': 'Country', 'name': params.from },
+        { '@type': 'Country', 'name': params.to },
+      ],
+      'provider': {
+        '@type': 'Organization',
+        'name': siteName || 'Remit-Scout',
+      },
+      'offers': params.providers.map(provider => ({
+        '@type': 'Offer',
+        'name': provider.name,
+        'price': params.bestRate,
+        'url': `${siteUrl}/learn/providers/${provider.slug || provider.name.toLowerCase()}`,
+      })),
+      'audience': {
+        '@type': 'Audience',
+        'name': 'Remitters and expatriates',
+      },
+      ...(params.lastUpdated ? { dateModified: params.lastUpdated } : {}),
+    }
+
+    useHead({
+      script: [{
+        key: 'jsonld:remittance-corridor',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -465,6 +620,7 @@ export const useStructuredData = () => {
 
     useHead({
       script: [{
+        key: 'jsonld:local-business',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
       }],
@@ -483,7 +639,11 @@ export const useStructuredData = () => {
     addRemittanceServiceSchema,
     addFinancialProductSchema,
     addReviewSchema,
+    addExchangeRateSchema,
     addHowToSchema,
+    addAggregateRatingSchema,
+    addVideoObjectSchema,
+    addRemittanceCorridorSchema,
     addLocalBusinessSchema,
   }
 }

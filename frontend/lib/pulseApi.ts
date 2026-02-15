@@ -10,6 +10,7 @@ import type {
   PulseCoverageSummary,
   PulseProviderBenchmarkRow,
   PulseEventItem,
+  PulseScreenerResponse,
 } from '~/types/pulse'
 import { useApi } from '~/composables/useApi'
 import type { PulseCorridor, PulseTimeframe } from '~/stores/pulse'
@@ -353,4 +354,31 @@ export async function getCostTrendData(
 ): Promise<CostTrendData[]> {
   const { request } = useApi()
   return await request<CostTrendData[]>('/pulse/cost-trend', { query: { corridor: corridor.slug, timeframe, amount } })
+}
+
+export async function getPulseScreener(options?: {
+  corridorIds?: string[]
+  timeframe?: PulseTimeframe | string
+  amount?: number
+  payin?: 'bank' | 'card' | 'cash'
+  payout?: 'bank' | 'cash' | 'wallet'
+  includeMovers?: boolean
+}): Promise<PulseScreenerResponse> {
+  const { request } = useApi()
+
+  const query: Record<string, unknown> = {}
+
+  const corridorIds = options?.corridorIds?.filter(Boolean).map(id => String(id).trim()).filter(Boolean) ?? []
+  if (corridorIds.length > 0) {
+    // Plane A supports repeated params or comma-separated. Use comma to keep requests compact.
+    query.corridor_ids = corridorIds.join(',')
+  }
+
+  if (options?.timeframe) query.timeframe = options.timeframe
+  if (typeof options?.amount === 'number') query.amount = options.amount
+  if (options?.payin) query.payin = options.payin
+  if (options?.payout) query.payout = options.payout
+  if (typeof options?.includeMovers === 'boolean') query.include_movers = options.includeMovers ? '1' : '0'
+
+  return await request<PulseScreenerResponse>('/pulse/screener', { query })
 }

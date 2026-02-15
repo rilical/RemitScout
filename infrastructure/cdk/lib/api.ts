@@ -74,8 +74,17 @@ export type ApiOptions = {
   fxRateRefreshQueueMode?: string
   exportJobQueueUrl?: string
   exportJobQueueMode?: string
+  ingestFanoutQueueUrl?: string
+  ingestFanoutTier1QueueUrl?: string
+  ingestFanoutTier2QueueUrl?: string
+  notificationsQueueUrl?: string
+  opsAlertsQueueUrl?: string
+  goldLiveQueueUrl?: string
+  goldLiveQueueMode?: string
+  alertEvaluationQueueUrl?: string
   exportsBucketName?: string
   exportsPrefix?: string
+  bronzeBucketName?: string
   userAssetsBucketName?: string
   userAssetsPrefix?: string
   enableCloudFront?: boolean
@@ -100,6 +109,9 @@ export type ApiOptions = {
   planeAThrottleBurst?: number
   planeCThrottleRate?: number
   planeCThrottleBurst?: number
+  // Keep Plane A's corridor tiering/freshness logic consistent with Plane B ingestion.
+  // When set (typically dev/staging), Plane A should treat all corridors as tier_2.
+  planeBDisableTier1?: string
 }
 
 export type ApiResources = {
@@ -162,6 +174,33 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.planeADbName) {
     planeAEnvironment.PLANE_A_DB_NAME = options.planeADbName
+  }
+  if (options.ingestFanoutQueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_QUEUE_URL = options.ingestFanoutQueueUrl
+  }
+  if (options.ingestFanoutTier1QueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL = options.ingestFanoutTier1QueueUrl
+  }
+  if (options.ingestFanoutTier2QueueUrl) {
+    planeAEnvironment.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL = options.ingestFanoutTier2QueueUrl
+  }
+  if (options.notificationsQueueUrl) {
+    planeAEnvironment.PLANE_B_NOTIFICATIONS_QUEUE_URL = options.notificationsQueueUrl
+  }
+  if (options.opsAlertsQueueUrl) {
+    planeAEnvironment.PLANE_B_OPS_ALERT_QUEUE_URL = options.opsAlertsQueueUrl
+  }
+  if (options.goldLiveQueueUrl) {
+    planeAEnvironment.GOLD_LIVE_QUEUE_URL = options.goldLiveQueueUrl
+  }
+  if (options.goldLiveQueueMode) {
+    planeAEnvironment.GOLD_LIVE_QUEUE_MODE = options.goldLiveQueueMode
+  }
+  if (options.alertEvaluationQueueUrl) {
+    planeAEnvironment.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.bronzeBucketName) {
+    planeAEnvironment.BRONZE_S3_BUCKET = options.bronzeBucketName
   }
   if (options.quoteRefreshQueueUrl) {
     planeAEnvironment.QUOTE_REFRESH_QUEUE_URL = options.quoteRefreshQueueUrl
@@ -240,6 +279,13 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       process.env.DB_POOL_MAX || '5'
     planeCEnvironment.DB_POOL_MIN =
       process.env.DB_POOL_MIN || '1'
+  }
+
+  // Ensure Plane A uses the same tier override as Plane B ingestion when dev/staging disables tier_1.
+  // Plane A relies on this env var indirectly via shared corridor tiering logic.
+  if (options.planeBDisableTier1) {
+    planeAEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
+    planeCEnvironment.PLANE_B_DISABLE_TIER1 = options.planeBDisableTier1
   }
 
   const otelLambdaLayer = options.otelLambdaLayerArn
@@ -503,7 +549,9 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     }
   }
 
-  const enablePlaneAJwtAuth = options.enablePlaneAJwtAuth ?? options.envName === 'prod'
+  const enablePlaneAJwtAuth =
+    options.enablePlaneAJwtAuth ??
+    (options.envName === 'prod' || options.envName === 'staging')
   const jwtIssuer = options.planeAJwtIssuer
   const jwtAudiences = options.planeAJwtAudiences ?? []
   const planeAJwtAuthorizer = enablePlaneAJwtAuth && jwtIssuer && jwtAudiences.length > 0
@@ -512,9 +560,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     })
     : undefined
   if (enablePlaneAJwtAuth && !planeAJwtAuthorizer) {
-    Annotations.of(scope).addError(
-      'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.',
-    )
+    const jwtError =
+      'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.'
+    if (options.envName === 'prod' || options.envName === 'staging') {
+      throw new Error(jwtError)
+    }
+    Annotations.of(scope).addError(jwtError)
   }
   if ((options.disablePlaneAExecuteEndpoint ?? false) && (options.enableCloudFront ?? false)) {
     throw new Error('disablePlaneAExecuteEndpoint cannot be true when CloudFront is enabled')
@@ -538,12 +589,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     ...(publicMetricsEnabled ? ['/metrics'] : []),
     // Legacy tombstones
     '/api',
-    '/api/{proxy+}',
     // Public web experience (no auth)
     '/api/v1/quotes/current',
     '/api/v1/providers',
     '/api/v1/providers/metadata',
     '/api/v1/providers/metadata/{id}',
+    '/api/v1/billing/webhook',
     '/api/v1/corridor-currencies',
     '/api/v1/corridor-limits',
     '/api/v1/rates/spot',
@@ -554,7 +605,6 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/contact',
     '/api/v1/pulse/teaser',
     '/api/v1/bank-vs-specialist',
-    '/api/v1/billing/webhook',
     '/api/v1/alerts/unsubscribe',
     '/api/v1/alerts/corridor-eligibility',
     '/api/v1/alerts/macro-corridors',

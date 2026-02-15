@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
       <!-- Ad Banner for Free Users -->
       <div
 v-if="!isPlus"
-class="bg-blue-600 text-white"
+class="bg-brand-600 text-white"
 >
         <CenteredPage
           as="div"
@@ -11,17 +11,17 @@ class="bg-blue-600 text-white"
           section-gap-class="space-y-0"
         >
           <div class="py-2">
-            <div class="flex items-center justify-center gap-3 text-sm">
+            <div class="flex items-center justify-center gap-3 text-body-sm">
               <span><strong>Upgrade to Plus</strong> — Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience</span>
-              <NuxtLink
-to="/plus"
-class="inline-flex items-center gap-1 font-semibold text-white hover:text-blue-100 underline underline-offset-2"
->
-                <span>Learn more</span>
-                <Icon
-                  name="chevron-right"
-                  :size="16"
-                  class="text-current"
+	              <NuxtLink
+	to="/plus"
+	class="inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100 underline underline-offset-2"
+	>
+	                <span>Learn more about Plus</span>
+	                <Icon
+	                  name="chevron-right"
+	                  :size="16"
+	                  class="text-current"
                 />
               </NuxtLink>
             </div>
@@ -31,7 +31,7 @@ class="inline-flex items-center gap-1 font-semibold text-white hover:text-blue-1
 
 	      <div
 	v-if="!isPlus"
-	class="bg-slate-50 border-b border-slate-200"
+	class="bg-neutral-50 border-b border-rs-border"
 	>
         <CenteredPage
           as="div"
@@ -49,7 +49,7 @@ min-height="120px"
       </div>
 
       <!-- Header -->
-      <header class="border-b border-slate-200 bg-white sticky top-16 z-40">
+      <header class="border-b border-rs-border bg-surface sticky top-16 z-40">
         <CenteredPage
           as="div"
           padding-y="none"
@@ -58,16 +58,16 @@ min-height="120px"
           <!-- Main Header Row -->
           <div class="flex items-center justify-between py-6">
             <div>
-              <h1 class="text-2xl font-bold text-slate-900">
-                Welcome back, <span class="text-blue-600">{{ user?.name || 'User' }}</span>
+              <h1 class="text-h3 font-bold text-rs-fg">
+                Welcome back, <span class="text-brand-600">{{ user?.name || 'User' }}</span>
               </h1>
-              <p class="text-sm text-slate-500 mt-0.5">Manage your watchlist, alerts, and transfer history</p>
+              <p class="text-body-sm text-rs-muted mt-0.5">Manage your watchlist, alerts, and transfer history</p>
             </div>
             <div class="flex items-center gap-4">
               <!-- Plan Badge -->
                 <div
                   v-if="isPlus"
-                  class="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-white"
+                  class="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-white"
                 >
                   <Icon
                     name="sparkles"
@@ -80,7 +80,7 @@ min-height="120px"
               <NuxtLink
                 v-else
                   to="/plus"
-                  class="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                  class="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
                 >
                   <Icon
                     name="sparkles"
@@ -96,39 +96,39 @@ min-height="120px"
           <!-- Usage Stats for Free Users -->
           <div
 v-if="!isPlus"
-class="pb-4 flex items-center gap-6 text-sm"
+class="pb-4 flex items-center gap-6 text-body-sm"
 >
             <div class="flex items-center gap-2">
-              <span class="text-slate-500">Watchlist:</span>
+              <span class="text-rs-muted">Watchlist:</span>
               <span
 class="font-medium"
-:class="watchlistLimitPercent >= 100 ? 'text-brand-600' : 'text-slate-900'"
+:class="watchlistLimitPercent >= 100 ? 'text-brand-600' : 'text-rs-fg'"
 >{{ watchlistCount }}/{{ limits.watchlistItems }}</span>
-              <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div class="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full"
-                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-600' : 'bg-blue-500'"
+                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-600' : 'bg-primary-500'"
                   :style="{ width: `${Math.min(watchlistLimitPercent, 100)}%` }"
                 />
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-slate-500">Alerts:</span>
+              <span class="text-rs-muted">Alerts:</span>
               <span
 class="font-medium"
-:class="alertsLimitPercent >= 100 ? 'text-brand-600' : 'text-slate-900'"
+:class="alertsLimitPercent >= 100 ? 'text-brand-600' : 'text-rs-fg'"
 >{{ alertsCount }}/{{ limits.alerts }}</span>
-              <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div class="w-16 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full"
-                  :class="alertsLimitPercent >= 100 ? 'bg-brand-600' : 'bg-blue-500'"
+                  :class="alertsLimitPercent >= 100 ? 'bg-brand-600' : 'bg-primary-500'"
                   :style="{ width: `${Math.min(alertsLimitPercent, 100)}%` }"
                 />
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-slate-500">History:</span>
-              <span class="font-medium text-slate-900">{{ limits.historyDays }} days</span>
+              <span class="text-rs-muted">History:</span>
+              <span class="font-medium text-rs-fg">{{ limits.historyDays }} days</span>
             </div>
           </div>
 
@@ -138,10 +138,10 @@ class="font-medium"
               v-for="tab in visibleTabs"
               :key="tab.id"
               type="button"
-              class="py-4 text-sm font-medium border-b-2 transition-colors"
+              class="py-4 text-body-sm font-medium border-b-2 transition-colors"
               :class="activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'"
+                ? 'border-brand-600 text-brand-600'
+                : 'border-transparent text-rs-muted hover:text-neutral-700 hover:border-neutral-300'"
               @click="setTab(tab.id)"
             >
               {{ tab.label }}
@@ -163,26 +163,26 @@ class="font-medium"
             <!-- Watchlist Stat -->
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-sm text-white/90">Watchlist</span>
-                <span class="text-xs text-white/70">
+                <span class="text-body-sm text-white/90">Watchlist</span>
+                <span class="text-body-sm text-white/70">
                   {{ watchlistCount }}/{{ limits.watchlistItems === 'unlimited' ? '∞' : limits.watchlistItems }}
                 </span>
               </div>
-              <div class="text-2xl font-semibold text-white">{{ watchlistCount }}</div>
+              <div class="text-h3 font-semibold text-white">{{ watchlistCount }}</div>
               <div
 v-if="limits.watchlistItems !== 'unlimited'"
 class="mt-2"
 >
-                <div class="h-1.5 bg-white/30 rounded-full overflow-hidden">
+                <div class="h-1.5 bg-surface/30 rounded-full overflow-hidden">
                   <div
-                    class="h-full rounded-full transition-all bg-white"
+                    class="h-full rounded-full transition-all bg-surface"
                     :style="{ width: `${Math.min(watchlistLimitPercent, 100)}%` }"
                   />
                 </div>
                 <NuxtLink
                   v-if="!isPlus && watchlistLimitPercent >= 100"
                   to="/plus"
-                  class="text-xs text-white hover:text-white/80 font-medium mt-1 inline-block"
+                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
                 >
                   Upgrade for Plus →
                 </NuxtLink>
@@ -192,26 +192,26 @@ class="mt-2"
             <!-- Alerts Stat -->
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-sm text-white/90">Active Alerts</span>
-                <span class="text-xs text-white/70">
+                <span class="text-body-sm text-white/90">Active Alerts</span>
+                <span class="text-body-sm text-white/70">
                   {{ alertsCount }}/{{ limits.alerts === 'unlimited' ? '∞' : limits.alerts }}
                 </span>
               </div>
-              <div class="text-2xl font-semibold text-white">{{ alertsCount }}</div>
+              <div class="text-h3 font-semibold text-white">{{ alertsCount }}</div>
               <div
 v-if="limits.alerts !== 'unlimited'"
 class="mt-2"
 >
-                <div class="h-1.5 bg-white/30 rounded-full overflow-hidden">
+                <div class="h-1.5 bg-surface/30 rounded-full overflow-hidden">
                   <div
-                    class="h-full rounded-full transition-all bg-white"
+                    class="h-full rounded-full transition-all bg-surface"
                     :style="{ width: `${Math.min(alertsLimitPercent, 100)}%` }"
                   />
                 </div>
                 <NuxtLink
                   v-if="!isPlus && alertsLimitPercent >= 100"
                   to="/plus"
-                  class="text-xs text-white hover:text-white/80 font-medium mt-1 inline-block"
+                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
                 >
                   Upgrade for Plus →
                 </NuxtLink>
@@ -221,22 +221,22 @@ class="mt-2"
             <!-- History Stat -->
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-sm text-white/90">History</span>
+                <span class="text-body-sm text-white/90">History</span>
                 <span
 v-if="!isPlus"
-class="text-xs text-white/70"
+class="text-body-sm text-white/70"
 >{{ limits.historyDays }} days</span>
                 <span
 v-else
-class="text-xs text-white"
+class="text-body-sm text-white"
 >365 days</span>
               </div>
-              <div class="text-2xl font-semibold text-white">{{ compareCount }}</div>
+              <div class="text-h3 font-semibold text-white">{{ compareCount }}</div>
                 <div
 v-if="!isPlus"
 class="mt-2"
 >
-                  <div class="flex items-center gap-1 text-xs text-white/70">
+                  <div class="flex items-center gap-1 text-body-sm text-white/70">
                     <Icon
                       name="info"
                       :size="16"
@@ -249,15 +249,15 @@ class="mt-2"
 
             <!-- Best Rate Stat -->
             <div class="bg-brand-600 rounded-xl border border-brand-700 p-5">
-              <div class="text-sm text-white/90 mb-1">Best Rate Today</div>
-              <div class="text-2xl font-semibold text-white">
+              <div class="text-body-sm text-white/90 mb-1">Best Rate Today</div>
+              <div class="text-h3 font-semibold text-white">
                 {{ currentRate.rate }}
-                <span class="text-sm text-white/80">{{ getCurrencyCode(selectedCorridor.to) }}</span>
+                <span class="text-body-sm text-white/80">{{ getCurrencyCode(selectedCorridor.to) }}</span>
               </div>
                 <div class="mt-2">
                   <span
 v-if="currentRate.change !== null"
-class="inline-flex items-center gap-1 text-xs font-medium text-white"
+class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
 >
                     <Icon
                       name="arrow-up"
@@ -269,7 +269,7 @@ class="inline-flex items-center gap-1 text-xs font-medium text-white"
                   </span>
                   <span
 v-else
-class="text-xs text-white/70"
+class="text-body-sm text-white/70"
 >No rate history yet</span>
                 </div>
             </div>
@@ -278,16 +278,16 @@ class="text-xs text-white/70"
           <!-- Upgrade Banner for Free Users -->
           <div
             v-if="!isPlus && (watchlistLimitPercent >= 66 || alertsLimitPercent >= 66)"
-            class="mb-8 bg-gradient-to-r from-gray-900 to-slate-900 rounded-xl p-6 text-white"
+            class="mb-8 bg-gradient-to-r from-neutral-900 to-neutral-900 rounded-xl p-6 text-white"
           >
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="font-semibold text-lg">You're approaching your limits</h3>
-              <p class="text-white/90 text-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 365-day history, and exports.</p>
+              <h3 class="font-semibold text-body-lg">You're approaching your limits</h3>
+              <p class="text-white/90 text-body-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 365-day history, and exports.</p>
             </div>
               <NuxtLink
                 to="/plus"
-                class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0"
+                class="inline-flex items-center justify-center rounded-lg bg-surface px-6 py-2.5 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors flex-shrink-0"
               >
                 Upgrade to Plus
               </NuxtLink>
@@ -297,11 +297,11 @@ class="text-xs text-white/70"
           <!-- Provider Feedback (non-blocking) -->
           <div
             v-if="pendingProviderFeedbackCount > 0"
-            class="mb-8 rounded-xl border border-slate-200 bg-white p-6"
+            class="mb-8 rounded-xl border border-rs-border bg-surface p-6"
           >
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div class="flex items-start gap-4">
-                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-600/10 text-success-600">
                   <Icon
                     name="check-circle"
                     :size="24"
@@ -309,17 +309,17 @@ class="text-xs text-white/70"
                   />
                 </div>
                 <div>
-                  <h3 class="text-base font-semibold text-slate-900">
+                  <h3 class="text-body font-semibold text-rs-fg">
                     Help improve provider accuracy
                   </h3>
-                  <p class="mt-1 text-sm text-slate-600">
+                  <p class="mt-1 text-body-sm text-neutral-600">
                     You have {{ pendingProviderFeedbackCount }} pending transfer check{{ pendingProviderFeedbackCount === 1 ? '' : 's' }}.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                class="inline-flex items-center justify-center rounded-lg bg-success-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-success-600 transition-colors"
                 @click="openProviderFeedback"
               >
                 Give feedback
@@ -332,60 +332,60 @@ class="text-xs text-white/70"
             <!-- Left Column (2/3) -->
             <div class="lg:col-span-2 space-y-6">
               <!-- Enhanced Rate Checker -->
-              <div class="bg-white rounded-xl border border-slate-200">
+              <div class="bg-surface rounded-xl border border-rs-border">
                 <!-- Header with Corridor Selector -->
-                <div class="p-6 border-b border-slate-100">
+                <div class="p-6 border-b border-neutral-100">
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
-                      <h2 class="text-lg font-semibold text-slate-900">Rate Checker</h2>
+                      <h2 class="text-body-lg font-semibold text-rs-fg">Rate Checker</h2>
                       <div class="relative">
                         <button
                           type="button"
-                          class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium text-slate-700 transition-colors"
+                          class="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-body-sm font-medium text-neutral-700 transition-colors"
                           @click="showCorridorSelector = !showCorridorSelector"
                           >
                             <span>{{ getFlag(selectedCorridor.from) }}</span>
                             <Icon
                               name="chevron-right"
                               :size="16"
-                              class="text-slate-400"
+                              class="text-neutral-400"
                             />
                             <span>{{ getFlag(selectedCorridor.to) }}</span>
-                            <span class="text-slate-500">{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span>
+                            <span class="text-rs-muted">{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span>
                             <Icon
                               name="chevron-down"
                               :size="16"
-                              class="text-slate-400"
+                              class="text-neutral-400"
                             />
                           </button>
 
                         <!-- Corridor Dropdown -->
                         <div
                           v-if="showCorridorSelector"
-                          class="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl border border-slate-200 shadow-lg z-20 p-4"
+                          class="absolute top-full left-0 mt-2 w-80 bg-surface rounded-xl border border-rs-border shadow-lg z-20 p-4"
                         >
                           <div class="space-y-3">
                             <div>
-                              <label class="block text-xs font-medium text-slate-700 mb-1.5">From</label>
+                              <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">From</label>
                               <UniversalDropdown
                                 v-model="customCorridor.from"
                                 :options="inlineFromOptions"
                                 placeholder="Select country"
-                                button-class="h-10 text-sm"
+                                button-class="h-10 text-body-sm"
                               />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-slate-700 mb-1.5">To</label>
+                              <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">To</label>
                               <UniversalDropdown
                                 v-model="customCorridor.to"
                                 :options="inlineToOptions"
                                 placeholder="Select country"
-                                button-class="h-10 text-sm"
+                                button-class="h-10 text-body-sm"
                               />
                             </div>
                             <button
                               type="button"
-                              class="w-full px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
+                              class="w-full px-4 py-2 bg-brand-600 text-white text-body-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors"
                               @click="selectCorridor(customCorridor.from, customCorridor.to)"
                             >
                               Select Corridor
@@ -396,16 +396,16 @@ class="text-xs text-white/70"
                     </div>
 
                     <!-- Timeframe Selector -->
-                    <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                    <div class="flex items-center gap-1 bg-neutral-100 rounded-lg p-1">
                       <button
                         v-for="period in timeframePeriods"
                         :key="period.value"
                         type="button"
-                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                        class="px-3 py-1.5 text-body-sm font-medium rounded-md transition-colors"
                         :class="[
                           graphTimeframe === period.value
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-600 hover:text-slate-900',
+                            ? 'bg-surface text-rs-fg shadow-sm'
+                            : 'text-neutral-600 hover:text-rs-fg',
                           isTimeframeLocked(period.value) ? 'opacity-50 cursor-not-allowed' : '',
                         ]"
                         :disabled="isTimeframeLocked(period.value)"
@@ -415,7 +415,7 @@ class="text-xs text-white/70"
                         {{ period.label }}
                         <span
 v-if="period.plusOnly && !isPlus"
-class="ml-1 text-[10px] text-slate-400"
+class="ml-1 text-[10px] text-neutral-400"
 >Plus</span>
                       </button>
                     </div>
@@ -427,22 +427,22 @@ class="ml-1 text-[10px] text-slate-400"
                   <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                          <span class="text-2xl">{{ getFlag(selectedCorridor.from) }}</span>
+                          <span class="text-h3">{{ getFlag(selectedCorridor.from) }}</span>
                           <Icon
                             name="arrow-right"
                             :size="16"
-                            class="text-slate-400"
+                            class="text-neutral-400"
                           />
-                          <span class="text-2xl">{{ getFlag(selectedCorridor.to) }}</span>
-                          <span class="text-sm text-slate-500 ml-1">{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span>
+                          <span class="text-h3">{{ getFlag(selectedCorridor.to) }}</span>
+                          <span class="text-body-sm text-rs-muted ml-1">{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span>
                         </div>
                       <div class="flex items-baseline gap-3">
-                        <span class="text-4xl font-semibold text-slate-900">{{ currentRate.rate }}</span>
-                        <span class="text-lg text-slate-500">{{ getCurrencyCode(selectedCorridor.to) }}</span>
+                        <span class="text-h1 font-semibold text-rs-fg">{{ currentRate.rate }}</span>
+                        <span class="text-body-lg text-rs-muted">{{ getCurrencyCode(selectedCorridor.to) }}</span>
                         <span
                             v-if="currentRate.change !== null"
-                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium"
-                            :class="currentRate.change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium"
+                            :class="currentRate.change >= 0 ? 'bg-success-600/10 text-success-600' : 'bg-danger-600/10 text-danger-600'"
                           >
                             <Icon
                               name="arrow-up"
@@ -453,45 +453,59 @@ class="ml-1 text-[10px] text-slate-400"
                             {{ formatPercentValue(currentRate.change) }}
                           </span>
                         </div>
-	                      <div class="text-xs text-slate-400 mt-1">
-	                        <span v-if="selectedHistoryLoading">Loading rate history...</span>
-	                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
-	                        <span v-else>{{ currentRate.updatedLabel }}</span>
-	                      </div>
+		                      <div class="text-body-sm text-neutral-400 mt-1">
+		                        <span
+		                          v-if="selectedHistoryLoading"
+		                          class="inline-flex items-center gap-2"
+		                          role="status"
+		                          aria-live="polite"
+		                        >
+		                          <span
+		                            class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"
+		                            aria-hidden="true"
+		                          />
+		                          <span>Loading rate history...</span>
+		                        </span>
+		                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
+		                        <span v-else>{{ currentRate.updatedLabel }}</span>
+		                      </div>
                     </div>
 
                     <!-- Rate Stats -->
                     <div class="flex gap-6">
                       <div class="text-center">
-                        <div class="text-xs text-slate-400 mb-0.5">High</div>
-                        <div class="text-sm font-semibold text-emerald-600">{{ rateStats.high }}</div>
+                        <div class="text-body-sm text-neutral-400 mb-0.5">High</div>
+                        <div class="text-body-sm font-semibold text-success-600">{{ rateStats.high }}</div>
                       </div>
                       <div class="text-center">
-                        <div class="text-xs text-slate-400 mb-0.5">Low</div>
-                        <div class="text-sm font-semibold text-red-600">{{ rateStats.low }}</div>
+                        <div class="text-body-sm text-neutral-400 mb-0.5">Low</div>
+                        <div class="text-body-sm font-semibold text-danger-600">{{ rateStats.low }}</div>
                       </div>
                       <div class="text-center">
-                        <div class="text-xs text-slate-400 mb-0.5">Average</div>
-                        <div class="text-sm font-semibold text-slate-700">{{ rateStats.average }}</div>
+                        <div class="text-body-sm text-neutral-400 mb-0.5">Average</div>
+                        <div class="text-body-sm font-semibold text-neutral-700">{{ rateStats.average }}</div>
                       </div>
                       <div class="text-center">
-                        <div class="text-xs text-slate-400 mb-0.5">Volatility</div>
-                        <div class="text-sm font-semibold text-slate-700">{{ rateStats.volatility }}</div>
+                        <div class="text-body-sm text-neutral-400 mb-0.5">Volatility</div>
+                        <div class="text-body-sm font-semibold text-neutral-700">{{ rateStats.volatility }}</div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Chart -->
-                  <div class="h-56 relative">
-                    <div
-v-if="selectedHistoryLoading"
-class="absolute inset-0 flex items-center justify-center text-sm text-slate-400"
->
-                      Loading rate history...
-                    </div>
+	                  <!-- Chart -->
+	                  <div class="h-56 relative">
+	                    <div
+	v-if="selectedHistoryLoading"
+	class="absolute inset-0 flex items-center justify-center px-4"
+	>
+	                      <LoadingState
+	                        mode="inline"
+	                        message="Loading rate history..."
+	                      />
+	                    </div>
                     <div
 v-else-if="graphData.length === 0"
-class="absolute inset-0 flex items-center justify-center text-sm text-slate-400"
+class="absolute inset-0 flex items-center justify-center text-body-sm text-neutral-400"
 >
                       No rate history yet
                     </div>
@@ -577,7 +591,7 @@ fill-opacity="0.2"
 />
                     </svg>
                     <!-- Y-axis labels -->
-                    <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-slate-400 py-2">
+                    <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-body-sm text-neutral-400 py-2">
                       <span>{{ rateStats.high }}</span>
                       <span>{{ rateStats.average }}</span>
                       <span>{{ rateStats.low }}</span>
@@ -585,19 +599,19 @@ fill-opacity="0.2"
                   </div>
 
                   <!-- X-axis labels -->
-                  <div class="flex justify-between text-xs text-slate-400 mt-2 px-6">
+                  <div class="flex justify-between text-body-sm text-neutral-400 mt-2 px-6">
                     <span>{{ getTimeframeStartLabel() }}</span>
                     <span>Today</span>
                   </div>
                 </div>
 
                 <!-- Action Bar -->
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl flex flex-wrap items-center justify-between gap-3">
+                <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 rounded-b-xl flex flex-wrap items-center justify-between gap-3">
                   <div class="flex items-center gap-3">
                     <button
                       type="button"
-                      class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
-                      :class="watchlistLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-slate-100 hover:text-slate-700' : ''"
+                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+                      :class="watchlistLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
                       :disabled="watchlistLimitReached"
                       @click="handleAddToWatchlist"
 	                    >
@@ -610,8 +624,8 @@ fill-opacity="0.2"
 	                    </button>
                     <button
                       type="button"
-                      class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
-	                      :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-slate-100 hover:text-slate-700' : ''"
+                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+	                      :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
 	                      :disabled="alertsLimitReached"
 	                      @click="handleSetAlert"
 	                    >
@@ -625,7 +639,7 @@ fill-opacity="0.2"
                     <button
                       v-if="isPlus"
                       type="button"
-	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
+	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
 	                      @click="showExportModal = true"
 	                    >
 	                      <Icon
@@ -639,21 +653,27 @@ fill-opacity="0.2"
                   <button
                     type="button"
                     :disabled="comparingSelectedCorridor"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-body-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
                     @click="handleCompareSelectedCorridor"
-	                  >
-	                    <div
-	                      v-if="comparingSelectedCorridor"
-	                      class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
-	                    />
-	                    <Icon
-	                      v-else
-	                      name="chevron-right"
-	                      :size="16"
-	                      class="text-current"
-	                    />
-	                    {{ comparingSelectedCorridor ? 'Loading...' : 'Compare Corridor' }}
-	                  </button>
+		                  >
+		                    <div
+		                      v-if="comparingSelectedCorridor"
+		                      class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
+		                      aria-hidden="true"
+		                    />
+		                    <Icon
+		                      v-else
+		                      name="chevron-right"
+		                      :size="16"
+		                      class="text-current"
+		                    />
+		                    <span
+		                      v-if="comparingSelectedCorridor"
+		                      role="status"
+		                      aria-live="polite"
+		                    >Comparing…</span>
+		                    <span v-else>Compare Corridor</span>
+		                  </button>
 	                </div>
               </div>
 
@@ -661,112 +681,113 @@ fill-opacity="0.2"
               <div class="grid sm:grid-cols-3 gap-4">
                 <NuxtLink
                   to="/send-money"
-                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all group"
+                  class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all group"
 	                >
-	                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
 	                    <Icon
 	                      name="magnifying-glass"
 	                      :size="20"
-	                      class="text-blue-600 group-hover:text-white transition-colors"
+	                      class="text-brand-600 group-hover:text-white transition-colors"
 	                    />
 	                  </div>
                   <div>
-                    <div class="text-sm font-semibold text-slate-900">Compare</div>
-                    <div class="text-xs text-slate-500">Find best rates</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">Compare</div>
+                    <div class="text-body-sm text-rs-muted">Find best rates</div>
                   </div>
                 </NuxtLink>
                 <button
                   type="button"
-                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all text-left group"
-                  :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:border-slate-200 hover:shadow-none' : ''"
+                  class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all text-left group"
+                  :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:border-rs-border hover:shadow-none' : ''"
                   :disabled="alertsLimitReached"
 	                  @click="openCreateAlert"
 	                >
-	                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
 	                    <Icon
 	                      name="bell-alert"
 	                      :size="20"
-	                      class="text-blue-600 group-hover:text-white transition-colors"
+	                      class="text-brand-600 group-hover:text-white transition-colors"
 	                    />
 	                  </div>
                   <div>
-                    <div class="text-sm font-semibold text-slate-900">New Alert</div>
-                    <div class="text-xs text-slate-500">Set rate target</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">New Alert</div>
+                    <div class="text-body-sm text-rs-muted">Set rate target</div>
                   </div>
                 </button>
                 <NuxtLink
                   to="/learn"
-                  class="flex items-center gap-4 bg-white rounded-xl border-2 border-slate-200 p-4 hover:border-blue-500 hover:shadow-md transition-all group"
+                  class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all group"
 	                >
-	                  <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
 	                    <Icon
 	                      name="book-open"
 	                      :size="20"
-	                      class="text-blue-600 group-hover:text-white transition-colors"
+	                      class="text-brand-600 group-hover:text-white transition-colors"
 	                    />
 	                  </div>
-                  <div>
-                    <div class="text-sm font-semibold text-slate-900">Guides</div>
-                    <div class="text-xs text-slate-500">Learn more</div>
-                  </div>
-                </NuxtLink>
+	                  <div>
+	                    <div class="text-body-sm font-semibold text-rs-fg">Guides</div>
+	                    <div class="text-body-sm text-rs-muted">Explore guides</div>
+	                  </div>
+	                </NuxtLink>
               </div>
 
               <!-- Watchlist Preview -->
-              <div class="bg-white rounded-xl border border-slate-200">
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                  <h2 class="font-semibold text-slate-900">Your Watchlist</h2>
+              <div class="bg-surface rounded-xl border border-rs-border">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+                  <h2 class="font-semibold text-rs-fg">Your Watchlist</h2>
                   <button
                     type="button"
-                    class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
+                    aria-label="View all watchlist corridors"
                     @click="setTab('watchlist')"
                   >
                     View all
                   </button>
                 </div>
                 <div
-v-if="corridorWatchlistItems.length === 0"
-class="px-6 py-12 text-center"
->
-	                  <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-	                    <Icon
-	                      name="document-text"
-	                      :size="24"
-	                      class="text-slate-400"
-	                    />
-	                  </div>
-                  <p class="text-sm text-slate-500 mb-4">No corridors saved yet</p>
-                  <NuxtLink
-                    to="/send-money"
-                    class="text-sm font-medium text-blue-600 hover:text-blue-700"
+                  v-if="corridorWatchlistItems.length === 0"
+                  class="px-6 py-12"
+                >
+                  <EmptyState
+                    mode="inline"
+                    title="No corridors saved yet"
+                    message="Compare rates to add a corridor to your watchlist."
                   >
-                    Compare rates to add one →
-                  </NuxtLink>
+                    <template #actions>
+                      <NuxtLink
+                        to="/send-money"
+                        class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                      >
+                        Compare rates →
+                      </NuxtLink>
+                    </template>
+                  </EmptyState>
                 </div>
                 <div
 v-else
-class="divide-y divide-slate-100"
+class="divide-y divide-neutral-100"
 >
                   <div
                     v-for="item in corridorWatchlistItems.slice(0, 3)"
                     :key="item.id"
-                    class="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                    class="flex items-center justify-between px-6 py-4 hover:bg-neutral-50 transition-colors"
                   >
                     <div class="flex items-center gap-3">
 	                      <div class="flex items-center gap-1">
-	                        <span class="text-lg">{{ getFlag(item.target.from) }}</span>
+	                        <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
 	                        <Icon
 	                          name="chevron-right"
 	                          :size="16"
-	                          class="text-slate-400"
+	                          class="text-neutral-400"
 	                        />
-	                        <span class="text-lg">{{ getFlag(item.target.to) }}</span>
+	                        <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
 	                      </div>
-                      <span class="text-sm font-medium text-slate-900">{{ item.label }}</span>
+                      <span class="text-body-sm font-medium text-rs-fg">{{ item.label }}</span>
                     </div>
                     <button
                       type="button"
-                      class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
                       @click="openAlert(item)"
                     >
                       Set alert
@@ -779,29 +800,32 @@ class="divide-y divide-slate-100"
             <!-- Right Column (1/3) -->
             <div class="space-y-6">
               <!-- Recent Searches -->
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4">Recent Searches</h3>
-                <div
-                  v-if="recentSearchesPending"
-                  class="text-sm text-slate-500"
-                >
-                  Loading...
-                </div>
+              <div class="bg-surface rounded-xl border border-rs-border p-6">
+                <h3 class="font-semibold text-rs-fg mb-4">Recent Searches</h3>
+	                <div
+	                  v-if="recentSearchesPending"
+	                  class="py-4"
+	                >
+	                  <LoadingState
+	                    mode="inline"
+	                    message="Loading recent searches..."
+	                  />
+	                </div>
                 <div
 	                  v-else-if="recentSearches.length === 0"
 	                  class="text-center py-4"
 	                >
-	                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
 	                    <Icon
 	                      name="magnifying-glass"
 	                      :size="20"
-	                      class="text-slate-400"
+	                      class="text-neutral-400"
 	                    />
 	                  </div>
-                  <p class="text-sm text-slate-500 mb-2">No searches yet</p>
+                  <p class="text-body-sm text-rs-muted mb-2">No searches yet</p>
                   <NuxtLink
 to="/send-money"
-class="text-sm font-medium text-blue-600 hover:text-blue-700"
+class="text-body-sm font-medium text-brand-600 hover:text-brand-700"
 >
                     Compare rates →
                   </NuxtLink>
@@ -814,22 +838,22 @@ class="space-y-3"
                     v-for="(search, idx) in recentSearches.slice(0, 5)"
                     :key="idx"
                     :to="getCorridorUrl(search.from, search.to)"
-                    class="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                    class="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
 	                    <div class="flex items-center gap-1.5">
-	                      <span class="text-lg">{{ getFlag(search.from) }}</span>
+	                      <span class="text-body-lg">{{ getFlag(search.from) }}</span>
 	                      <Icon
 	                        name="chevron-right"
 	                        :size="16"
-	                        class="text-slate-400"
+	                        class="text-neutral-400"
 	                      />
-	                      <span class="text-lg">{{ getFlag(search.to) }}</span>
+	                      <span class="text-body-lg">{{ getFlag(search.to) }}</span>
 	                    </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-slate-900">
+                      <p class="text-body-sm font-medium text-rs-fg">
                         {{ getCountryName(search.from) }} → {{ getCountryName(search.to) }}
 	                      </p>
-		                      <p class="text-sm text-slate-500 font-medium">
+		                      <p class="text-body-sm text-rs-muted font-medium">
 		                        ${{ formatOpsNumber(search.amount || 500, 0) }} • {{ formatMethod(search.method) }}
 		                      </p>
                     </div>
@@ -838,47 +862,53 @@ class="space-y-3"
               </div>
 
               <!-- Top Movers from Watchlist -->
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
-                <h3 class="font-semibold text-slate-900 mb-4">Top Movers Today</h3>
-                <div
-                  v-if="!watchlistHydrated"
-                  class="text-sm text-slate-500"
-                >
-                  Loading...
-                </div>
+              <div class="bg-surface rounded-xl border border-rs-border p-6">
+                <h3 class="font-semibold text-rs-fg mb-4">Top Movers Today</h3>
+	                <div
+	                  v-if="!watchlistHydrated"
+	                  class="py-4"
+	                >
+	                  <LoadingState
+	                    mode="inline"
+	                    message="Loading watchlist..."
+	                  />
+	                </div>
                 <div
 	                  v-else-if="corridorWatchlistItems.length === 0"
 	                  class="text-center py-4"
 	                >
-	                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
 	                    <Icon
 	                      name="arrow-trending-up"
 	                      :size="20"
-	                      class="text-slate-400"
+	                      class="text-neutral-400"
 	                    />
 	                  </div>
-                  <p class="text-sm text-slate-500 mb-2">No corridors tracked</p>
-                  <p class="text-xs text-slate-400">Add corridors to your watchlist to see their daily movements</p>
+                  <p class="text-body-sm text-rs-muted mb-2">No corridors tracked</p>
+                  <p class="text-body-sm text-neutral-400">Add corridors to your watchlist to see their daily movements</p>
                 </div>
-                <div
-v-else-if="topMoversLoading"
-class="text-sm text-slate-500"
->
-                  Loading rate history...
-                </div>
+	                <div
+	v-else-if="topMoversLoading"
+	class="py-4"
+	>
+	                  <LoadingState
+	                    mode="inline"
+	                    message="Loading rate history..."
+	                  />
+	                </div>
                 <div
 	v-else-if="topMoversFromWatchlist.length === 0"
 	class="text-center py-4"
 	>
-	                  <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
 	                    <Icon
 	                      name="arrow-trending-up"
 	                      :size="20"
-	                      class="text-slate-400"
+	                      class="text-neutral-400"
 	                    />
 	                  </div>
-                  <p class="text-sm text-slate-500 mb-2">No rate history yet</p>
-                  <p class="text-xs text-slate-400">Once history is available, movers will appear here.</p>
+                  <p class="text-body-sm text-rs-muted mb-2">No rate history yet</p>
+                  <p class="text-body-sm text-neutral-400">Once history is available, movers will appear here.</p>
                 </div>
                 <div
 v-else
@@ -888,32 +918,32 @@ class="space-y-3"
                     v-for="item in topMoversFromWatchlist"
                     :key="item.id"
                     :to="getCorridorUrl(item.target.from, item.target.to)"
-                    class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                    class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
 	                    <div class="flex items-center gap-2">
-	                      <span class="text-lg">{{ getFlag(item.target.from) }}</span>
+	                      <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
 	                      <Icon
 	                        name="chevron-right"
 	                        :size="16"
-	                        class="text-slate-400"
+	                        class="text-neutral-400"
 	                      />
-	                      <span class="text-lg">{{ getFlag(item.target.to) }}</span>
-	                      <span class="text-sm text-slate-700">{{ item.target.from }}/{{ item.target.to }}</span>
+	                      <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
+	                      <span class="text-body-sm text-neutral-700">{{ item.target.from }}/{{ item.target.to }}</span>
 	                    </div>
                     <span
-                      class="text-sm font-medium"
-                      :class="(item.change ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'"
+                      class="text-body-sm font-medium"
+                      :class="(item.change ?? 0) >= 0 ? 'text-success-600' : 'text-danger-600'"
                     >
                       {{ formatPercentValue(item.change) }}
                     </span>
                   </NuxtLink>
                   <div
 v-if="corridorWatchlistItems.length > topMoversLimit"
-class="pt-2 border-t border-slate-100"
+class="pt-2 border-t border-neutral-100"
 >
                     <button
                       type="button"
-                      class="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      class="w-full text-body-sm text-brand-600 hover:text-brand-700 font-medium"
                       @click="setTab('watchlist')"
                     >
                       View all {{ corridorWatchlistItems.length }} corridors →
@@ -926,7 +956,7 @@ class="pt-2 border-t border-slate-100"
               <div class="bg-brand-600 rounded-xl border border-brand-700 p-6">
                 <div class="flex items-start gap-4">
 	                  <div class="flex-shrink-0">
-	                    <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+	                    <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center">
 	                      <Icon
 	                        name="chat-bubble"
 	                        :size="20"
@@ -936,12 +966,12 @@ class="pt-2 border-t border-slate-100"
 	                  </div>
                   <div class="flex-1">
                     <h3 class="font-semibold text-white mb-2">Need Help?</h3>
-                    <p class="text-sm text-white/90 mb-4">
+                    <p class="text-body-sm text-white/90 mb-4">
                       Have questions or found an issue? Our support team is here to help.
                     </p>
 	                    <NuxtLink
 	                      to="/contact"
-	                      class="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-600 hover:bg-white/90 transition-colors"
+	                      class="inline-flex items-center gap-2 rounded-lg bg-surface px-4 py-2 text-body-sm font-semibold text-brand-600 hover:bg-surface/90 transition-colors"
 	                    >
 	                      Contact Support
 	                      <Icon
@@ -957,10 +987,10 @@ class="pt-2 border-t border-slate-100"
               <!-- Ad: Upgrade to Plus (Free users only) -->
               <div
 v-if="!isPlus"
-class="bg-blue-600 rounded-xl p-5 text-white"
+class="bg-brand-600 rounded-xl p-5 text-white"
 >
 	                <div class="flex items-start gap-3">
-	                  <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+	                  <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center flex-shrink-0">
 	                    <Icon
 	                      name="sparkles"
 	                      :size="20"
@@ -969,17 +999,17 @@ class="bg-blue-600 rounded-xl p-5 text-white"
 	                    />
 	                  </div>
 	                  <div class="flex-1">
-	                    <h4 class="font-semibold text-sm mb-1">Remove Ads with Plus</h4>
-	                    <p class="text-xs text-white/90 mb-3">Get Pulse access, 16 alerts, 365-day history, exports, and an ad-free experience.</p>
-	                    <NuxtLink
-	to="/plus"
-	class="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-blue-100"
-	>
-	                      <span>Learn more</span>
-	                      <Icon
-	                        name="chevron-right"
-	                        :size="16"
-	                        class="text-current"
+	                    <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
+	                    <p class="text-body-sm text-white/90 mb-3">Get Pulse access, 16 alerts, 365-day history, exports, and an ad-free experience.</p>
+		                    <NuxtLink
+		to="/plus"
+		class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
+		>
+		                      <span>Learn more about Plus</span>
+		                      <Icon
+		                        name="chevron-right"
+		                        :size="16"
+		                        class="text-current"
 	                      />
 	                    </NuxtLink>
 	                  </div>
@@ -994,17 +1024,17 @@ class="bg-blue-600 rounded-xl p-5 text-white"
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <div class="flex items-center gap-3">
-                <h2 class="text-lg font-semibold text-slate-900">Watchlist</h2>
+                <h2 class="text-body-lg font-semibold text-rs-fg">Watchlist</h2>
                 <span
                   v-if="limits.watchlistItems !== 'unlimited'"
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-body-sm font-medium"
+                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-warning-600 text-warning-600' : 'bg-neutral-100 text-neutral-600'"
                 >
                   {{ watchlistCount }}/{{ limits.watchlistItems }} used
                 </span>
                 <span
                   v-else
-	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
 	                >
 	                  <Icon
 	                    name="check"
@@ -1014,20 +1044,20 @@ class="bg-blue-600 rounded-xl p-5 text-white"
 	                  Unlimited
 	                </span>
               </div>
-              <p class="text-sm text-slate-500 mt-1">{{ watchlistCount }} saved corridor{{ watchlistCount !== 1 ? 's' : '' }}</p>
+              <p class="text-body-sm text-rs-muted mt-1">{{ watchlistCount }} saved corridor{{ watchlistCount !== 1 ? 's' : '' }}</p>
             </div>
             <div class="flex items-center gap-3">
               <NuxtLink
                 v-if="!isPlus && watchlistLimitPercent >= 66"
                 to="/plus"
-                class="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                class="inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
               >
                 Upgrade
               </NuxtLink>
               <button
                 v-if="watchlistCount > 0"
                 type="button"
-                class="text-sm text-red-600 hover:text-red-700 font-medium"
+                class="text-body-sm text-danger-600 hover:text-danger-600 font-medium"
                 @click="watchlistReset"
               >
                 Clear all
@@ -1038,7 +1068,7 @@ class="bg-blue-600 rounded-xl p-5 text-white"
           <!-- Limit Warning Banner -->
           <div
             v-if="!isPlus && watchlistLimitPercent >= 100"
-	            class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"
+	            class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
 	          >
 	            <Icon
 	              name="exclamation-triangle"
@@ -1047,12 +1077,12 @@ class="bg-blue-600 rounded-xl p-5 text-white"
 	              class="text-brand-600 flex-shrink-0 mt-0.5"
 	            />
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-brand-600">Watchlist limit reached</h4>
-              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Upgrade to Plus for up to 16 corridors.</p>
+              <h4 class="text-body-sm font-medium text-brand-600">Watchlist limit reached</h4>
+              <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Upgrade to Plus for up to 16 corridors.</p>
             </div>
             <NuxtLink
               to="/plus"
-              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
             >
               Upgrade
             </NuxtLink>
@@ -1060,17 +1090,17 @@ class="bg-blue-600 rounded-xl p-5 text-white"
 
           <div
             v-else-if="isPlus && watchlistLimitReached"
-	            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+	            class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
 	          >
 	            <Icon
 	              name="exclamation-triangle"
 	              :size="20"
 	              variant="solid"
-	              class="text-amber-600 flex-shrink-0 mt-0.5"
+	              class="text-warning-600 flex-shrink-0 mt-0.5"
 	            />
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-amber-800">Watchlist limit reached</h4>
-              <p class="text-sm text-amber-800/90 mt-0.5">
+              <h4 class="text-body-sm font-medium text-warning-600">Watchlist limit reached</h4>
+              <p class="text-body-sm text-warning-600/90 mt-0.5">
                 You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Remove a corridor to add another.
               </p>
             </div>
@@ -1079,7 +1109,7 @@ class="bg-blue-600 rounded-xl p-5 text-white"
           <!-- Quick Add Corridor Form -->
           <div
             v-if="!watchlistLimitReached"
-            class="bg-white rounded-xl border border-slate-200 p-4 mb-6"
+            class="bg-surface rounded-xl border border-rs-border p-4 mb-6"
           >
             <form
 class="flex flex-col sm:flex-row gap-3"
@@ -1094,7 +1124,7 @@ class="flex flex-col sm:flex-row gap-3"
                     placeholder="Select country"
                   />
                 </div>
-	                <div class="flex items-center text-slate-400">
+	                <div class="flex items-center text-neutral-400">
 	                  <Icon
 	                    name="arrow-right"
 	                    :size="20"
@@ -1112,7 +1142,7 @@ class="flex flex-col sm:flex-row gap-3"
               </div>
               <button
 	                type="submit"
-	                class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+	                class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
 	              >
 	                <Icon
 	                  name="plus"
@@ -1125,59 +1155,62 @@ class="flex flex-col sm:flex-row gap-3"
           </div>
 
           <div
-v-if="!watchlistHydrated"
-class="text-center py-12 text-slate-500"
->
-            Loading...
+	v-if="!watchlistHydrated"
+	class="py-12 flex justify-center"
+	>
+            <LoadingState
+              mode="inline"
+              message="Loading watchlist..."
+            />
           </div>
           <div
-v-else-if="corridorWatchlistItems.length === 0"
-	class="text-center py-16 bg-white rounded-xl border border-slate-200"
-	>
-	            <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
-	              <Icon
-	                name="document-text"
-	                :size="24"
-	                class="text-blue-600"
-	              />
-	            </div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">No corridors saved yet</h3>
-            <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Add your first corridor above to start tracking exchange rates.</p>
+            v-else-if="corridorWatchlistItems.length === 0"
+            class="bg-surface rounded-xl border border-rs-border p-8"
+          >
+            <EmptyState
+              mode="inline"
+              title="No corridors saved yet"
+              message="Add your first corridor above to start tracking exchange rates."
+            />
           </div>
 
           <!-- Enhanced Watchlist Cards -->
           <div
-v-else
-class="grid gap-6 sm:grid-cols-2"
->
+            v-else
+            class="grid gap-6 sm:grid-cols-2"
+            role="region"
+            aria-label="Watchlist rates"
+            aria-live="polite"
+          >
             <div
               v-for="item in corridorWatchlistItems"
               :key="item.id"
-              class="bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-blue-300 hover:shadow-lg transition-all group"
+              class="bg-surface rounded-xl border border-rs-border overflow-hidden hover:border-primary-300 hover:shadow-lg transition-all group"
             >
               <!-- Card Header -->
-              <div class="p-5 border-b border-slate-100">
+              <div class="p-5 border-b border-neutral-100">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
 	                    <div class="flex items-center gap-2">
-	                      <span class="text-2xl">{{ getFlag(item.target.from) }}</span>
+	                      <span class="text-h3">{{ getFlag(item.target.from) }}</span>
 	                      <Icon
 	                        name="arrow-right"
 	                        :size="20"
-	                        class="text-slate-300"
+	                        class="text-neutral-300"
 	                      />
-	                      <span class="text-2xl">{{ getFlag(item.target.to) }}</span>
+	                      <span class="text-h3">{{ getFlag(item.target.to) }}</span>
 	                    </div>
                     <div>
-                      <h3 class="font-semibold text-slate-900 text-base">{{ item.target.from }}→{{ item.target.to }}</h3>
-                      <p class="text-sm text-slate-500 font-medium">{{ formatMethod(item.target.method) }}</p>
+                      <h3 class="font-semibold text-rs-fg text-body">{{ item.target.from }}→{{ item.target.to }}</h3>
+                      <p class="text-body-sm text-rs-muted font-medium">{{ formatMethod(item.target.method) }}</p>
                     </div>
                   </div>
-	                  <button
-	                    type="button"
-	                    class="opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
-	                    @click="openDeleteWatchlistModal(item)"
-	                  >
+		                  <button
+		                    type="button"
+		                    class="opacity-0 group-hover:opacity-100 motion-safe:transition-opacity inline-flex items-center justify-center rounded-lg border border-rs-border p-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600"
+                        :aria-label="`Remove ${item.target.from} to ${item.target.to} from watchlist`"
+		                    @click="openDeleteWatchlistModal(item)"
+		                  >
 	                    <Icon
 	                      name="trash"
 	                      :size="16"
@@ -1189,17 +1222,17 @@ class="grid gap-6 sm:grid-cols-2"
                 <!-- Current Rate -->
                 <div class="flex items-baseline justify-between">
                   <div>
-                    <div class="text-3xl font-bold text-slate-900">{{ getWatchlistSnapshot(item.id).rateLabel }}</div>
-                    <div class="text-sm text-slate-500 mt-0.5">
+                    <div class="text-h2 font-bold text-rs-fg">{{ getWatchlistSnapshot(item.id).rateLabel }}</div>
+                    <div class="text-body-sm text-rs-muted mt-0.5">
                       {{ getCurrencyCode(item.target.to) }} per {{ getCurrencyCode(item.target.from) }}
                     </div>
                   </div>
                   <div class="text-right">
                     <div
-                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-semibold"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-body-sm font-semibold"
                       :class="!getWatchlistSnapshot(item.id).hasChange
-                        ? 'bg-slate-100 text-slate-500'
-                        : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700')"
+                        ? 'bg-neutral-100 text-rs-muted'
+                        : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-success-600/10 text-success-600' : 'bg-danger-600/10 text-danger-600')"
 	                    >
 	                      <Icon
 	                        name="arrow-up"
@@ -1209,18 +1242,18 @@ class="grid gap-6 sm:grid-cols-2"
 	                      />
 	                      {{ formatPercentValue(getWatchlistSnapshot(item.id).change) }}
 	                    </div>
-                    <div class="text-xs text-slate-500 mt-1">1d change</div>
+                    <div class="text-body-sm text-rs-muted mt-1">1d change</div>
                   </div>
                 </div>
               </div>
 
               <!-- Chart Section -->
-              <div class="px-5 py-4 bg-gradient-to-b from-slate-50 to-white">
+              <div class="px-5 py-4 bg-gradient-to-b from-neutral-50 to-white">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-medium text-slate-600">Last 7 days</span>
+                  <span class="text-body-sm font-medium text-neutral-600">Last 7 days</span>
 	                  <span
 	                    v-if="getWatchlistAlertCount(item.id) > 0"
-	                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700"
+	                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-50 text-brand-700"
 	                  >
 	                    <Icon
 	                      name="bell-alert"
@@ -1233,16 +1266,19 @@ class="grid gap-6 sm:grid-cols-2"
                   </div>
 
                   <!-- Enhanced Chart -->
-                  <div class="relative h-32 mb-3">
-                  <div
-                    v-if="isWatchlistHistoryLoading(item.id)"
-                    class="absolute inset-0 flex items-center justify-center text-xs text-slate-400"
-                  >
-                    Loading rate history...
-                  </div>
+	                  <div class="relative h-32 mb-3">
+	                  <div
+	                    v-if="isWatchlistHistoryLoading(item.id)"
+	                    class="absolute inset-0 flex items-center justify-center px-4"
+	                  >
+	                    <LoadingState
+	                      mode="inline"
+	                      message="Loading rate history..."
+	                    />
+	                  </div>
                   <div
                     v-else-if="getWatchlistSnapshot(item.id).history.length < 2"
-                    class="absolute inset-0 flex items-center justify-center text-xs text-slate-400"
+                    class="absolute inset-0 flex items-center justify-center text-body-sm text-neutral-400"
                   >
                     No rate history yet
                   </div>
@@ -1326,32 +1362,32 @@ stroke-width="1"
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-200">
+                <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-rs-border">
                   <div>
-                    <div class="text-xs text-slate-500 mb-0.5">High (7d)</div>
-                    <div class="text-sm font-semibold text-slate-900">{{ getWatchlistStats(item.id).high }}</div>
+                    <div class="text-body-sm text-rs-muted mb-0.5">High (7d)</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">{{ getWatchlistStats(item.id).high }}</div>
                   </div>
                   <div>
-                    <div class="text-xs text-slate-500 mb-0.5">Low (7d)</div>
-                    <div class="text-sm font-semibold text-slate-900">{{ getWatchlistStats(item.id).low }}</div>
+                    <div class="text-body-sm text-rs-muted mb-0.5">Low (7d)</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">{{ getWatchlistStats(item.id).low }}</div>
                   </div>
                   <div>
-                    <div class="text-xs text-slate-500 mb-0.5">Avg (7d)</div>
-                    <div class="text-sm font-semibold text-slate-900">{{ getWatchlistStats(item.id).avg }}</div>
+                    <div class="text-body-sm text-rs-muted mb-0.5">Avg (7d)</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">{{ getWatchlistStats(item.id).avg }}</div>
                   </div>
                 </div>
               </div>
 
               <!-- Best Provider Section -->
-              <div class="px-5 py-4 border-t border-slate-200 bg-white">
+              <div class="px-5 py-4 border-t border-rs-border bg-surface">
                 <div class="flex items-center justify-between mb-3">
 	                  <div class="flex items-center gap-2">
 	                    <Icon
 	                      name="sparkles"
 	                      :size="16"
-	                      class="text-emerald-600"
+	                      class="text-success-600"
 	                    />
-	                    <span class="text-xs font-semibold text-slate-700 uppercase tracking-wide">Best Provider (Latest)</span>
+	                    <span class="text-body-sm font-semibold text-neutral-700 uppercase tracking-wide">Best Provider (Latest)</span>
 	                  </div>
                 </div>
                 <div
@@ -1367,13 +1403,14 @@ class="flex items-center gap-3"
                     />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-slate-900 text-sm">{{ getBestProviderForItem(item.id)?.name }}</h4>
+                    <h4 class="font-semibold text-rs-fg text-body-sm">{{ getBestProviderForItem(item.id)?.name }}</h4>
                   </div>
                   <NuxtLink
-                    :to="`/learn/providers/${getBestProviderForItem(item.id)?.slug}`"
-	                    class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+	                    :to="`/learn/providers/${getBestProviderForItem(item.id)?.slug}`"
+	                    class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-neutral-300 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
+	                    :aria-label="`View provider review for ${getBestProviderForItem(item.id)?.name || 'this provider'}`"
 	                  >
-	                    Learn more
+	                    Provider review
 	                    <Icon
 	                      name="chevron-right"
 	                      :size="16"
@@ -1381,43 +1418,52 @@ class="flex items-center gap-3"
 	                    />
 	                  </NuxtLink>
 	                </div>
-                <div
-v-else-if="isProviderRatesLoadingForItem(item.id)"
-class="text-sm text-slate-500"
->
-                  Loading provider quotes...
-                </div>
+	                <div
+	v-else-if="isProviderRatesLoadingForItem(item.id)"
+	class="py-2"
+	>
+	                  <LoadingState
+	                    mode="inline"
+	                    message="Loading provider quotes..."
+	                  />
+	                </div>
                 <div
 v-else
-class="text-sm text-slate-500"
+class="text-body-sm text-rs-muted"
 >
                   No provider quotes yet.
                 </div>
               </div>
 
               <!-- Quick Actions -->
-              <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex gap-2">
+              <div class="px-5 py-4 border-t border-neutral-100 bg-neutral-50/50 flex gap-2">
                 <button
                   type="button"
                   :disabled="comparingCorridor === item.id"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
+	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
 	                  @click="handleCompareClick(item)"
-	                >
-	                  <div
-	                    v-if="comparingCorridor === item.id"
-	                    class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
-	                  />
-	                  <Icon
-	                    v-else
-	                    name="magnifying-glass"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  {{ comparingCorridor === item.id ? 'Loading...' : 'Compare' }}
-	                </button>
+		                >
+		                  <div
+		                    v-if="comparingCorridor === item.id"
+		                    class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
+		                    aria-hidden="true"
+		                  />
+		                  <Icon
+		                    v-else
+		                    name="magnifying-glass"
+		                    :size="16"
+		                    class="text-current"
+		                  />
+		                  <span
+		                    v-if="comparingCorridor === item.id"
+		                    role="status"
+		                    aria-live="polite"
+		                  >Comparing…</span>
+		                  <span v-else>Compare</span>
+		                </button>
                 <button
                   type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
 	                  @click="openAlert(item)"
 	                >
 	                  <Icon
@@ -1434,24 +1480,24 @@ class="text-sm text-slate-500"
           <!-- Ad: Sponsored Provider (Free users only) -->
           <div
 v-if="!isPlus"
-class="mt-6 bg-slate-50 rounded-xl border border-slate-200 p-4"
+class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
 >
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs text-slate-400 uppercase tracking-wide">Sponsored</span>
+              <span class="text-body-sm text-neutral-400 uppercase tracking-wide">Sponsored</span>
               <NuxtLink
 to="/plus"
-class="text-xs text-blue-600 hover:text-blue-700"
+class="text-body-sm text-brand-600 hover:text-brand-700"
 >Remove ads</NuxtLink>
             </div>
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-lg">W</div>
+              <div class="w-12 h-12 rounded-xl bg-success-600 flex items-center justify-center text-white font-bold text-body-lg">W</div>
               <div class="flex-1">
-                <h4 class="font-semibold text-slate-900 text-sm">Wise - Send Money Abroad</h4>
-                <p class="text-xs text-slate-500">Low fees, real exchange rate. Trusted by 16M+ people.</p>
+                <h4 class="font-semibold text-rs-fg text-body-sm">Wise - Send Money Abroad</h4>
+                <p class="text-body-sm text-rs-muted">Low fees, real exchange rate. Trusted by 16M+ people.</p>
               </div>
               <NuxtLink
                 to="/learn/providers/wise"
-                class="flex-shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                class="flex-shrink-0 rounded-lg bg-success-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-success-600 transition-colors"
               >
                 Compare
               </NuxtLink>
@@ -1464,17 +1510,17 @@ class="text-xs text-blue-600 hover:text-blue-700"
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <div class="flex items-center gap-3">
-                <h2 class="text-lg font-semibold text-slate-900">Rate Alerts</h2>
+                <h2 class="text-body-lg font-semibold text-rs-fg">Rate Alerts</h2>
                 <span
                   v-if="limits.alerts !== 'unlimited'"
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-body-sm font-medium"
+                  :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-warning-600 text-warning-600' : 'bg-neutral-100 text-neutral-600'"
                 >
                   {{ alertsCount }}/{{ limits.alerts }} used
                 </span>
                 <span
 	                  v-else
-	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
 	                >
 	                  <Icon
 	                    name="check"
@@ -1484,12 +1530,12 @@ class="text-xs text-blue-600 hover:text-blue-700"
 	                  Unlimited
 	                </span>
               </div>
-              <p class="text-sm text-slate-500 mt-1">{{ alertsCount }} alert{{ alertsCount !== 1 ? 's' : '' }}</p>
+              <p class="text-body-sm text-rs-muted mt-1">{{ alertsCount }} alert{{ alertsCount !== 1 ? 's' : '' }}</p>
             </div>
             <div class="flex items-center gap-3">
               <button
                 type="button"
-                class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="alertsLimitReached"
                 @click="openCreateAlert"
               >
@@ -1498,7 +1544,7 @@ class="text-xs text-blue-600 hover:text-blue-700"
               <NuxtLink
                 v-if="!isPlus && alertsLimitPercent >= 66"
                 to="/plus"
-	                class="inline-flex items-center gap-1.5 rounded-lg border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+	                class="inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 text-body-sm font-medium text-brand-600 hover:bg-primary-50 transition-colors"
 	              >
 	                <Icon
 	                  name="sparkles"
@@ -1511,7 +1557,7 @@ class="text-xs text-blue-600 hover:text-blue-700"
               <button
                 v-if="alertsCount > 0"
                 type="button"
-                class="text-sm text-red-600 hover:text-red-700 font-medium"
+                class="text-body-sm text-danger-600 hover:text-danger-600 font-medium"
                 @click="alertsReset"
               >
                 Clear all
@@ -1522,7 +1568,7 @@ class="text-xs text-blue-600 hover:text-blue-700"
           <!-- Limit Warning Banner -->
           <div
 	            v-if="!isPlus && alertsLimitPercent >= 100"
-	            class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"
+	            class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
 	          >
 	            <Icon
 	              name="exclamation-triangle"
@@ -1531,12 +1577,12 @@ class="text-xs text-blue-600 hover:text-blue-700"
 	              class="text-brand-600 flex-shrink-0 mt-0.5"
 	            />
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-brand-600">Alert limit reached</h4>
-              <p class="text-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alerts. Upgrade to Plus for up to 16 alerts.</p>
+              <h4 class="text-body-sm font-medium text-brand-600">Alert limit reached</h4>
+              <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alerts. Upgrade to Plus for up to 16 alerts.</p>
             </div>
             <NuxtLink
               to="/plus"
-              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
             >
               Upgrade
             </NuxtLink>
@@ -1544,54 +1590,56 @@ class="text-xs text-blue-600 hover:text-blue-700"
 
           <div
 	            v-else-if="isPlus && alertsLimitReached"
-	            class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"
+	            class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
 	          >
 	            <Icon
 	              name="exclamation-triangle"
 	              :size="20"
 	              variant="solid"
-	              class="text-amber-600 flex-shrink-0 mt-0.5"
+	              class="text-warning-600 flex-shrink-0 mt-0.5"
 	            />
             <div class="flex-1">
-              <h4 class="text-sm font-medium text-amber-800">Alert limit reached</h4>
-              <p class="text-sm text-amber-800/90 mt-0.5">
+              <h4 class="text-body-sm font-medium text-warning-600">Alert limit reached</h4>
+              <p class="text-body-sm text-warning-600/90 mt-0.5">
                 You've reached your limit of {{ limits.alerts }} alerts. Disable or delete an alert to add another.
               </p>
             </div>
           </div>
 
           <div
-v-if="!alertsHydrated"
-class="text-center py-12 text-slate-500"
->
-            Loading...
+	v-if="!alertsHydrated"
+	class="py-12 flex justify-center"
+	>
+            <LoadingState
+              mode="inline"
+              message="Loading alerts..."
+            />
           </div>
           <div
-	v-else-if="alertItems.length === 0"
-	class="text-center py-16 bg-white rounded-xl border border-slate-200"
-	>
-	            <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
-	              <Icon
-	                name="bell-alert"
-	                :size="24"
-	                class="text-emerald-600"
-	              />
-	            </div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">No alerts set yet</h3>
-            <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Get notified when exchange rates hit your target. Create your first alert to get started.</p>
-            <button
-              type="button"
-	              class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-	              :disabled="alertsLimitReached"
-	              @click="openCreateAlert"
-	            >
-	              <Icon
-	                name="plus"
-	                :size="16"
-	                class="text-current"
-	              />
-	              Create Alert
-	            </button>
+            v-else-if="alertItems.length === 0"
+            class="bg-surface rounded-xl border border-rs-border p-8"
+          >
+            <EmptyState
+              mode="inline"
+              title="No alerts set yet"
+              message="Get notified when exchange rates hit your target. Create your first alert to get started."
+            >
+              <template #actions>
+                <button
+                  type="button"
+                  class="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
+                  :disabled="alertsLimitReached"
+                  @click="openCreateAlert"
+                >
+                  <Icon
+                    name="plus"
+                    :size="16"
+                    class="text-current"
+                  />
+                  Create Alert
+                </button>
+              </template>
+            </EmptyState>
           </div>
 
           <!-- Enhanced Alerts Cards -->
@@ -1602,30 +1650,30 @@ class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
             <div
               v-for="alert in alertItems"
               :key="alert.id"
-              class="bg-white rounded-xl border overflow-hidden transition-all"
-              :class="alert.enabled ? 'border-emerald-200 hover:border-emerald-300 hover:shadow-md' : 'border-slate-200 opacity-75'"
+              class="bg-surface rounded-xl border overflow-hidden transition-all"
+              :class="alert.enabled ? 'border-success-600 hover:border-success-600 hover:shadow-md' : 'border-rs-border opacity-75'"
             >
               <!-- Card Header with Status -->
               <div
 class="p-4 border-b"
-:class="alert.enabled ? 'border-emerald-100 bg-emerald-50/50' : 'border-slate-100 bg-slate-50'"
+:class="alert.enabled ? 'border-success-600 bg-success-600/50' : 'border-neutral-100 bg-neutral-50'"
 >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <div
                       class="w-8 h-8 rounded-full flex items-center justify-center"
-	                      :class="alert.enabled ? 'bg-emerald-100' : 'bg-slate-200'"
+	                      :class="alert.enabled ? 'bg-success-600' : 'bg-neutral-200'"
 	                    >
 	                      <Icon
 	                        name="bell-alert"
 	                        :size="16"
 	                        variant="solid"
-	                        :class="alert.enabled ? 'text-emerald-600' : 'text-slate-400'"
+	                        :class="alert.enabled ? 'text-success-600' : 'text-neutral-400'"
 	                      />
 	                    </div>
                     <span
-                      class="px-2 py-0.5 rounded-full text-xs font-medium"
-                      :class="alert.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'"
+                      class="px-2 py-0.5 rounded-full text-body-sm font-medium"
+                      :class="alert.enabled ? 'bg-success-600/10 text-success-600' : 'bg-neutral-200 text-neutral-600'"
                     >
                       {{ alert.enabled ? 'Active' : 'Paused' }}
                     </span>
@@ -1634,11 +1682,14 @@ class="p-4 border-b"
                   <button
                     type="button"
                     class="relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
-                    :class="alert.enabled ? 'bg-emerald-500 focus:ring-emerald-500' : 'bg-slate-300 focus:ring-slate-500'"
+                    :class="alert.enabled ? 'bg-success-600 focus:ring-success-600' : 'bg-neutral-300 focus:ring-neutral-500'"
+                    role="switch"
+                    :aria-checked="alert.enabled ? 'true' : 'false'"
+                    :aria-label="`${alert.enabled ? 'Disable' : 'Enable'} alert for ${getAlertCorridor(alert).from} to ${getAlertCorridor(alert).to}`"
                     @click="alertsToggleEnabled(alert.id)"
                   >
                     <span
-                      class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                      class="absolute top-0.5 left-0.5 w-5 h-5 bg-surface rounded-full shadow transition-transform"
                       :class="alert.enabled ? 'translate-x-5' : 'translate-x-0'"
                     />
                   </button>
@@ -1650,86 +1701,86 @@ class="p-4 border-b"
                 <!-- Corridor with Flags -->
                 <div class="flex items-center gap-3 mb-3">
                   <div class="flex items-center">
-	                    <span class="text-2xl">{{ getFlag(getAlertCorridor(alert).from) }}</span>
+	                    <span class="text-h3">{{ getFlag(getAlertCorridor(alert).from) }}</span>
 	                    <div class="mx-2 flex flex-col items-center">
 	                      <Icon
 	                        name="arrow-right"
 	                        :size="16"
-	                        class="text-slate-400"
+	                        class="text-neutral-400"
 	                      />
 	                    </div>
-	                    <span class="text-2xl">{{ getFlag(getAlertCorridor(alert).to) }}</span>
+	                    <span class="text-h3">{{ getFlag(getAlertCorridor(alert).to) }}</span>
 	                  </div>
                   <div class="flex-1">
-                    <div class="font-semibold text-slate-900">{{ getAlertCorridor(alert).from }}/{{ getAlertCorridor(alert).to }}</div>
-                    <div class="text-xs text-slate-500">{{ watchlistFindById(alert.watchlistItemId)?.label || 'Alert' }}</div>
+                    <div class="font-semibold text-rs-fg">{{ getAlertCorridor(alert).from }}/{{ getAlertCorridor(alert).to }}</div>
+                    <div class="text-body-sm text-rs-muted">{{ watchlistFindById(alert.watchlistItemId)?.label || 'Alert' }}</div>
                   </div>
                 </div>
 
                 <!-- Currency Pair Badge -->
                 <div class="flex items-center gap-2 mb-3">
-                  <span class="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium">
+                  <span class="inline-flex items-center px-2 py-1 rounded-md bg-primary-50 text-brand-700 text-body-sm font-medium">
                     {{ getAlertCorridor(alert).from }} → {{ getAlertCorridor(alert).to }}
                   </span>
                   <span
 v-if="alert.rule.currency"
-class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium"
+class="inline-flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral-600 text-body-sm font-medium"
 >
                     {{ alert.rule.currency }}
                   </span>
                 </div>
 
                 <!-- Alert Condition -->
-                <div class="bg-slate-50 rounded-lg p-3 mb-3">
-                  <div class="text-xs text-slate-500 mb-1">Notify me when</div>
+                <div class="bg-neutral-50 rounded-lg p-3 mb-3">
+                  <div class="text-body-sm text-rs-muted mb-1">Notify me when</div>
                   <div class="flex items-center flex-wrap gap-2">
-                    <span class="text-sm font-semibold text-slate-900">{{ formatMetricLabel(alert.rule.metric) }}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-xs font-medium">
+                    <span class="text-body-sm font-semibold text-rs-fg">{{ formatMetricLabel(alert.rule.metric) }}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-primary-100 text-brand-700 text-body-sm font-medium">
                       {{ formatComparator(alert.rule.comparator) }}
                     </span>
-                    <span class="text-sm font-semibold text-slate-900">
+                    <span class="text-body-sm font-semibold text-rs-fg">
                       {{ alert.rule.value }}
-                      <span class="text-slate-500 font-normal">{{ alert.rule.currency || getAlertCorridor(alert).to }}</span>
+                      <span class="text-rs-muted font-normal">{{ alert.rule.currency || getAlertCorridor(alert).to }}</span>
                     </span>
                   </div>
                 </div>
 
                 <!-- Current Rate vs Target -->
-                <div class="flex items-center justify-between text-sm mb-3 p-2 bg-slate-50 rounded-lg">
+                <div class="flex items-center justify-between text-body-sm mb-3 p-2 bg-neutral-50 rounded-lg">
                   <div class="text-center flex-1">
-                    <div class="text-xs text-slate-400 mb-0.5">Current</div>
-                    <div class="font-semibold text-slate-900">{{ getAlertSnapshot(alert).rateLabel }}</div>
-                    <div class="text-xs text-slate-500">{{ getCurrencyCode(getAlertCorridor(alert).to) }}</div>
+                    <div class="text-body-sm text-neutral-400 mb-0.5">Current</div>
+                    <div class="font-semibold text-rs-fg">{{ getAlertSnapshot(alert).rateLabel }}</div>
+                    <div class="text-body-sm text-rs-muted">{{ getCurrencyCode(getAlertCorridor(alert).to) }}</div>
 	                  </div>
 	                  <div class="px-3">
 	                    <Icon
 	                      name="chevron-right"
 	                      :size="16"
-	                      class="text-slate-300"
+	                      class="text-neutral-300"
 	                    />
 	                  </div>
                   <div class="text-center flex-1">
-                    <div class="text-xs text-slate-400 mb-0.5">Target</div>
+                    <div class="text-body-sm text-neutral-400 mb-0.5">Target</div>
                     <div
 class="font-semibold"
-:class="getAlertProgress(alert) >= 100 ? 'text-emerald-600' : 'text-blue-600'"
+:class="getAlertProgress(alert) >= 100 ? 'text-success-600' : 'text-brand-600'"
 >
 {{ alert.rule.value }}
 </div>
-                    <div class="text-xs text-slate-500">{{ alert.rule.currency || getCurrencyCode(getAlertCorridor(alert).to) }}</div>
+                    <div class="text-body-sm text-rs-muted">{{ alert.rule.currency || getCurrencyCode(getAlertCorridor(alert).to) }}</div>
                   </div>
                 </div>
 
                 <!-- Progress to Target -->
                 <div class="mb-3">
-                  <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-2 bg-neutral-100 rounded-full overflow-hidden">
                     <div
                       class="h-full rounded-full transition-all"
-                      :class="getAlertProgress(alert) >= 100 ? 'bg-emerald-500' : 'bg-blue-500'"
+                      :class="getAlertProgress(alert) >= 100 ? 'bg-success-600' : 'bg-primary-500'"
                       :style="{ width: `${Math.min(getAlertProgress(alert), 100)}%` }"
                     />
                   </div>
-                  <div class="text-xs text-slate-500 mt-1">
+                  <div class="text-body-sm text-rs-muted mt-1">
                     {{ getAlertProgress(alert) >= 100 ? 'Target reached!' : `${getAlertProgress(alert).toFixed(0)}% to target` }}
                   </div>
                 </div>
@@ -1739,17 +1790,17 @@ class="font-semibold"
 	                  <Icon
 	                    name="clock"
 	                    :size="16"
-	                    class="text-slate-400"
+	                    class="text-neutral-400"
 	                  />
-	                  <span class="text-xs text-slate-500">{{ formatFrequency(alert.frequency) }}</span>
+	                  <span class="text-body-sm text-rs-muted">{{ formatFrequency(alert.frequency) }}</span>
 	                </div>
               </div>
 
               <!-- Quick Actions -->
-              <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+              <div class="px-4 py-3 bg-neutral-50 border-t border-neutral-100 flex gap-2">
                 <NuxtLink
 	                  :to="getCorridorUrl(getAlertCorridor(alert).from, getAlertCorridor(alert).to)"
-	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
 	                >
 	                  <Icon
 	                    name="magnifying-glass"
@@ -1760,7 +1811,7 @@ class="font-semibold"
 	                </NuxtLink>
                 <button
                   type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-surface border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
 	                  @click="editAlert(alert)"
 	                >
 	                  <Icon
@@ -1772,7 +1823,7 @@ class="font-semibold"
 	                </button>
                 <button
 	                  type="button"
-	                  class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-2 py-2 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors"
+	                  class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600 transition-colors"
 	                  @click="alertsRemove(alert.id)"
 	                >
 	                  <Icon
@@ -1788,11 +1839,11 @@ class="font-semibold"
           <!-- Ad: Plus Features (Free users only) -->
           <div
 v-if="!isPlus"
-class="mt-6 bg-slate-900 rounded-xl p-6 text-white"
+class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
 >
 	            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 	              <div class="flex items-start gap-4">
-	                <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+	                <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
 	                  <Icon
 	                    name="bell-alert"
 	                    :size="24"
@@ -1801,12 +1852,12 @@ class="mt-6 bg-slate-900 rounded-xl p-6 text-white"
 	                </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
-                  <p class="text-sm text-slate-300">Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
+                  <p class="text-body-sm text-neutral-300">Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
                 </div>
               </div>
               <NuxtLink
 to="/plus"
-class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+class="flex-shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
 >
                 Upgrade to Plus
               </NuxtLink>
@@ -1818,13 +1869,13 @@ class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold te
         <div v-else-if="activeTab === 'history'">
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Comparison History</h2>
-              <p class="text-sm text-slate-500">{{ compareCount }} comparison{{ compareCount !== 1 ? 's' : '' }}</p>
+              <h2 class="text-body-lg font-semibold text-rs-fg">Comparison History</h2>
+              <p class="text-body-sm text-rs-muted">{{ compareCount }} comparison{{ compareCount !== 1 ? 's' : '' }}</p>
             </div>
             <div class="flex items-center gap-3">
               <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                 @click="showExportModal = true"
               >
                 <Icon
@@ -1837,7 +1888,7 @@ class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold te
               <button
                 v-if="compareCount > 0"
                 type="button"
-                class="text-sm text-red-600 hover:text-red-700 font-medium"
+                class="text-body-sm text-danger-600 hover:text-danger-600 font-medium"
                 @click="compareReset"
               >
                 Clear all
@@ -1850,20 +1901,22 @@ class="flex-shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold te
             v-if="showExportModal"
             class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div
-class="absolute inset-0 bg-black/50"
-@click="showExportModal = false"
-/>
-            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+	            <div
+	class="absolute inset-0 bg-black/50"
+	aria-label="Close dialog"
+	@click="showExportModal = false"
+	/>
+            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-slate-900">Export Data</h3>
-                <button
-                  type="button"
-                  class="text-slate-400 hover:text-slate-600"
-                  @click="showExportModal = false"
-                >
-                  <Icon
-                    name="x"
+                <h3 class="text-body-lg font-semibold text-rs-fg">Export Data</h3>
+	                <button
+	                  type="button"
+	                  class="text-neutral-400 hover:text-neutral-600"
+	                  aria-label="Close dialog"
+	                  @click="showExportModal = false"
+	                >
+	                  <Icon
+	                    name="x"
                     :size="20"
                     class="text-current"
                   />
@@ -1875,21 +1928,21 @@ class="absolute inset-0 bg-black/50"
 v-if="!isPlus"
 class="text-center py-6"
 >
-                <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
+                <div class="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
                   <Icon
                     name="sparkles"
                     :size="24"
                     variant="solid"
-                    class="text-blue-600"
+                    class="text-brand-600"
                   />
                 </div>
-                <h4 class="text-base font-semibold text-slate-900 mb-2">Plus Feature</h4>
-                <p class="text-sm text-slate-500 mb-6">
+                <h4 class="text-body font-semibold text-rs-fg mb-2">Plus Feature</h4>
+                <p class="text-body-sm text-rs-muted mb-6">
                   Export your comparison history and watchlist data to CSV or PDF with Plus.
                 </p>
                 <NuxtLink
                   to="/plus"
-                  class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                 >
                   Upgrade to Plus
                 </NuxtLink>
@@ -1901,81 +1954,86 @@ v-else
 class="space-y-6"
 >
                 <div>
-                  <label class="block text-sm font-semibold text-slate-900 mb-3">Data to Export</label>
+                  <label class="block text-body-sm font-semibold text-rs-fg mb-3">Data to Export</label>
                   <div class="space-y-2.5">
                     <label
 class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'history' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+:class="exportSettings.dataType === 'history' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
 >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="history"
-                        class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                        class="w-4 h-4 text-brand-600 border-neutral-300 focus:ring-primary-500"
                       >
                       <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Comparison History</div>
-                        <div class="text-xs text-slate-500 mt-0.5">All your rate comparisons</div>
+                        <div class="text-body-sm font-semibold text-rs-fg">Comparison History</div>
+                        <div class="text-body-sm text-rs-muted mt-0.5">All your rate comparisons</div>
                       </div>
                     </label>
                     <label
 class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'watchlist' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+:class="exportSettings.dataType === 'watchlist' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
 >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="watchlist"
-                        class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                        class="w-4 h-4 text-brand-600 border-neutral-300 focus:ring-primary-500"
                       >
                       <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Watchlist</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Saved corridors and rates</div>
+                        <div class="text-body-sm font-semibold text-rs-fg">Watchlist</div>
+                        <div class="text-body-sm text-rs-muted mt-0.5">Saved corridors and rates</div>
                       </div>
                     </label>
                     <label
 class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'alerts' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+:class="exportSettings.dataType === 'alerts' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
 >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="alerts"
-                        class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                        class="w-4 h-4 text-brand-600 border-neutral-300 focus:ring-primary-500"
                       >
                       <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">Alerts</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Alert rules and history</div>
+                        <div class="text-body-sm font-semibold text-rs-fg">Alerts</div>
+                        <div class="text-body-sm text-rs-muted mt-0.5">Alert rules and history</div>
                       </div>
                     </label>
                     <label
 class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'all' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'"
+:class="exportSettings.dataType === 'all' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
 >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
                         value="all"
-                        class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                        class="w-4 h-4 text-brand-600 border-neutral-300 focus:ring-primary-500"
                       >
                       <div class="flex-1">
-                        <div class="text-sm font-semibold text-slate-900">All Data</div>
-                        <div class="text-xs text-slate-500 mt-0.5">Complete export of all your data</div>
+                        <div class="text-body-sm font-semibold text-rs-fg">All Data</div>
+                        <div class="text-body-sm text-rs-muted mt-0.5">Complete export of all your data</div>
                       </div>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-semibold text-slate-900 mb-3">Time Period</label>
+                  <label class="block text-body-sm font-semibold text-rs-fg mb-3">Time Period</label>
                   <select
                     v-model="exportSettings.dateRange"
-                    class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all hover:border-slate-400"
+                    class="w-full rounded-xl border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-rs-fg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all hover:border-neutral-400"
                     @change="setExportDateRange(exportSettings.dateRange)"
                   >
                     <option value="7d">Last 7 days</option>
                     <option value="30d">Last 30 days</option>
-                    <option v-if="isEnterprise" value="90d">Last 90 days</option>
+                    <option
+v-if="isEnterprise"
+value="90d"
+>
+Last 90 days
+</option>
                     <option
                       v-if="isEnterprise && exportSettings.dataType === 'history' && exportSettings.includeCorridorHistory && exportCorridorIds.length > 0"
                       value="all"
@@ -1987,28 +2045,28 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
 
                 <div
 v-if="exportSettings.dataType === 'history'"
-class="rounded-xl border border-slate-200 bg-slate-50 p-4"
+class="rounded-xl border border-rs-border bg-neutral-50 p-4"
 >
                   <label class="flex items-start gap-3 cursor-pointer">
                     <input
                       v-model="exportSettings.includeCorridorHistory"
                       type="checkbox"
-                      class="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
+                      class="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-primary-500 disabled:opacity-60"
                       :disabled="exportCorridorIds.length === 0"
                     >
                     <div class="flex-1">
-                      <div class="text-sm font-semibold text-slate-900">
+                      <div class="text-body-sm font-semibold text-rs-fg">
                         Include corridor history (Pulse indices)
                       </div>
                       <div
 v-if="exportCorridorIds.length > 0"
-class="text-xs text-slate-500 mt-0.5"
+class="text-body-sm text-rs-muted mt-0.5"
 >
                         Adds Pulse indices history for {{ exportCorridorIds.length }} watchlist corridor{{ exportCorridorIds.length !== 1 ? 's' : '' }} (max 16).
                       </div>
                       <div
 v-else
-class="text-xs text-slate-500 mt-0.5"
+class="text-body-sm text-rs-muted mt-0.5"
 >
                         Add corridors to your watchlist to include indices history in this export.
                       </div>
@@ -2017,11 +2075,11 @@ class="text-xs text-slate-500 mt-0.5"
                 </div>
 
                 <div>
-                  <label class="block text-sm font-semibold text-slate-900 mb-3">Export Format</label>
+                  <label class="block text-body-sm font-semibold text-rs-fg mb-3">Export Format</label>
                   <div class="grid grid-cols-2 gap-3">
                     <label
                       class="flex items-center justify-center gap-2 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-                      :class="exportSettings.format === 'csv' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'"
+                      :class="exportSettings.format === 'csv' ? 'border-primary-500 bg-primary-50 text-brand-700 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50 text-neutral-700'"
                     >
                       <input
                         v-model="exportSettings.format"
@@ -2034,11 +2092,11 @@ class="text-xs text-slate-500 mt-0.5"
                         :size="20"
                         class="text-current"
                       />
-                      <span class="text-sm font-semibold">CSV</span>
+                      <span class="text-body-sm font-semibold">CSV</span>
                     </label>
                     <label
                       class="flex items-center justify-center gap-2 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-                      :class="exportSettings.format === 'pdf' ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'"
+                      :class="exportSettings.format === 'pdf' ? 'border-primary-500 bg-primary-50 text-brand-700 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50 text-neutral-700'"
                     >
                       <input
                         v-model="exportSettings.format"
@@ -2051,24 +2109,24 @@ class="text-xs text-slate-500 mt-0.5"
                         :size="20"
                         class="text-current"
                       />
-                      <span class="text-sm font-semibold">PDF</span>
+                      <span class="text-body-sm font-semibold">PDF</span>
                     </label>
                   </div>
                 </div>
 
                 <div
 v-if="exportStatusMessage || exportErrorMessage"
-class="text-sm"
+class="text-body-sm"
 >
                   <p
 v-if="exportErrorMessage"
-class="text-red-600"
+class="text-danger-600"
 >
                     {{ exportErrorMessage }}
                   </p>
                   <p
 v-else
-class="text-slate-600"
+class="text-neutral-600"
 >
                     {{ exportStatusMessage }}
                   </p>
@@ -2077,14 +2135,14 @@ class="text-slate-600"
                 <div class="flex gap-3 pt-2">
                   <button
                     type="button"
-                    class="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                    class="flex-1 rounded-lg border border-neutral-300 px-4 py-2.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
                     @click="showExportModal = false"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                     :disabled="isExporting"
                     @click="handleExport"
                   >
@@ -2105,20 +2163,22 @@ class="text-slate-600"
             v-if="showDeleteAccountModal"
             class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div
-class="absolute inset-0 bg-black/50"
-@click="closeDeleteAccountModal"
-/>
-            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+	            <div
+	class="absolute inset-0 bg-black/50"
+	aria-label="Close dialog"
+	@click="closeDeleteAccountModal"
+	/>
+            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-slate-900">Delete Account</h3>
-	                <button
-	                  type="button"
-	                  class="text-slate-400 hover:text-slate-600"
-	                  :disabled="accountDeleting"
-	                  @click="closeDeleteAccountModal"
-	                >
-	                  <Icon
+                <h3 class="text-body-lg font-semibold text-rs-fg">Delete Account</h3>
+		                <button
+		                  type="button"
+		                  class="text-neutral-400 hover:text-neutral-600"
+		                  aria-label="Close dialog"
+		                  :disabled="accountDeleting"
+		                  @click="closeDeleteAccountModal"
+		                >
+		                  <Icon
 	                    name="x"
 	                    :size="20"
 	                    class="text-current"
@@ -2126,22 +2186,22 @@ class="absolute inset-0 bg-black/50"
 	                </button>
 	              </div>
 
-              <div class="space-y-4 text-sm text-slate-600">
+              <div class="space-y-4 text-body-sm text-neutral-600">
                 <p>
                   This will permanently delete your account and remove your personal data.
                   Export your data before continuing if you need a copy.
                 </p>
-                <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+                <div class="rounded-lg border border-warning-600 bg-warning-600 px-3 py-2 text-warning-600">
                   This action is irreversible.
                 </div>
               </div>
 
               <div class="mt-4 space-y-3">
-                <label class="flex items-center gap-2 text-sm text-slate-700">
+                <label class="flex items-center gap-2 text-body-sm text-neutral-700">
                   <input
                     v-model="deleteAccountConfirmed"
                     type="checkbox"
-                    class="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                    class="h-4 w-4 rounded border-neutral-300 text-danger-600 focus:ring-danger-600"
                   >
                   I understand this action cannot be undone.
                 </label>
@@ -2149,17 +2209,17 @@ class="absolute inset-0 bg-black/50"
                   v-model="deleteAccountConfirmText"
                   type="text"
                   placeholder="Type DELETE to confirm"
-                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-100"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-danger-600 focus:outline-none focus:ring-2 focus:ring-danger-600"
                 >
                 <p
 v-if="deleteAccountError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                   {{ deleteAccountError }}
                 </p>
                 <p
 v-else-if="deleteAccountWarning"
-class="text-xs text-amber-700"
+class="text-body-sm text-warning-600"
 >
                   {{ deleteAccountWarning }}
                 </p>
@@ -2168,7 +2228,7 @@ class="text-xs text-amber-700"
               <div class="flex gap-3 pt-4">
                 <button
                   type="button"
-                  class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
                   :disabled="accountDeleting"
                   @click="closeDeleteAccountModal"
                 >
@@ -2176,7 +2236,7 @@ class="text-xs text-amber-700"
                 </button>
                 <button
                   type="button"
-                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors disabled:opacity-60"
                   :disabled="!deleteAccountReady || accountDeleting"
                   @click="handleDeleteAccount"
                 >
@@ -2196,37 +2256,39 @@ class="text-xs text-amber-700"
             v-if="showDeleteWatchlistModal"
             class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div
-class="absolute inset-0 bg-black/50"
-@click="closeDeleteWatchlistModal"
-/>
-            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+	            <div
+	class="absolute inset-0 bg-black/50"
+	aria-label="Close dialog"
+	@click="closeDeleteWatchlistModal"
+	/>
+            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-slate-900">Remove from Watchlist</h3>
-                <button
-                  type="button"
-                  class="text-slate-400 hover:text-slate-600"
-                  @click="closeDeleteWatchlistModal"
-                >
-                  <Icon
-                    name="x"
+                <h3 class="text-body-lg font-semibold text-rs-fg">Remove from Watchlist</h3>
+	                <button
+	                  type="button"
+	                  class="text-neutral-400 hover:text-neutral-600"
+	                  aria-label="Close dialog"
+	                  @click="closeDeleteWatchlistModal"
+	                >
+	                  <Icon
+	                    name="x"
                     :size="20"
                     class="text-current"
                   />
                 </button>
               </div>
 
-              <div class="space-y-4 text-sm text-slate-600">
+              <div class="space-y-4 text-body-sm text-neutral-600">
                 <p v-if="watchlistItemToDelete?.target.type === 'corridor'">
-                  Are you sure you want to remove <strong class="font-semibold text-slate-900">{{ watchlistItemToDelete.target.from }} → {{ watchlistItemToDelete.target.to }}</strong> from your watchlist?
+                  Are you sure you want to remove <strong class="font-semibold text-rs-fg">{{ watchlistItemToDelete.target.from }} → {{ watchlistItemToDelete.target.to }}</strong> from your watchlist?
                 </p>
                 <p v-else-if="watchlistItemToDelete?.target.type === 'fxPair'">
-                  Are you sure you want to remove <strong class="font-semibold text-slate-900">{{ watchlistItemToDelete.target.base }}/{{ watchlistItemToDelete.target.quote }}</strong> from your watchlist?
+                  Are you sure you want to remove <strong class="font-semibold text-rs-fg">{{ watchlistItemToDelete.target.base }}/{{ watchlistItemToDelete.target.quote }}</strong> from your watchlist?
                 </p>
                 <p v-else>
                   Are you sure you want to remove this item from your watchlist?
                 </p>
-                <p class="text-xs text-slate-500">
+                <p class="text-body-sm text-rs-muted">
                   You can add it back anytime.
                 </p>
               </div>
@@ -2234,14 +2296,14 @@ class="absolute inset-0 bg-black/50"
               <div class="flex gap-3 pt-6">
                 <button
                   type="button"
-                  class="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
                   @click="closeDeleteWatchlistModal"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
                   @click="confirmDeleteWatchlistItem"
                 >
                   Remove
@@ -2250,67 +2312,70 @@ class="absolute inset-0 bg-black/50"
             </div>
           </div>
 
-          <div
-v-if="!compareHydrated"
-class="text-center py-12 text-slate-500"
->
-            Loading...
-          </div>
+	          <div
+	v-if="!compareHydrated"
+	class="py-12 flex justify-center"
+	>
+	            <LoadingState
+	              mode="inline"
+	              message="Loading comparisons..."
+	            />
+	          </div>
           <div
 v-else-if="compareRuns.length === 0"
 class="text-center py-16"
 >
-            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <div class="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
               <Icon
                 name="clock"
                 :size="24"
-                class="text-slate-400"
+                class="text-neutral-400"
               />
             </div>
-            <h3 class="text-lg font-semibold text-slate-900 mb-2">No comparisons yet</h3>
-            <p class="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Your comparison history will appear here.</p>
+            <h3 class="text-body-lg font-semibold text-rs-fg mb-2">No comparisons yet</h3>
+            <p class="text-body-sm text-rs-muted mb-6 max-w-sm mx-auto">Your comparison history will appear here.</p>
             <NuxtLink
               to="/send-money"
-              class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+              class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
             >
               Compare Rates
             </NuxtLink>
           </div>
           <div
 v-else
-class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100"
+class="bg-surface rounded-xl border border-rs-border divide-y divide-neutral-100"
 >
             <div
               v-for="run in compareRuns"
               :key="run.id"
-              class="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+              class="flex items-center justify-between px-6 py-4 hover:bg-neutral-50 transition-colors"
             >
               <div class="flex items-center gap-4 flex-1">
                 <input
                   v-model="selectedExportItems"
                   type="checkbox"
                   :value="run.id"
-                  class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                  class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-primary-500 flex-shrink-0"
                 >
                 <div class="flex items-center gap-3 flex-1 min-w-0">
 	                  <div class="flex items-center gap-2 flex-shrink-0">
-	                    <span class="text-xl">{{ getFlag(run.from) }}</span>
+	                    <span class="text-h4">{{ getFlag(run.from) }}</span>
 	                    <Icon
 	                      name="arrow-right"
 	                      :size="16"
-	                      class="text-slate-400"
+	                      class="text-neutral-400"
 	                    />
-	                    <span class="text-xl">{{ getFlag(run.to) }}</span>
+	                    <span class="text-h4">{{ getFlag(run.to) }}</span>
 	                  </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                      <span class="font-semibold text-slate-900">{{ run.from }}/{{ run.to }}</span>
-                      <span class="text-slate-400">•</span>
-                      <span class="text-sm text-emerald-600 font-medium">Sent {{ formatCurrency(run.amount, run.from) }}</span>
-                      <span class="text-slate-400">•</span>
-                      <span class="text-sm text-blue-600 capitalize font-medium">{{ run.method }}</span>
+                      <span class="font-semibold text-rs-fg">{{ run.from }}/{{ run.to }}</span>
+                      <span class="text-neutral-400">•</span>
+                      <span class="text-body-sm text-success-600 font-medium">Sent {{ formatCurrency(run.amount, run.from) }}</span>
+                      <span class="text-neutral-400">•</span>
+                      <span class="text-body-sm text-brand-600 capitalize font-medium">{{ run.method }}</span>
                     </div>
-	                    <div class="text-xs text-slate-500 mt-0.5">{{ formatDate(run.createdAt) }}</div>
+	                    <div class="text-body-sm text-rs-muted mt-0.5">{{ formatDate(run.createdAt) }}</div>
 	                  </div>
 	                </div>
 	              </div>
@@ -2318,7 +2383,7 @@ class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100"
                 <NuxtLink
                   v-if="run.path"
                   :to="run.path"
-                  class="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                  class="rounded-lg bg-brand-600 px-4 py-1.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                 >
                   View
                 </NuxtLink>
@@ -2329,10 +2394,10 @@ class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100"
           <!-- Ad: Extended History (Free users only) -->
           <div
 v-if="!isPlus"
-class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-5"
+class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
 >
 	            <div class="flex items-start gap-4">
-	              <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+	              <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
 	                <Icon
 	                  name="clock"
 	                  :size="20"
@@ -2340,11 +2405,11 @@ class="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-5"
 	                />
 	              </div>
               <div class="flex-1">
-                <h4 class="font-semibold text-brand-600 text-sm mb-1">Limited to 30-Day History</h4>
-                <p class="text-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and export.</p>
+                <h4 class="font-semibold text-brand-600 text-body-sm mb-1">Limited to 30-Day History</h4>
+                <p class="text-body-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and export.</p>
                 <NuxtLink
 to="/plus"
-class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
 >
                   Upgrade to Plus
                   <Icon
@@ -2360,23 +2425,24 @@ class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover
           <!-- Export selected items bar -->
           <div
             v-if="selectedExportItems.length > 0 && isPlus"
-            class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white rounded-full px-6 py-3 shadow-lg flex items-center gap-4"
+            class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white rounded-full px-6 py-3 shadow-lg flex items-center gap-4"
           >
-            <span class="text-sm">{{ selectedExportItems.length }} item{{ selectedExportItems.length !== 1 ? 's' : '' }} selected</span>
+            <span class="text-body-sm">{{ selectedExportItems.length }} item{{ selectedExportItems.length !== 1 ? 's' : '' }} selected</span>
             <button
               type="button"
-              class="text-sm font-medium text-blue-400 hover:text-blue-300"
+              class="text-body-sm font-medium text-primary-400 hover:text-primary-300"
               @click="handleExportSelected"
             >
               Export Selected
             </button>
-            <button
-              type="button"
-              class="text-slate-400 hover:text-white"
-              @click="selectedExportItems = []"
-            >
-              <Icon
-                name="x"
+	            <button
+	              type="button"
+	              class="text-neutral-400 hover:text-white"
+	              aria-label="Clear selection"
+	              @click="selectedExportItems = []"
+	            >
+	              <Icon
+	                name="x"
                 :size="16"
                 class="text-current"
               />
@@ -2388,31 +2454,32 @@ class="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover
         <div v-else-if="activeTab === 'enterprise'">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
             <div>
-              <h2 class="text-lg font-semibold text-slate-900">Enterprise API & Embeds</h2>
-              <p class="text-sm text-slate-500">Manage API access, refresh tokens, and generate TEER/RCI/RVI embeds.</p>
+              <h2 class="text-body-lg font-semibold text-rs-fg">Enterprise API & Embeds</h2>
+              <p class="text-body-sm text-rs-muted">Manage API access, export data, and generate TEER/RCI/RVI embeds.</p>
             </div>
-            <div class="text-xs text-slate-500">
-              Tier 2: {{ tier2CadenceLabel }}h cadence · Tier 3: {{ tier3CadenceLabel }}h cadence
+            <div class="text-body-sm text-rs-muted text-right">
+              <div>Tier 1: 10min cadence (USD corridors) · Tier 2: 3h cadence (all corridors)</div>
+              <div class="text-[11px] text-neutral-400">Tier 1 collection is currently disabled. All corridors served at 3h cadence.</div>
             </div>
           </div>
 
           <div
 v-if="!apiAccess"
-class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+class="mb-6 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-body-sm text-warning-800"
 >
             API access is not enabled for this account. Contact support to enable enterprise API access.
           </div>
 
           <div class="grid gap-6 lg:grid-cols-2">
-            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+            <div class="bg-surface rounded-xl border border-rs-border p-6 space-y-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <h3 class="text-base font-semibold text-slate-900">API Keys</h3>
-                  <p class="text-xs text-slate-500">Default tier: {{ apiTier || 2 }}. Tier 1 is disabled.</p>
+                  <h3 class="text-body font-semibold text-rs-fg">API Keys</h3>
+                  <p class="text-body-sm text-rs-muted">{{ activeApiKeyCount }}/{{ maxApiKeys }} active · 600 req/min · Tier {{ apiTier || 2 }} access</p>
                 </div>
                 <button
                   type="button"
-                  class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                   :disabled="apiKeysLoading || !apiAccess"
                   @click="fetchApiKeys"
                 >
@@ -2420,63 +2487,72 @@ class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm tex
                 </button>
               </div>
 
-              <div class="grid gap-3 sm:grid-cols-3">
+              <div class="grid gap-3 sm:grid-cols-2">
                 <input
                   v-model="apiKeyName"
                   type="text"
                   placeholder="Key name"
-                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 >
-                <select
-                  v-model="apiKeyTier"
-                  class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="2">Tier 2 ({{ tier2CadenceLabel }}h cadence)</option>
-                  <option value="3">Tier 3 ({{ tier3CadenceLabel }}h cadence)</option>
-                </select>
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
-                  :disabled="apiKeysLoading || !apiAccess"
+                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-60"
+                  :disabled="apiKeysLoading || !apiAccess || activeApiKeyCount >= maxApiKeys"
                   @click="createEnterpriseApiKey"
                 >
                   Create Key
                 </button>
               </div>
 
+              <div class="flex flex-wrap gap-3">
+                <label
+                  v-for="scope in availableScopes"
+                  :key="scope.value"
+                  class="inline-flex items-center gap-1.5 text-body-sm text-neutral-700 cursor-pointer select-none"
+                >
+                  <input
+                    v-model="apiKeyScopes"
+                    type="checkbox"
+                    :value="scope.value"
+                    class="rounded border-rs-border text-brand-600 focus:ring-brand-200"
+                  >
+                  <span class="font-mono text-[11px]">{{ scope.value }}</span>
+                </label>
+              </div>
+
               <p
 v-if="apiKeysError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                 {{ apiKeysError }}
               </p>
 
 	              <div
 	v-if="apiKeyToken"
-	class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-xs text-emerald-900"
+	class="rounded-lg border border-success-200 bg-success-50 px-3 py-3 text-body-sm text-success-700"
 	>
                 <div class="flex items-center justify-between gap-3">
                   <div class="font-semibold">New token (save now)</div>
                   <button
                     type="button"
-                    class="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                    class="text-body-sm font-semibold text-success-700 hover:text-success-800"
                     @click="copyApiKeyToken"
                   >
                     Copy
                   </button>
                 </div>
-                <div class="mt-2 break-all font-mono text-[11px] text-emerald-800">
+                <div class="mt-2 break-all font-mono text-[11px] text-success-700">
                   {{ apiKeyToken }}
                 </div>
                 <div
 v-if="apiKeyTokenLabel"
-class="mt-1 text-[11px] text-emerald-700"
+class="mt-1 text-[11px] text-success-700"
 >
                   Prefix: {{ apiKeyTokenLabel }}
                 </div>
                 <div
 v-if="apiKeyCopyStatus"
-class="mt-1 text-[11px] text-emerald-700"
+class="mt-1 text-[11px] text-success-700"
 >
 	                  {{ apiKeyCopyStatus }}
 	                </div>
@@ -2492,29 +2568,29 @@ class="mt-1 text-[11px] text-emerald-700"
 	                :empty="{ title: 'No API keys yet', message: 'Create a key to get started.' }"
 	              >
 	                <template #cell-name="{ row }">
-	                  <span class="text-slate-900">{{ apiKeyFromRow(row).name || 'Untitled' }}</span>
+	                  <span class="text-rs-fg">{{ apiKeyFromRow(row).name || 'Untitled' }}</span>
 	                </template>
 
 	                <template #cell-key_prefix="{ row }">
-	                  <span class="font-mono text-xs text-slate-600">{{ apiKeyFromRow(row).key_prefix }}••••</span>
+	                  <span class="font-mono text-body-sm text-neutral-600">{{ apiKeyFromRow(row).key_prefix }}••••</span>
 	                </template>
 
 	                <template #cell-scopes="{ row }">
-	                  <span class="text-xs text-slate-500">{{ apiKeyFromRow(row).scopes.join(', ') || '—' }}</span>
+	                  <span class="text-body-sm text-rs-muted">{{ apiKeyFromRow(row).scopes.join(', ') || '—' }}</span>
 	                </template>
 
 	                <template #cell-last_used_at="{ row }">
-	                  <span class="text-xs text-slate-500">{{ apiKeyFromRow(row).last_used_at ? formatDate(apiKeyFromRow(row).last_used_at!) : '—' }}</span>
+	                  <span class="text-body-sm text-rs-muted">{{ apiKeyFromRow(row).last_used_at ? formatDate(apiKeyFromRow(row).last_used_at!) : '—' }}</span>
 	                </template>
 
 	                <template #cell-revoked_at="{ row }">
 	                  <span
 	                    v-if="apiKeyFromRow(row).revoked_at"
-	                    class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
+	                    class="rounded-full bg-neutral-100 px-2 py-0.5 text-body-sm text-rs-muted"
 	                  >Revoked</span>
 	                  <span
 	                    v-else
-	                    class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700"
+	                    class="rounded-full bg-success-100 px-2 py-0.5 text-body-sm text-success-700"
 	                  >Active</span>
 	                </template>
 
@@ -2522,7 +2598,7 @@ class="mt-1 text-[11px] text-emerald-700"
 	                  <div class="flex items-center justify-end gap-2">
 	                    <button
 	                      type="button"
-	                      class="text-xs font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+	                      class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 disabled:opacity-50"
 	                      :disabled="apiKeysLoading || !apiAccess || Boolean(apiKeyFromRow(row).revoked_at)"
 	                      @click="rotateEnterpriseApiKey(apiKeyFromRow(row))"
 	                    >
@@ -2531,7 +2607,7 @@ class="mt-1 text-[11px] text-emerald-700"
 	                    <button
 	                      v-if="!apiKeyFromRow(row).revoked_at"
 	                      type="button"
-	                      class="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+	                      class="text-body-sm font-semibold text-danger-600 hover:text-danger-600 disabled:opacity-50"
 	                      :disabled="apiKeysLoading || !apiAccess"
 	                      @click="revokeEnterpriseApiKey(apiKeyFromRow(row))"
 	                    >
@@ -2540,39 +2616,72 @@ class="mt-1 text-[11px] text-emerald-700"
 	                  </div>
 	                </template>
 	              </DataTable>
+
+              <div class="rounded-lg border border-rs-border p-4 space-y-3">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between text-body-sm font-semibold text-rs-fg"
+                  @click="showApiReference = !showApiReference"
+                >
+                  <span>API Reference</span>
+                  <Icon :name="showApiReference ? 'chevron-up' : 'chevron-down'" :size="16" class="text-neutral-400" />
+                </button>
+                  <div v-if="showApiReference" class="space-y-3 text-body-sm">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-rs-muted">
+                      <span>Rate limit</span><span class="text-rs-fg font-medium">600 req/min</span>
+                      <span>Max keys</span><span class="text-rs-fg font-medium">{{ activeApiKeyCount }}/{{ maxApiKeys }}</span>
+                      <span>API tier</span><span class="text-rs-fg font-medium">Tier {{ apiTier || 2 }} (all corridors)</span>
+                      <span>Auth header</span><span class="text-rs-fg font-mono text-[11px]">X-API-Key: &lt;token&gt;</span>
+                    </div>
+                    <div class="border-t border-rs-border pt-3">
+                      <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-2">Endpoints</div>
+                      <div class="space-y-1 font-mono text-[11px]">
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/series</span> <span class="text-neutral-400">— Time series (TEER, RCI, RVI)</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/latest</span> <span class="text-neutral-400">— Latest index point</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/corridors</span> <span class="text-neutral-400">— Available corridors</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/indices/health</span> <span class="text-neutral-400">— Health check</span></div>
+                        <div><span class="text-success-700">POST</span> <span class="text-neutral-600">/api/v1/exports</span> <span class="text-neutral-400">— Create export</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/exports</span> <span class="text-neutral-400">— List exports</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/exports/:id/download</span> <span class="text-neutral-400">— Download export</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/providers</span> <span class="text-neutral-400">— Provider list</span></div>
+                        <div><span class="text-brand-600">GET</span> <span class="text-neutral-600">/api/v1/quotes</span> <span class="text-neutral-400">— Corridor quotes</span></div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
 	            </div>
 
-            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+            <div class="bg-surface rounded-xl border border-rs-border p-6 space-y-4">
               <div>
-                <h3 class="text-base font-semibold text-slate-900">Embed Generator</h3>
-                <p class="text-xs text-slate-500">Create shareable index charts for your site with proper citation.</p>
+                <h3 class="text-body font-semibold text-rs-fg">Embed Generator</h3>
+                <p class="text-body-sm text-rs-muted">Create shareable index charts for your site with proper citation.</p>
               </div>
 
               <div class="grid gap-3">
                 <div>
-                  <label class="text-xs font-semibold text-slate-600">Corridor ID</label>
+                  <label class="text-body-sm font-semibold text-neutral-600">Corridor ID</label>
                   <input
                     v-model="embedCorridorId"
                     type="text"
-                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     placeholder="US-PH-USD-PHP"
                   >
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label class="text-xs font-semibold text-slate-600">Amount Bucket</label>
+                    <label class="text-body-sm font-semibold text-neutral-600">Amount Bucket</label>
                     <input
                       v-model.number="embedAmountBucket"
                       type="number"
                       min="1"
-                      class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     >
                   </div>
                   <div>
-                    <label class="text-xs font-semibold text-slate-600">Method Profile</label>
+                    <label class="text-body-sm font-semibold text-neutral-600">Method Profile</label>
                     <select
                       v-model="embedMethodProfile"
-                      class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      class="mt-1 w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     >
                       <option value="standard_bank">Bank to Bank</option>
                       <option value="standard_card">Card to Bank</option>
@@ -2582,20 +2691,20 @@ class="mt-1 text-[11px] text-emerald-700"
                 </div>
                 <div class="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label class="text-xs font-semibold text-slate-600">Days</label>
+                    <label class="text-body-sm font-semibold text-neutral-600">Days</label>
                     <input
                       v-model.number="embedDays"
                       type="number"
                       min="1"
                       max="365"
-                      class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     >
                   </div>
                   <div>
-                    <label class="text-xs font-semibold text-slate-600">Theme</label>
+                    <label class="text-body-sm font-semibold text-neutral-600">Theme</label>
                     <select
                       v-model="embedTheme"
-                      class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                      class="mt-1 w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     >
                       <option value="dark">Dark</option>
                       <option value="light">Light</option>
@@ -2603,16 +2712,16 @@ class="mt-1 text-[11px] text-emerald-700"
                   </div>
                 </div>
                 <div>
-                  <label class="text-xs font-semibold text-slate-600">API Key</label>
+                  <label class="text-body-sm font-semibold text-neutral-600">API Key</label>
                   <input
                     v-model="embedApiKey"
                     type="text"
-                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                    class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     placeholder="Paste API key token"
                   >
                   <p
 v-if="!embedApiKey"
-class="mt-1 text-[11px] text-amber-600"
+class="mt-1 text-[11px] text-warning-600"
 >
                     Paste a dedicated API key before sharing embeds publicly.
                   </p>
@@ -2621,7 +2730,7 @@ class="mt-1 text-[11px] text-amber-600"
 
               <div
 v-if="embedCopyStatus"
-class="text-xs text-emerald-600"
+class="text-body-sm text-success-600"
 >
                 {{ embedCopyStatus }}
               </div>
@@ -2630,28 +2739,28 @@ class="text-xs text-emerald-600"
                 <div
 v-for="item in embedIndices"
 :key="item.key"
-class="rounded-lg border border-slate-200 p-4"
+class="rounded-lg border border-rs-border p-4"
 >
                   <div class="flex items-center justify-between mb-2">
-                    <div class="text-sm font-semibold text-slate-900">{{ item.label }} Embed</div>
+                    <div class="text-body-sm font-semibold text-rs-fg">{{ item.label }} Embed</div>
                     <button
                       type="button"
-                      class="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                      class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                       @click="copyEmbedCode(item.key)"
                     >
                       Copy
                     </button>
                   </div>
                   <textarea
-                    class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700"
+                    class="w-full rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-body-sm font-mono text-neutral-700"
                     rows="5"
                     readonly
                     :value="embedCodes[item.key]"
                   />
                   <div class="mt-3">
-                    <div class="text-xs text-slate-500 mb-2">Preview</div>
+                    <div class="text-body-sm text-rs-muted mb-2">Preview</div>
                     <div
-class="w-full overflow-hidden rounded-lg border border-slate-200"
+class="w-full overflow-hidden rounded-lg border border-rs-border"
 style="height: 240px;"
 >
                       <iframe
@@ -2666,162 +2775,333 @@ style="height: 240px;"
               </div>
             </div>
           </div>
+
+          <!-- Data Exports -->
+          <div class="mt-6 bg-surface rounded-xl border border-rs-border p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-body font-semibold text-rs-fg">Data Exports</h3>
+                <p class="text-body-sm text-rs-muted">Create and download bulk data exports (CSV or PDF).</p>
+              </div>
+              <button
+                type="button"
+                class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                :disabled="exportJobsLoading"
+                @click="fetchExportJobs"
+              >
+                Refresh
+              </button>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-4">
+              <select
+                v-model="exportJobType"
+                class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+              >
+                <option value="history">Quote History</option>
+                <option value="watchlist">Watchlist</option>
+                <option value="alerts">Alerts</option>
+                <option value="all">All Data</option>
+              </select>
+              <select
+                v-model="exportFormat"
+                class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+              >
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+              </select>
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="exportDateFrom"
+                  type="date"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  placeholder="From"
+                >
+                <span class="text-neutral-400">–</span>
+                <input
+                  v-model="exportDateTo"
+                  type="date"
+                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                  placeholder="To"
+                >
+              </div>
+              <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-60"
+                :disabled="exportCreating"
+                @click="createExportJob"
+              >
+                {{ exportCreating ? 'Creating…' : 'Create Export' }}
+              </button>
+            </div>
+
+            <p
+              v-if="exportJobsError"
+              class="text-body-sm text-danger-600"
+            >
+              {{ exportJobsError }}
+            </p>
+
+            <DataTable
+              variant="consumer"
+              caption="Export jobs"
+              :columns="exportJobTableColumns"
+              :rows="exportJobs"
+              :row-key="exportJobTableRowKey"
+              :loading="exportJobsLoading"
+              :empty="{ title: 'No exports yet', message: 'Create an export to get started.' }"
+            >
+              <template #cell-jobType="{ row }">
+                <span class="text-rs-fg capitalize">{{ exportJobFromRow(row).jobType }}</span>
+              </template>
+
+              <template #cell-status="{ row }">
+                <span
+                  class="rounded-full px-2 py-0.5 text-body-sm"
+                  :class="exportStatusClasses(exportJobFromRow(row).status)"
+                >{{ exportJobFromRow(row).status }}</span>
+              </template>
+
+              <template #cell-createdAt="{ row }">
+                <span class="text-body-sm text-rs-muted">{{ formatDate(exportJobFromRow(row).createdAt) }}</span>
+              </template>
+
+              <template #row-actions="{ row }">
+                <button
+                  v-if="exportJobFromRow(row).status === 'done'"
+                  type="button"
+                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                  @click="downloadExport(exportJobFromRow(row).id)"
+                >
+                  Download
+                </button>
+                <span
+                  v-else-if="exportJobFromRow(row).status === 'failed'"
+                  class="text-body-sm text-danger-600"
+                >Failed</span>
+                <span
+                  v-else
+                  class="text-body-sm text-neutral-400"
+                >Pending</span>
+              </template>
+            </DataTable>
+          </div>
         </div>
 
         <!-- Ops Tab -->
         <div v-else-if="activeTab === 'ops'">
-          <div class="flex flex-col gap-4 mb-6">
-            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div>
-                <h2 class="text-lg font-semibold text-slate-900">Ops Health</h2>
-                <p class="text-sm text-slate-500">Admin-only health probes for provider pipelines.</p>
+          <!-- Summary Banner -->
+          <div class="mb-6 rounded-xl border border-rs-border bg-surface overflow-hidden">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 px-6 py-5">
+              <div class="flex items-center gap-4">
+                <div
+                  class="flex items-center gap-2 rounded-full px-3 py-1 text-body-sm font-semibold"
+                  :class="opsStatusColor"
+                >
+                  <span
+                    class="inline-block h-2 w-2 rounded-full"
+                    :class="opsSummary.status === 'ok' ? 'bg-success-600' : opsSummary.status === 'warning' ? 'bg-warning-600' : opsSummary.status === 'critical' ? 'bg-danger-600' : 'bg-neutral-400'"
+                  />
+                  {{ opsStatusLabel }}
+                </div>
+                <div>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Ops Health</h2>
+                  <p class="text-body-sm text-rs-muted">Admin-only health probes for {{ opsProviders.length }} provider pipelines.</p>
+                </div>
               </div>
-              <button
-                type="button"
-                class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
-                :disabled="opsRefreshing"
-                @click="refreshAllOps"
-              >
-                {{ opsRefreshing ? 'Refreshing...' : 'Refresh All' }}
-              </button>
+              <div class="flex items-center gap-3">
+                <span v-if="opsLastRefreshedAt" class="text-body-sm text-rs-muted">
+                  Updated {{ formatOpsTimestamp(opsLastRefreshedAt) }}
+                </span>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
+                  :disabled="opsRefreshing"
+                  @click="refreshAllOps"
+                >
+                  <svg
+                    v-if="opsRefreshing"
+                    class="h-4 w-4 animate-spin text-neutral-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {{ opsRefreshing ? 'Refreshing...' : 'Refresh All' }}
+                </button>
+              </div>
+            </div>
+            <div v-if="opsSummary.loaded > 0" class="grid grid-cols-2 sm:grid-cols-5 gap-px border-t border-rs-border bg-neutral-100">
+              <div class="bg-surface px-4 py-3 text-center">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Providers</div>
+                <div class="text-body-lg font-semibold text-rs-fg">{{ opsSummary.total }}</div>
+              </div>
+              <div class="bg-surface px-4 py-3 text-center">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Healthy</div>
+                <div class="text-body-lg font-semibold text-success-600">{{ opsSummary.healthy }}</div>
+              </div>
+              <div class="bg-surface px-4 py-3 text-center">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Stale</div>
+                <div class="text-body-lg font-semibold" :class="opsSummary.stale > 0 ? 'text-warning-600' : 'text-rs-fg'">{{ opsSummary.stale }}</div>
+              </div>
+              <div class="bg-surface px-4 py-3 text-center">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Errored</div>
+                <div class="text-body-lg font-semibold" :class="opsSummary.errored > 0 ? 'text-danger-600' : 'text-rs-fg'">{{ opsSummary.errored }}</div>
+              </div>
+              <div class="bg-surface px-4 py-3 text-center">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Corridors</div>
+                <div class="text-body-lg font-semibold text-rs-fg">{{ opsSummary.totalCorridors }} <span v-if="opsSummary.staleCorridors > 0" class="text-body-sm text-warning-600">({{ opsSummary.staleCorridors }} stale)</span></div>
+              </div>
             </div>
           </div>
 
-          <div class="space-y-6">
+          <!-- Provider Health List -->
+          <div class="space-y-4">
             <div
 v-for="provider in opsProviders"
 :key="provider.id"
-class="bg-white rounded-xl border border-slate-200 overflow-hidden"
+class="bg-surface rounded-xl border border-rs-border overflow-hidden"
 >
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-b border-slate-100">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <div class="text-sm font-semibold text-slate-900">{{ provider.label }}</div>
-                    <span
-                      v-if="opsState[provider.id]?.affiliate === true"
-                      class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700"
-                    >
-                      Affiliate
-                    </span>
-                    <span
-                      v-else-if="opsState[provider.id]?.affiliate === false"
-                      class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600"
-                    >
-                      No affiliate
-                    </span>
-                    <span
-                      v-else
-                      class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700"
-                    >
-                      Unknown
-                    </span>
-                  </div>
-                  <div class="text-xs text-slate-500">Last update: {{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</div>
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-3 border-b border-neutral-100">
+                <div class="flex items-center gap-3">
+                  <div class="text-body-sm font-semibold text-rs-fg">{{ provider.label }}</div>
+                  <span
+                    v-if="opsState[provider.id]?.affiliate === true"
+                    class="inline-flex items-center rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-semibold text-success-700"
+                  >
+                    Affiliate
+                  </span>
+                  <span
+                    v-else-if="opsState[provider.id]?.affiliate === false"
+                    class="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold text-neutral-600"
+                  >
+                    No affiliate
+                  </span>
+                  <span v-if="opsState[provider.id]" class="text-body-sm text-rs-muted">
+                    {{ opsState[provider.id]?.summary?.corridor_count ?? 0 }} corridors
+                    <template v-if="(opsState[provider.id]?.summary?.stale_count ?? 0) > 0">
+                      &middot; <span class="text-warning-600">{{ opsState[provider.id]?.summary?.stale_count }} stale</span>
+                    </template>
+                  </span>
                 </div>
                 <div class="flex items-center gap-3">
-                  <div class="text-xs text-slate-500">
-                    Stale {{ opsState[provider.id]?.summary?.stale_count ?? 0 }} / {{ opsState[provider.id]?.summary?.corridor_count ?? 0 }}
-                  </div>
+                  <span class="text-body-sm text-rs-muted">{{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</span>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60"
                     :disabled="opsLoading[provider.id]"
                     @click="loadOpsHealth(provider.id)"
                   >
-                    {{ opsLoading[provider.id] ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsLoading[provider.id]"
+                      class="h-3.5 w-3.5 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsLoading[provider.id] ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
               </div>
 
               <div
-v-if="opsLoading[provider.id]"
-class="px-6 py-6 text-sm text-slate-500"
->
-                Loading health data...
+                v-if="opsLoading[provider.id]"
+                class="px-5 py-5"
+              >
+                <LoadingState
+                  mode="inline"
+                  message="Loading health data..."
+                />
               </div>
               <div
-v-else-if="opsErrors[provider.id]"
-class="px-6 py-6 text-sm text-amber-800 bg-amber-50"
->
+                v-else-if="opsErrors[provider.id]"
+                class="mx-5 my-4 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
+              >
                 {{ opsErrors[provider.id] }}
               </div>
               <div
-v-else-if="!opsState[provider.id]"
-class="px-6 py-6 text-sm text-slate-500"
->
-                No health data loaded yet.
+                v-else-if="!opsState[provider.id]"
+                class="px-5 py-5 text-body-sm text-rs-muted text-center"
+              >
+                Click <strong>Refresh</strong> to load health data for this provider.
               </div>
               <div v-else>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 px-6 py-4 border-b border-slate-100 text-sm">
-                  <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Corridors</div>
-                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.corridor_count ?? 0 }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Stale</div>
-                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.stale_count ?? 0 }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Fresh window (min)</div>
-                    <div class="font-semibold text-slate-900">{{ opsState[provider.id]?.summary?.fresh_window_minutes ?? 0 }}</div>
-                  </div>
-                  <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Snapshot</div>
-                    <div class="font-semibold text-slate-900">{{ formatOpsTimestamp(opsState[provider.id]?.timestamp) }}</div>
-                  </div>
-                </div>
-
                 <div class="overflow-x-auto">
-                  <table class="min-w-full text-sm">
-                    <thead class="bg-slate-50 text-slate-600">
+                  <table class="min-w-full text-body-sm">
+                    <thead class="bg-neutral-50 text-neutral-600 sticky top-0 z-10">
                       <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Corridor</th>
-                        <th class="px-4 py-3 text-left font-semibold">Attempt</th>
-                        <th class="px-4 py-3 text-left font-semibold">Quote age (min)</th>
-                        <th class="px-4 py-3 text-left font-semibold">Payin</th>
-                        <th class="px-4 py-3 text-left font-semibold">Payout</th>
-                        <th class="px-4 py-3 text-left font-semibold">Send</th>
-                        <th class="px-4 py-3 text-left font-semibold">Fee</th>
-                        <th class="px-4 py-3 text-left font-semibold">Promo fee</th>
-                        <th class="px-4 py-3 text-left font-semibold">Rate</th>
-                        <th class="px-4 py-3 text-left font-semibold">Delivery (min)</th>
-                        <th class="px-4 py-3 text-left font-semibold">Flags</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Corridor</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Status</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Quote age</th>
+                        <th class="px-3 py-2 text-left font-semibold whitespace-nowrap">Pay</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Send</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Fee</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Rate</th>
+                        <th class="px-3 py-2 text-right font-semibold whitespace-nowrap">Delivery</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr
-v-for="corridor in opsState[provider.id]?.corridors"
-:key="corridor.corridor_id"
-class="border-t border-slate-100"
->
-                        <td class="px-4 py-3 font-medium text-slate-900">{{ corridor.corridor_id }}</td>
-                        <td class="px-4 py-3">
-                          <div
-class="font-medium"
-:class="attemptStatusClass(corridor.last_attempt_success)"
->
+                        v-for="(corridor, idx) in getVisibleCorridors(provider.id)"
+                        :key="corridor.corridor_id"
+                        :class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
+                        class="border-t border-neutral-100"
+                      >
+                        <td class="px-3 py-2 font-medium text-rs-fg whitespace-nowrap">{{ corridor.corridor_id }}</td>
+                        <td class="px-3 py-2">
+                          <span
+                            class="inline-flex items-center gap-1 font-medium"
+                            :class="attemptStatusClass(corridor.last_attempt_success)"
+                          >
+                            <span
+                              class="inline-block h-1.5 w-1.5 rounded-full"
+                              :class="corridor.last_attempt_success === true ? 'bg-success-600' : corridor.last_attempt_success === false ? 'bg-danger-600' : 'bg-neutral-400'"
+                            />
                             {{ formatAttemptStatus(corridor.last_attempt_success) }}
-                          </div>
-                          <div class="text-xs text-slate-400">
-                            age {{ corridor.last_attempt_age_minutes ?? 'n/a' }} | http {{ corridor.last_attempt_http_status ?? 'n/a' }}
-                          </div>
+                          </span>
                         </td>
-                        <td class="px-4 py-3">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ corridor.payin ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ corridor.payout ?? 'n/a' }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.send_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.fee_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.promotional_fee_amount) }}</td>
-                        <td class="px-4 py-3">{{ formatOpsNumber(corridor.implied_fx_rate, 6) }}</td>
-                        <td class="px-4 py-3">
-                          {{ corridor.delivery_time_min_minutes ?? 'n/a' }} - {{ corridor.delivery_time_max_minutes ?? 'n/a' }}
+                        <td class="px-3 py-2 text-right tabular-nums" :class="(corridor.last_quote_age_minutes ?? 999) > 120 ? 'text-warning-600 font-medium' : 'text-neutral-600'">
+                          {{ corridor.last_quote_age_minutes ?? '—' }}<span class="text-neutral-400">m</span>
                         </td>
-                        <td class="px-4 py-3 text-xs text-slate-500">
-                          {{ formatOpsFlags(corridor.quality_flags) }}
+                        <td class="px-3 py-2 text-neutral-600 whitespace-nowrap">{{ corridor.payin ?? '—' }}/{{ corridor.payout ?? '—' }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums text-neutral-600">{{ formatOpsNumber(corridor.send_amount) }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums text-neutral-600">{{ formatOpsNumber(corridor.fee_amount) }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums font-medium text-rs-fg">{{ formatOpsNumber(corridor.implied_fx_rate, 6) }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums text-neutral-600 whitespace-nowrap">
+                          {{ corridor.delivery_time_min_minutes ?? '—' }}-{{ corridor.delivery_time_max_minutes ?? '—' }}<span class="text-neutral-400">m</span>
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                <div
+                  v-if="getHiddenCorridorCount(provider.id) > 0"
+                  class="border-t border-neutral-100 px-5 py-2 text-center"
+                >
+                  <button
+                    type="button"
+                    class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                    @click="toggleProviderExpanded(provider.id)"
+                  >
+                    {{ isProviderExpanded(provider.id) ? 'Show less' : `Show ${getHiddenCorridorCount(provider.id)} more corridors` }}
+                  </button>
+                </div>
+                <div
+                  v-else-if="isProviderExpanded(provider.id) && (opsState[provider.id]?.corridors?.length ?? 0) > OPS_CORRIDOR_PREVIEW_LIMIT"
+                  class="border-t border-neutral-100 px-5 py-2 text-center"
+                >
+                  <button
+                    type="button"
+                    class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+                    @click="toggleProviderExpanded(provider.id)"
+                  >
+                    Show less
+                  </button>
                 </div>
               </div>
             </div>
@@ -2829,11 +3109,11 @@ class="font-medium"
 
           <div class="mt-10 space-y-6">
             <div class="grid gap-6 lg:grid-cols-3">
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
+              <div class="bg-surface rounded-xl border border-rs-border p-6">
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <h3 class="text-base font-semibold text-slate-900">Admin Tools</h3>
-                    <p class="text-xs text-slate-500">Quick links to backend admin consoles.</p>
+                    <h3 class="text-body font-semibold text-rs-fg">Admin Tools</h3>
+                    <p class="text-body-sm text-rs-muted">Quick links to backend admin consoles.</p>
                   </div>
                 </div>
                 <div class="mt-4 space-y-3">
@@ -2841,35 +3121,35 @@ class="font-medium"
 	                    v-for="link in opsAdminLinks"
 	                    :key="link.label"
 	                    :to="link.to"
-	                    class="group flex items-start justify-between gap-4 rounded-lg border border-slate-100 px-3 py-2 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+	                    class="group flex items-start justify-between gap-4 rounded-lg border border-neutral-100 px-3 py-2 hover:border-primary-200 hover:bg-primary-50 transition-colors"
 	                  >
 	                    <div>
-	                      <div class="text-sm font-semibold text-slate-900 group-hover:text-blue-700">{{ link.label }}</div>
-	                      <div class="text-xs text-slate-500">{{ link.description }}</div>
+	                      <div class="text-body-sm font-semibold text-rs-fg group-hover:text-brand-700">{{ link.label }}</div>
+	                      <div class="text-body-sm text-rs-muted">{{ link.description }}</div>
 	                    </div>
 	                    <Icon
 	                      name="chevron-right"
 	                      :size="16"
-	                      class="text-slate-400 group-hover:text-blue-600"
+	                      class="text-neutral-400 group-hover:text-brand-600"
 	                    />
 	                  </NuxtLink>
 	                </div>
-                <div class="mt-4 text-xs text-slate-400">
+                <div class="mt-4 text-body-sm text-neutral-400">
                   Admin endpoints: /analytics/*, /audit/*, /telemetry/analytics, /ops/*
                 </div>
-                <div class="mt-5 border-t border-slate-100 pt-4">
-                  <h4 class="text-sm font-semibold text-slate-900">Role management</h4>
-                  <p class="text-xs text-slate-500">Grant admin access by email.</p>
+                <div class="mt-5 border-t border-neutral-100 pt-4">
+                  <h4 class="text-body-sm font-semibold text-rs-fg">Role management</h4>
+                  <p class="text-body-sm text-rs-muted">Grant admin access by email.</p>
                   <div class="mt-3 grid gap-2">
                     <input
                       v-model="adminRoleEmail"
                       type="email"
                       placeholder="user@example.com"
-                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                     >
                     <select
                       v-model="adminRoleSelection"
-                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
@@ -2877,199 +3157,201 @@ class="font-medium"
                     </select>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:bg-slate-400"
+                      class="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:cursor-not-allowed disabled:bg-neutral-400"
                       :disabled="adminRoleLoading || !adminRoleEmail"
                       @click="handleAdminRoleUpdate"
                     >
                       {{ adminRoleLoading ? 'Updating...' : 'Set role' }}
                     </button>
                     <p
-v-if="adminRoleSuccess"
-class="text-xs text-emerald-700"
->
+                      v-if="adminRoleSuccess"
+                      class="text-body-sm text-success-600"
+                    >
                       {{ adminRoleSuccess }}
                     </p>
                     <p
-v-else-if="adminRoleError"
-class="text-xs text-amber-700"
->
+                      v-else-if="adminRoleError"
+                      class="text-body-sm text-warning-600"
+                    >
                       {{ adminRoleError }}
                     </p>
                   </div>
                 </div>
+                <div class="mt-5 border-t border-neutral-100 pt-4">
+                  <h4 class="text-body-sm font-semibold text-rs-fg">Plan management</h4>
+                  <p class="text-body-sm text-rs-muted">Grant or revoke plan access by email.</p>
+                  <div class="mt-3 grid gap-2">
+                    <input
+                      v-model="adminPlanEmail"
+                      type="email"
+                      placeholder="user@example.com"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                    <select
+                      v-model="adminPlanSelection"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                      <option value="free">Free</option>
+                      <option value="plus">Plus</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                    <input
+                      v-if="adminPlanSelection === 'enterprise'"
+                      v-model="adminPlanNotes"
+                      type="text"
+                      placeholder="Notes (company name, deal terms...)"
+                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                    >
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:cursor-not-allowed disabled:bg-neutral-400"
+                      :disabled="adminPlanLoading || !adminPlanEmail"
+                      @click="handleAdminPlanGrant"
+                    >
+                      {{ adminPlanLoading ? 'Updating...' : 'Set plan' }}
+                    </button>
+                    <p
+                      v-if="adminPlanSuccess"
+                      class="text-body-sm text-success-600"
+                    >
+                      {{ adminPlanSuccess }}
+                    </p>
+                    <p
+                      v-else-if="adminPlanError"
+                      class="text-body-sm text-warning-600"
+                    >
+                      {{ adminPlanError }}
+                    </p>
+                  </div>
+                  <p class="mt-2 text-body-sm text-neutral-400">
+                    <NuxtLink to="/admin/enterprise" class="font-semibold text-brand-600 hover:text-brand-700">
+                      Enterprise console →
+                    </NuxtLink>
+                  </p>
+                </div>
               </div>
 
-              <div class="bg-white rounded-xl border border-slate-200 p-6 lg:col-span-2">
+              <div class="bg-surface rounded-xl border border-rs-border p-6 lg:col-span-2">
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <h3 class="text-base font-semibold text-slate-900">Telemetry Analytics</h3>
-                    <p class="text-xs text-slate-500">Aggregated telemetry metrics from silver.telemetry_analytics_aggregate.</p>
+                    <h3 class="text-body font-semibold text-rs-fg">Telemetry Analytics</h3>
+                    <p class="text-body-sm text-rs-muted">Live and aggregated telemetry metrics.</p>
                   </div>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
                     :disabled="telemetryLoading"
-                    @click="loadTelemetryAnalytics"
+                    @click="() => loadTelemetryAnalytics()"
                   >
-                    {{ telemetryLoading ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="telemetryLoading"
+                      class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ telemetryLoading ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
                 <div class="mt-4 flex flex-wrap items-end gap-3">
-                  <label class="text-xs text-slate-500">
+                  <label class="text-body-sm text-rs-muted">
                     Metric
                     <select
-v-model="telemetryMetric"
-class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
->
+                      v-model="telemetryMetric"
+                      class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+                    >
                       <option
-v-for="metric in telemetryMetricOptions"
-:key="metric.id"
-:value="metric.id"
->{{ metric.label }}</option>
+                        v-for="metric in telemetryMetricOptions"
+                        :key="metric.id"
+                        :value="metric.id"
+                      >{{ metric.label }}</option>
                     </select>
                   </label>
-                  <label class="text-xs text-slate-500">
-                    Window (hours)
+                  <label class="text-body-sm text-rs-muted">
+                    Window
                     <select
-v-model.number="telemetryHours"
-class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
->
+                      v-model.number="telemetryHours"
+                      class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+                    >
                       <option
-v-for="option in telemetryHourOptions"
-:key="option"
-:value="option"
->{{ option }}</option>
+                        v-for="option in telemetryHourOptions"
+                        :key="option"
+                        :value="option"
+                      >{{ option }}h</option>
                     </select>
                   </label>
                 </div>
                 <p
-v-if="telemetryError"
-class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
->
+                  v-if="telemetryError"
+                  class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
+                >
                   {{ telemetryError }}
                 </p>
-                <div
-v-else
-class="mt-4"
->
-                  <div
-v-if="telemetryLoading"
-class="text-sm text-slate-500"
->
-Loading telemetry analytics…
-</div>
-                  <div
-v-else-if="!telemetryLatest"
-class="text-sm text-slate-500"
->
-No telemetry aggregates yet.
-</div>
-                  <div
-v-else
-class="space-y-3"
->
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <div v-else class="mt-4">
+                  <div v-if="telemetryLoading" class="py-4">
+                    <LoadingState
+                      mode="inline"
+                      message="Loading telemetry analytics..."
+                    />
+                  </div>
+                  <div v-else-if="!telemetryLatest" class="py-6 text-center">
+                    <p class="text-body-sm text-rs-muted">No telemetry data for this metric and window.</p>
+                    <p class="mt-1 text-body-sm text-neutral-400">Try a wider time window or a different metric.</p>
+                  </div>
+                  <div v-else class="space-y-4">
+                    <div class="flex flex-wrap items-center gap-3 text-body-sm text-rs-muted">
                       <span>Bucket: {{ formatOpsTimestamp(telemetryLatest.time_bucket) }}</span>
                       <span v-if="telemetryWindowHours">Window: {{ telemetryWindowHours }}h</span>
                       <span>Computed: {{ formatOpsTimestamp(telemetryLatest.computed_at) }}</span>
                     </div>
                     <div
-v-if="telemetryMetric === 'engagement'"
-class="grid gap-3 sm:grid-cols-2 text-sm text-slate-700"
->
-                      <div class="rounded-lg border border-slate-100 p-3">
-                        <div class="text-xs text-slate-400 uppercase tracking-wide">Avg engagement</div>
-                        <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(telemetryEngagement?.avg_engagement, 2) }}</div>
+                      v-if="telemetryMetric === 'engagement'"
+                      class="grid gap-3 sm:grid-cols-2"
+                    >
+                      <div class="rounded-lg border border-neutral-100 p-4">
+                        <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Avg engagement</div>
+                        <div class="mt-1 text-2xl font-semibold text-rs-fg tabular-nums">{{ formatOpsNumber(telemetryEngagement?.avg_engagement, 2) }}</div>
                       </div>
-                      <div class="rounded-lg border border-slate-100 p-3">
-                        <div class="text-xs text-slate-400 uppercase tracking-wide">Sessions</div>
-                        <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(telemetryEngagement?.session_count, 0) }}</div>
+                      <div class="rounded-lg border border-neutral-100 p-4">
+                        <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Sessions</div>
+                        <div class="mt-1 text-2xl font-semibold text-rs-fg tabular-nums">{{ formatOpsNumber(telemetryEngagement?.session_count, 0) }}</div>
                       </div>
                     </div>
-                    <div
-v-else
-class="overflow-auto"
->
-                      <table class="min-w-full text-sm">
-                        <thead class="text-xs uppercase text-slate-400">
+                    <div v-else class="overflow-auto rounded-lg border border-neutral-100">
+                      <table class="min-w-full text-body-sm">
+                        <thead class="bg-neutral-50 text-body-sm uppercase text-neutral-500 sticky top-0">
                           <tr>
-                            <th
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-left"
->
-From
-</th>
-                            <th
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-left"
->
-To
-</th>
-                            <th
-v-if="telemetryMetric === 'popular_corridors'"
-class="py-2 text-left"
->
-Corridor
-</th>
-                            <th
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-left"
->
-Provider
-</th>
-                            <th
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-left"
->
-Corridor
-</th>
-                            <th class="py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
+                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">From</th>
+                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">To</th>
+                            <th v-if="telemetryMetric === 'popular_corridors'" class="px-3 py-2 text-left">Corridor</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Provider</th>
+                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Corridor</th>
+                            <th class="px-3 py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr
-v-for="row in telemetryListRows"
-:key="row.key"
-class="border-t border-slate-100"
->
-                            <td
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-slate-700"
->
-{{ row.from || '—' }}
-</td>
-                            <td
-v-if="telemetryMetric === 'heatmap'"
-class="py-2 text-slate-700"
->
-{{ row.to || '—' }}
-</td>
-                            <td
-v-if="telemetryMetric === 'popular_corridors'"
-class="py-2 text-slate-700"
->
-{{ row.corridor || '—' }}
-</td>
-                            <td
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-slate-700"
->
-{{ row.provider || '—' }}
-</td>
-                            <td
-v-if="telemetryMetric === 'provider_favorites'"
-class="py-2 text-slate-700"
->
-{{ row.corridor || '—' }}
-</td>
-                            <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.count, 0) }}</td>
+                            v-for="(row, idx) in telemetryListRows"
+                            :key="row.key"
+                            :class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
+                            class="border-t border-neutral-100"
+                          >
+                            <td v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-neutral-700">{{ row.from || '—' }}</td>
+                            <td v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-neutral-700">{{ row.to || '—' }}</td>
+                            <td v-if="telemetryMetric === 'popular_corridors'" class="px-3 py-2 font-medium text-neutral-700">{{ row.corridor || '—' }}</td>
+                            <td v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 font-medium text-neutral-700">{{ row.provider || '—' }}</td>
+                            <td v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-neutral-600">{{ row.corridor || '—' }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums font-medium text-rs-fg">{{ formatOpsNumber(row.count, 0) }}</td>
                           </tr>
                           <tr v-if="telemetryListRows.length === 0">
                             <td
-class="py-3 text-center text-xs text-slate-400"
-:colspan="telemetryMetric === 'heatmap' ? 3 : telemetryMetric === 'provider_favorites' ? 3 : 2"
->
-                              No telemetry rows yet.
+                              class="py-4 text-center text-body-sm text-neutral-400"
+                              :colspan="telemetryMetric === 'heatmap' ? 3 : telemetryMetric === 'provider_favorites' ? 3 : 2"
+                            >
+                              No telemetry rows for this window.
                             </td>
                           </tr>
                         </tbody>
@@ -3081,205 +3363,232 @@ class="py-3 text-center text-xs text-slate-400"
             </div>
 
             <div class="grid gap-6 lg:grid-cols-2">
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
+              <div class="bg-surface rounded-xl border border-rs-border p-6">
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <h3 class="text-base font-semibold text-slate-900">Analytics Snapshot</h3>
-                    <p class="text-xs text-slate-500">Top corridors and providers (last 7 days).</p>
+                    <h3 class="text-body font-semibold text-rs-fg">Analytics Snapshot</h3>
+                    <p class="text-body-sm text-rs-muted">Top corridors and providers (last 7 days).</p>
                   </div>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
                     :disabled="opsAnalyticsLoading"
                     @click="loadOpsAnalytics"
                   >
-                    {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsAnalyticsLoading"
+                      class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
                 <p
-v-if="opsAnalyticsError"
-class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
->
+                  v-if="opsAnalyticsError"
+                  class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
+                >
                   {{ opsAnalyticsError }}
                 </p>
-                <div
-v-else
-class="mt-4 grid gap-6 md:grid-cols-2 text-sm"
->
+                <div v-if="opsAnalyticsLoading" class="mt-4 py-4">
+                  <LoadingState mode="inline" message="Loading analytics..." />
+                </div>
+                <div v-else class="mt-4 grid gap-6 md:grid-cols-2 text-body-sm">
                   <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Popular corridors</div>
+                    <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Popular corridors</div>
                     <ul class="mt-3 space-y-2">
                       <li
-v-for="row in opsPopularCorridors"
-:key="row.corridor_id"
-class="flex items-center justify-between gap-4"
->
-                        <span class="text-slate-700">{{ row.from_country }} → {{ row.to_country }}</span>
-                        <span class="text-xs text-slate-500">
-                          {{ row.search_count }} searches
-                          <span v-if="row.trend_percentage !== undefined"> • {{ formatTrendPercentage(row.trend_percentage) }}</span>
+                        v-for="row in opsPopularCorridors"
+                        :key="row.corridor_id"
+                        class="flex items-center justify-between gap-4"
+                      >
+                        <span class="font-medium text-neutral-700">{{ row.from_country }} → {{ row.to_country }}</span>
+                        <span class="text-body-sm tabular-nums text-rs-muted">
+                          {{ formatOpsNumber(row.search_count, 0) }}
+                          <span v-if="row.trend_percentage !== undefined"> {{ formatTrendPercentage(row.trend_percentage) }}</span>
                         </span>
                       </li>
-                      <li
-v-if="!opsAnalyticsLoading && opsPopularCorridors.length === 0"
-class="text-xs text-slate-400"
->
-No corridor data yet.
-</li>
+                      <li v-if="opsPopularCorridors.length === 0" class="text-body-sm text-neutral-400">
+                        No corridor data yet.
+                      </li>
                     </ul>
                   </div>
                   <div>
-                    <div class="text-xs text-slate-400 uppercase tracking-wide">Top providers</div>
+                    <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Top providers</div>
                     <ul class="mt-3 space-y-2">
                       <li
-v-for="row in opsFavoriteProviders"
-:key="row.provider_id"
-class="flex items-center justify-between gap-4"
->
-                        <span class="text-slate-700">{{ row.provider_name || row.provider_id }}</span>
-                        <span class="text-xs text-slate-500">{{ row.click_through_rate }}% CTR</span>
+                        v-for="row in opsFavoriteProviders"
+                        :key="row.provider_id"
+                        class="flex items-center justify-between gap-4"
+                      >
+                        <span class="font-medium text-neutral-700">{{ row.provider_name || row.provider_id }}</span>
+                        <span class="text-body-sm tabular-nums text-rs-muted">{{ row.click_through_rate }}% CTR</span>
                       </li>
-                      <li
-v-if="!opsAnalyticsLoading && opsFavoriteProviders.length === 0"
-class="text-xs text-slate-400"
->
-No provider data yet.
-</li>
+                      <li v-if="opsFavoriteProviders.length === 0" class="text-body-sm text-neutral-400">
+                        No provider data yet.
+                      </li>
                     </ul>
                   </div>
                 </div>
-                <div class="mt-4 text-xs text-slate-500">
-                  <NuxtLink
-to="/admin/analytics"
-class="font-semibold text-blue-600 hover:text-blue-700"
->Open analytics console →</NuxtLink>
+                <div class="mt-4 text-body-sm text-rs-muted">
+                  <NuxtLink to="/admin/analytics" class="font-semibold text-brand-600 hover:text-brand-700">
+                    Open analytics console →
+                  </NuxtLink>
                 </div>
               </div>
 
-              <div class="bg-white rounded-xl border border-slate-200 p-6">
+              <div class="bg-surface rounded-xl border border-rs-border p-6">
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <h3 class="text-base font-semibold text-slate-900">Audit Log Snapshot</h3>
-                    <p class="text-xs text-slate-500">Recent admin/security events (last 7 days).</p>
+                    <h3 class="text-body font-semibold text-rs-fg">Audit Log Snapshot</h3>
+                    <p class="text-body-sm text-rs-muted">Recent admin/security events (last 7 days).</p>
                   </div>
                   <button
                     type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
                     :disabled="opsAuditLoading"
                     @click="loadOpsAudit"
                   >
-                    {{ opsAuditLoading ? 'Refreshing...' : 'Refresh' }}
+                    <svg
+                      v-if="opsAuditLoading"
+                      class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    {{ opsAuditLoading ? 'Loading...' : 'Refresh' }}
                   </button>
                 </div>
                 <p
-v-if="opsAuditError"
-class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
->
+                  v-if="opsAuditError"
+                  class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
+                >
                   {{ opsAuditError }}
                 </p>
-                <div
-v-else
-class="mt-4 overflow-auto"
->
-                  <table class="min-w-full text-sm">
-                    <thead class="text-xs uppercase text-slate-400">
+                <div v-else-if="opsAuditLoading" class="mt-4 py-4">
+                  <LoadingState mode="inline" message="Loading audit logs..." />
+                </div>
+                <div v-else class="mt-4 overflow-auto rounded-lg border border-neutral-100">
+                  <table class="min-w-full text-body-sm">
+                    <thead class="bg-neutral-50 text-body-sm uppercase text-neutral-500 sticky top-0">
                       <tr>
-                        <th class="py-2 text-left">Time</th>
-                        <th class="py-2 text-left">Action</th>
-                        <th class="py-2 text-left">Actor</th>
-                        <th class="py-2 text-left">Severity</th>
+                        <th class="px-3 py-2 text-left">Time</th>
+                        <th class="px-3 py-2 text-left">Action</th>
+                        <th class="px-3 py-2 text-left">Actor</th>
+                        <th class="px-3 py-2 text-left">Severity</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr
-v-for="log in opsAuditLogs"
-:key="log.event_id"
-class="border-t border-slate-100"
->
-                        <td class="py-2 text-slate-600">{{ formatOpsTimestamp(log.created_at) }}</td>
-                        <td class="py-2 text-slate-700">{{ log.action }}</td>
-                        <td class="py-2 text-slate-600">{{ log.actor_id }}</td>
-                        <td class="py-2 text-slate-600">{{ log.severity || 'info' }}</td>
+                        v-for="(log, idx) in opsAuditLogs"
+                        :key="log.event_id"
+                        :class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
+                        class="border-t border-neutral-100"
+                      >
+                        <td class="px-3 py-2 text-neutral-600 whitespace-nowrap">{{ formatOpsTimestamp(log.created_at) }}</td>
+                        <td class="px-3 py-2 font-medium text-neutral-700">{{ log.action }}</td>
+                        <td class="px-3 py-2 text-neutral-600">{{ log.actor_id }}</td>
+                        <td class="px-3 py-2">
+                          <span
+                            class="inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                            :class="(log.severity || 'info') === 'error' ? 'bg-danger-50 text-danger-700' : (log.severity || 'info') === 'warn' ? 'bg-warning-50 text-warning-700' : 'bg-neutral-100 text-neutral-600'"
+                          >
+                            {{ log.severity || 'info' }}
+                          </span>
+                        </td>
                       </tr>
-                      <tr v-if="!opsAuditLoading && opsAuditLogs.length === 0">
-                        <td
-colspan="4"
-class="py-3 text-center text-xs text-slate-400"
->
-No audit events found.
-</td>
+                      <tr v-if="opsAuditLogs.length === 0">
+                        <td colspan="4" class="py-4 text-center text-body-sm text-neutral-400">
+                          No audit events found.
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div class="mt-4 text-xs text-slate-500">
-                  <NuxtLink
-to="/admin/audit"
-class="font-semibold text-blue-600 hover:text-blue-700"
->Open audit console →</NuxtLink>
+                <div class="mt-4 text-body-sm text-rs-muted">
+                  <NuxtLink to="/admin/audit" class="font-semibold text-brand-600 hover:text-brand-700">
+                    Open audit console →
+                  </NuxtLink>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="mt-6 bg-white rounded-xl border border-slate-200 p-6">
+          <div class="mt-6 bg-surface rounded-xl border border-rs-border p-6">
             <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
-                <h3 class="text-base font-semibold text-slate-900">Affiliate + Conversion Snapshot</h3>
-                <p class="text-xs text-slate-500">Admin-only telemetry. Conversion values are reported volume, not commissions.</p>
+                <h3 class="text-body font-semibold text-rs-fg">Affiliate + Conversion Snapshot</h3>
+                <p class="text-body-sm text-rs-muted">Admin-only telemetry. Conversion values are reported volume, not commissions.</p>
               </div>
               <button
                 type="button"
-                class="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60"
+                class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
                 :disabled="opsAnalyticsLoading"
                 @click="loadOpsAnalytics"
               >
-                {{ opsAnalyticsLoading ? 'Refreshing...' : 'Refresh' }}
+                <svg
+                  v-if="opsAnalyticsLoading"
+                  class="h-3.5 w-3.5 animate-spin text-neutral-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
               </button>
             </div>
             <p
-v-if="opsAnalyticsError"
-class="mt-3 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2"
->
+              v-if="opsAnalyticsError"
+              class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
+            >
               {{ opsAnalyticsError }}
             </p>
             <div
-v-else
-class="mt-4 space-y-6"
->
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-sm text-slate-700">
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Total clicks</div>
-                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsRevenueSummary.totalClicks, 0) }}</div>
+              v-if="!opsAnalyticsLoading"
+              class="mt-4 space-y-6"
+            >
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-body-sm text-neutral-700">
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Total clicks</div>
+                  <div class="text-body-lg font-semibold text-rs-fg">{{ formatOpsNumber(opsRevenueSummary.totalClicks, 0) }}</div>
                 </div>
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Affiliate clicks</div>
-                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsRevenueSummary.affiliateClicks, 0) }}</div>
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Affiliate clicks</div>
+                  <div class="text-body-lg font-semibold text-rs-fg">{{ formatOpsNumber(opsRevenueSummary.affiliateClicks, 0) }}</div>
                 </div>
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Affiliate rate</div>
-                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsPercent(opsRevenueSummary.affiliateRate, 2) }}</div>
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Affiliate rate</div>
+                  <div class="text-body-lg font-semibold text-rs-fg">{{ formatOpsPercent(opsRevenueSummary.affiliateRate, 2) }}</div>
                 </div>
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversions</div>
-                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsNumber(opsConversionSummary.conversions, 0) }}</div>
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Conversions</div>
+                  <div class="text-body-lg font-semibold text-rs-fg">{{ formatOpsNumber(opsConversionSummary.conversions, 0) }}</div>
                 </div>
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversion rate</div>
-                  <div class="text-lg font-semibold text-slate-900">{{ formatOpsPercent(opsConversionSummary.conversionRate, 2) }}</div>
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Conversion rate</div>
+                  <div class="text-body-lg font-semibold text-rs-fg">{{ formatOpsPercent(opsConversionSummary.conversionRate, 2) }}</div>
                 </div>
-                <div class="rounded-lg border border-slate-100 p-3">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Reported volume</div>
-                  <div class="text-sm font-semibold text-slate-900">{{ formatCurrencyTotals(opsConversionSummary.conversionValues) }}</div>
+                <div class="rounded-lg border border-neutral-100 p-3">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Reported volume</div>
+                  <div class="text-body-sm font-semibold text-rs-fg">{{ formatCurrencyTotals(opsConversionSummary.conversionValues) }}</div>
                 </div>
               </div>
 
               <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-xl border border-slate-100 p-4">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Top affiliate links</div>
+                <div class="rounded-xl border border-neutral-100 p-4">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Top affiliate links</div>
                   <div class="mt-3 overflow-auto">
-                    <table class="min-w-full text-sm">
-                      <thead class="text-xs uppercase text-slate-400">
+                    <table class="min-w-full text-body-sm">
+                      <thead class="text-body-sm uppercase text-neutral-400">
                         <tr>
                           <th class="py-2 text-left">Provider</th>
                           <th class="py-2 text-left">Corridor</th>
@@ -3289,19 +3598,20 @@ class="mt-4 space-y-6"
                       </thead>
                       <tbody>
                         <tr
-v-for="row in opsRevenueRows.slice(0, 8)"
+v-for="(row, idx) in opsRevenueRows.slice(0, 8)"
 :key="`${row.provider_id}-${row.corridor_id || 'none'}`"
-class="border-t border-slate-100"
+class="border-t border-neutral-100"
+:class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
 >
-                          <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
-                          <td class="py-2 text-slate-600">{{ row.corridor_id || '—' }}</td>
-                          <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.affiliate_clicks, 0) }}</td>
-                          <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.affiliate_rate, 2) }}</td>
+                          <td class="py-2 text-neutral-700">{{ row.provider_name || row.provider_id }}</td>
+                          <td class="py-2 text-neutral-600">{{ row.corridor_id || '—' }}</td>
+                          <td class="py-2 text-right text-neutral-600">{{ formatOpsNumber(row.affiliate_clicks, 0) }}</td>
+                          <td class="py-2 text-right text-neutral-600">{{ formatOpsPercent(row.affiliate_rate, 2) }}</td>
                         </tr>
                         <tr v-if="opsRevenueRows.length === 0">
                           <td
 colspan="4"
-class="py-3 text-center text-xs text-slate-400"
+class="py-3 text-center text-body-sm text-neutral-400"
 >
 No affiliate click data yet.
 </td>
@@ -3311,11 +3621,11 @@ No affiliate click data yet.
                   </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-100 p-4">
-                  <div class="text-xs text-slate-400 uppercase tracking-wide">Conversions by provider</div>
+                <div class="rounded-xl border border-neutral-100 p-4">
+                  <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Conversions by provider</div>
                   <div class="mt-3 overflow-auto">
-                    <table class="min-w-full text-sm">
-                      <thead class="text-xs uppercase text-slate-400">
+                    <table class="min-w-full text-body-sm">
+                      <thead class="text-body-sm uppercase text-neutral-400">
                         <tr>
                           <th class="py-2 text-left">Provider</th>
                           <th class="py-2 text-right">Conversions</th>
@@ -3325,19 +3635,20 @@ No affiliate click data yet.
                       </thead>
                       <tbody>
                         <tr
-v-for="row in opsProviderImpact.slice(0, 8)"
+v-for="(row, idx) in opsProviderImpact.slice(0, 8)"
 :key="row.provider_id"
-class="border-t border-slate-100"
+class="border-t border-neutral-100"
+:class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
 >
-                          <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
-                          <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
-                          <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
-                          <td class="py-2 text-right text-slate-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
+                          <td class="py-2 text-neutral-700">{{ row.provider_name || row.provider_id }}</td>
+                          <td class="py-2 text-right text-neutral-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
+                          <td class="py-2 text-right text-neutral-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
+                          <td class="py-2 text-right text-neutral-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
                         </tr>
                         <tr v-if="opsProviderImpact.length === 0">
                           <td
 colspan="4"
-class="py-3 text-center text-xs text-slate-400"
+class="py-3 text-center text-body-sm text-neutral-400"
 >
 No conversion data yet.
 </td>
@@ -3348,11 +3659,11 @@ No conversion data yet.
                 </div>
               </div>
 
-              <div class="rounded-xl border border-slate-100 p-4">
-                <div class="text-xs text-slate-400 uppercase tracking-wide">Top provider corridors</div>
+              <div class="rounded-xl border border-neutral-100 p-4">
+                <div class="text-body-sm text-neutral-400 uppercase tracking-wide">Top provider corridors</div>
                 <div class="mt-3 overflow-auto">
-                  <table class="min-w-full text-sm">
-                    <thead class="text-xs uppercase text-slate-400">
+                  <table class="min-w-full text-body-sm">
+                    <thead class="text-body-sm uppercase text-neutral-400">
                       <tr>
                         <th class="py-2 text-left">Provider</th>
                         <th class="py-2 text-left">Corridor</th>
@@ -3364,21 +3675,22 @@ No conversion data yet.
                     </thead>
                     <tbody>
                       <tr
-v-for="row in opsProviderCorridors.slice(0, 8)"
+v-for="(row, idx) in opsProviderCorridors.slice(0, 8)"
 :key="`${row.provider_id}-${row.corridor_id || 'none'}`"
-class="border-t border-slate-100"
+class="border-t border-neutral-100"
+:class="idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50/50'"
 >
-                        <td class="py-2 text-slate-700">{{ row.provider_name || row.provider_id }}</td>
-                        <td class="py-2 text-slate-600">{{ row.corridor_id || '—' }}</td>
-                        <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.total_clicks, 0) }}</td>
-                        <td class="py-2 text-right text-slate-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
-                        <td class="py-2 text-right text-slate-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
-                        <td class="py-2 text-right text-slate-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
+                        <td class="py-2 text-neutral-700">{{ row.provider_name || row.provider_id }}</td>
+                        <td class="py-2 text-neutral-600">{{ row.corridor_id || '—' }}</td>
+                        <td class="py-2 text-right text-neutral-600">{{ formatOpsNumber(row.total_clicks, 0) }}</td>
+                        <td class="py-2 text-right text-neutral-600">{{ formatOpsNumber(row.conversions, 0) }}</td>
+                        <td class="py-2 text-right text-neutral-600">{{ formatOpsPercent(row.conversion_rate, 2) }}</td>
+                        <td class="py-2 text-right text-neutral-600">{{ formatCurrencyTotals(row.conversion_values) }}</td>
                       </tr>
                       <tr v-if="opsProviderCorridors.length === 0">
                         <td
 colspan="6"
-class="py-3 text-center text-xs text-slate-400"
+class="py-3 text-center text-body-sm text-neutral-400"
 >
 No corridor conversion data yet.
 </td>
@@ -3396,15 +3708,15 @@ No corridor conversion data yet.
           <div class="flex flex-col lg:flex-row gap-8">
             <!-- Account Sub-Navigation -->
             <aside class="lg:w-56 flex-shrink-0">
-              <nav class="bg-white rounded-xl border border-slate-200 p-2 lg:sticky lg:top-36">
+              <nav class="bg-surface rounded-xl border border-rs-border p-2 lg:sticky lg:top-36">
                 <button
                   v-for="section in accountSections"
                   :key="section.id"
                   type="button"
-                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left"
+                  class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-sm font-medium transition-colors text-left"
                   :class="activeAccountSection === section.id
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                    ? 'bg-primary-50 text-brand-700'
+                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-rs-fg'"
                   @click="activeAccountSection = section.id"
                   >
                     <Icon
@@ -3425,17 +3737,17 @@ v-if="activeAccountSection === 'profile'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Profile</h2>
-                  <p class="text-sm text-slate-500">Manage your personal information</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Profile</h2>
+                  <p class="text-body-sm text-rs-muted">Manage your personal information</p>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <div class="mb-6">
-                    <h3 class="font-medium text-slate-900">{{ user?.name || 'User' }}</h3>
-                    <p class="text-sm text-slate-500">{{ user?.email }}</p>
+                    <h3 class="font-medium text-rs-fg">{{ user?.name || 'User' }}</h3>
+                    <p class="text-body-sm text-rs-muted">{{ user?.email }}</p>
                     <span
-                      class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                      :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                      class="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-body-sm font-medium"
+                      :class="isPlus ? 'bg-primary-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'"
                     >
                       {{ isPlus ? 'Plus Member' : 'Free Plan' }}
                     </span>
@@ -3443,30 +3755,30 @@ class="space-y-6"
 
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1.5">Display Name</label>
+                      <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">Display Name</label>
                       <input
                         v-model="profileName"
                         type="text"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-body-sm text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                         placeholder="Your name"
                       >
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
+                      <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">Email Address</label>
                       <input
                         type="email"
                         :value="user?.email"
                         disabled
-                        class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                        class="w-full rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-body-sm text-rs-muted"
                       >
-                      <p class="text-xs text-slate-400 mt-1">Contact support to change your email</p>
+                      <p class="text-body-sm text-neutral-400 mt-1">Contact support to change your email</p>
                     </div>
                   </div>
 
-                  <div class="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between">
+                  <div class="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between">
 	                    <div
 	v-if="profileSaved"
-	class="flex items-center gap-2 text-sm text-emerald-600"
+	class="flex items-center gap-2 text-body-sm text-success-600"
 	>
 	                      <Icon
 	                        name="check-circle"
@@ -3479,7 +3791,7 @@ class="space-y-6"
                     <div v-else />
                     <button
                       type="button"
-                      class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                       @click="saveProfile"
                     >
                       Save Changes
@@ -3494,44 +3806,44 @@ v-else-if="activeAccountSection === 'billing'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Billing</h2>
-                  <p class="text-sm text-slate-500">Manage your subscription and payment methods</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Billing</h2>
+                  <p class="text-body-sm text-rs-muted">Manage your subscription and payment methods</p>
                 </div>
                 <div
                   v-if="checkoutNotice === 'success'"
-                  class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+                  class="rounded-lg border border-success-600 bg-success-600 px-4 py-3 text-body-sm text-success-600"
                 >
                   Subscription updated successfully. Your entitlements have been refreshed.
                 </div>
                 <div
                   v-else-if="checkoutNotice === 'cancel'"
-                  class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
+                  class="rounded-lg border border-warning-600 bg-warning-600 px-4 py-3 text-body-sm text-warning-600"
                 >
                   Checkout canceled. No changes were made to your subscription.
                 </div>
                 <div
                   v-if="billingActionMessage"
-                  class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                  class="rounded-lg border border-danger-600/30 bg-danger-600/10 px-4 py-3 text-body-sm text-danger-600"
                 >
                   {{ billingActionMessage }}
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <div class="flex items-center justify-between mb-6">
                     <div>
-                      <h3 class="font-medium text-slate-900">Current Plan</h3>
-                      <p class="text-sm text-slate-500">{{ isPlus ? 'Billed monthly' : 'Free forever' }}</p>
+                      <h3 class="font-medium text-rs-fg">Current Plan</h3>
+                      <p class="text-body-sm text-rs-muted">{{ isPlus ? 'Billed monthly' : 'Free forever' }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                       <div
-                        class="px-3 py-1.5 rounded-full text-sm font-semibold"
-                        :class="isPlus ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                        class="px-3 py-1.5 rounded-full text-body-sm font-semibold"
+                        :class="isPlus ? 'bg-primary-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'"
                       >
                         {{ isPlus ? 'Plus' : 'Free' }}
                       </div>
                       <div
                         v-if="isPlus"
-                        class="px-3 py-1.5 rounded-full text-xs font-semibold"
+                        class="px-3 py-1.5 rounded-full text-body-sm font-semibold"
                         :class="billingStatusBadge.classes"
                       >
                         {{ billingStatusBadge.label }}
@@ -3539,17 +3851,17 @@ class="space-y-6"
                     </div>
                   </div>
 
-                  <div class="bg-slate-50 rounded-lg p-4 mb-6">
+                  <div class="bg-neutral-50 rounded-lg p-4 mb-6">
                     <div class="flex items-baseline justify-between mb-2">
-                      <span class="text-sm text-slate-600">{{ isPlus ? 'Next billing date' : 'Plan type' }}</span>
-                      <span class="text-sm font-medium text-slate-900">{{ isPlus ? formatBillingDate(billingSummary?.next_billing_date) : 'No billing' }}</span>
+                      <span class="text-body-sm text-neutral-600">{{ isPlus ? 'Next billing date' : 'Plan type' }}</span>
+                      <span class="text-body-sm font-medium text-rs-fg">{{ isPlus ? formatBillingDate(billingSummary?.next_billing_date) : 'No billing' }}</span>
                     </div>
                     <div
 v-if="isPlus"
 class="flex items-baseline justify-between"
 >
-                      <span class="text-sm text-slate-600">Amount</span>
-                      <span class="text-sm font-medium text-slate-900">
+                      <span class="text-body-sm text-neutral-600">Amount</span>
+                      <span class="text-body-sm font-medium text-rs-fg">
                         {{ formatBillingAmount(billingSummary?.amount, billingSummary?.currency) }}
                       </span>
                     </div>
@@ -3557,24 +3869,24 @@ class="flex items-baseline justify-between"
 
                   <div
 v-if="!isPlus"
-class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100"
+class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border border-primary-100"
 >
 	                    <div class="flex items-start gap-3">
-	                      <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+	                      <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
 	                        <Icon
 	                          name="sparkles"
 	                          :size="16"
 	                          variant="solid"
-	                          class="text-blue-600"
+	                          class="text-brand-600"
 	                        />
 	                      </div>
                       <div class="flex-1">
-                        <h4 class="text-sm font-semibold text-slate-900">Upgrade to Plus</h4>
-                        <p class="text-xs text-slate-600 mt-0.5">Pulse access, 16 alerts, 365-day history, exports, and ad-free</p>
+                        <h4 class="text-body-sm font-semibold text-rs-fg">Upgrade to Plus</h4>
+                        <p class="text-body-sm text-neutral-600 mt-0.5">Pulse access, 16 alerts, 365-day history, exports, and ad-free</p>
                       </div>
                       <button
                         type="button"
-                        class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:bg-slate-300"
+                        class="rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:bg-neutral-300"
                         :disabled="billingCheckoutLoading"
                         @click="startCheckout"
                       >
@@ -3589,7 +3901,7 @@ class="flex gap-3"
 >
                     <button
                       type="button"
-                      class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+                      class="rounded-lg bg-neutral-100 px-4 py-2 text-body-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
                       :disabled="billingPortalLoading"
                       @click="openBillingPortal"
                     >
@@ -3600,24 +3912,24 @@ class="flex gap-3"
 
                 <div
 v-if="isPlus"
-class="bg-white rounded-xl border border-slate-200 p-6"
+class="bg-surface rounded-xl border border-rs-border p-6"
 >
-                  <h3 class="font-medium text-slate-900 mb-4">Payment Method</h3>
-                  <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <h3 class="font-medium text-rs-fg mb-4">Payment Method</h3>
+                  <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded flex items-center justify-center">
+                      <div class="w-10 h-6 bg-gradient-to-r from-brand-600 to-brand-700 rounded flex items-center justify-center">
                         <span class="text-white text-[10px] font-bold uppercase">
                           {{ billingSummary?.payment_method?.brand || 'Card' }}
                         </span>
                       </div>
                       <div>
-                        <div class="text-sm font-medium text-slate-900">
+                        <div class="text-body-sm font-medium text-rs-fg">
                           <span v-if="billingSummary?.payment_method?.last4">•••• •••• •••• {{ billingSummary?.payment_method?.last4 }}</span>
                           <span v-else>No payment method on file</span>
                         </div>
                         <div
 v-if="billingSummary?.payment_method?.exp_month && billingSummary?.payment_method?.exp_year"
-class="text-xs text-slate-500"
+class="text-body-sm text-rs-muted"
 >
                           Expires {{ billingSummary?.payment_method?.exp_month }}/{{ billingSummary?.payment_method?.exp_year }}
                         </div>
@@ -3625,7 +3937,7 @@ class="text-xs text-slate-500"
                     </div>
                     <button
                       type="button"
-                      class="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      class="text-body-sm font-medium text-brand-600 hover:text-brand-700"
                       :disabled="billingPortalLoading"
                       @click="openBillingPortal"
                     >
@@ -3636,24 +3948,27 @@ class="text-xs text-slate-500"
 
                 <div
 v-if="isPlus"
-class="bg-white rounded-xl border border-slate-200 p-6"
+class="bg-surface rounded-xl border border-rs-border p-6"
 >
-                  <h3 class="font-medium text-slate-900 mb-4">Billing History</h3>
-                  <div
-v-if="billingHistoryLoading"
-class="text-sm text-slate-500"
->
-                    Loading billing history…
-                  </div>
+                  <h3 class="font-medium text-rs-fg mb-4">Billing History</h3>
+	                  <div
+	v-if="billingHistoryLoading"
+	class="py-2"
+	>
+	                    <LoadingState
+	                      mode="inline"
+	                      message="Loading billing history..."
+	                    />
+	                  </div>
                   <div
 v-else-if="billingHistoryError"
-class="text-sm text-red-600"
+class="text-body-sm text-danger-600"
 >
                     {{ billingHistoryError }}
                   </div>
                   <div
 v-else-if="billingHistory.length === 0"
-class="text-sm text-slate-500"
+class="text-body-sm text-rs-muted"
 >
                     No invoices yet.
                   </div>
@@ -3665,16 +3980,16 @@ class="space-y-3"
                       v-for="(invoice, index) in billingHistory"
                       :key="invoice.id"
                       class="flex items-center justify-between py-2"
-                      :class="index > 0 ? 'border-t border-slate-100' : ''"
+                      :class="index > 0 ? 'border-t border-neutral-100' : ''"
                     >
                       <div>
-                        <div class="text-sm font-medium text-slate-900">
+                        <div class="text-body-sm font-medium text-rs-fg">
 	                          {{ invoice.date ? formatMonthYear(invoice.date) : 'Invoice' }}
                         </div>
-                        <div class="text-xs text-slate-500">{{ invoice.status || 'paid' }}</div>
+                        <div class="text-body-sm text-rs-muted">{{ invoice.status || 'paid' }}</div>
                       </div>
                       <div class="flex items-center gap-3">
-                        <span class="text-sm font-medium text-slate-900">
+                        <span class="text-body-sm font-medium text-rs-fg">
                           {{ formatBillingAmount(invoice.amount, invoice.currency) }}
                         </span>
                         <a
@@ -3682,7 +3997,7 @@ class="space-y-3"
                           :href="invoice.invoice_url"
                           target="_blank"
                           rel="noreferrer"
-                          class="text-sm text-blue-600 hover:text-blue-700"
+                          class="text-body-sm text-brand-600 hover:text-brand-700"
                         >
                           Invoice
                         </a>
@@ -3698,86 +4013,86 @@ v-else-if="activeAccountSection === 'notifications'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Notifications</h2>
-                  <p class="text-sm text-slate-500">Choose how you want to be notified</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Notifications</h2>
+                  <p class="text-body-sm text-rs-muted">Choose how you want to be notified</p>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Email Notifications</h3>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Email Notifications</h3>
                   <div class="space-y-4">
                     <label class="flex items-center justify-between cursor-pointer">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Rate Alerts</div>
-                        <div class="text-xs text-slate-500">Get notified when rates hit your target</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Rate Alerts</div>
+                        <div class="text-body-sm text-rs-muted">Get notified when rates hit your target</div>
                       </div>
                       <input
                         v-model="notificationSettings.rateAlerts"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Weekly Summary</div>
-                        <div class="text-xs text-slate-500">Weekly digest of rate movements</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Weekly Summary</div>
+                        <div class="text-body-sm text-rs-muted">Weekly digest of rate movements</div>
                       </div>
                       <input
                         v-model="notificationSettings.weeklySummary"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Market Updates</div>
-                        <div class="text-xs text-slate-500">Important market news and changes</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Market Updates</div>
+                        <div class="text-body-sm text-rs-muted">Important market news and changes</div>
                       </div>
                       <input
                         v-model="notificationSettings.marketUpdates"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Product Updates</div>
-                        <div class="text-xs text-slate-500">New features and improvements</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Product Updates</div>
+                        <div class="text-body-sm text-rs-muted">New features and improvements</div>
                       </div>
                       <input
                         v-model="notificationSettings.productUpdates"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Promotional Emails</div>
-                        <div class="text-xs text-slate-500">Special offers and discounts from providers</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Promotional Emails</div>
+                        <div class="text-body-sm text-rs-muted">Special offers and discounts from providers</div>
                       </div>
                       <input
                         v-model="notificationSettings.promotional"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
                   </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Push Notifications</h3>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Push Notifications</h3>
                   <div class="flex items-center justify-between gap-3">
                     <div>
-                      <div class="text-sm font-medium text-slate-900">Browser Notifications</div>
-                      <div class="text-xs text-slate-500">
+                      <div class="text-body-sm font-medium text-rs-fg">Browser Notifications</div>
+                      <div class="text-body-sm text-rs-muted">
                         Receive alert notifications in your browser
                       </div>
-                      <div class="mt-1 text-xs text-slate-500">
+                      <div class="mt-1 text-body-sm text-rs-muted">
                         Status: {{ notificationSettings.pushEnabled ? 'Enabled' : 'Disabled' }}
                       </div>
                     </div>
                     <button
                       type="button"
-                      class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                      class="rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                       :disabled="pushLoading || !pushSupported"
                       @click="handlePushToggle"
                     >
@@ -3786,13 +4101,13 @@ class="space-y-6"
                   </div>
                   <p
 v-if="!pushSupported"
-class="mt-3 text-xs text-slate-500"
+class="mt-3 text-body-sm text-rs-muted"
 >
                     Push notifications are not supported in this browser.
                   </p>
                   <p
 v-else-if="pushPermission === 'denied'"
-class="mt-3 text-xs text-amber-700"
+class="mt-3 text-body-sm text-warning-600"
 >
                     Browser notifications are blocked. Enable them in your browser settings.
                   </p>
@@ -3801,7 +4116,7 @@ class="mt-3 text-xs text-amber-700"
                 <div class="flex justify-end">
                   <button
                     type="button"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:cursor-not-allowed disabled:bg-blue-300"
+                    class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:cursor-not-allowed disabled:bg-primary-300"
                     :disabled="notificationLoading"
                     @click="handleSaveNotificationSettings"
                   >
@@ -3810,25 +4125,25 @@ class="mt-3 text-xs text-amber-700"
                 </div>
                 <p
 v-if="notificationSaveSuccess"
-class="text-xs text-emerald-700"
+class="text-body-sm text-success-600"
 >
                   Notification settings saved.
                 </p>
                 <p
 v-else-if="notificationSaveError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                   {{ notificationSaveError }}
                 </p>
                 <p
 v-else-if="notificationLoadError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                   {{ notificationLoadError }}
                 </p>
                 <p
 v-else-if="privacyLoadError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                   {{ privacyLoadError }}
                 </p>
@@ -3840,51 +4155,51 @@ v-else-if="activeAccountSection === 'security'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Security</h2>
-                  <p class="text-sm text-slate-500">Manage your account security settings</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Security</h2>
+                  <p class="text-body-sm text-rs-muted">Manage your account security settings</p>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Password</h3>
-                  <p class="text-sm text-slate-500 mb-4">Last changed 30 days ago</p>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Password</h3>
+                  <p class="text-body-sm text-rs-muted mb-4">Last changed 30 days ago</p>
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1.5">Current Password</label>
+                      <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">Current Password</label>
                       <input
                         v-model="securitySettings.currentPassword"
                         type="password"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-body-sm text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                         placeholder="••••••••"
                       >
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
+                      <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">New Password</label>
                       <input
                         v-model="securitySettings.newPassword"
                         type="password"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-body-sm text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                         placeholder="••••••••"
                       >
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1.5">Confirm New Password</label>
+                      <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">Confirm New Password</label>
                       <input
                         v-model="securitySettings.confirmPassword"
                         type="password"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        class="w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-body-sm text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                         placeholder="••••••••"
                       >
                     </div>
                   </div>
                   <div
 v-if="passwordUpdateError"
-class="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700"
+class="mt-4 rounded-lg bg-danger-600/10 px-3 py-2 text-body-sm text-danger-600"
 >
                     {{ passwordUpdateError }}
                   </div>
                   <div
 v-else-if="passwordUpdateSuccess"
-class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+class="mt-4 rounded-lg bg-success-600 px-3 py-2 text-body-sm text-success-600"
 >
                     Password updated successfully.
                   </div>
@@ -3892,7 +4207,7 @@ class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
                     <button
                       type="button"
                       :disabled="passwordUpdateLoading"
-                      class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                       @click="handlePasswordUpdate"
                     >
                       {{ passwordUpdateLoading ? 'Updating...' : 'Update Password' }}
@@ -3900,41 +4215,44 @@ class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
                   </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <div class="flex items-center justify-between mb-4">
                     <div>
-                      <h3 class="font-medium text-slate-900">Two-Factor Authentication</h3>
-                      <p class="text-sm text-slate-500">Add an extra layer of security</p>
+                      <h3 class="font-medium text-rs-fg">Two-Factor Authentication</h3>
+                      <p class="text-body-sm text-rs-muted">Add an extra layer of security</p>
                     </div>
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                    <span class="px-2 py-1 rounded-full text-body-sm font-medium bg-neutral-100 text-neutral-600">
                       Not enabled
                     </span>
                   </div>
                   <button
                     type="button"
-                    class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                    class="rounded-lg bg-neutral-100 px-4 py-2 text-body-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors"
                   >
                     Enable 2FA
                   </button>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Active Sessions</h3>
-                  <div
-v-if="sessionsLoading"
-class="text-sm text-slate-500"
->
-Loading sessions...
-</div>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Active Sessions</h3>
+	                  <div
+	v-if="sessionsLoading"
+	class="py-2"
+	>
+	                    <LoadingState
+	                      mode="inline"
+	                      message="Loading sessions..."
+	                    />
+	                  </div>
                   <div
 v-else-if="sessionsError"
-class="text-sm text-rose-600"
+class="text-body-sm text-danger-600"
 >
 {{ sessionsError }}
 </div>
                   <div
 v-else-if="sessions.length === 0"
-class="text-sm text-slate-500"
+class="text-body-sm text-rs-muted"
 >
                     No active sessions found.
                   </div>
@@ -3945,39 +4263,39 @@ class="space-y-3"
                     <div
                       v-for="session in sessions"
                       :key="session.id"
-                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
                     >
                       <div class="flex items-center gap-3">
 	                        <div
 	                          class="w-8 h-8 rounded-full flex items-center justify-center"
-	                          :class="session.is_current ? 'bg-emerald-100' : 'bg-slate-100'"
+	                          :class="session.is_current ? 'bg-success-600' : 'bg-neutral-100'"
 	                        >
 	                          <Icon
 	                            name="computer-desktop"
 	                            :size="16"
-	                            :class="session.is_current ? 'text-emerald-600' : 'text-slate-600'"
+	                            :class="session.is_current ? 'text-success-600' : 'text-neutral-600'"
 	                          />
 	                        </div>
                         <div>
-                          <div class="text-sm font-medium text-slate-900">
+                          <div class="text-body-sm font-medium text-rs-fg">
                             {{ session.is_current ? 'Current Session' : 'Session' }}
                           </div>
-                          <div class="text-xs text-slate-500">
+                          <div class="text-body-sm text-rs-muted">
                             {{ sessionMeta(session) }} • {{ session.ip_address || 'IP hidden' }}
                           </div>
                         </div>
                       </div>
                       <div class="flex items-center gap-3">
                         <span
-                          class="text-xs font-medium"
-                          :class="session.is_current ? 'text-emerald-600' : 'text-slate-500'"
+                          class="text-body-sm font-medium"
+                          :class="session.is_current ? 'text-success-600' : 'text-rs-muted'"
                         >
                           {{ formatSessionActivity(session.last_activity) }}
                         </span>
                         <button
                           v-if="!session.is_current"
                           type="button"
-                          class="text-xs font-medium text-slate-500 hover:text-rose-600"
+                          class="text-body-sm font-medium text-rs-muted hover:text-danger-600"
                           @click="handleRevokeSession(session.session_id)"
                         >
                           Revoke
@@ -3987,7 +4305,7 @@ class="space-y-3"
                   </div>
                   <button
                     type="button"
-                    class="mt-4 text-sm font-medium text-red-600 hover:text-red-700"
+                    class="mt-4 text-body-sm font-medium text-danger-600 hover:text-danger-600"
                     @click="handleRevokeAllSessions"
                   >
                     Sign out all other sessions
@@ -4001,60 +4319,60 @@ v-else-if="activeAccountSection === 'privacy'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Privacy</h2>
-                  <p class="text-sm text-slate-500">Control your data and privacy settings</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Privacy</h2>
+                  <p class="text-body-sm text-rs-muted">Control your data and privacy settings</p>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Data Collection</h3>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Data Collection</h3>
                   <div class="space-y-4">
                     <label class="flex items-center justify-between cursor-pointer">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Usage Analytics</div>
-                        <div class="text-xs text-slate-500">Help us improve by sharing anonymous usage data</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Usage Analytics</div>
+                        <div class="text-body-sm text-rs-muted">Help us improve by sharing anonymous usage data</div>
                       </div>
                       <input
                         v-model="privacySettings.analytics"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Personalized Recommendations</div>
-                        <div class="text-xs text-slate-500">Get corridor suggestions based on your activity</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Personalized Recommendations</div>
+                        <div class="text-body-sm text-rs-muted">Get corridor suggestions based on your activity</div>
                       </div>
                       <input
                         v-model="privacySettings.personalization"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
-                    <label class="flex items-center justify-between cursor-pointer border-t border-slate-100 pt-4">
+                    <label class="flex items-center justify-between cursor-pointer border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Marketing</div>
-                        <div class="text-xs text-slate-500">Support Remit-Scout with personalized ads and attribution</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Marketing</div>
+                        <div class="text-body-sm text-rs-muted">Support Remit-Scout with personalized ads and attribution</div>
                       </div>
                       <input
                         v-model="privacySettings.marketing"
                         type="checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        class="w-5 h-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
                       >
                     </label>
                   </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Your Data</h3>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Your Data</h3>
                   <div class="space-y-4">
                     <div class="flex items-center justify-between">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Download Your Data</div>
-                        <div class="text-xs text-slate-500">Get a copy of all your data</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Download Your Data</div>
+                        <div class="text-body-sm text-rs-muted">Get a copy of all your data</div>
                       </div>
                       <button
                         type="button"
-                        class="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+                        class="rounded-lg bg-neutral-100 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors"
                         @click="requestGdprExport"
                       >
                         Request Download
@@ -4062,24 +4380,24 @@ class="space-y-6"
                     </div>
                     <p
 v-if="gdprExportStatus"
-class="text-xs text-emerald-700"
+class="text-body-sm text-success-600"
 >
                       {{ gdprExportStatus }}
                     </p>
                     <p
 v-else-if="gdprExportError"
-class="text-xs text-red-600"
+class="text-body-sm text-danger-600"
 >
                       {{ gdprExportError }}
                     </p>
-                    <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div class="flex items-center justify-between border-t border-neutral-100 pt-4">
                       <div>
-                        <div class="text-sm font-medium text-slate-900">Delete Account</div>
-                        <div class="text-xs text-slate-500">Permanently delete your account and data</div>
+                        <div class="text-body-sm font-medium text-rs-fg">Delete Account</div>
+                        <div class="text-body-sm text-rs-muted">Permanently delete your account and data</div>
                       </div>
                       <button
                         type="button"
-                        class="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
+                        class="rounded-lg bg-danger-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-danger-700 transition-colors"
                         @click="openDeleteAccountModal"
                       >
                         Delete Account
@@ -4091,7 +4409,7 @@ class="text-xs text-red-600"
                 <div class="flex justify-end">
                   <button
                     type="button"
-                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                     :disabled="privacyLoading"
                     @click="handleSavePrivacySettings"
                   >
@@ -4100,13 +4418,13 @@ class="text-xs text-red-600"
                 </div>
                 <p
                   v-if="privacySaveSuccess"
-                  class="text-xs text-emerald-700"
+                  class="text-body-sm text-success-600"
                 >
                   Preferences saved.
                 </p>
                 <p
                   v-else-if="privacySaveError"
-                  class="text-xs text-red-600"
+                  class="text-body-sm text-danger-600"
                 >
                   {{ privacySaveError }}
                 </p>
@@ -4118,131 +4436,131 @@ v-else-if="activeAccountSection === 'compliance'"
 class="space-y-6"
 >
                 <div>
-                  <h2 class="text-lg font-semibold text-slate-900">Compliance</h2>
-                  <p class="text-sm text-slate-500">Regulatory information and data rights</p>
+                  <h2 class="text-body-lg font-semibold text-rs-fg">Compliance</h2>
+                  <p class="text-body-sm text-rs-muted">Regulatory information and data rights</p>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Data Protection Rights (GDPR)</h3>
-                  <p class="text-sm text-slate-600 mb-4">
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Data Protection Rights (GDPR)</h3>
+                  <p class="text-body-sm text-neutral-600 mb-4">
                     Under GDPR, you have several rights regarding your personal data. We are committed to respecting and fulfilling these rights.
                   </p>
 	                  <div class="space-y-3">
-	                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
 	                      <Icon
 	                        name="check-circle"
 	                        :size="20"
-	                        class="text-blue-600 flex-shrink-0 mt-0.5"
+	                        class="text-brand-600 flex-shrink-0 mt-0.5"
 	                      />
 	                      <div>
-	                        <div class="text-sm font-medium text-slate-900">Right to Access</div>
-	                        <div class="text-xs text-slate-500">Request a copy of your personal data</div>
+	                        <div class="text-body-sm font-medium text-rs-fg">Right to Access</div>
+	                        <div class="text-body-sm text-rs-muted">Request a copy of your personal data</div>
 	                      </div>
 	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
 	                      <Icon
 	                        name="check-circle"
 	                        :size="20"
-	                        class="text-blue-600 flex-shrink-0 mt-0.5"
+	                        class="text-brand-600 flex-shrink-0 mt-0.5"
 	                      />
 	                      <div>
-	                        <div class="text-sm font-medium text-slate-900">Right to Rectification</div>
-	                        <div class="text-xs text-slate-500">Request correction of inaccurate data</div>
+	                        <div class="text-body-sm font-medium text-rs-fg">Right to Rectification</div>
+	                        <div class="text-body-sm text-rs-muted">Request correction of inaccurate data</div>
 	                      </div>
 	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
 	                      <Icon
 	                        name="check-circle"
 	                        :size="20"
-	                        class="text-blue-600 flex-shrink-0 mt-0.5"
+	                        class="text-brand-600 flex-shrink-0 mt-0.5"
 	                      />
 	                      <div>
-	                        <div class="text-sm font-medium text-slate-900">Right to Erasure</div>
-	                        <div class="text-xs text-slate-500">Request deletion of your personal data</div>
+	                        <div class="text-body-sm font-medium text-rs-fg">Right to Erasure</div>
+	                        <div class="text-body-sm text-rs-muted">Request deletion of your personal data</div>
 	                      </div>
 	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
 	                      <Icon
 	                        name="check-circle"
 	                        :size="20"
-	                        class="text-blue-600 flex-shrink-0 mt-0.5"
+	                        class="text-brand-600 flex-shrink-0 mt-0.5"
 	                      />
 	                      <div>
-	                        <div class="text-sm font-medium text-slate-900">Right to Data Portability</div>
-	                        <div class="text-xs text-slate-500">Receive your data in a machine-readable format</div>
+	                        <div class="text-body-sm font-medium text-rs-fg">Right to Data Portability</div>
+	                        <div class="text-body-sm text-rs-muted">Receive your data in a machine-readable format</div>
 	                      </div>
 	                    </div>
                   </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-4">Legal Documents</h3>
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-4">Legal Documents</h3>
                   <div class="space-y-3">
 	                    <NuxtLink
 	                      to="/privacy"
-	                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+	                      class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
 	                    >
 	                      <div class="flex items-center gap-3">
 	                        <Icon
 	                          name="document-text"
 	                          :size="20"
-	                          class="text-slate-400"
+	                          class="text-neutral-400"
 	                        />
-	                        <span class="text-sm font-medium text-slate-900">Privacy Policy</span>
+	                        <span class="text-body-sm font-medium text-rs-fg">Privacy Policy</span>
 	                      </div>
 	                      <Icon
 	                        name="chevron-right"
 	                        :size="16"
-	                        class="text-slate-400"
+	                        class="text-neutral-400"
 	                      />
 	                    </NuxtLink>
                     <NuxtLink
                       to="/terms"
-                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                      class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
                     >
                       <div class="flex items-center gap-3">
                         <Icon
                           name="document-text"
                           :size="20"
-                          class="text-slate-400"
+                          class="text-neutral-400"
                         />
-                        <span class="text-sm font-medium text-slate-900">Terms of Service</span>
+                        <span class="text-body-sm font-medium text-rs-fg">Terms of Service</span>
                       </div>
                       <Icon
                         name="chevron-right"
                         :size="16"
-                        class="text-slate-400"
+                        class="text-neutral-400"
                       />
                     </NuxtLink>
                     <NuxtLink
                       to="/cookies"
-                      class="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                      class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
                     >
                       <div class="flex items-center gap-3">
                         <Icon
                           name="document-text"
                           :size="20"
-                          class="text-slate-400"
+                          class="text-neutral-400"
                         />
-                        <span class="text-sm font-medium text-slate-900">Cookie Policy</span>
+                        <span class="text-body-sm font-medium text-rs-fg">Cookie Policy</span>
                       </div>
                       <Icon
                         name="chevron-right"
                         :size="16"
-                        class="text-slate-400"
+                        class="text-neutral-400"
                       />
                     </NuxtLink>
                   </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-slate-200 p-6">
-                  <h3 class="font-medium text-slate-900 mb-2">Submit a Data Request</h3>
-                  <p class="text-sm text-slate-500 mb-4">
+                <div class="bg-surface rounded-xl border border-rs-border p-6">
+                  <h3 class="font-medium text-rs-fg mb-2">Submit a Data Request</h3>
+                  <p class="text-body-sm text-rs-muted mb-4">
                     For any data-related requests or questions about your privacy rights, please contact our Data Protection Officer.
                   </p>
                   <NuxtLink
                     to="/contact?subject=data-request"
-                    class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    class="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
                   >
                     Contact DPO
                   </NuxtLink>
@@ -4265,13 +4583,13 @@ import type { LocationQueryRaw } from 'vue-router'
 
 import AdPlacement from '~/components/ads/AdPlacement.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
-import ProviderLogo from '~/components/shared/ProviderLogo.vue'
-import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
-import { CenteredPage, DataTable, type DataTableColumn, Icon, type IconName } from '~/ui'
-import {
-  formatDate,
-  formatDateTime,
-  formatMonthDay,
+	import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+	import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
+		import { CenteredPage, DataTable, type DataTableColumn, EmptyState, Icon, type IconName, LoadingState } from '~/ui'
+	import {
+	  formatDate,
+	  formatDateTime,
+	  formatMonthDay,
   formatMonthYear,
   formatMoney,
   formatNumber,
@@ -4438,6 +4756,27 @@ type ApiKeyCreateResponse = {
   token: string
 }
 
+type ExportJobRecord = {
+  id: string
+  jobType: string
+  status: 'queued' | 'running' | 'done' | 'failed'
+  createdAt: string
+  startedAt: string | null
+  finishedAt: string | null
+  expiresAt: string | null
+  error: string | null
+}
+
+type ExportJobListResponse = {
+  success: boolean
+  jobs: ExportJobRecord[]
+}
+
+type ExportJobCreateResponse = {
+  success: boolean
+  job: { id: string; status: string; jobType: string; createdAt: string }
+}
+
 const historyDaysByTimeframe: Record<string, number> = {
   '7d': 7,
   '30d': 30,
@@ -4459,7 +4798,7 @@ const formatRateValue = (value: number | null | undefined) => {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—'
   return formatNumber(value, {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 6,
+    maximumFractionDigits: 4,
   })
 }
 
@@ -4511,7 +4850,7 @@ const getRateHistoryMeta = (base: string, quote: string, days: number) => {
   return rateHistoryCache.value[buildHistoryKey(base, quote, days)] ?? null
 }
 
-const loadRateHistory = async (base: string, quote: string, days: number) => {
+const loadRateHistory = async (base: string, quote: string, days: number, signal?: AbortSignal) => {
   const key = buildHistoryKey(base, quote, days)
   if (rateHistoryLoading.value[key] || rateHistoryCache.value[key]) return
   rateHistoryLoading.value[key] = true
@@ -4519,10 +4858,12 @@ const loadRateHistory = async (base: string, quote: string, days: number) => {
   try {
     const response = await request<RateHistoryResponse>('/rates/history', {
       query: { base, quote, days },
+      signal,
     })
     rateHistoryCache.value = { ...rateHistoryCache.value, [key]: response }
   }
  catch (error: any) {
+    if (error?.name === 'AbortError') return
     rateHistoryErrors.value[key] = error?.message || 'Unable to load rate history.'
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
@@ -4534,7 +4875,7 @@ const loadRateHistory = async (base: string, quote: string, days: number) => {
   }
 }
 
-const loadProviderRates = async (base: string, quote: string) => {
+const loadProviderRates = async (base: string, quote: string, signal?: AbortSignal) => {
   const key = buildProviderKey(base, quote)
   if (providerRatesLoading.value[key] || providerRatesCache.value[key]) return
   providerRatesLoading.value[key] = true
@@ -4542,10 +4883,12 @@ const loadProviderRates = async (base: string, quote: string) => {
   try {
     const response = await request<ProviderRatesResponse>('/rates/providers', {
       query: { base, quote },
+      signal,
     })
     providerRatesCache.value = { ...providerRatesCache.value, [key]: response }
   }
  catch (error: any) {
+    if (error?.name === 'AbortError') return
     providerRatesErrors.value[key] = error?.message || 'Unable to load provider rates.'
     providerRatesCache.value = {
       ...providerRatesCache.value,
@@ -4586,10 +4929,20 @@ const apiKeysLoading = ref(false)
 const apiKeysError = ref<string | null>(null)
 const apiKeysLoaded = ref(false)
 const apiKeyName = ref('')
-const apiKeyTier = ref<'2' | '3'>('2')
+const apiKeyScopes = ref<string[]>(['indices:read', 'corridors:read'])
 const apiKeyToken = ref<string | null>(null)
 const apiKeyTokenLabel = ref<string | null>(null)
 const apiKeyCopyStatus = ref<string | null>(null)
+const maxApiKeys = 5
+
+const availableScopes = [
+  { value: 'indices:read', label: 'Indices' },
+  { value: 'corridors:read', label: 'Corridors' },
+  { value: 'exports:read', label: 'Exports' },
+] as const
+
+const activeApiKeyCount = computed(() => apiKeys.value.filter(k => !k.revoked_at).length)
+const showApiReference = ref(false)
 
 const apiKeyFromRow = (row: unknown): ApiKeyRecord => row as ApiKeyRecord
 
@@ -4621,9 +4974,6 @@ const embedIndices = [
 ] as const
 
 type EmbedIndexKey = typeof embedIndices[number]['key']
-
-const tier2CadenceLabel = computed(() => 3)
-const tier3CadenceLabel = computed(() => 24)
 
 const embedSiteOrigin = computed(() => {
   if (runtimeConfig.public?.siteUrl) return runtimeConfig.public.siteUrl
@@ -4676,9 +5026,10 @@ const embedCodes = computed(() => {
 })
 
 const toApiKeyErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error) return error.message
-  if (typeof error === 'string') return error
-  return fallback
+  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+  if (/429|too many|rate.?limit/i.test(raw)) return 'Rate limited — wait a moment then press Refresh.'
+  if (/api_key_limit_reached/i.test(raw)) return `Maximum of ${maxApiKeys} active keys reached. Revoke a key before creating a new one.`
+  return raw || fallback
 }
 
 const copyApiKeyToken = async () => {
@@ -4738,12 +5089,12 @@ const createEnterpriseApiKey = async () => {
   apiKeyToken.value = null
   apiKeyTokenLabel.value = null
   try {
-    const tierScope = apiKeyTier.value === '3' ? 'tier:3' : 'tier:2'
+    const scopes = apiKeyScopes.value.length > 0 ? [...apiKeyScopes.value] : ['indices:read', 'corridors:read']
     const response = await request<ApiKeyCreateResponse>('/me/api-keys', {
       method: 'POST',
       body: {
         name: apiKeyName.value.trim() || undefined,
-        scopes: [tierScope, 'indices:read'],
+        scopes,
       },
     })
     apiKeys.value = [response.api_key, ...apiKeys.value.filter(key => key.key_id !== response.api_key.key_id)]
@@ -4751,7 +5102,6 @@ const createEnterpriseApiKey = async () => {
     apiKeyTokenLabel.value = response.api_key.key_prefix
     embedApiKey.value = response.token
     apiKeyName.value = ''
-    apiKeyTier.value = '2'
   }
  catch (error) {
     apiKeysError.value = toApiKeyErrorMessage(error, 'Unable to create API key.')
@@ -4804,10 +5154,88 @@ const revokeEnterpriseApiKey = async (key: ApiKeyRecord) => {
   }
 }
 
+const exportJobs = ref<ExportJobRecord[]>([])
+const exportJobsLoading = ref(false)
+const exportJobsError = ref<string | null>(null)
+const exportJobsLoaded = ref(false)
+const exportJobType = ref<'history' | 'watchlist' | 'alerts' | 'all'>('history')
+const exportFormat = ref<'csv' | 'pdf'>('csv')
+const exportDateFrom = ref('')
+const exportDateTo = ref('')
+const exportCreating = ref(false)
+
+const exportJobTableColumns: DataTableColumn[] = [
+  { key: 'jobType', label: 'Type' },
+  { key: 'status', label: 'Status' },
+  { key: 'createdAt', label: 'Created' },
+  { key: 'actions', label: '', align: 'right', widthClass: 'w-28' },
+]
+
+const exportJobTableRowKey = (row: unknown, rowIndex: number) => {
+  return (row as ExportJobRecord).id || String(rowIndex)
+}
+
+const exportJobFromRow = (row: unknown): ExportJobRecord => row as ExportJobRecord
+
+const fetchExportJobs = async () => {
+  if (exportJobsLoading.value) return
+  exportJobsLoading.value = true
+  exportJobsError.value = null
+  try {
+    const response = await request<ExportJobListResponse>('/exports')
+    exportJobs.value = response.jobs ?? []
+    exportJobsLoaded.value = true
+  }
+  catch (error) {
+    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+    exportJobsError.value = /429|too many|rate.?limit/i.test(raw) ? 'Rate limited — wait a moment then press Refresh.' : (raw || 'Unable to load exports.')
+  }
+  finally {
+    exportJobsLoading.value = false
+  }
+}
+
+const createExportJob = async () => {
+  if (exportCreating.value) return
+  exportCreating.value = true
+  exportJobsError.value = null
+  try {
+    const body: Record<string, unknown> = {
+      jobType: exportJobType.value,
+      format: exportFormat.value,
+    }
+    if (exportDateFrom.value) body.dateFrom = exportDateFrom.value
+    if (exportDateTo.value) body.dateTo = exportDateTo.value
+    await request<ExportJobCreateResponse>('/exports', { method: 'POST', body })
+    await fetchExportJobs()
+  }
+  catch (error) {
+    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+    exportJobsError.value = raw || 'Unable to create export.'
+  }
+  finally {
+    exportCreating.value = false
+  }
+}
+
+const downloadExport = (jobId: string) => {
+  const baseUrl = runtimeConfig.public?.apiBase || '/api/v1'
+  window.open(`${baseUrl}/exports/${jobId}/download`, '_blank')
+}
+
+const exportStatusClasses = (status: string) => {
+  switch (status) {
+    case 'done': return 'bg-success-100 text-success-700'
+    case 'failed': return 'bg-danger-100 text-danger-700'
+    case 'running': return 'bg-brand-100 text-brand-700'
+    default: return 'bg-neutral-100 text-neutral-600'
+  }
+}
+
 const hasAdminAccess = ref(false)
 const adminAccessChecked = ref(false)
 
-const checkAdminAccess = async () => {
+const checkAdminAccess = async (signal?: AbortSignal) => {
   if (!import.meta.client) return
   if (!isAuthenticated.value) {
     hasAdminAccess.value = false
@@ -4815,15 +5243,22 @@ const checkAdminAccess = async () => {
     return
   }
   if (adminAccessChecked.value) return
+  let aborted = false
   try {
-    await request('/admin/users', { query: { limit: 1 } })
+    await request('/admin/users', { query: { limit: 1 }, signal })
     hasAdminAccess.value = true
   }
- catch {
+ catch (error: any) {
+    if (error?.name === 'AbortError') {
+      aborted = true
+      return
+    }
     hasAdminAccess.value = false
   }
  finally {
-    adminAccessChecked.value = true
+    if (!aborted) {
+      adminAccessChecked.value = true
+    }
   }
 }
 
@@ -5031,6 +5466,7 @@ const opsProviders = [
   { id: 'bossmoney', label: 'BOSS Money', endpoint: '/ops/bossmoney/health' },
   { id: 'sendwave', label: 'Sendwave', endpoint: '/ops/sendwave/health' },
   { id: 'mukuru', label: 'Mukuru', endpoint: '/ops/mukuru/health' },
+  { id: 'wellsfargo', label: 'Wells Fargo', endpoint: '/ops/wellsfargo/health' },
 ] as const
 
 type OpsProviderId = typeof opsProviders[number]['id']
@@ -5063,6 +5499,13 @@ const adminRoleSelection = ref<'user' | 'admin' | 'super_admin'>('user')
 const adminRoleLoading = ref(false)
 const adminRoleError = ref<string | null>(null)
 const adminRoleSuccess = ref<string | null>(null)
+
+const adminPlanEmail = ref('')
+const adminPlanSelection = ref<'free' | 'plus' | 'enterprise'>('free')
+const adminPlanNotes = ref('')
+const adminPlanLoading = ref(false)
+const adminPlanError = ref<string | null>(null)
+const adminPlanSuccess = ref<string | null>(null)
 
 function buildOpsRecord<T>(factory: () => T): Record<OpsProviderId, T> {
   return opsProviders.reduce((acc, provider) => {
@@ -5113,6 +5556,90 @@ const opsAuditLogs = ref<OpsAuditLog[]>([])
 const opsAuditHasLoaded = ref(false)
 
 const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
+
+const opsLastRefreshedAt = ref<string | null>(null)
+const opsExpandedProviders = ref<Set<string>>(new Set())
+const OPS_CORRIDOR_PREVIEW_LIMIT = 5
+
+const toggleProviderExpanded = (providerId: string) => {
+  const next = new Set(opsExpandedProviders.value)
+  if (next.has(providerId)) {
+    next.delete(providerId)
+  } else {
+    next.add(providerId)
+  }
+  opsExpandedProviders.value = next
+}
+
+const isProviderExpanded = (providerId: string) => opsExpandedProviders.value.has(providerId)
+
+const getVisibleCorridors = (providerId: string) => {
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
+  if (isProviderExpanded(providerId) || corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) {
+    return corridors
+  }
+  return corridors.slice(0, OPS_CORRIDOR_PREVIEW_LIMIT)
+}
+
+const getHiddenCorridorCount = (providerId: string) => {
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
+  if (corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) return 0
+  return corridors.length - OPS_CORRIDOR_PREVIEW_LIMIT
+}
+
+const opsSummary = computed(() => {
+  let total = 0
+  let healthy = 0
+  let stale = 0
+  let errored = 0
+  let totalCorridors = 0
+  let staleCorridors = 0
+
+  for (const provider of opsProviders) {
+    total++
+    const state = opsState.value[provider.id]
+    const error = opsErrors.value[provider.id]
+    if (error) {
+      errored++
+      continue
+    }
+    if (!state) continue
+    const corridorCount = state.summary?.corridor_count ?? 0
+    const staleCount = state.summary?.stale_count ?? 0
+    totalCorridors += corridorCount
+    staleCorridors += staleCount
+    if (staleCount === 0) {
+      healthy++
+    } else {
+      stale++
+    }
+  }
+
+  const loaded = healthy + stale + errored
+  const status: 'ok' | 'warning' | 'critical' | 'unknown' =
+    loaded === 0 ? 'unknown'
+    : errored > 2 || staleCorridors > totalCorridors * 0.3 ? 'critical'
+    : errored > 0 || staleCorridors > 0 ? 'warning'
+    : 'ok'
+
+  return { total, healthy, stale, errored, loaded, totalCorridors, staleCorridors, status }
+})
+
+const opsStatusColor = computed(() => {
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'text-success-600 bg-success-50'
+  if (s === 'warning') return 'text-warning-700 bg-warning-50'
+  if (s === 'critical') return 'text-danger-600 bg-danger-50'
+  return 'text-neutral-500 bg-neutral-50'
+})
+
+const opsStatusLabel = computed(() => {
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'All Healthy'
+  if (s === 'warning') return 'Degraded'
+  if (s === 'critical') return 'Critical'
+  return 'Not Loaded'
+})
 
 const opsAutoRefreshMs = 60_000
 const opsInsightsRefreshMs = 300_000
@@ -5219,18 +5746,24 @@ const formatAttemptStatus = (success: boolean | null) => {
 }
 
 const attemptStatusClass = (success: boolean | null) => {
-  if (success === true) return 'text-emerald-600'
-  if (success === false) return 'text-red-600'
-  return 'text-slate-400'
+  if (success === true) return 'text-success-600'
+  if (success === false) return 'text-danger-600'
+  return 'text-neutral-400'
 }
 
 const toOpsErrorMessage = (error: unknown) => {
-  const candidate = error as { statusCode?: number, status?: number, message?: string, data?: { message?: string } }
+  const candidate = error as { statusCode?: number, status?: number, message?: string, data?: { message?: string, error?: string } }
   const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
     return 'Admin access required to view ops data.'
   }
-  return candidate?.data?.message ?? candidate?.message ?? 'Unable to load ops data.'
+  if (status === 404) {
+    return 'Endpoint not found — check BFF proxy allowlist and backend route registration.'
+  }
+  const detail = candidate?.data?.message ?? candidate?.data?.error
+  if (detail) return detail
+  if (candidate?.message && candidate.message !== 'fetch failed') return candidate.message
+  return 'Unable to load ops data.'
 }
 
 const telemetryLatest = computed(() => {
@@ -5340,6 +5873,7 @@ const loadOpsHealth = async (providerId: OpsProviderId) => {
 const refreshAllOps = async () => {
   opsHasLoaded.value = true
   await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+  opsLastRefreshedAt.value = new Date().toISOString()
 }
 
 const handleAdminRoleUpdate = async () => {
@@ -5369,13 +5903,43 @@ const handleAdminRoleUpdate = async () => {
   }
 }
 
+const handleAdminPlanGrant = async () => {
+  const email = adminPlanEmail.value.trim()
+  if (!email) {
+    adminPlanError.value = 'Enter a user email to update.'
+    return
+  }
+  adminPlanLoading.value = true
+  adminPlanError.value = null
+  adminPlanSuccess.value = null
+  try {
+    await request('/admin/plans/grant', {
+      method: 'POST',
+      body: {
+        email,
+        plan_code: adminPlanSelection.value,
+        ...(adminPlanSelection.value === 'enterprise' && adminPlanNotes.value
+          ? { notes: adminPlanNotes.value }
+          : {}),
+      },
+    })
+    adminPlanSuccess.value = `Plan "${adminPlanSelection.value}" granted to ${email}.`
+  }
+ catch (error) {
+    adminPlanError.value = toOpsErrorMessage(error)
+  }
+ finally {
+    adminPlanLoading.value = false
+  }
+}
+
 const buildOpsDateRange = (days: number) => {
   const end = new Date()
   const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
   return { start_date: start.toISOString(), end_date: end.toISOString() }
 }
 
-const loadTelemetryAnalytics = async () => {
+const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
   if (telemetryLoading.value) return
   telemetryHasLoaded.value = true
   telemetryLoading.value = true
@@ -5386,10 +5950,12 @@ const loadTelemetryAnalytics = async () => {
         metric: telemetryMetric.value,
         hours: telemetryHours.value,
       },
+      signal,
     })
     telemetryRows.value = response?.data ?? []
   }
  catch (error) {
+    if ((error as any)?.name === 'AbortError') return
     telemetryError.value = toOpsErrorMessage(error)
     telemetryRows.value = []
   }
@@ -5405,7 +5971,7 @@ const loadOpsAnalytics = async () => {
   opsAnalyticsError.value = null
   const range = buildOpsDateRange(7)
   try {
-    const [corridors, providers, impact, revenue] = await Promise.all([
+    const results = await Promise.allSettled([
       request<{ corridors: OpsAnalyticsCorridor[] }>('/analytics/corridors', {
         query: { ...range, limit: 6 },
       }),
@@ -5419,11 +5985,18 @@ const loadOpsAnalytics = async () => {
         query: { ...range, limit: 10 },
       }),
     ])
-    opsPopularCorridors.value = corridors?.corridors ?? []
-    opsFavoriteProviders.value = providers?.providers ?? []
-    opsProviderImpact.value = impact?.providers ?? []
-    opsProviderCorridors.value = impact?.corridors ?? []
-    opsRevenueRows.value = revenue?.revenue ?? []
+    const [corridors, providers, impact, revenue] = results
+    opsPopularCorridors.value = corridors.status === 'fulfilled' ? (corridors.value?.corridors ?? []) : []
+    opsFavoriteProviders.value = providers.status === 'fulfilled' ? (providers.value?.providers ?? []) : []
+    opsProviderImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers ?? []) : []
+    opsProviderCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors ?? []) : []
+    opsRevenueRows.value = revenue.status === 'fulfilled' ? (revenue.value?.revenue ?? []) : []
+    const failures = results.filter(r => r.status === 'rejected')
+    if (failures.length === results.length) {
+      opsAnalyticsError.value = toOpsErrorMessage((failures[0] as PromiseRejectedResult).reason)
+    } else if (failures.length > 0) {
+      opsAnalyticsError.value = `${failures.length} of ${results.length} analytics endpoints failed to load.`
+    }
   }
  catch (error) {
     opsAnalyticsError.value = toOpsErrorMessage(error)
@@ -5469,37 +6042,40 @@ watch(() => activeTab.value, (tab) => {
   if (tab === 'ops' && !hasAdminAccess.value) {
     return
   }
-  if (tab === 'ops' && !opsHasLoaded.value) {
-    void refreshAllOps()
-  }
-  if (tab === 'ops' && !telemetryHasLoaded.value) {
+  if (tab === 'ops') {
+    if (!opsHasLoaded.value) {
+      void refreshAllOps()
+    }
     void loadTelemetryAnalytics()
-  }
-  if (tab === 'ops' && !opsAnalyticsHasLoaded.value) {
     void loadOpsAnalytics()
-  }
-  if (tab === 'ops' && !opsAuditHasLoaded.value) {
     void loadOpsAudit()
   }
   if (tab === 'enterprise' && isEnterprise.value && !apiKeysLoaded.value) {
-    void fetchApiKeys()
+    setTimeout(() => void fetchApiKeys(), 400)
   }
-})
-
-watch([() => telemetryMetric.value, () => telemetryHours.value], () => {
-  if (activeTab.value !== 'ops') return
-  void loadTelemetryAnalytics()
-})
-
-watch(isAuthenticated, (loggedIn) => {
-  adminAccessChecked.value = false
-  if (loggedIn) {
-    void checkAdminAccess()
-    return
+  if (tab === 'enterprise' && isEnterprise.value && !exportJobsLoaded.value) {
+    setTimeout(() => void fetchExportJobs(), 600)
   }
-  hasAdminAccess.value = false
-  adminAccessChecked.value = true
 }, { immediate: true })
+
+useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
+  if (activeTab.value !== 'ops') return
+  await loadTelemetryAnalytics(signal)
+})
+
+useAbortableWatch(
+  isAuthenticated,
+  async (loggedIn, signal) => {
+    adminAccessChecked.value = false
+    if (loggedIn) {
+      await checkAdminAccess(signal)
+      return
+    }
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
+  },
+  { immediate: true },
+)
 
 // Form state
 const newWatchlist = ref({ from: 'US', to: 'PH' })
@@ -5626,10 +6202,14 @@ const rateStats = computed(() => {
   }
 })
 
-watch([selectedPair, selectedHistoryDays], ([pair, days]) => {
-  if (!pair) return
-  void loadRateHistory(pair.base, pair.quote, days)
-}, { immediate: true })
+useAbortableWatch(
+  [selectedPair, selectedHistoryDays],
+  async ([pair, days], signal) => {
+    if (!pair) return
+    await loadRateHistory(pair.base, pair.quote, days, signal)
+  },
+  { immediate: true },
+)
 
 watch(() => isPlus.value, (value) => {
   if (!value && isTimeframeLocked(graphTimeframe.value)) {
@@ -5662,12 +6242,18 @@ const watchlistPairs = computed(() => {
   return Array.from(pairs.values())
 })
 
-watch(watchlistPairs, (pairs) => {
-  pairs.forEach((pair) => {
-    void loadRateHistory(pair.base, pair.quote, watchlistHistoryDays)
-    void loadProviderRates(pair.base, pair.quote)
-  })
-}, { immediate: true })
+useAbortableWatch(
+  watchlistPairs,
+  async (pairs: Array<{ base: string, quote: string }>, signal) => {
+    await Promise.all(
+      pairs.flatMap(pair => [
+        loadRateHistory(pair.base, pair.quote, watchlistHistoryDays, signal),
+        loadProviderRates(pair.base, pair.quote, signal),
+      ]),
+    )
+  },
+  { immediate: true },
+)
 
 const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
   const map: Record<string, RateSnapshot> = {}
@@ -5861,15 +6447,15 @@ const formatBillingAmount = (amount: number | null | undefined, currency: string
 const billingStatusBadge = computed(() => {
   const status = billingStatus.value
   if (status === 'active' || status === 'trialing') {
-    return { label: 'Active', classes: 'bg-emerald-100 text-emerald-700' }
+    return { label: 'Active', classes: 'bg-success-600/10 text-success-600' }
   }
   if (status === 'past_due') {
-    return { label: 'Past due', classes: 'bg-amber-100 text-amber-700' }
+    return { label: 'Past due', classes: 'bg-warning-600 text-warning-600' }
   }
   if (status === 'canceled' || status === 'incomplete_expired') {
-    return { label: 'Canceled', classes: 'bg-slate-100 text-slate-600' }
+    return { label: 'Canceled', classes: 'bg-neutral-100 text-neutral-600' }
   }
-  return { label: status ? status.replace(/_/g, ' ') : 'Free', classes: 'bg-slate-100 text-slate-600' }
+  return { label: status ? status.replace(/_/g, ' ') : 'Free', classes: 'bg-neutral-100 text-neutral-600' }
 })
 
 const {
@@ -5965,7 +6551,7 @@ async function saveProfile() {
     }, 3000)
   }
  catch (error) {
-    console.warn('Profile update failed', error)
+    useLogger('DashboardSignedIn').warn('Profile update failed', error)
   }
 }
 
@@ -6089,7 +6675,7 @@ const handleRevokeSession = async (sessionId: string) => {
     await revokeSession(sessionId)
   }
  catch (error) {
-    console.warn('Failed to revoke session', error)
+    useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
   }
 }
 
@@ -6099,7 +6685,7 @@ const handleRevokeAllSessions = async () => {
     await revokeAllSessions(current?.session_id)
   }
  catch (error) {
-    console.warn('Failed to revoke sessions', error)
+    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
   }
 }
 

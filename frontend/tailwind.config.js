@@ -1,12 +1,27 @@
 /** @type {import('tailwindcss').Config} */
+import colors from 'tailwindcss/colors'
+
+const BRAND = colors.blue
+const PRIMARY = colors.blue
+const NEUTRAL = colors.slate
+const SUCCESS = colors.emerald
+const WARNING = colors.amber
+const DANGER = colors.red
+const ACCENT = colors.violet
+
 export default {
   content: [
     './components/**/*.{js,vue,ts}',
     './composables/**/*.{js,ts}',
+    './domains/**/*.{js,vue,ts}',
+    './ui/**/*.{js,vue,ts}',
+    './utils/**/*.{js,ts}',
+    './legacy/**/*.{js,vue,ts}',
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
     './shared/**/*.{js,vue,ts}',
+    '!./shared/lib/api/**',
     './nuxt.config.{js,ts}',
     './app.vue',
   ],
@@ -21,55 +36,22 @@ export default {
       },
       colors: {
         rs: {
-          bg: 'var(--rs-color-bg)',
-          surface: 'var(--rs-color-surface)',
-          fg: 'var(--rs-color-fg)',
-          muted: 'var(--rs-color-muted)',
-          border: 'var(--rs-color-border)',
-          brand: 'var(--rs-color-brand)',
+          // Use RGB triplet CSS vars so Tailwind opacity modifiers work (e.g. `border-rs-border/60`).
+          bg: 'rgb(var(--rs-color-bg) / <alpha-value>)',
+          surface: 'rgb(var(--rs-color-surface) / <alpha-value>)',
+          fg: 'rgb(var(--rs-color-fg) / <alpha-value>)',
+          muted: 'rgb(var(--rs-color-muted) / <alpha-value>)',
+          border: 'rgb(var(--rs-color-border) / <alpha-value>)',
+          brand: 'rgb(var(--rs-color-brand) / <alpha-value>)',
         },
-        brand: {
-          600: '#2563EB',
-          700: '#1D4ED8',
-        },
-        neutral: {
-          50: '#F8FAFC',
-          100: '#F1F5F9',
-          200: '#E2E8F0',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#0F172A',
-        },
+        brand: BRAND,
+        neutral: NEUTRAL,
         surface: '#FFFFFF',
-        success: {
-          600: '#059669',
-        },
-        warning: {
-          600: '#D97706',
-        },
-        danger: {
-          600: '#DC2626',
-        },
-        accent: {
-          600: '#7C3AED',
-        },
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
-        },
+        success: SUCCESS,
+        warning: WARNING,
+        danger: DANGER,
+        accent: ACCENT,
+        primary: PRIMARY,
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -119,6 +101,15 @@ export default {
       },
       gap: {
         gutter: '24px',
+      },
+      zIndex: {
+        base: '0',
+        dropdown: '20',
+        sticky: '40',
+        modal: '50',
+        overlay: '60',
+        toast: '70',
+        skip: '100',
       },
       ringOffsetWidth: {
         3: '2px',

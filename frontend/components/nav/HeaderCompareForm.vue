@@ -105,8 +105,8 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="bg-gradient-to-r from-blue-50 to-slate-50 border-b border-slate-200">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+  <div class="bg-gradient-to-r from-primary-50 to-neutral-50 border-b border-rs-border">
+    <div class="container py-4">
       <form
         class="flex flex-wrap items-end gap-3"
         @submit.prevent="handleSubmit"
@@ -114,7 +114,7 @@ const handleSubmit = async () => {
         <div class="flex-1 min-w-[140px]">
           <label
             for="header-from"
-            class="block text-xs font-medium text-slate-700 mb-1"
+            class="block text-body-sm font-medium text-neutral-700 mb-1"
           >
             From
           </label>
@@ -130,7 +130,7 @@ const handleSubmit = async () => {
         <div class="flex-1 min-w-[140px]">
           <label
             for="header-to"
-            class="block text-xs font-medium text-slate-700 mb-1"
+            class="block text-body-sm font-medium text-neutral-700 mb-1"
           >
             To
           </label>
@@ -146,7 +146,7 @@ const handleSubmit = async () => {
         <div class="flex-1 min-w-[120px]">
           <label
             for="header-amount"
-            class="block text-xs font-medium text-slate-700 mb-1"
+            class="block text-body-sm font-medium text-neutral-700 mb-1"
           >
             Amount
           </label>
@@ -157,7 +157,7 @@ const handleSubmit = async () => {
             :min="amountLimits.minAmount"
             :max="amountLimits.maxAmount"
             step="0.01"
-            class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-gray-900 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            class="h-10 w-full rounded-lg border border-neutral-300 bg-surface px-3 text-neutral-900 text-body-sm focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
             placeholder="500"
           >
         </div>
@@ -168,15 +168,16 @@ const handleSubmit = async () => {
             :key="method.value"
             type="button"
             :class="[
-              'flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-all',
+              'flex items-center gap-1.5 px-3 py-2 text-body-sm font-medium rounded-lg border transition-all',
               form.method === method.value
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-slate-700 border-slate-300 hover:border-blue-600',
+                ? 'bg-brand-600 text-white border-brand-600'
+                : 'bg-surface text-neutral-700 border-neutral-300 hover:border-brand-600',
             ]"
+            :aria-label="method.label"
             :aria-pressed="form.method === method.value"
             @click="form.method = method.value"
           >
-            <span>{{ method.icon }}</span>
+            <span aria-hidden="true">{{ method.icon }}</span>
             <span class="hidden lg:inline">{{ method.label }}</span>
           </button>
         </div>
@@ -184,7 +185,7 @@ const handleSubmit = async () => {
         <button
           type="submit"
           :disabled="isWaitingForQuotes"
-          class="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+          class="flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <span v-if="isWaitingForQuotes">Checking...</span>
           <span v-else>Compare</span>
@@ -208,7 +209,7 @@ const handleSubmit = async () => {
         v-if="validationError"
         role="alert"
         aria-live="polite"
-        class="mt-3 text-sm text-red-600"
+        class="mt-3 text-body-sm text-danger-600"
       >
         {{ validationError }}
       </div>
@@ -217,7 +218,7 @@ const handleSubmit = async () => {
         v-else-if="statusMessage"
         role="status"
         aria-live="polite"
-        class="mt-3 text-sm text-slate-600"
+        class="mt-3 text-body-sm text-neutral-600"
       >
         {{ statusMessage }}
       </div>

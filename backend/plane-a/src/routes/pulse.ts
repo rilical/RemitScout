@@ -6,11 +6,19 @@ import { createLogger } from '../../../shared/logger'
 import { createTtlCache } from '../../../shared/cache'
 import { buildChartData, pulseDefaults } from '../../../shared/pulse-defaults'
 import {
+  PULSE_AMOUNTS,
+  PULSE_PAYIN_METHODS,
+  PULSE_PAYOUT_METHODS,
+  buildPulseCacheKey,
   buildPulseCacheKeyCandidates,
+  normalizePulseCorridor,
+  normalizePulseMethod,
+  normalizePulseTimeframe,
   normalizePulseRange,
   type PulseCacheFilters,
 } from '../../../shared/pulse-cache-keys'
 import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../../../shared/corridor-tiers'
+import { recordRequest } from '../../../shared/api-metrics'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
 import type { PlaneAContainer } from '../container'
@@ -154,6 +162,69 @@ const parseCorridorFromId = (corridorId?: string | null) => {
     sendCurrency: parts[2].toUpperCase(),
     recvCurrency: parts[3].toUpperCase(),
   }
+}
+
+type PulseScreenerRow = {
+  corridorId: string
+  slug: string
+  label: string
+  fromFlag: string
+  toFlag: string
+  sourceCountry?: string
+  destCountry?: string
+  sourceCurrency?: string
+  destCurrency?: string
+  dataAvailable: boolean
+  updatedAt: string | null
+  smartSendLevel: 'great' | 'good' | 'fair' | 'wait' | null
+  bestProvider: string | null
+  bestRecipientGets: number | null
+  spreadRangeBps: number | null
+  providerCount: number | null
+  bankSavings: number | null
+  bankSavingsPercent: number | null
+  moverDeltaPct24h: number | null
+  moverTimestampBucket: string | null
+}
+
+type PulseScreenerResponse = {
+  success: true
+  updatedAt: string | null
+  rows: PulseScreenerRow[]
+}
+
+const normalizeCommaList = (value: string) => value
+  .split(',')
+  .map((part) => part.trim())
+  .filter(Boolean)
+
+const parseCorridorIdsParam = (value: unknown): string[] => {
+  if (!value) return []
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => typeof item === 'string' ? normalizeCommaList(item) : [])
+      .filter(Boolean)
+  }
+  if (typeof value === 'string') {
+    return normalizeCommaList(value)
+  }
+  return []
+}
+
+const parseBooleanParam = (value: unknown, fallback: boolean) => {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === '1' || normalized === 'true' || normalized === 'yes') return true
+    if (normalized === '0' || normalized === 'false' || normalized === 'no') return false
+  }
+  return fallback
+}
+
+const toSafeNumber = (value: unknown): number | null => {
+  const parsed = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const resolveIndicesCorridorId = async (
@@ -895,6 +966,308 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       const fallback = mapCorridors(payload)
       await pulseCorridorsCache.set(cacheKey, fallback, 10 * 60 * 1000)
       return fallback
+    }
+  })
+
+  app.get('/pulse/screener', guard, async (request): Promise<PulseScreenerResponse> => {
+    const startTime = Date.now()
+    try {
+      const queryParams = (request.query ?? {}) as Record<string, unknown>
+      const corridorIdsRaw = parseCorridorIdsParam(queryParams.corridor_ids)
+      const corridorIdsUnique = Array.from(new Set(corridorIdsRaw))
+        .filter((value) => typeof value === 'string' && value.trim().length > 0)
+      if (corridorIdsUnique.length > 25) {
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'corridor_ids_limit_exceeded',
+            limit: 25,
+            received: corridorIdsUnique.length,
+          },
+        })
+      }
+      const corridorIds = corridorIdsUnique
+
+      const includeMovers = parseBooleanParam(queryParams.include_movers, true)
+
+      const timeframeRaw = typeof queryParams.timeframe === 'string' ? queryParams.timeframe : null
+      const normalizedTimeframe = normalizePulseTimeframe(timeframeRaw)
+      if (timeframeRaw && !normalizedTimeframe) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_timeframe' } })
+      }
+      const timeframe = normalizedTimeframe ?? '7d'
+
+      const amountParamProvided = queryParams.amount !== undefined && queryParams.amount !== null && queryParams.amount !== ''
+      const amountRaw = amountParamProvided ? toSafeNumber(queryParams.amount) : null
+      if (amountParamProvided && amountRaw === null) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_amount' } })
+      }
+      const amount = amountRaw ?? 1000
+      if (!PULSE_AMOUNTS.includes(amount as any)) {
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'invalid_amount_bucket',
+            allowed: PULSE_AMOUNTS,
+          },
+        })
+      }
+
+      const payinRaw = typeof queryParams.payin === 'string' ? queryParams.payin : null
+      const payinNormalized = normalizePulseMethod(payinRaw)
+      if (payinRaw && !payinNormalized) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_payin_method' } })
+      }
+      const payin = payinNormalized ?? 'bank'
+      if (!PULSE_PAYIN_METHODS.includes(payin as any)) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_payin_method' } })
+      }
+
+      const payoutRaw = typeof queryParams.payout === 'string' ? queryParams.payout : null
+      const payoutNormalized = normalizePulseMethod(payoutRaw)
+      if (payoutRaw && !payoutNormalized) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_payout_method' } })
+      }
+      const payout = payoutNormalized ?? 'bank'
+      if (!PULSE_PAYOUT_METHODS.includes(payout as any)) {
+        throw new ValidationError('Invalid request', { details: { error: 'invalid_payout_method' } })
+      }
+
+      const moversByCorridor = new Map<string, { deltaPct: number; timestampBucket: string }>()
+
+      if (includeMovers && corridorIds.length > 0) {
+        const result = await query<{
+          corridor_id: string
+          current_bucket: Date
+          current_avg_rate: unknown
+          prev_avg_rate: unknown | null
+        }>(
+          `WITH ranked AS (
+            SELECT
+              corridor_id,
+              timestamp_bucket,
+              avg_rate,
+              ROW_NUMBER() OVER (PARTITION BY corridor_id ORDER BY timestamp_bucket DESC) AS rn
+            FROM gold_export.corridor_rates
+            WHERE corridor_id = ANY($1)
+              AND timestamp_bucket >= NOW() - INTERVAL '48 hours'
+          ),
+          pivoted AS (
+            SELECT
+              corridor_id,
+              MAX(CASE WHEN rn = 1 THEN timestamp_bucket END) AS current_bucket,
+              MAX(CASE WHEN rn = 1 THEN avg_rate END) AS current_avg_rate,
+              MAX(CASE WHEN rn = 2 THEN avg_rate END) AS prev_avg_rate
+            FROM ranked
+            WHERE rn <= 2
+            GROUP BY corridor_id
+          )
+          SELECT
+            corridor_id,
+            current_bucket,
+            current_avg_rate,
+            prev_avg_rate
+          FROM pivoted
+          WHERE current_bucket IS NOT NULL
+            AND current_bucket >= NOW() - INTERVAL '24 hours'`,
+          [corridorIds],
+          planeAPool,
+        )
+
+        for (const row of result.rows) {
+          const corridorId = String(row.corridor_id || '')
+          const currentAvg = toSafeNumber(row.current_avg_rate)
+          const prevAvg = toSafeNumber(row.prev_avg_rate)
+          const bucketIso = toIsoString(row.current_bucket)
+          if (!corridorId || currentAvg === null || prevAvg === null || prevAvg <= 0 || !bucketIso) continue
+          const deltaPct = (currentAvg - prevAvg) / prevAvg
+          if (!Number.isFinite(deltaPct)) continue
+          moversByCorridor.set(corridorId, { deltaPct, timestampBucket: bucketIso })
+        }
+      }
+
+      if (corridorIds.length === 0) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('GET', '/pulse/screener', 200, durationSeconds)
+        return { success: true, updatedAt: null, rows: [] }
+      }
+
+      const baseKeys = ['pulse:smart-send', 'pulse:market-snapshot', 'pulse:market-depth', 'pulse:bank-comparison'] as const
+      const keyMap = new Map<string, Record<(typeof baseKeys)[number], string>>()
+      const allKeys: string[] = []
+
+      for (const corridorId of corridorIds) {
+        const parsed = parseCorridorFromId(corridorId)
+        const rawSlug = parsed
+          ? `${parsed.sendCurrency.toLowerCase()}-${parsed.recvCurrency.toLowerCase()}`
+          : corridorId
+        const corridor = normalizePulseCorridor(rawSlug) ?? '__invalid__'
+        const filters: PulseCacheFilters = {
+          corridor,
+          timeframe,
+          range: null,
+          amount,
+          payin,
+          payout,
+        }
+
+        const keys = {
+          'pulse:smart-send': buildPulseCacheKey('pulse:smart-send', filters),
+          'pulse:market-snapshot': buildPulseCacheKey('pulse:market-snapshot', filters),
+          'pulse:market-depth': buildPulseCacheKey('pulse:market-depth', filters),
+          'pulse:bank-comparison': buildPulseCacheKey('pulse:bank-comparison', filters),
+        } as Record<(typeof baseKeys)[number], string>
+
+        keyMap.set(corridorId, keys)
+        allKeys.push(...Object.values(keys))
+      }
+
+      const entries = await pulseCacheRepository.getEntries(allKeys)
+      const entryByKey = new Map(entries.map((entry) => [entry.key, entry]))
+
+      const rows: PulseScreenerRow[] = corridorIds.map((corridorId) => {
+        const parsed = parseCorridorFromId(corridorId)
+        const slug = parsed
+          ? `${parsed.sendCurrency.toLowerCase()}-${parsed.recvCurrency.toLowerCase()}`
+          : corridorId.toLowerCase()
+        const label = parsed ? `${parsed.sendCurrency} ${arrow} ${parsed.recvCurrency}` : corridorId
+
+        const metaFrom = parsed?.fromCountry ?? ''
+        const metaTo = parsed?.toCountry ?? ''
+        const fromFlag = toFlagEmoji(metaFrom)
+        const toFlag = toFlagEmoji(metaTo)
+
+        const keys = keyMap.get(corridorId)
+        if (!keys) {
+          return {
+            corridorId,
+            slug,
+            label,
+            fromFlag,
+            toFlag,
+            sourceCountry: parsed?.fromCountry,
+            destCountry: parsed?.toCountry,
+            sourceCurrency: parsed?.sendCurrency,
+            destCurrency: parsed?.recvCurrency,
+            dataAvailable: false,
+            updatedAt: null,
+            smartSendLevel: null,
+            bestProvider: null,
+            bestRecipientGets: null,
+            spreadRangeBps: null,
+            providerCount: null,
+            bankSavings: null,
+            bankSavingsPercent: null,
+            moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
+            moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+          }
+        }
+
+        const smartEntry = entryByKey.get(keys['pulse:smart-send'])
+        const snapshotEntry = entryByKey.get(keys['pulse:market-snapshot'])
+        const depthEntry = entryByKey.get(keys['pulse:market-depth'])
+        const bankEntry = entryByKey.get(keys['pulse:bank-comparison'])
+
+        if (!smartEntry || !snapshotEntry || !depthEntry || !bankEntry) {
+          return {
+            corridorId,
+            slug,
+            label,
+            fromFlag,
+            toFlag,
+            sourceCountry: parsed?.fromCountry,
+            destCountry: parsed?.toCountry,
+            sourceCurrency: parsed?.sendCurrency,
+            destCurrency: parsed?.recvCurrency,
+            dataAvailable: false,
+            updatedAt: null,
+            smartSendLevel: null,
+            bestProvider: null,
+            bestRecipientGets: null,
+            spreadRangeBps: null,
+            providerCount: null,
+            bankSavings: null,
+            bankSavingsPercent: null,
+            moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
+            moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+          }
+        }
+
+        const smartUpdatedAt = toIsoString(smartEntry.updated_at)
+        const snapshotUpdatedAt = toIsoString(snapshotEntry.updated_at)
+        const depthUpdatedAt = toIsoString(depthEntry.updated_at)
+        const bankUpdatedAt = toIsoString(bankEntry.updated_at)
+        const updatedAtCandidates = [smartUpdatedAt, snapshotUpdatedAt, depthUpdatedAt, bankUpdatedAt].filter(Boolean) as string[]
+        const updatedAt = updatedAtCandidates.length === 4
+          ? updatedAtCandidates.sort((a, b) => a.localeCompare(b))[0]
+          : null
+
+        const smartPayload = parsePayload(smartEntry.payload)
+        const snapshotPayload = parsePayload(snapshotEntry.payload)
+        const depthPayload = parsePayload(depthEntry.payload)
+        const bankPayload = parsePayload(bankEntry.payload)
+
+        const smartSendLevel = (isObject(smartPayload) && typeof (smartPayload as any).level === 'string'
+          && ['great', 'good', 'fair', 'wait'].includes((smartPayload as any).level))
+          ? ((smartPayload as any).level as PulseScreenerRow['smartSendLevel'])
+          : null
+
+        const bestQuote = isObject(snapshotPayload) && Array.isArray((snapshotPayload as any).quotes)
+          ? (snapshotPayload as any).quotes[0]
+          : null
+        const bestProvider = isObject(bestQuote) && typeof (bestQuote as any).provider === 'string'
+          ? String((bestQuote as any).provider)
+          : null
+        const bestRecipientGets = isObject(bestQuote) ? toSafeNumber((bestQuote as any).recipientGets) : null
+
+        const spreadRangeBps = isObject(depthPayload) ? toSafeNumber((depthPayload as any).spreadRangeBps) : null
+        const providerCount = isObject(depthPayload) ? toSafeNumber((depthPayload as any).providerCount) : null
+
+        const bankSavings = isObject(bankPayload) ? toSafeNumber((bankPayload as any).savings) : null
+        const bankSavingsPercent = isObject(bankPayload) ? toSafeNumber((bankPayload as any).savingsPercent) : null
+
+        return {
+          corridorId,
+          slug,
+          label,
+          fromFlag,
+          toFlag,
+          sourceCountry: parsed?.fromCountry,
+          destCountry: parsed?.toCountry,
+          sourceCurrency: parsed?.sendCurrency,
+          destCurrency: parsed?.recvCurrency,
+          dataAvailable: Boolean(updatedAt),
+          updatedAt: updatedAt || null,
+          smartSendLevel,
+          bestProvider,
+          bestRecipientGets,
+          spreadRangeBps,
+          providerCount,
+          bankSavings,
+          bankSavingsPercent,
+          moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
+          moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+        }
+      })
+
+      const latestUpdatedAt = rows.reduce<string | null>((latest, row) => {
+        if (!row.updatedAt) return latest
+        if (!latest) return row.updatedAt
+        return row.updatedAt > latest ? row.updatedAt : latest
+      }, null)
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/screener', 200, durationSeconds)
+
+      return {
+        success: true,
+        updatedAt: latestUpdatedAt,
+        rows,
+      }
+    } catch (error) {
+      const statusCode = (error as any)?.statusCode
+      const normalizedStatus = Number.isFinite(Number(statusCode)) ? Number(statusCode) : 500
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/screener', normalizedStatus >= 400 ? normalizedStatus : 500, durationSeconds)
+      throw error
     }
   })
 

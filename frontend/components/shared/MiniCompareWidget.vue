@@ -2,20 +2,20 @@
   <div class="rounded-2xl bg-gradient-to-r from-brand-600 to-brand-500 p-6 shadow-xl">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="text-white max-w-xl">
-        <p class="text-sm font-semibold uppercase tracking-wide text-brand-50">
+        <p class="text-body-sm font-semibold uppercase tracking-wide text-brand-50">
           Compare now
         </p>
-        <h3 class="text-2xl font-bold leading-tight">
+        <h3 class="text-h3 font-bold leading-tight">
           Find the cheapest way to send money
         </h3>
-        <p class="text-brand-50 text-sm mt-1">
+        <p class="text-brand-50 text-body-sm mt-1">
           Live fees, FX markups, and delivery speed across bank, cash, and wallet payouts.
         </p>
       </div>
-      <div class="w-full max-w-xl rounded-xl bg-white p-4 shadow-lg">
+      <div class="w-full max-w-xl rounded-xl bg-surface p-4 shadow-lg">
         <div class="grid gap-3 md:grid-cols-2">
           <div>
-            <label class="text-xs font-semibold text-gray-700 mb-1 block">From</label>
+            <label class="text-body-sm font-semibold text-neutral-700 mb-1 block">From</label>
             <CountrySelect
               v-model="from"
               label="From country"
@@ -25,7 +25,7 @@
             />
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-700 mb-1 block">To</label>
+            <label class="text-body-sm font-semibold text-neutral-700 mb-1 block">To</label>
             <CountrySelect
               v-model="to"
               label="To country"
@@ -37,18 +37,18 @@
         </div>
         <div class="mt-3 grid gap-3 md:grid-cols-3">
           <div class="md:col-span-2">
-            <label class="text-xs font-semibold text-gray-700 mb-1 block">Amount</label>
-            <div class="flex items-center rounded-lg border border-gray-300 bg-gray-50 px-3">
+            <label class="text-body-sm font-semibold text-neutral-700 mb-1 block">Amount</label>
+            <div class="flex items-center rounded-lg border border-neutral-300 bg-neutral-50 px-3">
               <input
                 v-model.number="amount"
                 type="number"
                 :min="amountLimits.minAmount"
                 :max="amountLimits.maxAmount"
-                class="h-10 w-full bg-transparent text-gray-900 focus:outline-none"
+                class="h-10 w-full bg-transparent text-neutral-900 focus:outline-none"
                 placeholder="e.g. 500"
                 @blur="clampAmount"
               >
-              <span class="text-sm font-semibold text-gray-600 ml-2">{{ fromCurrency }}</span>
+              <span class="text-body-sm font-semibold text-neutral-600 ml-2">{{ fromCurrency }}</span>
             </div>
           </div>
           <div class="flex items-end">
@@ -62,7 +62,7 @@
         </div>
         <div class="mt-3 grid gap-3 md:grid-cols-2">
           <div>
-            <label class="text-xs font-semibold text-gray-700 mb-1 block">Send currency</label>
+            <label class="text-body-sm font-semibold text-neutral-700 mb-1 block">Send currency</label>
             <CurrencySelect
               v-model="fromCurrency"
               label="Send currency"
@@ -72,7 +72,7 @@
             />
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-700 mb-1 block">Receive currency</label>
+            <label class="text-body-sm font-semibold text-neutral-700 mb-1 block">Receive currency</label>
             <CurrencySelect
               v-model="toCurrency"
               label="Receive currency"
@@ -82,7 +82,7 @@
             />
           </div>
         </div>
-        <p class="mt-3 text-xs text-gray-500">
+        <p class="mt-3 text-body-sm text-neutral-500">
           We rank by total cost (fees + FX), speed, and payout options. No pay-to-play.
         </p>
       </div>

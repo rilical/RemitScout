@@ -1,9 +1,10 @@
 import type { RecentSearch } from '~/types/remit'
 import { useApi } from '~/composables/useApi'
 
-export const useRecentSearches = (limit = 20, options: Record<string, any> = {}) => {
+export const useRecentSearches = (limit = 20, options: Record<string, unknown> = {}) => {
   const { request } = useApi()
-  const key = options.key || `recent-searches-${limit}`
+  const key = typeof options.key === 'string' ? options.key : `recent-searches-${limit}`
+  const { key: _ignoredKey, ...asyncOptions } = options
 
   const data = useAsyncData(
     key,
@@ -11,15 +12,18 @@ export const useRecentSearches = (limit = 20, options: Record<string, any> = {})
       try {
         return await request<{ data: RecentSearch[], updatedAt: string }>('/recent-searches', { query: { limit } })
       }
-      catch (error: any) {
+      catch (error: unknown) {
+        const statusCode = error && typeof error === 'object'
+          ? (error as Record<string, unknown>).statusCode
+          : undefined
         // Don't crash the page if API fails - return empty data instead
-        if (error?.statusCode === 401 || error?.statusCode === 403 || error?.statusCode === 500) {
+        if (statusCode === 401 || statusCode === 403 || statusCode === 500) {
           return { data: [], updatedAt: new Date().toISOString() }
         }
         throw error
       }
     },
-    { watch: [], ...options },
+    { watch: [], ...(asyncOptions as any) },
   )
 
   const recordSearch = async (payload: Partial<RecentSearch>) => {

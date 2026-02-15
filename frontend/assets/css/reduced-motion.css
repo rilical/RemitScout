@@ -8,5 +8,18 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
 
+  /* Avoid 0.01ms flicker on custom animations by disabling them entirely. */
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-scale-in,
+  .animate-count-up,
+  .animate-gradient,
+  .animate-shimmer,
+  .animate-float,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+}

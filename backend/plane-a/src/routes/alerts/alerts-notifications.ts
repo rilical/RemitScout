@@ -1,11 +1,58 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply } from 'fastify'
 import { recordRequest } from '../../../../shared/api-metrics'
 import { config } from '../../../../shared/config'
 import { getRequestContext, logAuditEvent } from '../../services/audit-log'
 import { verifyAlertUnsubscribeToken } from '../../services/alert-unsubscribe'
 import { getErrorMessage } from '../../types/errors'
 import { logger } from './shared'
-import { ValidationError } from '../../../../shared/errors'
+
+const unsubscribePage = (title: string, body: string, manageUrl?: string) => `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h2>${title}</h2>
+    <p>${body}</p>
+    ${manageUrl ? `<p><a href="${manageUrl}">Manage notification preferences</a></p>` : ''}
+  </body>
+</html>
+`.trim()
+
+const sendUnsubscribePage = (
+  reply: FastifyReply,
+  statusCode: number,
+  title: string,
+  body: string,
+  manageUrl?: string,
+) => {
+  reply.code(statusCode)
+  return reply.type('text/html').send(unsubscribePage(title, body, manageUrl))
+}
+
+const sendUnsubscribeJsonError = (
+  reply: FastifyReply,
+  statusCode: number,
+  message: string,
+  details?: Record<string, string>,
+) => {
+  reply.code(statusCode)
+  return reply.type('application/json').send({
+    error: 'unsubscribe_error',
+    message,
+    ...(details ? { details } : {}),
+    statusCode,
+  })
+}
+
+const wantsJsonResponse = (request: { headers: { accept?: string }, query: { format?: string } }) => {
+  const acceptHeader = request.headers.accept?.toLowerCase() ?? ''
+  const queryFormat = request.query.format?.toLowerCase()
+  return queryFormat === 'json' || acceptHeader.includes('application/json')
+}
 
 export const registerAlertsNotificationRoutes = async (app: FastifyInstance) => {
   const { pool } = app.container
@@ -19,18 +66,40 @@ export const registerAlertsNotificationRoutes = async (app: FastifyInstance) => 
     if (!token) {
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('GET', '/alerts/unsubscribe', 400, durationSeconds)
-            throw new ValidationError('Invalid request', { details: reply
-        .type('text/html')
-        .send('<h2>Unsubscribe failed</h2><p>Missing unsubscribe token.</p>') })
+      return sendUnsubscribeJsonError(
+        reply,
+        400,
+        'Missing unsubscribe token.',
+        { reason: 'token_missing' },
+      )
     }
 
-    const payload = verifyAlertUnsubscribeToken(token)
+    let payload: { userId: string } | null = null
+    try {
+      payload = verifyAlertUnsubscribeToken(token)
+    } catch (error) {
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/alerts/unsubscribe', 400, durationSeconds)
+      return sendUnsubscribeJsonError(
+        reply,
+        400,
+        'Invalid or expired token.',
+        {
+          reason: 'token_invalid',
+          error: getErrorMessage(error),
+        },
+      )
+    }
+
     if (!payload) {
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('GET', '/alerts/unsubscribe', 400, durationSeconds)
-            throw new ValidationError('Invalid request', { details: reply
-        .type('text/html')
-        .send('<h2>Unsubscribe failed</h2><p>Invalid or expired token.</p>') })
+      return sendUnsubscribeJsonError(
+        reply,
+        400,
+        'Invalid or expired token.',
+        { reason: 'token_invalid' },
+      )
     }
 
     const { userId } = payload
@@ -91,12 +160,25 @@ export const registerAlertsNotificationRoutes = async (app: FastifyInstance) => 
 
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('GET', '/alerts/unsubscribe', 200, durationSeconds)
-      const baseUrl = config.alerts.unsubscribe.baseUrl.replace(/\/$/, '')
-      return reply
-        .type('text/html')
-        .send(
-          `<h2>You're unsubscribed</h2><p>Email alerts are now disabled.</p><p><a href="${baseUrl}/dashboard?tab=account&section=notifications">Manage notification preferences</a></p>`,
-        )
+      const baseUrl = config.alerts.unsubscribe.baseUrl
+        ? config.alerts.unsubscribe.baseUrl.replace(/\/$/, '')
+        : ''
+      if (wantsJsonResponse({ headers: request.headers as { accept?: string }, query: request.query as { format?: string } })) {
+        return reply.code(200).type('application/json').send({
+          status: 'ok',
+          message: 'Email alerts are now disabled.',
+          action: 'unsubscribed',
+          statusCode: 200,
+        })
+      }
+
+      return sendUnsubscribePage(
+        reply,
+        200,
+        'You\'re unsubscribed',
+        'Email alerts are now disabled.',
+        `${baseUrl}/dashboard?tab=account&section=notifications`,
+      )
     } catch (error) {
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('GET', '/alerts/unsubscribe', 500, durationSeconds)
@@ -104,10 +186,12 @@ export const registerAlertsNotificationRoutes = async (app: FastifyInstance) => 
         user_id: userId,
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(500)
-      return reply
-        .type('text/html')
-        .send('<h2>Unsubscribe failed</h2><p>Please try again later.</p>')
+      return sendUnsubscribeJsonError(
+        reply,
+        500,
+        'Unable to process unsubscribe request.',
+        { reason: 'database_update_failed' },
+      )
     }
   })
 }

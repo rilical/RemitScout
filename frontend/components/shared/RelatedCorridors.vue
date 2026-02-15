@@ -1,18 +1,18 @@
 <template>
-  <section class="border-t border-slate-200 bg-gray-900">
+  <section class="border-t border-rs-border bg-neutral-900">
     <div class="mx-auto max-w-6xl px-4 py-10">
       <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h2 class="text-2xl font-bold text-white">
+          <h2 class="text-h3 font-bold text-white">
             Popular corridors
           </h2>
-          <p class="text-sm text-white/70">
+          <p class="text-body-sm text-white/70">
             Top searched routes similar to {{ fromName }} to {{ toName }}.
           </p>
         </div>
         <NuxtLink
           to="/corridors"
-          class="text-sm font-semibold text-white hover:text-white/80 hover:underline transition-colors"
+          class="text-body-sm font-semibold text-white hover:text-white/80 hover:underline transition-colors"
         >
           Browse all corridors
         </NuxtLink>
@@ -20,14 +20,14 @@
 
       <div
         v-if="pending"
-        class="rounded-xl border border-gray-800 bg-gray-800/50 px-4 py-6 text-sm text-white/70"
+        class="rounded-xl border border-neutral-800 bg-neutral-800/50 px-4 py-6 text-body-sm text-white/70"
       >
         Loading corridors...
       </div>
 
       <div
         v-else-if="!displayCorridors.length"
-        class="rounded-xl border border-gray-800 bg-gray-800/50 px-4 py-6 text-sm text-white/70"
+        class="rounded-xl border border-neutral-800 bg-neutral-800/50 px-4 py-6 text-body-sm text-white/70"
       >
         No corridors are available right now.
       </div>
@@ -40,9 +40,9 @@
           v-for="corridor in displayCorridors"
           :key="corridor.key"
           :to="corridor.url"
-          class="group rounded-xl border-2 border-gray-800 bg-gray-800/50 p-5 hover:border-gray-700 hover:shadow-lg transition-all"
+          class="group rounded-xl border-2 border-neutral-800 bg-neutral-800/50 p-5 hover:border-neutral-700 hover:shadow-lg transition-all"
         >
-          <div class="flex items-center justify-between mb-3 text-2xl">
+          <div class="flex items-center justify-between mb-3 text-h3">
             <span aria-hidden="true">{{ corridor.fromFlag }}</span>
             <svg
               class="h-5 w-5 text-white/60 group-hover:text-white transition-colors"
@@ -59,15 +59,15 @@
             </svg>
             <span aria-hidden="true">{{ corridor.toFlag }}</span>
           </div>
-          <p class="text-sm font-semibold text-white group-hover:text-white transition-colors">
+          <p class="text-body-sm font-semibold text-white group-hover:text-white transition-colors">
             {{ corridor.fromName }} to {{ corridor.toName }}
           </p>
-          <p class="text-xs text-white/60 mt-1">
+          <p class="text-body-sm text-white/60 mt-1">
             {{ corridor.from }} to {{ corridor.to }}
           </p>
           <div
             v-if="corridor.count24h"
-            class="flex items-center gap-1.5 mt-2 text-xs text-white/50"
+            class="flex items-center gap-1.5 mt-2 text-body-sm text-white/50"
           >
             <svg
               class="h-3.5 w-3.5"

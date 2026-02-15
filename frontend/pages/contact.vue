@@ -1,42 +1,39 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-neutral-50">
+    <div class="py-10 mx-auto max-w-page px-page-x">
       <Breadcrumbs :items="breadcrumbItems" />
 
-      <div class="mx-auto max-w-7xl">
+      <div>
         <!-- Hero Section -->
-        <div class="mb-10 rounded-3xl border border-slate-200 bg-white p-10 shadow-xl relative overflow-hidden">
+        <div class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl relative overflow-hidden">
           <div class="absolute inset-0">
             <div class="h-full w-full bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_60%)]" />
           </div>
           <div class="relative">
-            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 mb-6">
-              Contact
-            </div>
-            <h1 class="mb-6 text-4xl font-bold text-slate-900 sm:text-5xl">
+            <h1 class="mb-6 text-h1 font-bold text-rs-fg">
               Get in touch with <span class="text-brand-600">Remit-Scout</span>
             </h1>
-            <p class="mb-4 text-lg text-slate-600">
+            <p class="mb-4 text-body-lg text-neutral-600">
               Have questions about money transfers or need help choosing the right provider? We're
               here to help.
             </p>
-            <p class="text-sm text-slate-500">
+            <p class="text-body-sm text-rs-muted">
               Advertiser disclosure -
               <NuxtLink
                 to="/legal/disclosure"
                 class="font-semibold text-brand-600 hover:text-brand-700 underline"
               >Read disclosure</NuxtLink>
             </p>
-            <p class="mb-6 mt-4 text-slate-600">
+            <p class="mb-6 mt-4 text-neutral-600">
               We are not able to answer questions about individual money transfers. Please refer to our frequently asked
               questions or use the form below for general inquiries.
             </p>
 
             <!-- Important Note -->
-            <div class="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-4">
+            <div class="mb-8 rounded-xl border border-warning-200 bg-warning-50 p-4">
               <div class="flex">
                 <svg
-                  class="mr-3 h-6 w-6 flex-shrink-0 text-orange-500"
+                  class="mr-3 h-6 w-6 flex-shrink-0 text-warning-500"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -47,7 +44,7 @@
                   />
                 </svg>
                 <div>
-                  <p class="text-sm font-medium text-orange-800">
+                  <p class="text-body-sm font-medium text-warning-800">
                     If you have a question about an ongoing transaction, the fastest path is to contact the provider's
                     support team directly.
                   </p>
@@ -57,8 +54,8 @@
 
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
               <!-- Contact Form -->
-              <div class="text-slate-900">
-                <h2 class="mb-6 text-2xl font-bold text-slate-900">
+              <div class="text-rs-fg">
+                <h2 class="mb-6 text-h3 font-bold text-rs-fg">
                   Send a message
                 </h2>
 
@@ -68,11 +65,11 @@
                 >
                   <div
                     v-if="submitSuccess"
-                    class="rounded-lg bg-green-50 border border-green-200 p-4"
+                    class="rounded-lg bg-success-50 border border-success-200 p-4"
                   >
                     <div class="flex">
                       <svg
-                        class="h-5 w-5 text-green-600 mr-2"
+                        class="h-5 w-5 text-success-600 mr-2"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -82,7 +79,7 @@
                           clip-rule="evenodd"
                         />
                       </svg>
-                      <p class="text-sm text-green-800">
+                      <p class="text-body-sm text-success-800">
                         {{ submitSuccess }}
                       </p>
                     </div>
@@ -90,11 +87,11 @@
 
                   <div
                     v-if="submitError"
-                    class="rounded-lg bg-red-50 border border-red-200 p-4"
+                    class="rounded-lg bg-danger-600/10 border border-danger-600/30 p-4"
                   >
                     <div class="flex">
                       <svg
-                        class="h-5 w-5 text-red-600 mr-2"
+                        class="h-5 w-5 text-danger-600 mr-2"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -104,7 +101,7 @@
                           clip-rule="evenodd"
                         />
                       </svg>
-                      <p class="text-sm text-red-800">
+                      <p class="text-body-sm text-danger-600">
                         {{ submitError }}
                       </p>
                     </div>
@@ -113,20 +110,20 @@
                   <div>
                     <label
                       for="name"
-                      class="mb-2 block text-sm font-medium text-gray-600"
-                    >Name <span class="text-red-500">*</span></label>
+                      class="mb-2 block text-body-sm font-medium text-neutral-600"
+                    >Name <span class="text-danger-600">*</span></label>
                     <input
                       id="name"
                       v-model="form.name"
                       type="text"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                      :class="errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.name ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
                     >
                     <p
                       v-if="errors.name"
-                      class="mt-1 text-sm text-red-600"
+                      class="mt-1 text-body-sm text-danger-600"
                     >
                       {{ errors.name }}
                     </p>
@@ -135,20 +132,20 @@
                   <div>
                     <label
                       for="email"
-                      class="mb-2 block text-sm font-medium text-gray-600"
-                    >Email <span class="text-red-500">*</span></label>
+                      class="mb-2 block text-body-sm font-medium text-neutral-600"
+                    >Email <span class="text-danger-600">*</span></label>
                     <input
                       id="email"
                       v-model="form.email"
                       type="email"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                      :class="errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.email ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
                     >
                     <p
                       v-if="errors.email"
-                      class="mt-1 text-sm text-red-600"
+                      class="mt-1 text-body-sm text-danger-600"
                     >
                       {{ errors.email }}
                     </p>
@@ -157,15 +154,15 @@
                   <div>
                     <label
                       for="subject"
-                      class="mb-2 block text-sm font-medium text-gray-600"
-                    >Subject <span class="text-red-500">*</span></label>
+                      class="mb-2 block text-body-sm font-medium text-neutral-600"
+                    >Subject <span class="text-danger-600">*</span></label>
                     <select
                       id="subject"
                       v-model="form.subject"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-gray-900 bg-white focus:outline-none focus:ring-2 transition-colors"
-                      :class="errors.subject ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                      class="w-full rounded-md border px-3 py-2 text-neutral-900 bg-surface focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.subject ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
                     >
                       <option
                         value=""
@@ -191,7 +188,7 @@
                     </select>
                     <p
                       v-if="errors.subject"
-                      class="mt-1 text-sm text-red-600"
+                      class="mt-1 text-body-sm text-danger-600"
                     >
                       {{ errors.subject }}
                     </p>
@@ -200,34 +197,34 @@
                   <div>
                     <label
                       for="message"
-                      class="mb-2 block text-sm font-medium text-gray-600"
-                    >Message <span class="text-red-500">*</span></label>
+                      class="mb-2 block text-body-sm font-medium text-neutral-600"
+                    >Message <span class="text-danger-600">*</span></label>
                     <textarea
                       id="message"
                       v-model="form.message"
                       rows="6"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 transition-colors"
-                      :class="errors.message ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-primary-500'"
+                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.message ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
                     />
                     <p
                       v-if="errors.message"
-                      class="mt-1 text-sm text-red-600"
+                      class="mt-1 text-body-sm text-danger-600"
                     >
                       {{ errors.message }}
                     </p>
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-body-sm text-neutral-500">
                       {{ form.message.length }}/5000 characters
                     </p>
                   </div>
 
-                  <button
-                    type="submit"
-                    :disabled="isSubmitting"
-                    class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    :class="isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
-                  >
+                    <button
+                      type="submit"
+                      :disabled="isSubmitting"
+                      class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 motion-safe:transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      :class="isSubmitting ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
+                    >
                     <span
                       v-if="isSubmitting"
                       class="flex items-center justify-center"
@@ -261,19 +258,19 @@
               <!-- Resources -->
               <div>
                 <!-- Internal Links -->
-                <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-sm">
-                  <h3 class="mb-5 text-xl font-bold text-gray-900">
+                <div class="rounded-xl border border-neutral-200 bg-surface p-6 shadow-sm">
+                  <h3 class="mb-5 text-h4 font-bold text-neutral-900">
                     Explore Our Resources
                   </h3>
                   <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <NuxtLink
                       to="/learn/providers"
-                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -287,12 +284,12 @@
                           </svg>
                         </div>
                         <div class="flex-1">
-                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Provider Reviews</span>
-                          <p class="mt-1 text-xs text-gray-600">Compare trusted money transfer services</p>
+                          <span class="font-semibold text-neutral-900 group-hover:text-brand-600">Provider Reviews</span>
+                          <p class="mt-1 text-body-sm text-neutral-600">Compare trusted money transfer services</p>
                         </div>
                       </div>
                       <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-brand-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -308,12 +305,12 @@
 
                     <NuxtLink
                       to="/learn"
-                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -327,12 +324,12 @@
                           </svg>
                         </div>
                         <div class="flex-1">
-                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Learn Guides</span>
-                          <p class="mt-1 text-xs text-gray-600">Expert guides and insights</p>
+                          <span class="font-semibold text-neutral-900 group-hover:text-brand-600">Learn Guides</span>
+                          <p class="mt-1 text-body-sm text-neutral-600">Expert guides and insights</p>
                         </div>
                       </div>
                       <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-brand-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -348,12 +345,12 @@
 
                     <NuxtLink
                       to="/about"
-                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -367,12 +364,12 @@
                           </svg>
                         </div>
                         <div class="flex-1">
-                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">About Us</span>
-                          <p class="mt-1 text-xs text-gray-600">Our story and mission</p>
+                          <span class="font-semibold text-neutral-900 group-hover:text-brand-600">About Us</span>
+                          <p class="mt-1 text-body-sm text-neutral-600">Our story and mission</p>
                         </div>
                       </div>
                       <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-brand-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -388,12 +385,12 @@
 
                     <NuxtLink
                       to="/methodology"
-                      class="group relative flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
+                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
                     >
                       <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
                           <svg
-                            class="w-5 h-5 text-primary-600"
+                            class="w-5 h-5 text-brand-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -407,12 +404,12 @@
                           </svg>
                         </div>
                         <div class="flex-1">
-                          <span class="font-semibold text-gray-900 group-hover:text-primary-700">Our Methodology</span>
-                          <p class="mt-1 text-xs text-gray-600">How we compare providers</p>
+                          <span class="font-semibold text-neutral-900 group-hover:text-brand-600">Our Methodology</span>
+                          <p class="mt-1 text-body-sm text-neutral-600">How we compare providers</p>
                         </div>
                       </div>
                       <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
+                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-brand-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -433,15 +430,15 @@
         </div>
 
         <!-- Mini FAQ Section -->
-        <div class="mb-10 rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
-          <h2 class="mb-6 text-3xl font-bold text-slate-900">
+        <div class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl">
+          <h2 class="mb-6 text-h2 font-bold text-rs-fg">
             Frequently Asked Questions
           </h2>
           <FaqAccordion :faqs="contactFaqs" />
           <div class="mt-6 text-center">
             <NuxtLink
               to="/faq"
-              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 transition-colors"
+              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 motion-safe:transition-colors"
             >
               View All FAQs
               <svg
@@ -470,13 +467,13 @@
     <Teleport to="body">
       <div
         v-if="showExternalLinkModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 px-4"
         role="dialog"
         aria-modal="true"
       >
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl">
           <div class="mb-4 flex items-start gap-3">
-            <div class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+            <div class="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 text-brand-700">
               <svg
                 class="h-6 w-6"
                 fill="none"
@@ -492,10 +489,10 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-lg font-semibold text-slate-900">
+              <h3 class="text-body-lg font-semibold text-rs-fg">
                 Leave Remit-Scout?
               </h3>
-              <p class="text-sm text-slate-700 mt-1">
+              <p class="text-body-sm text-neutral-700 mt-1">
                 You're about to visit an external site. We vet links, but it will open in a new tab.
               </p>
             </div>
@@ -503,14 +500,14 @@
           <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              class="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+              class="w-full rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 sm:w-auto"
               @click="closeExternalLinkModal"
             >
               Stay here
             </button>
             <button
               type="button"
-              class="w-full rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 sm:w-auto"
+              class="w-full rounded-lg bg-primary-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-primary-700 sm:w-auto"
               @click="confirmExternalLink"
             >
               Continue
@@ -537,12 +534,20 @@ const breadcrumbItems = [
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Contact',
+    description: 'Get help with transfers, provider comparisons, data issues, or partnership inquiries.',
+  },
+})
+
 setSeo({
   title: 'Contact Us | Get Help with Money Transfers | Remit-Scout',
   description:
-    'Contact Remit-Scout for help with money transfer questions, provider comparisons, or technical support. Based in Carnegie Mellon University\'s Swartz Center for Entrepreneurship.',
+    'Contact Remit-Scout for help with transfers, provider comparisons, data issues, or partnerships. We respond quickly and route you to the right resources.',
   canonical: `${siteUrl}/contact`,
-  ogImage: `${siteUrl}/images/og/contact.jpg`,
+  ogImage: false,
 })
 
 jsonLdBreadcrumb([

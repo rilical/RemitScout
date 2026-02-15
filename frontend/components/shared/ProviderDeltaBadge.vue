@@ -1,6 +1,6 @@
 <template>
   <div
-    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all"
+    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-body-sm font-semibold transition-all"
     :class="badgeClasses"
   >
     <template v-if="isBest">
@@ -46,7 +46,7 @@ const badgeClasses = computed(() => {
   }
 
   // All non-best options get dark blue styling to match footer
-  return 'bg-gray-900 text-white'
+  return 'bg-neutral-900 text-white'
 })
 
 const formattedDelta = computed(() => {

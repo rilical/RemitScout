@@ -1,9 +1,9 @@
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+      <h2 class="text-h4 font-bold text-white flex items-center gap-2">
         <svg
-          class="h-5 w-5 text-blue-400"
+          class="h-5 w-5 text-primary-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -17,10 +17,10 @@
         </svg>
         Market Snapshot
       </h2>
-      <div class="flex items-center gap-2 text-sm text-slate-400">
+      <div class="flex items-center gap-2 text-body-sm text-neutral-400">
         <span class="relative flex h-2 w-2">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-          <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-600 opacity-75" />
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-success-600" />
         </span>
         Snapshot
       </div>
@@ -30,8 +30,13 @@
       <div
         v-for="metric in metrics"
         :key="metric.id"
-        class="group relative cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-800/40 p-6 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02]"
+        class="group relative cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 p-6 transition-all duration-300 hover:border-white/20 hover:shadow-lg hover:shadow-black/20 hover:scale-[1.02]"
+        role="button"
+        tabindex="0"
+        :aria-label="`View details for ${metric.label}`"
         @click="openModal(metric)"
+        @keydown.enter="openModal(metric)"
+        @keydown.space.prevent="openModal(metric)"
       >
         <div
           class="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
@@ -50,9 +55,10 @@
                 :class="metric.iconColor"
               />
             </div>
-            <button
-              class="text-slate-500 opacity-0 transition-all duration-200 group-hover:opacity-100 hover:text-slate-300"
-              title="Learn more"
+            <span
+              class="text-rs-muted opacity-0 transition-all duration-200 group-hover:opacity-100 hover:text-neutral-300"
+              title="View details"
+              aria-hidden="true"
             >
               <svg
                 class="h-5 w-5"
@@ -67,21 +73,21 @@
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-            </button>
+            </span>
           </div>
 
-          <div class="mb-1 text-sm font-medium text-slate-400">
+          <div class="mb-1 text-body-sm font-medium text-neutral-400">
             {{ metric.label }}
           </div>
 
-          <div class="mb-3 text-2xl font-bold text-white">
+          <div class="mb-3 text-h3 font-bold text-white">
             {{ metric.value }}
           </div>
 
           <div
             v-if="metric.change"
-            class="flex items-center gap-1 text-sm font-medium"
-            :class="metric.changeType === 'positive' ? 'text-emerald-400' : 'text-red-400'"
+            class="flex items-center gap-1 text-body-sm font-medium"
+            :class="metric.changeType === 'positive' ? 'text-success-600' : 'text-danger-600'"
           >
             <svg
               class="h-4 w-4"
@@ -109,7 +115,7 @@
 
           <div
             v-if="metric.subtitle"
-            class="mt-3 pt-3 border-t border-white/5 text-xs text-slate-500"
+            class="mt-3 pt-3 border-t border-white/5 text-body-sm text-rs-muted"
           >
             {{ metric.subtitle }}
           </div>
@@ -157,9 +163,9 @@ const metrics = computed(() => [
     change: '+₱42 vs #2',
     changeType: 'positive' as const,
     subtitle: 'Recipient gets ₱56,234',
-    iconBgClass: 'bg-emerald-500/20',
-    iconColor: 'text-emerald-400',
-    glowClass: 'bg-gradient-to-br from-emerald-500/10 to-transparent',
+    iconBgClass: 'bg-success-600/20',
+    iconColor: 'text-success-600',
+    glowClass: 'bg-gradient-to-br from-success-600/10 to-transparent',
     icon: TrophyIcon,
   },
   {
@@ -169,9 +175,9 @@ const metrics = computed(() => [
     change: 'Avg: 4.5%',
     changeType: 'positive' as const,
     subtitle: 'Based on 847 quotes',
-    iconBgClass: 'bg-blue-500/20',
-    iconColor: 'text-blue-400',
-    glowClass: 'bg-gradient-to-br from-blue-500/10 to-transparent',
+    iconBgClass: 'bg-primary-500/20',
+    iconColor: 'text-primary-400',
+    glowClass: 'bg-gradient-to-br from-primary-500/10 to-transparent',
     icon: BankIcon,
   },
   {
@@ -181,9 +187,9 @@ const metrics = computed(() => [
     change: null,
     changeType: null,
     subtitle: 'Remitly Express',
-    iconBgClass: 'bg-purple-500/20',
-    iconColor: 'text-purple-400',
-    glowClass: 'bg-gradient-to-br from-purple-500/10 to-transparent',
+    iconBgClass: 'bg-accent-600/20',
+    iconColor: 'text-accent-600',
+    glowClass: 'bg-gradient-to-br from-accent-600/10 to-transparent',
     icon: ClockIcon,
   },
   {
@@ -193,14 +199,13 @@ const metrics = computed(() => [
     change: '+0.3% vs 7d avg',
     changeType: 'positive' as const,
     subtitle: 'Reliability signal',
-    iconBgClass: 'bg-amber-500/20',
-    iconColor: 'text-amber-400',
-    glowClass: 'bg-gradient-to-br from-amber-500/10 to-transparent',
+    iconBgClass: 'bg-warning-600/20',
+    iconColor: 'text-warning-600',
+    glowClass: 'bg-gradient-to-br from-warning-600/10 to-transparent',
     icon: CheckIcon,
   },
 ])
 
 const openModal = (metric: typeof metrics.value[0]) => {
-  console.log('Open modal for', metric.id)
 }
 </script>

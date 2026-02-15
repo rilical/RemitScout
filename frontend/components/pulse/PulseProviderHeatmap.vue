@@ -3,10 +3,10 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
       <div>
-        <h2 class="text-lg font-bold text-white">
+        <h2 class="text-body-lg font-bold text-white">
           Winner Timeline
         </h2>
-        <p class="text-sm text-neutral-400">
+        <p class="text-body-sm text-neutral-400">
           Who led on delivered amount each day
         </p>
       </div>
@@ -20,13 +20,13 @@
             class="h-3 w-3 rounded"
             :style="{ backgroundColor: getProviderColor(provider) }"
           />
-          <span class="text-sm text-neutral-400">{{ provider }}</span>
-          <span class="text-sm font-semibold text-white">{{ stats.percentage }}%</span>
+          <span class="text-body-sm text-neutral-400">{{ provider }}</span>
+          <span class="text-body-sm font-semibold text-white">{{ stats.percentage }}%</span>
         </div>
-        <div class="flex items-center gap-2 text-xs text-neutral-400">
+        <div class="flex items-center gap-2 text-body-sm text-neutral-400">
           <span class="h-2.5 w-2.5 rounded-full bg-neutral-600" />
           <span>Leader changes</span>
-          <span class="text-sm font-semibold text-white">{{ leaderChangeCount }}</span>
+          <span class="text-body-sm font-semibold text-white">{{ leaderChangeCount }}</span>
         </div>
       </div>
     </div>
@@ -35,30 +35,17 @@
     <div class="p-4">
       <div
         v-if="loading"
-        class="flex h-24 items-center justify-center"
+        class="flex h-24 w-full items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
       >
-        <div class="flex items-center gap-3 text-neutral-400">
-          <svg
-            class="h-5 w-5 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            />
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-          Loading...
-        </div>
+        <SkeletonBlock
+          width="full"
+          height="6rem"
+          tone="dark"
+        />
+        <span class="sr-only">Loading chart</span>
       </div>
 
       <div
@@ -96,7 +83,7 @@
             v-if="hoveredDay"
             class="absolute z-20 left-1/2 -translate-x-1/2 top-16 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-xl"
           >
-            <div class="mb-2 text-sm font-medium text-white">
+            <div class="mb-2 text-body-sm font-medium text-white">
               {{ hoveredDay.date }}
             </div>
             <div class="flex items-center gap-2">
@@ -104,17 +91,17 @@
                 class="h-3 w-3 rounded"
                 :style="{ backgroundColor: hoveredDay.winnerColor }"
               />
-              <span class="text-sm text-neutral-300">{{ hoveredDay.winner }}</span>
-              <span class="text-sm font-semibold text-brand-600">was leader</span>
+              <span class="text-body-sm text-neutral-300">{{ hoveredDay.winner }}</span>
+              <span class="text-body-sm font-semibold text-brand-600">was leader</span>
             </div>
-            <div class="mt-1 text-xs text-neutral-500">
+            <div class="mt-1 text-body-sm text-neutral-500">
               Edge ~${{ hoveredDay.savings.toFixed(2) }} vs #2
             </div>
           </div>
         </div>
 
         <!-- Week Labels -->
-        <div class="flex items-center justify-between text-xs text-neutral-500">
+        <div class="flex items-center justify-between text-body-sm text-neutral-500">
           <span>{{ getStartLabel() }}</span>
           <span>Today</span>
         </div>
@@ -133,11 +120,11 @@
             class="h-2.5 w-2.5 rounded"
             :style="{ backgroundColor: getProviderColor(provider) }"
           />
-          <span class="text-xs text-neutral-400">{{ provider }}</span>
+          <span class="text-body-sm text-neutral-400">{{ provider }}</span>
         </div>
       </div>
       <button
-        class="text-xs text-neutral-400 hover:text-white transition-colors"
+        class="text-body-sm text-neutral-400 hover:text-white transition-colors"
         @click="compactView = !compactView"
       >
         {{ compactView ? 'Expand view' : 'Compact view' }}
@@ -158,6 +145,7 @@ import { usePulseStore } from '~/stores/pulse'
 import { getProviderHeatmapData, type ProviderHeatmapData, type ProviderHeatmapDay } from '~/lib/pulseApi'
 import { PROVIDER_COLORS } from '~/lib/pulseChartRegistry'
 import { formatMonthDay } from '~/shared/lib/format'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 const store = usePulseStore()
 
@@ -203,7 +191,7 @@ async function loadData() {
     data.value = await getProviderHeatmapData(store.corridor, store.timeframe)
   }
   catch (e) {
-    console.error('Failed to load heatmap data:', e)
+    useLogger('PulseProviderHeatmap').error('Failed to load heatmap data', e)
   }
   finally {
     loading.value = false

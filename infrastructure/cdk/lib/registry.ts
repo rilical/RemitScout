@@ -20,15 +20,16 @@ export const createRegistry = (
     removalPolicy: options.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
-        maxImageCount: 30,
-        rulePriority: 1,
-        description: 'Keep last 30 images',
-      },
-      {
         maxImageAge: Duration.days(90),
         tagStatus: TagStatus.UNTAGGED,
-        rulePriority: 2,
+        rulePriority: 1,
         description: 'Delete untagged images after 90 days',
+      },
+      {
+        maxImageCount: 30,
+        tagStatus: TagStatus.ANY,
+        rulePriority: 2,
+        description: 'Keep last 30 images',
       },
     ],
   })

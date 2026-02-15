@@ -1,7 +1,7 @@
 <template>
   <section class="min-h-screen bg-neutral-50 flex items-center justify-center px-6 py-12">
-    <div class="max-w-xl w-full bg-white border border-neutral-200 rounded-3xl p-8 text-center shadow-sm">
-      <h1 class="text-2xl font-semibold text-neutral-900 mb-3">
+    <div class="max-w-xl w-full bg-surface border border-neutral-200 rounded-3xl p-8 text-center shadow-sm">
+      <h1 class="text-h3 font-semibold text-neutral-900 mb-3">
         {{ title }}
       </h1>
       <p class="text-neutral-600 mb-6">

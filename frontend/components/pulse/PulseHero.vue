@@ -1,12 +1,12 @@
 <template>
-  <div class="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-800/50 border border-white/10 overflow-hidden">
+  <div class="rounded-2xl bg-gradient-to-br from-neutral-800 to-neutral-800/50 border border-white/10 overflow-hidden">
     <!-- Header -->
     <div class="px-6 py-5 border-b border-white/10">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <h2 class="text-h4 font-bold text-white flex items-center gap-2">
             <svg
-              class="h-5 w-5 text-blue-400"
+              class="h-5 w-5 text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -20,12 +20,12 @@
             </svg>
             Quick Compare
           </h2>
-          <p class="text-sm text-slate-400 mt-1">
+          <p class="text-body-sm text-neutral-400 mt-1">
             Get quotes for any corridor in seconds
           </p>
         </div>
         <button
-          class="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+          class="text-body-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
           @click="showMethodology = true"
         >
           <svg
@@ -50,7 +50,7 @@
     <div class="p-6">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         <div>
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
             Sending from
           </label>
           <CountrySelect
@@ -63,7 +63,7 @@
         </div>
 
         <div>
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
             Receiving in
           </label>
           <CountrySelect
@@ -75,44 +75,52 @@
           />
         </div>
 
-        <div>
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Amount
-          </label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-            <input
-              v-model.number="form.amount"
-              type="number"
-              class="h-12 w-full rounded-xl border border-white/10 bg-white/5 pl-8 pr-4 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
-              placeholder="1000"
+          <div>
+            <label
+              for="pulse-amount"
+              class="mb-2 block text-body-sm font-semibold uppercase tracking-wider text-neutral-400"
             >
+              Amount
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">$</span>
+              <input
+                id="pulse-amount"
+                v-model.number="form.amount"
+                type="number"
+                class="h-12 w-full rounded-xl border border-white/10 bg-surface/5 pl-8 pr-4 text-white placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
+                placeholder="1000"
+              >
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Payout method
-          </label>
-          <select
-            v-model="form.method"
-            class="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
-          >
+          <div>
+            <label
+              for="pulse-method"
+              class="mb-2 block text-body-sm font-semibold uppercase tracking-wider text-neutral-400"
+            >
+              Payout method
+            </label>
+            <select
+              id="pulse-method"
+              v-model="form.method"
+              class="h-12 w-full rounded-xl border border-white/10 bg-surface/5 px-4 text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer"
+            >
             <option
               value="bank"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Bank Transfer
             </option>
             <option
               value="cash"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Cash Pickup
             </option>
             <option
               value="wallet"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Mobile Wallet
             </option>
@@ -120,28 +128,28 @@
         </div>
 
         <div>
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <label class="mb-2 block text-body-sm font-semibold uppercase tracking-wider text-neutral-400">
             Sort by
           </label>
           <select
             v-model="form.sortBy"
-            class="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all appearance-none cursor-pointer"
+            class="h-12 w-full rounded-xl border border-white/10 bg-surface/5 px-4 text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer"
           >
             <option
               value="recipient"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Max recipient gets
             </option>
             <option
               value="fastest"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Fastest delivery
             </option>
             <option
               value="reliable"
-              class="bg-slate-800"
+              class="bg-neutral-800"
             >
               Most reliable
             </option>
@@ -152,7 +160,7 @@
       <!-- Action Buttons -->
       <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <button
-          class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98]"
+          class="group relative overflow-hidden rounded-xl bg-gradient-to-r from-brand-600 to-primary-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02] active:scale-[0.98]"
           @click="applyFilters"
         >
           <span class="relative z-10 flex items-center justify-center gap-2">
@@ -171,11 +179,11 @@
             </svg>
             View Corridor Pulse
           </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-400 opacity-0 transition-opacity group-hover:opacity-100" />
+          <div class="absolute inset-0 bg-gradient-to-r from-primary-500 to-primary-400 opacity-0 transition-opacity group-hover:opacity-100" />
         </button>
 
         <div class="flex items-center gap-3">
-          <button class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
+          <button class="flex items-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-4 py-3 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
             <svg
               class="h-4 w-4"
               fill="none"
@@ -191,7 +199,7 @@
             </svg>
             Save corridor
           </button>
-          <button class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white">
+          <button class="flex items-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-4 py-3 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
             <svg
               class="h-4 w-4"
               fill="none"
@@ -206,7 +214,7 @@
               />
             </svg>
             Set alert
-            <span class="rounded bg-blue-500/20 px-1.5 py-0.5 text-xs font-bold text-blue-400">Plus</span>
+            <span class="rounded bg-primary-500/20 px-1.5 py-0.5 text-body-sm font-bold text-primary-400">Plus</span>
           </button>
         </div>
       </div>
@@ -215,26 +223,26 @@
     <!-- Quick Stats Bar -->
     <div class="grid grid-cols-2 md:grid-cols-4 border-t border-white/10">
       <div class="px-6 py-4 border-r border-white/10 last:border-r-0">
-        <div class="text-xs text-slate-400 mb-1">
+        <div class="text-body-sm text-neutral-400 mb-1">
           Best rate now
         </div>
-        <div class="text-lg font-bold text-white">
+        <div class="text-body-lg font-bold text-white">
           Wise
         </div>
       </div>
       <div class="px-6 py-4 border-r border-white/10 last:border-r-0">
-        <div class="text-xs text-slate-400 mb-1">
+        <div class="text-body-sm text-neutral-400 mb-1">
           Recipient gets
         </div>
-        <div class="text-lg font-bold text-emerald-400">
+        <div class="text-body-lg font-bold text-success-600">
           ₱56,234
         </div>
       </div>
       <div class="px-6 py-4 border-r border-white/10 last:border-r-0">
-        <div class="text-xs text-slate-400 mb-1">
+        <div class="text-body-sm text-neutral-400 mb-1">
           vs. yesterday
         </div>
-        <div class="text-lg font-bold text-emerald-400 flex items-center gap-1">
+        <div class="text-body-lg font-bold text-success-600 flex items-center gap-1">
           <svg
             class="h-4 w-4"
             fill="none"
@@ -252,10 +260,10 @@
         </div>
       </div>
       <div class="px-6 py-4">
-        <div class="text-xs text-slate-400 mb-1">
+        <div class="text-body-sm text-neutral-400 mb-1">
           Fastest option
         </div>
-        <div class="text-lg font-bold text-white">
+        <div class="text-body-lg font-bold text-white">
           12 min
         </div>
       </div>

@@ -14,6 +14,17 @@ type AuditLogFilters = {
 
 type ExportFormat = 'csv' | 'json'
 
+type AuditPagination = {
+  total: number
+  limit: number
+  offset: number
+}
+
+type AuditLogsResponse = {
+  logs: any[]
+  pagination: AuditPagination
+}
+
 export const useAudit = () => {
   const { request } = useApi()
   const loading = ref(false)
@@ -35,14 +46,14 @@ export const useAudit = () => {
   }
 
   const getLogs = (params: AuditLogFilters) =>
-    withLoading(() => request('/audit/logs', { method: 'GET', query: params }))
+    withLoading(() => request<AuditLogsResponse>('/audit/logs', { method: 'GET', query: params }))
 
   const getLog = (eventId: string) =>
     withLoading(() => request(`/audit/logs/${eventId}`, { method: 'GET' }))
 
   const exportLogs = (params: AuditLogFilters, format: ExportFormat = 'csv') =>
     withLoading(() =>
-      request('/audit/logs/export', {
+      request<string>('/audit/logs/export', {
         method: 'GET',
         query: { ...params, format },
         headers: format === 'csv' ? { accept: 'text/csv' } : undefined,

@@ -11,8 +11,61 @@ export default createConfigForNuxt({
 }).override('nuxt/vue/rules', {
   rules: {
     'vue/multi-word-component-names': 'off',
-    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    // Enforced via the runtime-only override below so server/scripts can still log.
+    'no-console': 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+  },
+}).append({
+  name: 'frontend/no-console-runtime',
+  files: [
+    'app.vue',
+    'components/**/*.{ts,vue}',
+    'composables/**/*.ts',
+    'domains/**/*.{ts,vue}',
+    'layouts/**/*.vue',
+    'middleware/**/*.{ts,js}',
+    'pages/**/*.vue',
+    'plugins/**/*.{ts,js}',
+    'shared/**/*.{ts,vue}',
+    'stores/**/*.{ts,js}',
+    'types/**/*.{ts,js}',
+    'utils/**/*.{ts,js}',
+  ],
+  rules: {
+    'no-console': ['error', { allow: ['warn'] }],
+  },
+}).append({
+  name: 'phase2/no-$fetch-in-composables',
+  files: [
+    'composables/**/*.ts',
+  ],
+  rules: {
+    'no-restricted-syntax': ['error', {
+      selector: 'CallExpression[callee.name=\'$fetch\']',
+      message: 'Do not call `$fetch` directly in composables. Use `useApi().request()` (see `composables/useApi.ts`).',
+    }],
+  },
+}).append({
+  name: 'phase2/no-$fetch-in-useApi',
+  files: [
+    'composables/useApi.ts',
+  ],
+  rules: {
+    'no-restricted-syntax': 'off',
+  },
+}).append({
+  name: 'phase2/no-process-env-client',
+  files: [
+    '**/*.vue',
+    'composables/**/*.ts',
+    'plugins/**/*.{ts,js}',
+  ],
+  rules: {
+    'no-restricted-properties': ['error', {
+      object: 'process',
+      property: 'env',
+      message: 'Use `useRuntimeConfig()` instead of `process.env` in client code.',
+    }],
   },
 }).append({
   name: 'phase2/icon-discipline',
@@ -86,6 +139,15 @@ export default createConfigForNuxt({
     'shared/lib/api/**',
     'tmp/**',
   ],
+}).append({
+  name: 'frontend/color-tokens',
+  files: ['**/*.vue'],
+  rules: {
+    'no-restricted-syntax': ['warn', {
+      message: 'Replace raw Tailwind color classes with semantic tokens (brand/neutral/primary/success/warning/danger/accent/rs-*).',
+      selector: 'VAttribute[key.name.name=\'class\'][value.value.type=\'VLiteral\'][value.value.value=/\\b(?:hover:|focus:|active:|sm:|md:|lg:|xl:)?(?:text-|bg-|border-|from-|to-|via-|ring-|placeholder-|outline-|shadow-|divide-)?(?:slate|gray|zinc|stone|blue|sky|cyan|teal|indigo|violet|purple|fuchsia|pink|rose|red|orange|amber|yellow|lime|green|emerald)-\\d{2,3}\\b/]',
+    }],
+  },
 })
 .overrideRules({
   // The current codebase still contains explicit `any` and intentionally-unused values.
@@ -98,4 +160,7 @@ export default createConfigForNuxt({
   'vue/html-indent': 'off',
   'vue/script-indent': 'off',
   'vue/singleline-html-element-content-newline': 'off',
+
+  // Lightweight import sorting (avoid strict ordering churn).
+  'sort-imports': ['warn', { ignoreCase: false, ignoreDeclarationSort: true, ignoreMemberSort: false, allowSeparatedGroups: true }],
 })

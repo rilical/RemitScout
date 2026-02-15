@@ -1,3 +1,7 @@
 {
   "extends": "./.nuxt/tsconfig.json"
+  // TODO(CQ-5.3): Consider enabling `"noUncheckedIndexedAccess": true` once we've
+  // budgeted time to fix the resulting indexing errors across the app.
+  // Enabling it immediately is likely to cause wide churn without improving runtime
+  // safety unless the follow-up fixes ship in the same PR.
 }

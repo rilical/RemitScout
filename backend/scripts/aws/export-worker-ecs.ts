@@ -1,5 +1,6 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
+import { config } from '../../shared/config'
 
 export const handler = async (): Promise<void> => {
   await resolveDatabaseUrl({
@@ -30,7 +31,7 @@ export const handler = async (): Promise<void> => {
       secretArnEnv: 'EXPORT_JOB_QUEUE_SECRET_ARN',
       ssmNameEnv: 'EXPORT_JOB_QUEUE_SSM_NAME',
       jsonKeys: ['url', 'EXPORT_JOB_QUEUE_URL'],
-      required: true,
+      required: config.queues.exports.mode !== 'off',
     },
     {
       envVar: 'EXPORTS_S3_BUCKET',
@@ -42,12 +43,23 @@ export const handler = async (): Promise<void> => {
   ])
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const requireExportJobQueue = config.queues.exports.mode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneA: true,
       requireRedis: true,
-      requireQueues: true,
+      requireQueues: requireExportJobQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue: false,
+      requireExportJobQueue: true,
+      requireIngestFanoutQueue: false,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
       requireStorage: true,
+      requireExportsBucket: true,
+      requireBronzeBucket: false,
     },
   })
 

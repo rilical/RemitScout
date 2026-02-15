@@ -2,23 +2,37 @@
   <div
     v-if="showPrompt"
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    @keydown.esc="dismissPrompt"
   >
     <div
       class="absolute inset-0 bg-black/50"
+      aria-label="Close dialog"
       @click="dismissPrompt"
     />
-    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <div
+      ref="modalRef"
+      class="relative w-full max-w-md rounded-2xl bg-surface p-6 shadow-xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="provider-visit-prompt-title"
+      tabindex="-1"
+      @keydown.esc="dismissPrompt"
+    >
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h3 class="text-lg font-semibold text-slate-900">
+          <h3
+            id="provider-visit-prompt-title"
+            class="text-body-lg font-semibold text-rs-fg"
+          >
             Did you complete your transfer?
           </h3>
-          <p class="text-sm text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Help us verify provider accuracy and improve reliability scores.
           </p>
         </div>
         <button
-          class="text-slate-400 hover:text-slate-600"
+          class="text-neutral-400 hover:text-neutral-600"
+          aria-label="Close dialog"
           @click="dismissPrompt"
         >
           <svg
@@ -37,17 +51,17 @@
         </button>
       </div>
 
-      <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <div class="text-sm font-semibold text-slate-900">
+      <div class="mt-4 rounded-xl border border-rs-border bg-neutral-50 p-4">
+        <div class="text-body-sm font-semibold text-rs-fg">
           {{ activeVisit.provider_name || activeVisit.provider_id }}
         </div>
         <div
           v-if="activeVisit.corridor_id"
-          class="text-xs text-slate-500"
+          class="text-body-sm text-rs-muted"
         >
           Corridor: {{ activeVisit.corridor_id }}
         </div>
-        <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+        <div class="mt-2 flex flex-wrap gap-2 text-body-sm text-neutral-600">
           <span v-if="activeVisit.quoted_rate">Quoted rate: {{ activeVisit.quoted_rate }}</span>
           <span v-if="activeVisit.quoted_fee">Quoted fee: {{ activeVisit.quoted_fee }}</span>
         </div>
@@ -57,14 +71,14 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+            class="flex-1 rounded-lg border border-success-600 bg-success-600 px-3 py-2 text-body-sm font-semibold text-success-600 hover:bg-success-600"
             @click="setCompleted(true)"
           >
             Yes, completed
           </button>
           <button
             type="button"
-            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            class="flex-1 rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             @click="setCompleted(false)"
           >
             Not yet
@@ -79,69 +93,69 @@
             v-if="completedTransfer"
             class="grid grid-cols-2 gap-3"
           >
-            <label class="text-xs text-slate-600">
+            <label class="text-body-sm text-neutral-600">
               Transfer amount
               <input
                 v-model="transferAmount"
                 type="number"
                 min="0"
-                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+                class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
               >
             </label>
-            <label class="text-xs text-slate-600">
+            <label class="text-body-sm text-neutral-600">
               Transfer date
               <input
                 v-model="transferDate"
                 type="date"
-                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+                class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
               >
             </label>
-            <label class="text-xs text-slate-600">
+            <label class="text-body-sm text-neutral-600">
               Actual rate
               <input
                 v-model="actualRate"
                 type="number"
                 min="0"
                 step="0.0001"
-                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+                class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
               >
             </label>
-            <label class="text-xs text-slate-600">
+            <label class="text-body-sm text-neutral-600">
               Actual fee
               <input
                 v-model="actualFee"
                 type="number"
                 min="0"
                 step="0.01"
-                class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+                class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
               >
             </label>
           </div>
 
-          <label class="text-xs text-slate-600">
+          <label class="text-body-sm text-neutral-600">
             Rating (1-5)
             <input
               v-model="feedbackRating"
               type="number"
               min="1"
               max="5"
-              class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
             >
           </label>
 
-          <label class="text-xs text-slate-600">
+          <label class="text-body-sm text-neutral-600">
             Notes (optional)
             <textarea
               v-model="feedbackNotes"
               rows="2"
-              class="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+              class="mt-1 w-full rounded-md border border-rs-border px-2 py-1 text-body-sm"
             />
           </label>
         </div>
 
         <p
           v-if="errorMessage"
-          class="text-xs text-red-600"
+          class="text-body-sm text-danger-600"
         >
           {{ errorMessage }}
         </p>
@@ -150,14 +164,14 @@
       <div class="mt-5 flex gap-3">
         <button
           type="button"
-          class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          class="flex-1 rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50"
           @click="dismissPrompt"
         >
           Not now
         </button>
         <button
           type="button"
-          class="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          class="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
           :disabled="completedTransfer === null || submitting"
           @click="submit"
         >
@@ -169,10 +183,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useProviderVisits } from '~/composables/useProviderVisits'
 import { useAffiliate } from '~/composables/useAffiliate'
 import { useAuth } from '~/composables/useAuth'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 type Props = {
   autoOpen?: boolean
@@ -197,6 +212,9 @@ const feedbackNotes = ref<string>('')
 const errorMessage = ref<string | null>(null)
 const submitting = ref(false)
 const hasFetched = ref(false)
+
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
 
 const activeVisit = computed(() => pendingVisits.value[0])
 
@@ -227,6 +245,23 @@ const open = () => {
   if (pendingVisits.value.length === 0) return
   showPrompt.value = true
 }
+
+watch(
+  () => showPrompt.value,
+  async (open) => {
+    if (!open) {
+      deactivate()
+      return
+    }
+
+    await nextTick()
+    activate()
+  },
+)
+
+onBeforeUnmount(() => {
+  deactivate()
+})
 
 const setCompleted = (value: boolean) => {
   completedTransfer.value = value

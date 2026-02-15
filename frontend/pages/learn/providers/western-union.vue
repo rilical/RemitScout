@@ -1,24 +1,24 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero Section -->
-    <section class="relative bg-gray-900 py-16 lg:py-24 overflow-hidden">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
-        <nav class="mb-8 flex items-center space-x-2 text-sm text-white/70 relative z-10">
+    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
+      <div class="mx-auto max-w-page px-page-x relative">
+        <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70 relative z-10">
           <NuxtLink
             to="/"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Home</NuxtLink>
           <span class="text-white/50">›</span>
           <NuxtLink
             to="/learn"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Learn</NuxtLink>
           <span class="text-white/50">›</span>
           <NuxtLink
             to="/learn/providers"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
+            class="hover:text-white motion-safe:transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
           >Providers</NuxtLink>
           <span class="text-white/50">›</span>
           <span class="font-medium text-white">Western Union Review</span>
@@ -28,7 +28,7 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="flex h-40 w-40 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+              <div class="flex h-40 w-40 items-center justify-center rounded-2xl bg-surface p-3 shadow-xl">
                 <ProviderLogo
                   slug="western-union"
                   alt="Western Union"
@@ -36,7 +36,7 @@
                 />
               </div>
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface/10 text-white text-body-sm font-medium mb-2">
                   <svg
                     class="w-4 h-4"
                     fill="currentColor"
@@ -46,23 +46,23 @@
                   </svg>
                   Provider Review
                 </div>
-                <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
+                <h1 class="text-h1 font-bold text-white mb-2">
                   Western Union Review
                 </h1>
-                <p class="text-xl text-slate-300">
+                <p class="text-h4 text-neutral-300">
                   Independent Remit-Scout Analysis
                 </p>
               </div>
             </div>
 
-            <p class="text-lg text-white/90 leading-relaxed mb-8">
+            <p class="text-body-lg text-white/90 leading-relaxed mb-8">
               A data-driven review based on real transfer outcomes - not paid endorsements. We evaluate what matters most: <strong class="text-white">how much money actually arrives</strong>.
             </p>
 
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 to="/send-money?provider=western-union"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold shadow-lg transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold shadow-lg motion-safe:transition-all"
                 style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
               >
                 <svg
@@ -82,7 +82,7 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-base font-semibold text-white transition-all"
+                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold text-white motion-safe:transition-all"
                 style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
               >
                 Read Full Review
@@ -105,9 +105,9 @@
 
           <!-- Right: Score Card -->
           <div class="flex justify-center lg:justify-end">
-            <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full">
+            <div class="bg-surface rounded-3xl p-8 shadow-2xl max-w-sm w-full">
               <div class="text-center mb-6">
-                <div class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                <div class="text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">
                   REMIT-SCOUT SCORE
                 </div>
                 <div class="flex justify-center">
@@ -118,35 +118,35 @@
               <!-- Quick Rating Bars -->
               <div class="space-y-3">
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Delivered Value</span>
                     <span class="font-semibold text-black">Inconsistent</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Reliability</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Speed</span>
                     <span class="font-semibold text-black">Elite</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Support</span>
                     <span class="font-semibold text-black">Good</span>
                   </div>
                   <div class="h-0.5 bg-brand-600 w-full" />
                 </div>
                 <div>
-                  <div class="flex justify-between text-sm mb-2">
+                  <div class="flex justify-between text-body-sm mb-2">
                     <span class="text-black">Trust & Safety</span>
                     <span class="font-semibold text-black">Strong</span>
                   </div>
@@ -154,9 +154,9 @@
                 </div>
               </div>
 
-              <div class="mt-6 pt-6 border-t border-slate-200 text-center">
+              <div class="mt-6 pt-6 border-t border-rs-border text-center">
                 <p
-                  class="text-xs"
+                  class="text-body-sm"
                   style="color: rgba(17, 24, 39, 1);"
                 >
                   Based on our independent methodology.<br>
@@ -174,38 +174,38 @@
     </section>
 
     <!-- Quick Stats Strip -->
-    <section class="bg-slate-50 border-y border-slate-200 py-6">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section class="bg-neutral-50 border-y border-rs-border py-6">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               200+
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Countries Supported
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               500k+
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Agent Locations
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-emerald-600">
+            <div class="text-h2 font-bold text-success-600">
               Minutes
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Cash Pickup
             </div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-slate-900">
+            <div class="text-h2 font-bold text-rs-fg">
               150+ Years
             </div>
-            <div class="text-sm text-slate-600">
+            <div class="text-body-sm text-neutral-600">
               Established
             </div>
           </div>
@@ -216,15 +216,15 @@
     <!-- Main Content -->
     <section
       id="review"
-      class="py-16 bg-white"
+      class="py-16 bg-surface"
     >
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid lg:grid-cols-3 gap-12">
           <!-- Main Content Column -->
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 border-2 border-slate-200 shadow-sm">
+              <div class="relative mb-22 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg
                     class="w-12 h-12 text-brand-600/20"
@@ -240,27 +240,27 @@
                     />
                   </svg>
                 </div>
-                <p class="text-xl text-slate-800 leading-relaxed relative z-10 font-medium">
+                <p class="text-h4 text-neutral-800 leading-relaxed relative z-10 font-medium">
                   Western Union's 8.2/10 is a classic "reach and reliability vs. price" tradeoff. The score starts with Delivered Value (40%): Western Union is often not the cheapest way to move money if you measure the effective cost (fees plus FX spread). Western Union itself discloses that it makes money from currency exchange and that its exchange rates are based on interbank rates plus a margin, meaning the FX rate can be meaningfully different from mid‑market.
                 </p>
               </div>
 
               <div class="mb-22">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-blue-700 rounded-full" />
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
+                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-brand-700 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
-                <div class="p-6 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 border-2 border-slate-200">
-                  <p class="text-lg text-slate-800 leading-relaxed italic m-0">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <p class="text-body-lg text-neutral-800 leading-relaxed italic m-0">
                     "Western Union (8.2): Elite reliability + instant cash pickup reach; delivered value inconsistent due to higher effective cost."
                   </p>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-8">
-                <h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-4 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -276,101 +276,101 @@
                   </svg>
                   Score Breakdown
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   Here's how Western Union performs across each category in our rubric:
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-blue-50/50 to-brand-50 p-8 shadow-lg">
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-primary-50/50 to-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-h3 shadow-md">
                     8.2
                   </div>
                   <div>
-                    <h3 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <h3 class="text-h3 font-bold text-rs-fg mb-2 flex items-center gap-2">
                       Western Union
                     </h3>
-                    <p class="text-sm text-black">
+                    <p class="text-body-sm text-black">
                       Remit-Score
                     </p>
                   </div>
                 </div>
                 <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">Inconsistent</span>
+                      <span class="px-2.5 py-1 rounded-full bg-warning-50 text-warning-800 text-body-sm font-bold">Inconsistent</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Western Union's FX rate is interbank + margin, and fees/spreads vary by channel/location/payment method. Higher effective cost versus price-leading digital specialists.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Reliability
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">Elite</span>
+                      <span class="px-2.5 py-1 rounded-full bg-success-600 text-success-600 text-body-sm font-bold">Elite</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       20% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Extremely broad physical payout reach—around 500k+ agent locations across 200+ countries and territories. Tends to be available when other rails aren't.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Friction & Speed
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">Elite</span>
+                      <span class="px-2.5 py-1 rounded-full bg-success-600 text-success-600 text-body-sm font-bold">Elite</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       "Cash pickup in minutes" is a core offering. For many corridors, recipients can collect quickly once the transfer is processed.
                     </div>
                   </div>
-                  <div class="p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Support & Refunds
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Good</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Cancellations/refunds are time- and status-dependent (e.g., in the US you have a 30‑minute cancellation right; after payout, refunds typically aren't possible).
                     </div>
                   </div>
-                  <div class="sm:col-span-2 p-4 rounded-xl bg-white/60 border border-brand-100">
+                  <div class="sm:col-span-2 p-4 rounded-xl bg-surface/60 border border-brand-100">
                     <div class="flex items-center justify-between mb-2">
-                      <div class="font-semibold text-slate-900 text-sm">
+                      <div class="font-semibold text-rs-fg text-body-sm">
                         Trust & Safety
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">Strong</span>
+                      <span class="px-2.5 py-1 rounded-full bg-primary-100 text-primary-800 text-body-sm font-bold">Strong</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-2">
+                    <div class="text-body-sm text-rs-muted mb-2">
                       10% weight
                     </div>
-                    <div class="text-sm text-slate-700 leading-relaxed">
+                    <div class="text-body-sm text-neutral-700 leading-relaxed">
                       Strong "checkability"—Western Union's online services are offered by regulated entities (e.g., WUPSIL regulated by Central Bank of Ireland in EEA; WUPSGL authorized by UK FCA).
                     </div>
                   </div>
                 </div>
-                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-white/40 rounded-xl p-4">
+                <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -383,10 +383,10 @@
                       />
                     </svg>
                     <div class="flex-1">
-                      <div class="font-semibold text-slate-900 mb-2.5">
+                      <div class="font-semibold text-rs-fg mb-2.5">
                         Why 8.2 (not 9.0+):
                       </div>
-                      <div class="text-sm text-slate-700 leading-relaxed">
+                      <div class="text-body-sm text-neutral-700 leading-relaxed">
                         Western Union is "elite" on Reliability & Success and Friction & Speed for cash pickup, but Delivered Value (40%) is held back by higher effective cost—fees plus an exchange rate that is explicitly interbank + margin, with prices varying by channel and corridor. You're often paying a premium for reach and immediacy.
                       </div>
                     </div>
@@ -394,57 +394,57 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     1
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Delivered Value (40%)
                   </h2>
                 </div>
-                <p class="text-lg text-slate-700 leading-relaxed mb-6">
+                <p class="text-body-lg text-neutral-700 leading-relaxed mb-6">
                   Delivered Value is the main reason Western Union isn't higher than 8.2 despite its reach.
                 </p>
-                <div class="mb-6 p-5 rounded-xl bg-slate-50 border border-slate-200">
-                  <p class="font-semibold text-slate-900 mb-3 text-base">
+                <div class="mb-6 p-5 rounded-xl bg-neutral-50 border border-rs-border">
+                  <p class="font-semibold text-rs-fg mb-3 text-body">
                     Effective cost = transfer fees + FX spread (and sometimes third‑party deductions)
                   </p>
-                  <p class="text-slate-700 mb-3">
+                  <p class="text-neutral-700 mb-3">
                     Western Union is unusually explicit about how it earns revenue:
                   </p>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">1</span>
                       <span>It makes money from currency exchange and urges customers to compare both fees and exchange rates.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">2</span>
                       <span>It calculates exchange rates using commercially available interbank rates plus a margin, and it adjusts rates several times daily.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-body-sm font-bold mt-0.5">3</span>
                       <span>It also states that its exchange rate may be less favorable than publicly reported commercial exchange rates used between banks/financial institutions.</span>
                     </li>
                   </ul>
-                  <p class="text-slate-700 mt-3 mb-0">
+                  <p class="text-neutral-700 mt-3 mb-0">
                     What that means practically: Western Union's fee might look small (or sometimes discounted), but the FX margin can be the bigger cost driver—especially for common corridors where bank-rail competitors compete aggressively on FX.
                   </p>
                 </div>
 
-                <div class="p-6 rounded-xl border-2 border-emerald-200">
-                  <p class="font-semibold text-slate-900 mb-3">
+                <div class="p-6 rounded-xl border-2 border-success-600">
+                  <p class="font-semibold text-rs-fg mb-3">
                     "How often is it the cheapest?"
                   </p>
-                  <p class="text-slate-800 leading-relaxed mb-4">
+                  <p class="text-neutral-800 leading-relaxed mb-4">
                     We're not going to invent a "win rate" (no corridor-by-corridor pricing stats were provided). The evidence-based framing is:
                   </p>
-                  <ul class="space-y-2 text-slate-700">
+                  <ul class="space-y-2 text-neutral-700">
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -460,7 +460,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -478,39 +478,39 @@
                 </div>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p class="text-sm text-blue-800 m-0">
+              <div class="not-prose my-6 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                <p class="text-body-sm text-primary-800 m-0">
                   <strong>Quote vs delivered accuracy (what can change):</strong> Western Union provides the rate/fees during the quoting flow, but two caveats matter: In some countries, due to local regulations, the rate shown is only an estimate and the actual rate is determined at payout time. If the receiver chooses to receive funds in a different currency than the sender selected, Western Union (or the agent/account provider) may collect additional money when converting.
                 </p>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Delivered Value verdict:</strong> Western Union is transparent that it charges both fees and FX margin, and those together make delivered value inconsistent versus price-leading digital specialists. That is the core reason the score lands at 8.2, not 9+.
                 </p>
               </div>
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     2
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Reliability & Success (20%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     Western Union scores "elite" here because it tends to be available and executable when other rails aren't.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Quote success / availability
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -526,7 +526,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -542,22 +542,22 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Pricing stability & data freshness signals
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Exchange rates are adjusted several times daily (fresh pricing, but not "stable").
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Western Union also flags that fees/rates can vary by channel and location and are subject to change without notice—so the "best" price can shift depending on whether you pay in-store vs online, card vs bank, etc.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Reliability caveat: compliance holds can happen
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Western Union states it screens transactions against sanctions lists and may require additional information, which can delay transfers. Its FAQs also describe "on hold" scenarios and additional documentation requests.
                     </p>
                   </div>
@@ -566,28 +566,28 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     3
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Friction & Speed (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This measures how quickly funds arrive in practice and how much effort is required (setup, verification, payment steps, payout complexity).
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       ETA / speed buckets
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Western Union's practical speed breaks into a few buckets:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -599,11 +599,11 @@
                             d="M13 10V3L4 14h7v7l9-11h-7z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Minutes:</strong> Cash pickup can be available within minutes for many services/corridors.</span>
+                        <span><strong class="text-rs-fg">Minutes:</strong> Cash pickup can be available within minutes for many services/corridors.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -615,11 +615,11 @@
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Same day to a few business days:</strong> Depending on the delivery and payment method, Western Union notes transfers can be available within minutes or within a few working days.</span>
+                        <span><strong class="text-rs-fg">Same day to a few business days:</strong> Depending on the delivery and payment method, Western Union notes transfers can be available within minutes or within a few working days.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -631,31 +631,31 @@
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">Bank deposit variability:</strong> Western Union's US "receive money" page says funds can arrive in minutes in some cases, but can take up to four business days in others.</span>
+                        <span><strong class="text-rs-fg">Bank deposit variability:</strong> Western Union's US "receive money" page says funds can arrive in minutes in some cases, but can take up to four business days in others.</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Payout methods (what recipients can use)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Western Union commonly supports:
                     </p>
                     <div class="flex flex-wrap gap-2 mb-3">
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Cash pickup at agent locations</span>
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Bank account deposit</span>
-                      <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm text-slate-700">Mobile wallet</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Cash pickup at agent locations</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Bank account deposit</span>
+                      <span class="px-3 py-1 rounded-full bg-surface border border-rs-border text-body-sm text-neutral-700">Mobile wallet</span>
                     </div>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Mobile wallet in some corridors ("where available").
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery-speed behavior
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       The fastest experience is usually cash pickup or certain wallet/card rails, while bank deposit is more dependent on banking partners, local rules, and timing. Western Union explicitly notes delays can occur due to factors like destination, currency availability, regulations, ID requirements, and partner system availability.
                     </p>
                   </div>
@@ -664,36 +664,36 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     4
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Support & Refunds (15%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     This category is about what happens after something goes wrong: refunds, cancellations, dispute handling, and how hard it is to reach a human.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Support access
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Western Union offers customer support via its help center and contact channels (chat/contact pages vary by country).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund and cancellation experience (what to expect)
                     </p>
-                    <p class="text-slate-700 mb-3">
+                    <p class="text-neutral-700 mb-3">
                       Refund rules depend on jurisdiction and whether funds have already been paid out. Two concrete, documented examples:
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -705,11 +705,11 @@
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">United States (remittance transfers):</strong> Western Union's "Error Resolution and Cancellation Disclosures" state you can cancel within 30 minutes of payment (if funds have not been picked up/deposited) and Western Union will refund within three business days of the request.</span>
+                        <span><strong class="text-rs-fg">United States (remittance transfers):</strong> Western Union's "Error Resolution and Cancellation Disclosures" state you can cancel within 30 minutes of payment (if funds have not been picked up/deposited) and Western Union will refund within three business days of the request.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -721,19 +721,19 @@
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">EEA (WUPSIL terms):</strong> You may cancel up to the time the receiver picks up the money, but the transfer fee may be deducted, and refunds "typically take up to 10 business days" (as described in WUPSIL terms).</span>
+                        <span><strong class="text-rs-fg">EEA (WUPSIL terms):</strong> You may cancel up to the time the receiver picks up the money, but the transfer fee may be deducted, and refunds "typically take up to 10 business days" (as described in WUPSIL terms).</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Dispute handling and post-issue friction
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       In the US disclosure, Western Union says you must contact them within 180 days of the promised availability date to report an error; they determine whether an error occurred within 90 days and provide results within three business days after completing the investigation.
                     </p>
-                    <p class="text-slate-700 mt-3 mb-0">
-                      <strong class="text-slate-900">Practical implication:</strong> Western Union has structured processes, but your ability to get a clean resolution depends heavily on when you report and whether the money has already been paid out.
+                    <p class="text-neutral-700 mt-3 mb-0">
+                      <strong class="text-rs-fg">Practical implication:</strong> Western Union has structured processes, but your ability to get a clean resolution depends heavily on when you report and whether the money has already been paid out.
                     </p>
                   </div>
                 </div>
@@ -741,22 +741,22 @@
 
               <div class="mb-20">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     5
                   </div>
-                  <h2 class="text-3xl font-bold text-slate-900">
+                  <h2 class="text-h2 font-bold text-rs-fg">
                     Trust & Safety (10%)
                   </h2>
                 </div>
-                <div class="space-y-4 text-lg leading-relaxed text-slate-700">
+                <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
                     We keep this "where available" and verifiable.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Public licensing / regulatory checks (examples)
                     </p>
-                    <ul class="space-y-2.5 text-slate-700">
+                    <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
                           class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -771,7 +771,7 @@
                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">EEA:</strong> Western Union Payment Services Ireland Limited (WUPSIL) is stated as regulated by the Central Bank of Ireland in its terms; the Central Bank register provides a public firm profile for WUPSIL.</span>
+                        <span><strong class="text-rs-fg">EEA:</strong> Western Union Payment Services Ireland Limited (WUPSIL) is stated as regulated by the Central Bank of Ireland in its terms; the Central Bank register provides a public firm profile for WUPSIL.</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -787,7 +787,7 @@
                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">UK:</strong> Western Union's UK online service is offered by Western Union Payment Services GB Limited (WUPSGL), stated as authorized by the Financial Conduct Authority (FCA).</span>
+                        <span><strong class="text-rs-fg">UK:</strong> Western Union's UK online service is offered by Western Union Payment Services GB Limited (WUPSGL), stated as authorized by the Financial Conduct Authority (FCA).</span>
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
@@ -803,29 +803,29 @@
                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                           />
                         </svg>
-                        <span><strong class="text-slate-900">United States:</strong> Western Union publishes state licensing information (money transmitter / sale of checks / etc.) by state in its licensing PDFs.</span>
+                        <span><strong class="text-rs-fg">United States:</strong> Western Union publishes state licensing information (money transmitter / sale of checks / etc.) by state in its licensing PDFs.</span>
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-amber-50 border-2 border-amber-200">
-                    <p class="font-semibold text-slate-900 mb-3 text-base">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
+                    <p class="font-semibold text-rs-fg mb-3 text-body">
                       Safety behavior and compliance friction (real-world)
                     </p>
-                    <p class="text-slate-700 mb-0">
+                    <p class="text-neutral-700 mb-0">
                       Western Union states it screens transactions against sanctions lists and may request additional identity information, which can delay transfers. This is a trust-and-safety positive, but it can also add friction in borderline cases.
                     </p>
                   </div>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border border-warning-200">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
                 </p>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
-              <h2 class="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+              <h2 class="text-h2 font-bold text-rs-fg mb-8 flex items-center gap-3">
                 <svg
                   class="w-7 h-7 text-brand-600"
                   fill="none"
@@ -843,10 +843,10 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -858,25 +858,25 @@
                     </svg>
                     Pros
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Reliability & Success:</strong> Extremely broad physical payout reach — Western Union cites ~500,000+ agent locations across 200+ countries and territories.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Friction & Speed:</strong> "Cash pickup in minutes" is a core offering; for many corridors, recipients can collect quickly once the transfer is processed.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-emerald-600 font-bold">+</span>
+                      <span class="text-success-600 font-bold">+</span>
                       <span><strong>Trust & Safety:</strong> Strong "checkability" — Western Union's online services are offered by regulated entities depending on jurisdiction (e.g., WUPSIL regulated by the Central Bank of Ireland in the EEA; WUPSGL authorized by the UK FCA in the UK).</span>
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-                  <h3 class="flex items-center gap-2 text-xl font-bold text-slate-900 mb-4 mt-0">
+                <div class="rounded-xl border-2 border-warning-200 bg-warning-50 p-6">
+                  <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -888,30 +888,30 @@
                     </svg>
                     Cons
                   </h3>
-                  <ul class="space-y-2 text-slate-700 text-base">
+                  <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Delivered Value:</strong> Western Union's FX rate is interbank + margin, and any difference between the customer rate and what Western Union receives is kept by Western Union (sometimes also agents/wallet providers) — this is often where higher effective cost shows up.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Delivered Value / Accuracy:</strong> Fees and FX rates vary by brand/channel/location/payment method, and in some countries the rate shown can be only an estimate until payout (regulatory constraints).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-amber-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Support & Refunds:</strong> Cancellations/refunds are time- and status-dependent (e.g., in the US you have a 30‑minute cancellation right for remittance transfers; after payout, refunds typically aren't possible).</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="grid md:grid-cols-2 gap-8 mb-22">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-emerald-600"
+                      class="w-6 h-6 text-success-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -925,10 +925,10 @@
                     </svg>
                     Best For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -944,7 +944,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -960,7 +960,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -977,10 +977,10 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-                  <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-200">
+                  <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-amber-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -994,10 +994,10 @@
                     </svg>
                     Not Ideal For
                   </h2>
-                  <ul class="space-y-3 text-slate-700">
+                  <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1013,7 +1013,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1029,7 +1029,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1047,10 +1047,10 @@
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1066,62 +1066,62 @@
                   </svg>
                   How to Get the Best Rate with Western Union
                 </h2>
-                <p class="text-lg text-slate-600 mb-6">
+                <p class="text-body-lg text-neutral-600 mb-6">
                   A quick checklist that usually saves money:
                 </p>
                 <div class="space-y-3">
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       1
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Compare payout methods:</strong>
-                      <span class="text-slate-700">Cash pickup is convenient, but bank deposit or wallet (where available) can sometimes reduce the effective cost—check "receiver gets" before paying.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Compare payout methods:</strong>
+                      <span class="text-neutral-700">Cash pickup is convenient, but bank deposit or wallet (where available) can sometimes reduce the effective cost—check "receiver gets" before paying.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       2
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Compare funding methods:</strong>
-                      <span class="text-slate-700">Card funding is convenient but can be pricier; check the final quote for both bank and card if you have the option.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Compare funding methods:</strong>
+                      <span class="text-neutral-700">Card funding is convenient but can be pricier; check the final quote for both bank and card if you have the option.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       3
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Focus on the exchange rate, not just fees:</strong>
-                      <span class="text-slate-700">Western Union rates are interbank + margin; the margin is often the biggest cost driver.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Focus on the exchange rate, not just fees:</strong>
+                      <span class="text-neutral-700">Western Union rates are interbank + margin; the margin is often the biggest cost driver.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       4
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">Move quickly once you're happy with the quote:</strong>
-                      <span class="text-slate-700">rates update several times daily; in some corridors the rate shown may be an estimate until payout.</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">Move quickly once you're happy with the quote:</strong>
+                      <span class="text-neutral-700">rates update several times daily; in some corridors the rate shown may be an estimate until payout.</span>
                     </div>
                   </div>
-                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200 hover:border-brand-300 transition-colors shadow-sm">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-blue-700 text-white flex items-center justify-center font-bold text-base shadow-md">
+                  <div class="flex gap-4 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200 hover:border-brand-300 motion-safe:transition-colors shadow-sm">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 text-white flex items-center justify-center font-bold text-body shadow-md">
                       5
                     </div>
                     <div class="flex-1">
-                      <strong class="text-slate-900 block mb-2.5 text-base">If you made a mistake, cancel fast:</strong>
-                      <span class="text-slate-700">in the US there's a 30‑minute cancellation window with a 3‑business‑day refund requirement (if funds haven't been picked up/deposited).</span>
+                      <strong class="text-rs-fg block mb-2.5 text-body">If you made a mistake, cancel fast:</strong>
+                      <span class="text-neutral-700">in the US there's a 30‑minute cancellation window with a 3‑business‑day refund requirement (if funds haven't been picked up/deposited).</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1139,35 +1139,35 @@
                 </h2>
 
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 motion-safe:transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Remitly (9.1)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">When Remitly beats Western Union:</strong> if you don't specifically need instant cash pickup reach and you're optimizing for a better price/speed balance, Remitly's "Express vs Economy" style options can be a better fit (with the known tradeoff that Express can cost more).
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">When Remitly beats Western Union:</strong> if you don't specifically need instant cash pickup reach and you're optimizing for a better price/speed balance, Remitly's "Express vs Economy" style options can be a better fit (with the known tradeoff that Express can cost more).
                     </p>
-                    <p class="text-slate-700 mb-0">
-                      <strong class="text-slate-900">Choose Remitly over Western Union when:</strong> This is especially true when the recipient can accept bank deposit or other digital rails.
+                    <p class="text-neutral-700 mb-0">
+                      <strong class="text-rs-fg">Choose Remitly over Western Union when:</strong> This is especially true when the recipient can accept bank deposit or other digital rails.
                     </p>
                   </div>
 
-                  <div class="p-6 rounded-xl border-2 border-slate-200 bg-white hover:border-brand-300 transition-colors">
-                    <h3 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <div class="p-6 rounded-xl border-2 border-rs-border bg-surface hover:border-brand-300 motion-safe:transition-colors">
+                    <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full bg-brand-600" />
                       Sendwave (9.0)
                     </h3>
-                    <p class="text-slate-700 mb-3">
-                      <strong class="text-slate-900">When Sendwave beats Western Union:</strong> if your corridor is supported and the recipient wants instant mobile money with minimal friction, Sendwave can beat Western Union on convenience and (often) delivered value—while you still keep an eye on FX spread as the key cost driver.
+                    <p class="text-neutral-700 mb-3">
+                      <strong class="text-rs-fg">When Sendwave beats Western Union:</strong> if your corridor is supported and the recipient wants instant mobile money with minimal friction, Sendwave can beat Western Union on convenience and (often) delivered value—while you still keep an eye on FX spread as the key cost driver.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div class="my-12 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+              <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <div class="mb-20">
-                <h2 class="text-3xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
                   <svg
                     class="w-7 h-7 text-brand-600"
                     fill="none"
@@ -1183,20 +1183,20 @@
                   </svg>
                   Bottom Line
                 </h2>
-                <div class="space-y-5 text-lg leading-relaxed text-slate-700">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-blue-50 border-2 border-brand-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                <div class="space-y-5 text-body-lg leading-relaxed text-neutral-700">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Use Western Union if:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       You prioritize reliability, availability, and instant cash pickup reach—especially for urgent situations or destinations where bank/wallet rails aren't dependable. Western Union's scale (around 500k+ agent locations across 200+ countries/territories) is the core differentiator that justifies a strong overall score.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
-                    <p class="font-semibold text-slate-900 mb-3">
+                  <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                    <p class="font-semibold text-rs-fg mb-3">
                       Why the 8.2/10 is justified:
                     </p>
-                    <p class="text-slate-800 mb-0">
+                    <p class="text-neutral-800 mb-0">
                       Western Union is "elite" on Reliability & Success and Friction & Speed for cash pickup, but Delivered Value (40%) is held back by higher effective cost—fees plus an exchange rate that is explicitly interbank + margin, with prices varying by channel and corridor. In other words: you're often paying a premium for reach and immediacy.
                     </p>
                   </div>
@@ -1209,16 +1209,16 @@
           <div class="lg:col-span-1">
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
-              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-blue-50 p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-2">
+              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-2">
                   Ready to Compare?
                 </h3>
-                <p class="text-sm text-slate-600 mb-4">
+                <p class="text-body-sm text-neutral-600 mb-4">
                   See how Western Union stacks up for your specific corridor and amount.
                 </p>
                 <NuxtLink
                   to="/send-money"
-                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
                 >
                   Compare Rates Now
                 </NuxtLink>
@@ -1231,48 +1231,48 @@
                 min-height="160px"
               />
               <!-- Quick Facts -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Quick Facts
                 </h3>
-                <dl class="space-y-3 text-sm">
+                <dl class="space-y-3 text-body-sm">
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Founded
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       1851
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Countries
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       200+
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Agent Locations
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       500k+
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Cash Pickup
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Minutes
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-slate-600">
+                    <dt class="text-neutral-600">
                       Headquarters
                     </dt>
-                    <dd class="font-semibold text-slate-900">
+                    <dd class="font-semibold text-rs-fg">
                       Denver, USA
                     </dd>
                   </div>
@@ -1280,11 +1280,11 @@
               </div>
 
               <!-- Why Trust Us -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   Why Trust This Review?
                 </h3>
-                <ul class="space-y-3 text-sm text-slate-700">
+                <ul class="space-y-3 text-body-sm text-neutral-700">
                   <li class="flex items-start gap-2">
                     <svg
                       class="w-5 h-5 text-brand-600 mt-0.5 flex-shrink-0"
@@ -1330,7 +1330,7 @@
                 </ul>
                 <NuxtLink
                   to="/methodology"
-                  class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  class="mt-4 inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                 >
                   See our methodology
                   <svg
@@ -1350,42 +1350,42 @@
               </div>
 
               <!-- More Providers -->
-              <div class="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 class="text-lg font-bold text-slate-900 mb-4">
+              <div class="rounded-2xl border border-rs-border bg-surface p-6">
+                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
                   More Provider Reviews
                 </h3>
                 <ul class="space-y-3">
                   <li>
                     <NuxtLink
                       to="/learn/providers/remitly"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">R</div>
+                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">R</div>
                       <span>Remitly Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/sendwave"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-xs font-bold text-green-600">SW</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-600">SW</div>
                       <span>Sendwave Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers/wise"
-                      class="flex items-center gap-3 text-sm text-slate-700 hover:text-brand-600"
+                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
                   <li>
                     <NuxtLink
                       to="/learn/providers"
-                      class="flex items-center gap-3 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                      class="flex items-center gap-3 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
                     >
                       View all providers →
                     </NuxtLink>
@@ -1400,25 +1400,25 @@
 
     <!-- Final CTA -->
     <section
-      class="py-16 bg-blue-600"
+      class="py-16 bg-brand-600"
       style="background-color: rgba(37, 99, 235, 1);"
     >
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
         <h2
-          class="text-3xl font-bold mb-4"
+          class="text-h2 font-bold mb-4"
           style="color: rgba(255, 255, 255, 1);"
         >
           Ready to See How Western Union Compares?
         </h2>
         <p
-          class="text-lg mb-8"
+          class="text-body-lg mb-8"
           style="color: rgba(255, 255, 255, 1);"
         >
           Enter your transfer details to see real-time rates from Western Union and 30+ other providers.
         </p>
         <NuxtLink
           to="/send-money"
-          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-lg font-semibold shadow-lg transition-all"
+          class="inline-flex items-center gap-2 rounded-xl px-8 py-4 text-body-lg font-semibold shadow-lg motion-safe:transition-all"
           style="background-color: rgba(255, 255, 255, 1); border: 1px solid rgba(239, 246, 255, 0.1); color: rgba(0, 0, 0, 1);"
         >
           Compare Rates Now
@@ -1444,30 +1444,39 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
+import { getProviderLogoPath } from '~/composables/useProviderLogo'
 
 const runtimeConfig = useRuntimeConfig()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 
 const score = 8.2
 
-setSeo({
-  title: 'Western Union Review 2024 - Remit-Score 8.2/10 | Remit-Scout',
-  description: 'Independent Western Union review with Remit-Score 8.2/10. Elite reliability + instant cash pickup reach; delivered value inconsistent due to higher effective cost. Detailed breakdown of fees, speed, and delivered value.',
-  canonical: `${siteUrl}/learn/providers/western-union`,
-  ogImage: `${siteUrl}/og-images/provider-western-union.jpg`,
+const providerName = 'Western Union'
+const providerLogoUrl = `${siteUrl}${getProviderLogoPath('western-union')}`
+
+defineOgImage({
+  component: 'OgImageProvider',
+  props: {
+    providerName,
+    remitScore: score,
+    logoUrl: providerLogoUrl,
+  },
 })
 
-const { addReviewSchema } = useStructuredData()
-const reviewBody = `Western Union earns a Remit-Score of 8.2/10 based on our independent analysis. The provider offers elite reliability with instant cash pickup reach across the largest global network. Delivered value can be inconsistent due to higher effective costs, but reliability and convenience are strong. Detailed breakdown of fees, speed, and delivered value based on real transfer data.`
+setSeo({
+  title: `Western Union Review ${new Date().getFullYear()} - Remit-Score 8.2/10 | Remit-Scout`,
+  description: 'Independent Western Union review with Remit-Score 8.2/10. Fees, exchange rates, delivery speed, and key pros/cons to compare before you send.',
+  canonical: `${siteUrl}/learn/providers/western-union`,
+  ogImage: false,
+})
 
-addReviewSchema({
-  itemReviewed: 'Western Union',
-  reviewBody,
-  author: 'Remit-Scout Editorial Team',
+const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+
+addAggregateRatingSchema({
+  name: 'Western Union',
   ratingValue: score,
   bestRating: 10,
   worstRating: 1,
-  datePublished: '2024-01-01',
 })
 
 const breadcrumbItems = [
@@ -1476,4 +1485,11 @@ const breadcrumbItems = [
   { name: 'Providers', path: '/learn/providers' },
   { name: 'Western Union Review', path: '/learn/providers/western-union' },
 ]
+
+addBreadcrumbSchema(
+  breadcrumbItems.map(item => ({
+    name: item.name,
+    url: item.path === '/' ? `${siteUrl}/` : `${siteUrl}${item.path}`,
+  })),
+)
 </script>

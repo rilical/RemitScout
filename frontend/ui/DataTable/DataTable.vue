@@ -41,32 +41,32 @@ const isTerminal = computed(() => props.variant === 'terminal')
 
 const tableClass = computed(() => {
   return isTerminal.value
-    ? 'w-full border-collapse text-sm'
-    : 'w-full border-collapse text-sm'
+    ? 'w-full border-collapse text-body-sm'
+    : 'w-full border-collapse text-body-sm'
 })
 
 const theadClass = computed(() => {
   return isTerminal.value
     ? 'bg-neutral-800 text-neutral-400'
-    : 'bg-slate-50 text-slate-600'
+    : 'bg-neutral-50 text-rs-muted'
 })
 
 const thBaseClass = computed(() => {
   return isTerminal.value
-    ? 'px-4 py-3 text-xs font-semibold uppercase tracking-wider'
-    : 'px-4 py-3 text-xs font-semibold uppercase tracking-wider'
+    ? 'px-4 py-3 text-body-sm font-semibold uppercase tracking-wider'
+    : 'px-4 py-3 text-body-sm font-semibold uppercase tracking-wider'
 })
 
 const trHoverClass = computed(() => {
   return isTerminal.value
     ? 'border-t border-neutral-700 transition-colors hover:bg-neutral-800/60'
-    : 'border-t border-slate-200 transition-colors hover:bg-slate-50'
+    : 'border-t border-rs-border transition-colors hover:bg-neutral-50'
 })
 
 const tdBaseClass = computed(() => {
   return isTerminal.value
-    ? 'px-4 py-3 text-sm text-neutral-200'
-    : 'px-4 py-3 text-sm text-slate-700'
+    ? 'px-4 py-3 text-body-sm text-neutral-200'
+    : 'px-4 py-3 text-body-sm text-neutral-700'
 })
 
 function alignClass(align?: DataTableAlign): string {
@@ -82,7 +82,7 @@ function alignClass(align?: DataTableAlign): string {
 
 function sortableClass(column: DataTableColumn): string {
   if (!column.sortable || !props.onSortChange) return ''
-  return isTerminal.value ? 'cursor-pointer hover:bg-neutral-700' : 'cursor-pointer hover:bg-slate-100'
+  return isTerminal.value ? 'cursor-pointer hover:bg-neutral-700' : 'cursor-pointer hover:bg-neutral-100'
 }
 
 function thClass(column: DataTableColumn): string {
@@ -122,7 +122,7 @@ function onHeaderClick(column: DataTableColumn) {
 <template>
   <section
     class="w-full"
-    :class="isTerminal ? 'rounded-lg border border-neutral-700 bg-neutral-900' : 'rounded-xl border border-slate-200 bg-white'"
+    :class="isTerminal ? 'rounded-lg border border-neutral-700 bg-neutral-900' : 'rounded-xl border border-rs-border bg-surface'"
   >
     <div class="overflow-x-auto">
       <table
@@ -161,7 +161,7 @@ function onHeaderClick(column: DataTableColumn) {
                 <span
                   v-if="col.sortable && onSortChange"
                   class="text-[10px]"
-                  :class="isTerminal ? 'text-neutral-500' : 'text-slate-400'"
+                  :class="isTerminal ? 'text-neutral-500' : 'text-neutral-400'"
                 >
                   <template v-if="sort?.key === col.key">
                     {{ sort.direction === 'asc' ? '▲' : '▼' }}

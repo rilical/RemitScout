@@ -2,14 +2,17 @@
   <div class="relative">
     <div class="relative">
       <input
-        :id="id"
+        :id="resolvedId"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 pr-10 text-gray-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed"
         :class="selectClass"
         :placeholder="placeholder"
+        :aria-label="props.label || props.placeholder || 'Select currency'"
         autocomplete="off"
         :disabled="disabled"
+        :aria-invalid="error ? 'true' : 'false'"
+        :aria-describedby="error ? errorId : undefined"
         @input="handleSearch"
         @focus="handleFocus"
         @blur="handleBlur"
@@ -19,7 +22,7 @@
         <svg
           :class="[
             'h-5 w-5 transition-transform duration-200',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-400',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-400',
             { 'rotate-180': isOpen },
           ]"
           fill="none"
@@ -44,10 +47,10 @@
         v-show="isOpen && filteredCurrencies.length > 0"
         ref="dropdownRef"
         :class="[
-          'fixed z-[9999] overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
+          'fixed z-dropdown overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
-            : 'border-gray-300 bg-white',
+            : 'border-neutral-300 bg-surface',
         ]"
         style="max-height: 400px;"
         :style="dropdownStyle"
@@ -55,8 +58,8 @@
         <div
           v-if="filteredCurrencies.length === 0"
           :class="[
-            'px-4 py-2 text-sm',
-            props.theme === 'dark' ? 'text-neutral-400' : 'text-gray-500',
+            'px-4 py-2 text-body-sm',
+            props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500',
           ]"
         >
           No currencies found
@@ -66,10 +69,10 @@
           :key="currency.code"
           type="button"
           :class="[
-            'w-full px-4 py-2.5 text-left text-sm transition-colors focus:outline-none',
+            'w-full px-4 py-2.5 text-left text-body-sm transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
-              : 'text-gray-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
+              : 'text-neutral-900 hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
           ]"
           @mousedown.prevent="selectCurrency(currency)"
           @touchstart.prevent="selectCurrency(currency)"
@@ -80,18 +83,21 @@
     </Teleport>
 
     <slot name="error">
-      <div
+      <p
         v-if="error"
-        class="mt-1 text-sm text-red-500"
+        :id="errorId"
+        class="mt-1 text-body-sm text-danger-600"
+        role="alert"
+        aria-live="polite"
       >
         {{ error }}
-      </div>
+      </p>
     </slot>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from 'vue'
 import {
   CURRENCIES,
   BASE_CURRENCIES,
@@ -107,6 +113,7 @@ interface CurrencyOption {
 
 interface Props {
   modelValue: string
+  label?: string
   id?: string
   placeholder?: string
   disabled?: boolean
@@ -120,6 +127,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  label: '',
   id: undefined,
   placeholder: 'Select currency',
   disabled: false,
@@ -131,6 +139,10 @@ const props = withDefaults(defineProps<Props>(), {
   codeOnly: false,
   excludeCurrency: undefined,
 })
+
+const fallbackId = useId()
+const resolvedId = computed(() => props.id ?? `currency-select-${fallbackId}`)
+const errorId = computed(() => `${resolvedId.value}-error`)
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
@@ -145,25 +157,20 @@ const dropdownStyle = ref({})
 
 const availableCurrencyCodes = computed(() => {
   if (props.currencies && props.currencies.length > 0) {
-    console.log('Using provided currencies:', props.currencies)
     return props.currencies
   }
 
   if (props.countryCode) {
     const codes = getAvailableCurrencies(props.countryCode)
-    console.log('Country code:', props.countryCode, 'Available currencies:', codes)
     return codes.length > 0 ? codes : BASE_CURRENCIES
   }
 
-  console.log('Using base currencies:', BASE_CURRENCIES)
   return BASE_CURRENCIES
 })
 
 const allCurrencies = computed(() => {
   const codes = availableCurrencyCodes.value
   const currencies: CurrencyOption[] = []
-
-  console.log('Building currency list from codes:', codes)
 
   codes.forEach((code) => {
     const currencyInfo = CURRENCIES[code]
@@ -176,7 +183,7 @@ const allCurrencies = computed(() => {
       })
     }
     else {
-      console.warn('Currency not found in CURRENCIES:', code)
+      useLogger('CurrencySelect').warn('Currency not found in CURRENCIES', code)
       currencies.push({
         code,
         label: code,
@@ -200,7 +207,6 @@ const allCurrencies = computed(() => {
     return a.name.localeCompare(b.name)
   })
 
-  console.log('Final currency list:', sorted.map(c => c.code))
   return sorted
 })
 
@@ -233,16 +239,11 @@ watch(allCurrencies, () => {
 watch(() => props.excludeCurrency, filterCurrencies)
 
 const selectCurrency = (currency: CurrencyOption) => {
-  console.log('=== Select Currency ===')
-  console.log('Selected:', currency.code, currency.name)
-
   emit('update:modelValue', currency.code)
   emit('currency-selected', currency.code)
   // Show just the code, not the full label
   searchQuery.value = currency.code
   isOpen.value = false
-
-  console.log('searchQuery set to:', searchQuery.value)
 }
 
 const handleSearch = (event: Event) => {

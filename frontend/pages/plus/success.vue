@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-slate-900 flex items-center justify-center py-12 px-4">
+  <div class="min-h-screen bg-neutral-900 flex items-center justify-center py-12 px-page-x">
     <div class="max-w-2xl w-full">
-      <div class="bg-slate-800 rounded-2xl border-2 border-emerald-500 p-8 sm:p-12 text-center">
+      <div class="bg-neutral-800 rounded-2xl border-2 border-success-600 p-8 sm:p-12 text-center">
         <!-- Success Icon -->
-        <div class="w-20 h-20 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-6">
+        <div class="w-20 h-20 rounded-full bg-success-600 flex items-center justify-center mx-auto mb-6">
           <svg
             class="w-10 h-10 text-white"
             fill="none"
@@ -19,56 +19,56 @@
           </svg>
         </div>
 
-        <h1 class="text-4xl font-bold text-white mb-4">
+        <h1 class="text-h1 font-bold text-white mb-4">
           Welcome to Plus!
         </h1>
-        <p class="text-xl text-slate-300 mb-8">
+        <p class="text-h4 text-neutral-300 mb-8">
           Your subscription is now active. You have full access to all Plus features.
         </p>
 
         <!-- What's Next -->
-        <div class="bg-slate-900 rounded-xl border border-slate-700 p-6 mb-8 text-left">
-          <h2 class="text-lg font-bold text-white mb-4 text-center">
+        <div class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 mb-8 text-left">
+          <h2 class="text-body-lg font-bold text-white mb-4 text-center">
             What's Next?
           </h2>
           <div class="space-y-4">
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+              <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-body-sm">
                 1
               </div>
               <div>
                 <h3 class="text-white font-semibold mb-1">
                   Set Up Your Alerts
                 </h3>
-                <p class="text-sm text-slate-400">
+                <p class="text-body-sm text-neutral-400">
                   Create up to 16 smart alerts for the corridors you use most
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+              <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-body-sm">
                 2
               </div>
               <div>
                 <h3 class="text-white font-semibold mb-1">
                   Build Your Watchlist
                 </h3>
-                <p class="text-sm text-slate-400">
+                <p class="text-body-sm text-neutral-400">
                   Track up to 16 corridors in one place
                 </p>
               </div>
             </div>
 
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+              <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-body-sm">
                 3
               </div>
               <div>
                 <h3 class="text-white font-semibold mb-1">
                   Explore Your Dashboard
                 </h3>
-                <p class="text-sm text-slate-400">
+                <p class="text-body-sm text-neutral-400">
                   See your personalized rate insights and market intelligence
                 </p>
               </div>
@@ -77,40 +77,40 @@
         </div>
 
         <!-- Confirmation Details -->
-        <div class="bg-slate-900 rounded-xl border border-slate-700 p-6 mb-8 text-left">
-          <div class="space-y-3 text-sm">
+        <div class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 mb-8 text-left">
+          <div class="space-y-3 text-body-sm">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400">Plan</span>
+              <span class="text-neutral-400">Plan</span>
               <span class="text-white font-semibold">Remit-Scout Plus</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-slate-400">Billing</span>
+              <span class="text-neutral-400">Billing</span>
               <span class="text-white">{{ billingAmountDisplay }}</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-slate-400">Trial Period</span>
+              <span class="text-neutral-400">Trial Period</span>
               <span class="text-white">{{ trialDisplay }}</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-slate-400">Next Billing Date</span>
+              <span class="text-neutral-400">Next Billing Date</span>
               <span class="text-white">{{ nextBillingDateDisplay }}</span>
             </div>
             <div
               v-if="billingStatusDisplay"
               class="flex items-center justify-between"
             >
-              <span class="text-slate-400">Subscription Status</span>
+              <span class="text-neutral-400">Subscription Status</span>
               <span class="text-white">{{ billingStatusDisplay }}</span>
             </div>
           </div>
         </div>
 
-        <p class="text-sm text-slate-400 mb-8">
+        <p class="text-body-sm text-neutral-400 mb-8">
           A confirmation email has been sent to your inbox with all the details.
         </p>
         <p
           v-if="meError"
-          class="text-sm text-amber-200 mb-6"
+          class="text-body-sm text-warning-600 mb-6"
         >
           {{ meError }}
         </p>
@@ -119,7 +119,7 @@
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
             to="/dashboard"
-            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
             <span>Go to Dashboard</span>
             <svg
@@ -138,7 +138,7 @@
           </NuxtLink>
           <NuxtLink
             :to="{ path: '/dashboard', query: { tab: 'alerts' } }"
-            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-lg font-semibold border-2 border-slate-600 transition-all"
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-neutral-700 hover:bg-neutral-600 text-white rounded-xl text-body-lg font-semibold border-2 border-neutral-600 transition-all"
           >
             <span>Create Alert</span>
           </NuxtLink>
@@ -153,6 +153,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { setSeo } from '~/composables/useSeo'
 import { formatDate, formatMoney as formatMoneyValue } from '~/shared/lib/format'
 
 type BillingPricingResponse = {
@@ -176,6 +177,8 @@ type MeResponse = {
 }
 
 const route = useRoute()
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
 const _sessionId = route.query.session_id as string | undefined
 const { request } = useApi()
 const { trackPlusPurchase } = useMarketingAnalytics()
@@ -199,7 +202,7 @@ if (_sessionId) {
     })
   }
   catch (error) {
-    console.warn('Stripe verification failed:', error)
+    meError.value = 'Unable to verify your checkout session. Your subscription may still be active; please check your dashboard.'
   }
 }
 
@@ -260,10 +263,10 @@ onMounted(() => {
   })
 })
 
-useHead({
+setSeo({
   title: 'Success - Remit-Scout Plus',
-  meta: [
-    { name: 'description', content: 'Your Plus subscription is active' },
-  ],
+  description: 'Your Plus subscription is active.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
 })
 </script>

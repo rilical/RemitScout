@@ -24,6 +24,27 @@ vi.mock('../plane-a/src/repositories', () => ({
 
 const makeApp = () => ({
   get: vi.fn(),
+  container: {
+    pool: {},
+    repositories: {
+      latestQuote: {
+        listLatestByCorridor,
+      },
+      quoteRefresh: {
+        enqueueRequest,
+      },
+      rightsMatrix: {
+        listActiveB2cProvidersByCountry,
+      },
+      corridorPriority: {
+        getPriorityInfo,
+        getPriorityTier,
+      },
+      corridorCapability: {
+        listSupportedProviderIds,
+      },
+    },
+  },
 }) as unknown as FastifyInstance
 
 const getHandler = (app: FastifyInstance, method: 'get', url: string) => {
@@ -71,14 +92,16 @@ describe('quotes route', () => {
   })
 
   it('returns B2C quotes for valid corridor request', async () => {
+    listSupportedProviderIds.mockResolvedValue(['wise'])
+
     listLatestByCorridor.mockResolvedValue([
       {
-        provider_id: 'wise',
-        provider_name: 'Wise',
-        implied_fx_rate: 17.5,
-        collected_at: new Date().toISOString(),
-        delivery_time_min_minutes: 10,
-        delivery_time_max_minutes: 20,
+      provider_id: 'wise',
+      provider_name: 'Wise',
+      implied_fx_rate: 17.5,
+      collected_at: new Date().toISOString(),
+      delivery_time_min_minutes: 10,
+      delivery_time_max_minutes: 20,
       },
     ])
 
@@ -95,6 +118,7 @@ describe('quotes route', () => {
           amount_bucket: 500,
           payin: 'bank_transfer',
           payout: 'bank_deposit',
+          live: true,
         },
         headers: {},
       },

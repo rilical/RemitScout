@@ -4,12 +4,19 @@
       v-for="tile in tiles"
       :key="tile.id"
       class="group relative cursor-pointer rounded-xl border border-neutral-700 bg-neutral-800 p-4 transition-all duration-200 hover:border-brand-600 hover:scale-[1.02]"
+      role="button"
+      tabindex="0"
+      :aria-label="`${tile.label}: ${tile.value}`"
       @click="handleTileClick(tile)"
+      @keydown.enter="handleTileClick(tile)"
+      @keydown.space.prevent="handleTileClick(tile)"
     >
       <!-- Tooltip trigger -->
       <button
+        type="button"
         class="absolute top-3 right-3 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100"
         :title="tile.tooltip"
+        :aria-label="tile.tooltip"
         @click.stop
       >
         <svg
@@ -36,12 +43,12 @@
       </div>
 
       <!-- Label -->
-      <div class="mb-1 text-xs font-medium text-neutral-400">
+      <div class="mb-1 text-body-sm font-medium text-neutral-400">
         {{ tile.label }}
       </div>
 
       <!-- Value -->
-      <div class="mb-2 text-xl font-bold text-white">
+      <div class="mb-2 text-h4 font-bold text-white">
         {{ tile.value }}
       </div>
 
@@ -51,7 +58,7 @@
         class="flex items-center gap-1.5"
       >
         <span
-          class="flex items-center gap-0.5 text-xs font-semibold"
+          class="flex items-center gap-0.5 text-body-sm font-semibold"
           :class="getDeltaClass(tile.deltaType)"
         >
           <svg
@@ -86,7 +93,7 @@
         </span>
         <span
           v-if="tile.deltaLabel"
-          class="text-xs text-neutral-500"
+          class="text-body-sm text-neutral-500"
         >
           {{ tile.deltaLabel }}
         </span>

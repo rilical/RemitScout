@@ -3,18 +3,31 @@
     <!-- Backdrop -->
     <div
       class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      aria-label="Close dialog"
       @click="$emit('close')"
     />
 
     <!-- Modal -->
-    <div class="relative w-full max-w-lg rounded-2xl border border-neutral-700 bg-neutral-800 shadow-2xl">
+    <div
+      ref="modalRef"
+      class="relative w-full max-w-lg rounded-2xl border border-neutral-700 bg-neutral-800 shadow-2xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pulse-share-title"
+      tabindex="-1"
+      @keydown.esc="$emit('close')"
+    >
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
-        <h2 class="text-lg font-bold text-white">
+        <h2
+          id="pulse-share-title"
+          class="text-body-lg font-bold text-white"
+        >
           {{ mode === 'share' ? 'Share Chart' : 'Embed Chart' }}
         </h2>
         <button
           class="rounded-lg p-2 text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors"
+          aria-label="Close dialog"
           @click="$emit('close')"
         >
           <Icon
@@ -40,7 +53,8 @@
               type="text"
               readonly
               :value="shareUrl"
-              class="flex-1 rounded-lg border border-neutral-600 bg-neutral-900 px-4 py-3 text-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+              aria-label="Share URL"
+              class="flex-1 rounded-lg border border-neutral-600 bg-neutral-900 px-4 py-3 text-body-sm text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
               @focus="selectInput"
             >
             <button
@@ -58,7 +72,7 @@
 
           <!-- Social Share -->
           <div class="mt-6">
-            <p class="mb-3 text-sm text-neutral-400">
+            <p class="mb-3 text-body-sm text-neutral-400">
               Or share via:
             </p>
             <div class="flex flex-wrap gap-3">
@@ -66,7 +80,7 @@
                 :href="twitterShareUrl"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-sm font-semibold text-brand-600 hover:bg-brand-600/30 transition-colors"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-body-sm font-semibold text-brand-600 hover:bg-brand-600/30 transition-colors"
               >
                 <Icon
                   name="share"
@@ -79,7 +93,7 @@
                 :href="linkedinShareUrl"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-sm font-semibold text-brand-600 hover:bg-brand-600/30 transition-colors"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-600/20 px-3 py-2 text-body-sm font-semibold text-brand-600 hover:bg-brand-600/30 transition-colors"
               >
                 <Icon
                   name="share"
@@ -90,7 +104,7 @@
               </a>
               <a
                 :href="emailShareUrl"
-                class="inline-flex items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-sm font-semibold text-neutral-200 hover:bg-neutral-600 transition-colors"
+                class="inline-flex items-center gap-2 rounded-lg bg-neutral-700 px-3 py-2 text-body-sm font-semibold text-neutral-200 hover:bg-neutral-600 transition-colors"
               >
                 <Icon
                   name="envelope"
@@ -112,10 +126,14 @@
           <!-- Options -->
           <div class="mb-4 flex flex-wrap gap-4">
             <div>
-              <label class="mb-1 block text-xs text-neutral-400">Theme</label>
+              <label
+                for="pulse-embed-theme"
+                class="mb-1 block text-body-sm text-neutral-400"
+              >Theme</label>
               <select
+                id="pulse-embed-theme"
                 v-model="embedTheme"
-                class="rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-brand-600 focus:outline-none"
+                class="rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm text-white focus:border-brand-600 focus:outline-none"
               >
                 <option value="dark">
                   Dark
@@ -126,20 +144,28 @@
               </select>
             </div>
             <div>
-              <label class="mb-1 block text-xs text-neutral-400">Width</label>
+              <label
+                for="pulse-embed-width"
+                class="mb-1 block text-body-sm text-neutral-400"
+              >Width</label>
               <input
+                id="pulse-embed-width"
                 v-model="embedWidth"
                 type="text"
-                class="w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-brand-600 focus:outline-none"
+                class="w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm text-white focus:border-brand-600 focus:outline-none"
                 placeholder="100%"
               >
             </div>
             <div>
-              <label class="mb-1 block text-xs text-neutral-400">Height</label>
+              <label
+                for="pulse-embed-height"
+                class="mb-1 block text-body-sm text-neutral-400"
+              >Height</label>
               <input
+                id="pulse-embed-height"
                 v-model="embedHeight"
                 type="text"
-                class="w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-sm text-white focus:border-brand-600 focus:outline-none"
+                class="w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm text-white focus:border-brand-600 focus:outline-none"
                 placeholder="400"
               >
             </div>
@@ -148,10 +174,10 @@
           <!-- Embed Code -->
           <div class="relative">
             <pre
-              class="rounded-lg border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-300 overflow-x-auto"
+              class="rounded-lg border border-neutral-700 bg-neutral-900 p-4 text-body-sm text-neutral-300 overflow-x-auto"
             ><code>{{ embedCode }}</code></pre>
             <button
-              class="absolute top-2 right-2 flex items-center gap-1.5 rounded bg-neutral-700 px-2 py-1 text-xs text-white hover:bg-neutral-600 transition-colors"
+              class="absolute top-2 right-2 flex items-center gap-1.5 rounded bg-neutral-700 px-2 py-1 text-body-sm text-white hover:bg-neutral-600 transition-colors"
               @click="copyEmbedCode"
             >
               <Icon
@@ -165,7 +191,7 @@
 
           <!-- Preview -->
           <div class="mt-6">
-            <p class="mb-2 text-sm text-neutral-400">
+            <p class="mb-2 text-body-sm text-neutral-400">
               Preview:
             </p>
             <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
@@ -185,10 +211,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import type { PulseFilters } from '~/types/pulse'
 import { getChartById } from '~/lib/pulseChartRegistry'
 import { Icon } from '~/ui'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 interface Props {
   chartId: string
@@ -203,6 +230,8 @@ defineEmits<{
 }>()
 
 const shareInput = ref<HTMLInputElement | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
 const copied = ref(false)
 const copiedEmbed = ref(false)
 const embedTheme = ref<'dark' | 'light'>('dark')
@@ -214,6 +243,15 @@ const chartMeta = computed(() => getChartById(props.chartId))
 const baseUrl = computed(() => {
   if (typeof window === 'undefined') return ''
   return window.location.origin
+})
+
+onMounted(async () => {
+  await nextTick()
+  activate()
+})
+
+onBeforeUnmount(() => {
+  deactivate()
 })
 
 const queryParams = computed(() => {
@@ -281,7 +319,7 @@ async function copyShareUrl() {
     }, 2000)
   }
   catch (e) {
-    console.error('Failed to copy:', e)
+    useLogger('PulseShareModal').error('Failed to copy', e)
   }
 }
 
@@ -294,7 +332,7 @@ async function copyEmbedCode() {
     }, 2000)
   }
   catch (e) {
-    console.error('Failed to copy:', e)
+    useLogger('PulseShareModal').error('Failed to copy', e)
   }
 }
 </script>

@@ -22,7 +22,7 @@ const runRemote = async (baseUrlRaw: string) => {
 }
 
 const run = async () => {
-  const remoteBase = process.env.API_BASE_URL || ''
+  const remoteBase = process.env.SMOKE_BASE_URL || process.env.API_BASE_URL || ''
   if (remoteBase) {
     await runRemote(remoteBase)
     return

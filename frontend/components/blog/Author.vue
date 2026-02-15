@@ -1,35 +1,39 @@
 <template>
-  <div class="rounded-2xl border border-neutral-200 bg-white p-6">
+  <div class="rounded-2xl border border-neutral-200 bg-surface p-6">
     <div class="flex items-start gap-4">
       <div
         v-if="avatar"
         class="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden bg-neutral-100"
       >
-        <img
+        <NuxtImg
           :src="avatar"
           :alt="name"
+          width="64"
+          height="64"
+          loading="lazy"
+          format="webp"
           class="w-full h-full object-cover"
-        >
+        />
       </div>
       <div
         v-else
-        class="flex-shrink-0 w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center text-2xl font-bold text-brand-600"
+        class="flex-shrink-0 w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center text-h3 font-bold text-brand-600"
       >
         {{ name.charAt(0).toUpperCase() }}
       </div>
       <div class="flex-1 min-w-0">
-        <h3 class="text-lg font-bold text-neutral-900 mb-1">
+        <h3 class="text-body-lg font-bold text-neutral-900 mb-1">
           {{ name }}
         </h3>
         <p
           v-if="title"
-          class="text-sm text-neutral-600 mb-2"
+          class="text-body-sm text-neutral-600 mb-2"
         >
           {{ title }}
         </p>
         <p
           v-if="bio"
-          class="text-sm text-neutral-700 leading-relaxed mb-3"
+          class="text-body-sm text-neutral-700 leading-relaxed mb-3"
         >
           {{ bio }}
         </p>

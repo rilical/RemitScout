@@ -1,11 +1,11 @@
 <template>
-  <section class="py-12 sm:py-16 bg-slate-900">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-neutral-900">
+    <div class="container">
       <div class="text-center mb-8">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">
+        <h2 class="text-h3 font-bold text-white mb-3">
           See something that doesn't look right?
         </h2>
-        <p class="text-base text-slate-300 max-w-2xl mx-auto">
+        <p class="text-body text-neutral-300 max-w-2xl mx-auto">
           If you notice a mismatch between our displayed quote and checkout, we want to know.
           We investigate every report and update our data pipeline accordingly.
         </p>
@@ -14,7 +14,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <NuxtLink
           to="/contact"
-          class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-slate-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
+          class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-neutral-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
         >
           <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <svg
@@ -32,10 +32,10 @@
             </svg>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
               Report a rate issue
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               Spotted a discrepancy between our quote and your checkout? Let us know so we can investigate and improve our data.
             </p>
           </div>
@@ -43,9 +43,9 @@
 
         <NuxtLink
           to="/methodology"
-          class="flex flex-col items-center gap-4 p-8 bg-white rounded-2xl border-2 border-slate-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
+          class="flex flex-col items-center gap-4 p-8 bg-surface rounded-2xl border-2 border-neutral-700 hover:border-brand-500 hover:shadow-2xl transition-all group"
         >
-          <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <div class="w-16 h-16 rounded-2xl bg-brand-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <svg
               class="w-9 h-9 text-white"
               fill="none"
@@ -61,10 +61,10 @@
             </svg>
           </div>
           <div class="text-center">
-            <h3 class="text-lg font-bold text-neutral-900 mb-2">
+            <h3 class="text-body-lg font-bold text-neutral-900 mb-2">
               View our methodology
             </h3>
-            <p class="text-sm text-neutral-600">
+            <p class="text-body-sm text-neutral-600">
               See exactly how we collect quotes, calculate scores, and ensure data quality across all providers.
             </p>
           </div>

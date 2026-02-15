@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-900">
+  <div class="min-h-screen bg-neutral-900">
     <CenteredPage
       max-width="5xl"
       padding-y="md"
@@ -8,7 +8,7 @@
       <div class="text-center mb-8">
         <NuxtLink
           to="/plus"
-          class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-4"
+          class="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 mb-4"
         >
           <svg
             class="w-5 h-5"
@@ -25,10 +25,10 @@
           </svg>
           <span>Back to Plus</span>
         </NuxtLink>
-        <h1 class="text-4xl font-bold text-white mb-2">
+        <h1 class="text-h1 font-bold text-white mb-2">
           Upgrade to Plus
         </h1>
-        <p class="text-lg text-slate-400">
+        <p class="text-body-lg text-neutral-400">
           Complete your subscription in just a few steps
         </p>
       </div>
@@ -36,8 +36,8 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Checkout Form -->
         <div class="lg:col-span-2">
-          <div class="bg-slate-800 rounded-2xl border border-slate-700 p-8">
-            <h2 class="text-2xl font-bold text-white mb-6">
+          <div class="bg-neutral-800 rounded-2xl border border-neutral-700 p-8">
+            <h2 class="text-h3 font-bold text-white mb-6">
               Payment Details
             </h2>
 
@@ -45,14 +45,14 @@
               class="space-y-6"
               @submit.prevent="handleCheckout"
             >
-              <div class="rounded-lg border border-slate-700 bg-slate-900 p-4">
-                <div class="text-sm font-semibold text-slate-300">
+              <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                <div class="text-body-sm font-semibold text-neutral-300">
                   Signed in as
                 </div>
                 <div class="text-white font-semibold">
                   {{ userEmail || 'Account email' }}
                 </div>
-                <p class="mt-2 text-xs text-slate-500">
+                <p class="mt-2 text-body-sm text-rs-muted">
                   Payment details are entered securely on Stripe Checkout. We never collect or store card data on this page.
                 </p>
               </div>
@@ -61,7 +61,7 @@
               <button
                 type="submit"
                 :disabled="processing"
-                class="w-full h-14 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                class="w-full h-14 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:bg-neutral-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <span v-if="!processing">Continue to Stripe Checkout</span>
                 <span v-else>Processing...</span>
@@ -81,23 +81,23 @@
                 </svg>
               </button>
 
-              <p class="text-xs text-slate-500 text-center">
+              <p class="text-body-sm text-rs-muted text-center">
                 By subscribing, you agree to our <NuxtLink
                   to="/terms"
-                  class="text-blue-400 hover:text-blue-300"
+                  class="text-primary-400 hover:text-primary-300"
                 >Terms of Service</NuxtLink> and <NuxtLink
                   to="/privacy"
-                  class="text-blue-400 hover:text-blue-300"
+                  class="text-primary-400 hover:text-primary-300"
                 >Privacy Policy</NuxtLink>
               </p>
             </form>
           </div>
 
           <!-- Security Notice -->
-          <div class="mt-6 bg-slate-800 border border-slate-700 rounded-lg p-4">
+          <div class="mt-6 bg-neutral-800 border border-neutral-700 rounded-lg p-4">
             <div class="flex items-start gap-3">
               <svg
-                class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5"
+                class="w-5 h-5 text-success-600 flex-shrink-0 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -110,10 +110,10 @@
                 />
               </svg>
               <div>
-                <p class="text-sm font-semibold text-white">
+                <p class="text-body-sm font-semibold text-white">
                   Secure Payment
                 </p>
-                <p class="text-xs text-slate-400 mt-1">
+                <p class="text-body-sm text-neutral-400 mt-1">
                   Your payment information is encrypted and processed securely by Stripe. We never store your card details.
                 </p>
               </div>
@@ -123,42 +123,42 @@
 
         <!-- Order Summary -->
         <div class="lg:col-span-1">
-          <div class="bg-slate-800 rounded-2xl border border-slate-700 p-6 sticky top-6">
-            <h3 class="text-xl font-bold text-white mb-6">
+          <div class="bg-neutral-800 rounded-2xl border border-neutral-700 p-6 sticky top-6">
+            <h3 class="text-h4 font-bold text-white mb-6">
               Order Summary
             </h3>
 
             <div class="space-y-4 mb-6">
               <div class="flex items-center justify-between">
-                <span class="text-slate-300">Remit-Scout Plus</span>
+                <span class="text-neutral-300">Remit-Scout Plus</span>
                 <span class="text-white font-semibold">{{ priceDisplay }}</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-slate-400">Billing cycle</span>
-                <span class="text-slate-300">{{ billingIntervalLabel }}</span>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-400">Billing cycle</span>
+                <span class="text-neutral-300">{{ billingIntervalLabel }}</span>
               </div>
               <div
                 v-if="billedAnnuallyMonthlyDisplay"
-                class="text-xs text-slate-500 text-right -mt-2"
+                class="text-body-sm text-rs-muted text-right -mt-2"
               >
                 {{ billedAnnuallyMonthlyDisplay }}
               </div>
-              <div class="border-t border-slate-700 pt-4">
+              <div class="border-t border-neutral-700 pt-4">
                 <div class="flex items-center justify-between">
                   <span class="text-white font-semibold">Total due today</span>
-                  <span class="text-2xl font-bold text-white">{{ totalDueToday }}</span>
+                  <span class="text-h3 font-bold text-white">{{ totalDueToday }}</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-2">
+                <p class="text-body-sm text-rs-muted mt-2">
                   <span v-if="trialDays > 0">{{ trialDays }}-day free trial • Cancel anytime</span>
                   <span v-else>Cancel anytime</span>
                 </p>
               </div>
             </div>
 
-            <div class="border-t border-slate-700 pt-6 space-y-3">
+            <div class="border-t border-neutral-700 pt-6 space-y-3">
               <div class="flex items-start gap-2">
                 <svg
-                  class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                  class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -170,11 +170,11 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">16 smart alerts + 16 watchlist corridors</span>
+                <span class="text-body-sm text-neutral-300">16 smart alerts + 16 watchlist corridors</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg
-                  class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                  class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -186,11 +186,11 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">Pulse access (send timing + provider quotes)</span>
+                <span class="text-body-sm text-neutral-300">Pulse access (send timing + provider quotes)</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg
-                  class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                  class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -202,11 +202,11 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">365-day rate history</span>
+                <span class="text-body-sm text-neutral-300">365-day rate history</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg
-                  class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                  class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -218,11 +218,11 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">Export data (CSV/PDF)</span>
+                <span class="text-body-sm text-neutral-300">Export data (CSV/PDF)</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg
-                  class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5"
+                  class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -234,12 +234,12 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-sm text-slate-300">Ad-free experience</span>
+                <span class="text-body-sm text-neutral-300">Ad-free experience</span>
               </div>
             </div>
 
-            <div class="mt-6 pt-6 border-t border-slate-700">
-              <p class="text-xs text-slate-500 text-center">
+            <div class="mt-6 pt-6 border-t border-neutral-700">
+              <p class="text-body-sm text-rs-muted text-center">
                 <span v-if="trialDays > 0">You won't be charged until after your {{ trialDays }}-day free trial ends</span>
                 <span v-else>Cancel anytime</span>
               </p>
@@ -343,7 +343,6 @@ async function handleCheckout() {
     throw new Error(result.error || 'No checkout URL returned')
   }
   catch (error: any) {
-    console.error('Checkout error:', error)
     if (error?.statusCode === 404 || error?.message?.includes('fetch')) {
       alert('Stripe integration pending. Please contact support to upgrade to Plus.')
       navigateTo('/contact')

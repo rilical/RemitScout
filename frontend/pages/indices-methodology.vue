@@ -1,151 +1,121 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div class="min-h-screen bg-surface">
     <CompareWidget />
 
     <!-- Hero -->
-    <section class="relative bg-slate-950 py-16 lg:py-20">
-      <div class="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section class="relative bg-neutral-900 py-16 lg:py-24">
+      <div class="relative z-10 mx-auto max-w-page px-page-x">
         <Breadcrumbs
           :items="breadcrumbItems"
           dark
         />
 
-        <div class="mt-10 grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
-          <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-brand-400">
-              Remit-Scout Indices
-            </p>
-            <h1 class="mt-3 text-4xl font-bold leading-tight text-white sm:text-5xl">
-              Indices Methodology
-            </h1>
-            <p class="mt-5 text-lg leading-relaxed text-slate-300">
-              A transparent, auditable description of how TEER™, RCI™, and RVI™ are calculated.
-              These indices are <strong class="text-white">synthetic volume‑weighted</strong> using
-              quote frequency, spread stability, and recency.
-            </p>
-            <p class="mt-4 text-sm text-slate-400">
-              Last updated:
-              <time :datetime="lastUpdatedIso">{{ lastUpdatedLabel }}</time>
-            </p>
-          </div>
-
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-lg">
-            <div class="space-y-4">
-              <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">
-                  Weighting Model
-                </p>
-                <p class="text-lg font-semibold text-white">
-                  synthetic_volume_v1
-                </p>
-              </div>
-              <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">
-                  Methodology Version
-                </p>
-                <p class="text-lg font-semibold text-white">
-                  indices_v2
-                </p>
-              </div>
-              <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">
-                  Default Amount
-                </p>
-                <p class="text-lg font-semibold text-white">
-                  $500 USD equivalent
-                </p>
-              </div>
-              <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">
-                  Outputs
-                </p>
-                <p class="text-sm text-slate-300">
-                  Daily TEER, RCI, RVI, and RVI_bps
-                </p>
-              </div>
-            </div>
-          </div>
+        <div class="mt-10 max-w-4xl">
+          <h1 class="text-h1 font-bold leading-tight text-white">
+            Indices Methodology
+          </h1>
+          <p class="mt-5 text-body-lg leading-relaxed text-neutral-300 max-w-3xl">
+            A transparent, auditable description of how TEER, RCI, and RVI are calculated.
+            These indices are <strong class="text-white">synthetic volume-weighted</strong> using
+            quote frequency, spread stability, and recency.
+          </p>
+          <p class="mt-4 text-body-sm text-neutral-400">
+            Last updated:
+            <time :datetime="lastUpdatedIso">{{ lastUpdatedLabel }}</time>
+          </p>
         </div>
 
-        <div class="mt-10 grid gap-6 md:grid-cols-3">
-          <NuxtLink
-            to="/indices-methodology#teer"
-            class="group rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-white/20 hover:bg-white/10 transition-all"
-          >
-            <p class="text-xs uppercase tracking-wide text-slate-400">Index</p>
-            <h3 class="mt-2 text-xl font-bold text-white">TEER™</h3>
-            <p class="mt-2 text-sm text-slate-300">Total Effective Exchange Rate.</p>
-          </NuxtLink>
-          <NuxtLink
-            to="/indices-methodology#rci"
-            class="group rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-white/20 hover:bg-white/10 transition-all"
-          >
-            <p class="text-xs uppercase tracking-wide text-slate-400">Index</p>
-            <h3 class="mt-2 text-xl font-bold text-white">RCI™</h3>
-            <p class="mt-2 text-sm text-slate-300">Remittance Cost Index.</p>
-          </NuxtLink>
-          <NuxtLink
-            to="/indices-methodology#rvi"
-            class="group rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-white/20 hover:bg-white/10 transition-all"
-          >
-            <p class="text-xs uppercase tracking-wide text-slate-400">Index</p>
-            <h3 class="mt-2 text-xl font-bold text-white">RVI™</h3>
-            <p class="mt-2 text-sm text-slate-300">Remittance Volatility Index.</p>
-          </NuxtLink>
-        </div>
+        
       </div>
     </section>
 
     <!-- Synthetic Weighting -->
     <section
       id="weighting"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
-          <div>
-            <h2 class="text-3xl font-bold text-slate-900">
-              Synthetic Volume Weighting
-            </h2>
-            <p class="mt-4 text-base text-slate-600 leading-relaxed">
-              We do not see provider transaction volume directly. Instead, we infer relative dominance
-              from observable microstructure signals: quote frequency, spread stability, and recency.
-            </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
-              <LaTeXFormula
-                :formula="formulaWeightingRaw"
-                display
-              />
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="max-w-4xl mb-12">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
+            Synthetic Volume Weighting
+          </h2>
+          <p class="text-body-lg text-neutral-600 leading-relaxed">
+            We don't see provider transaction volume directly. Instead, we infer relative dominance
+            from observable signals: how often a provider quotes, how stable their spread is, and how recently they've been active.
+          </p>
+        </div>
+
+        <div class="grid gap-8 lg:grid-cols-2">
+          <!-- Formula panel -->
+          <div class="space-y-6">
+            <div class="rounded-2xl border border-neutral-200 bg-neutral-900 p-6 overflow-x-auto text-white">
+              <p class="text-body-sm font-mono uppercase tracking-wide text-neutral-400 mb-4">Raw weight</p>
+              <AsyncErrorBoundary skeleton-height="120">
+                <LaTeXFormula
+                  :formula="formulaWeightingRaw"
+                  display
+                />
+              </AsyncErrorBoundary>
+              <p class="mt-4 text-body-sm text-neutral-400">
+                <code class="text-white/80">F</code> = quote frequency,
+                <code class="text-white/80">S</code> = spread stability,
+                <code class="text-white/80">R</code> = recency,
+                <code class="text-white/80">m_tier</code> = persistence multiplier.
+              </p>
             </div>
-            <p class="mt-3 text-xs text-slate-500">
-              Where <code>F</code> is quote frequency, <code>S</code> is spread stability, <code>R</code> is recency, and <code>m_tier</code> is the persistence multiplier.
-            </p>
-            <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
-              <LaTeXFormula
-                :formula="formulaWeightingBlend"
-                display
-              />
+
+            <div class="rounded-2xl border border-neutral-200 bg-neutral-900 p-6 overflow-x-auto text-white">
+              <p class="text-body-sm font-mono uppercase tracking-wide text-neutral-400 mb-4">Blended weight</p>
+              <AsyncErrorBoundary skeleton-height="120">
+                <LaTeXFormula
+                  :formula="formulaWeightingBlend"
+                  display
+                />
+              </AsyncErrorBoundary>
+              <p class="mt-4 text-body-sm text-neutral-400">
+                <code class="text-white/80">d</code> = window days,
+                <code class="text-white/80">n</code> = quote count,
+                <code class="text-white/80">n_min</code> = minimum quotes for full confidence.
+              </p>
             </div>
-            <p class="mt-3 text-xs text-slate-500">
-              Where <code>d</code> is window days, <code>n</code> is quote count, and <code>n_min</code> is minimum quotes required for full confidence.
-            </p>
-            <p class="mt-4 text-sm text-slate-500">
-              Default parameters: α=0.4, β=0.4, γ=0.2, half-life=180 minutes, min_days=3, min_providers=3, min_quotes=500.
-            </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
-            <h3 class="text-lg font-semibold text-slate-900">
-              Persistence bands (multiplier)
-            </h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">High persistence:</strong> ≥ 0.9 → 1.5×</li>
-              <li><strong class="text-slate-900">Medium persistence:</strong> ≥ 0.6 → 1.0×</li>
-              <li><strong class="text-slate-900">Low persistence:</strong> &lt; 0.6 → 0.5×</li>
-            </ul>
-            <div class="mt-6 rounded-xl bg-slate-50 p-4 text-xs text-slate-500">
-              Weight confidence (0–1) is returned to clients as <code>weightConfidence</code> along with
-              the effective window in <code>weightWindowDays</code>.
+          <!-- Parameters & persistence -->
+          <div class="space-y-6">
+            <div class="rounded-2xl border border-neutral-200 bg-surface p-6">
+              <h3 class="text-body-lg font-semibold text-neutral-900 mb-4">
+                Default parameters
+              </h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div
+                  v-for="param in weightParams"
+                  :key="param.label"
+                  class="rounded-xl bg-neutral-50 p-3"
+                >
+                  <p class="text-body-sm text-neutral-500">{{ param.label }}</p>
+                  <p class="text-body font-mono font-semibold text-neutral-900">{{ param.value }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-neutral-200 bg-surface p-6">
+              <h3 class="text-body-lg font-semibold text-neutral-900 mb-4">
+                Persistence bands
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between rounded-xl bg-brand-50 p-3">
+                  <span class="text-body-sm font-semibold text-neutral-900">High persistence</span>
+                  <span class="font-mono text-body-sm text-brand-600">&ge; 0.9 &rarr; 1.5&times;</span>
+                </div>
+                <div class="flex items-center justify-between rounded-xl bg-neutral-50 p-3">
+                  <span class="text-body-sm font-semibold text-neutral-900">Medium persistence</span>
+                  <span class="font-mono text-body-sm text-neutral-600">&ge; 0.6 &rarr; 1.0&times;</span>
+                </div>
+                <div class="flex items-center justify-between rounded-xl bg-neutral-50 p-3">
+                  <span class="text-body-sm font-semibold text-neutral-900">Low persistence</span>
+                  <span class="font-mono text-body-sm text-neutral-600">&lt; 0.6 &rarr; 0.5&times;</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -155,41 +125,58 @@
     <!-- TEER -->
     <section
       id="teer"
-      class="py-16 lg:py-20 bg-slate-50 scroll-mt-20"
+      class="py-16 lg:py-20 bg-brand-600 scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
           <div>
-            <h2 class="text-3xl font-bold text-slate-900">
-              TEER™ — Total Effective Exchange Rate
-            </h2>
-            <p class="mt-4 text-base text-slate-600 leading-relaxed">
-              TEER represents the net rate recipients effectively receive after fees and FX markup.
-              It is calculated from the weighted cost ratio and the mid‑market reference rate.
-            </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
-              <LaTeXFormula
-                :formula="formulaTeer"
-                display
-              />
+            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-body-sm font-semibold text-white mb-6">
+              Index 01
             </div>
-            <p class="mt-3 text-xs text-slate-500">
-              Where <code>S</code> is send amount, <code>f</code> is fee, <code>m</code> is hidden markup, and <code>r_mid</code> is the mid-market reference rate.
+            <h2 class="text-h2 font-bold text-white mb-4">
+              TEER &mdash; Total Effective Exchange Rate
+            </h2>
+            <p class="text-body-lg text-white/80 leading-relaxed mb-8">
+              TEER represents the net rate recipients effectively receive after fees and FX markup.
+              It is calculated from the weighted cost ratio and the mid-market reference rate.
             </p>
-            <p class="mt-4 text-sm text-slate-500">
-              TEER uses providers that are <code>allowed_in_teer</code> and active in the rights matrix.
+            <div class="rounded-2xl bg-neutral-900 p-6 overflow-x-auto text-white">
+              <AsyncErrorBoundary skeleton-height="120">
+                <LaTeXFormula
+                  :formula="formulaTeer"
+                  display
+                />
+              </AsyncErrorBoundary>
+              <p class="mt-4 text-body-sm text-neutral-400">
+                <code class="text-white/80">S</code> = send amount,
+                <code class="text-white/80">f</code> = fee,
+                <code class="text-white/80">m</code> = hidden markup,
+                <code class="text-white/80">r_mid</code> = mid-market reference rate.
+              </p>
+            </div>
+            <p class="mt-4 text-body-sm text-white/60">
+              Only includes providers approved for TEER calculation.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
-            <h3 class="text-lg font-semibold text-slate-900">
+          <div class="rounded-2xl bg-white/10 border border-white/20 p-6 lg:mt-16">
+            <h3 class="text-body-lg font-semibold text-white mb-4">
               Interpretation
             </h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">Higher TEER</strong> → better effective rate.</li>
-              <li><strong class="text-slate-900">Lower TEER</strong> → higher friction in the corridor.</li>
-              <li>Excludes promotional rates to avoid teaser‑rate distortion.</li>
-            </ul>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-white/90"><strong class="text-white">Higher TEER</strong> means a better effective rate for the recipient.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-white/90"><strong class="text-white">Lower TEER</strong> signals higher friction in the corridor.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-white/90">Promotional rates are excluded to avoid teaser-rate distortion.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -198,41 +185,56 @@
     <!-- RCI -->
     <section
       id="rci"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-surface scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
           <div>
-            <h2 class="text-3xl font-bold text-slate-900">
-              RCI™ — Remittance Cost Index
+            <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-1.5 text-body-sm font-semibold text-brand-600 mb-6">
+              Index 02
+            </div>
+            <h2 class="text-h2 font-bold text-neutral-900 mb-4">
+              RCI &mdash; Remittance Cost Index
             </h2>
-            <p class="mt-4 text-base text-slate-600 leading-relaxed">
+            <p class="text-body-lg text-neutral-600 leading-relaxed mb-8">
               RCI is the weighted total cost of sending money as a percent of the send amount.
               It captures both explicit fees and hidden FX markup.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
-              <LaTeXFormula
-                :formula="formulaRci"
-                display
-              />
+            <div class="rounded-2xl bg-neutral-900 p-6 overflow-x-auto text-white">
+              <AsyncErrorBoundary skeleton-height="120">
+                <LaTeXFormula
+                  :formula="formulaRci"
+                  display
+                />
+              </AsyncErrorBoundary>
+              <p class="mt-4 text-body-sm text-neutral-400">
+                <code class="text-white/80">w_i</code> = synthetic volume weights (normalized),
+                <code class="text-white/80">S, f, m</code> as defined above.
+              </p>
             </div>
-            <p class="mt-3 text-xs text-slate-500">
-              Where <code>w_i</code> are the synthetic volume weights (normalized across providers) and <code>S, f, m</code> are as defined above.
-            </p>
-            <p class="mt-4 text-sm text-slate-500">
-              RCI uses providers that are <code>allowed_in_rci</code> and active in the rights matrix.
+            <p class="mt-4 text-body-sm text-neutral-500">
+              Only includes providers approved for RCI calculation.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
-            <h3 class="text-lg font-semibold text-slate-900">
+          <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-6 lg:mt-16">
+            <h3 class="text-body-lg font-semibold text-neutral-900 mb-4">
               Interpretation
             </h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">Higher RCI</strong> → more friction (fees + spread).</li>
-              <li><strong class="text-slate-900">Lower RCI</strong> → more efficient corridor.</li>
-              <li>Reported as a ratio (0–1); API clients can express it in percent.</li>
-            </ul>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-brand-600" />
+                <p class="text-body-sm text-neutral-700"><strong class="text-neutral-900">Higher RCI</strong> means more friction (fees + spread).</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-brand-400" />
+                <p class="text-body-sm text-neutral-700"><strong class="text-neutral-900">Lower RCI</strong> means a more efficient corridor.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-brand-200" />
+                <p class="text-body-sm text-neutral-700">Reported as a ratio (0-1). API clients can express it in percent.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -241,41 +243,55 @@
     <!-- RVI -->
     <section
       id="rvi"
-      class="py-16 lg:py-20 bg-slate-50 scroll-mt-20"
+      class="py-16 lg:py-20 bg-neutral-900 scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="grid gap-10 lg:grid-cols-[1.2fr,0.8fr] items-start">
           <div>
-            <h2 class="text-3xl font-bold text-slate-900">
-              RVI™ — Remittance Volatility Index
+            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-body-sm font-semibold text-white mb-6">
+              Index 03
+            </div>
+            <h2 class="text-h2 font-bold text-white mb-4">
+              RVI &mdash; Remittance Volatility Index
             </h2>
-            <p class="mt-4 text-base text-slate-600 leading-relaxed">
+            <p class="text-body-lg text-neutral-300 leading-relaxed mb-8">
               RVI measures the weighted dispersion of effective rates across providers.
               We also publish RVI_bps for standardized comparison.
             </p>
-            <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 overflow-x-auto">
-              <LaTeXFormula
-                :formula="formulaRvi"
-                display
-              />
+            <div class="rounded-2xl bg-neutral-950 border border-white/10 p-6 overflow-x-auto text-white">
+              <AsyncErrorBoundary skeleton-height="120">
+                <LaTeXFormula
+                  :formula="formulaRvi"
+                  display
+                />
+              </AsyncErrorBoundary>
+              <p class="mt-4 text-body-sm text-neutral-400">
+                <code class="text-white/80">Var_w</code> = weighted variance across providers using the same synthetic weights.
+              </p>
             </div>
-            <p class="mt-3 text-xs text-slate-500">
-              Where <code>Var_w</code> is the weighted variance across providers (using the same weights used for the index point).
-            </p>
-            <p class="mt-4 text-sm text-slate-500">
-              RVI uses providers that are <code>allowed_in_rvi</code> and active in the rights matrix.
+            <p class="mt-4 text-body-sm text-neutral-500">
+              Only includes providers approved for RVI calculation.
             </p>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:self-start">
-            <h3 class="text-lg font-semibold text-slate-900">
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-6 lg:mt-16">
+            <h3 class="text-body-lg font-semibold text-white mb-4">
               Interpretation
             </h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">Higher RVI</strong> → providers disagree more.</li>
-              <li><strong class="text-slate-900">Lower RVI</strong> → tighter market consensus.</li>
-              <li>RVI_bps standardizes volatility vs TEER.</li>
-            </ul>
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-neutral-300"><strong class="text-white">Higher RVI</strong> means providers disagree more on pricing.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-neutral-300"><strong class="text-white">Lower RVI</strong> means tighter market consensus.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1 h-2 w-2 rounded-full bg-white" />
+                <p class="text-body-sm text-neutral-300">RVI_bps standardizes volatility relative to TEER.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -284,66 +300,85 @@
     <!-- Inputs & Controls -->
     <section
       id="inputs"
-      class="py-16 lg:py-20 bg-white scroll-mt-20"
+      class="py-16 lg:py-20 bg-brand-50 scroll-mt-20"
     >
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="grid gap-8 lg:grid-cols-2">
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-semibold text-slate-900">
-              Data inputs & filters
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="max-w-3xl mb-12">
+          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
+            Data Inputs &amp; Controls
+          </h2>
+          <p class="text-body-lg text-neutral-600 leading-relaxed">
+            Every index point is governed by the same filtering rules. Providers must pass the rights matrix, promotional pricing is stripped, and minimum coverage thresholds apply.
+          </p>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-3">
+          <div class="rounded-2xl border border-brand-200 bg-surface p-6">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
+              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+            <h3 class="text-body-lg font-semibold text-neutral-900 mb-3">
+              Rights Matrix
             </h3>
-            <ul class="mt-4 space-y-3 text-sm text-slate-600">
-              <li><strong class="text-slate-900">Rights matrix allowlists:</strong> per index using allowed_in_teer/allowed_in_rci/allowed_in_rvi.</li>
-              <li><strong class="text-slate-900">Promo exclusion:</strong> indices use base fees & rates only.</li>
-              <li><strong class="text-slate-900">Method profiles:</strong> standard_bank, standard_card, cash_pickup.</li>
-              <li><strong class="text-slate-900">Active providers:</strong> allowed_collect + allowed_b2c + stoplist_status=active.</li>
+            <ul class="space-y-2 text-body-sm text-neutral-600">
+              <li>Each index has its own provider allowlist</li>
+              <li>Only active, licensed providers are included</li>
+              <li>Promotional rates are excluded</li>
             </ul>
           </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-semibold text-slate-900">
-              Mid‑market reference
+          <div class="rounded-2xl border border-brand-200 bg-surface p-6">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
+              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            </div>
+            <h3 class="text-body-lg font-semibold text-neutral-900 mb-3">
+              Mid-Market Reference
             </h3>
-            <p class="mt-3 text-sm text-slate-600">
-              Mid‑market rates are sourced from OANDA. We prefer daily rates from
-              <code class="bg-slate-100 px-1 py-0.5 rounded">gold.fx_rate_history</code>
-              and fall back to the latest
-              <code class="bg-slate-100 px-1 py-0.5 rounded">gold.fx_rates</code> entry.
+            <p class="text-body-sm text-neutral-600 leading-relaxed">
+              Sourced from OANDA. We use daily mid-market rates as the benchmark, with automatic fallback to the most recent available rate when daily data is unavailable.
             </p>
           </div>
-        </div>
 
-        <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-          <h3 class="text-lg font-semibold text-slate-900">
-            Confidence & suppression
-          </h3>
-          <p class="mt-2 text-sm text-slate-600">
-            If provider coverage is too low (default minimum: 3 providers), index points are suppressed.
-            Confidence metadata is returned as <code>weightConfidence</code> and <code>weightWindowDays</code>.
-          </p>
+          <div class="rounded-2xl border border-brand-200 bg-surface p-6">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
+              <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-body-lg font-semibold text-neutral-900 mb-3">
+              Confidence &amp; Suppression
+            </h3>
+            <p class="text-body-sm text-neutral-600 leading-relaxed">
+              Minimum 3 providers required per corridor. Below that threshold, index points are suppressed. A confidence score (0-1) is published with every data point.
+            </p>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- CTA -->
-    <section class="py-14 bg-slate-900">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-3xl font-bold text-white">
+    <section class="py-16 sm:py-20 bg-brand-600">
+      <div class="mx-auto max-w-4xl px-page-x text-center">
+        <h2 class="text-h2 font-bold text-white mb-4">
           Need the indices directly?
         </h2>
-        <p class="mt-4 text-base text-slate-300">
-          Enterprise customers can access TEER™, RCI™, and RVI™ via API and scheduled exports.
+        <p class="text-body-lg text-white/80 mb-10">
+          Enterprise customers can access TEER, RCI, and RVI via API and scheduled exports.
         </p>
-        <div class="mt-6 flex justify-center gap-4">
+        <div class="flex flex-wrap justify-center gap-4">
           <NuxtLink
             to="/contact"
-            class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-500"
+            class="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-600 font-bold text-body-lg rounded-xl hover:bg-white/90 hover:shadow-xl motion-safe:transition-all duration-200"
           >
             Contact sales
           </NuxtLink>
           <NuxtLink
             to="/methodology"
-            class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:border-white/40"
+            class="inline-flex items-center gap-3 px-8 py-4 border-2 border-white/30 text-white font-bold text-body-lg rounded-xl hover:bg-white/10 motion-safe:transition-all duration-200"
           >
             View general methodology
           </NuxtLink>
@@ -354,11 +389,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import CompareWidget from '~/components/shared/CompareWidget.vue'
-import LaTeXFormula from '~/components/shared/LaTeXFormula.vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+
+const LaTeXFormula = defineAsyncComponent(() => import('~/components/shared/LaTeXFormula.vue'))
 
 const lastUpdatedIso = '2026-02-04'
 const lastUpdatedLabel = computed(() => {
@@ -373,6 +410,17 @@ const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Methodology', path: '/methodology' },
   { name: 'Indices Methodology', path: '/indices-methodology' },
+]
+
+const weightParams = [
+  { label: '\u03B1 (frequency)', value: '0.4' },
+  { label: '\u03B2 (stability)', value: '0.4' },
+  { label: '\u03B3 (recency)', value: '0.2' },
+  { label: 'Half-life', value: '180 min' },
+  { label: 'Min days', value: '3' },
+  { label: 'Min providers', value: '3' },
+  { label: 'Min quotes', value: '500' },
+  { label: 'Confidence', value: '0\u20131' },
 ]
 
 const formulaWeightingRaw = String.raw`\begin{aligned}
@@ -407,10 +455,19 @@ const formulaRvi = String.raw`\begin{aligned}
 
 const { public: { siteUrl } } = useRuntimeConfig()
 
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: 'Indices',
+    description: 'How TEER, RCI, and RVI are calculated and what they measure.',
+  },
+})
+
 setSeo({
   title: 'Indices Methodology | Remit-Scout',
-  description: 'How TEER™, RCI™, and RVI™ are calculated: synthetic volume weighting, inputs, and formulas.',
+  description: 'How TEER, RCI, and RVI are calculated on Remit-Scout: synthetic volume weighting, data inputs, and formulas for interpreting corridor efficiency and volatility.',
   canonical: `${siteUrl}/indices-methodology`,
+  ogImage: false,
   ogType: 'article',
   publishedTime: lastUpdatedIso,
   modifiedTime: lastUpdatedIso,

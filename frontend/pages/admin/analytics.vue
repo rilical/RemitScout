@@ -1,35 +1,35 @@
 <template>
-  <div class="min-h-screen bg-slate-50 px-6 py-10">
+  <div class="min-h-screen bg-neutral-50 px-6 py-10">
     <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="rounded-2xl bg-white p-6 shadow-sm">
+      <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 class="text-2xl font-semibold text-slate-900">
+            <h1 class="text-h3 font-semibold text-rs-fg">
               Analytics Console
             </h1>
-            <p class="text-sm text-slate-500">
+            <p class="text-body-sm text-rs-muted">
               Internal telemetry insights for corridors, providers, engagement, and savings.
             </p>
           </div>
           <div class="flex flex-wrap items-end gap-3">
-            <label class="text-xs text-slate-500">
+            <label class="text-body-sm text-rs-muted">
               Start date
               <input
                 v-model="startDate"
                 type="date"
-                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
               >
             </label>
-            <label class="text-xs text-slate-500">
+            <label class="text-body-sm text-rs-muted">
               End date
               <input
                 v-model="endDate"
                 type="date"
-                class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
               >
             </label>
             <button
-              class="h-10 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+              class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700"
               :disabled="loading"
               @click="loadAnalytics"
             >
@@ -37,25 +37,27 @@
             </button>
           </div>
         </div>
-        <p
+        <ErrorState
           v-if="error"
-          class="mt-3 text-sm text-red-600"
-        >
-          {{ error }}
-        </p>
+          class="mt-4"
+          mode="inline"
+          :title="error?.includes('panels failed') ? 'Partial load failure' : 'Something went wrong'"
+          :message="error || 'Failed to load data'"
+          :on-retry="refresh"
+        />
       </header>
 
       <section class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Popular Corridors
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Search and click activity with trend indicator.
           </p>
           <div class="mt-4 overflow-auto">
-            <table class="min-w-full text-sm">
-              <thead class="text-xs uppercase text-slate-400">
+            <table class="min-w-full text-body-sm">
+              <thead class="text-body-sm uppercase text-neutral-400">
                 <tr>
                   <th class="py-2 text-left">
                     Corridor
@@ -75,25 +77,25 @@
                 <tr
                   v-for="row in popularCorridors"
                   :key="row.corridor_id"
-                  class="border-t border-slate-100"
+                  class="border-t border-neutral-100"
                 >
-                  <td class="py-2 text-left text-slate-700">
+                  <td class="py-2 text-left text-neutral-700">
                     {{ row.from_country }} → {{ row.to_country }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ row.search_count }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ row.click_count }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ row.trend }} ({{ row.trend_percentage }}%)
                   </td>
                 </tr>
                 <tr v-if="popularCorridors.length === 0">
                   <td
                     colspan="4"
-                    class="py-3 text-center text-xs text-slate-400"
+                    class="py-3 text-center text-body-sm text-neutral-400"
                   >
                     No data
                   </td>
@@ -103,16 +105,16 @@
           </div>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Provider Performance
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Click-through rate by provider.
           </p>
           <div class="mt-4 overflow-auto">
-            <table class="min-w-full text-sm">
-              <thead class="text-xs uppercase text-slate-400">
+            <table class="min-w-full text-body-sm">
+              <thead class="text-body-sm uppercase text-neutral-400">
                 <tr>
                   <th class="py-2 text-left">
                     Provider
@@ -129,22 +131,22 @@
                 <tr
                   v-for="row in favoriteProviders"
                   :key="row.provider_id"
-                  class="border-t border-slate-100"
+                  class="border-t border-neutral-100"
                 >
-                  <td class="py-2 text-left text-slate-700">
+                  <td class="py-2 text-left text-neutral-700">
                     {{ row.provider_name || row.provider_id }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ row.click_count }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ row.click_through_rate }}%
                   </td>
                 </tr>
                 <tr v-if="favoriteProviders.length === 0">
                   <td
                     colspan="3"
-                    class="py-3 text-center text-xs text-slate-400"
+                    class="py-3 text-center text-body-sm text-neutral-400"
                   >
                     No data
                   </td>
@@ -156,16 +158,16 @@
       </section>
 
       <section class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Provider Impact
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Traffic, clicks, and reported transfer volume by provider.
           </p>
           <div class="mt-4 overflow-auto">
-            <table class="min-w-full text-sm">
-              <thead class="text-xs uppercase text-slate-400">
+            <table class="min-w-full text-body-sm">
+              <thead class="text-body-sm uppercase text-neutral-400">
                 <tr>
                   <th class="py-2 text-left">
                     Provider
@@ -191,31 +193,31 @@
                 <tr
                   v-for="row in providerImpact"
                   :key="row.provider_id"
-                  class="border-t border-slate-100"
+                  class="border-t border-neutral-100"
                 >
-                  <td class="py-2 text-left text-slate-700">
+                  <td class="py-2 text-left text-neutral-700">
                     {{ row.provider_name || row.provider_id }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatCount(row.total_clicks) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatCount(row.unique_clicks) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatCount(row.conversions) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatRate(row.conversion_rate) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatConversionValues(row.conversion_values) }}
                   </td>
                 </tr>
                 <tr v-if="providerImpact.length === 0">
                   <td
                     colspan="6"
-                    class="py-3 text-center text-xs text-slate-400"
+                    class="py-3 text-center text-body-sm text-neutral-400"
                   >
                     No data
                   </td>
@@ -223,21 +225,21 @@
               </tbody>
             </table>
           </div>
-          <p class="mt-2 text-xs text-slate-400">
+          <p class="mt-2 text-body-sm text-neutral-400">
             Reported volume is sourced from affiliate conversion events.
           </p>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Top Provider Corridors
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Corridors driving the most traffic and value per provider.
           </p>
           <div class="mt-4 overflow-auto">
-            <table class="min-w-full text-sm">
-              <thead class="text-xs uppercase text-slate-400">
+            <table class="min-w-full text-body-sm">
+              <thead class="text-body-sm uppercase text-neutral-400">
                 <tr>
                   <th class="py-2 text-left">
                     Provider
@@ -263,31 +265,31 @@
                 <tr
                   v-for="row in providerCorridors"
                   :key="`${row.provider_id}-${row.corridor_id || 'none'}`"
-                  class="border-t border-slate-100"
+                  class="border-t border-neutral-100"
                 >
-                  <td class="py-2 text-left text-slate-700">
+                  <td class="py-2 text-left text-neutral-700">
                     {{ row.provider_name || row.provider_id }}
                   </td>
-                  <td class="py-2 text-left text-slate-700">
+                  <td class="py-2 text-left text-neutral-700">
                     {{ row.corridor_id || '-' }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatCount(row.total_clicks) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatCount(row.conversions) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatRate(row.conversion_rate) }}
                   </td>
-                  <td class="py-2 text-right text-slate-600">
+                  <td class="py-2 text-right text-neutral-600">
                     {{ formatConversionValues(row.conversion_values) }}
                   </td>
                 </tr>
                 <tr v-if="providerCorridors.length === 0">
                   <td
                     colspan="6"
-                    class="py-3 text-center text-xs text-slate-400"
+                    class="py-3 text-center text-body-sm text-neutral-400"
                   >
                     No data
                   </td>
@@ -299,28 +301,28 @@
       </section>
 
       <section class="grid gap-6 lg:grid-cols-3">
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Engagement
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Daily engagement summary.
           </p>
-          <div class="mt-4 space-y-3 text-sm text-slate-600">
+          <div class="mt-4 space-y-3 text-body-sm text-neutral-600">
             <div>Avg session duration: {{ sessionMetrics.avg_session_duration.toFixed(1) }}s</div>
             <div>Avg searches/session: {{ sessionMetrics.avg_searches_per_session.toFixed(2) }}</div>
             <div>Bounce rate: {{ sessionMetrics.bounce_rate.toFixed(1) }}%</div>
           </div>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Heatmap
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Top source countries by searches.
           </p>
-          <ul class="mt-4 space-y-2 text-sm text-slate-600">
+          <ul class="mt-4 space-y-2 text-body-sm text-neutral-600">
             <li
               v-for="row in heatmap.slice(0, 6)"
               :key="row.country_code"
@@ -329,21 +331,21 @@
             </li>
             <li
               v-if="heatmap.length === 0"
-              class="text-xs text-slate-400"
+              class="text-body-sm text-neutral-400"
             >
               No data
             </li>
           </ul>
         </div>
 
-        <div class="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 class="text-lg font-semibold text-slate-900">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">
             Savings Snapshot
           </h2>
-          <p class="text-xs text-slate-500">
+          <p class="text-body-sm text-rs-muted">
             Fee spread proxy (admin view).
           </p>
-          <div class="mt-4 space-y-2 text-sm text-slate-600">
+          <div class="mt-4 space-y-2 text-body-sm text-neutral-600">
             <div>Total searches: {{ savingsSummary.total_searches }}</div>
             <div>Total fee spread: {{ savingsSummary.total_savings_fees.toFixed(2) }}</div>
             <div>Avg fee spread/search: {{ savingsSummary.avg_savings_per_search.toFixed(2) }}</div>
@@ -351,32 +353,32 @@
         </div>
       </section>
 
-      <section class="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">
           User Behavior Patterns
         </h2>
-        <p class="text-xs text-slate-500">
+        <p class="text-body-sm text-rs-muted">
           Search frequency distribution.
         </p>
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           <div
             v-for="pattern in userPatterns"
             :key="pattern.pattern_data.bucket"
-            class="rounded-xl border border-slate-100 p-4"
+            class="rounded-xl border border-neutral-100 p-4"
           >
-            <div class="text-xs uppercase text-slate-400">
+            <div class="text-body-sm uppercase text-neutral-400">
               {{ pattern.pattern_data.bucket }}
             </div>
-            <div class="mt-2 text-lg font-semibold text-slate-900">
+            <div class="mt-2 text-body-lg font-semibold text-rs-fg">
               {{ pattern.frequency }}
             </div>
-            <div class="text-xs text-slate-500">
+            <div class="text-body-sm text-rs-muted">
               {{ pattern.percentage }}%
             </div>
           </div>
           <div
             v-if="userPatterns.length === 0"
-            class="text-xs text-slate-400"
+            class="text-body-sm text-neutral-400"
           >
             No data
           </div>
@@ -387,10 +389,28 @@
 </template>
 
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
+import { setSeo } from '~/composables/useSeo'
+
 definePageMeta({ middleware: ['auth', 'admin'] })
 
-const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact, loading, error } = useAnalytics()
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Admin: Analytics | Remit-Scout',
+  description: 'Admin analytics dashboard for Remit-Scout.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
+
+const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
+
+const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact } = useAnalytics()
 const { formatMoney } = useRemittanceApi()
+
+const loading = ref(false)
+const error = ref<string | null>(null)
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -444,29 +464,51 @@ const formatConversionValues = (values?: Record<string, number> | null) => {
 }
 
 const loadAnalytics = async () => {
+  if (loading.value) return
+  loading.value = true
+  error.value = null
   const range = {
     start_date: new Date(startDate.value).toISOString(),
     end_date: new Date(endDate.value).toISOString(),
   }
 
-  const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = await Promise.all([
-    getPopularCorridors({ ...range, limit: 12 }),
-    getFavoriteProviders({ ...range, limit: 12 }),
-    getSessionMetrics(range),
-    getHeatmapData({ ...range, aggregation: 'country' }),
-    getSavingsMetrics(range),
-    getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
-    getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
-  ])
+  try {
+    const results = await Promise.allSettled([
+      getPopularCorridors({ ...range, limit: 12 }),
+      getFavoriteProviders({ ...range, limit: 12 }),
+      getSessionMetrics(range),
+      getHeatmapData({ ...range, aggregation: 'country' }),
+      getSavingsMetrics(range),
+      getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
+      getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
+    ])
 
-  popularCorridors.value = corridors?.corridors || []
-  favoriteProviders.value = providers?.providers || []
-  sessionMetrics.value = sessions || sessionMetrics.value
-  heatmap.value = heatmapRes?.heatmap || []
-  savingsSummary.value = savings?.summary || savingsSummary.value
-  userPatterns.value = patterns?.patterns || []
-  providerImpact.value = impact?.providers || []
-  providerCorridors.value = impact?.corridors || []
+    const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = results
+    popularCorridors.value = corridors.status === 'fulfilled' ? (corridors.value?.corridors || []) : []
+    favoriteProviders.value = providers.status === 'fulfilled' ? (providers.value?.providers || []) : []
+    sessionMetrics.value = sessions.status === 'fulfilled' && sessions.value ? sessions.value : sessionMetrics.value
+    heatmap.value = heatmapRes.status === 'fulfilled' ? (heatmapRes.value?.heatmap || []) : []
+    savingsSummary.value = savings.status === 'fulfilled' && savings.value?.summary ? savings.value.summary : savingsSummary.value
+    userPatterns.value = patterns.status === 'fulfilled' ? (patterns.value?.patterns || []) : []
+    providerImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers || []) : []
+    providerCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors || []) : []
+
+    const failures = results.filter(r => r.status === 'rejected')
+    if (failures.length === results.length) {
+      const reason = (failures[0] as PromiseRejectedResult).reason
+      error.value = reason?.message || 'All analytics endpoints failed to load.'
+    } else if (failures.length > 0) {
+      error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
+    }
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const refresh = () => {
+  void loadAnalytics()
 }
 
 onMounted(loadAnalytics)

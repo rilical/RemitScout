@@ -1,6 +1,6 @@
 <template>
-  <section class="py-12 sm:py-16 bg-slate-900">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <section class="py-12 sm:py-16 bg-neutral-50">
+    <div class="container">
       <div class="bg-brand-600 rounded-2xl border-2 border-brand-700 overflow-hidden">
         <div class="p-6 sm:p-8 bg-brand-600">
           <div class="flex items-start gap-4 mb-6">
@@ -20,23 +20,23 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">
+              <h2 class="text-h4 font-bold text-white mb-2">
                 Why your checkout may look different
               </h2>
-              <p class="text-sm text-white/90">
+              <p class="text-body-sm text-white/90">
                 Remittance pricing isn't one flat price. Here's what can change:
               </p>
             </div>
           </div>
 
           <div class="space-y-3 mb-6">
-            <p class="text-sm text-white/90">
+            <p class="text-body-sm text-white/90">
               <strong class="text-white">Payment method:</strong> Card payments often cost 2–3% more than bank transfers.
             </p>
-            <p class="text-sm text-white/90">
+            <p class="text-body-sm text-white/90">
               <strong class="text-white">Timing:</strong> FX rates change minute-to-minute. Provider rates may differ if captured at different times.
             </p>
-            <p class="text-sm text-white/90">
+            <p class="text-body-sm text-white/90">
               <strong class="text-white">Promotions:</strong> First-transfer promotions, fee waivers, or special rates may not be reflected in our quotes.
             </p>
           </div>
@@ -59,7 +59,7 @@
                   />
                 </svg>
               </div>
-              <p class="text-sm text-white/90">
+              <p class="text-body-sm text-white/90">
                 <strong class="text-white">Safety first:</strong> Remit‑Scout is a comparison and research product. We do not hold, move, or transmit money. When you choose a provider, you complete the transfer on their licensed platform.
               </p>
             </div>

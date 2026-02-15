@@ -2,9 +2,11 @@ interface SeoOptions {
   title: string
   description: string
   canonical?: string
+  locale?: string
   noindex?: boolean
-  ogImage?: string
-  ogType?: 'website' | 'article' | 'product'
+  /** When `false`, do not emit `og:image` / `twitter:image` meta (useful when using `defineOgImage()`). */
+  ogImage?: string | false
+  ogType?: 'website' | 'article'
   publishedTime?: string
   modifiedTime?: string
   author?: string
@@ -27,7 +29,7 @@ const trackingParams = new Set([
   'mc_eid',
 ])
 
-const sanitizeCanonical = (value: string, siteUrl: string) => {
+export const sanitizeCanonical = (value: string, siteUrl: string) => {
   try {
     const base = value.startsWith('http') ? value : new URL(value, siteUrl).toString()
     const url = new URL(base)
@@ -48,6 +50,7 @@ export const setSeo = ({
   title,
   description,
   canonical,
+  locale = 'en',
   noindex = false,
   ogImage,
   ogType = 'website',
@@ -66,58 +69,49 @@ export const setSeo = ({
     canonical || `${normalizedSiteUrl}${path || '/'}`,
     normalizedSiteUrl,
   )
-  const robots = noindex ? 'noindex,nofollow' : 'index,follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
-  const image = ogImage || `${normalizedSiteUrl}/og-image.png`
+  const image = ogImage === false ? undefined : (ogImage || `${normalizedSiteUrl}/og-image.png`)
+  const articleTags = Array.isArray(tags)
+    ? tags.map(tag => tag.trim()).filter(Boolean)
+    : []
 
-  const metaTags: Array<Record<string, string>> = [
-    { name: 'description', content: description },
-    { name: 'robots', content: robots },
-    // Open Graph tags
-    { property: 'og:title', content: title },
-    { property: 'og:description', content: description },
-    { property: 'og:image', content: image },
-    { property: 'og:url', content: canonicalUrl },
-    { property: 'og:type', content: ogType },
-    { property: 'og:site_name', content: 'Remit-Scout' },
-    { property: 'og:locale', content: 'en_US' },
-    // Twitter Card tags
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: title },
-    { name: 'twitter:description', content: description },
-    { name: 'twitter:image', content: image },
-    { name: 'twitter:site', content: '@RemitScout' },
-  ]
-
-  // Add article-specific meta tags
-  if (ogType === 'article') {
-    if (publishedTime) {
-      metaTags.push({ property: 'article:published_time', content: publishedTime })
-    }
-    if (modifiedTime) {
-      metaTags.push({ property: 'article:modified_time', content: modifiedTime })
-    }
-    if (author) {
-      metaTags.push({ property: 'article:author', content: author })
-    }
-    if (tags && tags.length > 0) {
-      tags.forEach((tag) => {
-        metaTags.push({ property: 'article:tag', content: tag })
-      })
-    }
-  }
-
-  // Add geo tags if provided
-  if (geoRegion) {
-    metaTags.push({ name: 'geo.region', content: geoRegion })
-  }
-  if (geoPlacename) {
-    metaTags.push({ name: 'geo.placename', content: geoPlacename })
-  }
+  useSeoMeta({
+    title,
+    description,
+    ogTitle: title,
+    ogDescription: description,
+    ...(image ? { ogImage: image } : {}),
+    ogUrl: canonicalUrl,
+    ogType,
+    ogSiteName: 'Remit-Scout',
+    ogLocale: locale === 'en' ? 'en_US' : locale,
+    twitterCard: 'summary_large_image',
+    twitterTitle: title,
+    twitterDescription: description,
+    ...(image ? { twitterImage: image } : {}),
+    twitterSite: '@RemitScout',
+    ...(publishedTime ? { articlePublishedTime: publishedTime } : {}),
+    ...(modifiedTime ? { articleModifiedTime: modifiedTime } : {}),
+    ...(author ? { articleAuthor: [author] } : {}),
+    ...(articleTags.length ? { articleSection: articleTags[0] } : {}),
+    ...(geoRegion ? { geoRegion: geoRegion } : {}),
+    ...(geoPlacename ? { geoPlaceName: geoPlacename } : {}),
+    ...(noindex ? { robots: { index: false, follow: false } } : {}),
+  })
 
   useHead({
     title,
-    meta: metaTags,
-    link: [{ rel: 'canonical', href: canonicalUrl }],
+    meta: [
+      ...articleTags.map(tag => ({
+        key: `article:tag:${tag}`,
+        property: 'article:tag',
+        content: tag,
+      })),
+    ],
+    link: [
+      // Keyed to prevent duplicate canonical/alternate links on dynamic pages that update SEO reactively.
+      { key: 'canonical', rel: 'canonical', href: canonicalUrl },
+      ...(locale ? [{ key: `alternate:${locale}`, rel: 'alternate', hreflang: locale, href: canonicalUrl }] : []),
+    ],
   })
 }
 

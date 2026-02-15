@@ -1,8 +1,8 @@
 <template>
   <section class="py-12 bg-neutral-50 rounded-2xl">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="container">
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-neutral-900 mb-2">
+        <h2 class="text-h3 font-bold text-neutral-900 mb-2">
           More Guides
         </h2>
         <p class="text-neutral-600">
@@ -14,16 +14,16 @@
         <article
           v-for="guide in guides"
           :key="guide.slug"
-          class="group rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-300"
+          class="group rounded-xl border border-neutral-200 bg-surface p-5 shadow-sm transition-all hover:shadow-md hover:border-brand-300"
         >
           <div class="flex items-center gap-2 mb-3">
             <span
               v-if="guide.category"
-              class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
+              class="rounded-full bg-brand-50 px-2.5 py-1 text-body-sm font-semibold text-brand-700"
             >
               {{ guide.category }}
             </span>
-            <span class="text-xs text-neutral-500">
+            <span class="text-body-sm text-neutral-500">
               {{ guide.readTime || '5 min' }}
             </span>
           </div>
@@ -31,12 +31,12 @@
             :to="`/learn/${guide.slug}`"
             class="block"
           >
-            <h3 class="text-lg font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-2">
+            <h3 class="text-body-lg font-bold text-neutral-900 hover:text-brand-600 transition-colors mb-2">
               {{ guide.title }}
             </h3>
             <p
               v-if="guide.excerpt"
-              class="text-sm text-neutral-600 leading-relaxed line-clamp-2"
+              class="text-body-sm text-neutral-600 leading-relaxed line-clamp-2"
             >
               {{ guide.excerpt }}
             </p>

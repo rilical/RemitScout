@@ -22,7 +22,7 @@
             :y="getProviderY(i) + barHeight / 2 + 4"
             text-anchor="end"
             fill="currentColor"
-            class="text-slate-400"
+            class="text-neutral-400"
           >
             {{ provider }}
           </text>
@@ -58,7 +58,7 @@
             :y="height - padding.bottom + 16"
             text-anchor="middle"
             fill="currentColor"
-            class="text-slate-500"
+            class="text-rs-muted"
           >
             {{ label.text }}
           </text>
@@ -71,10 +71,10 @@
         class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
         :style="tooltipStyle"
       >
-        <div class="mb-1 text-xs text-neutral-400">
+        <div class="mb-1 text-body-sm text-neutral-400">
           {{ hoveredSegment.date }}
         </div>
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-2 text-body-sm">
           <span
             class="h-2 w-2 rounded-full"
             :style="{ backgroundColor: hoveredSegment.color }"
@@ -90,7 +90,7 @@
       <button
         v-for="provider in providers"
         :key="`legend-${provider}`"
-        class="flex items-center gap-2 rounded-full px-3 py-1 text-sm transition-opacity"
+        class="flex items-center gap-2 rounded-full px-3 py-1 text-body-sm transition-opacity"
         :class="hoveredProvider === null || hoveredProvider === provider ? 'opacity-100' : 'opacity-40'"
         @mouseenter="hoveredProvider = provider"
         @mouseleave="hoveredProvider = null"

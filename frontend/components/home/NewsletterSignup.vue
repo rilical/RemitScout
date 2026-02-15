@@ -1,10 +1,10 @@
 <template>
-  <section class="py-12 sm:py-16 bg-white">
-    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-      <div class="bg-white rounded-3xl border-2 border-neutral-200 p-8 sm:p-12 text-center shadow-lg">
+  <section class="py-12 sm:py-16 bg-neutral-900">
+    <div class="mx-auto max-w-3xl px-page-x">
+      <div class="rounded-3xl border-2 border-white/20 p-8 sm:p-12 text-center">
         <div class="mb-4">
           <svg
-            class="w-12 h-12 text-brand-600 mx-auto"
+            class="w-12 h-12 text-white/80 mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -17,10 +17,10 @@
             />
           </svg>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
+        <h2 class="text-h3 font-bold text-white mb-3">
           Sign Up for Our Newsletter
         </h2>
-        <p class="text-lg text-neutral-600 mb-8">
+        <p class="text-body-lg text-white/80 mb-8">
           Get updates on the latest exchange rates, tips, and special deals!
         </p>
 
@@ -34,12 +34,12 @@
               type="email"
               placeholder="Enter your email"
               required
-              class="flex-1 px-6 py-4 bg-white border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors text-base"
+              class="flex-1 px-6 py-4 bg-white/15 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-colors text-body"
             >
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="px-8 py-4 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-8 py-4 bg-white text-brand-600 font-semibold rounded-xl hover:bg-white/90 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ isSubmitting ? 'Subscribing...' : 'Subscribe' }}
             </button>
@@ -47,13 +47,13 @@
 
           <p
             v-if="successMessage"
-            class="mt-4 text-sm text-emerald-600 font-medium"
+            class="mt-4 text-body-sm text-success-600 font-medium"
           >
             {{ successMessage }}
           </p>
           <p
             v-if="errorMessage"
-            class="mt-4 text-sm text-danger-600"
+            class="mt-4 text-body-sm text-danger-600"
           >
             {{ errorMessage }}
           </p>

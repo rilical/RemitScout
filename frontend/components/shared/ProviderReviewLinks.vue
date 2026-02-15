@@ -2,16 +2,16 @@
   <div class="mx-auto max-w-6xl px-4 py-10">
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div>
-        <h2 class="text-2xl font-bold text-neutral-900">
+        <h2 class="text-h3 font-bold text-neutral-900">
           Provider reviews
         </h2>
-        <p class="text-sm text-neutral-600">
+        <p class="text-body-sm text-neutral-600">
           Learn more about the providers available for this corridor.
         </p>
       </div>
       <NuxtLink
         to="/learn/providers"
-        class="text-sm font-semibold text-brand-600 hover:underline"
+        class="text-body-sm font-semibold text-brand-600 hover:underline"
       >
         View all providers
       </NuxtLink>
@@ -19,7 +19,7 @@
 
     <div
       v-if="!uniqueProviders.length"
-      class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-6 text-sm text-neutral-600"
+      class="rounded-xl border border-rs-border bg-neutral-50 px-4 py-6 text-body-sm text-neutral-600"
     >
       Provider reviews will appear once quotes are available.
     </div>
@@ -32,9 +32,9 @@
         v-for="provider in uniqueProviders"
         :key="provider.slug"
         :to="`/learn/providers/${provider.slug}`"
-        class="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 hover:border-brand-300 hover:shadow-md transition-all"
+        class="group flex items-center gap-4 rounded-xl border border-rs-border bg-surface p-4 hover:border-brand-300 hover:shadow-md transition-all"
       >
-        <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-50">
+        <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-neutral-50">
           <ProviderLogo
             :slug="provider.slug"
             :alt="provider.name"
@@ -42,10 +42,10 @@
           />
         </div>
         <div>
-          <p class="text-sm font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors">
+          <p class="text-body-sm font-semibold text-neutral-900 group-hover:text-brand-600 transition-colors">
             {{ provider.name }}
           </p>
-          <p class="text-xs text-neutral-500">Read review</p>
+          <p class="text-body-sm text-neutral-500">Read review</p>
         </div>
       </NuxtLink>
     </div>

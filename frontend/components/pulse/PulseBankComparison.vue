@@ -11,13 +11,13 @@
           />
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">
+          <h2 class="text-body-lg font-bold text-white">
             Bank Reference Pricing Gap
           </h2>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             Reference benchmark used for savings estimates
           </p>
-          <p class="text-xs text-neutral-500">
+          <p class="text-body-sm text-neutral-500">
             Benchmark only - not part of provider rankings
           </p>
         </div>
@@ -28,24 +28,29 @@
     <div class="p-6">
       <div
         v-if="loading"
-        class="flex h-48 items-center justify-center"
+        class="flex h-48 w-full items-center justify-center"
+        role="status"
+        aria-live="polite"
+        aria-label="Loading chart"
       >
-        <div class="flex items-center gap-3 text-neutral-400">
-          <div class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-transparent" />
-          Loading...
-        </div>
+        <SkeletonBlock
+          width="full"
+          height="12rem"
+          tone="dark"
+        />
+        <span class="sr-only">Loading chart</span>
       </div>
 
       <div v-else>
         <!-- Amount Context -->
         <div class="mb-6 text-center">
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             If you send
           </p>
-          <p class="text-3xl font-bold text-white">
+          <p class="text-h2 font-bold text-white">
             {{ amountDisplay }}
           </p>
-          <p class="text-sm text-neutral-400">
+          <p class="text-body-sm text-neutral-400">
             {{ store.corridor.fromCode }} → {{ store.corridor.toCode }}
           </p>
         </div>
@@ -60,21 +65,21 @@
                 :size="20"
                 class="text-danger-600"
               />
-              <span class="text-sm font-semibold text-white">Bank Benchmark</span>
+              <span class="text-body-sm font-semibold text-white">Bank Benchmark</span>
             </div>
             <div class="space-y-2">
-              <div class="flex justify-between text-sm">
+              <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Hidden markup</span>
                 <span class="font-semibold text-danger-600">{{ money(data?.bankMarkup) }}</span>
               </div>
-              <div class="flex justify-between text-sm">
+              <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Wire fee</span>
                 <span class="font-semibold text-white">{{ money(data?.bankFee) }}</span>
               </div>
               <div class="border-t border-danger-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
-                  <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-danger-600">{{ money(data?.bankTotalCost) }}</span>
+                  <span class="text-body-sm font-semibold text-white">Total cost</span>
+                  <span class="text-body-lg font-bold text-danger-600">{{ money(data?.bankTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -88,21 +93,21 @@
                 :size="20"
                 class="text-brand-600"
               />
-              <span class="text-sm font-semibold text-white">{{ data?.bestSpecialistName || 'n/a' }}</span>
+              <span class="text-body-sm font-semibold text-white">{{ data?.bestSpecialistName || 'n/a' }}</span>
             </div>
             <div class="space-y-2">
-              <div class="flex justify-between text-sm">
+              <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Hidden markup</span>
                 <span class="font-semibold text-brand-600">{{ money(data?.bestSpecialistMarkup) }}</span>
               </div>
-              <div class="flex justify-between text-sm">
+              <div class="flex justify-between text-body-sm">
                 <span class="text-neutral-400">Transfer fee</span>
                 <span class="font-semibold text-white">{{ money(data?.bestSpecialistFee) }}</span>
               </div>
               <div class="border-t border-brand-600/30 pt-2 mt-2">
                 <div class="flex justify-between">
-                  <span class="text-sm font-semibold text-white">Total cost</span>
-                  <span class="text-lg font-bold text-brand-600">{{ money(data?.bestSpecialistTotalCost) }}</span>
+                  <span class="text-body-sm font-semibold text-white">Total cost</span>
+                  <span class="text-body-lg font-bold text-brand-600">{{ money(data?.bestSpecialistTotalCost) }}</span>
                 </div>
               </div>
             </div>
@@ -110,13 +115,13 @@
         </div>
 
         <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4 text-center">
-          <div class="text-xs text-neutral-500 uppercase tracking-wider mb-1">
+          <div class="text-body-sm text-neutral-500 uppercase tracking-wider mb-1">
             Benchmark Gap
           </div>
-          <div class="text-3xl font-bold text-white">
+          <div class="text-h2 font-bold text-white">
             {{ money(data?.savings) }}
           </div>
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Bank all-in cost is {{ typeof data?.savingsPercent === 'number' ? data.savingsPercent : 'n/a' }}% higher than specialist leader
           </div>
         </div>
@@ -137,6 +142,7 @@ import type { BankComparisonData } from '~/types/remit'
 import { getBankComparisonData } from '~/lib/pulseApi'
 import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 const store = usePulseStore()
 
@@ -160,7 +166,7 @@ async function loadData() {
     data.value = await getBankComparisonData(store.corridor, store.timeframe, store.amount)
   }
   catch (e) {
-    console.error('Failed to load bank comparison:', e)
+    useLogger('PulseBankComparison').error('Failed to load bank comparison', e)
   }
   finally {
     loading.value = false

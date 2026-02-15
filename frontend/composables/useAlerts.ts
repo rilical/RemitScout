@@ -55,6 +55,7 @@ export const useAlerts = () => {
   const watchlist = useWatchlist()
   const { isLoggedIn } = useAuth()
   const { request } = useApi()
+  const toast = useToast()
 
   const { state: alerts, hydrated: localStorageHydrated, reset: resetLocalStorage } = usePersistedState<Alert[]>(
     'alerts:items',
@@ -100,12 +101,12 @@ export const useAlerts = () => {
         hydrated.value = true
       }
       else {
-        console.warn('Failed to fetch alerts from backend:', response)
+        useLogger('alerts').warn('Failed to fetch alerts from backend', response)
         hydrated.value = true
       }
     }
     catch (error) {
-      console.error('Error fetching alerts from backend:', error)
+      useLogger('alerts').error('Error fetching alerts from backend', error)
       hydrated.value = true
     }
     finally {
@@ -140,7 +141,7 @@ export const useAlerts = () => {
         }
       }
       catch (error) {
-        console.error('Error syncing local alert to backend:', error)
+        useLogger('alerts').error('Error syncing local alert to backend', error)
       }
     }
 
@@ -228,7 +229,7 @@ export const useAlerts = () => {
       }
     }
     catch (error) {
-      console.error(`Error syncing ${operation} to backend:`, error)
+      useLogger('alerts').error(`Error syncing ${operation} to backend`, error)
     }
   }
 
@@ -308,7 +309,8 @@ export const useAlerts = () => {
         return await createAlertInBackend(next)
       }
       catch (error) {
-        console.error('Error creating alert on backend:', error)
+        useLogger('alerts').error('Error creating alert on backend', error)
+        toast.error('Failed to create alert. Please try again.')
         return {
           message: 'Unable to create alert right now.',
           status: 'error',

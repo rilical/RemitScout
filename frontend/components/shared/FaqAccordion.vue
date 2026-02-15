@@ -1,18 +1,24 @@
 <template>
-  <div class="space-y-4 break-words [text-wrap:pretty]">
+  <div
+    class="divide-y divide-neutral-100 break-words [text-wrap:pretty]"
+    @keydown="onAccordionKeydown"
+  >
     <div
-      v-for="(faq, index) in faqs"
+      v-for="(faq, index) in props.faqs"
       :key="index"
-      class="rounded-lg border border-gray-200 overflow-hidden"
     >
       <button
+        :ref="el => setButtonEl(index, el)"
         type="button"
-        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-gray-50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-neutral-50 cursor-pointer motion-safe:transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-inset"
+        :id="`faq-button-${index}`"
+        :aria-expanded="openFaqs.includes(index)"
+        :aria-controls="`faq-panel-${index}`"
         @click="toggleFaq(index)"
       >
-        <span class="flex-1 text-left font-medium leading-relaxed text-gray-900 [text-wrap:pretty]">{{ faq.question }}</span>
+        <span class="flex-1 text-left font-medium leading-relaxed text-neutral-900 [text-wrap:pretty]">{{ faq.question }}</span>
         <svg
-          class="mt-1 h-5 w-5 flex-shrink-0 transform text-gray-500 transition-transform"
+          class="mt-1 h-5 w-5 flex-shrink-0 transform text-neutral-500 motion-safe:transition-transform"
           :class="{ 'rotate-180': openFaqs.includes(index) }"
           fill="none"
           stroke="currentColor"
@@ -28,12 +34,15 @@
       </button>
       <div
         v-if="openFaqs.includes(index)"
-        class="px-6 pb-6 pt-2 border-t border-gray-100"
+        :id="`faq-panel-${index}`"
+        role="region"
+        :aria-labelledby="`faq-button-${index}`"
+        class="px-6 pb-6 pt-2 border-t border-neutral-100"
       >
-        <div
+        <RichHtml
           :ref="el => setAnswerEl(index, el)"
-          class="prose prose-sm max-w-none text-slate-700 leading-relaxed"
-          v-html="faq.answer"
+          class="prose prose-sm max-w-none text-neutral-700 leading-relaxed"
+          :content="faq.answer"
         />
       </div>
     </div>
@@ -49,19 +58,32 @@ interface Faq {
   answer: string
 }
 
-defineProps<{
+const props = defineProps<{
   faqs: Faq[]
 }>()
 
 const openFaqs = ref<number[]>([])
 const answerEls = ref<Map<number, HTMLElement>>(new Map())
+const buttonEls = ref<Map<number, HTMLButtonElement>>(new Map())
+
+const setButtonEl = (index: number, el: Element | ComponentPublicInstance | null) => {
+  if (!el || !(el instanceof HTMLButtonElement)) {
+    buttonEls.value.delete(index)
+    return
+  }
+  buttonEls.value.set(index, el)
+}
 
 const setAnswerEl = (index: number, el: Element | ComponentPublicInstance | null) => {
-  if (!el || !(el instanceof HTMLElement)) {
+  const resolved = el instanceof HTMLElement
+    ? el
+    : (el as ComponentPublicInstance | null)?.$el
+
+  if (!resolved || !(resolved instanceof HTMLElement)) {
     answerEls.value.delete(index)
     return
   }
-  answerEls.value.set(index, el)
+  answerEls.value.set(index, resolved)
 }
 
 const renderMathIfPresent = async (index: number) => {
@@ -85,6 +107,44 @@ const renderMathIfPresent = async (index: number) => {
   })
 
   el.dataset.katexRendered = '1'
+}
+
+const focusButton = (index: number) => {
+  buttonEls.value.get(index)?.focus()
+}
+
+const onAccordionKeydown = (e: KeyboardEvent) => {
+  const count = props.faqs.length
+  if (count <= 1) return
+
+  const active = document.activeElement
+  if (!(active instanceof HTMLButtonElement)) return
+
+  const activeIndex = Array.from(buttonEls.value.entries()).find(([, el]) => el === active)?.[0]
+  if (typeof activeIndex !== 'number') return
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    focusButton((activeIndex + 1) % count)
+    return
+  }
+
+  if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    focusButton((activeIndex - 1 + count) % count)
+    return
+  }
+
+  if (e.key === 'Home') {
+    e.preventDefault()
+    focusButton(0)
+    return
+  }
+
+  if (e.key === 'End') {
+    e.preventDefault()
+    focusButton(count - 1)
+  }
 }
 
 const toggleFaq = (index: number) => {

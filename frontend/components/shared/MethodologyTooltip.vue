@@ -36,7 +36,7 @@
       >
         <div
           v-if="showTooltip"
-          class="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-neutral-900 text-white text-xs rounded-lg shadow-lg"
+          class="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-neutral-900 text-white text-body-sm rounded-lg shadow-lg"
         >
           <div class="relative">
             <p class="font-medium mb-1">
@@ -50,7 +50,7 @@
               v-if="formula"
               class="mt-2 p-2 bg-neutral-800 rounded"
             >
-              <code class="text-xs text-green-400">{{ formula }}</code>
+              <code class="text-body-sm text-success-400">{{ formula }}</code>
             </div>
 
             <NuxtLink

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-page-x">
     <div class="w-full max-w-md">
       <!-- Logo/Header -->
       <div class="text-center mb-8">
@@ -7,36 +7,39 @@
           to="/"
           class="inline-block"
         >
-          <img
+          <NuxtImg
             src="/png/SVG/LOGO.svg"
             alt="RemitScout"
-            class="h-10 w-auto mx-auto mb-4"
-          >
+            width="32"
+            height="40"
+            loading="eager"
+            class="h-10 w-auto mx-auto mb-4 object-contain"
+          />
         </NuxtLink>
-        <h1 class="text-3xl font-bold text-slate-900">
+        <h1 class="text-h2 font-bold text-rs-fg">
           Create your account
         </h1>
-        <p class="mt-2 text-sm text-slate-600">
+        <p class="mt-2 text-body-sm text-neutral-600">
           Start comparing rates and saving money on transfers
         </p>
       </div>
 
       <!-- Main Card -->
-      <div class="rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+      <div class="rounded-2xl border border-rs-border bg-surface p-8 shadow-xl">
         <!-- Sign Up Form -->
         <div>
           <div
             v-if="errorMessage"
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            class="mb-4 rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-body-sm text-danger-800"
           >
             {{ errorMessage }}
           </div>
           <div
             v-if="sent"
-            class="rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-4 text-center"
+            class="rounded-xl border-2 border-primary-200 bg-primary-50 px-4 py-4 text-center"
           >
             <svg
-              class="w-12 h-12 text-blue-600 mx-auto mb-2"
+              class="w-12 h-12 text-brand-600 mx-auto mb-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -48,15 +51,15 @@
                 d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            <p class="text-sm font-semibold text-blue-900 mb-1">
+            <p class="text-body-sm font-semibold text-primary-900 mb-1">
               Check your email
             </p>
-            <p class="text-xs text-blue-700 mb-4">
+            <p class="text-body-sm text-brand-700 mb-4">
               We sent a confirmation link to <span class="font-semibold">{{ email }}</span>. Confirm your email, then sign in.
             </p>
             <NuxtLink
               to="/sign-in"
-              class="inline-block text-sm font-semibold text-blue-700 hover:text-blue-800 underline"
+              class="inline-block text-body-sm font-semibold text-brand-700 hover:text-primary-800 underline"
             >
               Continue to sign in
             </NuxtLink>
@@ -71,7 +74,7 @@
               <div>
                 <label
                   for="name"
-                  class="block text-sm font-semibold text-slate-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   Name
                 </label>
@@ -82,14 +85,14 @@
                   autocomplete="name"
                   required
                   maxlength="200"
-                  class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                  class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                   placeholder="Your name"
                 >
               </div>
               <div>
                 <label
                   for="email"
-                  class="block text-sm font-semibold text-slate-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   Email
                 </label>
@@ -99,14 +102,14 @@
                   type="email"
                   autocomplete="email"
                   required
-                  class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                  class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                   placeholder="you@example.com"
                 >
               </div>
               <div>
                 <label
                   for="password"
-                  class="block text-sm font-semibold text-slate-700 mb-2"
+                  class="block text-body-sm font-semibold text-neutral-700 mb-2"
                 >
                   Password
                 </label>
@@ -117,10 +120,10 @@
                   autocomplete="new-password"
                   required
                   minlength="8"
-                  class="h-11 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-colors"
+                  class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                   placeholder="At least 8 characters"
                 >
-                <p class="mt-2 text-xs text-slate-500">
+                <p class="mt-2 text-body-sm text-rs-muted">
                   Use at least 8 characters.
                 </p>
               </div>
@@ -128,7 +131,7 @@
               <button
                 type="submit"
                 :disabled="loading"
-                class="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
               >
                 {{ loading ? 'Creating account…' : 'Create account' }}
               </button>
@@ -136,18 +139,18 @@
 
             <!-- Divider -->
             <div class="my-6 flex items-center gap-4">
-              <div class="h-px flex-1 bg-slate-200" />
-              <div class="text-xs font-semibold text-slate-500">
+              <div class="h-px flex-1 bg-neutral-200" />
+              <div class="text-body-sm font-semibold text-rs-muted">
                 OR
               </div>
-              <div class="h-px flex-1 bg-slate-200" />
+              <div class="h-px flex-1 bg-neutral-200" />
             </div>
 
             <!-- Social Sign Up Buttons -->
             <div class="space-y-3">
               <button
                 type="button"
-                class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-all"
                 :disabled="loading"
                 @click="handleSocialSignUp('google')"
               >
@@ -177,16 +180,16 @@
             </div>
           </div>
 
-          <p class="mt-4 text-xs text-slate-500">
+          <p class="mt-4 text-body-sm text-rs-muted">
             By continuing, you agree to the
             <NuxtLink
               to="/terms"
-              class="font-semibold text-blue-600 hover:text-blue-700"
+              class="font-semibold text-brand-600 hover:text-brand-700"
             >Terms of Service</NuxtLink>
             and
             <NuxtLink
               to="/privacy"
-              class="font-semibold text-blue-600 hover:text-blue-700"
+              class="font-semibold text-brand-600 hover:text-brand-700"
             >Privacy Policy</NuxtLink>.
           </p>
         </div>
@@ -194,11 +197,11 @@
 
       <!-- Sign In Link -->
       <div class="mt-6 text-center">
-        <p class="text-sm text-slate-600">
+        <p class="text-body-sm text-neutral-600">
           Already have an account?
           <NuxtLink
             to="/sign-in"
-            class="font-semibold text-blue-600 hover:text-blue-700"
+            class="font-semibold text-brand-600 hover:text-brand-700"
           >
             Sign in
           </NuxtLink>
@@ -206,24 +209,24 @@
       </div>
 
       <!-- Quick Links -->
-      <div class="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500">
+      <div class="mt-8 flex items-center justify-center gap-6 text-body-sm text-rs-muted">
         <NuxtLink
           to="/about"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           About
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/contact"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Contact Us
         </NuxtLink>
         <span>•</span>
         <NuxtLink
           to="/plus"
-          class="hover:text-slate-700"
+          class="hover:text-neutral-700"
         >
           Remit-Scout Plus
         </NuxtLink>
@@ -233,7 +236,19 @@
 </template>
 
 <script setup lang="ts">
+import { setSeo } from '~/composables/useSeo'
+
 const { signInWithOAuth, signUp, isLoggedIn } = useAuth()
+const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
+
+setSeo({
+  title: 'Sign up | Remit-Scout',
+  description: 'Create a Remit-Scout account to save corridors, set alerts, and track providers.',
+  canonical: `${siteUrl}${route.path}`,
+  noindex: true,
+})
+
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const sent = ref(false)
@@ -273,11 +288,4 @@ async function handleSocialSignUp(provider: 'google') {
     errorMessage.value = result.error || `Unable to sign up with ${provider}.`
   }
 }
-
-useHead({
-  title: 'Sign up | Remit-Scout',
-  meta: [
-    { name: 'robots', content: 'noindex, nofollow' },
-  ],
-})
 </script>

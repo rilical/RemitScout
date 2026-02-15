@@ -50,6 +50,34 @@ const getDatabaseUrl = (primary?: string, fallback?: string) => {
   return ''
 }
 
+const buildPostgresUrlFromParts = (parts: {
+  username?: string
+  password?: string
+  host?: string
+  port?: string
+  dbName?: string
+  sslMode?: string
+}): string => {
+  const username = parts.username?.trim()
+  const password = parts.password?.trim()
+  const host = parts.host?.trim()
+  const port = parts.port?.trim()
+  const dbName = parts.dbName?.trim()
+
+  if (!username || !password || !host || !port || !dbName) {
+    return ''
+  }
+
+  const encodedUser = encodeURIComponent(username)
+  const encodedPass = encodeURIComponent(password)
+  const baseUrl = `postgresql://${encodedUser}:${encodedPass}@${host}:${port}/${dbName}`
+  const sslMode = parts.sslMode?.trim()
+  if (!sslMode) return baseUrl
+
+  const delimiter = baseUrl.includes('?') ? '&' : '?'
+  return `${baseUrl}${delimiter}sslmode=${encodeURIComponent(sslMode)}`
+}
+
 type ProviderLimits = {
   rpm: number
   concurrency: number
@@ -887,10 +915,17 @@ const rawConfig = {
       process.env.DATABASE_URL_PLANE_A,
       process.env.DATABASE_URL || defaultLocalDbUrl,
     ),
-    planeBUrl: getDatabaseUrl(
-      process.env.DATABASE_URL_PLANE_B,
-      process.env.DATABASE_URL || defaultLocalDbUrl,
-    ),
+    planeBUrl:
+      (process.env.DATABASE_URL_PLANE_B && process.env.DATABASE_URL_PLANE_B.trim()) ||
+      buildPostgresUrlFromParts({
+        username: process.env.PLANE_B_DB_USERNAME,
+        password: process.env.PLANE_B_DB_PASSWORD,
+        host: process.env.PLANE_B_DB_HOST,
+        port: process.env.PLANE_B_DB_PORT || '5432',
+        dbName: process.env.PLANE_B_DB_NAME,
+        sslMode: process.env.DB_SSL_MODE || process.env.PGSSLMODE,
+      }) ||
+      getDatabaseUrl(process.env.DATABASE_URL, defaultLocalDbUrl),
     planeCUrl: getDatabaseUrl(
       process.env.DATABASE_URL_PLANE_C,
       process.env.DATABASE_URL || defaultLocalDbUrl,
@@ -1089,9 +1124,24 @@ export type RuntimeConfigRequirements = {
   requireStripe?: boolean
   requireJwtSecret?: boolean
   requireQueues?: boolean
+  requireQuoteRefreshQueue?: boolean
+  requireFxRateRefreshQueue?: boolean
+  requireExportJobQueue?: boolean
+  requireIngestFanoutQueue?: boolean
+  requireNotificationsQueue?: boolean
+  requireOpsAlertsQueue?: boolean
+  requireGoldLiveQueue?: boolean
+  requireAlertEvaluationQueue?: boolean
   requireStorage?: boolean
+  requireBronzeBucket?: boolean
+  requireExportsBucket?: boolean
   requireAlerts?: boolean
 }
+
+const shouldRequire = (
+  overrideValue: boolean | undefined,
+  defaultValue: boolean,
+) => overrideValue ?? defaultValue
 
 export const assertRuntimeConfig = (
   requirements: RuntimeConfigRequirements = {},
@@ -1125,18 +1175,53 @@ export const assertRuntimeConfig = (
     missing.push('REDIS_URL')
   }
   if (requirements.requireQueues) {
-    if (!config.queues.quoteRefreshUrl) missing.push('QUOTE_REFRESH_QUEUE_URL')
-    if (!config.queues.fxRateRefreshUrl) missing.push('FX_RATE_REFRESH_QUEUE_URL')
-    if (!config.queues.exports.url) missing.push('EXPORT_JOB_QUEUE_URL')
-    if (!config.queues.ingestFanout.url) missing.push('PLANE_B_INGEST_FANOUT_QUEUE_URL')
-    if (!config.queues.notifications.url) missing.push('PLANE_B_NOTIFICATIONS_QUEUE_URL')
-    if (!config.queues.opsAlerts.url) missing.push('PLANE_B_OPS_ALERT_QUEUE_URL')
-    if (!config.queues.goldLive.url) missing.push('GOLD_LIVE_QUEUE_URL')
-    if (!config.alerts.evaluation.queueUrl) missing.push('ALERT_EVALUATION_QUEUE_URL')
+    const requireQuoteRefreshQueue = shouldRequire(requirements.requireQuoteRefreshQueue, true)
+    const requireFxRateRefreshQueue = shouldRequire(requirements.requireFxRateRefreshQueue, true)
+    const requireExportJobQueue = shouldRequire(requirements.requireExportJobQueue, true)
+    const requireIngestFanoutQueue = shouldRequire(requirements.requireIngestFanoutQueue, true)
+    const requireNotificationsQueue = shouldRequire(requirements.requireNotificationsQueue, true)
+    const requireOpsAlertsQueue = shouldRequire(requirements.requireOpsAlertsQueue, true)
+    const requireGoldLiveQueue = shouldRequire(requirements.requireGoldLiveQueue, true)
+    const requireAlertEvaluationQueue = shouldRequire(
+      requirements.requireAlertEvaluationQueue,
+      true,
+    )
+
+    if (requireQuoteRefreshQueue && !config.queues.quoteRefreshUrl) {
+      missing.push('QUOTE_REFRESH_QUEUE_URL')
+    }
+    if (requireFxRateRefreshQueue && !config.queues.fxRateRefreshUrl) {
+      missing.push('FX_RATE_REFRESH_QUEUE_URL')
+    }
+    if (requireExportJobQueue && !config.queues.exports.url) {
+      missing.push('EXPORT_JOB_QUEUE_URL')
+    }
+    if (requireIngestFanoutQueue && !config.queues.ingestFanout.url) {
+      missing.push('PLANE_B_INGEST_FANOUT_QUEUE_URL')
+    }
+    if (requireNotificationsQueue && !config.queues.notifications.url) {
+      missing.push('PLANE_B_NOTIFICATIONS_QUEUE_URL')
+    }
+    if (requireOpsAlertsQueue && !config.queues.opsAlerts.url) {
+      missing.push('PLANE_B_OPS_ALERT_QUEUE_URL')
+    }
+    if (requireGoldLiveQueue && !config.queues.goldLive.url) {
+      missing.push('GOLD_LIVE_QUEUE_URL')
+    }
+    if (requireAlertEvaluationQueue && !config.alerts.evaluation.queueUrl) {
+      missing.push('ALERT_EVALUATION_QUEUE_URL')
+    }
   }
   if (requirements.requireStorage) {
-    if (!config.storage.bronze.bucket) missing.push('BRONZE_S3_BUCKET')
-    if (!config.storage.exports.bucket) missing.push('EXPORTS_S3_BUCKET')
+    const requireBronzeBucket = shouldRequire(requirements.requireBronzeBucket, true)
+    const requireExportsBucket = shouldRequire(requirements.requireExportsBucket, true)
+
+    if (requireBronzeBucket && !config.storage.bronze.bucket) {
+      missing.push('BRONZE_S3_BUCKET')
+    }
+    if (requireExportsBucket && !config.storage.exports.bucket) {
+      missing.push('EXPORTS_S3_BUCKET')
+    }
   }
   if (requirements.requireAlerts) {
     if (!config.alerts.slackWebhookUrl) missing.push('ALERT_SLACK_WEBHOOK_URL')
@@ -1177,10 +1262,3 @@ export const assertRuntimeConfig = (
     throw new Error(`Missing required configuration: ${missing.join(', ')}`)
   }
 }
-
-export * from './config-db'
-export * from './config-queues'
-export * from './config-plane-a'
-export * from './config-plane-b'
-export * from './config-alerts'
-export * from './config-storage'

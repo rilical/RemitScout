@@ -2,11 +2,11 @@
   <div class="min-h-screen bg-neutral-900">
     <!-- Header -->
     <div class="border-b border-neutral-700 bg-neutral-800">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+      <div class="mx-auto max-w-page px-page-x py-4">
         <div class="flex items-center justify-between">
           <NuxtLink
             to="/pulse"
-            class="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+            class="flex items-center gap-2 text-neutral-400 hover:text-white motion-safe:transition-colors"
           >
             <svg
               class="h-5 w-5"
@@ -28,7 +28,7 @@
             <!-- View Mode Toggle -->
             <div class="hidden sm:flex items-center gap-1 rounded-lg bg-neutral-700 p-1">
               <button
-                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium motion-safe:transition-colors"
                 :class="store.viewMode === 'sender'
                   ? 'bg-brand-600 text-white'
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-600'"
@@ -50,7 +50,7 @@
                 Sender
               </button>
               <button
-                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium motion-safe:transition-colors"
                 :class="store.viewMode === 'analyst'
                   ? 'bg-brand-600 text-white'
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-600'"
@@ -74,7 +74,7 @@
             </div>
 
             <button
-              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-sm text-white hover:bg-neutral-600 transition-colors"
+              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showShareModal = true"
             >
               <svg
@@ -93,7 +93,7 @@
               Share
             </button>
             <button
-              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-sm text-white hover:bg-neutral-600 transition-colors"
+              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showEmbedModal = true"
             >
               <svg
@@ -123,7 +123,7 @@
     />
 
     <!-- Main Content -->
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mx-auto max-w-page px-page-x py-8">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <!-- Main Column -->
         <div class="lg:col-span-8 space-y-8">
@@ -142,7 +142,7 @@
             v-if="store.viewMode === 'sender'"
             class="rounded-xl border border-neutral-700 bg-neutral-800 p-6"
           >
-            <h3 class="text-lg font-semibold text-white mb-2">
+            <h3 class="text-body-lg font-semibold text-white mb-2">
               Key Takeaway
             </h3>
             <p class="text-neutral-300">
@@ -173,22 +173,22 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-lg font-bold text-white">
+                  <h3 class="text-body-lg font-bold text-white">
                     Actionable Insight
                   </h3>
-                  <p class="text-sm text-neutral-400">
+                  <p class="text-body-sm text-neutral-400">
                     AI-generated execution guidance
                   </p>
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs font-mono text-neutral-500">Confidence:</span>
-                <span class="text-sm font-bold text-brand-600">{{ actionableInsight.confidence }}%</span>
+                <span class="text-body-sm font-mono text-neutral-500">Confidence:</span>
+                <span class="text-body-sm font-bold text-brand-600">{{ actionableInsight.confidence }}%</span>
               </div>
             </div>
             <div class="p-6">
               <div class="mb-4">
-                <span class="inline-flex items-center rounded-full bg-brand-600/20 px-3 py-1 text-sm font-semibold text-brand-600">
+                <span class="inline-flex items-center rounded-full bg-brand-600/20 px-3 py-1 text-body-sm font-semibold text-brand-600">
                   {{ actionableInsight.signal }}
                 </span>
               </div>
@@ -200,7 +200,7 @@
               <div class="mt-6 pt-4 border-t border-neutral-700 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                   <button
-                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-600 transition-colors"
+                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
                     @click="handleExportCSV"
                   >
                     <svg
@@ -219,7 +219,7 @@
                     Export CSV
                   </button>
                   <button
-                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-600 transition-colors"
+                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
                     @click="handleExportPDF"
                   >
                     <svg
@@ -240,7 +240,7 @@
                 </div>
                 <NuxtLink
                   to="/institutions/api"
-                  class="text-sm font-medium text-brand-600 hover:text-brand-500 transition-colors"
+                  class="text-body-sm font-medium text-brand-600 hover:text-brand-500 motion-safe:transition-colors"
                 >
                   API Access →
                 </NuxtLink>
@@ -253,7 +253,7 @@
             v-if="store.viewMode === 'analyst'"
             class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 flex items-center justify-between"
           >
-            <div class="flex items-center gap-4 text-xs text-neutral-500">
+            <div class="flex items-center gap-4 text-body-sm text-neutral-500">
               <span class="flex items-center gap-1.5">
                 <svg
                   class="w-3.5 h-3.5 text-brand-600"
@@ -275,7 +275,7 @@
               <span>|</span>
               <span class="font-mono">Hash: {{ complianceHash }}</span>
             </div>
-            <button class="text-xs font-medium text-neutral-400 hover:text-white transition-colors">
+            <button class="text-body-sm font-medium text-neutral-400 hover:text-white motion-safe:transition-colors">
               Audit Log
             </button>
           </div>
@@ -288,7 +288,7 @@
         <div class="lg:col-span-4 space-y-6">
           <!-- Related Charts -->
           <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">
+            <h3 class="text-body-lg font-semibold text-white mb-4">
               Related Charts
             </h3>
             <div class="space-y-4">
@@ -296,26 +296,26 @@
                 v-for="chart in relatedCharts"
                 :key="chart.id"
                 :to="`/pulse/charts/${chart.id}?${queryString}`"
-                class="block rounded-lg border border-neutral-700 bg-neutral-800 p-4 hover:border-brand-600 transition-colors"
+                class="block rounded-lg border border-neutral-700 bg-neutral-800 p-4 hover:border-brand-600 motion-safe:transition-colors"
               >
-                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                <div class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                   {{ chart.categoryLabel }}
                 </div>
                 <div class="font-medium text-white">{{ chart.title }}</div>
-                <div class="mt-1 text-sm text-neutral-400">{{ chart.description }}</div>
+                <div class="mt-1 text-body-sm text-neutral-400">{{ chart.description }}</div>
               </NuxtLink>
             </div>
           </div>
 
           <!-- Quick Actions -->
           <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-            <h3 class="text-lg font-semibold text-white mb-4">
+            <h3 class="text-body-lg font-semibold text-white mb-4">
               Quick Actions
             </h3>
             <div class="space-y-3">
               <NuxtLink
                 :to="`/send-money/${corridorSlug}`"
-                class="flex items-center gap-3 rounded-lg bg-brand-600 px-4 py-3 text-white hover:bg-brand-700 transition-colors"
+                class="flex items-center gap-3 rounded-lg bg-brand-600 px-4 py-3 text-white hover:bg-brand-700 motion-safe:transition-colors"
               >
                 <svg
                   class="h-5 w-5"
@@ -333,7 +333,7 @@
                 <span class="font-medium">Compare Rates Now</span>
               </NuxtLink>
               <button
-                class="flex w-full items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-3 text-white hover:bg-neutral-600 transition-colors"
+                class="flex w-full items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-3 text-white hover:bg-neutral-600 motion-safe:transition-colors"
                 @click="handleSetAlert"
               >
                 <svg
@@ -375,12 +375,12 @@
               </svg>
               <span class="font-semibold">Remit-Scout Plus</span>
             </div>
-            <p class="text-sm text-neutral-300 mb-4">
+            <p class="text-body-sm text-neutral-300 mb-4">
               Unlock 365 days of history, CSV exports, and premium insights.
             </p>
             <NuxtLink
               to="/plus"
-              class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-medium text-white hover:bg-brand-700 motion-safe:transition-colors"
             >
               Upgrade Now
               <svg
@@ -421,6 +421,7 @@
     />
 
     <AuthPromptModal
+      v-if="authModalOpen"
       :is-open="authModalOpen"
       :feature="authModalFeature"
       title="Sign in to set alerts"
@@ -431,14 +432,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import type { PulseFilters, TimeRange, AmountBucket } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
 import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
-import AuthPromptModal from '~/components/shared/AuthPromptModal.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+
+const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
+const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
+const PulseChartFull = defineAsyncComponent(() => import('~/components/pulse/PulseChartFull.vue'))
 
 const { pulseEnabled } = useFeatureFlags()
 
@@ -528,7 +532,6 @@ const actionableInsight = computed(() => {
 })
 
 function handleDownload() {
-  console.log('Download requested')
 }
 
 function handleExportCSV() {

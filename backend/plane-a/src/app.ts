@@ -493,13 +493,28 @@ export const buildApp = async (options?: {
 
   const legacyGonePayload = (legacyPath: string) => {
     const normalized = legacyPath === '/api' ? '/api' : legacyPath.replace(/\/+$/, '')
-    const suffix = normalized === '/api' ? '' : normalized.slice('/api'.length)
+    const suffix = normalized === '/api'
+      ? ''
+      : (normalized.startsWith('/api/v1')
+        ? normalized.slice('/api/v1'.length)
+        : normalized.slice('/api'.length))
     return {
       error: 'gone',
       message: 'Legacy /api/* routes have been removed. Use /api/v1/*.',
       alternativePath: `/api/v1${suffix || ''}`,
     }
   }
+
+  const apiV1NotFoundPayload = (path: string) => ({
+    error: 'not_found',
+    message: 'Unknown API v1 route. Use /api/v1/* endpoints.',
+    path,
+  })
+
+  app.all('/api/v1', async (_request, reply) => {
+    reply.code(404)
+    return apiV1NotFoundPayload('/api/v1')
+  })
 
   app.all('/api', async (_request, reply) => {
     reply.code(410)
@@ -508,6 +523,10 @@ export const buildApp = async (options?: {
 
   app.all('/api/*', async (request, reply) => {
     const path = request.url.split('?')[0] || '/api'
+    if (path.startsWith('/api/v1/')) {
+      reply.code(404)
+      return apiV1NotFoundPayload(path)
+    }
     reply.code(410)
     return legacyGonePayload(path)
   })

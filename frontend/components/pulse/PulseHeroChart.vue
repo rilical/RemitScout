@@ -13,19 +13,19 @@
     <template #actions>
       <div class="flex items-center gap-4">
         <div class="text-right">
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Current markup
           </div>
-          <div class="text-lg font-bold text-brand-600">
+          <div class="text-body-lg font-bold text-brand-600">
             {{ formatNumber(currentSpreadBps, { maximumFractionDigits: 0 }) }} bps
           </div>
         </div>
         <div class="h-10 w-px bg-neutral-700" />
         <div class="text-right">
-          <div class="text-xs text-neutral-400">
+          <div class="text-body-sm text-neutral-400">
             Markup cost for {{ amountLabel }}
           </div>
-          <div class="text-lg font-bold text-danger-600">
+          <div class="text-body-lg font-bold text-danger-600">
             {{ lossDisplay }}
           </div>
         </div>
@@ -46,34 +46,34 @@
           class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-xl"
           :style="{ left: tooltipPosition.x + 'px', top: tooltipPosition.y + 'px' }"
         >
-          <div class="mb-2 text-xs font-medium text-neutral-400">
+          <div class="mb-2 text-body-sm font-medium text-neutral-400">
             {{ tooltipData.timestamp }}
           </div>
           <div class="space-y-1.5">
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-neutral-500" />
-                <span class="text-sm text-neutral-300">{{ midLabel }}</span>
+                <span class="text-body-sm text-neutral-300">{{ midLabel }}</span>
               </div>
-              <span class="text-sm font-semibold text-white">{{ tooltipData.midMarket }}</span>
+              <span class="text-body-sm font-semibold text-white">{{ tooltipData.midMarket }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-brand-600" />
-                <span class="text-sm text-neutral-300">{{ tooltipData.bestProvider }}</span>
+                <span class="text-body-sm text-neutral-300">{{ tooltipData.bestProvider }}</span>
               </div>
-              <span class="text-sm font-semibold text-brand-600">{{ tooltipData.bestRate }}</span>
+              <span class="text-body-sm font-semibold text-brand-600">{{ tooltipData.bestRate }}</span>
             </div>
             <div class="flex items-center justify-between gap-4">
               <div class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-danger-600" />
-                <span class="text-sm text-neutral-300">Bank average</span>
+                <span class="text-body-sm text-neutral-300">Bank average</span>
               </div>
-              <span class="text-sm font-semibold text-danger-600">{{ tooltipData.bankRate }}</span>
+              <span class="text-body-sm font-semibold text-danger-600">{{ tooltipData.bankRate }}</span>
             </div>
           </div>
           <div class="mt-2 border-t border-neutral-700 pt-2">
-            <div class="text-xs text-neutral-500">
+            <div class="text-body-sm text-neutral-500">
               Markup: <span class="text-white">{{ tooltipData.spread }}</span>
             </div>
           </div>
@@ -83,15 +83,15 @@
       <div class="flex flex-wrap items-center justify-center gap-6 border-t border-neutral-700 pt-4">
         <div class="flex items-center gap-2">
           <span class="h-0.5 w-6 border-t-2 border-dashed border-neutral-400" />
-          <span class="text-sm text-neutral-400">{{ midLabel }}</span>
+          <span class="text-body-sm text-neutral-400">{{ midLabel }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="h-0.5 w-6 bg-brand-600" />
-          <span class="text-sm text-neutral-400">{{ leaderLabel }}</span>
+          <span class="text-body-sm text-neutral-400">{{ leaderLabel }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="h-0.5 w-6 bg-danger-600" />
-          <span class="text-sm text-neutral-400">{{ bankLabel }}</span>
+          <span class="text-body-sm text-neutral-400">{{ bankLabel }}</span>
         </div>
       </div>
     </template>
@@ -99,7 +99,7 @@
     <template #footer>
       <NuxtLink
         to="/methodology"
-        class="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+        class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors"
       >
         <span>Methodology</span>
         <Icon
@@ -425,7 +425,7 @@ async function loadData() {
     data.value = await getHeroChartData(store.corridor, store.timeframe, store.amount)
   }
   catch (e) {
-    console.error('Failed to load hero chart data:', e)
+    useLogger('PulseHeroChart').error('Failed to load hero chart data', e)
     data.value = null
     error.value = {
       title: 'Could not load',

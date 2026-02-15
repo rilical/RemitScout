@@ -1,6 +1,11 @@
 <template>
-  <div class="min-h-screen bg-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl w-full text-center">
+  <div class="min-h-screen bg-white flex items-center justify-center px-page-x">
+    <div
+      class="max-w-2xl w-full text-center"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
       <!-- Logo -->
       <div class="mb-12">
         <NuxtLink
@@ -65,11 +70,11 @@
       </div>
 
       <!-- Heading -->
-      <h2 class="text-2xl sm:text-3xl font-bold text-neutral-900 mb-3">
+      <h2 class="text-h1 text-neutral-900 mb-3">
         {{ heading }}
       </h2>
 
-      <p class="text-base sm:text-lg text-neutral-600 mb-10 max-w-xl mx-auto">
+      <p class="text-body-lg text-neutral-600 mb-10 max-w-xl mx-auto">
         {{ description }}
       </p>
 
@@ -77,7 +82,7 @@
       <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
         <button
           type="button"
-          class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:bg-brand-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body font-semibold text-white shadow-lg transition-all hover:bg-brand-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
           @click="handleError"
         >
           <svg
@@ -98,7 +103,7 @@
 
         <NuxtLink
           to="/send-money"
-          class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-brand-600 bg-white px-6 py-3 text-base font-semibold text-brand-600 transition-all hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
+          class="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-brand-600 bg-surface px-6 py-3 text-body font-semibold text-brand-600 transition-all hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2"
         >
           <svg
             class="w-5 h-5"
@@ -119,7 +124,7 @@
 
       <!-- Help Link -->
       <div class="mt-8">
-        <p class="text-sm text-neutral-600">
+        <p class="text-body-sm text-neutral-600">
           Need help?
           <NuxtLink
             to="/contact"

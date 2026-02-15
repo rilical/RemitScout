@@ -8,6 +8,7 @@
 import { createLogger } from '../../shared/logger'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { formatError } from '../../shared/utils/error-handling'
+import { config } from '../../shared/config'
 
 const logger = createLogger('script.fx-rate-refresh-worker-ecs')
 
@@ -89,12 +90,21 @@ export const handler = async (): Promise<number> => {
   }
 
   const { runStartupChecks } = await import('../../shared/startup')
+  const requireFxRateRefreshQueue = config.queues.fxRateRefresh.mode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: true,
-      requireQueues: true,
-      requireStorage: true,
+      requireQueues: requireFxRateRefreshQueue,
+      requireQuoteRefreshQueue: false,
+      requireFxRateRefreshQueue,
+      requireExportJobQueue: false,
+      requireIngestFanoutQueue: false,
+      requireNotificationsQueue: false,
+      requireOpsAlertsQueue: false,
+      requireGoldLiveQueue: false,
+      requireAlertEvaluationQueue: false,
+      requireStorage: false,
     },
   })
 
