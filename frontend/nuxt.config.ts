@@ -100,6 +100,7 @@ const workspaceRoot = join(projectRoot, '..')
 const localNodeModules = join(projectRoot, 'node_modules')
 const workspaceNodeModules = join(workspaceRoot, 'node_modules')
 const workspacePnpmStore = join(workspaceNodeModules, '.pnpm')
+const appManifestAliasPath = join(projectRoot, '.nuxt', 'manifest', 'meta', 'dev.json')
 const defaultWatchIgnored = [
   '**/node_modules/**',
   '**/.pnpm/**',
@@ -386,6 +387,13 @@ export default defineNuxtConfig({
 
   // Vite Configuration
   vite: {
+    // Nuxt's internal dynamic import("#app-manifest") can fail to resolve in this monorepo setup.
+    // Map it explicitly to the generated dev manifest JSON (nuxt prepare writes it).
+    resolve: {
+      alias: {
+        '#app-manifest': appManifestAliasPath,
+      },
+    },
     server: {
       fs: {
         allow: [workspaceRoot],
