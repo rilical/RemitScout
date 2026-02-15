@@ -1143,12 +1143,13 @@ if (!pulseEnabled.value) {
   await navigateTo('/plus', { redirectCode: 302 })
 }
 
-const router = useRouter()
-const route = useRoute()
-const store = usePulseStore()
-const { isPlus, limits } = useEntitlements()
-const watchlist = useWatchlist()
-const saveAlertModal = useSaveAlertModal()
+	const router = useRouter()
+	const route = useRoute()
+	const runtimeConfig = useRuntimeConfig()
+	const store = usePulseStore()
+	const { isPlus, limits } = useEntitlements()
+	const watchlist = useWatchlist()
+	const saveAlertModal = useSaveAlertModal()
 const exportsApi = useExports()
 const shareModalChart = ref<string | null>(null)
 const embedModalChart = ref<string | null>(null)
@@ -1175,11 +1176,16 @@ const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.v
 const selectedCorridorKey = ref<string>('')
 const decisionPanelRef = ref<HTMLElement | null>(null)
 
-// Screener state (Plus)
-const showAdvancedFilters = ref(false)
+	// Screener state (Plus)
+	const showAdvancedFilters = ref(false)
+	const pulseScreenerEnabled = computed(() => (
+	  Boolean(runtimeConfig.public.pulseScreenerEnabled)
+	  && isPlus.value
+	  && store.viewMode === 'analyst'
+	))
 
-const pickBestByCoverage = (candidates: CorridorOption[]): CorridorOption | undefined => {
-  if (candidates.length === 0) return undefined
+	const pickBestByCoverage = (candidates: CorridorOption[]): CorridorOption | undefined => {
+	  if (candidates.length === 0) return undefined
 
   let best = candidates[0]
   let bestRank: [number, number, number] = [

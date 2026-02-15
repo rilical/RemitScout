@@ -89,9 +89,9 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 
-const { ensureHydrated, isConfigured } = useAuth()
-const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
+	const { ensureHydrated, isConfigured } = useAuth()
+	const route = useRoute()
+	const { public: { siteUrl, supabaseSuppressConfigError } } = useRuntimeConfig()
 
 setSeo({
   title: 'Confirming email... | Remit-Scout',

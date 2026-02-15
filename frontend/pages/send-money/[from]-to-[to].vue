@@ -2245,9 +2245,9 @@ const refreshGateActive = computed(() => {
   if (refreshCompletion.value?.done) return false
   return true
 })
-const shouldBlockResults = computed(() => {
-  if (refreshTimedOut.value) return false
-  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+	const shouldBlockResults = computed(() => {
+	  if (refreshTimedOut.value) return false
+	  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
 
   const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
@@ -2261,13 +2261,14 @@ const shouldBlockResults = computed(() => {
   if (quoteRefreshPending.value) return true
   if (providersLive.value) return true
   if (quotesPending.value && !hasApiQuotes.value) return true
-  if (searchInitiated.value && !hasApiQuotes.value) return true
-  return false
-})
-const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
-const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
-const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
-const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
+	  if (searchInitiated.value && !hasApiQuotes.value) return true
+	  return false
+	})
+	const showRefreshGate = computed(() => shouldBlockResults.value)
+	const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
+	const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
+	const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
+	const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
 const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
 const flagTo = computed(() => resolveFlag(canonicalTo.value))
 

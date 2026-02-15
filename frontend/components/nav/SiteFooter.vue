@@ -299,11 +299,32 @@
 </template>
 
 <script setup lang="ts">
-import { useFeatureFlags } from '~/composables/useFeatureFlags'
+	import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
-defineEmits<{
-  'open-modal': []
-}>()
+	defineEmits<{
+	  'open-modal': []
+	}>()
 
-const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+	const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+
+	const openCookiePreferences = async () => {
+	  if (!import.meta.client) return
+
+	  const w = window as any
+	  try {
+	    if (typeof w?.Cookiebot?.renew === 'function') {
+	      w.Cookiebot.renew()
+	      return
+	    }
+	    if (typeof w?.OneTrust?.ToggleInfoDisplay === 'function') {
+	      w.OneTrust.ToggleInfoDisplay()
+	      return
+	    }
+	  }
+	  catch {
+	    // Ignore and fall back to the Cookie Policy page.
+	  }
+
+	  await navigateTo('/cookies')
+	}
 </script>

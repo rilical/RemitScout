@@ -802,32 +802,52 @@ const formatMoney = (amount: number | null | undefined, currency: string | null 
   return formatMoneyUtil(amount, { currency })
 }
 
-const plusPriceDisplay = computed(() => formatMoney(selectedPrice.value?.amount, selectedPrice.value?.currency))
+	const plusPriceDisplay = computed(() => formatMoney(selectedPrice.value?.amount, selectedPrice.value?.currency))
 
-const billedAnnuallyMonthlyPrice = computed(() => {
-  if (billingInterval.value !== 'year') return null
+	const billedAnnuallyMonthlyPrice = computed(() => {
+	  if (billingInterval.value !== 'year') return null
   const annualAmount = pricing.value?.plus.year.amount
   const currency = pricing.value?.plus.year.currency
   if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
   if (!currency) return null
-  return formatMoney(annualAmount / 12, currency)
-})
+	  return formatMoney(annualAmount / 12, currency)
+	})
 
-const annualSavingsPct = computed(() => {
-  const month = pricing.value?.plus.month.amount
-  const year = pricing.value?.plus.year.amount
-  if (typeof month !== 'number' || typeof year !== 'number') return null
+	const billedAnnuallyMonthlyDisplay = computed(() => (
+	  billingInterval.value === 'year'
+	  && Boolean(billedAnnuallyMonthlyPrice.value)
+	  && Boolean(plusPriceDisplay.value)
+	))
+
+	const plusPriceSuffix = computed(() => {
+	  if (billingInterval.value === 'year' && billedAnnuallyMonthlyPrice.value) {
+	    return 'per month (billed annually)'
+	  }
+	  if (plusPriceDisplay.value) {
+	    return 'per month'
+	  }
+	  return ''
+	})
+
+	const annualSavingsPct = computed(() => {
+	  const month = pricing.value?.plus.month.amount
+	  const year = pricing.value?.plus.year.amount
+	  if (typeof month !== 'number' || typeof year !== 'number') return null
   if (!Number.isFinite(month) || !Number.isFinite(year) || month <= 0 || year <= 0) return null
   const pct = (1 - year / (month * 12)) * 100
   if (!Number.isFinite(pct)) return null
-  return Math.max(0, Math.round(pct))
-})
+	  return Math.max(0, Math.round(pct))
+	})
 
-async function handleUpgrade() {
-  if (!isAuthenticated.value) {
-    await navigateTo({ path: '/sign-in', query: { redirect: '/plus' } })
-    return
-  }
+	const pulseCtaLabel = computed(() => (
+	  isPlus.value ? 'Open Pulse' : 'Explore Pulse'
+	))
+
+	async function handleUpgrade() {
+	  if (!isAuthenticated.value) {
+	    await navigateTo({ path: '/sign-in', query: { redirect: '/plus' } })
+	    return
+	  }
 
   if (isPlus.value) {
     const portalResult = await billingActions.openBillingPortal()

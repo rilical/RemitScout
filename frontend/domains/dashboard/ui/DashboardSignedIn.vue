@@ -2452,15 +2452,12 @@ class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 
 
         <!-- Enterprise Tab -->
         <div v-else-if="activeTab === 'enterprise'">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-            <div>
-              <h2 class="text-body-lg font-semibold text-rs-fg">Enterprise API & Embeds</h2>
-              <p class="text-body-sm text-rs-muted">Manage API access, refresh tokens, and generate TEER/RCI/RVI embeds.</p>
-            </div>
-            <div class="text-body-sm text-rs-muted">
-              Tier 2: {{ tier2CadenceLabel }}h cadence · Tier 3: {{ tier3CadenceLabel }}h cadence
-            </div>
-          </div>
+	          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+	            <div>
+	              <h2 class="text-body-lg font-semibold text-rs-fg">Enterprise API & Embeds</h2>
+	              <p class="text-body-sm text-rs-muted">Manage API access, refresh tokens, and generate TEER/RCI/RVI embeds.</p>
+	            </div>
+	          </div>
 
           <div
 v-if="!apiAccess"
@@ -2486,24 +2483,17 @@ class="mb-6 rounded-xl border border-warning-600 bg-warning-600 px-4 py-3 text-b
                 </button>
               </div>
 
-              <div class="grid gap-3 sm:grid-cols-2">
-                <input
-                  v-model="apiKeyName"
-                  type="text"
-                  placeholder="Key name"
-                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-                <select
-                  v-model="apiKeyTier"
-                  class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                >
-                  <option value="2">Tier 2 ({{ tier2CadenceLabel }}h cadence)</option>
-                  <option value="3">Tier 3 ({{ tier3CadenceLabel }}h cadence)</option>
-                </select>
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-60"
-                  :disabled="apiKeysLoading || !apiAccess"
+	              <div class="grid gap-3 sm:grid-cols-2">
+	                <input
+	                  v-model="apiKeyName"
+	                  type="text"
+	                  placeholder="Key name"
+	                  class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+	                >
+	                <button
+	                  type="button"
+	                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-60"
+	                  :disabled="apiKeysLoading || !apiAccess"
                   @click="createEnterpriseApiKey"
                 >
                   Create Key
