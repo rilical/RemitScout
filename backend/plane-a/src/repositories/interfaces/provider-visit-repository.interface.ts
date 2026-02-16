@@ -10,6 +10,8 @@ export type ProviderVisitCreateInput = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
   quoted_rate?: number | null
   quoted_fee?: number | null
 }
@@ -29,6 +31,8 @@ export type ProviderVisitRow = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
   quoted_rate: number | null
   quoted_fee: number | null
   completed_transfer: boolean | null

@@ -227,6 +227,15 @@
         </div>
       </div>
 
+      <PulseTruthBar
+        :updated-at="truthUpdatedAt"
+        :data-available="truthDataAvailable"
+        :method-profile="methodProfile"
+        :amount-bucket="store.amount"
+        :badges="truthBadges"
+        :panels="truthPanels"
+      />
+
       <div class="py-8">
         <!-- Filter Form Section -->
         <div class="mb-8 px-page-x">
@@ -654,18 +663,63 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <ChartPreviewCard
-                  v-for="chart in indicesIntegrityCharts"
-                  :key="chart.id"
-                  :metadata="chart"
-                  :insight="getIndicesIntegrityInsight(chart.id)"
-                  :sparkline-data="getIndicesIntegritySparkline(chart.id)"
-                  :updated-at="getIndicesIntegrityUpdatedAt(chart.id)"
-                  @view="navigateToChart"
-                  @share="handleShare"
-                  @embed="handleEmbed"
-                />
+              <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <div class="lg:col-span-4 rounded-xl border border-neutral-700 bg-neutral-800 p-5">
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+                    Index reliability score
+                  </div>
+                  <div class="mt-2 flex items-baseline justify-between gap-3">
+                    <div class="text-hero font-bold text-white">
+                      {{ indicesReliability.score }}
+                    </div>
+                    <div class="text-body-sm text-neutral-400">
+                      / 100
+                    </div>
+                  </div>
+                  <div class="mt-2 grid grid-cols-2 gap-3 text-[11px] text-neutral-400">
+                    <div class="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2">
+                      <div class="uppercase tracking-wider text-neutral-500">Confidence</div>
+                      <div class="mt-1 text-body-sm font-semibold text-white">
+                        <span v-if="indicesReliability.confidence !== null">{{ Math.round(indicesReliability.confidence) }}%</span>
+                        <span v-else>—</span>
+                      </div>
+                    </div>
+                    <div class="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2">
+                      <div class="uppercase tracking-wider text-neutral-500">Providers</div>
+                      <div class="mt-1 text-body-sm font-semibold text-white">
+                        <span v-if="indicesReliability.providers !== null">{{ Math.round(indicesReliability.providers) }}</span>
+                        <span v-else>—</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 text-body-sm text-neutral-300">
+                    <ul class="space-y-1">
+                      <li
+                        v-for="reason in indicesReliability.reasons"
+                        :key="reason"
+                        class="text-neutral-400"
+                      >
+                        • {{ reason }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="lg:col-span-8">
+                  <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <ChartPreviewCard
+                      v-for="chart in indicesIntegrityCharts"
+                      :key="chart.id"
+                      :metadata="chart"
+                      :insight="getIndicesIntegrityInsight(chart.id)"
+                      :sparkline-data="getIndicesIntegritySparkline(chart.id)"
+                      :updated-at="getIndicesIntegrityUpdatedAt(chart.id)"
+                      @view="navigateToChart"
+                      @share="handleShare"
+                      @embed="handleEmbed"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -677,7 +731,118 @@
             :class="highlightedSection === 'coverage-by-currency' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
           >
             <div class="mx-auto max-w-page">
-              <PulseCoverageByCurrency :filters="legacyFilters" />
+              <PulseCoverageByCurrency
+                :filters="legacyFilters"
+                @loaded="handleCoverageByCurrencyLoaded"
+              />
+            </div>
+          </section>
+
+          <!-- 1d. What changed? (high signal) -->
+          <section
+            v-if="store.viewMode === 'analyst'"
+            id="what-changed"
+            class="mb-10 px-page-x"
+          >
+            <div class="mx-auto max-w-page">
+              <div class="mb-4">
+                <h2 class="text-h3 font-bold text-white">
+                  What changed?
+                </h2>
+                <p class="text-body-sm text-neutral-400">
+                  Biggest movers in your tracked set (24h). This is where missing providers and corridor shifts should surface first.
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                <div class="lg:col-span-8 rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
+                      Top movers (24h)
+                    </div>
+                    <div class="text-body-sm text-neutral-500">
+                      {{ screenerUpdatedAt ? `Updated ${formatUpdatedLabel(screenerUpdatedAt)}` : '—' }}
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="topMovers24h.length === 0"
+                    class="mt-4 text-body-sm text-neutral-400"
+                  >
+                    No movers available yet for your tracked corridors.
+                  </div>
+
+                  <div
+                    v-else
+                    class="mt-4 grid gap-3"
+                  >
+                    <button
+                      v-for="mover in topMovers24h"
+                      :key="mover.corridorId"
+                      type="button"
+                      class="flex items-center justify-between gap-4 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-left hover:border-brand-600/60"
+                      @click="handleScreenerSelect(mover.corridorId)"
+                    >
+                      <div class="flex items-center gap-3">
+                        <div class="text-h3">
+                          <span>{{ mover.fromFlag }}</span>
+                          <span class="text-neutral-600">→</span>
+                          <span>{{ mover.toFlag }}</span>
+                        </div>
+                        <div>
+                          <div class="text-body font-semibold text-white">
+                            {{ mover.label }}
+                          </div>
+                          <div class="text-[11px] text-neutral-500">
+                            {{ mover.corridorId }}
+                            <span v-if="mover.providerCount !== null"> · providers {{ mover.providerCount }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-right">
+                        <div
+                          class="text-body-lg font-bold"
+                          :class="mover.deltaPct24h >= 0 ? 'text-success-600' : 'text-danger-500'"
+                        >
+                          {{ mover.deltaPct24h >= 0 ? '+' : '' }}{{ mover.deltaPct24h.toFixed(2) }}%
+                        </div>
+                        <div class="text-[11px] text-neutral-500">
+                          {{ mover.timestampBucket || '—' }}
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="lg:col-span-4 rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                  <div class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
+                    Gaps at a glance
+                  </div>
+                  <div class="mt-3 text-body-sm text-neutral-300">
+                    <div>
+                      Currency snapshot: <span class="font-semibold text-white">{{ coverageCurrencyDate || '—' }}</span>
+                    </div>
+                    <div class="mt-1">
+                      Suppressed ratio:
+                      <span class="font-semibold text-white">
+                        <span v-if="coverageCurrencySuppressedRatio !== null">{{ Math.round(coverageCurrencySuppressedRatio * 100) }}%</span>
+                        <span v-else>—</span>
+                      </span>
+                    </div>
+                    <div class="mt-1">
+                      Confidence p10:
+                      <span class="font-semibold text-white">
+                        <span v-if="coverageCurrencyConfidenceP10 !== null">{{ Math.round(coverageCurrencyConfidenceP10 * 100) }}%</span>
+                        <span v-else>—</span>
+                      </span>
+                    </div>
+                    <div class="mt-3 text-[11px] text-neutral-500">
+                      Click “View 0-coverage” in the coverage deck to see corridor-level reason codes.
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1136,6 +1301,7 @@ const PulseOperationalCoverage = defineAsyncComponent(() => import('~/components
 const PulseReliabilityCoverage = defineAsyncComponent(() => import('~/components/pulse/PulseReliabilityCoverage.vue'))
 const PulseArbitrageAlert = defineAsyncComponent(() => import('~/components/pulse/PulseArbitrageAlert.vue'))
 const PulseCoverageByCurrency = defineAsyncComponent(() => import('~/components/pulse/PulseCoverageByCurrency.vue'))
+const PulseTruthBar = defineAsyncComponent(() => import('~/components/pulse/PulseTruthBar.vue'))
 const ChartPreviewCard = defineAsyncComponent(() => import('~/domains/pulse/ui/ChartPreviewCard.vue'))
 
 const { pulseEnabled } = useFeatureFlags()
@@ -1272,6 +1438,28 @@ const screenerRows = ref<PulseScreenerRow[]>([])
 const screenerLoading = ref(false)
 const screenerError = ref<string | null>(null)
 const screenerUpdatedAt = ref<string | null>(null)
+const coverageCurrencyUpdatedAt = ref<string | null>(null)
+const coverageCurrencyDate = ref<string | null>(null)
+const coverageCurrencySuppressedRatio = ref<number | null>(null)
+const coverageCurrencyConfidenceP10 = ref<number | null>(null)
+
+const handleCoverageByCurrencyLoaded = (payload: {
+  date: string | null
+  updatedAt: string | null
+  rows: Array<{ corridorsTotal: number, corridorsSuppressed: number, weightConfidenceP10: number | null }>
+}) => {
+  coverageCurrencyDate.value = payload.date
+  coverageCurrencyUpdatedAt.value = payload.updatedAt
+
+  const total = payload.rows.reduce((sum, row) => sum + (Number.isFinite(row.corridorsTotal) ? row.corridorsTotal : 0), 0)
+  const suppressed = payload.rows.reduce((sum, row) => sum + (Number.isFinite(row.corridorsSuppressed) ? row.corridorsSuppressed : 0), 0)
+  coverageCurrencySuppressedRatio.value = total > 0 ? suppressed / total : null
+
+  const p10Values = payload.rows
+    .map(row => row.weightConfidenceP10)
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+  coverageCurrencyConfidenceP10.value = p10Values.length ? Math.min(...p10Values) : null
+}
 
 const loadScreener = async () => {
   if (!isPlus.value) return
@@ -1309,6 +1497,23 @@ const loadScreener = async () => {
     screenerLoading.value = false
   }
 }
+
+const topMovers24h = computed(() => {
+  const movers = screenerRows.value
+    .filter((row) => typeof row.moverDeltaPct24h === 'number' && Number.isFinite(row.moverDeltaPct24h))
+    .map((row) => ({
+      corridorId: row.corridorId,
+      label: row.label,
+      fromFlag: row.fromFlag,
+      toFlag: row.toFlag,
+      deltaPct24h: row.moverDeltaPct24h as number,
+      providerCount: row.providerCount ?? null,
+      updatedAt: row.updatedAt ?? null,
+      timestampBucket: row.moverTimestampBucket ?? null,
+    }))
+  movers.sort((a, b) => Math.abs(b.deltaPct24h) - Math.abs(a.deltaPct24h))
+  return movers.slice(0, 8)
+})
 
 const scrollToDecisionPanel = async () => {
   if (!import.meta.client) return
@@ -1691,10 +1896,11 @@ const indicesIntegrityData = ref<Record<string, ChartData | null>>({})
 const indicesIntegrityLoading = ref(false)
 const indicesIntegrityLoadKey = computed(() => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}:indices_integrity`)
 const indicesIntegrityLoadedKey = ref<string | null>(null)
+const indicesIntegrityMeta = ref<Record<string, { source: string | null, updatedAt: string | null, dataAvailable: boolean }>>({})
 
 const indicesIntegrityUpdatedAt = computed(() => {
   const candidates = INDICES_INTEGRITY_CHART_IDS
-    .map((id) => indicesIntegrityData.value[id]?.metadata?.lastUpdated || null)
+    .map((id) => indicesIntegrityMeta.value[id]?.updatedAt || indicesIntegrityData.value[id]?.metadata?.lastUpdated || null)
     .filter((value): value is string => Boolean(value) && typeof value === 'string' && value.trim().length > 0)
   if (candidates.length === 0) return null
   return candidates.sort((a, b) => a.localeCompare(b))[candidates.length - 1]
@@ -1733,10 +1939,120 @@ function getIndicesIntegritySparkline(chartId: string) {
 }
 
 function getIndicesIntegrityUpdatedAt(chartId: string): string | null {
+  const metaUpdated = indicesIntegrityMeta.value[chartId]?.updatedAt || null
+  if (metaUpdated && metaUpdated.trim().length > 0) return metaUpdated
   const data = indicesIntegrityData.value[chartId]
   const updatedAt = data?.metadata?.lastUpdated
   return updatedAt && typeof updatedAt === 'string' && updatedAt.trim().length > 0 ? updatedAt : null
 }
+
+const getLatestPoint = (points: Array<{ t: number, v: number }> = []) => {
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i]
+    if (p && Number.isFinite(p.v)) return p
+  }
+  return null
+}
+
+const indicesReliability = computed(() => {
+  const confidencePts = indicesIntegrityData.value['indices-confidence']?.series?.[0]?.points || []
+  const providerPts = indicesIntegrityData.value['indices-provider-count']?.series?.[0]?.points || []
+  const suppressionPts = indicesIntegrityData.value['indices-suppression']?.series?.[0]?.points || []
+
+  const confidence = getLatestPoint(confidencePts)?.v ?? null // already in pct
+  const providers = getLatestPoint(providerPts)?.v ?? null
+  const suppressed = (getLatestPoint(suppressionPts)?.v ?? 0) >= 1
+
+  const confidenceScore = typeof confidence === 'number' ? Math.max(0, Math.min(100, confidence)) : 0
+  const providerScore = typeof providers === 'number' ? Math.max(0, Math.min(100, (providers / 5) * 100)) : 0
+  const suppressionScore = suppressed ? 0 : 100
+
+  const score = Math.round((confidenceScore * 0.6) + (providerScore * 0.3) + (suppressionScore * 0.1))
+
+  const reasons: string[] = []
+  if (suppressed) reasons.push('Suppressed in Gold export')
+  if (typeof providers === 'number' && providers < 3) reasons.push('Provider count < 3')
+  if (typeof confidence === 'number' && confidence < 30) reasons.push('Weight confidence < 30%')
+  if (!reasons.length) reasons.push('Healthy (confidence + coverage look good)')
+
+  return {
+    score,
+    confidence,
+    providers,
+    suppressed,
+    reasons,
+  }
+})
+
+const methodProfile = computed(() => {
+  const payin = legacyFilters.value.fundingMethod
+  const payout = legacyFilters.value.payoutMethod
+  if (payout === 'cash') return 'cash_pickup'
+  if (payin === 'card') return 'standard_card'
+  return 'standard_bank'
+})
+
+const truthUpdatedAt = computed(() => {
+  const candidates = [
+    store.lastUpdated || null,
+    indicesIntegrityUpdatedAt.value,
+    screenerUpdatedAt.value,
+    coverageCurrencyUpdatedAt.value,
+    snapshotSummary.value?.lastUpdated || null,
+  ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+  if (!candidates.length) return null
+  return candidates.sort((a, b) => a.localeCompare(b))[candidates.length - 1]
+})
+
+const truthDataAvailable = computed(() => Boolean(truthUpdatedAt.value))
+
+const truthBadges = computed(() => {
+  const staleQuoteSeconds = (() => {
+    const updatedAt = store.lastUpdated
+    if (!updatedAt) return null
+    const ms = Date.now() - new Date(updatedAt).getTime()
+    if (!Number.isFinite(ms)) return null
+    return Math.round(ms / 1000)
+  })()
+
+  return {
+    suppressed: typeof coverageCurrencySuppressedRatio.value === 'number' ? coverageCurrencySuppressedRatio.value > 0 : false,
+    lowConfidence: typeof coverageCurrencyConfidenceP10.value === 'number' ? coverageCurrencyConfidenceP10.value < 0.3 : false,
+    staleQuotes: typeof staleQuoteSeconds === 'number' ? staleQuoteSeconds > 3 * 60 * 60 : false,
+    staleFx: false,
+  }
+})
+
+const truthPanels = computed(() => ([
+  {
+    id: 'snapshot',
+    label: 'Snapshot KPIs',
+    source: null,
+    updatedAt: snapshotSummary.value?.lastUpdated || null,
+    dataAvailable: Boolean(snapshotSummary.value?.lastUpdated),
+  },
+  {
+    id: 'indices',
+    label: 'Indices integrity',
+    source: 'gold_export.cdp_daily',
+    updatedAt: indicesIntegrityUpdatedAt.value,
+    dataAvailable: Boolean(indicesIntegrityUpdatedAt.value),
+  },
+  {
+    id: 'coverage',
+    label: 'Coverage by currency',
+    source: 'gold_export.cdp_daily',
+    updatedAt: coverageCurrencyUpdatedAt.value,
+    dataAvailable: Boolean(coverageCurrencyUpdatedAt.value),
+  },
+  {
+    id: 'screener',
+    label: 'Screener',
+    source: null,
+    updatedAt: screenerUpdatedAt.value,
+    dataAvailable: Boolean(screenerUpdatedAt.value),
+  },
+]))
 
 async function loadIndicesIntegrity() {
   if (!isPlus.value) return
@@ -1751,13 +2067,17 @@ async function loadIndicesIntegrity() {
 
     const response = await getChartsBatch([...INDICES_INTEGRITY_CHART_IDS], legacyFilters.value, '90d')
     const newData: Record<string, ChartData | null> = {}
+    const newMeta: Record<string, { source: string | null, updatedAt: string | null, dataAvailable: boolean }> = {}
     for (const id of INDICES_INTEGRITY_CHART_IDS) {
       newData[id] = null
+      newMeta[id] = { source: null, updatedAt: null, dataAvailable: false }
     }
     for (const entry of response.charts || []) {
       newData[entry.id] = entry.chart || null
+      newMeta[entry.id] = { source: entry.source || null, updatedAt: entry.updatedAt || null, dataAvailable: Boolean(entry.dataAvailable) }
     }
     indicesIntegrityData.value = newData
+    indicesIntegrityMeta.value = newMeta
     indicesIntegrityLoadedKey.value = key
   }
   catch (e) {

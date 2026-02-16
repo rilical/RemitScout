@@ -17,6 +17,8 @@ const trackSchema = z.object({
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
   quoted_rate: z.coerce.number().positive().optional(),
   quoted_fee: z.coerce.number().nonnegative().optional(),
 })
@@ -79,6 +81,8 @@ export const providerVisitRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
         quoted_rate: input.quoted_rate ?? null,
         quoted_fee: input.quoted_fee ?? null,
       })

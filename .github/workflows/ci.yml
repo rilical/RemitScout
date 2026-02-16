@@ -36,6 +36,7 @@ permissions:
 
 jobs:
   changes:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       backend_changed: ${{ steps.filter.outputs.backend_changed }}
@@ -108,9 +109,24 @@ jobs:
           echo "run_infra=$INFRA" >> "$GITHUB_OUTPUT"
           echo "run_e2e=$FRONTEND" >> "$GITHUB_OUTPUT"
 
+  lockfile-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - name: Lockfile integrity passed
+        run: echo "pnpm-lock.yaml is parseable and frozen install succeeded."
+
   lint-typecheck-build:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 25
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.docs_only != 'true'
     steps:
       - uses: actions/checkout@v4
@@ -133,8 +149,11 @@ jobs:
       - name: sharp native smoke
         run: pnpm -C backend exec node -e "require('sharp'); console.log('sharp ok')"
       - run: pnpm -C backend lint
+        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
       - run: pnpm -C frontend lint
+        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
       - name: Boundary enforcement (Golden Rule)
+        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
         shell: bash
         run: |
           set +e
@@ -146,11 +165,16 @@ jobs:
           fi
           echo "Golden Rule enforcement working (forbidden import was blocked)."
       - run: pnpm -C frontend type-check
+        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
+      - run: pnpm -C frontend build
+        if: needs.changes.outputs.run_frontend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
       - run: pnpm -C backend build
+        if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
 
   contract-types:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 12
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.run_backend == 'true' || needs.changes.outputs.run_frontend == 'true'
     steps:
       - uses: actions/checkout@v4
@@ -162,6 +186,7 @@ jobs:
 
   migration-immutability:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: changes
     if: github.event_name == 'pull_request' && needs.changes.outputs.migrations_changed == 'true'
     steps:
@@ -185,7 +210,8 @@ jobs:
 
   migration-dry-run:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 20
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.run_backend == 'true'
     services:
       postgres:
@@ -217,7 +243,8 @@ jobs:
 
   backend-tests:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 35
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.run_backend == 'true'
     services:
       postgres:
@@ -265,7 +292,8 @@ jobs:
 
   backend-docker-native-deps:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 35
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.run_backend == 'true'
     strategy:
       fail-fast: false
@@ -293,23 +321,36 @@ jobs:
 
   frontend-unit:
     runs-on: ubuntu-latest
-    needs: [changes, contract-types]
+    timeout-minutes: 20
+    needs: [changes, lockfile-integrity, contract-types]
     if: needs.changes.outputs.run_frontend == 'true'
+    env:
+      ENFORCE_COVERAGE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
+      - run: pnpm -C frontend type-check
       - run: pnpm -C frontend test:coverage
       - uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'pull_request'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: true
 
   frontend-e2e:
     runs-on: ubuntu-latest
-    needs: [changes, contract-types]
+    timeout-minutes: 35
+    needs: [changes, lockfile-integrity, contract-types]
     if: needs.changes.outputs.run_e2e == 'true'
     steps:
       - uses: actions/checkout@v4
@@ -338,7 +379,8 @@ jobs:
 
   smoke:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 20
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.run_backend == 'true'
     services:
       postgres:
@@ -372,7 +414,8 @@ jobs:
 
   config-validate:
     runs-on: ubuntu-latest
-    needs: changes
+    timeout-minutes: 15
+    needs: [changes, lockfile-integrity]
     if: needs.changes.outputs.docs_only != 'true'
     env:
       NODE_ENV: production

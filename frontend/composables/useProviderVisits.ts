@@ -65,6 +65,8 @@ export const useProviderVisits = () => {
     gclid?: string
     fbclid?: string
     msclkid?: string
+    ttclid?: string
+    li_fat_id?: string
     quoted_rate?: number
     quoted_fee?: number
   }) => {

@@ -21,7 +21,11 @@ const eventSchema = z.object({
   source: z.string().optional(),
   page_path: z.string().optional(),
   utm: z.record(z.string()).optional(),
+  gclid: z.string().optional(),
   fbclid: z.string().optional(),
+  msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
   fbc: z.string().optional(),
   fbp: z.string().optional(),
   custom_data: z.record(z.unknown()).optional(),
@@ -58,7 +62,11 @@ const insertEvent = async (
   source?: string | null
   page_path?: string | null
   utm?: Record<string, string> | null
+  gclid?: string | null
   fbclid?: string | null
+  msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
   fbc?: string | null
   fbp?: string | null
   client_ip?: string | null
@@ -79,13 +87,17 @@ const insertEvent = async (
        source,
        page_path,
        utm,
+       gclid,
        fbclid,
+       msclkid,
+       ttclid,
+       li_fat_id,
        fbc,
        fbp,
        client_ip,
        user_agent
      ) VALUES (
-       $1, $2, to_timestamp($3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18
+       $1, $2, to_timestamp($3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18, $19, $20, $21, $22
      )
      ON CONFLICT (event_id) DO NOTHING`,
     [
@@ -102,7 +114,11 @@ const insertEvent = async (
       input.source ?? null,
       input.page_path ?? null,
       input.utm ? JSON.stringify(input.utm) : null,
+      input.gclid ?? null,
       input.fbclid ?? null,
+      input.msclkid ?? null,
+      input.ttclid ?? null,
+      input.li_fat_id ?? null,
       input.fbc ?? null,
       input.fbp ?? null,
       input.client_ip ?? null,
@@ -217,7 +233,7 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         return { success: true, skipped: 'opt_out' }
       }
 
-      const inserted = await insertEvent(pool, {
+     const inserted = await insertEvent(pool, {
         event_name: input.event_name,
         event_id: eventId,
         event_time: eventTime,
@@ -231,7 +247,11 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         source: input.source ?? null,
         page_path: input.page_path ?? null,
         utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
         fbc: input.fbc ?? null,
         fbp: input.fbp ?? null,
         client_ip: request.ip,
@@ -282,6 +302,135 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         code: 'internal_error',
         cause: error,
       })
+    }
+  })
+
+  // NOTE: We intentionally do not attempt to send events to other networks until you provide the real secrets/IDs.
+  // These endpoints exist so clients can send reason-coded payloads and we can persist attribution in Silver today.
+
+  app.post('/marketing/tiktok', async (request, _reply) => {
+    const parsed = eventSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
+    }
+    const input = parsed.data
+    const eventId = input.event_id || randomUUID()
+    const eventTime = toTimestamp(input.event_time)
+
+    const inserted = await insertEvent(pool, {
+      event_name: input.event_name,
+      event_id: eventId,
+      event_time: eventTime,
+      event_source_url: input.event_source_url ?? null,
+      anon_session_id: null,
+      user_id: request.user?.user_id ?? null,
+      provider_id: input.provider_id ?? null,
+      corridor_id: input.corridor_id ?? null,
+      conversion_value: input.value ?? null,
+      conversion_currency: input.currency?.toUpperCase() ?? null,
+      source: input.source ?? null,
+      page_path: input.page_path ?? null,
+      utm: input.utm ?? null,
+      gclid: input.gclid ?? null,
+      fbclid: input.fbclid ?? null,
+      msclkid: input.msclkid ?? null,
+      ttclid: input.ttclid ?? null,
+      li_fat_id: input.li_fat_id ?? null,
+      fbc: input.fbc ?? null,
+      fbp: input.fbp ?? null,
+      client_ip: request.ip,
+      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+    })
+
+    return {
+      success: true,
+      deduped: !inserted,
+      delivered: false,
+      reason: 'tiktok_events_disabled',
+    }
+  })
+
+  app.post('/marketing/linkedin', async (request, _reply) => {
+    const parsed = eventSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
+    }
+    const input = parsed.data
+    const eventId = input.event_id || randomUUID()
+    const eventTime = toTimestamp(input.event_time)
+
+    const inserted = await insertEvent(pool, {
+      event_name: input.event_name,
+      event_id: eventId,
+      event_time: eventTime,
+      event_source_url: input.event_source_url ?? null,
+      anon_session_id: null,
+      user_id: request.user?.user_id ?? null,
+      provider_id: input.provider_id ?? null,
+      corridor_id: input.corridor_id ?? null,
+      conversion_value: input.value ?? null,
+      conversion_currency: input.currency?.toUpperCase() ?? null,
+      source: input.source ?? null,
+      page_path: input.page_path ?? null,
+      utm: input.utm ?? null,
+      gclid: input.gclid ?? null,
+      fbclid: input.fbclid ?? null,
+      msclkid: input.msclkid ?? null,
+      ttclid: input.ttclid ?? null,
+      li_fat_id: input.li_fat_id ?? null,
+      fbc: input.fbc ?? null,
+      fbp: input.fbp ?? null,
+      client_ip: request.ip,
+      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+    })
+
+    return {
+      success: true,
+      deduped: !inserted,
+      delivered: false,
+      reason: 'linkedin_conversions_disabled',
+    }
+  })
+
+  app.post('/marketing/google', async (request, _reply) => {
+    const parsed = eventSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request body', { details: parsed.error.issues })
+    }
+    const input = parsed.data
+    const eventId = input.event_id || randomUUID()
+    const eventTime = toTimestamp(input.event_time)
+
+    const inserted = await insertEvent(pool, {
+      event_name: input.event_name,
+      event_id: eventId,
+      event_time: eventTime,
+      event_source_url: input.event_source_url ?? null,
+      anon_session_id: null,
+      user_id: request.user?.user_id ?? null,
+      provider_id: input.provider_id ?? null,
+      corridor_id: input.corridor_id ?? null,
+      conversion_value: input.value ?? null,
+      conversion_currency: input.currency?.toUpperCase() ?? null,
+      source: input.source ?? null,
+      page_path: input.page_path ?? null,
+      utm: input.utm ?? null,
+      gclid: input.gclid ?? null,
+      fbclid: input.fbclid ?? null,
+      msclkid: input.msclkid ?? null,
+      ttclid: input.ttclid ?? null,
+      li_fat_id: input.li_fat_id ?? null,
+      fbc: input.fbc ?? null,
+      fbp: input.fbp ?? null,
+      client_ip: request.ip,
+      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+    })
+
+    return {
+      success: true,
+      deduped: !inserted,
+      delivered: false,
+      reason: 'google_ads_offline_disabled',
     }
   })
 }

@@ -847,6 +847,20 @@ const rawConfig = {
       accessToken: process.env.META_CAPI_ACCESS_TOKEN || '',
       testEventCode: process.env.META_CAPI_TEST_EVENT_CODE || '',
     },
+    // These are optional at launch. They should remain empty until you have real values.
+    googleAds: {
+      conversionId: process.env.GOOGLE_ADS_CONVERSION_ID || process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || '',
+    },
+    tiktok: {
+      pixelId: process.env.TIKTOK_PIXEL_ID || process.env.PUBLIC_TIKTOK_PIXEL_ID || '',
+      accessToken: process.env.TIKTOK_EVENTS_ACCESS_TOKEN || '',
+      testEventCode: process.env.TIKTOK_EVENTS_TEST_CODE || '',
+    },
+    linkedin: {
+      partnerId: process.env.LINKEDIN_PARTNER_ID || process.env.PUBLIC_LINKEDIN_PARTNER_ID || '',
+      accessToken: process.env.LINKEDIN_CONVERSIONS_ACCESS_TOKEN || '',
+      testEventCode: process.env.LINKEDIN_CONVERSIONS_TEST_CODE || '',
+    },
   },
   alerts: {
     slackWebhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL || '',

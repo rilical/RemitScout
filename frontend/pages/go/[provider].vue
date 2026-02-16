@@ -261,6 +261,8 @@ const trackOutbound = async () => {
     gclid: attribution.gclid,
     fbclid: attribution.fbclid,
     msclkid: attribution.msclkid,
+    ttclid: (attribution as any).ttclid,
+    li_fat_id: (attribution as any).li_fat_id,
     quoted_rate: quotedRate.value ?? undefined,
     quoted_fee: quotedFee.value ?? undefined,
   })

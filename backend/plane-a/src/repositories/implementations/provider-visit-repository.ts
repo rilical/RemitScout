@@ -13,8 +13,8 @@ export class ProviderVisitRepository implements IProviderVisitRepository {
   async createVisit(input: ProviderVisitCreateInput): Promise<void> {
     await query(
       `INSERT INTO silver.telemetry_provider_visit
-         (provider_id, corridor_id, user_id, anon_session_id, session_id, target_url, page_path, utm, gclid, fbclid, msclkid, quoted_rate, quoted_fee, visit_timestamp, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, NOW(), NOW())`,
+         (provider_id, corridor_id, user_id, anon_session_id, session_id, target_url, page_path, utm, gclid, fbclid, msclkid, ttclid, li_fat_id, quoted_rate, quoted_fee, visit_timestamp, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())`,
       [
         input.provider_id,
         input.corridor_id || null,
@@ -27,6 +27,8 @@ export class ProviderVisitRepository implements IProviderVisitRepository {
         input.gclid ?? null,
         input.fbclid ?? null,
         input.msclkid ?? null,
+        input.ttclid ?? null,
+        input.li_fat_id ?? null,
         input.quoted_rate ?? null,
         input.quoted_fee ?? null,
       ],
@@ -50,6 +52,8 @@ export class ProviderVisitRepository implements IProviderVisitRepository {
               v.gclid,
               v.fbclid,
               v.msclkid,
+              v.ttclid,
+              v.li_fat_id,
               v.quoted_rate,
               v.quoted_fee,
               v.completed_transfer,
@@ -91,6 +95,8 @@ export class ProviderVisitRepository implements IProviderVisitRepository {
               v.gclid,
               v.fbclid,
               v.msclkid,
+              v.ttclid,
+              v.li_fat_id,
               v.quoted_rate,
               v.quoted_fee,
               v.completed_transfer,

@@ -192,6 +192,7 @@ const ensureNuxtPaths = async () => {
 }
 
 export default defineNuxtConfig({
+  compatibilityDate: '2026-02-14',
 
   // Development
 
@@ -320,6 +321,10 @@ export default defineNuxtConfig({
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
+      googleAdsConversionId: process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || process.env.GOOGLE_ADS_CONVERSION_ID || '',
+      linkedinPartnerId: process.env.PUBLIC_LINKEDIN_PARTNER_ID || process.env.LINKEDIN_PARTNER_ID || '',
+      tiktokPixelId: process.env.PUBLIC_TIKTOK_PIXEL_ID || process.env.TIKTOK_PIXEL_ID || '',
+      clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
       analyticsEnabled,
       adsEnabled,
       stripeTrialDays: Number(process.env.PUBLIC_STRIPE_TRIAL_DAYS || process.env.STRIPE_TRIAL_DAYS || 14),
@@ -395,6 +400,16 @@ export default defineNuxtConfig({
   vite: {
     // Nuxt's internal dynamic import("#app-manifest") can fail to resolve in this monorepo setup.
     // Map it explicitly to a local stub so Vite import-analysis doesn't error.
+    plugins: [
+      {
+        name: 'remit-scout-app-manifest-stub',
+        enforce: 'pre',
+        resolveId(id: string) {
+          if (id === '#app-manifest') return appManifestAliasPath
+          return null
+        },
+      },
+    ],
     resolve: {
       alias: {
         '#app-manifest': appManifestAliasPath,

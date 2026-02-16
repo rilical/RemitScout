@@ -8,6 +8,7 @@ const enforceCoverage = process.env.ENFORCE_COVERAGE === '1'
 // Reach statements 50%, branches 40%, functions 50%, lines 50% within 3 months.
 export default defineConfig({
   test: {
+    allowOnly: !process.env.CI,
     globals: true,
     environment: 'node',
     pool: 'threads',
@@ -30,6 +31,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'text-summary', 'json', 'lcov'],
       reportsDirectory: './coverage',
+      all: true,
       exclude: [
         '**/node_modules/**',
         '**/dist/**',

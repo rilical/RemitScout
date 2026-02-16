@@ -172,6 +172,33 @@ const parseCorridorFromId = (corridorId?: string | null) => {
   }
 }
 
+const normalizeLowerToken = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\-._/]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+
+const payoutMethodsDefaultForScheduler = (payoutMethods: string[] | null): string[] => {
+  if (!payoutMethods || payoutMethods.length === 0) return ['bank_deposit']
+  return payoutMethods.map(normalizeLowerToken).filter(Boolean)
+}
+
+const capabilityAllowsPayout = (payoutMethods: string[] | null, requiredMethod: string): boolean => {
+  const normalized = normalizeLowerToken(requiredMethod)
+  if (!normalized) return true
+  const methods = payoutMethodsDefaultForScheduler(payoutMethods)
+  return methods.includes(normalized)
+}
+
+const resolvePayoutMethodForMethodProfile = (
+  methodProfile: 'standard_bank' | 'standard_card' | 'cash_pickup',
+): 'bank_deposit' | 'cash_pickup' => {
+  if (methodProfile === 'cash_pickup') return 'cash_pickup'
+  return 'bank_deposit'
+}
+
 type PulseScreenerRow = {
   corridorId: string
   slug: string
@@ -1629,6 +1656,357 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       const normalizedStatus = Number.isFinite(Number(statusCode)) ? Number(statusCode) : 500
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('GET', '/pulse/coverage-by-currency', normalizedStatus >= 400 ? normalizedStatus : 500, durationSeconds)
+      throw error
+    }
+  })
+
+  app.get('/pulse/coverage-by-currency/gaps', guard, async (request) => {
+    const startTime = Date.now()
+    try {
+      const queryParams = (request.query ?? {}) as Record<string, unknown>
+      const filters = buildPulseFilters(queryParams)
+
+      const sendCurrencyRaw = typeof queryParams.send_currency === 'string'
+        ? queryParams.send_currency.trim().toUpperCase()
+        : ''
+      if (!/^[A-Z]{3}$/.test(sendCurrencyRaw)) {
+        throw new ValidationError('Invalid request', {
+          details: { error: 'invalid_send_currency', send_currency: sendCurrencyRaw || null },
+        })
+      }
+
+      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup'])
+      const methodProfileParam = typeof queryParams.method_profile === 'string'
+        ? queryParams.method_profile.trim()
+        : null
+      const derivedMethodProfile = resolveIndicesMethodProfile(filters) || 'standard_bank'
+      const methodProfile = (methodProfileParam && allowedMethodProfiles.has(methodProfileParam))
+        ? (methodProfileParam as 'standard_bank' | 'standard_card' | 'cash_pickup')
+        : derivedMethodProfile
+
+      const requiredPayoutMethod = resolvePayoutMethodForMethodProfile(methodProfile)
+
+      const amountBucketRaw = typeof queryParams.amount_bucket === 'string' || typeof queryParams.amount_bucket === 'number'
+        ? Number(queryParams.amount_bucket)
+        : null
+      const amountBucket = Number.isFinite(amountBucketRaw) && amountBucketRaw && amountBucketRaw > 0
+        ? Math.round(amountBucketRaw)
+        : INDICES_AMOUNT_BUCKET
+
+      const binRaw = typeof queryParams.bin === 'string' ? queryParams.bin.trim().toLowerCase() : 'none'
+      const bin = (binRaw === 'low' || binRaw === 'none') ? binRaw : 'none'
+
+      const limitRaw = typeof queryParams.limit === 'string' || typeof queryParams.limit === 'number'
+        ? Number(queryParams.limit)
+        : null
+      const limit = Math.max(1, Math.min(200, Number.isFinite(limitRaw as any) ? Math.round(limitRaw as any) : 50))
+
+      const staleSecondsRaw = typeof queryParams.stale_seconds === 'string' || typeof queryParams.stale_seconds === 'number'
+        ? Number(queryParams.stale_seconds)
+        : null
+      const staleSeconds = Number.isFinite(staleSecondsRaw as any) && (staleSecondsRaw as any) > 0
+        ? Math.round(staleSecondsRaw as any)
+        : 3 * 60 * 60
+
+      const requireProduction = parseBooleanParam(queryParams.require_production, true)
+
+      const latestDateResult = await query<{ max_date: Date | null }>(
+        `SELECT MAX(date) AS max_date
+           FROM gold_export.cdp_daily
+          WHERE amount_bucket = $1
+            AND method_profile = $2`,
+        [amountBucket, methodProfile],
+        planeAPool,
+      )
+      const latestDate = latestDateResult.rows[0]?.max_date ?? null
+      if (!latestDate) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('GET', '/pulse/coverage-by-currency/gaps', 200, durationSeconds)
+        return {
+          success: true as const,
+          date: null,
+          updatedAt: null,
+          sendCurrency: sendCurrencyRaw,
+          methodProfile,
+          amountBucket,
+          bin,
+          rows: [],
+        }
+      }
+
+      const updatedAtResult = await query<{ updated_at: Date | null }>(
+        `SELECT MAX(created_at) AS updated_at
+           FROM gold_export.cdp_daily
+          WHERE amount_bucket = $1
+            AND method_profile = $2
+            AND date = $3`,
+        [amountBucket, methodProfile, latestDate],
+        planeAPool,
+      )
+      const updatedAt = toIsoString(updatedAtResult.rows[0]?.updated_at) || null
+
+      const corridorRows = await query<{
+        corridor_id: string
+        provider_count: number | null
+        suppression_flag: boolean
+        suppression_reason: string | null
+        weight_confidence: number | null
+      }>(
+        `SELECT corridor_id,
+                provider_count,
+                suppression_flag,
+                suppression_reason,
+                weight_confidence
+           FROM gold_export.cdp_daily
+          WHERE amount_bucket = $1
+            AND method_profile = $2
+            AND date = $3
+            AND SPLIT_PART(corridor_id, '-', 3) = $4
+            AND (
+              ($5::text = 'none' AND COALESCE(provider_count, 0) = 0)
+              OR
+              ($5::text = 'low' AND COALESCE(provider_count, 0) BETWEEN 1 AND 2)
+            )
+          ORDER BY corridor_id ASC
+          LIMIT $6`,
+        [amountBucket, methodProfile, latestDate, sendCurrencyRaw, bin, limit],
+        planeAPool,
+      )
+
+      const corridorIds = corridorRows.rows.map((row) => row.corridor_id).filter(Boolean)
+      if (corridorIds.length === 0) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('GET', '/pulse/coverage-by-currency/gaps', 200, durationSeconds)
+        return {
+          success: true as const,
+          date: latestDate.toISOString().slice(0, 10),
+          updatedAt,
+          sendCurrency: sendCurrencyRaw,
+          methodProfile,
+          amountBucket,
+          bin,
+          rows: [],
+        }
+      }
+
+      type RightsRow = {
+        provider_id: string
+        allowed_collect: boolean | null
+        allowed_b2b: boolean | null
+        stoplist_status: string | null
+        status: string | null
+        source_countries: string[] | null
+        destination_countries: string[] | null
+      }
+
+      type CapabilityRow = {
+        provider_id: string
+        corridor_id: string
+        payout_methods: string[] | null
+        is_supported: boolean | null
+        source: string | null
+        last_verified_at: Date | string | null
+      }
+
+      type LatestQuoteRow = {
+        provider_id: string
+        corridor_id: string
+        amount_bucket: number
+        collected_at: Date | string | null
+      }
+
+      const [rightsResult, capResult, quoteResult] = await Promise.all([
+        query<RightsRow>(
+          `SELECT provider_id,
+                  allowed_collect,
+                  allowed_b2b,
+                  stoplist_status,
+                  status,
+                  source_countries,
+                  destination_countries
+             FROM silver.rights_matrix
+            WHERE allowed_collect IS TRUE
+              AND allowed_b2b IS TRUE
+              AND LOWER(COALESCE(stoplist_status, '')) = 'active'
+              AND ($1::boolean = false OR LOWER(COALESCE(status, '')) = 'production')`,
+          [requireProduction],
+          planeAPool,
+        ),
+        query<CapabilityRow>(
+          `SELECT provider_id,
+                  corridor_id,
+                  payout_methods,
+                  is_supported,
+                  source,
+                  last_verified_at
+             FROM silver.provider_corridor_capability
+            WHERE corridor_id = ANY($1::text[])`,
+          [corridorIds],
+          planeAPool,
+        ),
+        query<LatestQuoteRow>(
+          `SELECT provider_id,
+                  corridor_id,
+                  amount_bucket,
+                  collected_at
+             FROM silver.latest_quote_by_provider
+            WHERE corridor_id = ANY($1::text[])
+              AND amount_bucket = $2`,
+          [corridorIds, amountBucket],
+          planeAPool,
+        ),
+      ])
+
+      const rightsByProvider = new Map<string, RightsRow>()
+      for (const row of rightsResult.rows) {
+        if (!row.provider_id) continue
+        rightsByProvider.set(row.provider_id, row)
+      }
+
+      const capsByCorridor = new Map<string, Map<string, CapabilityRow>>()
+      for (const row of capResult.rows) {
+        if (!row.corridor_id || !row.provider_id) continue
+        if (!capsByCorridor.has(row.corridor_id)) {
+          capsByCorridor.set(row.corridor_id, new Map())
+        }
+        capsByCorridor.get(row.corridor_id)!.set(row.provider_id, row)
+      }
+
+      const quotesByCorridorProvider = new Map<string, Date>()
+      for (const row of quoteResult.rows) {
+        if (!row.corridor_id || !row.provider_id) continue
+        if (!row.collected_at) continue
+        const date = row.collected_at instanceof Date ? row.collected_at : new Date(row.collected_at)
+        if (Number.isNaN(date.getTime())) continue
+        const key = `${row.corridor_id}:${row.provider_id}`
+        const existing = quotesByCorridorProvider.get(key)
+        if (!existing || date > existing) quotesByCorridorProvider.set(key, date)
+      }
+
+      const includesCountry = (list: string[] | null, code: string): boolean => {
+        if (!list || list.length === 0) return false
+        const upper = code.trim().toUpperCase()
+        return list.some((c) => c && c.trim().toUpperCase() === upper)
+      }
+
+      const allActiveProviders = Array.from(rightsByProvider.keys())
+
+      const now = Date.now()
+      const rows = corridorRows.rows.map((row) => {
+        const parsed = parseCorridorFromId(row.corridor_id)
+        const fromCountry = parsed?.fromCountry ?? null
+        const toCountry = parsed?.toCountry ?? null
+        const sendCurrency = parsed?.sendCurrency ?? sendCurrencyRaw
+        const recvCurrency = parsed?.recvCurrency ?? null
+
+        const rightsEligibleProviders: string[] = []
+        if (fromCountry && toCountry) {
+          for (const providerId of allActiveProviders) {
+            const rights = rightsByProvider.get(providerId)
+            if (!rights) continue
+            if (!includesCountry(rights.source_countries, fromCountry)) continue
+            if (!includesCountry(rights.destination_countries, toCountry)) continue
+            rightsEligibleProviders.push(providerId)
+          }
+        }
+
+        const capMap = capsByCorridor.get(row.corridor_id) ?? new Map<string, CapabilityRow>()
+        const supportedProviders: string[] = []
+        let capabilityMissing = 0
+        let capabilityUnsupported = 0
+        let methodMismatch = 0
+
+        for (const providerId of rightsEligibleProviders) {
+          const cap = capMap.get(providerId) ?? null
+          if (!cap) {
+            capabilityMissing += 1
+            continue
+          }
+          if (!cap.is_supported) {
+            capabilityUnsupported += 1
+            continue
+          }
+          if (!capabilityAllowsPayout(cap.payout_methods ?? null, requiredPayoutMethod)) {
+            methodMismatch += 1
+            continue
+          }
+          supportedProviders.push(providerId)
+        }
+
+        let freshestQuoteAt: string | null = null
+        let freshestQuoteAgeSeconds: number | null = null
+        if (supportedProviders.length > 0) {
+          let freshest: Date | null = null
+          for (const providerId of supportedProviders) {
+            const key = `${row.corridor_id}:${providerId}`
+            const collectedAt = quotesByCorridorProvider.get(key) ?? null
+            if (!collectedAt) continue
+            if (!freshest || collectedAt > freshest) freshest = collectedAt
+          }
+          if (freshest) {
+            freshestQuoteAt = freshest.toISOString()
+            freshestQuoteAgeSeconds = Math.max(0, Math.floor((now - freshest.getTime()) / 1000))
+          }
+        }
+
+        type GapReason = 'rights' | 'capability' | 'method_mismatch' | 'freshness' | 'unknown'
+        let reason: GapReason = 'unknown'
+        if (rightsEligibleProviders.length === 0) {
+          reason = 'rights'
+        } else if (supportedProviders.length === 0) {
+          if (capabilityMissing > 0) reason = 'capability'
+          else if (methodMismatch > 0) reason = 'method_mismatch'
+          else if (capabilityUnsupported > 0) reason = 'capability'
+          else reason = 'capability'
+        } else {
+          const age = freshestQuoteAgeSeconds
+          if (age === null || age > staleSeconds) {
+            reason = 'freshness'
+          }
+        }
+
+        return {
+          corridorId: row.corridor_id,
+          fromCountry,
+          toCountry,
+          sendCurrency,
+          recvCurrency,
+          providerCount: row.provider_count !== null ? Number(row.provider_count) : null,
+          suppressionFlag: Boolean(row.suppression_flag),
+          suppressionReason: row.suppression_reason ?? null,
+          weightConfidence: row.weight_confidence !== null ? Number(row.weight_confidence) : null,
+          gap: {
+            reason,
+            rightsEligibleProviders: rightsEligibleProviders.length,
+            supportedProviders: supportedProviders.length,
+            capabilityMissing,
+            capabilityUnsupported,
+            methodMismatch,
+            freshestQuoteAt,
+            freshestQuoteAgeSeconds,
+            staleSeconds,
+          },
+        }
+      })
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/coverage-by-currency/gaps', 200, durationSeconds)
+
+      return {
+        success: true as const,
+        date: latestDate.toISOString().slice(0, 10),
+        updatedAt,
+        sendCurrency: sendCurrencyRaw,
+        methodProfile,
+        amountBucket,
+        bin,
+        rows,
+      }
+    } catch (error) {
+      const statusCode = (error as any)?.statusCode
+      const normalizedStatus = Number.isFinite(Number(statusCode)) ? Number(statusCode) : 500
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('GET', '/pulse/coverage-by-currency/gaps', normalizedStatus >= 400 ? normalizedStatus : 500, durationSeconds)
       throw error
     }
   })

@@ -23,6 +23,8 @@ const searchSchema = z.object({
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
   page_path: z.string().optional(),
 })
 
@@ -37,6 +39,8 @@ const clickSchema = z.object({
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
   quoted_rate: z.coerce.number().positive().optional(),
   quoted_fee: z.coerce.number().nonnegative().optional(),
   is_affiliate: z.coerce.boolean().optional(),
@@ -56,6 +60,8 @@ const conversionSchema = z.object({
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
 })
 
 const sessionSchema = z.object({
@@ -67,6 +73,8 @@ const sessionSchema = z.object({
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
+  ttclid: z.string().optional(),
+  li_fat_id: z.string().optional(),
 })
 
 const analyticsSchema = z.object({
@@ -249,6 +257,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
       })
 
       await telemetryRepository.recordSearchEvent({
@@ -262,6 +272,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
         page_path: input.page_path ?? null,
       })
 
@@ -302,6 +314,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
       })
 
       await telemetryRepository.recordOutboundClick({
@@ -315,6 +329,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
         is_affiliate: input.is_affiliate ?? false,
       })
 
@@ -330,6 +346,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
         quoted_rate: input.quoted_rate ?? null,
         quoted_fee: input.quoted_fee ?? null,
       })
@@ -371,6 +389,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
       })
 
       await telemetryRepository.recordAffiliateConversion({
@@ -387,6 +407,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: input.gclid ?? null,
         fbclid: input.fbclid ?? null,
         msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
       })
 
       return { success: true }
@@ -423,6 +445,8 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         gclid: parsed.data.gclid ?? null,
         fbclid: parsed.data.fbclid ?? null,
         msclkid: parsed.data.msclkid ?? null,
+        ttclid: parsed.data.ttclid ?? null,
+        li_fat_id: parsed.data.li_fat_id ?? null,
       })
 
       return {

@@ -9,6 +9,8 @@ export type TelemetrySearchInput = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
   page_path?: string | null
 }
 
@@ -23,6 +25,8 @@ export type TelemetryClickInput = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
   is_affiliate?: boolean | null
 }
 
@@ -40,6 +44,8 @@ export type TelemetryConversionInput = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
 }
 
 export type TelemetrySessionInput = {
@@ -52,6 +58,8 @@ export type TelemetrySessionInput = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
 }
 
 export type TelemetrySessionRow = {
@@ -67,6 +75,8 @@ export type TelemetrySessionRow = {
   gclid?: string | null
   fbclid?: string | null
   msclkid?: string | null
+  ttclid?: string | null
+  li_fat_id?: string | null
 }
 
 export type TelemetryAnalyticsRow = {
@@ -95,6 +105,8 @@ export interface ITelemetryRepository {
     gclid?: string | null
     fbclid?: string | null
     msclkid?: string | null
+    ttclid?: string | null
+    li_fat_id?: string | null
     quoted_rate?: number | null
     quoted_fee?: number | null
   }): Promise<void>

@@ -53,6 +53,8 @@ type Attribution = {
   gclid?: string
   fbclid?: string
   msclkid?: string
+  ttclid?: string
+  li_fat_id?: string
 }
 
 const attributionStorageKey = 'rs:attribution'
@@ -98,6 +100,8 @@ export const useTelemetry = () => {
       gclid: typeof query.gclid === 'string' ? query.gclid : stored.gclid,
       fbclid: typeof query.fbclid === 'string' ? query.fbclid : stored.fbclid,
       msclkid: typeof query.msclkid === 'string' ? query.msclkid : stored.msclkid,
+      ttclid: typeof query.ttclid === 'string' ? query.ttclid : stored.ttclid,
+      li_fat_id: typeof query.li_fat_id === 'string' ? query.li_fat_id : stored.li_fat_id,
     }
     persistAttribution(next)
     return next
@@ -115,6 +119,8 @@ export const useTelemetry = () => {
           gclid: attribution.gclid,
           fbclid: attribution.fbclid,
           msclkid: attribution.msclkid,
+          ttclid: attribution.ttclid,
+          li_fat_id: attribution.li_fat_id,
           page_path: pagePath,
         }
       : {

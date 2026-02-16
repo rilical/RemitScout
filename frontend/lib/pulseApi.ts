@@ -245,6 +245,42 @@ export interface PulseCoverageByCurrencyResponse {
   rows: PulseCoverageByCurrencyRow[]
 }
 
+export type PulseCoverageGapReason = 'rights' | 'capability' | 'method_mismatch' | 'freshness' | 'unknown'
+
+export interface PulseCoverageGapRow {
+  corridorId: string
+  fromCountry: string | null
+  toCountry: string | null
+  sendCurrency: string
+  recvCurrency: string | null
+  providerCount: number | null
+  suppressionFlag: boolean
+  suppressionReason: string | null
+  weightConfidence: number | null
+  gap: {
+    reason: PulseCoverageGapReason
+    rightsEligibleProviders: number
+    supportedProviders: number
+    capabilityMissing: number
+    capabilityUnsupported: number
+    methodMismatch: number
+    freshestQuoteAt: string | null
+    freshestQuoteAgeSeconds: number | null
+    staleSeconds: number
+  }
+}
+
+export interface PulseCoverageGapsResponse {
+  success: true
+  date: string | null
+  updatedAt: string | null
+  sendCurrency: string
+  methodProfile: 'standard_bank' | 'standard_card' | 'cash_pickup'
+  amountBucket: number
+  bin: 'none' | 'low'
+  rows: PulseCoverageGapRow[]
+}
+
 export async function getCoverageByCurrency(
   filters: PulseFilters,
   sendCurrencies: string[] = ['USD', 'AED', 'GBP', 'EUR'],
@@ -254,6 +290,22 @@ export async function getCoverageByCurrency(
   return await request<PulseCoverageByCurrencyResponse>('/pulse/coverage-by-currency', {
     query: buildPulseQuery(filters, {
       send_currencies: sendCurrencies.join(','),
+      amount_bucket: amountBucket,
+    }),
+  })
+}
+
+export async function getCoverageGapsByCurrency(
+  filters: PulseFilters,
+  sendCurrency: string,
+  bin: 'none' | 'low' = 'none',
+  amountBucket: number = 500,
+): Promise<PulseCoverageGapsResponse> {
+  const { request } = useApi()
+  return await request<PulseCoverageGapsResponse>('/pulse/coverage-by-currency/gaps', {
+    query: buildPulseQuery(filters, {
+      send_currency: sendCurrency,
+      bin,
       amount_bucket: amountBucket,
     }),
   })

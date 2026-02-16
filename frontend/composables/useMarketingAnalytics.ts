@@ -5,6 +5,8 @@ type Attribution = {
   fbclid?: string
   gclid?: string
   msclkid?: string
+  ttclid?: string
+  li_fat_id?: string
   utm?: Record<string, string>
   lastSeenAt?: string
 }
@@ -166,6 +168,8 @@ export const useMarketingAnalytics = () => {
       fbclid: typeof query.fbclid === 'string' ? query.fbclid : stored.fbclid,
       gclid: typeof query.gclid === 'string' ? query.gclid : stored.gclid,
       msclkid: typeof query.msclkid === 'string' ? query.msclkid : stored.msclkid,
+      ttclid: typeof query.ttclid === 'string' ? query.ttclid : stored.ttclid,
+      li_fat_id: typeof query.li_fat_id === 'string' ? query.li_fat_id : stored.li_fat_id,
       utm: getUtmParams(query) || stored.utm,
       lastSeenAt: new Date().toISOString(),
     }
@@ -223,7 +227,11 @@ export const useMarketingAnalytics = () => {
           source: input.source,
           page_path: input.pagePath,
           utm: attribution.utm,
+          gclid: attribution.gclid,
           fbclid: attribution.fbclid,
+          msclkid: attribution.msclkid,
+          ttclid: attribution.ttclid,
+          li_fat_id: attribution.li_fat_id,
           fbc: readCookie('_fbc') || buildFbc(attribution.fbclid),
           fbp: readCookie('_fbp'),
           custom_data: input.customData,
