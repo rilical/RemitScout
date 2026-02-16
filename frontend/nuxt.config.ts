@@ -405,7 +405,8 @@ export default defineNuxtConfig({
         name: 'remit-scout-app-manifest-stub',
         enforce: 'pre',
         resolveId(id: string) {
-          if (id === '#app-manifest') return appManifestAliasPath
+          // Nuxt uses a virtual module id "#app-manifest". Depending on Vite internals, it may be prefixed.
+          if (id === '#app-manifest' || id === '\u0000#app-manifest') return appManifestAliasPath
           return null
         },
       },

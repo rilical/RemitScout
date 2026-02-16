@@ -9,6 +9,8 @@ import { requireAuth } from '../plugins/auth-plugin'
 import { getUserPlan } from '../services/user-plan'
 import { getEntitlementsForPlan } from '../services/entitlements'
 import { upsertUsageSnapshot } from '../services/plan-usage'
+import { ensureUserPlan } from '../services/user-plan'
+import { upsertUserAccount } from '../services/user-account'
 import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
@@ -183,6 +185,9 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
+      // Ensure FK targets exist (watchlist_item.user_id references silver.user_account).
+      await upsertUserAccount(pool, user)
+      await ensureUserPlan(pool, user.user_id)
       const rows = await watchlistRepository.listByUserId(user.user_id)
 
       const items = rows.map((row) => {
@@ -234,6 +239,9 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
+      // Ensure FK targets exist (watchlist_item.user_id references silver.user_account).
+      await upsertUserAccount(pool, user)
+      await ensureUserPlan(pool, user.user_id)
       const body = createWatchlistItemSchema.parse(request.body)
       const target = body.target
 
@@ -427,6 +435,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
+      await upsertUserAccount(pool, user)
+      await ensureUserPlan(pool, user.user_id)
       const { id } = request.params as { id: string }
       const body = updateWatchlistItemSchema.parse(request.body)
 
@@ -530,6 +540,8 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
+      await upsertUserAccount(pool, user)
+      await ensureUserPlan(pool, user.user_id)
       const { id } = request.params as { id: string }
 
       const existing = await watchlistRepository.findById(id, user.user_id)

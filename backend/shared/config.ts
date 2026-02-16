@@ -193,6 +193,27 @@ const rawConfig = {
       .split(',')
       .map(email => email.trim().toLowerCase())
       .filter(Boolean),
+    // Optional: allow internal domains to be treated as admin (for small-team ops).
+    // If configured, a user is admin when their email domain matches one of these domains.
+    // Example: "remit-scout.com"
+    adminEmailDomains: (() => {
+      const configured = (process.env.PLANE_A_ADMIN_EMAIL_DOMAINS || '')
+        .split(',')
+        .map(domain => domain.trim().toLowerCase().replace(/^@/, ''))
+        .filter(Boolean)
+      // Dev ergonomics: make internal emails admin by default so local/dev accounts can operate the system
+      // without having to wire secrets first. Staging/prod must be explicit.
+      if (!configured.length && env === 'dev') {
+        return ['remit-scout.com']
+      }
+      return configured
+    })(),
+    // Optional: internal admin users can be treated as enterprise for feature access even without Stripe.
+    // Default: enabled for dev/staging; disabled for production unless explicitly enabled.
+    internalUsersGetEnterprise: toBoolean(
+      process.env.PLANE_A_INTERNAL_USERS_GET_ENTERPRISE,
+      env !== 'production',
+    ),
     b2c: {
       cacheTtlSeconds: toNumber(process.env.PLANE_A_B2C_CACHE_TTL_SECONDS, 900),
       jitterMs: toNumber(process.env.PLANE_A_B2C_JITTER_MS, 300),

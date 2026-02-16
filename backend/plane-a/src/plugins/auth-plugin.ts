@@ -180,6 +180,7 @@ export const requireAdmin = () => {
 
     const email = request.user.email?.toLowerCase()
     const allowlist = config.planeA.adminEmails
+    const domainAllowlist = config.planeA.adminEmailDomains
     const supabaseRole = request.user.role
     // Never lock out super admins because an allowlist was misconfigured.
     if (supabaseRole === 'super_admin') {
@@ -204,13 +205,20 @@ export const requireAdmin = () => {
       })
     }
 
+    const domainAllowed = (() => {
+      if (!email) return false
+      const [, domain] = email.split('@')
+      if (!domain) return false
+      return domainAllowlist.includes(domain)
+    })()
     const allowlisted = allowlist.length > 0 && email ? allowlist.includes(email) : false
-    if (allowlisted) {
+    const privilegedByEmail = allowlisted || domainAllowed
+    if (privilegedByEmail) {
       return
     }
 
-    // If an allowlist is configured, require it for non-super-admin access.
-    if (allowlist.length > 0) {
+    // If an allowlist is configured (emails or domains), require it for non-super-admin access.
+    if (allowlist.length > 0 || domainAllowlist.length > 0) {
       reply.code(403)
       return reply.send({ error: 'forbidden' })
     }
