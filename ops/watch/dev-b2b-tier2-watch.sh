@@ -15,8 +15,9 @@ DB_CLUSTER_ID="remit-scout-dev-remitscoutauroracluster4aa33bab-am3xjbcrzsnh"
 
 PLANE_A_BASE_URL="${PLANE_A_BASE_URL:-}"
 if [[ -z "${PLANE_A_BASE_URL}" ]]; then
+  # Use JMESPath literal string via backticks to avoid shell quoting issues.
   PLANE_A_BASE_URL="$(aws cloudformation describe-stacks --stack-name remit-scout-dev \
-    --query \"Stacks[0].Outputs[?OutputKey=='PlaneAApiUrl'].OutputValue | [0]\" \
+    --query 'Stacks[0].Outputs[?OutputKey==`PlaneAApiUrl`].OutputValue | [0]' \
     --output text 2>/dev/null || true)"
   if [[ "${PLANE_A_BASE_URL}" == "None" ]]; then
     PLANE_A_BASE_URL=""
@@ -58,6 +59,28 @@ log_count() {
   echo "${label}=${n}"
 }
 
+cw_queue_age_max_seconds() {
+  local queue_name="$1"
+  local start end age
+  # CloudWatch can be delayed; use a ~20m window and take the most recent datapoint's Max.
+  start="$(date -u -v-20M +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '20 minutes ago' +%Y-%m-%dT%H:%M:%SZ)"
+  end="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  age="$(aws cloudwatch get-metric-statistics \
+    --namespace AWS/SQS \
+    --metric-name ApproximateAgeOfOldestMessage \
+    --dimensions "Name=QueueName,Value=${queue_name}" \
+    --start-time "$start" \
+    --end-time "$end" \
+    --period 300 \
+    --statistics Maximum \
+    --query 'sort_by(Datapoints,&Timestamp)[-1].Maximum' \
+    --output text 2>/dev/null || true)"
+  if [[ -z "${age}" || "${age}" == "None" ]]; then
+    age=""
+  fi
+  echo "${age}"
+}
+
 plane_a_probe() {
   local label="$1"
   local url="$2"
@@ -89,6 +112,12 @@ for i in $(seq 1 24); do
   queue_snapshot "remit-scout-dev-ingest-fanout-tier2-dlq"
   queue_snapshot "remit-scout-dev-ingest-fanout"
   queue_snapshot "remit-scout-dev-ingest-fanout-dlq"
+  age_t2="$(cw_queue_age_max_seconds remit-scout-dev-ingest-fanout-tier2)"
+  if [[ -n "${age_t2}" ]]; then
+    echo "cw t2_age_oldest_seconds_max(last~20m)=${age_t2}"
+  else
+    echo "cw t2_age_oldest_seconds_max(last~20m)=unknown"
+  fi
 
   start_ms="$(( ($(date +%s) - 300) * 1000 ))"
 

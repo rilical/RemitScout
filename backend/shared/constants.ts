@@ -15,3 +15,6 @@ export const SMART_ALERT_MIN_SAMPLE_DAYS = 21
 // API defaults.
 export const DEFAULT_LIMIT_MAX = 200
 
+// Exports defaults.
+// Hard cap across all plans/environments to prevent accidental huge exports and keep latency predictable.
+export const EXPORTS_MAX_WINDOW_DAYS_HARD_CAP = 30

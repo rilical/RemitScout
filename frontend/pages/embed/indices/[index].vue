@@ -75,7 +75,7 @@
           v-else
           class="flex h-64 items-center justify-center text-body-sm text-neutral-500"
         >
-          No data available yet.
+          {{ emptyStateMessage }}
         </div>
         <div
           v-if="!loading && !error"
@@ -127,6 +127,7 @@ import type { IndexKey } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
+import { clampExportDays } from '~/shared/lib/exports'
 
 const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
 
@@ -145,7 +146,7 @@ const indexKey = computed(() => route.params.index as IndexKey)
 const corridorId = computed(() => (route.query.corridor_id as string) || 'US-PH-USD-PHP')
 const amountBucket = computed(() => Number.parseInt(route.query.amount_bucket as string) || 500)
 const methodProfile = computed(() => (route.query.method_profile as string) || 'standard_bank')
-const days = computed(() => Number.parseInt(route.query.days as string) || 30)
+const days = computed(() => clampExportDays(Number.parseInt(route.query.days as string) || 30))
 const apiKey = computed(() => (route.query.api_key as string) || '')
 
 const indexMeta: Record<IndexKey, { title: string, color: string, unit: 'rate' | 'percent' | 'bps', unitLabel: string }> = {
@@ -160,6 +161,7 @@ const apiKeyWarning = ref<string | null>(null)
 const chartSeries = ref<ChartSeries[]>([])
 const lastUpdated = ref('')
 const weightingLabel = ref('synthetic volume weighted')
+const emptyStateMessage = ref('No data available yet.')
 
 const meta = computed(() => indexMeta[indexKey.value])
 const chartTitle = computed(() => meta.value?.title || 'Index')
@@ -243,6 +245,13 @@ onMounted(async () => {
     })
     lastUpdated.value = data.lastUpdated || ''
     weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'
+
+    const hasOnlySuppressed = Array.isArray(data.series)
+      && data.series.length > 0
+      && data.series.every((point: any) => Boolean(point?.suppressionFlag))
+    emptyStateMessage.value = hasOnlySuppressed
+      ? 'Index data is currently suppressed (coverage/confidence too low).'
+      : 'No data available yet.'
 
     const points = data.series
       .filter(point => !point.suppressionFlag)

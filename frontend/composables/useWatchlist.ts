@@ -242,9 +242,9 @@ export const useWatchlist = () => {
     throw new Error(response.message || response.error || 'Failed to save watchlist item')
   }
 
-  async function syncToBackend(operation: 'save' | 'update' | 'delete', item: WatchlistItem | WatchTarget, id?: string) {
+  async function syncToBackend(operation: 'save' | 'update' | 'delete', item: WatchlistItem | WatchTarget, id?: string): Promise<boolean> {
     if (!isLoggedIn.value) {
-      return
+      return true
     }
 
     try {
@@ -252,6 +252,7 @@ export const useWatchlist = () => {
         const target = item as WatchTarget
         const normalized = normalizeTarget(target)
         await saveToBackend(normalized)
+        return true
       }
       else if (operation === 'update' && id) {
         const watchlistItem = item as WatchlistItem
@@ -261,15 +262,20 @@ export const useWatchlist = () => {
             label: watchlistItem.label,
           },
         })
+        return true
       }
       else if (operation === 'delete' && id) {
         await request<WatchlistApiResponse>(`/watchlist/${id}`, {
           method: 'DELETE',
         })
+        return true
       }
+
+      return true
     }
     catch (error) {
       useLogger('watchlist').error(`Error syncing ${operation} to backend`, error)
+      return false
     }
   }
 
@@ -373,24 +379,34 @@ export const useWatchlist = () => {
     return result
   }
 
-  async function remove(id: string) {
+  async function remove(id: string): Promise<boolean> {
     const index = items.value.findIndex(i => i.id === id)
-    if (index === -1) return
+    if (index === -1) return true
 
+    const removed = items.value[index]
     items.value = items.value.filter(i => i.id !== id)
 
     if (isLoggedIn.value) {
-      await syncToBackend('delete', {} as WatchTarget, id)
+      const ok = await syncToBackend('delete', {} as WatchTarget, id)
+      if (!ok) {
+        // Roll back local removal if backend deletion fails.
+        items.value = [removed, ...items.value].sort(sortByUpdatedDesc)
+        toast.error('Unable to remove item right now. Please try again.')
+        return false
+      }
     }
+
+    return true
   }
 
-  function removeByTarget(target: WatchTarget) {
+  async function removeByTarget(target: WatchTarget): Promise<boolean> {
     const normalized = normalizeTarget(target)
     const key = targetKey(normalized)
     const item = items.value.find(i => targetKey(normalizeTarget(i.target)) === key)
     if (item) {
-      remove(item.id)
+      return await remove(item.id)
     }
+    return true
   }
 
   async function updateLabel(id: string, label: string) {

@@ -110,11 +110,11 @@ const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP',
         </div>
 
         <!-- Loading state -->
-        <div
-          v-if="pending"
-          class="p-6"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+	        <div
+	          v-if="pending"
+	          class="p-6"
+	        >
+	          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="n in 6"
               :key="n"
@@ -135,31 +135,30 @@ const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP',
                 height="12"
               />
             </div>
-          </div>
-        </div>
+	          </div>
+	        </div>
 
-          <div
-            v-else-if="movers.length === 0"
-            class="rounded-2xl border border-dashed border-rs-border bg-neutral-50 p-8 text-center"
-          >
-            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900 text-white font-black">
-              P
-            </div>
-            <div class="text-body-lg font-bold text-rs-fg">
-              Pulse is warming up
-            </div>
-            <p class="mt-2 text-body-sm text-neutral-600 max-w-xl mx-auto">
-              We do not show placeholder numbers. Once Gold Export has recent corridor buckets, the movers list will appear here.
-            </p>
-          </div>
-        </div>
+	        <div
+	          v-else-if="movers.length === 0"
+	          class="rounded-2xl border border-dashed border-rs-border bg-neutral-50 p-8 text-center"
+	        >
+	          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900 text-white font-black">
+	            P
+	          </div>
+	          <div class="text-body-lg font-bold text-rs-fg">
+	            Pulse is warming up
+	          </div>
+	          <p class="mt-2 text-body-sm text-neutral-600 max-w-xl mx-auto">
+	            We do not show placeholder numbers. Once Gold Export has recent corridor buckets, the movers list will appear here.
+	          </p>
+	        </div>
 
-        <!-- Live data grid -->
-        <div
-          v-else
-          class="p-4 sm:p-6"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+	        <div
+	          v-else
+	          class="p-4 sm:p-6"
+	        >
+	          <!-- Live data grid -->
+	          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <div
               v-for="m in movers"
               :key="m.corridorId"

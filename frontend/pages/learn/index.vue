@@ -225,7 +225,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -312,7 +312,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -390,17 +390,22 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
         </div>
 
-        <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 mb-8">
-          <p class="text-body-sm text-neutral-700">
-            <strong class="font-semibold text-neutral-900">Note:</strong> Reviews are editorial; rankings come from data. See our <NuxtLink
-              to="/methodology"
-              class="text-brand-600 hover:text-brand-700 underline"
-            >review policy</NuxtLink> for how we test and verify providers.
-          </p>
-        </div>
+	        <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 mb-8">
+	          <p class="text-body-sm text-neutral-700">
+	            <strong class="font-semibold text-neutral-900">Note:</strong>
+	            Reviews are editorial; rankings come from data. See our
+	            <NuxtLink
+	              to="/methodology"
+	              class="text-brand-600 hover:text-brand-700 underline"
+	            >
+	              review policy
+	            </NuxtLink>
+	            for how we test and verify providers.
+	          </p>
+	        </div>
 
         <!-- View All Providers CTA -->
         <div class="mb-10">
@@ -498,8 +503,8 @@
               </div>
             </div>
             <!-- Decorative Background Elements -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
           </NuxtLink>
         </div>
 
@@ -584,7 +589,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -668,7 +673,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

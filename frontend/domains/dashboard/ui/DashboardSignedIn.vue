@@ -13,11 +13,11 @@ class="bg-brand-600 text-white"
           <div class="py-2">
             <div class="flex items-center justify-center gap-3 text-body-sm">
               <span><strong>Upgrade to Plus</strong> — Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience</span>
-	              <NuxtLink
+		              <NuxtLink
 	to="/plus"
 	class="inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100 underline underline-offset-2"
 	>
-	                <span>Learn more about Plus</span>
+		                <span>Learn more about Plus</span>
 	                <Icon
 	                  name="chevron-right"
 	                  :size="16"
@@ -77,11 +77,11 @@ min-height="120px"
                   />
                   <span class="font-semibold">{{ isEnterprise ? 'Enterprise' : 'Plus Member' }}</span>
                 </div>
-              <NuxtLink
-                v-else
-                  to="/plus"
-                  class="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
-                >
+	              <NuxtLink
+	                v-else
+	                  to="/plus/checkout"
+	                  class="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
+	                >
                   <Icon
                     name="sparkles"
                     :size="16"
@@ -179,13 +179,13 @@ class="mt-2"
                     :style="{ width: `${Math.min(watchlistLimitPercent, 100)}%` }"
                   />
                 </div>
-                <NuxtLink
-                  v-if="!isPlus && watchlistLimitPercent >= 100"
-                  to="/plus"
-                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
-                >
-                  Upgrade for Plus →
-                </NuxtLink>
+	                <NuxtLink
+	                  v-if="!isPlus && watchlistLimitPercent >= 100"
+	                  to="/plus/checkout"
+	                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
+	                >
+	                  Upgrade for Plus →
+	                </NuxtLink>
               </div>
             </div>
 
@@ -208,13 +208,13 @@ class="mt-2"
                     :style="{ width: `${Math.min(alertsLimitPercent, 100)}%` }"
                   />
                 </div>
-                <NuxtLink
-                  v-if="!isPlus && alertsLimitPercent >= 100"
-                  to="/plus"
-                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
-                >
-                  Upgrade for Plus →
-                </NuxtLink>
+	                <NuxtLink
+	                  v-if="!isPlus && alertsLimitPercent >= 100"
+	                  to="/plus/checkout"
+	                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
+	                >
+	                  Upgrade for Plus →
+	                </NuxtLink>
               </div>
             </div>
 
@@ -252,13 +252,13 @@ class="mt-2"
               <div class="text-body-sm text-white/90 mb-1">Best Rate Today</div>
               <div class="text-h3 font-semibold text-white">
                 {{ currentRate.rate }}
-                <span class="text-body-sm text-white/80">{{ getCurrencyCode(selectedCorridor.to) }}</span>
+                <span class="text-body-sm text-white/80">{{ selectedCorridor ? getCurrencyCode(selectedCorridor.to) : '' }}</span>
               </div>
                 <div class="mt-2">
                   <span
-v-if="currentRate.change !== null"
-class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
->
+	v-if="currentRate.change !== null"
+	class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
+	>
                     <Icon
                       name="arrow-up"
                       :size="16"
@@ -268,9 +268,9 @@ class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
                     {{ formatPercentValue(currentRate.change) }} vs previous
                   </span>
                   <span
-v-else
-class="text-body-sm text-white/70"
->No rate history yet</span>
+	v-else
+	class="text-body-sm text-white/70"
+	>{{ selectedCorridor ? 'No rate history yet' : 'Select a corridor' }}</span>
                 </div>
             </div>
           </div>
@@ -285,12 +285,12 @@ class="text-body-sm text-white/70"
               <h3 class="font-semibold text-body-lg">You're approaching your limits</h3>
               <p class="text-white/90 text-body-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 365-day history, and exports.</p>
             </div>
-              <NuxtLink
-                to="/plus"
-                class="inline-flex items-center justify-center rounded-lg bg-surface px-6 py-2.5 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors flex-shrink-0"
-              >
-                Upgrade to Plus
-              </NuxtLink>
+	              <NuxtLink
+	                to="/plus/checkout"
+	                class="inline-flex items-center justify-center rounded-lg bg-surface px-6 py-2.5 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors flex-shrink-0"
+	              >
+	                Upgrade to Plus
+	              </NuxtLink>
             </div>
           </div>
 
@@ -344,19 +344,34 @@ class="text-body-sm text-white/70"
                           class="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-body-sm font-medium text-neutral-700 transition-colors"
                           @click="showCorridorSelector = !showCorridorSelector"
                           >
-                            <span>{{ getFlag(selectedCorridor.from) }}</span>
-                            <Icon
-                              name="chevron-right"
-                              :size="16"
-                              class="text-neutral-400"
-                            />
-                            <span>{{ getFlag(selectedCorridor.to) }}</span>
-                            <span class="text-rs-muted">{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span>
-                            <Icon
-                              name="chevron-down"
-                              :size="16"
-                              class="text-neutral-400"
-                            />
+                            <template v-if="selectedCorridor">
+                              <span>{{ getFlag(selectedCorridor.from) }}</span>
+                              <Icon
+                                name="chevron-right"
+                                :size="16"
+                                class="text-neutral-400"
+                              />
+                              <span>{{ getFlag(selectedCorridor.to) }}</span>
+                              <span class="text-rs-muted">{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span>
+                              <Icon
+                                name="chevron-down"
+                                :size="16"
+                                class="text-neutral-400"
+                              />
+                            </template>
+                            <template v-else>
+                              <Icon
+                                name="magnifying-glass"
+                                :size="16"
+                                class="text-neutral-500"
+                              />
+                              <span>Select corridor</span>
+                              <Icon
+                                name="chevron-down"
+                                :size="16"
+                                class="text-neutral-400"
+                              />
+                            </template>
                           </button>
 
                         <!-- Corridor Dropdown -->
@@ -427,18 +442,23 @@ class="ml-1 text-[10px] text-neutral-400"
                   <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
-                          <span class="text-h3">{{ getFlag(selectedCorridor.from) }}</span>
-                          <Icon
-                            name="arrow-right"
-                            :size="16"
-                            class="text-neutral-400"
-                          />
-                          <span class="text-h3">{{ getFlag(selectedCorridor.to) }}</span>
-                          <span class="text-body-sm text-rs-muted ml-1">{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span>
+                          <template v-if="selectedCorridor">
+                            <span class="text-h3">{{ getFlag(selectedCorridor.from) }}</span>
+                            <Icon
+                              name="arrow-right"
+                              :size="16"
+                              class="text-neutral-400"
+                            />
+                            <span class="text-h3">{{ getFlag(selectedCorridor.to) }}</span>
+                            <span class="text-body-sm text-rs-muted ml-1">{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span>
+                          </template>
+                          <template v-else>
+                            <span class="text-body-sm text-neutral-500">Select a corridor to view rate history.</span>
+                          </template>
                         </div>
                       <div class="flex items-baseline gap-3">
                         <span class="text-h1 font-semibold text-rs-fg">{{ currentRate.rate }}</span>
-                        <span class="text-body-lg text-rs-muted">{{ getCurrencyCode(selectedCorridor.to) }}</span>
+                        <span class="text-body-lg text-rs-muted">{{ selectedCorridor ? getCurrencyCode(selectedCorridor.to) : '' }}</span>
                         <span
                             v-if="currentRate.change !== null"
                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium"
@@ -453,22 +473,23 @@ class="ml-1 text-[10px] text-neutral-400"
                             {{ formatPercentValue(currentRate.change) }}
                           </span>
                         </div>
-		                      <div class="text-body-sm text-neutral-400 mt-1">
-		                        <span
-		                          v-if="selectedHistoryLoading"
-		                          class="inline-flex items-center gap-2"
-		                          role="status"
-		                          aria-live="polite"
-		                        >
+			                      <div class="text-body-sm text-neutral-400 mt-1">
+			                        <span
+			                          v-if="selectedHistoryLoading"
+			                          class="inline-flex items-center gap-2"
+			                          role="status"
+			                          aria-live="polite"
+			                        >
 		                          <span
 		                            class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"
 		                            aria-hidden="true"
 		                          />
-		                          <span>Loading rate history...</span>
-		                        </span>
-		                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
-		                        <span v-else>{{ currentRate.updatedLabel }}</span>
-		                      </div>
+			                          <span>Loading rate history...</span>
+			                        </span>
+			                        <span v-else-if="!selectedCorridor">Select a corridor</span>
+			                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
+			                        <span v-else>{{ currentRate.updatedLabel }}</span>
+			                      </div>
                     </div>
 
                     <!-- Rate Stats -->
@@ -607,14 +628,14 @@ fill-opacity="0.2"
 
                 <!-- Action Bar -->
                 <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 rounded-b-xl flex flex-wrap items-center justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
-                      :class="watchlistLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
-                      :disabled="watchlistLimitReached"
-                      @click="handleAddToWatchlist"
-	                    >
+	                  <div class="flex items-center gap-3">
+	                    <button
+	                      type="button"
+	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+	                      :class="(!selectedCorridor || watchlistLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
+	                      :disabled="!selectedCorridor || watchlistLimitReached"
+	                      @click="handleAddToWatchlist"
+		                    >
 	                      <Icon
 	                        name="plus"
 	                        :size="16"
@@ -622,13 +643,13 @@ fill-opacity="0.2"
 	                      />
 	                      Add to Watchlist
 	                    </button>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
-	                      :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
-	                      :disabled="alertsLimitReached"
-	                      @click="handleSetAlert"
-	                    >
+	                    <button
+	                      type="button"
+	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+		                      :class="(!selectedCorridor || alertsLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
+		                      :disabled="!selectedCorridor || alertsLimitReached"
+		                      @click="handleSetAlert"
+		                    >
 	                      <Icon
 	                        name="bell-alert"
 	                        :size="16"
@@ -652,10 +673,10 @@ fill-opacity="0.2"
                   </div>
                   <button
                     type="button"
-                    :disabled="comparingSelectedCorridor"
+                    :disabled="!selectedCorridor || comparingSelectedCorridor"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-body-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
                     @click="handleCompareSelectedCorridor"
-		                  >
+			                  >
 		                    <div
 		                      v-if="comparingSelectedCorridor"
 		                      class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
@@ -1001,11 +1022,11 @@ class="bg-brand-600 rounded-xl p-5 text-white"
 	                  <div class="flex-1">
 	                    <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
 	                    <p class="text-body-sm text-white/90 mb-3">Get Pulse access, 16 alerts, 365-day history, exports, and an ad-free experience.</p>
-		                    <NuxtLink
-		to="/plus"
-		class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
-		>
-		                      <span>Learn more about Plus</span>
+			                    <NuxtLink
+	to="/plus"
+	class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
+	>
+			                      <span>Learn more about Plus</span>
 		                      <Icon
 		                        name="chevron-right"
 		                        :size="16"
@@ -1047,13 +1068,13 @@ class="bg-brand-600 rounded-xl p-5 text-white"
               <p class="text-body-sm text-rs-muted mt-1">{{ watchlistCount }} saved corridor{{ watchlistCount !== 1 ? 's' : '' }}</p>
             </div>
             <div class="flex items-center gap-3">
-              <NuxtLink
-                v-if="!isPlus && watchlistLimitPercent >= 66"
-                to="/plus"
-                class="inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-              >
-                Upgrade
-              </NuxtLink>
+	              <NuxtLink
+	                v-if="!isPlus && watchlistLimitPercent >= 66"
+	                to="/plus/checkout"
+	                class="inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+	              >
+	                Upgrade
+	              </NuxtLink>
               <button
                 v-if="watchlistCount > 0"
                 type="button"
@@ -1080,12 +1101,12 @@ class="bg-brand-600 rounded-xl p-5 text-white"
               <h4 class="text-body-sm font-medium text-brand-600">Watchlist limit reached</h4>
               <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Upgrade to Plus for up to 16 corridors.</p>
             </div>
-            <NuxtLink
-              to="/plus"
-              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-            >
-              Upgrade
-            </NuxtLink>
+	            <NuxtLink
+	              to="/plus/checkout"
+	              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+	            >
+	              Upgrade
+	            </NuxtLink>
           </div>
 
           <div
@@ -1484,10 +1505,10 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
 >
             <div class="flex items-center justify-between mb-3">
               <span class="text-body-sm text-neutral-400 uppercase tracking-wide">Sponsored</span>
-              <NuxtLink
-to="/plus"
-class="text-body-sm text-brand-600 hover:text-brand-700"
->Remove ads</NuxtLink>
+	              <NuxtLink
+	to="/plus/checkout"
+	class="text-body-sm text-brand-600 hover:text-brand-700"
+	>Remove ads</NuxtLink>
             </div>
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-success-600 flex items-center justify-center text-white font-bold text-body-lg">W</div>
@@ -1541,11 +1562,11 @@ class="text-body-sm text-brand-600 hover:text-brand-700"
               >
                 New Alert
               </button>
-              <NuxtLink
-                v-if="!isPlus && alertsLimitPercent >= 66"
-                to="/plus"
-	                class="inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 text-body-sm font-medium text-brand-600 hover:bg-primary-50 transition-colors"
-	              >
+	              <NuxtLink
+	                v-if="!isPlus && alertsLimitPercent >= 66"
+	                to="/plus/checkout"
+		                class="inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 text-body-sm font-medium text-brand-600 hover:bg-primary-50 transition-colors"
+		              >
 	                <Icon
 	                  name="sparkles"
 	                  :size="16"
@@ -1580,12 +1601,12 @@ class="text-body-sm text-brand-600 hover:text-brand-700"
               <h4 class="text-body-sm font-medium text-brand-600">Alert limit reached</h4>
               <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alerts. Upgrade to Plus for up to 16 alerts.</p>
             </div>
-            <NuxtLink
-              to="/plus"
-              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-            >
-              Upgrade
-            </NuxtLink>
+	            <NuxtLink
+	              to="/plus/checkout"
+	              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+	            >
+	              Upgrade
+	            </NuxtLink>
           </div>
 
           <div
@@ -1821,15 +1842,15 @@ class="font-semibold"
 	                  />
 	                  Edit
 	                </button>
-                <button
-	                  type="button"
-	                  class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600 transition-colors"
-	                  @click="alertsRemove(alert.id)"
-	                >
-	                  <Icon
-	                    name="trash"
-	                    :size="16"
-	                    class="text-current"
+	                <button
+		                  type="button"
+		                  class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600 transition-colors"
+		                  @click="openDeleteAlertModal(alert)"
+		                >
+		                  <Icon
+		                    name="trash"
+		                    :size="16"
+		                    class="text-current"
 	                  />
 	                </button>
               </div>
@@ -1855,12 +1876,12 @@ class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
                   <p class="text-body-sm text-neutral-300">Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
                 </div>
               </div>
-              <NuxtLink
-to="/plus"
-class="flex-shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
->
-                Upgrade to Plus
-              </NuxtLink>
+	              <NuxtLink
+	to="/plus/checkout"
+	class="flex-shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+	>
+	                Upgrade to Plus
+	              </NuxtLink>
             </div>
           </div>
         </div>
@@ -1940,12 +1961,12 @@ class="text-center py-6"
                 <p class="text-body-sm text-rs-muted mb-6">
                   Export your comparison history and watchlist data to CSV or PDF with Plus.
                 </p>
-                <NuxtLink
-                  to="/plus"
-                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
-                >
-                  Upgrade to Plus
-                </NuxtLink>
+	                <NuxtLink
+	                  to="/plus/checkout"
+	                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+	                >
+	                  Upgrade to Plus
+	                </NuxtLink>
               </div>
 
               <!-- Export form for Plus users -->
@@ -2025,23 +2046,11 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                     v-model="exportSettings.dateRange"
                     class="w-full rounded-xl border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-rs-fg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all hover:border-neutral-400"
                     @change="setExportDateRange(exportSettings.dateRange)"
-                  >
-                    <option value="7d">Last 7 days</option>
-                    <option value="30d">Last 30 days</option>
-                    <option
-v-if="isEnterprise"
-value="90d"
->
-Last 90 days
-</option>
-                    <option
-                      v-if="isEnterprise && exportSettings.dataType === 'history' && exportSettings.includeCorridorHistory && exportCorridorIds.length > 0"
-                      value="all"
-                    >
-                      All available index history
-                    </option>
-                  </select>
-                </div>
+	                  >
+	                    <option value="7d">Last 7 days</option>
+	                    <option value="30d">Last 30 days</option>
+	                  </select>
+	                </div>
 
                 <div
 v-if="exportSettings.dataType === 'history'"
@@ -2251,10 +2260,10 @@ class="text-body-sm text-warning-600"
             </div>
           </div>
 
-          <!-- Delete Watchlist Item Modal -->
-          <div
-            v-if="showDeleteWatchlistModal"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+	          <!-- Delete Watchlist Item Modal -->
+	          <div
+	            v-if="showDeleteWatchlistModal"
+	            class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
 	            <div
 	class="absolute inset-0 bg-black/50"
@@ -2293,24 +2302,91 @@ class="text-body-sm text-warning-600"
                 </p>
               </div>
 
-              <div class="flex gap-3 pt-6">
-                <button
-                  type="button"
-                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
-                  @click="closeDeleteWatchlistModal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
-                  @click="confirmDeleteWatchlistItem"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          </div>
+	              <div class="flex gap-3 pt-6">
+	                <button
+	                  type="button"
+	                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
+	                  @click="closeDeleteWatchlistModal"
+	                >
+	                  Cancel
+	                </button>
+	                <button
+	                  type="button"
+	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
+	                  @click="confirmDeleteWatchlistItem"
+	                >
+	                  Remove
+	                </button>
+	              </div>
+	            </div>
+	          </div>
+
+	          <!-- Delete Alert Modal -->
+	          <div
+	            v-if="showDeleteAlertModal"
+	            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+	          >
+	            <div
+	              class="absolute inset-0 bg-black/50"
+	              aria-label="Close dialog"
+	              @click="closeDeleteAlertModal"
+	            />
+	            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
+	              <div class="flex items-center justify-between mb-4">
+	                <h3 class="text-body-lg font-semibold text-rs-fg">Delete Alert</h3>
+	                <button
+	                  type="button"
+	                  class="text-neutral-400 hover:text-neutral-600"
+	                  aria-label="Close dialog"
+	                  @click="closeDeleteAlertModal"
+	                >
+	                  <Icon
+	                    name="x"
+	                    :size="20"
+	                    class="text-current"
+	                  />
+	                </button>
+	              </div>
+
+	              <div class="space-y-4 text-body-sm text-neutral-600">
+	                <p>
+	                  Are you sure you want to delete this alert?
+	                </p>
+	                <p
+	                  v-if="alertToDelete"
+	                  class="rounded-xl border border-rs-border bg-neutral-50 p-3"
+	                >
+	                  <span class="font-semibold text-rs-fg">
+	                    {{ watchlistFindById(alertToDelete.watchlistItemId)?.label || 'Alert' }}
+	                  </span>
+	                  <span class="text-neutral-400"> • </span>
+	                  <span class="text-rs-muted">
+	                    {{ formatRuleSummary(alertToDelete.rule) }}
+	                  </span>
+	                </p>
+	                <p class="text-body-sm text-rs-muted">
+	                  This can’t be undone, but you can always create a new alert later.
+	                </p>
+	              </div>
+
+	              <div class="flex gap-3 pt-6">
+	                <button
+	                  type="button"
+	                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
+	                  @click="closeDeleteAlertModal"
+	                >
+	                  Cancel
+	                </button>
+	                <button
+	                  type="button"
+	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
+	                  @click="confirmDeleteAlert"
+	                >
+	                  Delete
+	                </button>
+	              </div>
+	            </div>
+	          </div>
 
 	          <div
 	v-if="!compareHydrated"
@@ -2407,12 +2483,12 @@ class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
               <div class="flex-1">
                 <h4 class="font-semibold text-brand-600 text-body-sm mb-1">Limited to 30-Day History</h4>
                 <p class="text-body-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and export.</p>
-                <NuxtLink
-to="/plus"
-class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
->
-                  Upgrade to Plus
-                  <Icon
+	                <NuxtLink
+	to="/plus/checkout"
+	class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+	>
+	                  Upgrade to Plus
+	                  <Icon
                     name="chevron-right"
                     :size="16"
                     class="text-current"
@@ -4563,19 +4639,35 @@ class="space-y-6"
         </div>
       </CenteredPage>
 
-      <ProviderVisitPrompt
-        ref="providerVisitPromptRef"
-        :auto-open="false"
-      />
-    </div>
-</template>
+	      <ProviderVisitPrompt
+	        ref="providerVisitPromptRef"
+	        :auto-open="false"
+	      />
 
-<script setup lang="ts">
-import type { LocationQueryRaw } from 'vue-router'
+	      <LimitReachedModal
+	        v-if="limitModalOpen"
+	        :is-open="limitModalOpen"
+	        :feature="limitModalFeature"
+	        :limit="limitModalLimit || 0"
+	        :current-count="limitModalCount"
+	        :show-upgrade="!isPlus"
+	        :title="limitModalFeature === 'watchlist' ? 'Watchlist limit reached' : 'Alert limit reached'"
+	        :message="limitModalFeature === 'watchlist'
+	          ? (isPlus ? 'You’ve hit the current plan limit. Remove a corridor to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 corridors.')
+	          : (isPlus ? 'You’ve hit the current plan limit. Remove an alert to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 alerts.')"
+	        :items="limitModalItems"
+	        @close="limitModalOpen = false"
+	        @remove="handleLimitRemove"
+	      />
+	    </div>
+	</template>
 
-import AdPlacement from '~/components/ads/AdPlacement.vue'
-import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
-	import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+	<script setup lang="ts">
+	import type { LocationQueryRaw } from 'vue-router'
+
+	import AdPlacement from '~/components/ads/AdPlacement.vue'
+	import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
+			import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 	import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
 		import { CenteredPage, DataTable, type DataTableColumn, EmptyState, Icon, type IconName, LoadingState } from '~/ui'
 	import {
@@ -4590,9 +4682,10 @@ import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
 } from '~/shared/lib/format'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
-import type { AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
-import { getCorridors } from '~/lib/pulseApi'
-import type { CorridorOption } from '~/types/pulse'
+	import type { Alert, AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
+	import { getCorridors } from '~/lib/pulseApi'
+	import type { CorridorOption } from '~/types/pulse'
+	import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
 
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
@@ -4640,11 +4733,12 @@ const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.val
 const billingPortalLoading = computed(() => billingActions.portalLoading.value)
 const exportsApi = useExports()
 const dataExportApi = useDataExport()
-const accountApi = useAccount()
-const accountDeleting = computed(() => accountApi.deleting.value)
-const modal = useSaveAlertModal()
-const { request } = useApi()
-const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: [] })
+	const accountApi = useAccount()
+	const accountDeleting = computed(() => accountApi.deleting.value)
+	const modal = useSaveAlertModal()
+	const toast = useToast()
+	const { request } = useApi()
+	const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: [] })
 
 const {
   items: watchlistItems,
@@ -4662,16 +4756,70 @@ const corridorWatchlistItems = computed(() =>
   ),
 )
 
-const {
-  alerts: alertItems,
-  hydrated: alertsHydrated,
-  count: alertsCount,
+	const {
+	  alerts: alertItems,
+	  hydrated: alertsHydrated,
+	  count: alertsCount,
   toggleEnabled: alertsToggleEnabled,
   remove: alertsRemove,
   reset: alertsReset,
   findById: alertsFindById,
-  update: alertsUpdate,
-} = useAlerts()
+	  update: alertsUpdate,
+	} = useAlerts()
+
+	// Production-grade limit UX (no browser alert()).
+	const limitModalOpen = ref(false)
+	const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
+	const limitModalLimit = ref(0)
+
+	const limitModalCount = computed(() => {
+	  return limitModalFeature.value === 'watchlist' ? watchlistCount.value : alertsCount.value
+	})
+
+	const formatRuleSummary = (rule: AlertRule) => {
+	  const currency = (rule as any)?.currency ? ` ${(rule as any).currency}` : ''
+	  return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim()
+	}
+
+	const limitModalItems = computed(() => {
+	  const sliceLimit = limitModalLimit.value || 0
+	  if (limitModalFeature.value === 'alert') {
+	    const items = alertItems.value.map((alert) => ({
+	      id: alert.id,
+	      label: watchlistFindById(alert.watchlistItemId)?.label || 'Alert',
+	      meta: formatRuleSummary(alert.rule),
+	    }))
+	    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+	  }
+
+	  const items = watchlistItems.value.map(item => ({
+	    id: item.id,
+	    label: item.label,
+	  }))
+	  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+	})
+
+	const openLimitModal = (feature: 'watchlist' | 'alert', explicitLimit?: number) => {
+	  limitModalFeature.value = feature
+	  const limit = explicitLimit ?? (feature === 'watchlist'
+	    ? (limits.value.watchlistItems === 'unlimited' ? 0 : Number(limits.value.watchlistItems))
+	    : (limits.value.alerts === 'unlimited' ? 0 : Number(limits.value.alerts)))
+	  limitModalLimit.value = Number.isFinite(limit) ? limit : 0
+	  limitModalOpen.value = true
+	}
+
+		const handleLimitRemove = async (id: string) => {
+		  if (limitModalFeature.value === 'watchlist') {
+		    await watchlistRemove(id)
+		  }
+		  else {
+		    await alertsRemove(id)
+		  }
+
+		  if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
+		    limitModalOpen.value = false
+		  }
+		}
 
 const {
   runs: compareRuns,
@@ -5187,28 +5335,44 @@ const fetchExportJobs = async () => {
   }
 }
 
-const createExportJob = async () => {
-  if (exportCreating.value) return
-  exportCreating.value = true
-  exportJobsError.value = null
-  try {
-    const body: Record<string, unknown> = {
-      jobType: exportJobType.value,
-      format: exportFormat.value,
-    }
-    if (exportDateFrom.value) body.dateFrom = exportDateFrom.value
-    if (exportDateTo.value) body.dateTo = exportDateTo.value
-    await request<ExportJobCreateResponse>('/exports', { method: 'POST', body })
-    await fetchExportJobs()
-  }
-  catch (error) {
-    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
-    exportJobsError.value = raw || 'Unable to create export.'
-  }
-  finally {
-    exportCreating.value = false
-  }
-}
+	const createExportJob = async () => {
+	  if (exportCreating.value) return
+	  exportCreating.value = true
+	  exportJobsError.value = null
+	  try {
+	    const body: Record<string, unknown> = {
+	      dataType: exportJobType.value,
+	      format: exportFormat.value,
+	    }
+	    if (exportDateFrom.value) body.dateFrom = exportDateFrom.value
+	    if (exportDateTo.value) body.dateTo = exportDateTo.value
+
+	    if (exportJobType.value === 'history' || exportJobType.value === 'all') {
+	      if (!exportDateFrom.value || !exportDateTo.value) {
+	        throw new Error(`Please select a date range (max ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days).`)
+	      }
+	      const from = new Date(`${exportDateFrom.value}T00:00:00.000Z`)
+	      const to = new Date(`${exportDateTo.value}T23:59:59.999Z`)
+	      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+	        throw new Error('Invalid date range.')
+	      }
+	      const diffDays = Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1
+	      if (diffDays > EXPORTS_MAX_WINDOW_DAYS_HARD_CAP) {
+	        throw new Error(`Export window too large. Max is ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days.`)
+	      }
+	    }
+
+	    await request<ExportJobCreateResponse>('/exports', { method: 'POST', body })
+	    await fetchExportJobs()
+	  }
+	  catch (error) {
+	    const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+	    exportJobsError.value = raw || 'Unable to create export.'
+	  }
+	  finally {
+	    exportCreating.value = false
+	  }
+	}
 
 const downloadExport = (jobId: string) => {
   const baseUrl = runtimeConfig.public?.apiBase || '/api/v1'
@@ -5291,20 +5455,7 @@ async function openBillingPortal() {
 
 async function startCheckout() {
   billingActionMessage.value = null
-  const result = await billingActions.createCheckoutSession('plus')
-  if (!result.ok) {
-    billingActionMessage.value = result.error || 'Unable to start checkout.'
-    return
-  }
-
-  if (!result.url) {
-    billingActionMessage.value = result.error || 'Unable to start checkout.'
-    return
-  }
-
-  if (import.meta.client) {
-    window.location.href = result.url
-  }
+  await navigateTo('/plus/checkout')
 }
 
 type OpsHealthCorridor = {
@@ -6095,14 +6246,50 @@ useAbortableWatch(
   { immediate: true },
 )
 
-// Form state
-const newWatchlist = ref({ from: 'US', to: 'PH' })
-const graphTimeframe = ref('7d')
+	// Form state
+	type CorridorSelection = { from: string, to: string }
 
-// Rate Checker state
-const showCorridorSelector = ref(false)
-const selectedCorridor = ref({ from: 'US', to: 'PH' })
-const customCorridor = ref({ from: 'US', to: 'PH' })
+	const newWatchlist = ref<CorridorSelection>({ from: '', to: '' })
+	const graphTimeframe = ref('7d')
+
+	// Rate Checker state
+	const showCorridorSelector = ref(false)
+	const selectedCorridor = ref<CorridorSelection | null>(null)
+	const customCorridor = ref<CorridorSelection>({ from: '', to: '' })
+
+	const defaultSelectedCorridor = computed<CorridorSelection | null>(() => {
+	  const first = corridorWatchlistItems.value[0]
+	  if (!first || first.target.type !== 'corridor') return null
+	  return {
+	    from: first.target.from.toUpperCase(),
+	    to: first.target.to.toUpperCase(),
+	  }
+	})
+
+	// Avoid showing mock corridors. Default to the user's real watchlist corridor when available.
+	watch(
+	  () => [watchlistHydrated.value, corridorWatchlistItems.value.length] as const,
+	  ([hydrated]) => {
+	    if (!hydrated) return
+	    if (selectedCorridor.value) return
+	    const fallback = defaultSelectedCorridor.value
+	    if (!fallback) return
+	    selectedCorridor.value = fallback
+	  },
+	  { immediate: true },
+	)
+
+	watch(
+	  () => showCorridorSelector.value,
+	  (open) => {
+	    if (!open) return
+	    if (selectedCorridor.value) {
+	      customCorridor.value = { ...selectedCorridor.value }
+	      return
+	    }
+	    customCorridor.value = { from: '', to: '' }
+	  },
+	)
 
 const timeframePeriods = [
   { label: '7D', value: '7d' },
@@ -6134,9 +6321,10 @@ const inlineToOptions = computed(() => countryOptions.value)
 
 const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
 
-const selectedPair = computed(() => {
-  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
-})
+	const selectedPair = computed(() => {
+	  if (!selectedCorridor.value) return null
+	  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
+	})
 
 const selectedSnapshot = computed<RateSnapshot>(() => {
   const pair = selectedPair.value
@@ -6235,10 +6423,13 @@ watch(() => isPlus.value, (value) => {
   }
 })
 
-function selectCorridor(from: string, to: string) {
-  selectedCorridor.value = { from, to }
-  showCorridorSelector.value = false
-}
+	function selectCorridor(from: string, to: string) {
+	  const nextFrom = (from || '').trim().toUpperCase()
+	  const nextTo = (to || '').trim().toUpperCase()
+	  if (!nextFrom || !nextTo) return
+	  selectedCorridor.value = { from: nextFrom, to: nextTo }
+	  showCorridorSelector.value = false
+	}
 
 function getTimeframeStartLabel() {
   if (selectedSnapshot.value.history.length > 0) {
@@ -6378,12 +6569,12 @@ const isProviderRatesLoadingForItem = (itemId: string) => {
 
 async function handleAddToWatchlist() {
   if (watchlistLimitReached.value) {
-    if (!isPlus.value) {
-      alert('Watchlist limit reached. Upgrade to Plus for up to 16 corridors.')
-    }
- else {
-      alert(`Watchlist limit reached (${limits.value.watchlistItems}). Remove a corridor to add another.`)
-    }
+    openLimitModal('watchlist')
+    return
+  }
+
+  if (!selectedCorridor.value) {
+    showCorridorSelector.value = true
     return
   }
   const target: WatchTarget = {
@@ -6395,19 +6586,28 @@ async function handleAddToWatchlist() {
   const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
   const result = await watchlistSave(target, { label })
 
-  if (result.status === 'limit_reached' || result.status === 'error') {
-    alert(result.message)
+  if (result.status === 'saved') {
+    toast.success('Added to watchlist.')
+  }
+  else if (result.status === 'already_saved') {
+    toast.info('Already in your watchlist.')
+  }
+  else if (result.status === 'limit_reached') {
+    openLimitModal('watchlist', result.limit)
+  }
+  else if (result.status === 'error') {
+    toast.error(result.message)
   }
 }
 
 function handleSetAlert() {
   if (alertsLimitReached.value) {
-    if (!isPlus.value) {
-      alert('Alert limit reached. Upgrade to Plus for up to 16 alerts.')
-    }
- else {
-      alert(`Alert limit reached (${limits.value.alerts}). Disable or delete an alert to add another.`)
-    }
+    openLimitModal('alert')
+    return
+  }
+
+  if (!selectedCorridor.value) {
+    showCorridorSelector.value = true
     return
   }
   const target: WatchTarget = {
@@ -6688,24 +6888,28 @@ const sessionMeta = (session: { device_type: string | null, location: string | n
   return `${device} • ${location}`
 }
 
-const handleRevokeSession = async (sessionId: string) => {
-  try {
-    await revokeSession(sessionId)
-  }
- catch (error) {
-    useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
-  }
-}
+	const handleRevokeSession = async (sessionId: string) => {
+	  try {
+	    await revokeSession(sessionId)
+	    toast.success('Session signed out.')
+	  }
+	 catch (error) {
+	    useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
+	    toast.error('Unable to sign out session. Please try again.')
+	  }
+	}
 
-const handleRevokeAllSessions = async () => {
-  const current = sessions.value.find(session => session.is_current)
-  try {
-    await revokeAllSessions(current?.session_id)
-  }
- catch (error) {
-    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
-  }
-}
+	const handleRevokeAllSessions = async () => {
+	  const current = sessions.value.find(session => session.is_current)
+	  try {
+	    await revokeAllSessions(current?.session_id)
+	    toast.success('Signed out all other sessions.')
+	  }
+	 catch (error) {
+	    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
+	    toast.error('Unable to sign out other sessions. Please try again.')
+	  }
+	}
 
 const fetchBillingHistory = async (force = false) => {
   if (!isPlus.value) return
@@ -6761,7 +6965,7 @@ watch(
   { immediate: true },
 )
 
-type ExportDateRange = '7d' | '30d' | '90d' | 'all'
+	type ExportDateRange = '7d' | '30d'
 
 const getDefaultDateFrom = () => {
   const date = new Date()
@@ -6798,12 +7002,12 @@ const exportCorridorIds = computed<string[]>(() => {
 
 const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
 
-const resolveAllAvailableGoldHistoryRange = (): { dateFrom: string, dateTo: string } | null => {
-  // Only meaningful when exporting corridor history (Gold indices).
-  const byId = new Map<string, CorridorOption>()
-  for (const c of trackedCorridorsData.value || []) {
-    if (c.corridorId) byId.set(c.corridorId, c)
-  }
+	const resolveAllAvailableGoldHistoryRange = (windowDays: number): { dateFrom: string, dateTo: string } | null => {
+	  // Only meaningful when exporting corridor history (Gold indices).
+	  const byId = new Map<string, CorridorOption>()
+	  for (const c of trackedCorridorsData.value || []) {
+	    if (c.corridorId) byId.set(c.corridorId, c)
+	  }
 
   let minDate: string | null = null
   let maxDate: string | null = null
@@ -6818,9 +7022,18 @@ const resolveAllAvailableGoldHistoryRange = (): { dateFrom: string, dateTo: stri
     }
   }
 
-  if (!minDate || !maxDate) return null
-  return { dateFrom: minDate, dateTo: maxDate }
-}
+	  if (!minDate || !maxDate) return null
+
+	  // Use the maximum available window (up to hard cap) so exports remain bounded and
+	  // still work when Gold only has <30 days in a new environment.
+	  const end = new Date(`${maxDate}T00:00:00.000Z`)
+	  const start = new Date(end)
+	  const clampedDays = Math.min(Math.max(Math.floor(windowDays || EXPORTS_MAX_WINDOW_DAYS_HARD_CAP), 1), EXPORTS_MAX_WINDOW_DAYS_HARD_CAP)
+	  start.setUTCDate(start.getUTCDate() - (clampedDays - 1))
+	  const candidateFrom = start.toISOString().split('T')[0]
+	  const dateFrom = candidateFrom < minDate ? minDate : candidateFrom
+	  return { dateFrom, dateTo: maxDate }
+	}
 
 const exportStatusMessage = ref<string | null>(null)
 const exportErrorMessage = ref<string | null>(null)
@@ -6885,41 +7098,37 @@ const pollExportStatus = async (jobId: string) => {
   }, 2000)
 }
 
-function setExportDateRange(range: ExportDateRange) {
-  const today = new Date()
-  exportSettings.value.dateTo = today.toISOString().split('T')[0]
+	function setExportDateRange(range: ExportDateRange) {
+	  const days = range === '7d' ? 7 : 30
 
-  if (range === 'all') {
-    const resolved = resolveAllAvailableGoldHistoryRange()
-    if (resolved) {
-      exportSettings.value.dateFrom = resolved.dateFrom
-      exportSettings.value.dateTo = resolved.dateTo
-      exportSettings.value.dateRange = range
-      return
-    }
-    // Fallback if corridor metadata is unavailable.
-    range = '30d'
-  }
+	  // Prefer Gold availability bounds when exporting corridor history.
+	  if (exportSettings.value.includeCorridorHistory && exportCorridorIds.value.length > 0) {
+	    const resolved = resolveAllAvailableGoldHistoryRange(days)
+	    if (resolved) {
+	      exportSettings.value.dateFrom = resolved.dateFrom
+	      exportSettings.value.dateTo = resolved.dateTo
+	      exportSettings.value.dateRange = range
+	      return
+	    }
+	  }
 
-  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
-  const fromDate = new Date()
-  // Inclusive window: subtract (days-1).
-  fromDate.setDate(fromDate.getDate() - (days - 1))
-  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
-  exportSettings.value.dateRange = range
-}
+	  const today = new Date()
+	  exportSettings.value.dateTo = today.toISOString().split('T')[0]
+
+	  const fromDate = new Date()
+	  // Inclusive window: subtract (days-1).
+	  fromDate.setDate(fromDate.getDate() - (days - 1))
+	  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
+	  exportSettings.value.dateRange = range
+	}
 
 // Initialize date range when modal opens
-watch(() => showExportModal.value, (isOpen) => {
-  if (isOpen) {
-    const range = exportSettings.value.dateRange || '30d'
-    if (!isEnterprise.value && range !== '7d' && range !== '30d') {
-      setExportDateRange('30d')
-      return
-    }
-    setExportDateRange(range)
-  }
-})
+	watch(() => showExportModal.value, (isOpen) => {
+	  if (isOpen) {
+	    const range = exportSettings.value.dateRange || '30d'
+	    setExportDateRange(range)
+	  }
+	})
 
 watch(
   () => exportSettings.value.dataType,
@@ -6930,14 +7139,14 @@ watch(
   },
 )
 
-watch(
-  () => exportSettings.value.includeCorridorHistory,
-  (enabled) => {
-    if (!enabled && exportSettings.value.dateRange === 'all') {
-      setExportDateRange('30d')
-    }
-  },
-)
+	watch(
+	  () => exportSettings.value.includeCorridorHistory,
+	  (enabled) => {
+	    if (enabled) {
+	      setExportDateRange(exportSettings.value.dateRange || '30d')
+	    }
+	  },
+	)
 
 watch(
   () => exportCorridorIds.value.length,
@@ -6996,8 +7205,10 @@ const deleteAccountConfirmed = ref(false)
 const deleteAccountError = ref<string | null>(null)
 const deleteAccountWarning = ref<string | null>(null)
 
-const showDeleteWatchlistModal = ref(false)
-const watchlistItemToDelete = ref<WatchlistItem | null>(null)
+	const showDeleteWatchlistModal = ref(false)
+	const watchlistItemToDelete = ref<WatchlistItem | null>(null)
+	const showDeleteAlertModal = ref(false)
+	const alertToDelete = ref<Alert | null>(null)
 
 const deleteAccountReady = computed(() => {
   return deleteAccountConfirmed.value && deleteAccountConfirmText.value.trim().toUpperCase() === 'DELETE'
@@ -7094,12 +7305,33 @@ const closeDeleteWatchlistModal = () => {
   watchlistItemToDelete.value = null
 }
 
-const confirmDeleteWatchlistItem = () => {
-  if (watchlistItemToDelete.value) {
-    watchlistRemove(watchlistItemToDelete.value.id)
-    closeDeleteWatchlistModal()
-  }
-}
+	const confirmDeleteWatchlistItem = async () => {
+	  if (!watchlistItemToDelete.value) return
+	  const ok = await watchlistRemove(watchlistItemToDelete.value.id)
+	  if (ok) {
+	    toast.success('Removed from watchlist.')
+	    closeDeleteWatchlistModal()
+	  }
+	}
+
+	const openDeleteAlertModal = (alert: Alert) => {
+	  alertToDelete.value = alert
+	  showDeleteAlertModal.value = true
+	}
+
+	const closeDeleteAlertModal = () => {
+	  showDeleteAlertModal.value = false
+	  alertToDelete.value = null
+	}
+
+	const confirmDeleteAlert = async () => {
+	  if (!alertToDelete.value) return
+	  const ok = await alertsRemove(alertToDelete.value.id)
+	  if (ok) {
+	    toast.success('Alert deleted.')
+	    closeDeleteAlertModal()
+	  }
+	}
 
 // Graph data
 const graphData = computed(() => {
@@ -7157,32 +7389,39 @@ const topMoversLoading = computed(() => {
 
 async function handleAddWatchlist() {
   if (watchlistLimitReached.value) {
-    if (!isPlus.value) {
-      alert('Watchlist limit reached. Upgrade to Plus for up to 16 corridors.')
-    }
- else {
-      alert(`Watchlist limit reached (${limits.value.watchlistItems}). Remove a corridor to add another.`)
-    }
+    openLimitModal('watchlist')
     return
   }
+
+  const from = (newWatchlist.value.from || '').trim().toUpperCase()
+  const to = (newWatchlist.value.to || '').trim().toUpperCase()
+  if (!from || !to) return
+
   const target: WatchTarget = {
     type: 'corridor',
-    from: newWatchlist.value.from,
-    to: newWatchlist.value.to,
+    from,
+    to,
     method: 'bank',
   }
-  const label = `${newWatchlist.value.from} → ${newWatchlist.value.to}`
+  const label = `${from} → ${to}`
   const result = await watchlistSave(target, { label })
 
   if (result.status === 'saved') {
-    newWatchlist.value = { from: 'US', to: 'PH' }
+    newWatchlist.value = { from: '', to: '' }
+    toast.success('Added to watchlist.')
   }
  else if (result.status === 'already_saved') {
     // Already in watchlist, just reset the form
-    newWatchlist.value = { from: 'US', to: 'PH' }
+    newWatchlist.value = { from: '', to: '' }
+    toast.info('Already in your watchlist.')
   }
  else if (result.status === 'limit_reached' || result.status === 'error') {
-    alert(result.message)
+    if (result.status === 'limit_reached') {
+      openLimitModal('watchlist', result.limit)
+    }
+    else {
+      toast.error(result.message)
+    }
   }
 }
 
@@ -7212,6 +7451,11 @@ async function handleCompareClick(item: WatchlistItem) {
 async function handleCompareSelectedCorridor() {
   if (comparingSelectedCorridor.value) return
 
+  if (!selectedCorridor.value) {
+    showCorridorSelector.value = true
+    return
+  }
+
   comparingSelectedCorridor.value = true
 
   const url = getCorridorUrl(selectedCorridor.value.from, selectedCorridor.value.to)
@@ -7230,19 +7474,38 @@ function openAlert(item: WatchlistItem) {
 
 function openCreateAlert() {
   if (alertsLimitReached.value) {
-    if (!isPlus.value) {
-      alert('Alert limit reached. Upgrade to Plus for up to 16 alerts.')
-    }
- else {
-      alert(`Alert limit reached (${limits.value.alerts}). Disable or delete an alert to add another.`)
-    }
+    openLimitModal('alert')
     return
   }
+  const selected = selectedCorridor.value
+    ? ({
+        target: { type: 'corridor', from: selectedCorridor.value.from, to: selectedCorridor.value.to, method: 'bank' } as WatchTarget,
+        label: `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`,
+      })
+    : null
+
   const first = corridorWatchlistItems.value[0]
-  const fallbackTarget: WatchTarget = { type: 'corridor', from: 'US', to: 'PH', method: 'bank' }
+  const fromWatchlist = first?.target?.type === 'corridor'
+    ? ({ target: first.target as WatchTarget, label: first.label })
+    : null
+
+  const recent = recentSearches.value?.[0]
+  const fromRecent = recent?.from && recent?.to
+    ? ({
+        target: { type: 'corridor', from: String(recent.from).toUpperCase(), to: String(recent.to).toUpperCase(), method: 'bank' } as WatchTarget,
+        label: `${String(recent.from).toUpperCase()} → ${String(recent.to).toUpperCase()}`,
+      })
+    : null
+
+  const fallback = selected ?? fromWatchlist ?? fromRecent
+  if (!fallback) {
+    showCorridorSelector.value = true
+    return
+  }
+
   modal.open({
-    target: first?.target ?? fallbackTarget,
-    label: first?.label ?? 'US → PH',
+    target: fallback.target,
+    label: fallback.label,
     source: 'dashboard',
   })
 }

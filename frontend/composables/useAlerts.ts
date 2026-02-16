@@ -192,9 +192,9 @@ export const useAlerts = () => {
     throw new Error(response.message || response.error || 'Failed to create alert')
   }
 
-  async function syncToBackend(operation: 'create' | 'update' | 'delete', alert: Alert | Partial<Alert>, id?: string) {
+  async function syncToBackend(operation: 'create' | 'update' | 'delete', alert: Alert | Partial<Alert>, id?: string): Promise<boolean> {
     if (!isLoggedIn.value) {
-      return
+      return true
     }
 
     try {
@@ -206,6 +206,7 @@ export const useAlerts = () => {
           frequency: fullAlert.frequency,
           enabled: fullAlert.enabled,
         })
+        return true
       }
       else if (operation === 'update' && id) {
         const patch = alert as Partial<Alert>
@@ -221,15 +222,20 @@ export const useAlerts = () => {
         if (response.success && response.alert) {
           upsertAlert(response.alert)
         }
+        return true
       }
       else if (operation === 'delete' && id) {
         await request<AlertsApiResponse>(`/alerts/${id}`, {
           method: 'DELETE',
         })
+        return true
       }
+
+      return true
     }
     catch (error) {
       useLogger('alerts').error(`Error syncing ${operation} to backend`, error)
+      return false
     }
   }
 
@@ -380,17 +386,31 @@ export const useAlerts = () => {
     }
   }
 
-  async function remove(id: string) {
+  async function remove(id: string): Promise<boolean> {
     const index = alerts.value.findIndex(a => a.id === id)
-    if (index === -1) return
+    if (index === -1) return true
+
+    const removedAlert = alerts.value[index]
+    const removedHistory = historyByAlertId.value[id] ?? null
 
     alerts.value = alerts.value.filter(a => a.id !== id)
     const { [id]: _removed, ...rest } = historyByAlertId.value
     historyByAlertId.value = rest
 
     if (isLoggedIn.value) {
-      await syncToBackend('delete', {} as Alert, id)
+      const ok = await syncToBackend('delete', {} as Alert, id)
+      if (!ok) {
+        // Roll back local removal if backend deletion fails.
+        alerts.value = [removedAlert, ...alerts.value].sort(sortByUpdatedDesc)
+        if (removedHistory) {
+          historyByAlertId.value = { ...historyByAlertId.value, [id]: removedHistory }
+        }
+        toast.error('Unable to delete alert right now. Please try again.')
+        return false
+      }
     }
+
+    return true
   }
 
   function toggleEnabled(id: string) {

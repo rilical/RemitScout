@@ -5,7 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { sendJsonMessage } from '../../../shared/sqs'
-import { DEFAULT_LIMIT_MAX } from '../../../shared/constants'
+import { DEFAULT_LIMIT_MAX, EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '../../../shared/constants'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
@@ -176,9 +176,17 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     const jobType = exportJobTypeMap[dataType][format]
 
     const exportMaxDays = request.entitlementsContext?.entitlements.exports_max_days ?? null
-    const finiteExportMaxDays = typeof exportMaxDays === 'number' && exportMaxDays > 0
+    const planMaxDays = typeof exportMaxDays === 'number' && exportMaxDays > 0
       ? exportMaxDays
       : null
+    // Always enforce a hard cap even if a plan reports "unlimited".
+    const effectiveMaxDays = Math.max(
+      1,
+      Math.min(
+        EXPORTS_MAX_WINDOW_DAYS_HARD_CAP,
+        planMaxDays ?? EXPORTS_MAX_WINDOW_DAYS_HARD_CAP,
+      ),
+    )
 
     const dateFrom = toDateFromOrNull(parsed.data.dateFrom)
     const dateTo = toDateToOrNull(parsed.data.dateTo)
@@ -191,10 +199,10 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
 
     const requiresDateRange = dataType === 'history' || dataType === 'all'
-    if (finiteExportMaxDays && requiresDateRange) {
-      if (!dateFrom || !dateTo) {
-                throw new ValidationError('Invalid request', { details: { error: 'export_date_range_required', allowedDays: finiteExportMaxDays } })
-      }
+    if (requiresDateRange && (!dateFrom || !dateTo)) {
+      throw new ValidationError('Invalid request', {
+        details: { error: 'export_date_range_required', allowedDays: effectiveMaxDays },
+      })
     }
 
     if (dateFrom && dateTo) {
@@ -202,15 +210,15 @@ export const exportsRoutes = async (app: FastifyInstance) => {
                 throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
       }
 
-      if (finiteExportMaxDays) {
-        const windowDays = getInclusiveWindowDays(dateFrom, dateTo)
-        if (windowDays > finiteExportMaxDays) {
-                    throw new ValidationError('Invalid request', { details: {
+      const windowDays = getInclusiveWindowDays(dateFrom, dateTo)
+      if (windowDays > effectiveMaxDays) {
+        throw new ValidationError('Invalid request', {
+          details: {
             error: 'export_window_exceeds_plan_limit',
-            allowedDays: finiteExportMaxDays,
+            allowedDays: effectiveMaxDays,
             windowDays,
-          } })
-        }
+          },
+        })
       }
     }
 

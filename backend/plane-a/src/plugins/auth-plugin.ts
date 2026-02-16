@@ -180,27 +180,21 @@ export const requireAdmin = () => {
 
     const email = request.user.email?.toLowerCase()
     const allowlist = config.planeA.adminEmails
-    if (allowlist.length > 0) {
-      if (email && allowlist.includes(email)) {
-        return
-      }
-      reply.code(403)
-      return reply.send({ error: 'forbidden' })
-    }
-
     const supabaseRole = request.user.role
-    if (supabaseRole === 'admin' || supabaseRole === 'super_admin') {
+    // Never lock out super admins because an allowlist was misconfigured.
+    if (supabaseRole === 'super_admin') {
       return
     }
 
+    let appRole: string | null = null
     try {
       const result = await query<{ app_role: string | null }>(
         `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
         [request.user.user_id],
         planeAPool,
       )
-      const appRole = result.rows[0]?.app_role
-      if (appRole === 'admin' || appRole === 'super_admin') {
+      appRole = result.rows[0]?.app_role ?? null
+      if (appRole === 'super_admin') {
         return
       }
     } catch (error) {
@@ -208,6 +202,24 @@ export const requireAdmin = () => {
         user_id: request.user.user_id,
         error: getErrorMessage(error),
       })
+    }
+
+    const allowlisted = allowlist.length > 0 && email ? allowlist.includes(email) : false
+    if (allowlisted) {
+      return
+    }
+
+    // If an allowlist is configured, require it for non-super-admin access.
+    if (allowlist.length > 0) {
+      reply.code(403)
+      return reply.send({ error: 'forbidden' })
+    }
+
+    if (supabaseRole === 'admin') {
+      return
+    }
+    if (appRole === 'admin') {
+      return
     }
 
     reply.code(403)

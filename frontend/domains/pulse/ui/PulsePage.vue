@@ -1116,12 +1116,13 @@ import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/fo
 import { COUNTRIES } from '~/utils/countries-currencies'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useWatchlist } from '~/composables/useWatchlist'
-import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
-import { useExports } from '~/composables/useExports'
-import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
-import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
-import { useFeatureFlags } from '~/composables/useFeatureFlags'
-import { getCorridorUrl } from '~/utils/country-slugs'
+	import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
+	import { useExports } from '~/composables/useExports'
+	import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
+	import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+	import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+	import { useFeatureFlags } from '~/composables/useFeatureFlags'
+	import { getCorridorUrl } from '~/utils/country-slugs'
 
 const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
 const PulseSmartGauge = defineAsyncComponent(() => import('~/components/pulse/PulseSmartGauge.vue'))
@@ -1572,14 +1573,14 @@ function handleCreateAlert() {
   })
 }
 
-const resolveExportDays = () => {
-  if (!limits.value.exports) return 0
-  const max = limits.value.exportsMaxDays
-  // Plus is capped at 30d exports. Enterprise full history export is handled via Dashboard.
-  if (max === 'unlimited') return 30
-  if (typeof max === 'number' && max > 0) return Math.min(30, max)
-  return 0
-}
+	const resolveExportDays = () => {
+	  if (!limits.value.exports) return 0
+	  const max = limits.value.exportsMaxDays
+	  // Keep snapshot exports bounded and fast.
+	  if (max === 'unlimited') return EXPORTS_MAX_WINDOW_DAYS_HARD_CAP
+	  if (typeof max === 'number' && max > 0) return Math.min(EXPORTS_MAX_WINDOW_DAYS_HARD_CAP, max)
+	  return 0
+	}
 
 const pollExportStatus = async (jobId: string) => {
   clearSnapshotExportPoll()

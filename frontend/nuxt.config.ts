@@ -383,8 +383,11 @@ export default defineNuxtConfig({
           failOnError: false,
         }
       : {
-          crawlLinks: true,
+          // Local/CI builds should be deterministic and not depend on backend availability.
+          // Crawling all links during build will explode build time and cause spurious 500s when the API isn't running.
+          crawlLinks: false,
           routes: ['/'],
+          failOnError: false,
         },
   },
 
