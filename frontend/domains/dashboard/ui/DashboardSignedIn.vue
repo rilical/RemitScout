@@ -5391,27 +5391,30 @@ const exportStatusClasses = (status: string) => {
 const hasAdminAccess = ref(false)
 const adminAccessChecked = ref(false)
 
-const checkAdminAccess = async (signal?: AbortSignal) => {
-  if (!import.meta.client) return
-  if (!isAuthenticated.value) {
-    hasAdminAccess.value = false
-    adminAccessChecked.value = true
-    return
-  }
-  if (adminAccessChecked.value) return
-  let aborted = false
-  try {
-    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
-    hasAdminAccess.value = Boolean(me?.user?.is_admin)
-  }
- catch (error: any) {
-    if (error?.name === 'AbortError') {
-      aborted = true
+	const checkAdminAccess = async (signal?: AbortSignal) => {
+	  if (!import.meta.client) return
+	  if (!isAuthenticated.value) {
+	    hasAdminAccess.value = false
+	    adminAccessChecked.value = true
+	    return
+	  }
+	  if (adminAccessChecked.value) return
+	  let aborted = false
+	  try {
+	    // Determine admin access via `/me` instead of probing `/admin/*` routes.
+	    // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
+	    // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
+	    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
+	    hasAdminAccess.value = Boolean(me?.user?.is_admin)
+	  }
+	 catch (error: any) {
+	    if (error?.name === 'AbortError') {
+	      aborted = true
       return
     }
     hasAdminAccess.value = false
   }
- finally {
+  finally {
     if (!aborted) {
       adminAccessChecked.value = true
     }
