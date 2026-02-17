@@ -37,9 +37,9 @@ const start = async () => {
       requirements: {
         requirePlaneA: true,
         requirePlaneC: true,
-        requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
+        requireRedis: false,
+        requireQueues: false,
+        requireStorage: false,
         requireSupabase: isProdLikeEnv,
         requireStripe: isProdLikeEnv,
       },

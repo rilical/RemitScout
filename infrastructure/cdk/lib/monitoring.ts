@@ -630,6 +630,7 @@ export const createMonitoring = (
   const batchJobNames = [
     'gold-publisher-job',
     'gold-indices-job',
+    'institutional-daily-export-job',
     'gold-reconciliation-job',
     'provider-weighting-job',
     'data-health-slo',
@@ -911,6 +912,50 @@ export const createMonitoring = (
   for (const alarm of probeHeartbeatAlarms) {
     alarm.addAlarmAction(isProd ? opsAction : warningAction)
   }
+
+  // Aggregate probe failure signal: pages ops when multiple providers fail at once.
+  // Single-provider failures remain warning-level (per-provider alarms above).
+  const probeFailureMetricsByProvider: Record<string, Metric> = {}
+  for (const providerId of probeProviders) {
+    probeFailureMetricsByProvider[providerId] = new Metric({
+      namespace: 'RemitScout/Probes',
+      metricName: 'probe_result',
+      statistic: 'Sum',
+      period: Duration.minutes(5),
+      dimensionsMap: {
+        ProviderId: providerId,
+        Status: 'failure',
+        environment: options.envName,
+      },
+    })
+  }
+
+  const probeFailureSumExpression = probeProviders
+    .map((providerId, idx) => `FILL(m${idx + 1}, 0)`)
+    .join(' + ')
+  const probeFailureUsingMetrics: Record<string, Metric> = {}
+  probeProviders.forEach((providerId, idx) => {
+    probeFailureUsingMetrics[`m${idx + 1}`] = probeFailureMetricsByProvider[providerId]
+  })
+
+  const probeFailuresAllProviders5m = new MathExpression({
+    label: 'Probe failures (all providers)',
+    expression: probeFailureSumExpression || '0',
+    usingMetrics: probeFailureUsingMetrics,
+    period: Duration.minutes(5),
+  })
+
+  const probeFailureBurstThreshold = isProd ? 3 : 5
+  const probeFailureBurstAlarm = new Alarm(scope, 'ProviderProbeFailureBurstAlarm', {
+    alarmName: `remit-scout-${options.envName}-provider-probe-failures-high`,
+    metric: probeFailuresAllProviders5m,
+    threshold: probeFailureBurstThreshold,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Multiple provider probe failures detected (>=${probeFailureBurstThreshold} in 5m)`,
+  })
+  probeFailureBurstAlarm.addAlarmAction(isProd ? opsAction : warningAction)
 
   // API Health Alarms
   // High API Error Rate: > 5% for 5 minutes

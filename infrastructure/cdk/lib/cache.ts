@@ -1,13 +1,17 @@
+import { SecretValue } from 'aws-cdk-lib'
 import {
   CfnReplicationGroup,
   CfnSubnetGroup,
 } from 'aws-cdk-lib/aws-elasticache'
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import type { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2'
 import type { Construct } from 'constructs'
 
 export type CacheResources = {
   subnetGroup: CfnSubnetGroup
   replicationGroup: CfnReplicationGroup
+  redisAuthSecret: Secret
+  redisAuthToken: SecretValue
 }
 
 export type CacheOptions = {
@@ -19,6 +23,18 @@ export type CacheOptions = {
 export const createCache = (scope: Construct, options: CacheOptions): CacheResources => {
   const isProd = options.envName === 'prod'
   const subnets = options.vpc.privateSubnets
+
+  const redisAuthSecret = new Secret(scope, 'RedisAuthSecret', {
+    secretName: `remit-scout/${options.envName}/redis-auth`,
+    description: `Redis AUTH token for Remit-Scout ${options.envName}`,
+    generateSecretString: {
+      passwordLength: 48,
+      excludePunctuation: true,
+      includeSpace: false,
+    },
+  })
+
+  const redisAuthToken = redisAuthSecret.secretValueFromJson('password')
 
   const subnetGroup = new CfnSubnetGroup(scope, 'RedisSubnetGroup', {
     cacheSubnetGroupName: `remit-scout-${options.envName}-redis`,
@@ -40,10 +56,13 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     cacheSubnetGroupName: subnetGroup.ref,
     securityGroupIds: [options.redisSecurityGroup.securityGroupId],
     autoMinorVersionUpgrade: true,
+    authToken: redisAuthToken.toString(),
   })
 
   return {
     subnetGroup,
     replicationGroup,
+    redisAuthSecret,
+    redisAuthToken,
   }
 }

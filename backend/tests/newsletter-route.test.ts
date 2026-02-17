@@ -72,6 +72,22 @@ vi.mock('../plane-a/src/services/audit-log', () => ({
 }))
 
 const makeApp = () => ({
+  container: {
+    pool: {
+      query: (...args: any[]) => mockPoolQuery(...args),
+    },
+    repositories: {
+      newsletter: {
+        findByEmail: (...args: any[]) => mockFindByEmail(...args),
+        updatePendingTokens: (...args: any[]) => mockUpdatePendingTokens(...args),
+        createPending: (...args: any[]) => mockCreatePending(...args),
+        findByVerifyTokenHash: (...args: any[]) => mockFindByVerifyTokenHash(...args),
+        findByUnsubscribeTokenHash: (...args: any[]) => mockFindByUnsubscribeTokenHash(...args),
+        activate: (...args: any[]) => mockActivate(...args),
+        unsubscribe: (...args: any[]) => mockUnsubscribe(...args),
+      },
+    },
+  },
   get: vi.fn(),
   post: vi.fn(),
 }) as unknown as FastifyInstance

@@ -1,5 +1,15 @@
 import { test, expect, type Page } from '@playwright/test'
 
+const stubGeo = async (page: Page, countryCode: string) => {
+  await page.route('**/api/geo', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ countryCode }),
+    })
+  })
+}
+
 const getPublicConfig = async (page: Page) => {
   return await page.evaluate(() => {
     const nuxt = (window as any).__NUXT__
@@ -8,6 +18,7 @@ const getPublicConfig = async (page: Page) => {
 }
 
 test('cookie banner shows; accept enables marketing gating', async ({ page }) => {
+  await stubGeo(page, 'DE')
   await page.goto('/')
 
   await expect(page.getByText('Ads keep the free plan free')).toBeVisible()
@@ -50,6 +61,7 @@ test('cookie banner shows; accept enables marketing gating', async ({ page }) =>
 })
 
 test('reject non-essential keeps marketing disabled', async ({ page }) => {
+  await stubGeo(page, 'DE')
   await page.goto('/')
 
   await expect(page.getByText('Ads keep the free plan free')).toBeVisible()
@@ -78,4 +90,17 @@ test('reject non-essential keeps marketing disabled', async ({ page }) => {
   expect(after.ezoicScript).toBe(false)
   expect(after.ezstandalone).toBe(false)
   expect(after.attribution).toBeNull()
+})
+
+test('outside EEA/UK: banner does not auto-show; cookie settings entry is still available', async ({ page }) => {
+  await stubGeo(page, 'US')
+  await page.goto('/')
+
+  await expect(page.getByText('Ads keep the free plan free')).toHaveCount(0)
+
+  const cookieSettings = page.getByRole('button', { name: 'Cookie settings' })
+  await cookieSettings.scrollIntoViewIfNeeded()
+  await cookieSettings.click()
+
+  await expect(page.getByText('Cookie preferences')).toBeVisible()
 })

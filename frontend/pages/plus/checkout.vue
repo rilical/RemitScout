@@ -149,8 +149,7 @@
                   <span class="text-h3 font-bold text-white">{{ totalDueToday }}</span>
                 </div>
                 <p class="text-body-sm text-rs-muted mt-2">
-                  <span v-if="trialDays > 0">{{ trialDays }}-day free trial • Cancel anytime</span>
-                  <span v-else>Cancel anytime</span>
+                  Cancel anytime
                 </p>
               </div>
             </div>
@@ -240,8 +239,7 @@
 
             <div class="mt-6 pt-6 border-t border-neutral-700">
               <p class="text-body-sm text-rs-muted text-center">
-                <span v-if="trialDays > 0">You won't be charged until after your {{ trialDays }}-day free trial ends</span>
-                <span v-else>Cancel anytime</span>
+                Cancel anytime
               </p>
             </div>
           </div>
@@ -269,7 +267,6 @@ const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'mon
 type BillingPricingResponse = {
   success: true
   configured: boolean
-  trialDays: number
   plus: {
     month: { amount: number | null, currency: string | null, priceId: string | null }
     year: { amount: number | null, currency: string | null, priceId: string | null }
@@ -283,7 +280,6 @@ const { data: pricing, pending: pricingLoading } = await useAsyncData(
   { server: true },
 )
 
-const trialDays = computed(() => pricing.value?.trialDays ?? 0)
 const selectedPrice = computed(() => (
   billingInterval.value === 'year' ? pricing.value?.plus.year : pricing.value?.plus.month
 ))
@@ -310,12 +306,7 @@ const billedAnnuallyMonthlyDisplay = computed(() => {
   return `${formatted} / month billed annually`
 })
 const billingIntervalLabel = computed(() => (billingInterval.value === 'year' ? 'Annual' : 'Monthly'))
-const totalDueToday = computed(() => {
-  if (trialDays.value > 0) {
-    return plusPriceCurrency.value ? (formatMoney(0, plusPriceCurrency.value) || '$0.00') : '$0.00'
-  }
-  return priceDisplay.value
-})
+const totalDueToday = computed(() => priceDisplay.value)
 
 async function handleCheckout() {
   if (!isAuthenticated.value) {

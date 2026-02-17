@@ -24,7 +24,7 @@ describe('entitlements', () => {
       const entitlements = getEntitlementsForPlan('plus')
 
       expect(entitlements).toEqual({
-        pulse_access: 'full',
+        pulse_access: 'lite',
         exports_enabled: true,
         exports_max_days: 30,
         alerts_max: 16,
@@ -41,7 +41,7 @@ describe('entitlements', () => {
       const entitlements = getEntitlementsForPlan('enterprise')
 
       expect(entitlements).toEqual({
-        pulse_access: 'full',
+        pulse_access: 'pro',
         exports_enabled: true,
         exports_max_days: null,
         alerts_max: null,
@@ -111,8 +111,8 @@ describe('entitlements', () => {
       const enterprise = getEntitlementsForPlan('enterprise')
 
       expect(free.pulse_access).toBe('none')
-      expect(plus.pulse_access).toBe('full')
-      expect(enterprise.pulse_access).toBe('full')
+      expect(plus.pulse_access).toBe('lite')
+      expect(enterprise.pulse_access).toBe('pro')
     })
 
     it('validates exports_enabled values', () => {

@@ -1269,7 +1269,7 @@ paths:
   /api/v1/pulse/providers/heatmap:
     get:
       summary: Pulse provider heatmap
-      description: Returns provider heatmap data (requires Pulse entitlement)
+      description: Returns provider heatmap data (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -1466,7 +1466,7 @@ paths:
   /api/v1/pulse/market-depth:
     get:
       summary: Pulse market depth
-      description: Returns market depth summary (requires Pulse entitlement)
+      description: Returns market depth summary (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -1513,7 +1513,7 @@ paths:
   /api/v1/pulse/arbitrage:
     get:
       summary: Pulse arbitrage insight
-      description: Returns arbitrage opportunity summary (requires Pulse entitlement)
+      description: Returns arbitrage opportunity summary (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -1715,7 +1715,7 @@ paths:
   /api/v1/pulse/events:
     get:
       summary: Pulse events feed
-      description: Returns corridor event feed (requires Pulse entitlement)
+      description: Returns corridor event feed (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -1785,7 +1785,7 @@ paths:
   /api/v1/pulse/providers/benchmarking:
     get:
       summary: Pulse provider benchmarking
-      description: Returns provider benchmarking data for a corridor (requires Pulse entitlement)
+      description: Returns provider benchmarking data for a corridor (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -1859,7 +1859,7 @@ paths:
   /api/v1/pulse/method-coverage:
     get:
       summary: Pulse method coverage
-      description: Returns method coverage for a corridor (requires Pulse entitlement)
+      description: Returns method coverage for a corridor (requires Pulse Pro (Enterprise))
       tags:
         - Pulse
       security:
@@ -2575,7 +2575,7 @@ components:
           properties:
             pulse_access:
               type: string
-              enum: [none, full]
+              enum: [none, lite, pro]
             exports_enabled:
               type: boolean
             alerts_max:

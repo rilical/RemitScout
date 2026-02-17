@@ -1,7 +1,14 @@
-import { Annotations } from 'aws-cdk-lib'
+import path from 'path'
+
+import { Annotations, Duration } from 'aws-cdk-lib'
 import { SlackChannelConfiguration, LoggingLevel } from 'aws-cdk-lib/aws-chatbot'
+import { Runtime, Tracing } from 'aws-cdk-lib/aws-lambda'
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { ManagedPolicy } from 'aws-cdk-lib/aws-iam'
 import { Topic, Subscription, SubscriptionProtocol } from 'aws-cdk-lib/aws-sns'
+import { LambdaSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
+import { RetentionDays } from 'aws-cdk-lib/aws-logs'
+import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { Construct } from 'constructs'
 
 export type SnsSubscriptionResources = {
@@ -18,6 +25,7 @@ export type SnsSubscriptionOptions = {
   slackOpsChannelId?: string
   slackWebhookUrl?: string
   pagerDutyIntegrationKey?: string
+  betterUptimeWebhookSsmParamName?: string
 }
 
 const createSlackChannelConfig = (
@@ -50,6 +58,42 @@ const createPagerDutySubscription = (
   })
 
   return subscription
+}
+
+const createBetterUptimeRelay = (
+  scope: Construct,
+  envName: string,
+  webhookSsmParamName: string,
+) => {
+  const isProd = envName === 'prod'
+  const webhookParam = StringParameter.fromSecureStringParameterAttributes(
+    scope,
+    'BetterUptimeWebhookParam',
+    { parameterName: webhookSsmParamName },
+  )
+
+  return new NodejsFunction(scope, 'BetterUptimeSnsRelay', {
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'betteruptime-sns-relay-lambda.ts',
+    ),
+    handler: 'handler',
+    runtime: Runtime.NODEJS_20_X,
+    memorySize: 256,
+    timeout: Duration.seconds(10),
+    tracing: Tracing.ACTIVE,
+    logRetention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+    environment: {
+      ENV_NAME: envName,
+      BETTERUPTIME_WEBHOOK_URL: webhookParam.stringValue,
+    },
+  })
 }
 
 export const createSnsSubscriptions = (
@@ -113,6 +157,18 @@ export const createSnsSubscriptions = (
 
   if (options.pagerDutyIntegrationKey) {
     createPagerDutySubscription(scope, criticalTopic, options.pagerDutyIntegrationKey)
+  }
+
+  if (options.betterUptimeWebhookSsmParamName) {
+    const relay = createBetterUptimeRelay(
+      scope,
+      options.envName,
+      options.betterUptimeWebhookSsmParamName,
+    )
+    // Subscribe all alert topics so Better Uptime can route/escalate by severity.
+    criticalTopic.addSubscription(new LambdaSubscription(relay))
+    warningTopic.addSubscription(new LambdaSubscription(relay))
+    opsTopic.addSubscription(new LambdaSubscription(relay))
   }
 
   return {

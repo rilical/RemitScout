@@ -96,13 +96,13 @@ const addMissing = (
     code: z.ZodIssueCode.custom,
     path,
     message: envVar,
-})
+  })
+}
 
 const shouldRequire = (
   overrideValue: boolean | undefined,
   defaultValue: boolean,
 ) => overrideValue ?? defaultValue
-}
 
 const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
   baseConfigSchema.superRefine((cfg, ctx) => {

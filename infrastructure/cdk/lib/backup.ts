@@ -1,4 +1,5 @@
 import { Duration, RemovalPolicy } from 'aws-cdk-lib'
+import { Key } from 'aws-cdk-lib/aws-kms'
 import { Schedule } from 'aws-cdk-lib/aws-events'
 import {
   BackupPlan,
@@ -40,6 +41,12 @@ export const createBackup = (
     return null
   }
   const vaultRetentionDays = isProd ? 35 : 14
+  const vaultEncryptionKey = new Key(scope, 'DatabaseBackupVaultKey', {
+    description: `RemitScout ${options.envName} backup vault encryption key`,
+    enableKeyRotation: true,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    alias: `alias/remit-scout-${options.envName}-backup`,
+  })
 
   const notificationTopic = new Topic(scope, 'DatabaseBackupAlerts', {
     topicName: `remit-scout-${options.envName}-backup-alerts`,
@@ -47,6 +54,7 @@ export const createBackup = (
 
   const vault = new BackupVault(scope, 'DatabaseBackupVault', {
     backupVaultName: `remit-scout-${options.envName}-db`,
+    encryptionKey: vaultEncryptionKey,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     notificationTopic,
     notificationEvents: [

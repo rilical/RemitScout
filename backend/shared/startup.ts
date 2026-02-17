@@ -197,6 +197,14 @@ export const runStartupChecks = async (params: {
     })
   }
 
+  const stripeTrialDays = Number(process.env.STRIPE_TRIAL_DAYS)
+  if (Number.isFinite(stripeTrialDays) && stripeTrialDays > 0) {
+    logger.warn('stripe_trial_days_ignored', {
+      message: 'STRIPE_TRIAL_DAYS is set but trials are disabled by policy (trialDays forced to 0).',
+      configured_days: stripeTrialDays,
+    })
+  }
+
   // Connectivity checks: fail-fast in ECS (or when explicitly requested via --validate).
   // Local dev often has no AWS creds/queues/buckets, and Lambda cold starts should avoid extra calls.
   const shouldValidateConnectivity = config.runtime.isEcs || process.argv.includes('--validate')

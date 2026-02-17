@@ -1,7 +1,7 @@
 import path from 'path'
 
 import { Annotations, Duration, Fn, RemovalPolicy, Stack, Token } from 'aws-cdk-lib'
-import { HttpApi, HttpMethod, HttpStage } from 'aws-cdk-lib/aws-apigatewayv2'
+import { CfnStage, HttpApi, HttpMethod, HttpStage } from 'aws-cdk-lib/aws-apigatewayv2'
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations'
 import {
   HttpIamAuthorizer,
@@ -11,7 +11,10 @@ import {
   AllowedMethods,
   CachePolicy,
   Distribution,
+  HeadersFrameOption,
+  HeadersReferrerPolicy,
   OriginRequestPolicy,
+  ResponseHeadersPolicy,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront'
 import { HttpOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
@@ -21,6 +24,8 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { SubnetType, type SecurityGroup, type Vpc } from 'aws-cdk-lib/aws-ec2'
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
+import { ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import type { IBucket } from 'aws-cdk-lib/aws-s3'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import { CfnIPSet, CfnLoggingConfiguration, CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
@@ -89,6 +94,7 @@ export type ApiOptions = {
   userAssetsPrefix?: string
   enableCloudFront?: boolean
   enableWaf?: boolean
+  cloudFrontAccessLogsBucket?: IBucket
   planeADomainName?: string
   planeACertificateArn?: string
   planeAHostedZoneId?: string
@@ -658,7 +664,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     authorizer: planeAJwtAuthorizer,
   })
 
-  new HttpStage(scope, 'PlaneAStage', {
+  const planeAStage = new HttpStage(scope, 'PlaneAStage', {
     httpApi: planeAApi,
     stageName: '$default',
     autoDeploy: true,
@@ -668,6 +674,29 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     },
     detailedMetricsEnabled: true,
   })
+
+  const planeAAccessLogGroup = new LogGroup(scope, 'PlaneAAccessLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/api-gateway-access`,
+    retention: options.envName === 'prod' ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+    removalPolicy: options.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+  planeAAccessLogGroup.grantWrite(new ServicePrincipal('apigateway.amazonaws.com'))
+
+  // HttpStage does not expose access log settings in the L2 for all configurations; set via L1 override.
+  const planeACfnStage = planeAStage.node.defaultChild as CfnStage
+  planeACfnStage.accessLogSettings = {
+    destinationArn: planeAAccessLogGroup.logGroupArn,
+    format: JSON.stringify({
+      requestId: '$context.requestId',
+      requestTime: '$context.requestTime',
+      httpMethod: '$context.httpMethod',
+      routeKey: '$context.routeKey',
+      status: '$context.status',
+      responseLength: '$context.responseLength',
+      ip: '$context.identity.sourceIp',
+      userAgent: '$context.identity.userAgent',
+    }),
+  }
 
   new HttpStage(scope, 'PlaneCStage', {
     httpApi: planeCApi,
@@ -685,7 +714,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeADomainName = options.planeADomainName
   const planeACertificateArn = options.planeACertificateArn
   const enableCloudFront = options.enableCloudFront ?? options.envName === 'prod'
-  const enableWaf = options.enableWaf ?? options.envName === 'prod'
+  const enableWaf = options.enableWaf ?? (options.envName === 'prod' || options.envName === 'staging')
   const wafAllowList = options.wafAllowListIps ?? []
   const wafBlockList = options.wafBlockListIps ?? []
   const wafStripeWebhookAllowList = options.wafStripeWebhookAllowListIps ?? []
@@ -693,6 +722,30 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const wafEnableBotControl = options.wafEnableBotControl ?? false
 
   if (enableCloudFront) {
+    const securityHeadersPolicy = new ResponseHeadersPolicy(scope, 'PlaneASecurityHeaders', {
+      securityHeadersBehavior: {
+        strictTransportSecurity: {
+          accessControlMaxAge: Duration.days(365),
+          includeSubdomains: true,
+          override: true,
+        },
+        contentTypeOptions: { override: true },
+        frameOptions: { frameOption: HeadersFrameOption.DENY, override: true },
+        referrerPolicy: {
+          referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          override: true,
+        },
+        xssProtection: { protection: true, modeBlock: true, override: true },
+      },
+    })
+    const cloudFrontLoggingConfig = options.cloudFrontAccessLogsBucket
+      ? {
+          enableLogging: true,
+          logBucket: options.cloudFrontAccessLogsBucket,
+          logFilePrefix: 'cloudfront/plane-a/',
+        }
+      : {}
+
     if (enableWaf) {
       const region = Stack.of(scope).region
       const regionReady = Token.isUnresolved(region) || region === 'us-east-1'
@@ -984,6 +1037,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
         originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
+        responseHeadersPolicy: securityHeadersPolicy,
       },
       webAclId: planeAWaf?.attrArn,
       domainNames: planeADomainName ? [planeADomainName] : undefined,
@@ -991,6 +1045,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
         ? Certificate.fromCertificateArn(scope, 'PlaneACert', planeACertificateArn)
         : undefined,
       comment: `Plane A edge distribution (${options.envName})`,
+      ...cloudFrontLoggingConfig,
     })
 
     if (planeADomainName && !planeACertificateArn) {

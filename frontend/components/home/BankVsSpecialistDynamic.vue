@@ -215,7 +215,7 @@
           <div class="flex items-center gap-4 mb-6">
             <div class="h-24 w-24 flex-shrink-0 flex items-center justify-center overflow-visible">
               <NuxtImg
-                v-if="topProviderSlug && topProviderLogoSrc"
+                v-if="topProviderSlug && topProviderLogoSrc && !topLogoError"
                 :src="topProviderLogoSrc"
                 :alt="comparison.top.name"
                 width="96"
@@ -223,9 +223,10 @@
                 loading="lazy"
                 :format="topProviderLogoSrc?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
                 class="max-h-full max-w-full object-contain"
+                @error="topLogoError = true"
               />
               <NuxtImg
-                v-else-if="comparison.top.logoUrl"
+                v-else-if="comparison.top.logoUrl && !topLogoError"
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
                 width="96"
@@ -233,24 +234,13 @@
                 loading="lazy"
                 :format="comparison.top.logoUrl?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
                 class="max-h-full max-w-full object-contain"
+                @error="topLogoError = true"
               />
               <div
                 v-else
-                class="h-16 w-16 flex items-center justify-center"
+                class="h-24 w-24 flex items-center justify-center rounded-xl bg-success-100 text-success-700 text-h1 font-bold"
               >
-                <svg
-                class="h-full w-full text-success-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
+                {{ comparison.top.name?.charAt(0) ?? 'P' }}
               </div>
             </div>
             <div>
@@ -501,10 +491,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { normalizeProviderSlug, getProviderLogoPath } from '~/composables/useProviderLogo'
 
+const topLogoError = ref(false)
 const amount = 500
 
 // Fixed corridor: US → Mexico
@@ -529,6 +520,9 @@ const topProviderLogoSrc = computed(() => {
   const slug = topProviderSlug.value
   return slug ? getProviderLogoPath(slug) : ''
 })
+
+watch(topProviderSlug, () => { topLogoError.value = false })
+watch(() => comparison.value?.top?.logoUrl, () => { topLogoError.value = false })
 
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''

@@ -3,10 +3,12 @@ import { proxyToBackend } from '~/server/utils/backendProxy'
 
 const ALLOWED_PATH_PREFIXES = [
   '/providers', '/quotes', '/corridors', '/popular-corridors',
+  '/corridor-currencies',
   '/offers', '/bank-vs-specialist', '/geo', '/click',
   '/newsletter', '/recent-searches', '/billing',
   '/me', '/watchlist', '/alerts', '/exports',
   '/sessions', '/telemetry', '/admin', '/rates',
+  '/pulse',
   '/ops', '/analytics', '/audit', '/ads',
 ] as const
 

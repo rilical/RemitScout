@@ -59,9 +59,20 @@
           </div>
         </div>
         <PulseMatrixTable
-          v-else
+          v-else-if="isPro"
           :rows="matrixRows"
         />
+        <PulsePlusGate
+          v-else
+          :is-gated="true"
+          tier="enterprise"
+          title="Method Matrix (Pro)"
+          description="Enterprise unlocks the method/provider matrix view for operational coverage."
+        >
+          <template #preview>
+            <div class="h-48 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+          </template>
+        </PulsePlusGate>
       </div>
     </div>
 
@@ -77,6 +88,10 @@ import { ref, watch, onMounted } from 'vue'
 import { usePulseStore } from '~/stores/pulse'
 import { getMethodCoverage, getChartData, getPulseCoverageSummary } from '~/lib/pulseApi'
 import type { MethodCoverageRow, PulseCoverageSummary } from '~/types/pulse'
+
+const props = withDefaults(defineProps<{ isPro?: boolean }>(), {
+  isPro: false,
+})
 
 const store = usePulseStore()
 
@@ -98,7 +113,7 @@ async function loadData() {
   loading.value = true
   try {
     const [rows, successData, freshnessData, summary] = await Promise.all([
-      getMethodCoverage(store.filtersForApi),
+      props.isPro ? getMethodCoverage(store.filtersForApi) : Promise.resolve([] as MethodCoverageRow[]),
       getChartData('quote-success', store.filtersForApi),
       getChartData('data-freshness', store.filtersForApi),
       getPulseCoverageSummary(store.corridor, store.timeframe),

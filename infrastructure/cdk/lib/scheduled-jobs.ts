@@ -44,6 +44,7 @@ export type ScheduledJobsResources = {
   goldPulseCacheRule?: Rule
   goldPublisherRule?: Rule
   goldIndicesRule?: Rule
+  institutionalDailyExportRule?: Rule
   dataHealthSloFunction?: IFunction
   dataHealthSloRule?: Rule
   goldReconciliationRule?: Rule
@@ -1381,7 +1382,6 @@ export const createScheduledJobs = (
     redisSsmName,
   })
 
-  const goldIndicesIntervalHours = 4
   const goldIndicesRule = createPlaneCLambdaJob({
     scope,
     options,
@@ -1397,7 +1397,38 @@ export const createScheduledJobs = (
       'aws',
       'gold-indices-job-lambda.ts',
     ),
-    schedule: Schedule.rate(Duration.hours(goldIndicesIntervalHours)),
+    // Anchor to UTC so the daily institutional export can safely run at 01:00 UTC
+    // after the post-midnight indices recompute.
+    schedule: Schedule.cron({ minute: '15', hour: '0/4' }),
+    enabled: rulesEnabled,
+    logRetention,
+    otelLambdaLayer,
+    lambdaNetworking: planeCLambdaNetworking,
+    planeCDbSecretArn,
+    planeCDbSsmName,
+    planeCDbHost,
+    planeCDbPort,
+    planeCDbName,
+    redisSecretArn,
+    redisSsmName,
+  })
+
+  const institutionalDailyExportRule = createPlaneCLambdaJob({
+    scope,
+    options,
+    id: 'InstitutionalDailyExportJob',
+    jobName: 'institutional-daily-export',
+    entry: path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'backend',
+      'scripts',
+      'aws',
+      'institutional-daily-export-lambda.ts',
+    ),
+    schedule: Schedule.cron({ minute: '0', hour: '1' }),
     enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,
@@ -1962,6 +1993,7 @@ export const createScheduledJobs = (
     goldPulseCacheRule,
     goldPublisherRule,
     goldIndicesRule,
+    institutionalDailyExportRule,
     dataHealthSloFunction,
     dataHealthSloRule,
     goldReconciliationRule,
@@ -2098,7 +2130,9 @@ const createPlaneBLambdaJob = ({
   })
   tagManagedRule(rule, options.envName)
 
-  rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
+  rule.addTarget(new LambdaFunction(fn, {
+    retryAttempts: jobName === 'institutional-daily-export' ? 2 : 1,
+  }))
 
   return rule
 }
@@ -2140,6 +2174,9 @@ const createPlaneCLambdaJob = ({
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  if (jobName === 'institutional-daily-export' && options.exportsBucketName) {
+    environment.EXPORTS_S3_BUCKET = options.exportsBucketName
+  }
   if (jobName === 'gold-indices') {
     const lookbackOverride =
       options.goldIndicesLookbackDays ?? (options.envName === 'dev' ? '3' : undefined)
@@ -2163,13 +2200,18 @@ const createPlaneCLambdaJob = ({
     environment.PLANE_C_DB_NAME = planeCDbName
   }
 
+  const lambdaMemorySize = jobName === 'institutional-daily-export' ? 1024 : 512
+  const lambdaTimeout = jobName === 'institutional-daily-export'
+    ? Duration.minutes(15)
+    : Duration.minutes(5)
+
   const fn = new NodejsFunction(scope, `${id}Function`, {
     entry,
     handler: 'handler',
     runtime: Runtime.NODEJS_20_X,
     architecture: options.lambdaArchitecture,
-    memorySize: 512,
-    timeout: Duration.minutes(5),
+    memorySize: lambdaMemorySize,
+    timeout: lambdaTimeout,
     ...lambdaNetworking,
     role: options.roles.planeCLambdaRole,
     tracing: tracingMode,

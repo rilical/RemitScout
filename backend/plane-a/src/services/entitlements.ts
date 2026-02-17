@@ -1,7 +1,7 @@
 export type PlanCode = 'free' | 'plus' | 'enterprise'
 
 export type Entitlements = {
-  pulse_access: 'none' | 'full'
+  pulse_access: 'none' | 'lite' | 'pro'
   exports_enabled: boolean
   exports_max_days: number | null
   alerts_max: number | null
@@ -35,7 +35,7 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     indices_api: false,
   },
   plus: {
-    pulse_access: 'full',
+    pulse_access: 'lite',
     exports_enabled: true,
     exports_max_days: 30,
     alerts_max: 16,
@@ -47,7 +47,7 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     indices_api: false,
   },
   enterprise: {
-    pulse_access: 'full',
+    pulse_access: 'pro',
     exports_enabled: true,
     exports_max_days: null,
     alerts_max: null,

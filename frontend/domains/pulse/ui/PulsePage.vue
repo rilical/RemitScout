@@ -18,7 +18,7 @@
               A market-screener-first view of what is moving across corridors, with honest timestamps.
             </p>
             <p class="mt-2 text-body-sm text-neutral-400">
-              Public preview shows corridor moves only. Plus unlocks Smart Send, best-provider snapshots, and spread risk.
+              Public preview shows corridor moves only. Plus unlocks Pulse Lite (market snapshot, trends, and basic deep dives). Enterprise unlocks Pulse Pro (screener, market depth, benchmarking, and alerts).
             </p>
           </div>
 
@@ -62,7 +62,7 @@
                 </span>
               </div>
               <p class="text-body-sm text-neutral-400 mb-4">
-                Plus ranks your watchlist corridors and shows the best provider, spread risk, and freshness.
+                Enterprise unlocks the watchlist screener with best-provider ranking, spread risk, and freshness across corridors.
               </p>
               <div class="space-y-3 opacity-70 blur-[1.5px] select-none pointer-events-none">
                 <div
@@ -96,7 +96,7 @@
                 Unlock Pulse Plus
               </h2>
               <p class="mt-2 text-body-sm text-neutral-300">
-                Get the screener, deep dives, alerts, and snapshot exports. No ads.
+                Plus unlocks Pulse Lite: market snapshot, trends, and exports. Enterprise unlocks Pulse Pro: screener, market depth, benchmarking, and arbitrage alerts.
               </p>
               <NuxtLink
                 to="/plus"
@@ -106,9 +106,9 @@
               </NuxtLink>
               <div class="mt-4 text-body-sm text-neutral-400">
                 Enterprise teams: <NuxtLink
-                  to="/institutions/data-products"
+                  to="/contact?type=enterprise&topic=pulse"
                   class="text-primary-400 hover:text-primary-300 underline"
-                >API & exports</NuxtLink>
+                >Contact sales</NuxtLink>
               </div>
             </div>
           </div>
@@ -181,7 +181,7 @@
               </span>
               <div class="flex flex-col gap-3">
                 <NuxtLink
-                  to="/institutions/data-products"
+                  to="/contact?type=enterprise&topic=pulse"
                   class="inline-flex items-center gap-2.5 rounded-xl border-2 border-primary-500 bg-primary-500 px-6 py-3 text-body font-semibold text-white hover:bg-brand-600 hover:border-brand-600 transition-colors shadow-lg hover:shadow-xl whitespace-nowrap"
                 >
                   Enterprise
@@ -209,20 +209,71 @@
       </div>
 
       <div class="py-8">
-        <!-- Screener-first (Plus) -->
+        <!-- Screener-first (Pro) -->
         <div class="mb-8 px-page-x">
           <div class="mx-auto max-w-page grid grid-cols-1 gap-6 lg:grid-cols-12">
             <div
               v-if="pulseScreenerEnabled"
               class="lg:col-span-7"
             >
-              <PulseScreener
-                :rows="screenerRows"
-                :loading="screenerLoading"
-                :error="screenerError"
-                :selected-corridor-id="store.corridor.corridorId || null"
-                @select="handleScreenerSelect"
-              />
+              <PulsePlusGate
+                :is-gated="!isPro"
+                tier="enterprise"
+                title="Watchlist Screener (Pro)"
+                description="Enterprise unlocks the corridor screener, best-provider ranking, spread risk, and freshness across your watchlist."
+              >
+                <PulseScreener
+                  :rows="screenerRows"
+                  :loading="screenerLoading"
+                  :error="screenerError"
+                  :selected-corridor-id="store.corridor.corridorId || null"
+                  @select="handleScreenerSelect"
+                />
+                <template #preview>
+                  <div class="rounded-2xl border border-neutral-700 bg-neutral-800 shadow-lg overflow-hidden">
+                    <div class="border-b border-neutral-700 px-6 py-5">
+                      <div class="flex items-end justify-between gap-3">
+                        <div>
+                          <div class="text-body-lg font-bold text-white">
+                            Your Watchlist Screener
+                          </div>
+                          <div class="mt-1 text-body-sm text-neutral-400">
+                            Ranked corridors, best provider, spread risk, and freshness.
+                          </div>
+                        </div>
+                        <div class="text-[11px] font-mono uppercase tracking-wider text-neutral-500">
+                          $1000 • bank→bank • 7D
+                        </div>
+                      </div>
+                    </div>
+                    <div class="p-6 space-y-3">
+                      <div
+                        v-for="n in 5"
+                        :key="n"
+                        class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
+                      >
+                        <SkeletonBlock
+                          width="11rem"
+                          height="14"
+                          tone="dark"
+                        />
+                        <div class="mt-3 grid grid-cols-2 gap-3">
+                          <SkeletonBlock
+                            width="5rem"
+                            height="12"
+                            tone="dark"
+                          />
+                          <SkeletonBlock
+                            width="6rem"
+                            height="12"
+                            tone="dark"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </PulsePlusGate>
             </div>
 
             <div :class="pulseScreenerEnabled ? 'lg:col-span-5' : 'lg:col-span-12'">
@@ -238,11 +289,16 @@
 
           <div class="mx-auto max-w-page mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="text-body-sm text-neutral-400">
-              Tip: Click a screener row or mover to load the decision panel below.
-              <span
-                v-if="pulseScreenerEnabled && screenerUpdatedAt"
-                class="ml-2 text-neutral-500"
-              >Screener {{ formatUpdatedLabel(screenerUpdatedAt) }}</span>
+              <template v-if="isPro && pulseScreenerEnabled">
+                Tip: Click a screener row or mover to load the decision panel below.
+                <span
+                  v-if="screenerUpdatedAt"
+                  class="ml-2 text-neutral-500"
+                >Screener {{ formatUpdatedLabel(screenerUpdatedAt) }}</span>
+              </template>
+              <template v-else>
+                Tip: Click a mover to load the decision panel below.
+              </template>
             </div>
             <button
               type="button"
@@ -681,7 +737,24 @@
                   class="lg:col-span-4"
                   :class="highlightedSection === 'market-spread' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
                 >
-                  <PulseMarketDepth />
+                  <PulsePlusGate
+                    :is-gated="!isPro"
+                    tier="enterprise"
+                    title="Market Depth (Pro)"
+                    description="Enterprise unlocks market depth: best-to-worst dispersion and spread structure."
+                  >
+                    <PulseMarketDepth />
+                    <template #preview>
+                      <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                        <SkeletonBlock
+                          width="10rem"
+                          height="16"
+                          tone="dark"
+                        />
+                        <div class="mt-4 h-56 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                      </div>
+                    </template>
+                  </PulsePlusGate>
                 </div>
               </div>
             </div>
@@ -703,8 +776,49 @@
                 </p>
               </div>
               <div class="grid grid-cols-1 gap-6">
-                <PulseProviderLeaderboard />
-                <PulseProviderHeatmap />
+                <PulsePlusGate
+                  :is-gated="!isPro"
+                  tier="enterprise"
+                  title="Provider Leaderboard (Pro)"
+                  description="Enterprise unlocks institutional provider ranking and benchmarking."
+                >
+                  <PulseProviderLeaderboard />
+                  <template #preview>
+                    <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                      <SkeletonBlock
+                        width="12rem"
+                        height="16"
+                        tone="dark"
+                      />
+                      <div class="mt-4 space-y-2">
+                        <div
+                          v-for="n in 6"
+                          :key="n"
+                          class="h-10 rounded-lg border border-neutral-700 bg-neutral-900/30"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                </PulsePlusGate>
+
+                <PulsePlusGate
+                  :is-gated="!isPro"
+                  tier="enterprise"
+                  title="Provider Heatmap (Pro)"
+                  description="Enterprise unlocks winner timelines and provider dominance analytics."
+                >
+                  <PulseProviderHeatmap />
+                  <template #preview>
+                    <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                      <SkeletonBlock
+                        width="10rem"
+                        height="16"
+                        tone="dark"
+                      />
+                      <div class="mt-4 h-56 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                    </div>
+                  </template>
+                </PulsePlusGate>
               </div>
             </div>
           </section>
@@ -754,7 +868,51 @@
                   Quote success rates, method support, and data freshness.
                 </p>
               </div>
-              <PulseReliabilityCoverage />
+              <PulsePlusGate
+                :is-gated="!isPro"
+                tier="enterprise"
+                title="Reliability & Coverage (Pro)"
+                description="Enterprise unlocks method coverage and operational diagnostics for this corridor."
+              >
+                <PulseReliabilityCoverage />
+                <template #preview>
+                  <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                      <div class="space-y-3 lg:col-span-4">
+                        <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                          <SkeletonBlock
+                            width="9rem"
+                            height="14"
+                            tone="dark"
+                          />
+                          <SkeletonBlock
+                            class="mt-3"
+                            width="6rem"
+                            height="28"
+                            tone="dark"
+                          />
+                        </div>
+                        <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                          <SkeletonBlock
+                            width="8rem"
+                            height="14"
+                            tone="dark"
+                          />
+                          <SkeletonBlock
+                            class="mt-3"
+                            width="7rem"
+                            height="28"
+                            tone="dark"
+                          />
+                        </div>
+                      </div>
+                      <div class="lg:col-span-8">
+                        <div class="h-72 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </PulsePlusGate>
             </div>
           </section>
 
@@ -776,12 +934,54 @@
               <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
                 <div class="lg:col-span-7 flex">
                   <div class="flex-1">
-                    <PulseEventFeed @view="navigateToChart" />
+                    <PulsePlusGate
+                      :is-gated="!isPro"
+                      tier="enterprise"
+                      title="Market Events (Pro)"
+                      description="Enterprise unlocks anomaly events and corridor risk signals."
+                    >
+                      <PulseEventFeed @view="navigateToChart" />
+                      <template #preview>
+                        <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                          <SkeletonBlock
+                            width="10rem"
+                            height="16"
+                            tone="dark"
+                          />
+                          <div class="mt-4 space-y-3">
+                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                          </div>
+                        </div>
+                      </template>
+                    </PulsePlusGate>
                   </div>
                 </div>
                 <div class="lg:col-span-5 flex">
                   <div class="flex-1">
-                    <PulseArbitrageAlert />
+                    <PulsePlusGate
+                      :is-gated="!isPro"
+                      tier="enterprise"
+                      title="Arbitrage Alerts (Pro)"
+                      description="Enterprise unlocks spread anomaly detection and arbitrage signals."
+                    >
+                      <PulseArbitrageAlert />
+                      <template #preview>
+                        <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
+                          <SkeletonBlock
+                            width="11rem"
+                            height="16"
+                            tone="dark"
+                          />
+                          <div class="mt-4 space-y-3">
+                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+                          </div>
+                        </div>
+                      </template>
+                    </PulsePlusGate>
                   </div>
                 </div>
               </div>
@@ -807,7 +1007,7 @@
               <PulseChartGrid
                 :chart-data="chartData"
                 :filters="legacyFilters"
-                :is-plus="isPlus"
+                :pulse-level="pulseLevel"
                 @view="navigateToChart"
                 @share="handleShare"
                 @embed="handleEmbed"
@@ -967,7 +1167,7 @@
                 </div>
                 <div class="border-t border-primary-500/40 px-6 py-4">
                   <NuxtLink
-                    to="/institutions/data-products"
+                    to="/contact?type=enterprise&topic=pulse"
                     class="inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 text-body-sm font-semibold text-white hover:bg-brand-600 transition-colors"
                   >
                     Learn More About Enterprise Access
@@ -1116,7 +1316,8 @@ if (!pulseEnabled.value) {
 const router = useRouter()
 const route = useRoute()
 const store = usePulseStore()
-const { isPlus, limits } = useEntitlements()
+const { isPlus, pulseLevel, limits } = useEntitlements()
+const isPro = computed(() => pulseLevel.value === 'pro')
 const watchlist = useWatchlist()
 const saveAlertModal = useSaveAlertModal()
 const exportsApi = useExports()
@@ -1237,7 +1438,7 @@ const screenerError = ref<string | null>(null)
 const screenerUpdatedAt = ref<string | null>(null)
 
 const loadScreener = async () => {
-  if (!isPlus.value) return
+  if (!isPro.value) return
   if (!pulseScreenerEnabled.value) return
 
   const corridorIds = screenerCorridorIds.value
@@ -1663,7 +1864,10 @@ async function loadChartData() {
   if (chartLoadedKey.value === key) return
   try {
     chartLoading.value = true
-    const chartIds = pulseChartRegistry.map(c => c.id)
+    const proTypes = new Set(['stacked', 'scatter', 'matrix'])
+    const chartIds = pulseChartRegistry
+      .filter(c => isPro.value || !proTypes.has(c.type))
+      .map(c => c.id)
     const promises = chartIds.map(async (id) => {
       const data = await getChartData(id, legacyFilters.value)
       return { id, data }
@@ -1793,10 +1997,10 @@ watch(
 )
 
 watch(
-  () => [pulseScreenerEnabled.value, screenerCorridorIds.value.join(',')],
-  () => {
+  () => [isPro.value, pulseScreenerEnabled.value, screenerCorridorIds.value.join(',')],
+  ([pro]) => {
     if (!import.meta.client) return
-    if (!isPlus.value) return
+    if (!pro) return
     void loadScreener()
   },
   { immediate: true },
@@ -1849,7 +2053,9 @@ onMounted(async () => {
   // Avoid Plus-gated Pulse API calls for public preview users.
   if (isPlus.value) {
     void refreshTrackedCorridors()
-    void loadScreener()
+    if (isPro.value) {
+      void loadScreener()
+    }
     loadSnapshotSummary()
     loadChartData()
     loadCoverageSummary()

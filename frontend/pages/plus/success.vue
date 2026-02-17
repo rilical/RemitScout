@@ -88,10 +88,6 @@
               <span class="text-white">{{ billingAmountDisplay }}</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-neutral-400">Trial Period</span>
-              <span class="text-white">{{ trialDisplay }}</span>
-            </div>
-            <div class="flex items-center justify-between">
               <span class="text-neutral-400">Next Billing Date</span>
               <span class="text-white">{{ nextBillingDateDisplay }}</span>
             </div>
@@ -159,7 +155,6 @@ import { formatDate, formatMoney as formatMoneyValue } from '~/shared/lib/format
 type BillingPricingResponse = {
   success: true
   configured: boolean
-  trialDays: number
   plus: {
     month: { amount: number | null, currency: string | null, priceId: string | null }
     year: { amount: number | null, currency: string | null, priceId: string | null }
@@ -207,7 +202,6 @@ if (_sessionId) {
 }
 
 const billing = computed(() => me.value?.billing ?? null)
-const trialDays = computed(() => pricing.value?.trialDays ?? 0)
 
 function formatMoney(amount: number | null | undefined, currency: string | null | undefined): string {
   if (amount === null || amount === undefined || !currency) return '—'
@@ -225,12 +219,6 @@ const nextBillingDateDisplay = computed(() => {
 })
 
 const billingStatusDisplay = computed(() => billing.value?.status ?? null)
-
-const trialDisplay = computed(() => {
-  if (billing.value?.status !== 'trialing') return '—'
-  if (trialDays.value <= 0) return 'Trial'
-  return `${trialDays.value} days`
-})
 
 const loadMe = async () => {
   meLoading.value = true

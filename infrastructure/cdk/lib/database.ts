@@ -3,12 +3,16 @@ import {
   AuroraPostgresEngineVersion,
   ClusterInstance,
   Credentials,
+  PerformanceInsightRetention,
+  ParameterGroup,
   DatabaseCluster,
   DatabaseClusterEngine,
   DatabaseProxy,
   ProxyTarget,
 } from 'aws-cdk-lib/aws-rds'
 import { InstanceType, SubnetType, type SecurityGroup, type Vpc } from 'aws-cdk-lib/aws-ec2'
+import { Key } from 'aws-cdk-lib/aws-kms'
+import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import type { Construct } from 'constructs'
 
@@ -16,6 +20,7 @@ export type DatabaseResources = {
   cluster: DatabaseCluster
   proxy?: DatabaseProxy
   credentialsSecret: Secret
+  encryptionKey: Key
 }
 
 export type DatabaseOptions = {
@@ -29,7 +34,33 @@ export type DatabaseOptions = {
 export const createDatabase = (scope: Construct, options: DatabaseOptions): DatabaseResources => {
   const isProd = options.envName === 'prod'
   const isDev = options.envName === 'dev'
+  const isStaging = options.envName === 'staging'
   const enableProxy = options.enableProxy ?? true
+
+  const encryptionKey = new Key(scope, 'DatabaseEncryptionKey', {
+    description: `RemitScout ${options.envName} Aurora encryption key`,
+    enableKeyRotation: true,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    alias: `alias/remit-scout-${options.envName}-rds`,
+  })
+
+  const parameterGroup = new ParameterGroup(scope, 'DatabaseParameterGroup', {
+    engine: DatabaseClusterEngine.auroraPostgres({
+      version: AuroraPostgresEngineVersion.VER_15_14,
+    }),
+    parameters: {
+      shared_preload_libraries: 'pgaudit',
+      'pgaudit.log': 'all',
+      'pgaudit.log_catalog': 'on',
+      'pgaudit.log_parameter': 'on',
+      'pgaudit.log_relation': 'on',
+      'pgaudit.log_statement_once': 'on',
+      log_connections: '1',
+      log_disconnections: '1',
+      log_statement: 'all',
+      log_min_duration_statement: '1000',
+    },
+  })
 
   const credentialsSecret = new Secret(scope, 'AuroraMasterSecret', {
     secretName: `remit-scout/${options.envName}/database/master`,
@@ -47,9 +78,13 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     defaultDatabaseName: 'remit_scout',
-    backup: { retention: Duration.days(isProd ? 30 : (isDev ? 3 : 7)) },
+    backup: { retention: Duration.days(isProd ? 30 : (isDev ? 3 : 14)) },
     storageEncrypted: true,
-    deletionProtection: isProd,
+    storageEncryptionKey: encryptionKey,
+    deletionProtection: isProd || isStaging,
+    parameterGroup,
+    cloudwatchLogsExports: ['postgresql'],
+    cloudwatchLogsRetention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   }
 
@@ -76,6 +111,8 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
           vpcSubnets: { subnetType: dbSubnetType },
           securityGroups: [options.dbSecurityGroup],
           instanceType: new InstanceType(isProd ? 'r6g.xlarge' : 'r6g.large'),
+          enablePerformanceInsights: true,
+          performanceInsightRetention: PerformanceInsightRetention.DEFAULT,
         },
       })
 
@@ -98,5 +135,6 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     cluster,
     proxy,
     credentialsSecret,
+    encryptionKey,
   }
 }

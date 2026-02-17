@@ -60,3 +60,77 @@
 - Reduce dev cadences/lookback windows for heavy jobs.
 - Confirm nightly auto-pause + cost guardrail auto-pause are still wired.
 
+## Cost guardrail configuration (explicit values)
+
+Deploy now passes these values to CDK context for all environments:
+- `costBudgetAmountUsd`
+- `costAnomalyThresholdUsd`
+- `costAlertEmails`
+
+Recommended values currently wired in `.github/workflows/deploy.yml`:
+
+- **dev**: `50`, `20`, `alerts@remit-scout.com`
+- **staging**: `100`, `60`, `alerts@remit-scout.com`
+- **prod**: `500`, `100`, `alerts@remit-scout.com`
+
+GitHub environment variables (or repo vars) currently resolve this order:
+
+- `COST_BUDGET_AMOUNT_USD`:
+  - dev uses this directly (fallback `50`)
+  - staging prefers `COST_BUDGET_AMOUNT_USD`, then `STAGING_COST_BUDGET_AMOUNT_USD`, fallback `100`
+  - prod prefers `COST_BUDGET_AMOUNT_USD`, then `PROD_COST_BUDGET_AMOUNT_USD`, fallback `500`
+- `COST_ANOMALY_THRESHOLD_USD`:
+  - dev uses this directly (fallback `20`)
+  - staging prefers `COST_ANOMALY_THRESHOLD_USD`, then `STAGING_COST_ANOMALY_THRESHOLD_USD`, fallback `60`
+  - prod prefers `COST_ANOMALY_THRESHOLD_USD`, then `PROD_COST_ANOMALY_THRESHOLD_USD`, fallback `100`
+- `COST_ALERT_EMAILS`:
+  - staging prefers `COST_ALERT_EMAILS`, then `STAGING_COST_ALERT_EMAILS`, fallback `alerts@remit-scout.com`
+  - prod prefers `COST_ALERT_EMAILS`, then `PROD_COST_ALERT_EMAILS`, fallback `alerts@remit-scout.com`
+  - dev uses `COST_ALERT_EMAILS` directly (fallback `alerts@remit-scout.com`)
+- `COST_ALERT_EMAILS` accepts comma-separated emails (for example: `alerts@a.com,alerts@b.com`) and is split by comma in deploy context.
+
+Operational check:
+1. In each GitHub environment (`dev`, `staging`, `prod`), confirm budget variables are set to current policy values.
+2. Confirm recipients in `COST_ALERT_EMAILS` are actively monitored.
+3. If alerting is missing, validate that these values were actually passed in the workflow logs under the `CDK Diff` / `CDK Deploy` steps.
+
+## Monthly Ghost-Resource Cleanup Checklist
+Run once per month from the payer account:
+
+1) **Unattached EBS volumes**
+   ```sh
+   aws ec2 describe-volumes \
+     --filters Name=status,Values=available \
+     --query 'Volumes[].{id:VolumeId,size:Size,state:State,create:CreateTime,az:AvailabilityZone}' \
+     --output table
+   ```
+
+2) **RDS / ElastiCache snapshots outside retention**
+   ```sh
+   aws rds describe-db-snapshots --snapshot-type automated --query 'DBSnapshots[].{id:DBSnapshotIdentifier,created:SnapshotCreateTime,status:Status}'
+   aws elasticache describe-snapshots --query 'Snapshots[].{name:Name,created:SnapshotCreateTime}'
+   ```
+
+3) **Unassociated Elastic IPs**
+   ```sh
+   aws ec2 describe-addresses --query 'Addresses[].{AllocationId:AllocationId,AssocId:AssociationId,PublicIp:PublicIp}'
+   ```
+
+4) **Orphaned ENIs**
+   ```sh
+   aws ec2 describe-network-interfaces \
+     --filters Name=status,Values=available \
+     --query 'NetworkInterfaces[].{id:NetworkInterfaceId,desc:Description,subnet:SubnetId,az:AvailabilityZone,ageDays:CreateTime}' \
+     --output table
+   ```
+
+5) **Old AMIs from past deploys**
+   ```sh
+   aws ec2 describe-images \
+     --owners self \
+     --query 'Images[].{id:ImageId,name:Name,created:CreationDate}' \
+     --output table
+   ```
+
+6) **Cost Explorer by environment tag**
+   - Verify `environment=dev|staging|prod` daily spend trend and any unusual spikes (especially after deployments or weekend runs).

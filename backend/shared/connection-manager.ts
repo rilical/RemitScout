@@ -125,9 +125,22 @@ export const cleanupAllConnections = async (): Promise<void> => {
           break
         }
         case 'sqs':
-        case 'cloudwatch':
-          logger.debug('aws_client_skipped', { type: connection.type, name: connection.name })
+        case 'cloudwatch': {
+          const promise = Promise.resolve()
+            .then(() => {
+              connection.client.destroy()
+              logger.debug('aws_client_destroyed', { type: connection.type, name: connection.name })
+            })
+            .catch((error) => {
+              logger.warn('aws_client_destroy_failed', {
+                type: connection.type,
+                name: connection.name,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            })
+          cleanupPromises.push(promise)
           break
+        }
       }
     } catch (error) {
       logger.warn('connection_cleanup_error', {
@@ -194,4 +207,3 @@ export const listConnections = (): Array<{ type: ConnectionType; name: string }>
     name: conn.name,
   }))
 }
-

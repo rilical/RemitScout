@@ -25,8 +25,24 @@ let initialized = false
 
 const configValue = (value?: string) => value?.trim() || ''
 
+const resolveOtlpEndpoint = (): string =>
+  configValue(process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) ||
+  configValue(process.env.OTEL_EXPORTER_OTLP_ENDPOINT) ||
+  configValue(config.observability.tracing.otlpEndpoint)
+
+const resolveTraceSampleRate = (): number => {
+  const raw = configValue(process.env.TRACE_SAMPLE_RATE)
+  if (raw) {
+    const parsed = Number.parseFloat(raw)
+    if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) return parsed
+  }
+  return config.observability.tracing.sampleRate
+}
+
 const parseExporterMode = (): string[] => {
-  const raw = configValue(config.observability.tracing.exporter)
+  // Prefer process.env so unit tests can tweak env after importing config/tracing.
+  // Config remains the source of truth in production when env is stable at boot.
+  const raw = configValue(process.env.TRACING_EXPORTER) || configValue(config.observability.tracing.exporter)
   if (raw) {
     const modes: string[] = []
     for (const value of raw.split(',')) {
@@ -41,7 +57,7 @@ const parseExporterMode = (): string[] => {
     return Array.from(new Set(modes))
   }
 
-  if (configValue(config.observability.tracing.otlpEndpoint)) {
+  if (resolveOtlpEndpoint()) {
     return ['xray']
   }
 
@@ -60,10 +76,13 @@ export const initTracing = (serviceName: string): void => {
 
   const environment = config.env || 'development'
   const version = config.build.version || 'unknown'
+  const nodeEnv = configValue(process.env.NODE_ENV) || 'development'
+  const isProdNodeEnv = nodeEnv === 'production'
+  const isProdEnvName = environment === 'prod' || environment === 'production'
   const exporterModes = parseExporterMode()
   const requestedXray = exporterModes.includes('xray')
   const requestedOtlp = exporterModes.includes('otlp')
-  const otlpEndpoint = configValue(config.observability.tracing.otlpEndpoint)
+  const otlpEndpoint = resolveOtlpEndpoint()
   const useOtlp = Boolean(otlpEndpoint) && (requestedXray || requestedOtlp)
 
   try {
@@ -80,7 +99,7 @@ export const initTracing = (serviceName: string): void => {
 
     provider = new NodeTracerProvider({ resource })
 
-    const Processor = environment === 'production' ? BatchSpanProcessor : SimpleSpanProcessor
+    const Processor = isProdNodeEnv || isProdEnvName ? BatchSpanProcessor : SimpleSpanProcessor
 
     if (exporterModes.includes('jaeger')) {
       logger.warn('tracing_exporter_unsupported', {
@@ -302,7 +321,7 @@ export const resetTracingState = (): void => {
 }
 
 const shouldSampleTrace = (): boolean => {
-  const sampleRate = config.observability.tracing.sampleRate
+  const sampleRate = resolveTraceSampleRate()
   if (Number.isFinite(sampleRate) && sampleRate >= 0 && sampleRate <= 1) {
     return Math.random() < sampleRate
   }

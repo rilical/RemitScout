@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 
 const vuePlugin = vue() as any
+const enforceCoverage = process.env.ENFORCE_COVERAGE === '1'
 
 export default defineConfig({
   plugins: [vuePlugin],
@@ -16,6 +17,28 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'text-summary', 'lcov'],
       reportsDirectory: './coverage',
+      exclude: [
+        '**/node_modules/**',
+        '**/.nuxt/**',
+        '**/.output/**',
+        '**/coverage/**',
+        '**/*.test.ts',
+        '**/tests/**',
+      ],
+      thresholds: enforceCoverage
+        ? {
+            // Starting thresholds (raise every sprint as coverage improves).
+            statements: 10,
+            branches: 5,
+            functions: 10,
+            lines: 10,
+          }
+        : {
+            statements: 0,
+            branches: 0,
+            functions: 0,
+            lines: 0,
+          },
     },
   },
   resolve: {

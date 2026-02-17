@@ -104,6 +104,14 @@
             </li>
             <li>
               <NuxtLink
+                to="/status"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+              >
+                Status
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
                 to="/faq"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
@@ -149,6 +157,23 @@
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Cookie Policy
+              </NuxtLink>
+            </li>
+            <li>
+              <button
+                type="button"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+                @click="openCookiePreferences"
+              >
+                Cookie settings
+              </button>
+            </li>
+            <li>
+              <NuxtLink
+                to="/legal/do-not-sell"
+                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
+              >
+                Do Not Sell
               </NuxtLink>
             </li>
             <li>
@@ -203,10 +228,10 @@
             </div>
             <div>
               <h3 class="text-body-sm font-semibold text-white">
-                For Enterprise
+                For institutions
               </h3>
               <p class="text-body-sm text-white/60">
-                Data products for enterprise & research
+                Institutional details available under NDA
               </p>
             </div>
           </div>
@@ -215,22 +240,10 @@
             aria-label="Institutional links"
           >
             <NuxtLink
-              to="/institutions/data-products"
+              to="/institutions"
               class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
             >
-              Data Products
-            </NuxtLink>
-            <NuxtLink
-              to="/institutions/api"
-              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
-            >
-              API
-            </NuxtLink>
-            <NuxtLink
-              to="/institutions/compliance"
-              class="text-body-sm text-neutral-400 hover:text-white motion-safe:transition-colors"
-            >
-              Compliance
+              Institutions
             </NuxtLink>
             <NuxtLink
               to="/methodology"
@@ -261,10 +274,14 @@
 
 <script setup lang="ts">
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { useCookiePreferencesModal } from '~/composables/useCookiePreferencesModal'
 
 defineEmits<{
   'open-modal': []
 }>()
 
 const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+const { open } = useCookiePreferencesModal()
+
+const openCookiePreferences = () => open()
 </script>

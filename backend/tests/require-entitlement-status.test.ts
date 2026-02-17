@@ -72,6 +72,38 @@ describe('requireEntitlement plan status enforcement', () => {
     expect(reply.send).not.toHaveBeenCalled()
   })
 
+  it('denies pulse_pro for active plus plans', async () => {
+    mockGetUserPlan.mockResolvedValue({
+      user_id: 'u1',
+      plan_code: 'plus',
+      status: 'active',
+    })
+
+    const request: any = { user: { user_id: 'u1' } }
+    const reply: any = makeReply()
+
+    await requireEntitlement('pulse_pro')(request, reply)
+
+    expect(reply.code).toHaveBeenCalledWith(403)
+    expect(reply.send).toHaveBeenCalledWith({ error: 'forbidden', entitlement: 'pulse_pro' })
+  })
+
+  it('fails closed with plan_inactive for pulse_pro on inactive plans', async () => {
+    mockGetUserPlan.mockResolvedValue({
+      user_id: 'u1',
+      plan_code: 'plus',
+      status: 'past_due',
+    })
+
+    const request: any = { user: { user_id: 'u1' } }
+    const reply: any = makeReply()
+
+    await requireEntitlement('pulse_pro')(request, reply)
+
+    expect(reply.code).toHaveBeenCalledWith(403)
+    expect(reply.send).toHaveBeenCalledWith({ error: 'plan_inactive' })
+  })
+
   it('denies inactive enterprise api key plans', async () => {
     mockGetUserPlan.mockResolvedValue({
       user_id: 'u1',
@@ -88,4 +120,3 @@ describe('requireEntitlement plan status enforcement', () => {
     expect(reply.send).toHaveBeenCalledWith({ error: 'plan_inactive' })
   })
 })
-

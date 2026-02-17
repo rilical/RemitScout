@@ -1,13 +1,17 @@
 import { type Construct } from 'constructs'
+import { RemovalPolicy } from 'aws-cdk-lib'
 import {
   Vpc,
   SubnetType,
   SecurityGroup,
   Port,
   Peer,
+  FlowLogDestination,
+  FlowLogTrafficType,
   GatewayVpcEndpointAwsService,
   InterfaceVpcEndpointAwsService,
 } from 'aws-cdk-lib/aws-ec2'
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
 
 export type NetworkingResources = {
   vpc: Vpc
@@ -47,6 +51,17 @@ export const createNetworking = (
         subnetType: SubnetType.PRIVATE_WITH_EGRESS,
       },
     ],
+  })
+
+  vpc.addFlowLog('VpcFlowLog', {
+    destination: FlowLogDestination.toCloudWatchLogs(
+      new LogGroup(scope, 'VpcFlowLogGroup', {
+        logGroupName: `/remit-scout/${options.envName}/vpc-flow-logs`,
+        retention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+      }),
+    ),
+    trafficType: FlowLogTrafficType.ALL,
   })
 
   vpc.addGatewayEndpoint('S3GatewayEndpoint', {
@@ -99,6 +114,11 @@ export const createNetworking = (
     })
     vpc.addInterfaceEndpoint('StsEndpoint', {
       service: InterfaceVpcEndpointAwsService.STS,
+      subnets: endpointSubnets,
+      securityGroups: [endpointSecurityGroup],
+    })
+    vpc.addInterfaceEndpoint('SqsEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SQS,
       subnets: endpointSubnets,
       securityGroups: [endpointSecurityGroup],
     })

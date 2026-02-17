@@ -131,7 +131,7 @@
           <PulseChartFull
             :chart-id="chartId"
             :filters="filters"
-            :is-plus="isPlus"
+            :pulse-level="pulseLevel"
             @share="showShareModal = true"
             @embed="showEmbedModal = true"
             @download="handleDownload"
@@ -239,10 +239,10 @@
                   </button>
                 </div>
                 <NuxtLink
-                  to="/institutions/api"
+                  to="/contact?type=enterprise&topic=pulse"
                   class="text-body-sm font-medium text-brand-600 hover:text-brand-500 motion-safe:transition-colors"
                 >
-                  API Access →
+                  Institutional access →
                 </NuxtLink>
               </div>
             </div>
@@ -434,11 +434,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import type { PulseFilters, TimeRange, AmountBucket } from '~/types/pulse'
+import type { PulseFilters, AmountBucket } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
 import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { useEntitlements } from '~/composables/useEntitlements'
 
 const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
 const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
@@ -454,6 +455,7 @@ const route = useRoute()
 const store = usePulseStore()
 const { isAuthenticated } = useAuth()
 const saveAlertModal = useSaveAlertModal()
+const { pulseLevel } = useEntitlements()
 
 const chartId = computed(() => route.params.chartId as string)
 
@@ -467,7 +469,7 @@ const filters = ref<PulseFilters>({
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
 })
 
-const isPlus = ref(false)
+const isPlus = computed(() => pulseLevel.value !== 'none')
 const lastUpdated = ref<string>('')
 const showShareModal = ref(false)
 const showEmbedModal = ref(false)

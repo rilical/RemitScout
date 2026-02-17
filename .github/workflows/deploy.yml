@@ -38,6 +38,9 @@ jobs:
       actions: write
     env:
       SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
+      COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || '50' }}
+      COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || '20' }}
+      COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,6 +50,35 @@ jobs:
         with:
           node_version: 20.19.6
           pnpm_version: 10.19.0
+
+      - name: Security Evidence Gate
+        shell: bash
+        env:
+          SECURITY_ENV: dev
+          AUDIT_BLOCKING: '0'
+        run: |
+          set -euo pipefail
+          mkdir -p .security
+          docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
+            dir:/workspace \
+            -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_exit=0
+          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
+            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+              exit "$audit_exit"
+            fi
+            echo "Non-blocking mode: continuing."
+          fi
+
+      - name: Upload Security Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-dev-security-evidence
+          path: .security
+          if-no-files-found: ignore
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -127,6 +159,32 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
             image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
 
+      - name: Validate ECR Scan Results
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          REPO="remit-scout-backend-${ENV_NAME}"
+          for i in $(seq 1 30); do
+            STATUS="$(aws ecr describe-image-scan-findings \
+              --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+              --query 'imageScanStatus.status' --output text 2>/dev/null || echo "IN_PROGRESS")"
+            [ "$STATUS" = "COMPLETE" ] && break
+            echo "ECR scan status: $STATUS (attempt $i/30)"
+            sleep 10
+          done
+          CRITICAL="$(aws ecr describe-image-scan-findings \
+            --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
+          if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
+          fi
+
       - name: CDK Diff (dev)
         shell: bash
         env:
@@ -135,9 +193,12 @@ jobs:
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk cdk diff \
+          pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-50}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
@@ -158,9 +219,12 @@ jobs:
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
-          pnpm -C infrastructure/cdk cdk deploy \
+          pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-50}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
@@ -287,6 +351,9 @@ jobs:
       SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
+      COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || vars.STAGING_COST_BUDGET_AMOUNT_USD || '100' }}
+      COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.STAGING_COST_ANOMALY_THRESHOLD_USD || '60' }}
+      COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.STAGING_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -296,6 +363,35 @@ jobs:
         with:
           node_version: 20.19.6
           pnpm_version: 10.19.0
+
+      - name: Security Evidence Gate
+        shell: bash
+        env:
+          SECURITY_ENV: staging
+          AUDIT_BLOCKING: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p .security
+          docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
+            dir:/workspace \
+            -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_exit=0
+          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
+            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+              exit "$audit_exit"
+            fi
+            echo "Non-blocking mode: continuing."
+          fi
+
+      - name: Upload Security Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-staging-security-evidence
+          path: .security
+          if-no-files-found: ignore
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -394,6 +490,32 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
             image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
 
+      - name: Validate ECR Scan Results
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          REPO="remit-scout-backend-${ENV_NAME}"
+          for i in $(seq 1 30); do
+            STATUS="$(aws ecr describe-image-scan-findings \
+              --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+              --query 'imageScanStatus.status' --output text 2>/dev/null || echo "IN_PROGRESS")"
+            [ "$STATUS" = "COMPLETE" ] && break
+            echo "ECR scan status: $STATUS (attempt $i/30)"
+            sleep 10
+          done
+          CRITICAL="$(aws ecr describe-image-scan-findings \
+            --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
+          if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
+          fi
+
       - name: CDK Diff (staging)
         shell: bash
         env:
@@ -402,9 +524,12 @@ jobs:
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk cdk diff \
+          pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}"
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
 
       - name: CDK Deploy (staging)
         shell: bash
@@ -413,9 +538,12 @@ jobs:
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
-          pnpm -C infrastructure/cdk cdk deploy \
+          pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             --require-approval never
 
       - name: Run Migrations (staging)
@@ -491,8 +619,9 @@ jobs:
 
           pnpm -C frontend build
           pnpm -C frontend generate
+          pnpm -C frontend sentry:sourcemaps
 
-          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json"
+          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json" --exclude "*.map"
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
           aws cloudfront create-invalidation --distribution-id "$dist_id" --paths "/*" >/dev/null
 
@@ -570,6 +699,8 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.env == 'prod') ||
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
+    # IMPORTANT: Production environment requires manual approval.
+    # Configure in GitHub Settings -> Environments -> prod -> Required reviewers.
     environment: prod
     permissions:
       contents: read
@@ -579,6 +710,9 @@ jobs:
       SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
+      COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || vars.PROD_COST_BUDGET_AMOUNT_USD || '500' }}
+      COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.PROD_COST_ANOMALY_THRESHOLD_USD || '100' }}
+      COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.PROD_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -588,6 +722,35 @@ jobs:
         with:
           node_version: 20.19.6
           pnpm_version: 10.19.0
+
+      - name: Security Evidence Gate
+        shell: bash
+        env:
+          SECURITY_ENV: prod
+          AUDIT_BLOCKING: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p .security
+          docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
+            dir:/workspace \
+            -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
+          audit_exit=0
+          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
+            if [ "${AUDIT_BLOCKING}" = "1" ]; then
+              exit "$audit_exit"
+            fi
+            echo "Non-blocking mode: continuing."
+          fi
+
+      - name: Upload Security Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-prod-security-evidence
+          path: .security
+          if-no-files-found: ignore
 
       - name: Full Test Suite (prod gate)
         shell: bash
@@ -691,6 +854,32 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.50.1 \
             image --no-progress --severity HIGH,CRITICAL --exit-code 1 "${ECR_URI}:${IMAGE_TAG}"
 
+      - name: Validate ECR Scan Results
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
+        run: |
+          set -euo pipefail
+          REPO="remit-scout-backend-${ENV_NAME}"
+          for i in $(seq 1 30); do
+            STATUS="$(aws ecr describe-image-scan-findings \
+              --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+              --query 'imageScanStatus.status' --output text 2>/dev/null || echo "IN_PROGRESS")"
+            [ "$STATUS" = "COMPLETE" ] && break
+            echo "ECR scan status: $STATUS (attempt $i/30)"
+            sleep 10
+          done
+          CRITICAL="$(aws ecr describe-image-scan-findings \
+            --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
+            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
+          if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
+          fi
+
       - name: CDK Diff (prod)
         shell: bash
         env:
@@ -699,9 +888,12 @@ jobs:
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk cdk diff \
+          pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}"
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
 
       - name: CDK Deploy (prod)
         shell: bash
@@ -710,9 +902,12 @@ jobs:
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
-          pnpm -C infrastructure/cdk cdk deploy \
+          pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             --require-approval never
 
       - name: Run Migrations (prod)

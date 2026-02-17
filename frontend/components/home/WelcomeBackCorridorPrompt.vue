@@ -10,12 +10,12 @@
     >
       <div
         v-if="shouldShow"
-        class="fixed right-4 bottom-6 z-40 w-80"
+        class="fixed right-4 top-20 z-40 w-[min(20rem,calc(100vw-2rem))]"
       >
         <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl">
           <div class="flex items-start justify-between gap-3">
             <p class="text-body-sm font-semibold text-neutral-900">
-              Welcome back
+              Your last corridor search
             </p>
             <button
               type="button"
@@ -77,7 +77,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useCompareHistory } from '~/composables/useCompareHistory'
+import { usePersistedState } from '~/composables/usePersistedState'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
+import { useVisitSession } from '~/composables/useVisitSession'
 import { getCountryByCode } from '~/utils/countries-currencies'
 import { getCorridorUrl } from '~/utils/country-slugs'
 
@@ -96,14 +98,23 @@ const router = useRouter()
 const { request } = useApi()
 const { isLoggedIn } = useAuth()
 const { runs } = useCompareHistory()
-const { functionalConsent } = usePrivacySettings()
+const { functionalConsent, settings } = usePrivacySettings()
+const { startedAt: visitStartedAtMs } = useVisitSession()
 
 const lastCorridor = ref<{ from: string, to: string } | null>(null)
-const dismissed = ref(false)
+const lastSearchAtMs = ref<number | null>(null)
 const loading = ref(false)
+const searchedThisVisit = ref(false)
 
-const dismissalKey = 'rs:welcome_back_corridor:dismissed_until'
 const dismissalTtlMs = 24 * 60 * 60 * 1000
+const { state: dismissedUntilMs } = usePersistedState<number | null>(
+  'welcome_back_corridor:dismissed_until',
+  () => null,
+  {
+    requiredConsent: 'functional',
+    validate: (value): value is number | null => value === null || (typeof value === 'number' && Number.isFinite(value)),
+  },
+)
 
 const corridorUrl = computed(() => {
   if (!lastCorridor.value) return null
@@ -111,8 +122,14 @@ const corridorUrl = computed(() => {
 })
 
 const shouldShow = computed(() => {
+  if (!functionalConsent.value) return false
   if (!corridorUrl.value) return false
-  if (dismissed.value) return false
+  if (!lastSearchAtMs.value) return false
+  if (searchedThisVisit.value) return false
+  if (typeof dismissedUntilMs.value === 'number' && Date.now() < dismissedUntilMs.value) return false
+  if (lastSearchAtMs.value >= visitStartedAtMs.value) return false
+  const consentAt = Date.parse(settings.value.updated_at ?? '')
+  if (Number.isFinite(consentAt) && consentAt >= visitStartedAtMs.value) return false
   return route.path !== corridorUrl.value
 })
 
@@ -121,39 +138,9 @@ const toFlag = computed(() => getCountryByCode(lastCorridor.value?.to?.toUpperCa
 const fromLabel = computed(() => getCountryByCode(lastCorridor.value?.from?.toUpperCase() || '')?.name || (lastCorridor.value?.from || ''))
 const toLabel = computed(() => getCountryByCode(lastCorridor.value?.to?.toUpperCase() || '')?.name || (lastCorridor.value?.to || ''))
 
-const readDismissal = () => {
-  if (!import.meta.client) return
-  if (!functionalConsent.value) return
-  try {
-    const raw = window.sessionStorage.getItem(dismissalKey)
-    if (!raw) return
-    const until = Number(raw)
-    if (!Number.isFinite(until)) return
-    if (Date.now() < until) {
-      dismissed.value = true
-      return
-    }
-    window.sessionStorage.removeItem(dismissalKey)
-  }
-  catch {
-    // ignore
-  }
-}
-
-const persistDismissal = () => {
-  if (!import.meta.client) return
-  if (!functionalConsent.value) return
-  try {
-    window.sessionStorage.setItem(dismissalKey, String(Date.now() + dismissalTtlMs))
-  }
-  catch {
-    // ignore
-  }
-}
-
 const dismiss = () => {
-  dismissed.value = true
-  persistDismissal()
+  if (!functionalConsent.value) return
+  dismissedUntilMs.value = Date.now() + dismissalTtlMs
 }
 
 const viewCorridor = async () => {
@@ -170,9 +157,12 @@ const deriveFromLocal = () => {
     from: latest.from,
     to: latest.to,
   }
+  const ms = Date.parse(latest.createdAt)
+  lastSearchAtMs.value = Number.isFinite(ms) ? ms : null
 }
 
 const fetchRecentFromServer = async () => {
+  if (!functionalConsent.value) return
   if (!isLoggedIn.value) return
   if (loading.value) return
   loading.value = true
@@ -187,6 +177,8 @@ const fetchRecentFromServer = async () => {
       from: record.from_country,
       to: record.to_country,
     }
+    const ms = Date.parse(record.created_at)
+    lastSearchAtMs.value = Number.isFinite(ms) ? ms : null
   }
   catch {
     // ignore
@@ -196,8 +188,25 @@ const fetchRecentFromServer = async () => {
   }
 }
 
+const readSearchedThisVisit = () => {
+  if (!import.meta.client) return
+  if (!functionalConsent.value) {
+    searchedThisVisit.value = false
+    return
+  }
+  try {
+    searchedThisVisit.value = window.sessionStorage.getItem('rs:compare:searched_this_visit') === '1'
+  }
+  catch {
+    searchedThisVisit.value = false
+  }
+}
+
 const hydrate = async () => {
-  readDismissal()
+  readSearchedThisVisit()
+  if (typeof dismissedUntilMs.value === 'number' && Date.now() >= dismissedUntilMs.value) {
+    dismissedUntilMs.value = null
+  }
   if (isLoggedIn.value) {
     await fetchRecentFromServer()
     return
@@ -226,6 +235,7 @@ watch(
 watch(
   () => runs.value,
   () => {
+    readSearchedThisVisit()
     if (isLoggedIn.value) return
     deriveFromLocal()
   },

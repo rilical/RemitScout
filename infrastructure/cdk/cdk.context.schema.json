@@ -72,6 +72,10 @@
       "type": "string",
       "description": "ARN of Secrets Manager secret for Supabase config (URL + keys)"
     },
+    "sharedSecretArn": {
+      "type": "string",
+      "description": "Shared secret ARN for Supabase/Stripe/Redis"
+    },
     "devSharedSecretArn": {
       "type": "string",
       "description": "Shared dev secret ARN for Supabase/Stripe/Redis (dev only)"
@@ -175,6 +179,10 @@
       "type": "string",
       "description": "Dev-only: cron() expression for the nightly auto-pause schedule (e.g., cron(0 0 * * ? *))"
     },
+    "devMorningResumeCron": {
+      "type": "string",
+      "description": "Dev-only: cron() expression for the morning auto-resume schedule (e.g., cron(0 8 ? * MON-FRI *))"
+    },
     "goldIndicesLookbackDays": {
       "type": "string",
       "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"
@@ -186,6 +194,21 @@
     "costGuardrailsCreateCur": {
       "type": "boolean",
       "description": "Create CUR bucket/report (default: true in prod only)"
+    },
+    "costBudgetAmountUsd": {
+      "type": "number",
+      "description": "Monthly USD budget threshold used for the CloudWatch cost budget"
+    },
+    "costAnomalyThresholdUsd": {
+      "type": "number",
+      "description": "USD anomaly threshold used for Cost Anomaly Detection"
+    },
+    "costAlertEmails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Email recipients for budget/anomaly notifications"
     },
     "quoteRefreshQueueMode": {
       "type": "string",
@@ -368,6 +391,20 @@
         "type": "string"
       },
       "description": "List of IP addresses to block in WAF"
+    },
+    "wafStripeWebhookAllowListIps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of IP addresses allowed to hit /api/v1/billing/webhook"
+    },
+    "wafAdminAllowListIps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of IP addresses allowed to hit admin/ops/audit routes"
     },
     "wafEnableBotControl": {
       "type": "boolean",

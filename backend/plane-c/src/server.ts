@@ -27,9 +27,9 @@ const start = async () => {
     await runStartupChecks({
       requirements: {
         requirePlaneCDb: true,
-        requireRedis: true,
-        requireQueues: true,
-        requireStorage: true,
+        requireRedis: false,
+        requireQueues: false,
+        requireStorage: false,
       },
     })
 

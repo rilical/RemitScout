@@ -90,7 +90,7 @@ export const handler = async (): Promise<number> => {
   }
 
   const { runStartupChecks } = await import('../../shared/startup')
-  const requireFxRateRefreshQueue = config.queues.fxRateRefresh.mode !== 'off'
+  const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,

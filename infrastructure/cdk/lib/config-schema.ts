@@ -106,6 +106,7 @@ const cdkContextShape = {
   pipelineEnabled: optionalBool,
   pipelineEnableDeploy: optionalBool,
   pipelineRequireApproval: optionalBool,
+  devMorningResumeCron: z.string().optional(),
 
   // Queue / worker mode controls
   planeBIngestFanoutMode: queueMode.optional(),
@@ -184,6 +185,8 @@ const cdkContextShape = {
   // WAF/network controls
   wafAllowListIps: optionalStringList,
   wafBlockListIps: optionalStringList,
+  wafStripeWebhookAllowListIps: optionalStringList,
+  wafAdminAllowListIps: optionalStringList,
 
   // Notifications/ops integration
   costAlertEmails: optionalStringList,

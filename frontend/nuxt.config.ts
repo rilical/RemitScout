@@ -139,6 +139,15 @@ const analyticsEnabled = (() => {
   return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
 })()
 
+const sentryEnabled = (() => {
+  const flag = resolveEnvValue('NUXT_PUBLIC_SENTRY_ENABLED', 'PUBLIC_SENTRY_ENABLED')
+  // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
+  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
+})()
+
+const environmentName = (process.env.ENVIRONMENT || process.env.NODE_ENV || (isStagingOrProd ? 'production' : 'development')).toLowerCase()
+const appVersion = process.env.APP_VERSION || process.env.SENTRY_RELEASE || process.env.GITHUB_SHA || process.env.npm_package_version || ''
+
 const ensureClientPrecomputed = async () => {
   const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
   await fs.mkdir(serverDist, { recursive: true })
@@ -191,6 +200,8 @@ export default defineNuxtConfig({
 
   // Development
 
+  sourcemap: isStagingOrProd ? { client: true, server: false } : false,
+
   // Modules
   modules: nuxtModules,
 
@@ -206,6 +217,10 @@ export default defineNuxtConfig({
     ],
   },
   devtools: { enabled: false },
+
+  devServer: {
+    port: 3000,
+  },
 
   // App Head
   app: {
@@ -316,7 +331,20 @@ export default defineNuxtConfig({
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
       analyticsEnabled,
       adsEnabled,
-      stripeTrialDays: Number(process.env.PUBLIC_STRIPE_TRIAL_DAYS || process.env.STRIPE_TRIAL_DAYS || 14),
+      sentryDsn: resolveEnvValue('NUXT_PUBLIC_SENTRY_DSN', 'PUBLIC_SENTRY_DSN', 'SENTRY_DSN') || '',
+      sentryEnabled,
+      appVersion,
+      environmentName,
+      e2eMockApi: process.env.E2E_MOCK_API === '1',
+      // Policy: Plus has no free trial (ignore env to prevent accidental UI claims).
+      stripeTrialDays: 0,
+      webVitalsSampleRate: (() => {
+        const raw = resolveEnvValue('NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE', 'PUBLIC_WEB_VITALS_SAMPLE_RATE')
+        if (raw === undefined) return 0.1
+        const parsed = Number(raw)
+        if (!Number.isFinite(parsed)) return 0.1
+        return Math.min(1, Math.max(0, parsed))
+      })(),
       pulseEnabled: (() => {
         const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
         // Default ON. Pre-alpha: Pulse should be visible for marketing and gated by entitlements.
@@ -377,8 +405,11 @@ export default defineNuxtConfig({
           failOnError: false,
         }
       : {
-          crawlLinks: true,
+          // Local/node-server builds should not crawl the entire site; it is slow and brittle
+          // (remote images, transient network failures). Keep prerender minimal and non-fatal.
+          crawlLinks: false,
           routes: ['/'],
+          failOnError: false,
         },
   },
 
