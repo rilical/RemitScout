@@ -31,6 +31,13 @@ const launchUsers: LaunchUserSpec[] = [
     passwordEnvKey: 'LAUNCH_PASSWORD_OMAR',
   },
   {
+    email: 'developer@remit-scout.com',
+    appRole: 'admin',
+    // Give developers enterprise access for testing without relying on Stripe wiring.
+    planCode: 'enterprise',
+    passwordEnvKey: 'LAUNCH_PASSWORD_DEVELOPER',
+  },
+  {
     email: 'austrilic@gmail.com',
     appRole: 'user',
     planCode: 'enterprise',
@@ -57,6 +64,7 @@ Usage:
 
 Password env vars (optional):
   LAUNCH_PASSWORD_OMAR
+  LAUNCH_PASSWORD_DEVELOPER
   LAUNCH_PASSWORD_AUSTRILIC
   LAUNCH_PASSWORD_GHABAYENEDU
   LAUNCH_PASSWORD_SUPPORT
