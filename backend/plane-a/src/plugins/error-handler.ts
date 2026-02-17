@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createLogger } from '../../../shared/logger'
 import { config } from '../../../shared/config'
 import { AppError } from '../../../shared/errors'
+import { captureExceptionWithContext } from '../../../shared/error-tracker'
 import {
   getErrorMessage,
   getErrorStack,
@@ -11,6 +12,80 @@ import {
 } from '../types/errors'
 
 const logger = createLogger('plane-a.error-handler')
+
+const stripQuery = (url: string): string => url.split('?')[0] || url
+
+const toNumberOrNull = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value)
+  return null
+}
+
+const getSentry4xxSampleRate = (): number => {
+  const explicit = toNumberOrNull(process.env.SENTRY_CAPTURE_4XX_SAMPLE_RATE)
+  if (explicit !== null) {
+    return Math.max(0, Math.min(1, explicit))
+  }
+  // Capturing every 4xx can get noisy; default to a lower rate in prod.
+  return config.env === 'production' ? 0.25 : 1
+}
+
+const shouldCapture4xx = (): boolean => {
+  const rate = getSentry4xxSampleRate()
+  if (rate <= 0) return false
+  if (rate >= 1) return true
+  return Math.random() < rate
+}
+
+const safeQueryKeys = (request: FastifyRequest): string[] => {
+  const query = (request as unknown as { query?: unknown }).query
+  if (!query || typeof query !== 'object') return []
+  const keys = Object.keys(query as Record<string, unknown>)
+  // Only report keys, never values, to avoid PII leakage (emails in query params, etc).
+  return keys.slice(0, 25)
+}
+
+const captureRequestErrorToSentry = (params: {
+  error: unknown
+  request: FastifyRequest
+  statusCode: number
+  errorCode: string
+}): void => {
+  if (params.statusCode < 400) return
+  if (params.statusCode < 500 && !shouldCapture4xx()) return
+
+  const path = stripQuery(params.request.url)
+  const route = params.request.routeOptions?.url || path
+  const userId = (params.request.user as { user_id?: string } | undefined)?.user_id ?? null
+
+  const err =
+    params.error instanceof Error
+      ? params.error
+      : new Error(getErrorMessage(params.error) || 'request_error')
+
+  // Fire-and-forget: never block API responses on network IO.
+  void captureExceptionWithContext(
+    err,
+    {
+      request_id: params.request.id,
+      method: params.request.method,
+      path,
+      route,
+      status_code: params.statusCode,
+      error_code: params.errorCode,
+      user_id: userId,
+      query_keys: safeQueryKeys(params.request),
+    },
+    {
+      plane: 'plane-a',
+      http_status: String(params.statusCode),
+      method: params.request.method,
+      route,
+      error_code: params.errorCode,
+      // Avoid high-cardinality tags (full URL, request_id, user_id) in tags.
+    },
+  )
+}
 
 /**
  * Centralized error handler for Fastify
@@ -31,6 +106,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     })
 
     if (error instanceof AppError) {
+      captureRequestErrorToSentry({
+        error,
+        request,
+        statusCode: error.statusCode,
+        errorCode: error.code,
+      })
       reply.code(error.statusCode)
       return createApiError(
         error.code,
@@ -50,6 +131,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
         constraint: error.constraint,
         detail: error.detail,
       })
+      captureRequestErrorToSentry({
+        error,
+        request,
+        statusCode: 500,
+        errorCode: 'database_error',
+      })
       reply.code(500)
       return createApiError(
         'database_error',
@@ -65,6 +152,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
         code: error.code,
         decline_code: error.decline_code,
       })
+      captureRequestErrorToSentry({
+        error,
+        request,
+        statusCode: 500,
+        errorCode: 'payment_error',
+      })
       reply.code(500)
       return createApiError(
         'payment_error',
@@ -76,6 +169,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
 
     // Handle Fastify validation errors
     if (error && typeof error === 'object' && 'validation' in error) {
+      captureRequestErrorToSentry({
+        error,
+        request,
+        statusCode: 400,
+        errorCode: 'validation_error',
+      })
       reply.code(400)
       return createApiError('validation_error', 'Invalid request parameters', error)
     }
@@ -83,6 +182,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     // Handle Fastify HTTP errors
     if (error && typeof error === 'object' && 'statusCode' in error) {
       const statusCode = Number(error.statusCode) || 500
+      captureRequestErrorToSentry({
+        error,
+        request,
+        statusCode,
+        errorCode: 'http_error',
+      })
       reply.code(statusCode)
       return createApiError(
         'http_error',
@@ -92,6 +197,12 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     }
 
     // Default error response
+    captureRequestErrorToSentry({
+      error,
+      request,
+      statusCode: 500,
+      errorCode: 'internal_error',
+    })
     reply.code(500)
     return createApiError(
       'internal_error',
@@ -101,5 +212,4 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     )
   })
 }
-
 
