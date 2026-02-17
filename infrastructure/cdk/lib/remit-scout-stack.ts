@@ -785,8 +785,9 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('pagerDutyIntegrationKey') ??
       process.env.PAGERDUTY_INTEGRATION_KEY
     const betterUptimeWebhookSsmParamName =
-      process.env.BETTERUPTIME_WEBHOOK_SSM_PARAM
-        ?? (envName === 'prod' ? '/remitscout/prod/betteruptime_webhook' : undefined)
+      this.node.tryGetContext('betterUptimeWebhookSsmParamName') ??
+      process.env.BETTERUPTIME_WEBHOOK_SSM_PARAM ??
+      (envName === 'prod' ? '/remitscout/prod/betteruptime_webhook' : undefined)
     const pipelineConnectionArn =
       this.node.tryGetContext('pipelineConnectionArn') ??
       process.env.PIPELINE_CONNECTION_ARN
