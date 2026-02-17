@@ -85,10 +85,22 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
+        // Helps correlate Stripe sessions/subscriptions back to our internal user ID.
+        client_reference_id: user.user_id,
+        // Stripe-hosted Checkout theming is controlled in Stripe Dashboard (Branding + custom domain).
+        // We still set locale to improve UX.
+        locale: 'auto',
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${config.billing.stripe.frontendBaseUrl}/plus/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${config.billing.stripe.frontendBaseUrl}/plus/failed?checkout=cancel`,
-        ...(trialDays > 0 ? { subscription_data: { trial_period_days: trialDays } } : {}),
+        subscription_data: {
+          ...(trialDays > 0 ? { trial_period_days: trialDays } : {}),
+          metadata: {
+            user_id: user.user_id,
+            plan_code: 'plus',
+            billing_interval: billingInterval,
+          },
+        },
         metadata: {
           user_id: user.user_id,
           plan_code: 'plus',
