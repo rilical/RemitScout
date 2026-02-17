@@ -4,6 +4,7 @@ import { Role, ServicePrincipal, ManagedPolicy } from 'aws-cdk-lib/aws-iam'
 import { CfnHub, CfnStandard } from 'aws-cdk-lib/aws-securityhub'
 import { CfnDetector } from 'aws-cdk-lib/aws-guardduty'
 import { CfnConfigurationRecorder, CfnDeliveryChannel, CfnConfigRule } from 'aws-cdk-lib/aws-config'
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from 'aws-cdk-lib/custom-resources'
 import { Trail } from 'aws-cdk-lib/aws-cloudtrail'
 import { Rule } from 'aws-cdk-lib/aws-events'
 import { SnsTopic } from 'aws-cdk-lib/aws-events-targets'
@@ -126,4 +127,27 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
     })
     managedRule.addDependency(configRecorder)
   }
+
+  const inspectorResourceTypes = ['ECR', 'EC2']
+  const inspectorEnableCall = {
+    service: 'Inspector2',
+    action: 'enable',
+    parameters: {
+      resourceTypes: inspectorResourceTypes,
+    },
+    physicalResourceId: PhysicalResourceId.of(`remit-scout-${envName}-inspector-v2`),
+    // If Inspector is already enabled with the same options, tolerate idempotent retries.
+    ignoreErrorCodesMatching: 'ResourceConflictException',
+  }
+
+  new AwsCustomResource(scope, 'InspectorV2Enablement', {
+    onCreate: inspectorEnableCall,
+    onUpdate: inspectorEnableCall,
+    installLatestAwsSdk: false,
+    // This custom resource intentionally has no delete behavior so existing inspector
+    // coverage remains enabled if the stack is removed.
+    policy: AwsCustomResourcePolicy.fromSdkCalls({
+      resources: AwsCustomResourcePolicy.ANY_RESOURCE,
+    }),
+  })
 }

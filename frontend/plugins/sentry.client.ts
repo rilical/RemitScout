@@ -20,30 +20,35 @@ const redactHeader = (headers: Record<string, string>, key: string) => {
   }
 }
 
-const sanitizeEvent = (event: Sentry.Event): Sentry.Event | null => {
+const sanitizeEvent = (event: Sentry.ErrorEvent): Sentry.ErrorEvent | null => {
+  const sentryEvent = event as Sentry.ErrorEvent & {
+    request?: Record<string, unknown>
+    user?: Record<string, unknown>
+  }
+
   // Avoid leaking query params (emails, tokens) in URLs.
-  if (event.request?.url && typeof event.request.url === 'string') {
-    event.request.url = stripUrlQuery(event.request.url)
+  if (sentryEvent.request?.url && typeof sentryEvent.request.url === 'string') {
+    sentryEvent.request.url = stripUrlQuery(sentryEvent.request.url)
   }
 
   // Strip obvious sensitive request metadata.
-  if (event.request?.headers && typeof event.request.headers === 'object') {
-    const headers = event.request.headers as Record<string, string>
+  if (sentryEvent.request?.headers && typeof sentryEvent.request.headers === 'object') {
+    const headers = sentryEvent.request.headers as Record<string, string>
     redactHeader(headers, 'cookie')
     redactHeader(headers, 'authorization')
     redactHeader(headers, 'x-api-key')
   }
 
-  if ('cookies' in (event.request ?? {})) {
-    delete (event.request as any).cookies
+  if ('cookies' in (sentryEvent.request ?? {})) {
+    delete (sentryEvent.request as Record<string, unknown>).cookies
   }
 
   // Never send email from the client.
-  if (event.user && typeof event.user === 'object' && 'email' in event.user) {
-    delete (event.user as any).email
+  if (sentryEvent.user && typeof sentryEvent.user === 'object' && 'email' in sentryEvent.user) {
+    delete (sentryEvent.user as Record<string, unknown>).email
   }
 
-  return event
+  return sentryEvent as Sentry.ErrorEvent
 }
 
 let initialized = false

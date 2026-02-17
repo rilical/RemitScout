@@ -3,9 +3,6 @@ import type { AdPlacement } from '~/lib/ads'
 const EZOIC_PLACEHOLDERS: Record<AdPlacement, number[]> = {
   compare_inline: [101],
   compare_sidebar: [101],
-  corridor_interstitial: [101],
-  corridor_below_faq: [101],
-  corridor_footer: [101],
   home_inline: [101],
   dashboard_inline: [101],
   corridor_interstitial: [101],

@@ -9,7 +9,7 @@ const isAbortError = (error: unknown) => {
 
 type ApiFetchOptions = {
   query?: Record<string, unknown>
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'HEAD' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: BodyInit | Record<string, unknown> | null
   headers?: Record<string, string>
   timeoutMs?: number
