@@ -9,7 +9,7 @@
               Source: <code>gold_export.cdp_daily</code>
             </p>
           </div>
-          <div class="flex flex-col gap-2 sm:flex-row">
+        <div class="flex flex-col gap-2 sm:flex-row">
             <button
               class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
               :disabled="loading"
@@ -23,6 +23,13 @@
               @click="downloadCsv"
             >
               {{ downloading ? 'Downloading…' : 'Download CSV' }}
+            </button>
+            <button
+              class="h-10 rounded-lg bg-rs-fg/90 px-4 text-body-sm font-semibold text-white hover:bg-rs-fg disabled:cursor-not-allowed disabled:bg-rs-muted"
+              :disabled="downloading || loading"
+              @click="downloadPdf"
+            >
+              {{ downloading ? 'Downloading…' : 'Download PDF' }}
             </button>
           </div>
         </div>
@@ -196,6 +203,59 @@
             </div>
           </div>
         </div>
+
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">Index trend</h2>
+          <label class="mt-3 block text-body-sm text-rs-muted">
+            Corridor
+            <select
+              v-model="selectedCorridor"
+              class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+            >
+              <option
+                v-for="corridor in corridorOptions"
+                :key="corridor"
+                :value="corridor"
+              >
+                {{ corridor }}
+              </option>
+            </select>
+          </label>
+
+          <div class="mt-4 h-80 rounded-xl border border-neutral-100 bg-white p-2">
+            <div
+              v-if="chartLoading"
+              class="flex h-full items-center justify-center text-body-sm text-rs-muted"
+            >
+              Loading chart...
+            </div>
+            <div
+              v-else-if="chartError"
+              class="flex h-full items-center justify-center text-body-sm text-danger-600"
+            >
+              {{ chartError }}
+            </div>
+            <div
+              v-else-if="chartSeries.length"
+              class="h-full"
+            >
+              <PulseLineChart
+                :series="chartSeries"
+                unit="number"
+              />
+            </div>
+            <div
+              v-else
+              class="flex h-full items-center justify-center text-body-sm text-rs-muted"
+            >
+              No chart data for this corridor.
+            </div>
+          </div>
+
+          <p class="mt-3 text-body-sm text-rs-muted">
+            TEER = effective rate, RCI/RVI trend from `/indices/series`.
+          </p>
+        </div>
       </section>
     </div>
   </div>
@@ -203,7 +263,9 @@
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
+import { getIndexSeries } from '~/lib/indicesApi'
 import { setSeo } from '~/composables/useSeo'
+import type { ChartSeries } from '~/types/pulse'
 
 definePageMeta({ middleware: ['auth', 'admin'] })
 
@@ -218,6 +280,13 @@ setSeo({
 })
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
+const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
+
+const indexColor = {
+  teer: 'rgb(var(--rs-color-brand) / 1)',
+  rci: 'rgb(var(--rs-color-brand) / 0.72)',
+  rvi: 'rgb(var(--rs-color-brand) / 0.52)',
+}
 
 type GoldExportRow = {
   date: string
@@ -267,7 +336,11 @@ type GoldExportsResponse = {
     min_provider_count: number | null
     weight_confidence_p10: number | null
   }
-  pagination: { total: number; limit: number; offset: number }
+  pagination: {
+    total: number
+    limit: number
+    offset: number
+  }
   rows: GoldExportRow[]
 }
 
@@ -298,12 +371,108 @@ const summary = reactive({
 
 const pagination = reactive({ total: 0, limit: 200, offset: 0 })
 const rows = ref<GoldExportRow[]>([])
+const selectedCorridor = ref('')
+const chartSeries = ref<ChartSeries[]>([])
+const chartLoading = ref(false)
+const chartError = ref<string | null>(null)
 
 const filters = reactive({
   q: '',
   suppressed: '' as '' | '0' | '1',
   sendCurrencies: [] as string[],
 })
+
+const corridorOptions = computed(() => [...new Set(rows.value.map(row => row.corridor_id))])
+
+watch(corridorOptions, (options) => {
+  if (!options.length) {
+    selectedCorridor.value = ''
+    chartSeries.value = []
+    return
+  }
+  if (!selectedCorridor.value || !options.includes(selectedCorridor.value)) {
+    selectedCorridor.value = options[0]
+  }
+}, { immediate: true })
+
+const buildIndexSeries = (value: number | null): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null
+
+const loadChart = async () => {
+  if (!selectedCorridor.value) {
+    chartSeries.value = []
+    chartError.value = null
+    return
+  }
+  if (!meta.date) {
+    chartSeries.value = []
+    chartError.value = 'Select a date first.'
+    return
+  }
+
+  chartLoading.value = true
+  chartError.value = null
+
+  try {
+    const data = await getIndexSeries({
+      corridor_id: selectedCorridor.value,
+      amount_bucket: meta.amount_bucket,
+      method_profile: meta.method_profile,
+      days: 90,
+    })
+
+    const toPoints = (extractor: (point: typeof data.series[number]) => number | null) =>
+      data.series
+        .map(point => ({
+          point,
+          value: extractor(point),
+        }))
+        .filter(item => !item.point.suppressionFlag && item.value !== null && Number.isFinite(item.value))
+        .map(item => ({
+          t: new Date(item.point.date).getTime(),
+          v: item.value ?? 0,
+        }))
+
+    const series: ChartSeries[] = [
+      {
+        id: 'teer',
+        label: 'TEER',
+        color: indexColor.teer,
+        points: toPoints(item => buildIndexSeries(item.teer) ?? null),
+      },
+      {
+        id: 'rci',
+        label: 'RCI',
+        color: indexColor.rci,
+        points: toPoints((item) => {
+          const rci = buildIndexSeries(item.rci)
+          return rci === null ? null : rci * 100
+        }),
+      },
+      {
+        id: 'rvi',
+        label: 'RVI (bps)',
+        color: indexColor.rvi,
+        points: toPoints(item => buildIndexSeries(item.rvi_bps)),
+      },
+    ]
+
+    chartSeries.value = series.filter(item => item.points.length > 0)
+    if (!chartSeries.value.length) {
+      chartError.value = 'No index history is available for this corridor yet.'
+    }
+  }
+  catch (err: unknown) {
+    chartError.value = err instanceof Error ? err.message : 'Failed to load index chart.'
+    chartSeries.value = []
+  }
+  finally {
+    chartLoading.value = false
+  }
+}
+
+watch(selectedCorridor, loadChart)
+watch([() => meta.date, () => meta.amount_bucket, () => meta.method_profile], loadChart)
 
 const buildQuery = (includePaging = true) => {
   const query: Record<string, unknown> = {
@@ -421,6 +590,49 @@ const downloadCsv = async () => {
   }
   catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to download CSV.'
+  }
+  finally {
+    downloading.value = false
+  }
+}
+
+const downloadPdf = async () => {
+  if (downloading.value) return
+
+  const query = buildQuery(false)
+  query.format = 'pdf'
+  const apiBase = runtimeConfig.public.apiBase || '/api'
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) params.set(key, String(value))
+  }
+  const url = `${apiBase}/ops/gold/exports/cdp-daily/export?${params.toString()}`
+
+  downloading.value = true
+  error.value = null
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { accept: 'application/pdf' },
+    })
+
+    if (!response.ok) {
+      const body = await response.text()
+      throw new Error(body || `HTTP ${response.status}`)
+    }
+
+    const blob = await response.blob()
+    const output = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = output
+    const suffix = meta.date ? meta.date : 'unknown'
+    anchor.download = `gold-exports-${suffix}-${meta.method_profile}-${meta.amount_bucket}.pdf`
+    anchor.click()
+    URL.revokeObjectURL(output)
+  }
+  catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to download PDF.'
   }
   finally {
     downloading.value = false

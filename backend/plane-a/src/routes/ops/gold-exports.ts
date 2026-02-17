@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPool, query } from '../../../../shared/db'
+import { renderPdf } from '../../../../scripts/export-generators'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { requireAdmin } from '../../plugins/auth-plugin'
@@ -23,6 +24,10 @@ const listQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).max(100000).default(0),
 })
 
+const exportQuerySchema = listQuerySchema.extend({
+  format: z.enum(['csv', 'pdf']).default('csv'),
+})
+
 const parseSendCurrencies = (raw?: string): string[] => {
   if (!raw) return []
   return raw
@@ -37,6 +42,91 @@ const escapeCsv = (value: string) => {
   }
   return value
 }
+
+const exportHeaders = [
+  'date',
+  'corridor_id',
+  'from_country',
+  'to_country',
+  'from_currency',
+  'to_currency',
+  'amount_bucket',
+  'method_profile',
+  'teer_rate',
+  'rci_ratio',
+  'rvi_bps',
+  'mid_market_rate',
+  'provider_count',
+  'provider_count_binned',
+  'rci_median_bps',
+  'rci_p10_bps',
+  'rci_p90_bps',
+  'dispersion_bps',
+  'volatility_7d',
+  'weight_confidence',
+  'weight_window_days',
+  'weighting_model',
+  'methodology_version',
+  'pipeline_version',
+  'suppression_flag',
+  'suppression_reason',
+  'created_at',
+]
+
+const normalizeExportRow = (row: Record<string, unknown>) => {
+  const normalized: Record<string, unknown> = {}
+  for (const header of exportHeaders) {
+    const value = row[header]
+    if (header === 'created_at' && value instanceof Date) {
+      normalized[header] = value.toISOString()
+    }
+    else {
+      normalized[header] = value
+    }
+  }
+  return normalized
+}
+
+const buildCsvContent = (rows: Array<Record<string, unknown>>) => {
+  const lines = [exportHeaders.join(',')]
+  for (const row of rows) {
+    lines.push(exportHeaders.map((key) => {
+      const value = row[key]
+      if (value === null || value === undefined) return ''
+      return escapeCsv(String(value))
+    }).join(','))
+  }
+
+  return lines.join('\n')
+}
+
+const buildPdfContent = async (
+  fileName: string,
+  rows: Array<Record<string, unknown>>,
+) => {
+  const sections = rows.length > 0
+    ? [{
+        title: 'CDP Daily Snapshot',
+        headers: exportHeaders,
+        rows: rows.map((row) => normalizeExportRow(row)),
+      }]
+    : [{
+        title: 'CDP Daily Snapshot',
+        headers: ['Note'],
+        rows: [{
+          Note: 'No rows matched the selected filters.',
+        }],
+      }]
+
+  return renderPdf(`${fileName} · Remit-Scout Gold Export`, sections)
+}
+
+const fileBaseName = (
+  date: string | null,
+  methodProfile: string,
+  amountBucket: number,
+  ext: 'csv' | 'pdf',
+) => `gold-exports-${date || 'unknown'}-${methodProfile}-${amountBucket}.${ext}`
 
 const resolveLatestDate = async (
   amountBucket: number,
@@ -90,6 +180,36 @@ const buildWhere = (filters: SliceFilters) => {
   }
 
   return { whereClause: conditions.join(' AND '), values }
+}
+
+type CdpExportRow = {
+  date: string
+  corridor_id: string
+  from_country: string
+  to_country: string
+  from_currency: string
+  to_currency: string
+  amount_bucket: number
+  method_profile: string
+  teer_rate: number | null
+  rci_ratio: number | null
+  rvi_bps: number | null
+  mid_market_rate: number | null
+  provider_count: number | null
+  provider_count_binned: number | null
+  rci_median_bps: number | null
+  rci_p10_bps: number | null
+  rci_p90_bps: number | null
+  dispersion_bps: number | null
+  volatility_7d: number | null
+  weight_confidence: number | null
+  weight_window_days: number | null
+  weighting_model: string | null
+  methodology_version: string | null
+  pipeline_version: string | null
+  suppression_flag: boolean
+  suppression_reason: string | null
+  created_at: Date
 }
 
 export const goldExportsRoutes = (app: FastifyInstance) => {
@@ -290,7 +410,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
   })
 
   app.get('/ops/gold/exports/cdp-daily/export', { preHandler: requireAdmin() }, async (request, reply) => {
-    const parsed = listQuerySchema.safeParse(request.query ?? {})
+    const parsed = exportQuerySchema.safeParse(request.query ?? {})
     if (!parsed.success) {
       throw new ValidationError('Invalid request', {
         details: { error: 'bad_request', details: parsed.error.issues },
@@ -302,6 +422,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     const q = parsed.data.q
     const sendCurrencies = parseSendCurrencies(parsed.data.send_currencies)
     const suppressed = parsed.data.suppressed
+    const format = parsed.data.format
 
     if (sendCurrencies.some((currency) => currency.length !== 3)) {
       throw new ValidationError('Invalid request', {
@@ -317,39 +438,17 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     }
 
     const date = requestedDate || (await resolveLatestDate(amountBucket, methodProfile))
-    const headers = [
-      'date',
-      'corridor_id',
-      'from_country',
-      'to_country',
-      'from_currency',
-      'to_currency',
-      'amount_bucket',
-      'method_profile',
-      'teer_rate',
-      'rci_ratio',
-      'rvi_bps',
-      'mid_market_rate',
-      'provider_count',
-      'provider_count_binned',
-      'rci_median_bps',
-      'rci_p10_bps',
-      'rci_p90_bps',
-      'dispersion_bps',
-      'volatility_7d',
-      'weight_confidence',
-      'weight_window_days',
-      'weighting_model',
-      'methodology_version',
-      'pipeline_version',
-      'suppression_flag',
-      'suppression_reason',
-      'created_at',
-    ]
-
     if (!date) {
+      const filename = fileBaseName(date, methodProfile, amountBucket, format)
+      if (format === 'pdf') {
+        reply.header('Content-Type', 'application/pdf')
+        reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+        return await buildPdfContent('CDP Daily Snapshot', [])
+      }
+
       reply.header('Content-Type', 'text/csv')
-      return headers.join(',') + '\n'
+      reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+      return exportHeaders.join(',') + '\n'
     }
 
     const sliceFilters: SliceFilters = {
@@ -380,7 +479,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
         }
       }
 
-      const rowsResult = await query<Record<string, any>>(
+      const rowsResult = await query<CdpExportRow>(
         `SELECT
            date::text AS date,
            corridor_id,
@@ -417,24 +516,20 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
         pool,
       )
 
-      const lines = rowsResult.rows.map((row) => {
-        const payload: Record<string, unknown> = {
-          ...(row as Record<string, unknown>),
-          created_at: row.created_at instanceof Date
-            ? row.created_at.toISOString()
-            : String(row.created_at ?? ''),
-        }
-        return headers
-          .map((key) => {
-            const value = payload[key]
-            if (value === null || value === undefined) return ''
-            return escapeCsv(String(value))
-          })
-          .join(',')
-      })
+      const rows = rowsResult.rows
+      const filename = fileBaseName(date, methodProfile, amountBucket, format)
+      if (format === 'pdf') {
+        const normalizedRows = rows.map((row) => normalizeExportRow(row as Record<string, unknown>))
+        const pdf = await buildPdfContent('CDP Daily Snapshot', normalizedRows)
+        reply.header('Content-Type', 'application/pdf')
+        reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+        return pdf
+      }
 
+      const csv = buildCsvContent(rows.map((row) => normalizeExportRow(row as Record<string, unknown>)))
       reply.header('Content-Type', 'text/csv')
-      return [headers.join(','), ...lines].join('\n')
+      reply.header('Content-Disposition', `attachment; filename="${filename}"`)
+      return csv
     } catch (error) {
       logger.error('gold_exports_export_failed', {
         error: getErrorMessage(error),

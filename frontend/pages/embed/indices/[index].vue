@@ -150,9 +150,24 @@ const days = computed(() => clampExportDays(Number.parseInt(route.query.days as 
 const apiKey = computed(() => (route.query.api_key as string) || '')
 
 const indexMeta: Record<IndexKey, { title: string, color: string, unit: 'rate' | 'percent' | 'bps', unitLabel: string }> = {
-  teer: { title: 'Total Effective Exchange Rate (TEER)', color: '#16a34a', unit: 'rate', unitLabel: 'rate' },
-  rci: { title: 'Remittance Cost Index (RCI)', color: '#f97316', unit: 'percent', unitLabel: 'percent' },
-  rvi_bps: { title: 'Remittance Volatility Index (RVI) · bps', color: '#0ea5e9', unit: 'bps', unitLabel: 'bps' },
+  teer: {
+    title: 'Total Effective Exchange Rate (TEER)',
+    color: 'rgb(var(--rs-color-brand) / 1)',
+    unit: 'rate',
+    unitLabel: 'rate',
+  },
+  rci: {
+    title: 'Remittance Cost Index (RCI)',
+    color: 'rgb(var(--rs-color-brand) / 0.72)',
+    unit: 'percent',
+    unitLabel: 'percent',
+  },
+  rvi_bps: {
+    title: 'Remittance Volatility Index (RVI) · bps',
+    color: 'rgb(var(--rs-color-brand) / 0.52)',
+    unit: 'bps',
+    unitLabel: 'bps',
+  },
 }
 
 const loading = ref(true)
@@ -248,7 +263,7 @@ onMounted(async () => {
 
     const hasOnlySuppressed = Array.isArray(data.series)
       && data.series.length > 0
-      && data.series.every((point: any) => Boolean(point?.suppressionFlag))
+      && data.series.every(point => Boolean(point.suppressionFlag))
     emptyStateMessage.value = hasOnlySuppressed
       ? 'Index data is currently suppressed (coverage/confidence too low).'
       : 'No data available yet.'
