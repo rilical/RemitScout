@@ -1,5 +1,5 @@
 import { Duration, RemovalPolicy } from 'aws-cdk-lib'
-import { Repository, TagStatus } from 'aws-cdk-lib/aws-ecr'
+import { Repository, TagMutability, TagStatus } from 'aws-cdk-lib/aws-ecr'
 import type { Construct } from 'constructs'
 
 export type RegistryResources = {
@@ -14,10 +14,13 @@ export const createRegistry = (
   scope: Construct,
   options: RegistryOptions,
 ): RegistryResources => {
+  const isProd = options.envName === 'prod'
+
   const backendRepository = new Repository(scope, 'BackendRepository', {
     repositoryName: `remit-scout-backend-${options.envName}`,
     imageScanOnPush: true,
-    removalPolicy: options.envName === 'prod' ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    imageTagMutability: isProd ? TagMutability.IMMUTABLE : undefined,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         maxImageAge: Duration.days(90),

@@ -29,6 +29,7 @@ import { createCostGuardrails } from './budgets'
 import { createMonitoring } from './monitoring'
 import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
+import { createComplianceServices } from './compliance'
 import { createOpsPause } from './ops-pause'
 import { createGithubActionsOidcRoles } from './github-actions-oidc'
 import { loadCdkContextConfig } from './config-schema'
@@ -1176,6 +1177,13 @@ export class RemitScoutStack extends Stack {
       pagerDutyIntegrationKey,
       betterUptimeWebhookSsmParamName,
     })
+
+    if (envName !== 'dev') {
+      createComplianceServices(this, {
+        envName,
+        criticalTopic: snsSubscriptions.criticalTopic,
+      })
+    }
 
     // Determine Plane A base URL for synthetics (CloudFront if enabled, otherwise API Gateway)
     const planeABaseUrl =

@@ -42,6 +42,9 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
       })
 
   const account = Stack.of(scope).account
+  const region = Stack.of(scope).region
+  const ecrRepositoryResource = `arn:aws:ecr:${region}:${account}:repository/remit-scout-backend-*`
+  const s3FrontendBucketResource = 'arn:aws:s3:::remit-scout-frontend-*'
 
   const policy = new PolicyDocument({
     statements: [
@@ -53,16 +56,40 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
           'cloudformation:Get*',
           'cloudformation:List*',
           'cloudformation:DetectStackDrift',
+          'cloudformation:CreateChangeSet',
+          'cloudformation:ExecuteChangeSet',
+          'cloudformation:CreateStack',
+          'cloudformation:UpdateStack',
         ],
-        resources: ['*'],
+        resources: [
+          `arn:aws:cloudformation:${region}:${account}:stack/remit-scout-*/*`,
+        ],
       }),
       // ECR push/pull (startup pragmatic).
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['ecr:*'],
-        resources: ['*'],
+        actions: [
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:BatchDeleteImage',
+          'ecr:BatchGetImage',
+          'ecr:CompleteLayerUpload',
+          'ecr:CreateRepository',
+          'ecr:DescribeImageScanFindings',
+          'ecr:DescribeImages',
+          'ecr:DescribeRepositories',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:GetLifecyclePolicy',
+          'ecr:GetRepositoryPolicy',
+          'ecr:InitiateLayerUpload',
+          'ecr:ListImages',
+          'ecr:ListTagsForResource',
+          'ecr:PutImage',
+          'ecr:UploadLayerPart',
+          'ecr:PutImageScanningConfiguration',
+          'ecr:StartImageScan',
+        ],
+        resources: [ecrRepositoryResource],
       }),
-      // ECR auth token must be wildcard.
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['ecr:GetAuthorizationToken'],
@@ -72,18 +99,24 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['s3:ListBucket'],
-        resources: ['arn:aws:s3:::remit-scout-frontend-*'],
+        resources: [s3FrontendBucketResource],
       }),
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['s3:PutObject', 's3:GetObject', 's3:DeleteObject'],
-        resources: ['arn:aws:s3:::remit-scout-frontend-*/*'],
+        resources: [`${s3FrontendBucketResource}/*`],
       }),
       // CloudFront cache bust.
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ['cloudfront:CreateInvalidation', 'cloudfront:GetDistribution', 'cloudfront:ListDistributions'],
-        resources: ['*'],
+        resources: [`arn:aws:cloudfront::${account}:distribution/*`],
+      }),
+      // SSM parameter store for last-good image and bootstrap markers.
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: ['ssm:GetParameter', 'ssm:PutParameter', 'ssm:DeleteParameter'],
+        resources: [`arn:aws:ssm:${region}:${account}:parameter/remit-scout/*`],
       }),
       // Run migrations (ECS task) + inspect task logs.
       new PolicyStatement({
@@ -95,8 +128,14 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
           'ecs:ListTasks',
           'ecs:DescribeClusters',
           'ecs:DescribeServices',
+          'ecs:StopTask',
         ],
-        resources: ['*'],
+        resources: [
+          `arn:aws:ecs:${region}:${account}:cluster/remit-scout-*`,
+          `arn:aws:ecs:${region}:${account}:service/remit-scout-*/*`,
+          `arn:aws:ecs:${region}:${account}:task-definition/remit-scout-*`,
+          `arn:aws:ecs:${region}:${account}:task/*`,
+        ],
       }),
       // Allow passing task roles/execution roles.
       new PolicyStatement({

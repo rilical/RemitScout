@@ -16,7 +16,6 @@ on:
         options:
           - dev
           - staging
-          - prod
       ref:
         description: Git ref (sha/branch/tag). Leave empty to use default.
         required: false
@@ -24,16 +23,16 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: deploy-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name || github.ref }}-${{ github.event.inputs.env || 'auto' }}
-  cancel-in-progress: false
+  id-token: write
 
 jobs:
   deploy-dev:
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') ||
       (github.event_name == 'workflow_dispatch' && inputs.env == 'dev')
+    concurrency:
+      group: deploy-dev
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 90
     environment: dev
@@ -83,6 +82,7 @@ jobs:
         with:
           name: deploy-dev-security-evidence
           path: .security
+          retention-days: 90
           if-no-files-found: ignore
 
       - uses: aws-actions/configure-aws-credentials@v4
@@ -189,6 +189,31 @@ jobs:
             echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
             exit 1
           fi
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign backend image (digest)
+        id: sign_image
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_DIGEST: ${{ steps.build_push.outputs.digest }}
+          ENV_NAME: dev
+        run: |
+          set -euo pipefail
+          IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-${ENV_NAME}@${IMAGE_DIGEST}"
+          cosign sign --yes "${IMAGE_URI}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify backend image signature
+        shell: bash
+        env:
+          IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
+        run: |
+          set -euo pipefail
+          cosign verify --keyless "${IMAGE_URI}"
 
       - name: CDK Diff (dev)
         shell: bash
@@ -346,6 +371,9 @@ jobs:
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') ||
       (github.event_name == 'workflow_dispatch' && inputs.env == 'staging')
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 120
     environment: staging
@@ -397,6 +425,7 @@ jobs:
         with:
           name: deploy-staging-security-evidence
           path: .security
+          retention-days: 90
           if-no-files-found: ignore
 
       - uses: aws-actions/configure-aws-credentials@v4
@@ -470,6 +499,7 @@ jobs:
           aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
       - name: Build + Push Backend Image (with Cache)
+        id: build_push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -521,6 +551,31 @@ jobs:
             echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
             exit 1
           fi
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign backend image (digest)
+        id: sign_image
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_DIGEST: ${{ steps.build_push.outputs.digest }}
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-${ENV_NAME}@${IMAGE_DIGEST}"
+          cosign sign --yes "${IMAGE_URI}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify backend image signature
+        shell: bash
+        env:
+          IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
+        run: |
+          set -euo pipefail
+          cosign verify --keyless "${IMAGE_URI}"
 
       - name: CDK Diff (staging)
         shell: bash
@@ -702,8 +757,10 @@ jobs:
 
   deploy-prod:
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.env == 'prod') ||
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 150
     # IMPORTANT: Production environment requires manual approval.
@@ -757,6 +814,7 @@ jobs:
         with:
           name: deploy-prod-security-evidence
           path: .security
+          retention-days: 180
           if-no-files-found: ignore
 
       - name: Full Test Suite (prod gate)
@@ -773,8 +831,15 @@ jobs:
 
       - name: Validate Required GitHub Environment Vars (prod)
         shell: bash
+        env:
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)."
+            exit 1
+          fi
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
             exit 1
@@ -822,8 +887,13 @@ jobs:
         run: |
           set -euo pipefail
           ECR_REPO="remit-scout-backend-${ENV_NAME}"
-          aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
-            aws ecr create-repository --repository-name "${ECR_REPO}" --image-scanning-configuration scanOnPush=true >/dev/null
+          if ! aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1; then
+            aws ecr create-repository \
+              --repository-name "${ECR_REPO}" \
+              --image-scanning-configuration scanOnPush=true \
+              --image-tag-mutability IMMUTABLE \
+              >/dev/null
+          fi
 
       - name: Login To ECR
         shell: bash
@@ -835,6 +905,7 @@ jobs:
           aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
       - name: Build + Push Backend Image (with Cache)
+        id: build_push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -845,7 +916,6 @@ jobs:
           tags: |
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.IMAGE_TAG }}
             ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:${{ steps.vars.outputs.SEMVER_TAG }}
-            ${{ steps.vars.outputs.ACCOUNT_ID }}.dkr.ecr.${{ steps.vars.outputs.AWS_REGION }}.amazonaws.com/remit-scout-backend-prod:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -887,6 +957,31 @@ jobs:
             exit 1
           fi
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign backend image (digest)
+        id: sign_image
+        shell: bash
+        env:
+          AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
+          ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
+          IMAGE_DIGEST: ${{ steps.build_push.outputs.digest }}
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-${ENV_NAME}@${IMAGE_DIGEST}"
+          cosign sign --yes "${IMAGE_URI}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify backend image signature
+        shell: bash
+        env:
+          IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
+        run: |
+          set -euo pipefail
+          cosign verify --keyless "${IMAGE_URI}"
+
       - name: CDK Diff (prod)
         shell: bash
         env:
@@ -916,6 +1011,41 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             --require-approval never
+
+      - name: Deploy Frontend (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
+          dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          export NODE_ENV=production
+          export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
+          export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
+          export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
+          export PUBLIC_API_BASE="${api_base}/api/v1"
+          export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
+          export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
+
+          pnpm -C frontend build
+          pnpm -C frontend generate
+          pnpm -C frontend sentry:sourcemaps
+
+          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json" --exclude "*.map"
+          aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
+          aws cloudfront create-invalidation --distribution-id "$dist_id" --paths "/*" >/dev/null
 
       - name: Run Migrations (prod)
         shell: bash
