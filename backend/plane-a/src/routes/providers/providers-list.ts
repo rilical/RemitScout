@@ -1296,11 +1296,6 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         methodsByProvider.get(key)!.add(methodValue)
       }
 
-      const filteredQuotes = quotes.filter((quote) => {
-        const methodValue = toAvailableMethod(quote.payout)
-        return methodValue === requestedMethod
-      })
-
       const availableMethodsByProvider: Record<string, Array<'bank' | 'cash' | 'wallet' | 'airtime'>> = {}
       for (const [providerKey, methods] of methodsByProvider.entries()) {
         availableMethodsByProvider[providerKey] = orderMethods(methods)

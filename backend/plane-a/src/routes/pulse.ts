@@ -1191,8 +1191,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         return { success: true, updatedAt: null, rows: [] }
       }
 
-      const baseKeys = ['pulse:smart-send', 'pulse:market-snapshot', 'pulse:market-depth', 'pulse:bank-comparison'] as const
-      const keyMap = new Map<string, Record<(typeof baseKeys)[number], string>>()
+      const _baseKeys = ['pulse:smart-send', 'pulse:market-snapshot', 'pulse:market-depth', 'pulse:bank-comparison'] as const
+      const keyMap = new Map<string, Record<(typeof _baseKeys)[number], string>>()
       const allKeys: string[] = []
 
       for (const corridorId of corridorIds) {
@@ -1215,7 +1215,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
           'pulse:market-snapshot': buildPulseCacheKey('pulse:market-snapshot', filters),
           'pulse:market-depth': buildPulseCacheKey('pulse:market-depth', filters),
           'pulse:bank-comparison': buildPulseCacheKey('pulse:bank-comparison', filters),
-        } as Record<(typeof baseKeys)[number], string>
+        } as Record<(typeof _baseKeys)[number], string>
 
         keyMap.set(corridorId, keys)
         allKeys.push(...Object.values(keys))

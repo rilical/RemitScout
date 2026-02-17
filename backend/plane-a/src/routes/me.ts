@@ -224,7 +224,6 @@ export const meRoutes = async (app: FastifyInstance) => {
           ? plan.plan_code
           : 'free'
       const effectivePlanCode = isPlanActive ? normalizedPlanCode : 'free'
-      const entitlements = getEntitlementsForPlan(effectivePlanCode)
       const usage = await getUsageForUser(planeAPool, user.user_id)
       const billing = await buildBillingInfo(plan)
       const profile = await userAccountRepository.getProfile(user.user_id)

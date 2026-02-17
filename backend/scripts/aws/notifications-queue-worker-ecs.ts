@@ -1,6 +1,5 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
-import { config } from '../../shared/config'
 
 export const handler = async (): Promise<void> => {
   await resolveDatabaseUrl({
