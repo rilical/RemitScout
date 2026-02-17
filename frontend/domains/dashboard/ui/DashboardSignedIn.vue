@@ -4710,7 +4710,7 @@ const accountSections: { id: AccountSection, label: string, icon: IconName }[] =
 ]
 
 const route = useRoute()
-const { user, isAuthenticated, updatePasswordWithCurrent } = useAuth()
+const { user, isAuthenticated, isAdmin, updatePasswordWithCurrent } = useAuth()
 const { pendingVisits } = useProviderVisits()
 const providerVisitPromptRef = ref<{ open: () => void } | null>(null)
 const pendingProviderFeedbackCount = computed(() => pendingVisits.value.length)
@@ -5398,6 +5398,11 @@ const adminAccessChecked = ref(false)
 	    adminAccessChecked.value = true
 	    return
 	  }
+	  if (isAdmin.value || user.value?.isAdmin) {
+	    hasAdminAccess.value = true
+	    adminAccessChecked.value = true
+	    return
+	  }
 	  if (adminAccessChecked.value) return
 	  let aborted = false
 	  try {
@@ -5618,6 +5623,11 @@ const opsProviders = [
 type OpsProviderId = typeof opsProviders[number]['id']
 
 const opsAdminLinks = [
+  {
+    label: 'Admin Console',
+    description: 'Central command center for all admin tools and workflows.',
+    to: '/admin',
+  },
   {
     label: 'Observer Console',
     description: 'AWS click-paths + ops status for ingestion, gold indices, alerts, and exports.',

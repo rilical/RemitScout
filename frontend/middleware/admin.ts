@@ -1,10 +1,14 @@
 export default defineNuxtRouteMiddleware(async () => {
-  const { ensureHydrated, isAuthenticated } = useAuth()
+  const { ensureHydrated, isAuthenticated, user, isAdmin } = useAuth()
   const { request } = useApi()
 
   await ensureHydrated()
   if (!isAuthenticated.value) {
     return navigateTo('/sign-in')
+  }
+
+  if (isAdmin.value || user.value?.isAdmin) {
+    return
   }
 
   try {

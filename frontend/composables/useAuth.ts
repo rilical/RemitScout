@@ -6,6 +6,10 @@ export interface User {
   id: string
   email: string
   name: string
+  role?: string | null
+  appRole?: string | null
+  isAdmin?: boolean
+  isSuperAdmin?: boolean
 }
 
 type BackendProfile = {
@@ -68,6 +72,18 @@ export const useAuth = () => {
   const isLoggedIn = computed(() => user.value !== null)
   const isAuthenticated = isLoggedIn
   const accessToken = computed(() => session.value?.access_token ?? null)
+  const isAdmin = computed(() => Boolean(
+    user.value?.isAdmin
+    || user.value?.role === 'admin'
+    || user.value?.role === 'super_admin'
+    || user.value?.appRole === 'admin'
+    || user.value?.appRole === 'super_admin',
+  ))
+  const isSuperAdmin = computed(() => Boolean(
+    user.value?.isSuperAdmin
+    || user.value?.role === 'super_admin'
+    || user.value?.appRole === 'super_admin',
+  ))
   const isConfigured = computed(() => Boolean(
     config.public.supabaseUrl && config.public.supabaseAnonKey,
   ))
@@ -139,6 +155,30 @@ export const useAuth = () => {
 
   if (import.meta.client && !hydrated.value) {
     void ensureHydrated()
+  }
+
+  const applyBackendProfileState = (profile: BackendProfile) => {
+    if (!profile) return
+
+    const profileRole = profile.role ?? null
+    const profileAppRole = profile.app_role ?? null
+    const resolvedIsAdmin = Boolean(profile.is_admin)
+    const resolvedIsSuperAdmin = profileRole === 'super_admin' || profileAppRole === 'super_admin'
+
+    const fallbackName
+      = profile.email && profile.email.includes('@')
+        ? profile.email.split('@')[0]
+        : 'User'
+
+    user.value = {
+      id: profile.user_id,
+      email: profile.email,
+      name: profile.name ?? user.value?.name ?? fallbackName,
+      role: profileRole,
+      appRole: profileAppRole,
+      isAdmin: resolvedIsAdmin,
+      isSuperAdmin: resolvedIsSuperAdmin,
+    }
   }
 
   const signIn = async (email: string, password?: string): Promise<AuthResult> => {
@@ -423,24 +463,20 @@ export const useAuth = () => {
     }
 
     if (data.user) {
-      user.value = mapSupabaseUser(data.user)
+      const mapped = mapSupabaseUser(data.user)
+      if (mapped) {
+        user.value = {
+          ...user.value,
+          ...mapped,
+        }
+      }
     }
 
     return { ok: true }
   }
 
   const applyBackendProfile = (profile: BackendProfile) => {
-    if (!profile) return
-    const fallbackName
-      = profile.email && profile.email.includes('@')
-        ? profile.email.split('@')[0]
-        : 'User'
-
-    user.value = {
-      id: profile.user_id,
-      email: profile.email,
-      name: profile.name ?? user.value?.name ?? fallbackName,
-    }
+    applyBackendProfileState(profile)
   }
 
   return {
@@ -450,6 +486,8 @@ export const useAuth = () => {
     isLoggedIn,
     isAuthenticated,
     accessToken,
+    isAdmin,
+    isSuperAdmin,
     lastError,
     isConfigured,
     ensureHydrated,

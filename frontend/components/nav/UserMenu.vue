@@ -2,7 +2,7 @@
 import { useAuth } from '~/composables/useAuth'
 import { useEntitlements } from '~/composables/useEntitlements'
 
-const { user, signOut } = useAuth()
+const { user, signOut, isAdmin } = useAuth()
 const { isPlus } = useEntitlements()
 const userMenuOpen = ref(false)
 
@@ -123,6 +123,28 @@ onBeforeUnmount(() => {
               />
             </svg>
             Dashboard
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="isAdmin"
+            to="/admin"
+            class="flex items-center gap-3 px-4 py-2 text-body-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+            @click="closeUserMenu"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 17a4 4 0 1 0 8 0 4 4 0 0 0-8 0zm5-14v2M9 3v2m-6.5.5.1-.9M12.5 3.6l.9.4M5.2 5.2 4.4 4.4m15.4 0-.8-.8M6 12a4 4 0 0 1 8 0v1h2v6H4v-6h2v-1z"
+              />
+            </svg>
+            Admin Console
           </NuxtLink>
 
           <NuxtLink
