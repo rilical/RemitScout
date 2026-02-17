@@ -624,6 +624,21 @@ const buildSectionsForJob = async (
     return sections
   }
 
+  if (jobType.startsWith('indices')) {
+    const corridorIds = Array.isArray(params.corridorIds)
+      ? params.corridorIds.filter((id) => typeof id === 'string') as string[]
+      : []
+    const corridorHistory = await fetchCorridorHistory(corridorIds, params)
+
+    return [
+      {
+        title: 'indices_history',
+        headers: [...CORRIDOR_HISTORY_HEADERS],
+        rows: corridorHistory,
+      },
+    ]
+  }
+
   if (jobType.startsWith('watchlist')) {
     const watchlist = await fetchWatchlist(userId)
     return [

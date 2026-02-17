@@ -19,7 +19,7 @@ const logger = createLogger('plane-a.exports')
 const s3Client = new S3Client({})
 
 const exportCreateSchema = z.object({
-  dataType: z.enum(['history', 'watchlist', 'alerts', 'all']),
+  dataType: z.enum(['history', 'watchlist', 'alerts', 'all', 'indices']),
   format: z.enum(['csv', 'pdf']),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
@@ -68,6 +68,7 @@ const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
   watchlist: { csv: 'watchlist_csv', pdf: 'watchlist_pdf' },
   alerts: { csv: 'alerts_csv', pdf: 'alerts_pdf' },
   all: { csv: 'all_csv', pdf: 'all_pdf' },
+  indices: { csv: 'indices_csv', pdf: 'indices_pdf' },
 }
 
 const resolveActor = (
@@ -198,10 +199,19 @@ export const exportsRoutes = async (app: FastifyInstance) => {
             throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'dateTo' } })
     }
 
-    const requiresDateRange = dataType === 'history' || dataType === 'all'
+    const requiresDateRange = dataType === 'history' || dataType === 'all' || dataType === 'indices'
     if (requiresDateRange && (!dateFrom || !dateTo)) {
       throw new ValidationError('Invalid request', {
         details: { error: 'export_date_range_required', allowedDays: effectiveMaxDays },
+      })
+    }
+
+    if (dataType === 'indices' && (!parsed.data.corridorIds || parsed.data.corridorIds.length === 0)) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'indices_corridor_required',
+          message: 'Corridor IDs are required for TEER/RCI/RVI exports.',
+        },
       })
     }
 

@@ -201,6 +201,7 @@
                 <div class="flex items-center gap-3">
                   <button
                     class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
+                    :disabled="isExporting"
                     @click="handleExportCSV"
                   >
                     <svg
@@ -220,6 +221,7 @@
                   </button>
                   <button
                     class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
+                    :disabled="isExporting"
                     @click="handleExportPDF"
                   >
                     <svg
@@ -237,6 +239,18 @@
                     </svg>
                     Compliance PDF
                   </button>
+                  <span
+                    v-if="exportStatusMessage"
+                    class="text-body-sm text-neutral-200 mt-1 sm:mt-0 sm:ml-3 sm:self-center"
+                  >
+                    {{ exportStatusMessage }}
+                  </span>
+                  <span
+                    v-if="exportErrorMessage"
+                    class="text-body-sm text-danger-300 mt-1 sm:mt-0 sm:ml-3 sm:self-center"
+                  >
+                    {{ exportErrorMessage }}
+                  </span>
                 </div>
                 <NuxtLink
                   to="/contact?type=enterprise&topic=pulse"
@@ -432,7 +446,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import type { PulseFilters, AmountBucket } from '~/types/pulse'
 import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
@@ -440,6 +454,7 @@ import { getPulseOverview } from '~/lib/pulseApi'
 import { usePulseStore } from '~/stores/pulse'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { useExports } from '~/composables/useExports'
 
 const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
 const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
@@ -456,6 +471,7 @@ const store = usePulseStore()
 const { isAuthenticated } = useAuth()
 const saveAlertModal = useSaveAlertModal()
 const { pulseLevel } = useEntitlements()
+const exportsApi = useExports()
 
 const chartId = computed(() => route.params.chartId as string)
 
@@ -475,6 +491,42 @@ const showShareModal = ref(false)
 const showEmbedModal = ref(false)
 const authModalOpen = ref(false)
 const authModalFeature = ref<'watchlist' | 'alert'>('alert')
+const isExporting = ref(false)
+const exportStatusMessage = ref<string | null>(null)
+const exportErrorMessage = ref<string | null>(null)
+let exportPollTimer: ReturnType<typeof setInterval> | null = null
+
+const exportCorridorId = computed(() => {
+  return filters.value.corridorId || store.corridor.corridorId || ''
+})
+
+const toIsoDate = (value: Date) => value.toISOString().split('T')[0]
+
+const buildExportDateWindow = () => {
+  const timeframeDaysByPulseMode: Record<string, number> = {
+    '24H': 1,
+    '7D': 7,
+    '30D': 30,
+    '1Y': 365,
+    'MAX': 365,
+  }
+  const requestedDays = timeframeDaysByPulseMode[store.timeframe] ?? 30
+  const windowDays = Math.max(1, requestedDays)
+  const dateToDate = new Date()
+  const dateFromDate = new Date()
+  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1))
+  return {
+    dateFrom: toIsoDate(dateFromDate),
+    dateTo: toIsoDate(dateToDate),
+  }
+}
+
+const clearExportPolling = () => {
+  if (exportPollTimer) {
+    clearInterval(exportPollTimer)
+    exportPollTimer = null
+  }
+}
 
 const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3))
 
@@ -536,19 +588,83 @@ const actionableInsight = computed(() => {
 function handleDownload() {
 }
 
+const triggerExportDownload = (url: string) => {
+  if (import.meta.client) {
+    window.open(url, '_blank', 'noopener')
+  }
+}
+
+const pollExportStatus = async (jobId: string) => {
+  clearExportPolling()
+  exportPollTimer = setInterval(async () => {
+    try {
+      const status = await exportsApi.getExportStatus(jobId)
+      if (status.job.status === 'failed') {
+        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.'
+        isExporting.value = false
+        clearExportPolling()
+        return
+      }
+      if (status.job.status === 'done') {
+        const download = await exportsApi.getExportDownloadUrl(jobId)
+        exportStatusMessage.value = 'Export ready. Downloading...'
+        triggerExportDownload(download.url)
+        isExporting.value = false
+        clearExportPolling()
+        return
+      }
+      exportStatusMessage.value = 'Export in progress...'
+    }
+ catch (error: any) {
+      exportErrorMessage.value = error?.message || 'Failed to check export status.'
+      isExporting.value = false
+      clearExportPolling()
+    }
+  }, 2000)
+}
+
+const startIndicesExport = async (format: 'csv' | 'pdf') => {
+  if (isExporting.value) return
+
+  if (!exportCorridorId.value) {
+    exportErrorMessage.value = 'Export is not available for this corridor. Select a corridor from the filter first.'
+    return
+  }
+
+  if (!isAuthenticated.value) {
+    authModalFeature.value = 'alert'
+    authModalOpen.value = true
+    return
+  }
+
+  exportErrorMessage.value = null
+  exportStatusMessage.value = null
+  isExporting.value = true
+
+  const { dateFrom, dateTo } = buildExportDateWindow()
+  try {
+    const response = await exportsApi.createExport({
+      dataType: 'indices',
+      format,
+      dateFrom,
+      dateTo,
+      corridorIds: [exportCorridorId.value],
+    })
+    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
+    void pollExportStatus(response.job.id)
+  }
+ catch (error: any) {
+    exportErrorMessage.value = error?.message || 'Failed to start export.'
+    isExporting.value = false
+  }
+}
+
 function handleExportCSV() {
-  const csvContent = `Chart ID,${chartId.value}\nCorridor,${filters.value.corridor}\nAmount,${filters.value.amount}\nTimestamp,${complianceTimestamp.value}\nHash,${complianceHash.value}\n\n"Note: Full data export requires API access."`
-  const blob = new Blob([csvContent], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `pulse-${chartId.value}-${Date.now()}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  void startIndicesExport('csv')
 }
 
 function handleExportPDF() {
-  alert('PDF export requires Plus subscription. Upgrade to access compliance-ready reports.')
+  void startIndicesExport('pdf')
 }
 
 function handleSetAlert() {
@@ -569,6 +685,10 @@ onMounted(async () => {
   const overview = await getPulseOverview(filters.value)
   lastUpdated.value = overview.lastUpdated
   await store.initFromRoute(route.query as Record<string, string>)
+})
+
+onBeforeUnmount(() => {
+  clearExportPolling()
 })
 
 useHead({

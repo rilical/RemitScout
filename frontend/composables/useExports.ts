@@ -12,7 +12,7 @@ export type ExportJob = {
 }
 
 export type CreateExportInput = {
-  dataType: 'history' | 'watchlist' | 'alerts' | 'all'
+  dataType: 'history' | 'watchlist' | 'alerts' | 'all' | 'indices'
   format: 'csv' | 'pdf'
   dateFrom?: string
   dateTo?: string

@@ -1978,9 +1978,9 @@ class="space-y-6"
                   <label class="block text-body-sm font-semibold text-rs-fg mb-3">Data to Export</label>
                   <div class="space-y-2.5">
                     <label
-class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'history' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
->
+                      class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.dataType === 'history' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
+                    >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
@@ -1993,9 +1993,9 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                       </div>
                     </label>
                     <label
-class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'watchlist' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
->
+                      class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.dataType === 'watchlist' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
+                    >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
@@ -2008,9 +2008,9 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                       </div>
                     </label>
                     <label
-class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'alerts' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
->
+                      class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.dataType === 'alerts' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
+                    >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
@@ -2023,9 +2023,9 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                       </div>
                     </label>
                     <label
-class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
-:class="exportSettings.dataType === 'all' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
->
+                      class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.dataType === 'all' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
+                    >
                       <input
                         v-model="exportSettings.dataType"
                         type="radio"
@@ -2035,6 +2035,21 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
                       <div class="flex-1">
                         <div class="text-body-sm font-semibold text-rs-fg">All Data</div>
                         <div class="text-body-sm text-rs-muted mt-0.5">Complete export of all your data</div>
+                      </div>
+                    </label>
+                    <label
+                      class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
+                      :class="exportSettings.dataType === 'indices' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
+                    >
+                      <input
+                        v-model="exportSettings.dataType"
+                        type="radio"
+                        value="indices"
+                        class="w-4 h-4 text-brand-600 border-neutral-300 focus:ring-primary-500"
+                      >
+                      <div class="flex-1">
+                        <div class="text-body-sm font-semibold text-rs-fg">TEER / RCI / RVI</div>
+                        <div class="text-body-sm text-rs-muted mt-0.5">Indices history and export-ready snapshots</div>
                       </div>
                     </label>
                   </div>
@@ -2053,16 +2068,16 @@ class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transiti
 	                </div>
 
                 <div
-v-if="exportSettings.dataType === 'history'"
-class="rounded-xl border border-rs-border bg-neutral-50 p-4"
->
+                  v-if="exportSettings.dataType === 'history' || exportSettings.dataType === 'indices'"
+                  class="rounded-xl border border-rs-border bg-neutral-50 p-4"
+                >
                   <label class="flex items-start gap-3 cursor-pointer">
-                    <input
-                      v-model="exportSettings.includeCorridorHistory"
-                      type="checkbox"
-                      class="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-primary-500 disabled:opacity-60"
-                      :disabled="exportCorridorIds.length === 0"
-                    >
+                      <input
+                        v-model="exportSettings.includeCorridorHistory"
+                        type="checkbox"
+                        class="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-primary-500 disabled:opacity-60"
+                        :disabled="exportCorridorIds.length === 0 || exportSettings.dataType === 'indices'"
+                      >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">
                         Include corridor history (Pulse indices)
@@ -2866,7 +2881,7 @@ style="height: 240px;"
             </div>
 
             <div class="grid gap-3 sm:grid-cols-4">
-              <select
+            <select
                 v-model="exportJobType"
                 class="w-full rounded-lg border border-rs-border bg-surface px-3 py-2 text-body-sm text-neutral-700 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               >
@@ -2874,6 +2889,7 @@ style="height: 240px;"
                 <option value="watchlist">Watchlist</option>
                 <option value="alerts">Alerts</option>
                 <option value="all">All Data</option>
+                <option value="indices">TEER / RCI / RVI</option>
               </select>
               <select
                 v-model="exportFormat"
@@ -5298,7 +5314,7 @@ const exportJobs = ref<ExportJobRecord[]>([])
 const exportJobsLoading = ref(false)
 const exportJobsError = ref<string | null>(null)
 const exportJobsLoaded = ref(false)
-const exportJobType = ref<'history' | 'watchlist' | 'alerts' | 'all'>('history')
+const exportJobType = ref<'history' | 'watchlist' | 'alerts' | 'all' | 'indices'>('history')
 const exportFormat = ref<'csv' | 'pdf'>('csv')
 const exportDateFrom = ref('')
 const exportDateTo = ref('')
@@ -5347,20 +5363,28 @@ const fetchExportJobs = async () => {
 	    if (exportDateFrom.value) body.dateFrom = exportDateFrom.value
 	    if (exportDateTo.value) body.dateTo = exportDateTo.value
 
-	    if (exportJobType.value === 'history' || exportJobType.value === 'all') {
-	      if (!exportDateFrom.value || !exportDateTo.value) {
-	        throw new Error(`Please select a date range (max ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days).`)
-	      }
+    const requiresDateRange = exportJobType.value === 'history' || exportJobType.value === 'all' || exportJobType.value === 'indices'
+    if (requiresDateRange) {
+      if (!exportDateFrom.value || !exportDateTo.value) {
+        throw new Error(`Please select a date range (max ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days).`)
+      }
 	      const from = new Date(`${exportDateFrom.value}T00:00:00.000Z`)
 	      const to = new Date(`${exportDateTo.value}T23:59:59.999Z`)
 	      if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
 	        throw new Error('Invalid date range.')
 	      }
 	      const diffDays = Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)) + 1
-	      if (diffDays > EXPORTS_MAX_WINDOW_DAYS_HARD_CAP) {
-	        throw new Error(`Export window too large. Max is ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days.`)
-	      }
-	    }
+      if (diffDays > EXPORTS_MAX_WINDOW_DAYS_HARD_CAP) {
+        throw new Error(`Export window too large. Max is ${EXPORTS_MAX_WINDOW_DAYS_HARD_CAP} days.`)
+      }
+    }
+
+    if (exportJobType.value === 'indices') {
+      if (exportCorridorIds.value.length === 0) {
+        throw new Error('Select at least one watchlist corridor to export TEER / RCI / RVI.')
+      }
+      body.corridorIds = exportCorridorIds.value
+    }
 
 	    await request<ExportJobCreateResponse>('/exports', { method: 'POST', body })
 	    await fetchExportJobs()
@@ -6988,7 +7012,7 @@ const getDefaultDateFrom = () => {
 }
 
 const exportSettings = ref({
-  dataType: 'history' as 'history' | 'watchlist' | 'alerts' | 'all',
+  dataType: 'history' as 'history' | 'watchlist' | 'alerts' | 'all' | 'indices',
   dateRange: '30d' as ExportDateRange,
   dateFrom: getDefaultDateFrom(),
   dateTo: new Date().toISOString().split('T')[0],
@@ -7146,6 +7170,10 @@ const pollExportStatus = async (jobId: string) => {
 watch(
   () => exportSettings.value.dataType,
   (dataType) => {
+    if (dataType === 'indices') {
+      exportSettings.value.includeCorridorHistory = true
+      return
+    }
     if (dataType !== 'history') {
       exportSettings.value.includeCorridorHistory = false
     }
@@ -7180,11 +7208,19 @@ async function handleExport() {
       ? selectedExportItems.value
       : undefined
 
-    const corridorIds = exportSettings.value.dataType === 'history'
+    const corridorIds = (exportSettings.value.dataType === 'history' || exportSettings.value.dataType === 'indices')
       && exportSettings.value.includeCorridorHistory
       && exportCorridorIds.value.length > 0
       ? exportCorridorIds.value
       : undefined
+
+    if ((exportSettings.value.dataType === 'indices' || exportSettings.value.dataType === 'history')
+      && exportSettings.value.includeCorridorHistory
+      && (!corridorIds || corridorIds.length === 0)) {
+      exportErrorMessage.value = 'Select at least one watchlist corridor to include indices history.'
+      isExporting.value = false
+      return
+    }
 
     const response = await exportsApi.createExport({
       dataType: exportSettings.value.dataType,

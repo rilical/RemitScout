@@ -7,6 +7,8 @@ export type ExportJobType =
   | 'alerts_pdf'
   | 'all_csv'
   | 'all_pdf'
+  | 'indices_csv'
+  | 'indices_pdf'
   | 'gdpr_export'
 
 export type ExportJobStatus = 'queued' | 'running' | 'done' | 'failed'
