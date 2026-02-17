@@ -213,47 +213,45 @@
         <!-- Best Specialist Box -->
         <div class="bg-surface rounded-3xl border-3 border-success-600 p-8 shadow-2xl relative overflow-hidden">
           <div class="flex items-center gap-4 mb-6">
-            <div
-              v-if="comparison.top.logoUrl"
-              class="h-24 w-24 flex items-center justify-center flex-shrink-0"
-            >
+            <div class="h-24 w-24 flex items-center justify-center flex-shrink-0">
               <NuxtImg
+                v-if="topProviderSlug && topProviderLogoSrc && !topLogoError"
+                :src="topProviderLogoSrc"
+                :alt="comparison.top.name"
+                width="96"
+                height="96"
+                loading="lazy"
+                :format="topProviderLogoSrc?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
+                class="max-h-full max-w-full object-contain"
+                @error="topLogoError = true"
+              />
+              <NuxtImg
+                v-else-if="comparison.top.logoUrl && !topLogoError"
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
                 width="96"
                 height="96"
                 loading="lazy"
                 :format="comparison.top.logoUrl?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
-                class="h-full w-full object-contain"
+                class="max-h-full max-w-full object-contain"
+                @error="topLogoError = true"
               />
-            </div>
-            <div
-              v-else
-              class="h-24 w-24 flex items-center justify-center flex-shrink-0"
-            >
-              <svg
-                class="h-full w-full text-success-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <div
+                v-else
+                class="h-full w-full flex items-center justify-center rounded-xl bg-success-100 text-success-700 text-h1 font-bold"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-	              </svg>
-	            </div>
-	            <div>
-	              <h3 class="text-h3 font-bold text-neutral-900">
-	                {{ comparison.top.name }}
-	              </h3>
-	              <p class="text-body-sm text-success-600 font-medium">
-	                Money Transfer Specialist
-	              </p>
-	            </div>
-	          </div>
+                {{ comparison.top.name?.charAt(0) ?? 'P' }}
+              </div>
+            </div>
+            <div>
+              <h3 class="text-h3 font-bold text-neutral-900">
+                {{ comparison.top.name }}
+              </h3>
+              <p class="text-body-sm text-success-600 font-medium">
+                Money Transfer Specialist
+              </p>
+            </div>
+          </div>
 
           <div class="space-y-4">
             <div class="bg-success-600 rounded-xl p-5 border border-success-600">
@@ -510,10 +508,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
 import { normalizeProviderSlug, getProviderLogoPath } from '~/composables/useProviderLogo'
 
+const topLogoError = ref(false)
 const amount = 500
 
 // Fixed corridor: US → Mexico
@@ -538,6 +537,9 @@ const topProviderLogoSrc = computed(() => {
   const slug = topProviderSlug.value
   return slug ? getProviderLogoPath(slug) : ''
 })
+
+watch(topProviderSlug, () => { topLogoError.value = false })
+watch(() => comparison.value?.top?.logoUrl, () => { topLogoError.value = false })
 
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''

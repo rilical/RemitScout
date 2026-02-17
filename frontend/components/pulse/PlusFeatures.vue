@@ -25,11 +25,11 @@
         </p>
         <div class="flex flex-wrap gap-4">
           <NuxtLink
-            to="/plus"
+            to="/plus/checkout"
             class="group rounded-xl bg-surface px-8 py-4 font-bold text-brand-700 shadow-lg shadow-black/20 transition-all hover:shadow-xl hover:scale-[1.02]"
           >
             <span class="flex items-center gap-2">
-              Start 14-day free trial
+              Upgrade to Plus
               <svg
                 class="h-5 w-5 transition-transform group-hover:translate-x-1"
                 fill="none"
@@ -237,11 +237,14 @@
               <span>{{ feature }}</span>
             </li>
           </ul>
-          <button class="w-full rounded-xl bg-brand-600 py-4 font-bold text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]">
-            Start 14-day free trial
-          </button>
+          <NuxtLink
+            to="/plus/checkout"
+            class="block w-full rounded-xl bg-brand-600 py-4 text-center font-bold text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]"
+          >
+            Upgrade to Plus
+          </NuxtLink>
           <p class="mt-4 text-center text-body-sm text-neutral-400">
-            No credit card required • Cancel anytime
+            Cancel anytime
           </p>
         </div>
       </div>

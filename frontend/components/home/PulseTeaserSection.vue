@@ -25,7 +25,7 @@ type PulseTeaserResponse = {
 }
 
 const { request } = useApi()
-const { isPlus } = useEntitlements()
+const { pulseLevel } = useEntitlements()
 
 const { data, pending } = await useAsyncData(
   'pulse:teaser',
@@ -36,7 +36,11 @@ const { data, pending } = await useAsyncData(
 const movers = computed(() => data.value?.movers ?? [])
 const updatedAt = computed(() => data.value?.updatedAt ?? null)
 const windowHours = computed(() => data.value?.windowHours ?? 24)
-const ctaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pulse'))
+const ctaLabel = computed(() => {
+  if (pulseLevel.value === 'pro') return 'Open Pulse Pro'
+  if (pulseLevel.value === 'lite') return 'Open Pulse'
+  return 'Preview Pulse'
+})
 
 const formatPct = (value: number) => {
   const pct = value * 100

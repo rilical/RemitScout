@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000'
+// Use a dedicated port for Playwright to avoid accidentally reusing `nuxt dev` on :3000.
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3002'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -13,10 +14,11 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        // Playwright runs with `cwd` set to the frontend package; don't double `-C frontend`.
-        command: 'pnpm run build && pnpm run preview --port 3000',
-        port: 3000,
-        reuseExistingServer: !process.env.CI,
+      // Playwright runs with `cwd` set to the frontend package; don't double `-C frontend`.
+      // `nuxi preview` does not support `--host`; it binds to all interfaces by default.
+        command: 'pnpm run build && E2E_MOCK_API=1 pnpm exec nuxi preview -p 3002',
+        port: 3002,
+        reuseExistingServer: false,
         // `pnpm run build` is the slow part; allow enough time for cold caches.
         timeout: 10 * 60 * 1000,
       },

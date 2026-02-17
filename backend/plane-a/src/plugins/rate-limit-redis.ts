@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getRedisClient } from '../../../shared/redis'
 import { createLogger } from '../../../shared/logger'
+import { withTimeout } from '../../../shared/utils/timeout'
+import { LRUCache } from 'lru-cache'
 
 const logger = createLogger('plane-a.rate-limit-redis')
 
@@ -20,18 +22,42 @@ interface RateLimitOptions {
 
 type MemoryEntry = { count: number; resetAt: number }
 
-const createMemoryLimiter = (timeWindowMs: number) => {
-  const store = new Map<string, MemoryEntry>()
-  return (key: string) => {
+const DEFAULT_MAX_MEMORY_KEYS = 50_000
+
+export const createMemoryLimiterStore = (
+  timeWindowMs: number,
+  options?: { maxKeys?: number },
+) => {
+  const maxKeys = options?.maxKeys ?? DEFAULT_MAX_MEMORY_KEYS
+  const cache = new LRUCache<string, MemoryEntry>({
+    max: maxKeys,
+  })
+
+  const getOrIncrement = (key: string): MemoryEntry => {
     const now = Date.now()
-    const entry = store.get(key)
-    if (!entry || entry.resetAt < now) {
-      store.set(key, { count: 1, resetAt: now + timeWindowMs })
-      return { count: 1, resetAt: now + timeWindowMs }
+    const entry = cache.get(key)
+
+    if (!entry || entry.resetAt <= now) {
+      const next = { count: 1, resetAt: now + timeWindowMs }
+      cache.set(key, next, { ttl: timeWindowMs })
+      return next
     }
-    entry.count += 1
-    return { count: entry.count, resetAt: entry.resetAt }
+
+    const next = { count: entry.count + 1, resetAt: entry.resetAt }
+    cache.set(key, next, { ttl: Math.max(0, entry.resetAt - now) })
+    return next
   }
+
+  return {
+    cache,
+    getOrIncrement,
+    size: () => cache.size,
+  }
+}
+
+const createMemoryLimiter = (timeWindowMs: number) => {
+  const store = createMemoryLimiterStore(timeWindowMs)
+  return (key: string) => store.getOrIncrement(key)
 }
 
 /**
@@ -72,11 +98,11 @@ export const registerRedisRateLimit = async (
       const redisKey = `plane-a:rate-limit:${key}`
 
       // Use Redis INCR with EXPIRE for rate limiting
-      const current = await redis.incr(redisKey)
+      const current = await withTimeout(redis.incr(redisKey), 2000, 'redis_rate_limit_incr')
       
       // Set expiration on first request
       if (current === 1) {
-        await redis.expire(redisKey, timeWindowSeconds)
+        await withTimeout(redis.expire(redisKey, timeWindowSeconds), 2000, 'redis_rate_limit_expire')
       }
 
       // Add rate limit headers
@@ -152,8 +178,8 @@ export const registerMemoryRateLimit = (
   app: FastifyInstance,
   options: RateLimitOptions,
 ): void => {
-  const store = new Map<string, { count: number; resetAt: number }>()
   const timeWindowMs = options.timeWindow
+  const store = createMemoryLimiterStore(timeWindowMs)
 
   // Use preHandler so auth hooks can populate request.user / request.apiKey first.
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
@@ -168,34 +194,25 @@ export const registerMemoryRateLimit = (
       : `rate-limit:${request.ip}`
 
     const now = Date.now()
-    const entry = store.get(key)
+    const entry = store.cache.get(key)
 
-    // Clean up expired entries periodically
-    if (store.size > 1000) {
-      for (const [k, v] of store.entries()) {
-        if (v.resetAt < now) {
-          store.delete(k)
-        }
-      }
-    }
-
-    if (!entry || entry.resetAt < now) {
-      store.set(key, { count: 1, resetAt: now + timeWindowMs })
+    if (!entry || entry.resetAt <= now) {
+      const next = store.getOrIncrement(key)
       reply.header('X-RateLimit-Limit', String(maxRequests))
       reply.header('X-RateLimit-Remaining', String(maxRequests - 1))
-      reply.header('X-RateLimit-Reset', String(now + timeWindowMs))
+      reply.header('X-RateLimit-Reset', String(next.resetAt))
       return
     }
 
-    entry.count++
+    const next = store.getOrIncrement(key)
     reply.header('X-RateLimit-Limit', String(maxRequests))
-    reply.header('X-RateLimit-Remaining', String(Math.max(0, maxRequests - entry.count)))
-    reply.header('X-RateLimit-Reset', String(entry.resetAt))
+    reply.header('X-RateLimit-Remaining', String(Math.max(0, maxRequests - next.count)))
+    reply.header('X-RateLimit-Reset', String(next.resetAt))
 
-    if (entry.count > maxRequests) {
+    if (next.count > maxRequests) {
       logger.warn('rate_limit_exceeded_memory', {
         key,
-        current: entry.count,
+        current: next.count,
         max: maxRequests,
       })
       reply.code(429)

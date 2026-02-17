@@ -23,7 +23,7 @@
 
     <!-- 6. Popular corridor chips -->
     <AsyncErrorBoundary skeleton-height="160">
-      <CorridorsGridDynamic @corridor-selected="handleCorridorSelected" />
+      <CorridorsGridDynamic dark @corridor-selected="handleCorridorSelected" />
     </AsyncErrorBoundary>
 
     <!-- Educational comparison: Bank vs Specialist -->
@@ -56,7 +56,6 @@
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
     <AsyncErrorBoundary
-      v-if="enterpriseEnabled"
       skeleton-height="180"
     >
       <InstitutionalTeaser />
@@ -156,7 +155,7 @@ const NewsletterSignup = defineAsyncComponent(() => import('~/components/home/Ne
 
 const modalOpen = ref(false)
 const heroDualTabRef = ref<InstanceType<typeof HeroDualTab> | null>(null)
-const { pulseEnabled, enterpriseEnabled } = useFeatureFlags()
+const { pulseEnabled } = useFeatureFlags()
 
 const handleCorridorSelected = (data: { from: string, to: string }) => {
   heroDualTabRef.value?.prefillMoneyForm({

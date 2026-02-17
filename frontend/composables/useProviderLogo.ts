@@ -18,7 +18,7 @@ export function getProviderLogoPath(slug: string): string {
     'xoom': '/png/SVG/PROVIDERS/XOOM_LOGO.svg',
     'transfergo': '/png/SVG/PROVIDERS/TRANSFERGO_LOGO.svg',
     'paysend': '/png/SVG/PROVIDERS/PAYSEND_LOGO.svg',
-    'pangea': '/png/SVG/PROVIDERS/PANGEA_LOGO.webp',
+    'pangea': '/png/SVG/PROVIDERS/PANGEA_LOGO.svg',
     'orbitremit': '/png/SVG/PROVIDERS/ORBITREMIT_LOGO.png',
     'bossmoney': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',
     'boss-money': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',

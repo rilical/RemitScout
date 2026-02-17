@@ -58,7 +58,7 @@ describe('billing verify-session route', () => {
 
     const handler = getHandler(app, '/billing/verify-session')
     await expect(
-      handler({ user: { user_id: 'u-1' }, body: { sessionId: '00000000-0000-4000-8000-000000000001' } }, {} as any),
+      handler({ user: { user_id: 'u-1' }, body: { sessionId: 'cs_test_session_mismatch' } }, {} as any),
     ).rejects.toBeInstanceOf(AppError)
   })
 

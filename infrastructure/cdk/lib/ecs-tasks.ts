@@ -164,6 +164,13 @@ export const createEcsTasks = (
     operatingSystemFamily: OperatingSystemFamily.LINUX,
   }
 
+  // Read-only root filesystems require a writable tmp directory.
+  // For Fargate, an unnamed/empty volume is the portable option.
+  const tmpMountPoint = { sourceVolume: 'tmp', containerPath: '/tmp', readOnly: false }
+  const addTmpVolume = (task: FargateTaskDefinition): void => {
+    task.addVolume({ name: 'tmp' })
+  }
+
   const planeBIngestCpu = isDev ? 256 : 512
   const planeBIngestMemory = isDev ? 512 : 1024
   const ingestFanoutCpu = isDev ? 256 : 512
@@ -178,6 +185,7 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(planeBIngestTask)
 
   const planeBDbSecretArn = options.planeBDbSecretArn
   const planeBDbMigratorSecretArn = options.planeBDbMigratorSecretArn
@@ -632,8 +640,9 @@ export const createEcsTasks = (
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  planeBIngestTask.addContainer('PlaneBIngestContainer', {
+  const planeBIngestContainer = planeBIngestTask.addContainer('PlaneBIngestContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/plane-b-ingest-ecs.js',
       'scripts/aws/plane-b-ingest-ecs.ts',
@@ -647,16 +656,18 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  planeBIngestContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const planeBIngestOtelLogGroup = new LogGroup(scope, 'PlaneBIngestOtelLogGroup', {
       logGroupName: `/remit-scout/${options.envName}/plane-b-ingest-otel`,
       retention: logRetention,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
-    planeBIngestTask.addContainer('PlaneBIngestOtelCollector', {
+    const planeBIngestOtelCollector = planeBIngestTask.addContainer('PlaneBIngestOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -669,6 +680,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    planeBIngestOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const b2bSweepSchedulerTask = new FargateTaskDefinition(scope, 'B2bSweepSchedulerTask', {
@@ -678,14 +690,16 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(b2bSweepSchedulerTask)
 
   const b2bSweepSchedulerLogGroup = new LogGroup(scope, 'B2bSweepSchedulerLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/b2b-sweep-scheduler`,
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  b2bSweepSchedulerTask.addContainer('B2bSweepSchedulerContainer', {
+  const b2bSweepSchedulerContainer = b2bSweepSchedulerTask.addContainer('B2bSweepSchedulerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/b2b-sweep-scheduler-ecs.js',
       'scripts/aws/b2b-sweep-scheduler-ecs.ts',
@@ -730,6 +744,7 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  b2bSweepSchedulerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const b2bSweepSchedulerOtelLogGroup = new LogGroup(
       scope,
@@ -740,10 +755,11 @@ export const createEcsTasks = (
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       },
     )
-    b2bSweepSchedulerTask.addContainer('B2bSweepSchedulerOtelCollector', {
+    const b2bSweepSchedulerOtelCollector = b2bSweepSchedulerTask.addContainer('B2bSweepSchedulerOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -756,6 +772,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    b2bSweepSchedulerOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const b2cRefreshTask = new FargateTaskDefinition(scope, 'B2cRefreshWorkerTask', {
@@ -765,14 +782,16 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(b2cRefreshTask)
 
   const b2cRefreshLogGroup = new LogGroup(scope, 'B2cRefreshLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/b2c-refresh-worker`,
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  b2cRefreshTask.addContainer('B2cRefreshWorkerContainer', {
+  const b2cRefreshWorkerContainer = b2cRefreshTask.addContainer('B2cRefreshWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/b2c-refresh-worker-ecs.js',
       'scripts/aws/b2c-refresh-worker-ecs.ts',
@@ -796,16 +815,18 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  b2cRefreshWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const b2cRefreshOtelLogGroup = new LogGroup(scope, 'B2cRefreshOtelLogGroup', {
       logGroupName: `/remit-scout/${options.envName}/b2c-refresh-worker-otel`,
       retention: logRetention,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
-    b2cRefreshTask.addContainer('B2cRefreshOtelCollector', {
+    const b2cRefreshOtelCollector = b2cRefreshTask.addContainer('B2cRefreshOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -818,6 +839,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    b2cRefreshOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const fxRateRefreshTask = new FargateTaskDefinition(scope, 'FxRateRefreshWorkerTask', {
@@ -827,14 +849,16 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(fxRateRefreshTask)
 
   const fxRateRefreshLogGroup = new LogGroup(scope, 'FxRateRefreshLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/fx-rate-refresh-worker`,
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
-  fxRateRefreshTask.addContainer('FxRateRefreshWorkerContainer', {
+  const fxRateRefreshWorkerContainer = fxRateRefreshTask.addContainer('FxRateRefreshWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/fx-rate-refresh-worker-ecs.js',
       'scripts/aws/fx-rate-refresh-worker-ecs.ts',
@@ -852,16 +876,18 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  fxRateRefreshWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const fxRateRefreshOtelLogGroup = new LogGroup(scope, 'FxRateRefreshOtelLogGroup', {
       logGroupName: `/remit-scout/${options.envName}/fx-rate-refresh-worker-otel`,
       retention: logRetention,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
-    fxRateRefreshTask.addContainer('FxRateRefreshOtelCollector', {
+    const fxRateRefreshOtelCollector = fxRateRefreshTask.addContainer('FxRateRefreshOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -874,6 +900,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    fxRateRefreshOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const buildIngestFanoutEnv = (queueUrl: string, tierLabel: string) => {
@@ -936,6 +963,7 @@ export const createEcsTasks = (
       taskRole: options.roles.planeBEcsTaskRole,
       runtimePlatform,
     })
+    addTmpVolume(task)
 
     const ingestFanoutLogGroup = new LogGroup(scope, `IngestFanout${idSuffix}LogGroup`, {
       logGroupName: `/remit-scout/${options.envName}/ingest-fanout${logSuffix}-worker`,
@@ -943,8 +971,9 @@ export const createEcsTasks = (
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
 
-    task.addContainer('IngestFanoutWorkerContainer', {
+    const ingestFanoutWorkerContainer = task.addContainer('IngestFanoutWorkerContainer', {
       image,
+      readonlyRootFilesystem: true,
       command: resolveCommand(
         'scripts/aws/ingest-fanout-worker-ecs.js',
         'scripts/aws/ingest-fanout-worker-ecs.ts',
@@ -958,6 +987,7 @@ export const createEcsTasks = (
       healthCheck: workerHealthCheck,
       stopTimeout: Duration.seconds(45),
     })
+    ingestFanoutWorkerContainer.addMountPoints(tmpMountPoint)
 
     if (enableTelemetry) {
       const ingestFanoutOtelLogGroup = new LogGroup(
@@ -969,10 +999,11 @@ export const createEcsTasks = (
           removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
         },
       )
-      task.addContainer('IngestFanoutOtelCollector', {
+      const ingestFanoutOtelCollector = task.addContainer('IngestFanoutOtelCollector', {
         image: ContainerImage.fromRegistry(
           'public.ecr.aws/aws-observability/aws-otel-collector:latest',
         ),
+        readonlyRootFilesystem: true,
         cpu: 32,
         memoryLimitMiB: 256,
         environment: {
@@ -985,6 +1016,7 @@ export const createEcsTasks = (
         }),
         portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
       })
+      ingestFanoutOtelCollector.addMountPoints(tmpMountPoint)
     }
 
     return task
@@ -1009,6 +1041,7 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(goldLiveTask)
 
   const goldLiveLogGroup = new LogGroup(scope, 'GoldLiveLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/gold-live-worker`,
@@ -1033,8 +1066,9 @@ export const createEcsTasks = (
   if (planeBDbName) {
     goldLiveEnv.PLANE_B_DB_NAME = planeBDbName
   }
-  goldLiveTask.addContainer('GoldLiveWorkerContainer', {
+  const goldLiveWorkerContainer = goldLiveTask.addContainer('GoldLiveWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/gold-live-worker-ecs.js',
       'scripts/aws/gold-live-worker-ecs.ts',
@@ -1048,16 +1082,18 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  goldLiveWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const goldLiveOtelLogGroup = new LogGroup(scope, 'GoldLiveOtelLogGroup', {
       logGroupName: `/remit-scout/${options.envName}/gold-live-worker-otel`,
       retention: logRetention,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
-    goldLiveTask.addContainer('GoldLiveOtelCollector', {
+    const goldLiveOtelCollector = goldLiveTask.addContainer('GoldLiveOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -1070,6 +1106,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    goldLiveOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const notificationsQueueTask = new FargateTaskDefinition(
@@ -1083,6 +1120,7 @@ export const createEcsTasks = (
       runtimePlatform,
     },
   )
+  addTmpVolume(notificationsQueueTask)
 
   const notificationsLogGroup = new LogGroup(scope, 'NotificationsQueueLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/notifications-queue-worker`,
@@ -1118,8 +1156,9 @@ export const createEcsTasks = (
     notificationsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
   }
   hydrateAlertWorkerEnv(notificationsEnv)
-  notificationsQueueTask.addContainer('NotificationsQueueWorkerContainer', {
+  const notificationsQueueWorkerContainer = notificationsQueueTask.addContainer('NotificationsQueueWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/notifications-queue-worker-ecs.js',
       'scripts/aws/notifications-queue-worker-ecs.ts',
@@ -1133,6 +1172,7 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  notificationsQueueWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const notificationsOtelLogGroup = new LogGroup(
       scope,
@@ -1143,10 +1183,11 @@ export const createEcsTasks = (
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       },
     )
-    notificationsQueueTask.addContainer('NotificationsQueueOtelCollector', {
+    const notificationsQueueOtelCollector = notificationsQueueTask.addContainer('NotificationsQueueOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -1159,6 +1200,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    notificationsQueueOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const opsAlertsQueueTask = new FargateTaskDefinition(
@@ -1172,6 +1214,7 @@ export const createEcsTasks = (
       runtimePlatform,
     },
   )
+  addTmpVolume(opsAlertsQueueTask)
 
   const opsAlertsLogGroup = new LogGroup(scope, 'OpsAlertsQueueLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/ops-alerts-queue-worker`,
@@ -1207,8 +1250,9 @@ export const createEcsTasks = (
     opsAlertsEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
   }
   hydrateAlertWorkerEnv(opsAlertsEnv)
-  opsAlertsQueueTask.addContainer('OpsAlertsQueueWorkerContainer', {
+  const opsAlertsQueueWorkerContainer = opsAlertsQueueTask.addContainer('OpsAlertsQueueWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/ops-alerts-queue-worker-ecs.js',
       'scripts/aws/ops-alerts-queue-worker-ecs.ts',
@@ -1222,16 +1266,18 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  opsAlertsQueueWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const opsAlertsOtelLogGroup = new LogGroup(scope, 'OpsAlertsQueueOtelLogGroup', {
       logGroupName: `/remit-scout/${options.envName}/ops-alerts-queue-worker-otel`,
       retention: logRetention,
       removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     })
-    opsAlertsQueueTask.addContainer('OpsAlertsQueueOtelCollector', {
+    const opsAlertsQueueOtelCollector = opsAlertsQueueTask.addContainer('OpsAlertsQueueOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -1244,6 +1290,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    opsAlertsQueueOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const planeADbSecretArn = options.planeADbSecretArn ?? options.planeBDbSecretArn
@@ -1282,6 +1329,7 @@ export const createEcsTasks = (
       runtimePlatform,
     },
   )
+  addTmpVolume(alertEvaluationTask)
 
   const alertEvaluationLogGroup = new LogGroup(scope, 'AlertEvaluationWorkerLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/alert-evaluation-worker`,
@@ -1299,8 +1347,9 @@ export const createEcsTasks = (
     alertEvaluationEnv.COMMUNICATIONS_SECRET_ARN = options.communicationsSecretArn
   }
   hydrateAlertWorkerEnv(alertEvaluationEnv)
-  alertEvaluationTask.addContainer('AlertEvaluationWorkerContainer', {
+  const alertEvaluationWorkerContainer = alertEvaluationTask.addContainer('AlertEvaluationWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/alert-evaluation-worker-ecs.js',
       'scripts/aws/alert-evaluation-worker-ecs.ts',
@@ -1314,6 +1363,7 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  alertEvaluationWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const alertEvaluationOtelLogGroup = new LogGroup(
       scope,
@@ -1324,10 +1374,11 @@ export const createEcsTasks = (
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       },
     )
-    alertEvaluationTask.addContainer('AlertEvaluationOtelCollector', {
+    const alertEvaluationOtelCollector = alertEvaluationTask.addContainer('AlertEvaluationOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -1340,6 +1391,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    alertEvaluationOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const exportWorkerTask = new FargateTaskDefinition(
@@ -1353,6 +1405,7 @@ export const createEcsTasks = (
       runtimePlatform,
     },
   )
+  addTmpVolume(exportWorkerTask)
 
   const exportWorkerLogGroup = new LogGroup(scope, 'ExportWorkerLogGroup', {
     logGroupName: `/remit-scout/${options.envName}/export-worker`,
@@ -1374,8 +1427,9 @@ export const createEcsTasks = (
   if (options.exportsPrefix) {
     exportWorkerEnv.EXPORTS_S3_PREFIX = options.exportsPrefix
   }
-  exportWorkerTask.addContainer('ExportWorkerContainer', {
+  const exportWorkerContainer = exportWorkerTask.addContainer('ExportWorkerContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/export-worker-ecs.js',
       'scripts/aws/export-worker-ecs.ts',
@@ -1389,6 +1443,7 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  exportWorkerContainer.addMountPoints(tmpMountPoint)
   if (enableTelemetry) {
     const exportWorkerOtelLogGroup = new LogGroup(
       scope,
@@ -1399,10 +1454,11 @@ export const createEcsTasks = (
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       },
     )
-    exportWorkerTask.addContainer('ExportWorkerOtelCollector', {
+    const exportWorkerOtelCollector = exportWorkerTask.addContainer('ExportWorkerOtelCollector', {
       image: ContainerImage.fromRegistry(
         'public.ecr.aws/aws-observability/aws-otel-collector:latest',
       ),
+      readonlyRootFilesystem: true,
       cpu: 32,
       memoryLimitMiB: 256,
       environment: {
@@ -1415,6 +1471,7 @@ export const createEcsTasks = (
       }),
       portMappings: [{ containerPort: 4318, protocol: Protocol.TCP }],
     })
+    exportWorkerOtelCollector.addMountPoints(tmpMountPoint)
   }
 
   const dbMigrateTask = new FargateTaskDefinition(scope, 'DbMigrateTask', {
@@ -1424,14 +1481,16 @@ export const createEcsTasks = (
     taskRole: options.roles.planeBEcsTaskRole,
     runtimePlatform,
   })
+  addTmpVolume(dbMigrateTask)
 
   const dbMigrateLogGroup = new LogGroup(scope, 'DbMigrateLogGroup', {
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
 
-  dbMigrateTask.addContainer('DbMigrateContainer', {
+  const dbMigrateContainer = dbMigrateTask.addContainer('DbMigrateContainer', {
     image,
+    readonlyRootFilesystem: true,
     command: resolveCommand(
       'scripts/aws/db-migrate-ecs.js',
       'scripts/aws/db-migrate-ecs.ts',
@@ -1451,6 +1510,7 @@ export const createEcsTasks = (
     healthCheck: workerHealthCheck,
     stopTimeout: Duration.seconds(45),
   })
+  dbMigrateContainer.addMountPoints(tmpMountPoint)
 
   return {
     planeBIngestTask,

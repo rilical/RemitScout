@@ -2,12 +2,32 @@ import { createError, defineEventHandler } from 'h3'
 import { proxyToBackend } from '~/server/utils/backendProxy'
 
 const ALLOWED_PATH_PREFIXES = [
-  '/providers', '/quotes', '/corridors', '/popular-corridors',
-  '/offers', '/ads', '/bank-vs-specialist', '/geo', '/click',
-  '/newsletter', '/recent-searches', '/billing',
-  '/me', '/watchlist', '/alerts', '/exports',
-  '/sessions', '/telemetry', '/marketing',
-  '/admin', '/ops', '/audit', '/analytics', '/pulse',
+  '/providers',
+  '/quotes',
+  '/corridors',
+  '/popular-corridors',
+  '/corridor-currencies',
+  '/offers',
+  '/ads',
+  '/bank-vs-specialist',
+  '/geo',
+  '/click',
+  '/newsletter',
+  '/recent-searches',
+  '/billing',
+  '/me',
+  '/watchlist',
+  '/alerts',
+  '/exports',
+  '/sessions',
+  '/telemetry',
+  '/marketing',
+  '/admin',
+  '/ops',
+  '/audit',
+  '/analytics',
+  '/pulse',
+  '/rates',
 ] as const
 
 export default defineEventHandler(async (event) => {

@@ -43,7 +43,9 @@ const publishProbeMetrics = async (
           },
           {
             MetricName: 'probe_result',
-            Value: result.success ? 1 : 0,
+            // Count occurrences by status. Alarms and dashboards can SUM per Status.
+            // (A 0 value would never breach a Sum-based failure alarm.)
+            Value: 1,
             Unit: 'Count',
             Timestamp: new Date(),
             Dimensions: [

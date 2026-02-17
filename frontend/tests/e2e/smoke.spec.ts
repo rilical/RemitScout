@@ -34,8 +34,8 @@ test('dashboard + plus + pulse surfaces load (logged out)', async ({ page }) => 
   await expect(page.getByRole('heading', { name: /choose your plan/i })).toBeVisible()
 
   await page.goto('/pulse')
-  await expect(page.getByRole('heading', { name: /pulse is included with plus/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /upgrade to plus/i }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: /pulse for remittance markets/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /unlock plus|upgrade to plus/i }).first()).toBeVisible()
 })
 
 test('US corridor page renders', async ({ page }) => {

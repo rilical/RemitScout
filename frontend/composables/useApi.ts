@@ -100,7 +100,9 @@ export const createApiClient = (deps: ApiClientDeps) => {
     const cloudfrontRequestId = deps.getCloudFrontRequestId?.()
     const serverHeaders = deps.getServerHeaders?.() || {}
 
-    const maxRetries = options.retries ?? 3
+    const method = options.method || 'GET'
+    const defaultRetries = method === 'GET' || method === 'HEAD' ? 3 : 0
+    const maxRetries = options.retries ?? defaultRetries
     const timeoutMs = options.timeoutMs ?? 10000
 
     const makeRequest = async () => {
@@ -123,7 +125,7 @@ export const createApiClient = (deps: ApiClientDeps) => {
       }
 
       const data = await deps.fetcher(url as string, {
-        method: options.method || 'GET',
+        method,
         query: options.query as Record<string, string>,
         body: options.body ?? undefined,
         headers,

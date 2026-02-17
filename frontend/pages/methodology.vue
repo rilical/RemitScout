@@ -1106,14 +1106,14 @@
           <h2 class="text-h2 font-bold text-white mb-6">
             Proprietary Indices
           </h2>
-          <p class="text-body-lg text-neutral-300 max-w-3xl mx-auto leading-relaxed">
-            Remit-Scout has developed three trademarked indices to quantify cross-border payment efficiency. Full formulations and citation rules live in our
-            <NuxtLink
-              to="/indices-methodology"
-              class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold"
-            >indices methodology</NuxtLink>,
-            while enterprise accounts generate embeds and API access from the dashboard.
-          </p>
+	          <p class="text-body-lg text-neutral-300 max-w-3xl mx-auto leading-relaxed">
+	            Remit-Scout has developed three trademarked indices to quantify cross-border payment efficiency. A methodology overview and citation requirements live in our
+	            <NuxtLink
+	              to="/indices-methodology"
+	              class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold"
+	            >indices methodology</NuxtLink>.
+	            Full technical documentation is available to institutional clients under NDA, while enterprise accounts generate embeds and API access from the dashboard.
+	          </p>
         </div>
 
         <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
@@ -1205,15 +1205,15 @@
         <div class="mt-10 text-center">
           <p class="text-body-sm text-neutral-400">
             TEER™, RVI™, and RCI™ are trademarks of Remit-Scout. See the
-            <NuxtLink
-              to="/indices-methodology"
-              class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold"
-            >indices methodology</NuxtLink>
-            for formulas and citation requirements.
-          </p>
-        </div>
-      </div>
-    </section>
+	            <NuxtLink
+	              to="/indices-methodology"
+	              class="text-brand-400 hover:text-brand-300 underline decoration-brand-400/40 hover:decoration-brand-300/60 font-semibold"
+	            >indices methodology</NuxtLink>
+	            for methodology overview and citation requirements.
+	          </p>
+	        </div>
+	      </div>
+	    </section>
 
     <!-- Technical Appendix (Institutional) -->
     <section

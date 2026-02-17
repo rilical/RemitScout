@@ -3,14 +3,20 @@ import { config } from '../../../shared/config'
 import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
+import { formatCorridorId, parseCorridorId } from '../../../shared/corridor'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { validateApiKey } from '../services/api-keys'
+import {
+  getInstitutionalClientScopes,
+  isInstitutionalClientActive,
+  validateInstitutionalClientApiKey,
+} from '../services/institutional-clients'
 import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../services/entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 
-type EntitlementType = 'pulse' | 'exports' | 'alerts' | 'history' | 'api_access'
+type EntitlementType = 'pulse' | 'pulse_pro' | 'exports' | 'alerts' | 'history' | 'api_access'
 
 type RateLimitEntry = {
   count: number
@@ -18,8 +24,11 @@ type RateLimitEntry = {
 }
 
 const apiKeyRateLimitStore = new Map<string, RateLimitEntry>()
+const institutionalDailyRateLimitStore = new Map<string, RateLimitEntry>()
 
 const normalizeScope = (value: string) => value.trim().toLowerCase()
+
+const toUtcDateString = (value: Date) => value.toISOString().slice(0, 10)
 
 const resolveRequiredApiKeyScopes = (request: FastifyRequest): string[] => {
   const rawPath = request.routeOptions?.url || request.url.split('?')[0] || ''
@@ -61,15 +70,124 @@ const hasAllScopes = (scopes: string[] | undefined, required: string[]) => {
   return required.every((scope) => set.has(normalizeScope(scope)))
 }
 
+const resolveInstitutionalSurfacePath = (request: FastifyRequest): string => {
+  return request.url.split('?')[0] || ''
+}
+
+const isInstitutionalSurface = (path: string): boolean => {
+  return path.startsWith('/api/v1/indices') || path === '/api/v1/usage'
+}
+
+const resolveNormalizedCorridorId = (raw: unknown): string | null => {
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const parts = parseCorridorId(trimmed)
+  if (!parts) return null
+  return formatCorridorId({
+    sourceCountry: parts.sourceCountry.toUpperCase(),
+    destCountry: parts.destCountry.toUpperCase(),
+    sourceCurrency: parts.sourceCurrency.toUpperCase(),
+    destCurrency: parts.destCurrency.toUpperCase(),
+  })
+}
+
+const getSecondsUntilNextUtcMidnight = (now: Date): number => {
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
+  const deltaMs = Math.max(0, next.getTime() - now.getTime())
+  return Math.max(1, Math.ceil(deltaMs / 1000))
+}
+
+const applyInstitutionalDailyRateLimit = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+  clientId: string,
+  maxRequestsPerDay: number,
+): Promise<boolean> => {
+  const now = new Date()
+  const dateKey = toUtcDateString(now)
+  const secondsUntilReset = getSecondsUntilNextUtcMidnight(now)
+  const resetAtMs = now.getTime() + secondsUntilReset * 1000
+
+  const redis = await getRedisClient()
+  if (redis) {
+    const redisKey = `plane-a:inst-daily:${clientId}:${dateKey}`
+    const current = await redis.incr(redisKey)
+    if (current === 1) {
+      await redis.expire(redisKey, secondsUntilReset)
+    }
+
+    reply.header('X-RateLimit-Daily-Limit', String(maxRequestsPerDay))
+    reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - current)))
+    reply.header('X-RateLimit-Daily-Reset', String(resetAtMs))
+
+    if (current > maxRequestsPerDay) {
+      reply.code(429)
+      reply.send({
+        error: 'daily_limit_exceeded',
+        message: 'Daily request limit exceeded.',
+        retryAfter: secondsUntilReset,
+      })
+      return false
+    }
+    return true
+  }
+
+  // Fallback: in-memory daily limiter (best-effort; not distributed).
+  const memoryKey = `${clientId}:${dateKey}`
+  const entry = institutionalDailyRateLimitStore.get(memoryKey)
+  const nowMs = now.getTime()
+  if (!entry || entry.resetAt < nowMs) {
+    institutionalDailyRateLimitStore.set(memoryKey, { count: 1, resetAt: resetAtMs })
+    reply.header('X-RateLimit-Daily-Limit', String(maxRequestsPerDay))
+    reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - 1)))
+    reply.header('X-RateLimit-Daily-Reset', String(resetAtMs))
+    if (1 > maxRequestsPerDay) {
+      reply.code(429)
+      reply.send({
+        error: 'daily_limit_exceeded',
+        message: 'Daily request limit exceeded.',
+        retryAfter: secondsUntilReset,
+      })
+      return false
+    }
+    return true
+  }
+
+  entry.count += 1
+  reply.header('X-RateLimit-Daily-Limit', String(maxRequestsPerDay))
+  reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - entry.count)))
+  reply.header('X-RateLimit-Daily-Reset', String(entry.resetAt))
+
+  if (entry.count > maxRequestsPerDay) {
+    reply.code(429)
+    reply.send({
+      error: 'daily_limit_exceeded',
+      message: 'Daily request limit exceeded.',
+      retryAfter: secondsUntilReset,
+    })
+    return false
+  }
+
+  return true
+}
+
 export const authPlugin = (app: FastifyInstance) => {
   app.addHook('preHandler', async (request: FastifyRequest) => {
     const apiKeyToken = resolveApiKeyToken(request)
     if (apiKeyToken) {
+      const institutional = await validateInstitutionalClientApiKey(planeAPool, apiKeyToken)
+      if (institutional) {
+        request.institutionalClient = institutional
+        return
+      }
+
       const apiKey = await validateApiKey(planeAPool, apiKeyToken)
       if (apiKey) {
         request.apiKey = apiKey
         return
       }
+
       request.apiKeyError = { code: 'invalid_api_key', message: 'Invalid API key.' }
     }
 
@@ -124,6 +242,65 @@ export const authPlugin = (app: FastifyInstance) => {
     }
 
     request.user = result
+  })
+
+  // Institutional-only enforcement that must apply even to routes that don't use requireEntitlement.
+  // Runs after auth has identified the institutional client.
+  app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.institutionalClient) return
+    const path = resolveInstitutionalSurfacePath(request)
+    if (!isInstitutionalSurface(path)) return
+
+    // Daily limiter counts authenticated institutional traffic, regardless of downstream 4xx.
+    const allowed = await applyInstitutionalDailyRateLimit(
+      request,
+      reply,
+      request.institutionalClient.id,
+      Math.max(0, Number(request.institutionalClient.rate_limit_daily) || 0),
+    )
+    if (!allowed) {
+      return
+    }
+  })
+
+  // Best-effort usage logging for institutional surfaces. Must never block the response.
+  app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.institutionalClient) return
+    const path = resolveInstitutionalSurfacePath(request)
+    if (!isInstitutionalSurface(path)) return
+
+    const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+    const endpoint = request.routeOptions?.url || path
+    const responseTimeMs = Number.isFinite(reply.elapsedTime) ? Math.round(reply.elapsedTime) : null
+
+    try {
+      await query(
+        `
+        INSERT INTO public.api_usage_log (
+          client_id,
+          endpoint,
+          corridor_id,
+          response_time_ms,
+          status_code
+        ) VALUES ($1, $2, $3, $4, $5)
+        `,
+        [
+          request.institutionalClient.id,
+          endpoint,
+          corridorId,
+          responseTimeMs,
+          reply.statusCode,
+        ],
+        planeAPool,
+      )
+    } catch (error) {
+      logger.warn('api_usage_log_insert_failed', {
+        client_id: request.institutionalClient.id,
+        endpoint,
+        status_code: reply.statusCode,
+        error: getErrorMessage(error),
+      })
+    }
   })
 }
 
@@ -285,6 +462,9 @@ const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeo
   if (entitlement === 'pulse') {
     return entitlements.pulse_access !== 'none'
   }
+  if (entitlement === 'pulse_pro') {
+    return entitlements.pulse_access === 'pro'
+  }
   if (entitlement === 'exports') {
     return entitlements.exports_enabled
   }
@@ -317,7 +497,7 @@ const isPlanActive = (status?: string | null): boolean => {
 }
 
 const isPaidEntitlement = (entitlement: EntitlementType): boolean => {
-  return entitlement === 'pulse' || entitlement === 'exports' || entitlement === 'api_access'
+  return entitlement === 'pulse' || entitlement === 'pulse_pro' || entitlement === 'exports' || entitlement === 'api_access'
 }
 
 const applyApiKeyRateLimit = async (
@@ -399,6 +579,39 @@ export const requireEntitlement = (entitlement: EntitlementType) => {
     if (request.accountDeleted) {
       reply.code(403)
       return reply.send({ error: 'account_deleted', message: 'This account has been deleted.' })
+    }
+
+    // Institutional clients are not part of the Supabase user plan system.
+    if (request.institutionalClient) {
+      if (!isInstitutionalClientActive(request.institutionalClient)) {
+        reply.code(403)
+        return reply.send({ error: 'forbidden', code: 'institutional_inactive' })
+      }
+      if (entitlement !== 'api_access') {
+        reply.code(403)
+        return reply.send({ error: 'forbidden' })
+      }
+
+      const scopes = getInstitutionalClientScopes(request.institutionalClient.tier)
+      const requiredScopes = resolveRequiredApiKeyScopes(request)
+      if (!hasAllScopes(scopes, requiredScopes)) {
+        reply.code(403)
+        return reply.send({
+          error: 'insufficient_scope',
+          requiredScopes,
+        })
+      }
+
+      const corridorsAllowed = request.institutionalClient.corridors_allowed
+      if (corridorsAllowed !== null) {
+        const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+        if (corridorId && !corridorsAllowed.includes(corridorId)) {
+          reply.code(403)
+          return reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
+        }
+      }
+
+      return
     }
 
     const userId = request.user?.user_id ?? request.apiKey?.user_id

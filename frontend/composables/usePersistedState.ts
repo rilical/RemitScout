@@ -48,7 +48,7 @@ export function usePersistedState<T>(
   const listenToStorage = options.listenToStorage ?? true
   const requiredConsent = options.requiredConsent
 
-  const { functionalConsent, analyticsConsent, marketingConsent } = usePrivacySettings()
+  const { loaded: privacyLoaded, functionalConsent, analyticsConsent, marketingConsent } = usePrivacySettings()
   const allowStorage = computed(() => {
     switch (requiredConsent) {
       case 'functional':
@@ -77,6 +77,9 @@ export function usePersistedState<T>(
 
   function hydrateFromStorage() {
     if (!import.meta.client) return
+    // When consent is required, defer any hydrate/clear decision until privacy settings
+    // are hydrated on the client. This prevents wiping persisted state due to SSR defaults.
+    if (requiredConsent && !privacyLoaded.value) return
 
     if (!allowStorage.value) {
       clearStorage()
@@ -103,6 +106,7 @@ export function usePersistedState<T>(
   function persistToStorage() {
     if (!import.meta.client) return
     if (!hydrated.value) return
+    if (requiredConsent && !privacyLoaded.value) return
     if (!allowStorage.value) {
       clearStorage()
       return
@@ -139,6 +143,7 @@ export function usePersistedState<T>(
     () => allowStorage.value,
     (enabled, prevEnabled) => {
       if (!import.meta.client) return
+      if (requiredConsent && !privacyLoaded.value) return
       if (enabled) {
         if (!prevEnabled) {
           hydrateFromStorage()
@@ -151,6 +156,17 @@ export function usePersistedState<T>(
         state.value = initial()
         hydrated.value = true
       }
+    },
+    { immediate: false },
+  )
+
+  watch(
+    () => privacyLoaded.value,
+    (loaded) => {
+      if (!import.meta.client) return
+      if (!loaded) return
+      if (!requiredConsent) return
+      hydrateFromStorage()
     },
     { immediate: false },
   )

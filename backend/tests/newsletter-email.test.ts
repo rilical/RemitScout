@@ -19,6 +19,7 @@ const loadModule = async (overrides?: Partial<any>) => {
   vi.resetModules()
   vi.doMock('../shared/config', () => ({
     config: {
+      aws: { sesRegion: 'us-east-1' },
       db: { planeAUrl: 'postgres://localhost/test' },
       billing: { stripe: { frontendBaseUrl: 'http://localhost:3000' } },
       newsletter: {

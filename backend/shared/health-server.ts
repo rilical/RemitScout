@@ -15,6 +15,7 @@ import { createLogger } from './logger'
 import { config } from './config'
 import { getRedisClient } from './redis'
 import { createPool } from './db'
+import { withAbortTimeout, withTimeout } from './utils/timeout'
 
 const moduleLogger = createLogger('shared.health-server')
 
@@ -52,13 +53,7 @@ const sendJson = (res: http.ServerResponse, statusCode: number, payload: Record<
 
 const checkDatabase = async (pool: Pool): Promise<boolean> => {
   try {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('database_check_timeout')), 2000)
-    })
-    await Promise.race([
-      pool.query('SELECT 1'),
-      timeoutPromise,
-    ])
+    await withTimeout(pool.query('SELECT 1'), 2000, 'database_check')
     return true
   } catch (error) {
     moduleLogger.debug('health_database_check_failed', {
@@ -74,7 +69,7 @@ const checkRedis = async (): Promise<boolean> => {
     if (!client) {
       return false
     }
-    await client.ping()
+    await withTimeout(client.ping(), 2000, 'redis_check_ping')
     return true
   } catch (error) {
     moduleLogger.debug('health_redis_check_failed', {
@@ -89,11 +84,16 @@ const checkSqs = async (queueUrls: string[]): Promise<boolean> => {
   const sqs = new SQSClient({})
   try {
     for (const queueUrl of queueUrls) {
-      await sqs.send(
-        new GetQueueAttributesCommand({
-          QueueUrl: queueUrl,
-          AttributeNames: ['QueueArn'],
-        }),
+      await withAbortTimeout(
+        (signal) => sqs.send(
+          new GetQueueAttributesCommand({
+            QueueUrl: queueUrl,
+            AttributeNames: ['QueueArn'],
+          }),
+          { abortSignal: signal },
+        ),
+        2000,
+        'health_sqs_check',
       )
     }
     return true
@@ -103,6 +103,8 @@ const checkSqs = async (queueUrls: string[]): Promise<boolean> => {
       error: error instanceof Error ? error.message : String(error),
     })
     return false
+  } finally {
+    sqs.destroy()
   }
 }
 
@@ -256,5 +258,4 @@ export const startHealthServer = async (
     },
   }
 }
-
 

@@ -22,12 +22,13 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
   let metricStatus: 'success' | 'error' = 'error'
 
   try {
+    const body = checkoutSessionSchema.parse(request.body)
+    const billingInterval = body.billing_interval || 'month'
+
+    // Validate input before surfacing server configuration errors.
     if (!isStripeConfigured() || !config.billing.stripe.priceIdPlus) {
       throw new AppError('Billing not configured', { statusCode: 500, code: 'billing_not_configured' })
     }
-
-    const body = checkoutSessionSchema.parse(request.body)
-    const billingInterval = body.billing_interval || 'month'
 
     await ensureUserPlan(planeAPool, user.user_id)
     const plan = await getUserPlan(planeAPool, user.user_id)

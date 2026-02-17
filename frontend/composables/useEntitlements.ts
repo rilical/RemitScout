@@ -1,5 +1,21 @@
 export type Plan = 'free' | 'plus' | 'enterprise'
 
+export type PulseLevel = 'none' | 'lite' | 'pro'
+
+export function planToPulseLevel(plan: Plan): PulseLevel {
+  if (plan === 'enterprise') return 'pro'
+  if (plan === 'plus') return 'lite'
+  return 'none'
+}
+
+type BackendPulseAccess = 'none' | 'lite' | 'pro'
+
+const pulseAccessToPulseLevel = (access: BackendPulseAccess): PulseLevel => {
+  if (access === 'pro') return 'pro'
+  if (access === 'lite') return 'lite'
+  return 'none'
+}
+
 export type Limit = number | 'unlimited'
 
 export type PlanLimits = {
@@ -40,7 +56,7 @@ type MeResponse = {
     } | null
   }
   entitlements: {
-    pulse_access: 'none' | 'full'
+    pulse_access: BackendPulseAccess
     exports_enabled: boolean
     exports_max_days: number | null
     alerts_max: number | null
@@ -79,6 +95,7 @@ export const useEntitlements = () => {
   }))
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
+  const pulseAccess = useState<BackendPulseAccess>('entitlements:pulse-access', () => 'none')
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
   const error = useState<string | null>('entitlements:error', () => null)
@@ -93,6 +110,12 @@ export const useEntitlements = () => {
     return plan.value === 'enterprise'
   })
 
+  const pulseLevel = computed(() => {
+    // Prefer backend entitlements (authoritative). Fallback to plan mapping if missing.
+    const access = pulseAccess.value
+    return access ? pulseAccessToPulseLevel(access) : planToPulseLevel(plan.value)
+  })
+
   async function fetchPlan() {
     if (!isLoggedIn.value) {
       plan.value = 'free'
@@ -105,6 +128,7 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
       return
@@ -126,6 +150,7 @@ export const useEntitlements = () => {
         limits.value = mapEntitlementsToLimits(data.entitlements)
         apiAccess.value = Boolean(data.entitlements.api_access)
         apiTier.value = data.entitlements.api_tier
+        pulseAccess.value = data.entitlements.pulse_access
         billing.value = data.billing ?? null
         if (data.user) {
           applyBackendProfile(data.user)
@@ -149,6 +174,7 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
     }
@@ -194,6 +220,7 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
     }
@@ -208,6 +235,7 @@ export const useEntitlements = () => {
     error: readonly(error),
     isPlus,
     isEnterprise,
+    pulseLevel,
     apiAccess: readonly(apiAccess),
     apiTier: readonly(apiTier),
     refreshPlan,

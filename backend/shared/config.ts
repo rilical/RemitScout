@@ -1025,7 +1025,8 @@ const rawConfig = {
         process.env.FRONTEND_BASE_URL ||
         process.env.PUBLIC_SITE_URL ||
         frontendFallbackUrl,
-      trialDays: toNumber(process.env.STRIPE_TRIAL_DAYS, 14),
+      // Policy: no free trial for Plus.
+      trialDays: 0,
     },
   },
   newsletter: {

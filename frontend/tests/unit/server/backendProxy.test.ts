@@ -2,7 +2,7 @@
 import { createServer } from 'node:http'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, eventHandler, toNodeListener } from 'h3'
-import { proxyToBackend } from '~/server/utils/backendProxy'
+import { __resetBackendProxyCircuitForTests, proxyToBackend } from '~/server/utils/backendProxy'
 
 vi.mock('ofetch', () => {
   return {
@@ -38,6 +38,7 @@ afterEach(() => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  __resetBackendProxyCircuitForTests()
   process.env.API_BASE = 'https://backend.example.com'
 })
 

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import fs from 'node:fs'
 
 test('Debug watchlist button click behavior', async ({ page }) => {
   await page.goto('/send-money/us-to-gt')
@@ -66,7 +67,6 @@ test('Debug watchlist button click behavior', async ({ page }) => {
   
   // Save full page HTML
   const html = await page.content()
-  const fs = require('fs')
   fs.writeFileSync('test-results/debug-after.html', html)
   console.log('HTML saved: debug-after.html')
 })

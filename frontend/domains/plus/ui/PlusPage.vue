@@ -246,8 +246,7 @@
                 {{ plusPriceDisplay }} per year, billed annually
               </p>
               <p class="mt-2 text-body-sm text-white/80">
-                <span v-if="trialDays > 0">{{ trialDays }}-day free trial • Cancel anytime</span>
-                <span v-else>Cancel anytime</span>
+                Cancel anytime
               </p>
               <p
                 v-if="!pricingConfigured"
@@ -777,7 +776,6 @@ const billingInterval = useState<'month' | 'year'>('billingInterval', () => 'yea
 type BillingPricingResponse = {
   success: true
   configured: boolean
-  trialDays: number
   plus: {
     month: { amount: number | null, currency: string | null, priceId: string | null }
     year: { amount: number | null, currency: string | null, priceId: string | null }
@@ -791,7 +789,6 @@ const { data: pricing, pending: pricingLoading } = await useAsyncData(
   { server: true },
 )
 
-const trialDays = computed(() => pricing.value?.trialDays ?? 0)
 const pricingConfigured = computed(() => pricing.value?.configured === true)
 const selectedPrice = computed(() => (
   billingInterval.value === 'year' ? pricing.value?.plus.year : pricing.value?.plus.month

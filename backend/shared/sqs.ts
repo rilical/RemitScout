@@ -14,8 +14,9 @@ import { context as otelContext, propagation, trace, type Context } from '@opent
 import { createLogger } from './logger'
 import { isRetryableError, isThrottlingError } from './aws-errors'
 import { retry } from './retry'
-import { registerSQSClient } from './connection-manager'
+import { registerCloudWatchClient, registerSQSClient } from './connection-manager'
 import { startSpan } from './tracing'
+import { withAbortTimeout } from './utils/timeout'
 import {
   trackMessageSent,
   trackMessageReceived,
@@ -32,6 +33,8 @@ const logger = createLogger('shared.sqs')
 
 let client: SQSClient | null = null
 let cloudWatchClient: CloudWatchClient | null = null
+const DEFAULT_AWS_OP_TIMEOUT_MS = 5000
+const DEFAULT_AWS_RECEIVE_BUFFER_MS = 5000
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -61,6 +64,7 @@ const getClient = (): SQSClient => {
 const getCloudWatchClient = (): CloudWatchClient => {
   if (!cloudWatchClient) {
     cloudWatchClient = new CloudWatchClient({})
+    registerCloudWatchClient(cloudWatchClient, 'sqs')
   }
   return cloudWatchClient
 }
@@ -115,11 +119,16 @@ const getVisibilityTimeout = async (queueUrl: string): Promise<number> => {
 
   try {
     const sqs = getClient()
-    const response = await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: ['VisibilityTimeout'],
-      }),
+    const response = await withAbortTimeout(
+      (signal) => sqs.send(
+        new GetQueueAttributesCommand({
+          QueueUrl: queueUrl,
+          AttributeNames: ['VisibilityTimeout'],
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'sqs_get_visibility_timeout',
     )
     const timeout = Number(response.Attributes?.VisibilityTimeout || DEFAULT_VISIBILITY_TIMEOUT)
     visibilityTimeoutCache.set(queueUrl, timeout)
@@ -140,12 +149,17 @@ export const extendMessageVisibility = async (
 ): Promise<void> => {
   try {
     const sqs = getClient()
-    await sqs.send(
-      new ChangeMessageVisibilityCommand({
-        QueueUrl: queueUrl,
-        ReceiptHandle: receiptHandle,
-        VisibilityTimeout: visibilityTimeoutSeconds,
-      }),
+    await withAbortTimeout(
+      (signal) => sqs.send(
+        new ChangeMessageVisibilityCommand({
+          QueueUrl: queueUrl,
+          ReceiptHandle: receiptHandle,
+          VisibilityTimeout: visibilityTimeoutSeconds,
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'sqs_change_message_visibility',
     )
     trackVisibilityExtended(queueUrl)
     logger.debug('message_visibility_extended', {
@@ -278,11 +292,16 @@ export const drainAndStop = async (extender: VisibilityTimeoutExtender): Promise
 export const getDLQUrl = async (queueUrl: string): Promise<string | null> => {
   try {
     const sqs = getClient()
-    const response = await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: ['RedrivePolicy'],
-      }),
+    const response = await withAbortTimeout(
+      (signal) => sqs.send(
+        new GetQueueAttributesCommand({
+          QueueUrl: queueUrl,
+          AttributeNames: ['RedrivePolicy'],
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'sqs_get_dlq_url',
     )
     const redrivePolicy = response.Attributes?.RedrivePolicy
     if (redrivePolicy) {
@@ -409,12 +428,17 @@ export const sendJsonMessage = async <T>(
     await startSpan(
       'sqs.send_json_message',
       async () => {
-        await sqs.send(
-          new SendMessageCommand({
-            QueueUrl: queueUrl,
-            MessageBody: JSON.stringify(payload),
-            ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
-          }),
+        await withAbortTimeout(
+          (signal) => sqs.send(
+            new SendMessageCommand({
+              QueueUrl: queueUrl,
+              MessageBody: JSON.stringify(payload),
+              ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
+            }),
+            { abortSignal: signal },
+          ),
+          DEFAULT_AWS_OP_TIMEOUT_MS,
+          'sqs_send_message',
         )
       },
       {
@@ -474,15 +498,20 @@ export const sendBatchJsonMessages = async <T>(
     await startSpan(
       'sqs.send_batch_json_messages',
       async () => {
-        await sqs.send(
-          new SendMessageBatchCommand({
-            QueueUrl: queueUrl,
-            Entries: messages.map((msg) => ({
-              Id: msg.id,
-              MessageBody: JSON.stringify(msg.payload),
-              ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
-            })),
-          }),
+        await withAbortTimeout(
+          (signal) => sqs.send(
+            new SendMessageBatchCommand({
+              QueueUrl: queueUrl,
+              Entries: messages.map((msg) => ({
+                Id: msg.id,
+                MessageBody: JSON.stringify(msg.payload),
+                ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
+              })),
+            }),
+            { abortSignal: signal },
+          ),
+          DEFAULT_AWS_OP_TIMEOUT_MS,
+          'sqs_send_message_batch',
         )
       },
       {
@@ -543,17 +572,23 @@ export const receiveJsonMessages = async <T>(
     const waitTimeSeconds = getLongPollSeconds()
     const sqs = getClient()
     const queueName = getQueueName(queueUrl)
+    const receiveTimeoutMs = waitTimeSeconds * 1000 + DEFAULT_AWS_RECEIVE_BUFFER_MS
     const response = await startSpan(
       'sqs.receive_json_messages',
       async () => {
-        return await sqs.send(
-          new ReceiveMessageCommand({
-            QueueUrl: queueUrl,
-            MaxNumberOfMessages: Math.min(maxMessages, 10),
-            WaitTimeSeconds: waitTimeSeconds,
-            MessageAttributeNames: ['All'],
-            AttributeNames: ['All'],
-          }),
+        return await withAbortTimeout(
+          (signal) => sqs.send(
+            new ReceiveMessageCommand({
+              QueueUrl: queueUrl,
+              MaxNumberOfMessages: Math.min(maxMessages, 10),
+              WaitTimeSeconds: waitTimeSeconds,
+              MessageAttributeNames: ['All'],
+              AttributeNames: ['All'],
+            }),
+            { abortSignal: signal },
+          ),
+          receiveTimeoutMs,
+          'sqs_receive_messages',
         )
       },
       {
@@ -571,56 +606,56 @@ export const receiveJsonMessages = async <T>(
     }
     return {
       messages: messages.map((message) => {
-      const body = message.Body ?? ''
-      let payload: T | null = null
-      if (body) {
-        try {
-          const parsed = JSON.parse(body) as unknown
-          if (
-            parsed &&
-            typeof parsed === 'object' &&
-            !Array.isArray(parsed) &&
-            'originalPayload' in parsed &&
-            ('originalQueueUrl' in parsed || 'originalMessageId' in parsed || 'error' in parsed)
-          ) {
-            const originalPayload = (parsed as { originalPayload?: unknown }).originalPayload
-            if (originalPayload !== undefined) {
-              payload = originalPayload as T
+        const body = message.Body ?? ''
+        let payload: T | null = null
+        if (body) {
+          try {
+            const parsed = JSON.parse(body) as unknown
+            if (
+              parsed &&
+              typeof parsed === 'object' &&
+              !Array.isArray(parsed) &&
+              'originalPayload' in parsed &&
+              ('originalQueueUrl' in parsed || 'originalMessageId' in parsed || 'error' in parsed)
+            ) {
+              const originalPayload = (parsed as { originalPayload?: unknown }).originalPayload
+              if (originalPayload !== undefined) {
+                payload = originalPayload as T
+              } else {
+                payload = parsed as T
+              }
             } else {
               payload = parsed as T
             }
-          } else {
-            payload = parsed as T
+          } catch (error) {
+            logger.warn('invalid_message_body', {
+              queue_url: queueUrl,
+              message_id: message.MessageId,
+              error: error instanceof Error ? error.message : String(error),
+            })
           }
-        } catch (error) {
-          logger.warn('invalid_message_body', {
-            queue_url: queueUrl,
-            message_id: message.MessageId,
-            error: error instanceof Error ? error.message : String(error),
-          })
         }
-      }
 
-      const rawMessageAttributes = message.MessageAttributes ?? {}
-      const messageAttributes: Record<string, string> = {}
-      for (const [key, value] of Object.entries(rawMessageAttributes)) {
-        if (value?.StringValue) {
-          messageAttributes[key] = value.StringValue
+        const rawMessageAttributes = message.MessageAttributes ?? {}
+        const messageAttributes: Record<string, string> = {}
+        for (const [key, value] of Object.entries(rawMessageAttributes)) {
+          if (value?.StringValue) {
+            messageAttributes[key] = value.StringValue
+          }
         }
-      }
-      const traceContext = Object.keys(messageAttributes).length > 0
-        ? propagation.extract(otelContext.active(), messageAttributes)
-        : undefined
+        const traceContext = Object.keys(messageAttributes).length > 0
+          ? propagation.extract(otelContext.active(), messageAttributes)
+          : undefined
 
-      return {
-        messageId: message.MessageId ?? '',
-        receiptHandle: message.ReceiptHandle ?? '',
-        payload,
-        attributes: message.Attributes ?? {},
-        messageAttributes,
-        traceContext,
-        raw: message,
-      }
+        return {
+          messageId: message.MessageId ?? '',
+          receiptHandle: message.ReceiptHandle ?? '',
+          payload,
+          attributes: message.Attributes ?? {},
+          messageAttributes,
+          traceContext,
+          raw: message,
+        }
       }),
     }
   } catch (error) {
@@ -670,11 +705,16 @@ export const deleteMessages = async (
       const response = await startSpan(
         'sqs.delete_messages',
         async () => {
-          return await sqs.send(
-            new DeleteMessageBatchCommand({
-              QueueUrl: queueUrl,
-              Entries: entries,
-            }),
+          return await withAbortTimeout(
+            (signal) => sqs.send(
+              new DeleteMessageBatchCommand({
+                QueueUrl: queueUrl,
+                Entries: entries,
+              }),
+              { abortSignal: signal },
+            ),
+            DEFAULT_AWS_OP_TIMEOUT_MS,
+            'sqs_delete_message_batch',
           )
         },
         {
@@ -740,11 +780,16 @@ export const deleteMessages = async (
 export const getQueueDepth = async (queueUrl: string): Promise<number> => {
   try {
     const sqs = getClient()
-    const response = await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: ['ApproximateNumberOfMessages'],
-      }),
+    const response = await withAbortTimeout(
+      (signal) => sqs.send(
+        new GetQueueAttributesCommand({
+          QueueUrl: queueUrl,
+          AttributeNames: ['ApproximateNumberOfMessages'],
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'sqs_get_queue_depth',
     )
     const count = response.Attributes?.ApproximateNumberOfMessages
     const depth = count ? Number(count) : 0
@@ -770,15 +815,20 @@ export type QueueStats = {
 export const getQueueStats = async (queueUrl: string): Promise<QueueStats> => {
   try {
     const sqs = getClient()
-    const response = await sqs.send(
-      new GetQueueAttributesCommand({
-        QueueUrl: queueUrl,
-        AttributeNames: [
-          'ApproximateNumberOfMessages',
-          'ApproximateNumberOfMessagesNotVisible',
-          'ApproximateNumberOfMessagesDelayed',
-        ],
-      }),
+    const response = await withAbortTimeout(
+      (signal) => sqs.send(
+        new GetQueueAttributesCommand({
+          QueueUrl: queueUrl,
+          AttributeNames: [
+            'ApproximateNumberOfMessages',
+            'ApproximateNumberOfMessagesNotVisible',
+            'ApproximateNumberOfMessagesDelayed',
+          ],
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'sqs_get_queue_stats',
     )
     const visible = Number(response.Attributes?.ApproximateNumberOfMessages ?? 0)
     const inFlight = Number(response.Attributes?.ApproximateNumberOfMessagesNotVisible ?? 0)
@@ -803,16 +853,21 @@ export const getQueueAgeSeconds = async (queueUrl: string): Promise<number> => {
     const client = getCloudWatchClient()
     const endTime = new Date()
     const startTime = new Date(endTime.getTime() - 5 * 60 * 1000)
-    const response = await client.send(
-      new GetMetricStatisticsCommand({
-        Namespace: 'AWS/SQS',
-        MetricName: 'ApproximateAgeOfOldestMessage',
-        Dimensions: [{ Name: 'QueueName', Value: queueName }],
-        StartTime: startTime,
-        EndTime: endTime,
-        Period: 60,
-        Statistics: ['Maximum'],
-      }),
+    const response = await withAbortTimeout(
+      (signal) => client.send(
+        new GetMetricStatisticsCommand({
+          Namespace: 'AWS/SQS',
+          MetricName: 'ApproximateAgeOfOldestMessage',
+          Dimensions: [{ Name: 'QueueName', Value: queueName }],
+          StartTime: startTime,
+          EndTime: endTime,
+          Period: 60,
+          Statistics: ['Maximum'],
+        }),
+        { abortSignal: signal },
+      ),
+      DEFAULT_AWS_OP_TIMEOUT_MS,
+      'cloudwatch_get_sqs_age',
     )
     const points = response.Datapoints ?? []
     const maxPoint = points.reduce((best, point) => {

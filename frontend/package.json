@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --port 3000",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -27,6 +27,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "sentry:sourcemaps": "node scripts/sentry-upload-sourcemaps.mjs",
     "lint:debt": "node scripts/lint-debt.mjs",
     "api:types:generate": "node scripts/gen-api-types.mjs",
     "api:types:check": "pnpm api:types:generate && git diff --exit-code -- shared/lib/api/types.ts"
@@ -47,6 +48,7 @@
     "@nuxt/image": "^1.8.1",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@playwright/test": "^1.50.1",
+    "@sentry/cli": "3.2.0",
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vitest/coverage-v8": "^2.1.9",
@@ -54,6 +56,7 @@
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "h3": "1.15.5",
     "jsdom": "^25.0.1",
     "nuxt": "^3.20.2",
     "openapi-typescript": "^7.12.0",
@@ -67,6 +70,8 @@
     "@heroicons/vue": "^2.2.0",
     "@nuxtjs/google-fonts": "3.2.0",
     "@pinia/nuxt": "^0.11.3",
+    "@sentry/nuxt": "10.39.0",
+    "@sentry/vue": "10.39.0",
     "@supabase/supabase-js": "^2.49.1",
     "echarts": "^6.0.0",
     "katex": "^0.16.27",
@@ -74,6 +79,7 @@
     "pinia": "^3.0.4",
     "vue": "^3.5.13",
     "vue-router": "^4.6.4",
-    "vue-echarts": "^8.0.1"
+    "vue-echarts": "^8.0.1",
+    "web-vitals": "5.1.0"
   }
 }

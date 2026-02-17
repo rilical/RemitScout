@@ -1,5 +1,6 @@
 import { createId } from '~/utils/id'
 import type { Method } from '~/types/remit'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 
 export type CompareRun = {
   id: string
@@ -27,6 +28,7 @@ function sameRun(a: Pick<CompareRun, 'from' | 'to' | 'method' | 'amount'>, b: Pi
 export const useCompareHistory = () => {
   const { isAuthenticated } = useAuth()
   const { request } = useApi()
+  const { functionalConsent } = usePrivacySettings()
   const { state: runs, hydrated, reset } = usePersistedState<CompareRun[]>(
     'compare:history',
     () => [],
@@ -43,6 +45,15 @@ export const useCompareHistory = () => {
     label?: string
     path?: string
   }) {
+    if (import.meta.client && functionalConsent.value) {
+      try {
+        window.sessionStorage.setItem('rs:compare:searched_this_visit', '1')
+      }
+      catch {
+        // ignore
+      }
+    }
+
     const normalized: Omit<CompareRun, 'id' | 'createdAt' | 'label'> & { label: string } = {
       from: normalizeCountryCode(input.from),
       to: normalizeCountryCode(input.to),

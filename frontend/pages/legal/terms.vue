@@ -148,7 +148,7 @@
         <li><strong class="text-brand-600">Billing cycle:</strong> Monthly subscription</li>
         <li><strong class="text-brand-600">Automatic renewal:</strong> Your subscription renews automatically unless you cancel</li>
         <li><strong class="text-brand-600">Cancellation:</strong> If you cancel, access continues until the end of your current billing period</li>
-        <li><strong class="text-brand-600">No free trial:</strong> Unless we explicitly state otherwise at purchase</li>
+        <li><strong class="text-brand-600">No free trial:</strong> Remit-Scout Plus does not include a free trial.</li>
         <li><strong class="text-brand-600">No refunds:</strong> All fees are non-refundable unless required by law</li>
       </ul>
       <p class="mb-6 leading-relaxed">

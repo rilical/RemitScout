@@ -106,11 +106,13 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('backendImageTag') ??
       process.env.BACKEND_IMAGE_TAG ??
       'latest'
+    const devSharedSecretArn =
+      this.node.tryGetContext('devSharedSecretArn') ??
+      process.env.DEV_SHARED_SECRET_ARN
     const sharedSecretArn =
       this.node.tryGetContext('sharedSecretArn') ??
       process.env.SHARED_SECRET_ARN ??
-      this.node.tryGetContext('devSharedSecretArn') ??
-      process.env.DEV_SHARED_SECRET_ARN
+      (envName === 'dev' ? devSharedSecretArn : undefined)
     if (!sharedSecretArn) {
       throw new Error('sharedSecretArn context or SHARED_SECRET_ARN env var required')
     }
@@ -230,7 +232,24 @@ export class RemitScoutStack extends Stack {
       vpc: networking.vpc,
       redisSecurityGroup: networking.redisSecurityGroup,
     })
-    const storage = createStorage(this, { envName })
+    const bronzePrefix =
+      this.node.tryGetContext('bronzePrefix') ??
+      process.env.BRONZE_S3_PREFIX ??
+      'bronze'
+    const exportsPrefix =
+      this.node.tryGetContext('exportsPrefix') ??
+      process.env.EXPORTS_S3_PREFIX ??
+      'exports'
+    const userAssetsPrefix =
+      this.node.tryGetContext('userAssetsPrefix') ??
+      process.env.USER_ASSETS_S3_PREFIX ??
+      'avatars'
+    const auditLogsPrefix =
+      this.node.tryGetContext('auditLogsPrefix') ??
+      process.env.AUDIT_LOGS_S3_PREFIX ??
+      'audit-logs'
+
+    const storage = createStorage(this, { envName, exportsPrefix })
     const queues = createQueues(this, { envName })
 
     const planeADbSecretArn =
@@ -266,7 +285,7 @@ export class RemitScoutStack extends Stack {
     const planeCDbSsmName =
       this.node.tryGetContext('planeCDbSsmName') ??
       process.env.PLANE_C_DB_SSM_NAME
-    const redisSecretArn =
+    let redisSecretArn =
       this.node.tryGetContext('redisSecretArn') ??
       process.env.REDIS_SECRET_ARN
     const redisSecretJsonKey =
@@ -275,7 +294,13 @@ export class RemitScoutStack extends Stack {
     const redisSsmName =
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
-    const redisUrl = `rediss://${cache.replicationGroup.attrPrimaryEndPointAddress}:${cache.replicationGroup.attrPrimaryEndPointPort}`
+    const redisAuthToken = cache.redisAuthToken.toString()
+    const redisHost = cache.replicationGroup.attrPrimaryEndPointAddress
+    const redisPort = cache.replicationGroup.attrPrimaryEndPointPort
+    let redisUrl = `rediss://${redisHost}:${redisPort}`
+    if (!redisSecretArn && !redisSsmName) {
+      redisUrl = `rediss://:${redisAuthToken}@${redisHost}:${redisPort}`
+    }
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
       process.env.SUPABASE_SECRET_ARN ??
@@ -543,22 +568,6 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeBQueueWorkerSpotOnly') ??
         process.env.PLANE_B_QUEUE_WORKER_SPOT_ONLY,
     ) ?? (envName === 'dev' ? false : undefined)
-    const bronzePrefix =
-      this.node.tryGetContext('bronzePrefix') ??
-      process.env.BRONZE_S3_PREFIX ??
-      'bronze'
-    const exportsPrefix =
-      this.node.tryGetContext('exportsPrefix') ??
-      process.env.EXPORTS_S3_PREFIX ??
-      'exports'
-    const userAssetsPrefix =
-      this.node.tryGetContext('userAssetsPrefix') ??
-      process.env.USER_ASSETS_S3_PREFIX ??
-      'avatars'
-    const auditLogsPrefix =
-      this.node.tryGetContext('auditLogsPrefix') ??
-      process.env.AUDIT_LOGS_S3_PREFIX ??
-      'audit-logs'
     const planeCBaseUrl =
       this.node.tryGetContext('planeCBaseUrl') ??
       process.env.PLANE_C_BASE_URL
@@ -712,6 +721,26 @@ export class RemitScoutStack extends Stack {
       }
       return []
     })()
+    const wafStripeWebhookAllowListIps = (() => {
+      const raw =
+        this.node.tryGetContext('wafStripeWebhookAllowListIps') ??
+        process.env.WAF_STRIPE_WEBHOOK_ALLOWLIST_IPS
+      if (Array.isArray(raw)) return raw
+      if (typeof raw === 'string') {
+        return raw.split(',').map((value) => value.trim()).filter(Boolean)
+      }
+      return []
+    })()
+    const wafAdminAllowListIps = (() => {
+      const raw =
+        this.node.tryGetContext('wafAdminAllowListIps') ??
+        process.env.WAF_ADMIN_ALLOWLIST_IPS
+      if (Array.isArray(raw)) return raw
+      if (typeof raw === 'string') {
+        return raw.split(',').map((value) => value.trim()).filter(Boolean)
+      }
+      return []
+    })()
     const wafEnableBotControl = toOptionalBool(
       this.node.tryGetContext('wafEnableBotControl') ??
         process.env.WAF_ENABLE_BOT_CONTROL,
@@ -754,6 +783,9 @@ export class RemitScoutStack extends Stack {
     const pagerDutyIntegrationKey =
       this.node.tryGetContext('pagerDutyIntegrationKey') ??
       process.env.PAGERDUTY_INTEGRATION_KEY
+    const betterUptimeWebhookSsmParamName =
+      process.env.BETTERUPTIME_WEBHOOK_SSM_PARAM
+        ?? (envName === 'prod' ? '/remitscout/prod/betteruptime_webhook' : undefined)
     const pipelineConnectionArn =
       this.node.tryGetContext('pipelineConnectionArn') ??
       process.env.PIPELINE_CONNECTION_ARN
@@ -807,6 +839,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('devNightlyPauseCron') ??
       process.env.DEV_NIGHTLY_PAUSE_CRON ??
       'cron(0 0 * * ? *)'
+    const devMorningResumeCron =
+      this.node.tryGetContext('devMorningResumeCron') ??
+      process.env.DEV_MORNING_RESUME_CRON ??
+      'cron(0 8 ? * MON-FRI *)'
     const devNightlyPauseTimezone =
       this.node.tryGetContext('devNightlyPauseTimezone') ??
       process.env.DEV_NIGHTLY_PAUSE_TIMEZONE ??
@@ -980,6 +1016,7 @@ export class RemitScoutStack extends Stack {
       planeCBaseUrl,
       enableCloudFront,
       enableWaf,
+      cloudFrontAccessLogsBucket: storage.storageAccessLogsBucket,
       enablePlaneAJwtAuth,
       planeAJwtIssuer,
       planeAJwtAudiences,
@@ -988,6 +1025,8 @@ export class RemitScoutStack extends Stack {
       disablePlaneCExecuteEndpoint,
       wafAllowListIps,
       wafBlockListIps,
+      wafStripeWebhookAllowListIps,
+      wafAdminAllowListIps,
       wafEnableBotControl,
       otelLambdaLayerArn,
       planeAThrottleRate,
@@ -1135,6 +1174,7 @@ export class RemitScoutStack extends Stack {
       slackOpsChannelId,
       slackWebhookUrl,
       pagerDutyIntegrationKey,
+      betterUptimeWebhookSsmParamName,
     })
 
     // Determine Plane A base URL for synthetics (CloudFront if enabled, otherwise API Gateway)
@@ -1345,6 +1385,24 @@ export class RemitScoutStack extends Stack {
         },
       })
 
+      new CfnSchedule(this, 'DevMorningResumeSchedule', {
+        name: `remit-scout-${envName}-morning-resume`,
+        scheduleExpression: devMorningResumeCron,
+        scheduleExpressionTimezone: devNightlyPauseTimezone,
+        flexibleTimeWindow: { mode: 'OFF' },
+        state: 'ENABLED',
+        target: {
+          arn: opsPause.controllerFunction.functionArn,
+          roleArn: schedulerInvokeRole.roleArn,
+          input: JSON.stringify({ paused: false }),
+          deadLetterConfig: { arn: nightlyPauseDlq.queueArn },
+          retryPolicy: {
+            maximumRetryAttempts: 2,
+            maximumEventAgeInSeconds: 60 * 60,
+          },
+        },
+      })
+
       const dlqAlarm = new Alarm(this, 'DevNightlyPauseSchedulerDlqAlarm', {
         alarmName: `remit-scout-${envName}-nightly-pause-scheduler-dlq`,
         metric: nightlyPauseDlq.metricApproximateNumberOfMessagesVisible({
@@ -1364,6 +1422,7 @@ export class RemitScoutStack extends Stack {
 
     storage.bronzeBucket.grantReadWrite(iam.planeBEcsTaskRole)
     storage.exportsBucket.grantReadWrite(iam.planeALambdaRole)
+    storage.exportsBucket.grantWrite(iam.planeCLambdaRole, 'indices/*')
     storage.userAssetsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.auditLogsBucket.grantReadWrite(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantSendMessages(iam.planeALambdaRole)

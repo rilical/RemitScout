@@ -511,6 +511,16 @@ export const indicesRoutes = async (app: FastifyInstance) => {
 
   app.get('/indices/corridors', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     try {
+      const corridorsAllowed = request.institutionalClient?.corridors_allowed ?? null
+      const filterByAllowed = corridorsAllowed !== null
+
+      const whereClause = filterByAllowed
+        ? 'WHERE amount_bucket = $1 AND corridor_id = ANY($2::text[])'
+        : 'WHERE amount_bucket = $1'
+      const params = filterByAllowed
+        ? [DEFAULT_AMOUNT_BUCKET, corridorsAllowed]
+        : [DEFAULT_AMOUNT_BUCKET]
+
       const result = await query<{
         corridor_id: string
         source_country: string
@@ -529,10 +539,10 @@ export const indicesRoutes = async (app: FastifyInstance) => {
            COUNT(*)::int AS data_points,
            MAX(created_at) AS last_updated
          FROM gold_export.cdp_daily
-         WHERE amount_bucket = $1
+         ${whereClause}
          GROUP BY corridor_id
          ORDER BY corridor_id`,
-        [DEFAULT_AMOUNT_BUCKET],
+        params,
         planeAPool,
       )
 

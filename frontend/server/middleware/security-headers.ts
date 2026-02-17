@@ -3,6 +3,13 @@ import { defineEventHandler, getRequestURL, setResponseHeaders } from 'h3'
 export default defineEventHandler((event) => {
   const url = getRequestURL(event)
   const isEmbed = url.pathname.startsWith('/embed/')
+  const prodLike =
+    process.env.NODE_ENV === 'production'
+    || process.env.NODE_ENV === 'staging'
+    || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
+  const enforceCsp =
+    (process.env.CSP_ENFORCE === '1' || process.env.CSP_ENFORCE === 'true')
+    || prodLike
 
   // NOTE: If `/embed/*` pages must be iframe-embeddable on third-party sites,
   // `X-Frame-Options: SAMEORIGIN` will block them. In that case, omit XFO for
@@ -29,10 +36,12 @@ export default defineEventHandler((event) => {
     'style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com',
     'img-src \'self\' data: https: blob:',
     'font-src \'self\' https://fonts.gstatic.com',
-    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://*.ezoic.net wss://*.supabase.co',
+    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co',
     'frame-src \'self\' https://js.stripe.com https://*.ezoic.net',
     `frame-ancestors ${frameAncestors}`,
   ].join('; ')
+
+  const cspHeaderName = enforceCsp ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only'
 
   setResponseHeaders(event, {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
@@ -43,6 +52,6 @@ export default defineEventHandler((event) => {
     'X-DNS-Prefetch-Control': 'on',
     'X-Download-Options': 'noopen',
     'X-Permitted-Cross-Domain-Policies': 'none',
-    'Content-Security-Policy-Report-Only': csp,
+    [cspHeaderName]: csp,
   })
 })

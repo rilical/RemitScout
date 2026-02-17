@@ -18,6 +18,7 @@ If you’re running a structured dev observation window, follow:
 
 Guardrails:
 - **Nightly auto-pause** at **12:00am ET** (EventBridge Scheduler → OpsPause).
+- **Dev morning resume** at **8:00am ET weekdays** (customizable via `devMorningResumeCron`).
 - **Cost guardrail auto-pause** on **Budget / Anomaly** notifications (SNS → OpsPause).
 
 ## Commands

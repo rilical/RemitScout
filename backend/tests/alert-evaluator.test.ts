@@ -265,6 +265,7 @@ describe('alert-evaluator', () => {
       ['daily', 12, 5000],
       mockPool,
     )
-    expect(recordCloudWatchMetric).toHaveBeenCalledTimes(3)
+    // 3 explicit CloudWatch metrics + 2 business metrics (which also go through CloudWatch).
+    expect(recordCloudWatchMetric).toHaveBeenCalledTimes(5)
   })
 })

@@ -26,6 +26,11 @@ vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
 
 vi.mock('../plane-a/src/services/user-plan', () => ({
   getUserPlan: (...args: any[]) => mockGetUserPlan(...args),
+  ensureUserPlan: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('../plane-a/src/services/user-account', () => ({
+  upsertUserAccount: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../plane-a/src/services/entitlements', () => ({
@@ -34,10 +39,6 @@ vi.mock('../plane-a/src/services/entitlements', () => ({
 
 vi.mock('../plane-a/src/services/plan-usage', () => ({
   upsertUsageSnapshot: vi.fn(),
-}))
-
-vi.mock('../plane-a/src/repositories', () => ({
-  WatchlistRepository: vi.fn().mockImplementation(() => mockRepo),
 }))
 
 const makeApp = () =>

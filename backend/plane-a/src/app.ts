@@ -1,5 +1,6 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import compress from '@fastify/compress'
 import multipart from '@fastify/multipart'
 import { randomUUID } from 'crypto'
 import { SpanStatusCode } from '@opentelemetry/api'
@@ -46,6 +47,7 @@ import { recentSearchRoutes } from './routes/recent-searches'
 import { telemetryRoutes } from './routes/telemetry'
 import { historyRoutes } from './routes/history'
 import { indicesRoutes } from './routes/indices'
+import { usageRoutes } from './routes/usage'
 import { exportsRoutes } from './routes/exports'
 import { dataExportRoutes } from './routes/data-export'
 import { bankVsSpecialistRoutes } from './routes/bank-vs-specialist'
@@ -175,6 +177,12 @@ export const buildApp = async (options?: {
     exposedHeaders: ['X-API-Version', 'X-API-Deprecation-Warning', 'Sunset', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
   })
 
+  // Compress API responses (gzip/br) to reduce egress and improve p95.
+  app.register(compress as any, {
+    encodings: ['br', 'gzip', 'deflate'],
+    threshold: 1024,
+  })
+
   app.register(multipart, {
     limits: {
       fileSize: 5 * 1024 * 1024,
@@ -221,7 +229,7 @@ export const buildApp = async (options?: {
     }
 
     const path = request.url.split('?')[0] || ''
-    if (path.startsWith('/api/v1') && (request.user || request.apiKey)) {
+    if (path.startsWith('/api/v1') && (request.user || request.apiKey || request.institutionalClient)) {
       reply.header('Cache-Control', 'no-store, no-cache, must-revalidate')
       reply.header('Pragma', 'no-cache')
       reply.header('Expires', '0')
@@ -244,7 +252,17 @@ export const buildApp = async (options?: {
     return Math.max(1, Math.ceil((perMinute * windowMs) / 60_000))
   }
 
+  const toPerWindowAllowZero = (perMinute: number) => {
+    const windowMs = Math.max(1000, config.planeA.rateLimitWindowMs)
+    if (!Number.isFinite(perMinute) || perMinute <= 0) return 0
+    return Math.max(1, Math.ceil((perMinute * windowMs) / 60_000))
+  }
+
   const maxRequestsForPath = (request: import('fastify').FastifyRequest) => {
+    if (request.institutionalClient) {
+      return toPerWindowAllowZero(Number(request.institutionalClient.rate_limit_rpm) || 0)
+    }
+
     const path = request.url.split('?')[0] || ''
     const method = request.method
 
@@ -295,6 +313,7 @@ export const buildApp = async (options?: {
       timeWindow: config.planeA.rateLimitWindowMs,
       max: maxRequestsForPath,
       keyGenerator: (request) => {
+        if (request.institutionalClient) return `inst:${request.institutionalClient.id}`
         if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
         if (request.user) return `user:${request.user.user_id}`
         return `ip:${request.ip}`
@@ -309,6 +328,7 @@ export const buildApp = async (options?: {
       timeWindow: config.planeA.rateLimitWindowMs,
       max: maxRequestsForPath,
       keyGenerator: (request) => {
+        if (request.institutionalClient) return `inst:${request.institutionalClient.id}`
         if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
         if (request.user) return `user:${request.user.user_id}`
         return `ip:${request.ip}`
@@ -477,6 +497,7 @@ export const buildApp = async (options?: {
   app.register(telemetryRoutes, { prefix: '/api/v1' })
   app.register(historyRoutes, { prefix: '/api/v1' })
   app.register(indicesRoutes, { prefix: '/api/v1' })
+  app.register(usageRoutes, { prefix: '/api/v1' })
   app.register(exportsRoutes, { prefix: '/api/v1' })
   app.register(dataExportRoutes, { prefix: '/api/v1' })
   app.register(sessionsRoutes, { prefix: '/api/v1' })

@@ -37,7 +37,11 @@
           :metadata="chart"
           :insight="getChartInsight(chart.id)"
           :sparkline-data="getSparklineData(chart.id)"
-          :is-gated="isChartGated(chart.id)"
+          :is-gated="isChartGated(chart)"
+          :gate-label="isChartGated(chart) ? 'Pro' : undefined"
+          :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
+          :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
+          :disable-actions="isChartGated(chart)"
           @view="handleView"
           @share="handleShare"
           @embed="handleEmbed"
@@ -49,19 +53,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { ChartCategory, ChartData, PulseFilters } from '~/types/pulse'
-import { getAllCategories, isRangeGated } from '~/lib/pulseChartRegistry'
+import type { ChartCategory, ChartData, ChartMetadata, PulseFilters } from '~/types/pulse'
+import { getAllCategories } from '~/lib/pulseChartRegistry'
 import { Icon, type IconName } from '~/ui'
 import ChartPreviewCard from '~/domains/pulse/ui/ChartPreviewCard.vue'
+import type { PulseLevel } from '~/composables/useEntitlements'
 
 interface Props {
   chartData: Record<string, ChartData | null>
   filters: PulseFilters
-  isPlus?: boolean
+  pulseLevel?: PulseLevel
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isPlus: false,
+  pulseLevel: 'none',
 })
 
 const emit = defineEmits<{
@@ -83,8 +88,10 @@ function getSparklineData(chartId: string) {
   return data.series[0].points
 }
 
-function isChartGated(chartId: string): boolean {
-  return isRangeGated(chartId, '365d', props.isPlus)
+const PRO_TYPES = new Set<ChartMetadata['type']>(['stacked', 'scatter', 'matrix'])
+
+function isChartGated(chart: ChartMetadata): boolean {
+  return PRO_TYPES.has(chart.type) && props.pulseLevel !== 'pro'
 }
 
 function handleView(chartId: string) {

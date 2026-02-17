@@ -11,7 +11,7 @@
         :size="16"
         class="text-current"
       />
-      Plus
+      {{ resolvedGateLabel }}
     </div>
 
     <div class="p-5">
@@ -24,7 +24,30 @@
       </h3>
 
       <div
-        v-if="calloutCurrentLabel"
+        v-if="isGated"
+        class="mb-4 rounded-lg border border-neutral-700 bg-neutral-900/40 p-3"
+      >
+        <div class="text-body-sm font-semibold text-neutral-200">
+          {{ resolvedGateLabel }} chart
+        </div>
+        <div class="mt-1 text-body-sm text-neutral-400">
+          {{ metadata.description }}
+        </div>
+        <NuxtLink
+          :to="resolvedCtaTo"
+          class="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-500 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-600 transition-colors"
+        >
+          {{ resolvedCtaLabel }}
+          <Icon
+            name="arrow-right"
+            :size="16"
+            class="text-current"
+          />
+        </NuxtLink>
+      </div>
+
+      <div
+        v-else-if="calloutCurrentLabel"
         class="mb-4 flex items-end justify-between gap-4"
       >
         <div>
@@ -34,6 +57,12 @@
           <div class="text-h4 font-bold text-white">
             {{ calloutCurrentLabel }}
           </div>
+          <p
+            v-if="insight"
+            class="mt-2 text-body-sm text-neutral-400"
+          >
+            {{ insight }}
+          </p>
         </div>
         <div
           v-if="calloutDeltaLabel"
@@ -52,7 +81,7 @@
       </div>
 
       <p
-        v-if="displayInsight"
+        v-else-if="displayInsight"
         class="mb-4 text-body-sm text-neutral-400"
       >
         {{ displayInsight }}
@@ -80,15 +109,19 @@
       </div>
 
       <p
-        v-if="updatedAtLabel"
+        v-if="!isGated && updatedAtLabel"
         class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
       >
         {{ updatedAtLabel }}
       </p>
 
       <div class="mb-4 h-16 w-full">
+        <div
+          v-if="isGated"
+          class="h-full w-full rounded-lg border border-neutral-700 bg-neutral-900/30"
+        />
         <svg
-          v-if="sparklinePoints.length >= 2"
+          v-else-if="sparklinePoints.length >= 2"
           viewBox="0 0 200 60"
           class="h-full w-full"
           preserveAspectRatio="none"
@@ -160,31 +193,46 @@
     </div>
 
     <div class="flex items-center justify-between border-t border-neutral-700 px-5 py-3">
-      <button
-        class="text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
-        @click="$emit('view', metadata.id)"
-      >
-        <Icon
-          name="eye"
-          :size="16"
-          class="text-current"
-        />
-        View
-      </button>
-      <div class="flex items-center gap-3">
-        <button
-          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
-          @click="$emit('share', metadata.id)"
+      <template v-if="resolvedDisableActions">
+        <NuxtLink
+          :to="resolvedCtaTo"
+          class="text-body-sm font-semibold text-brand-600 hover:text-brand-500 transition-colors inline-flex items-center gap-1.5"
         >
-          Share
-        </button>
+          {{ resolvedCtaLabel }}
+          <Icon
+            name="arrow-right"
+            :size="16"
+            class="text-current"
+          />
+        </NuxtLink>
+      </template>
+      <template v-else>
         <button
-          class="text-body-sm text-neutral-400 hover:text-white transition-colors"
-          @click="$emit('embed', metadata.id)"
+          class="text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors flex items-center gap-1"
+          @click="handleView"
         >
-          Embed
+          <Icon
+            name="eye"
+            :size="16"
+            class="text-current"
+          />
+          View
         </button>
-      </div>
+        <div class="flex items-center gap-3">
+          <button
+            class="text-body-sm text-neutral-400 hover:text-white transition-colors"
+            @click="handleShare"
+          >
+            Share
+          </button>
+          <button
+            class="text-body-sm text-neutral-400 hover:text-white transition-colors"
+            @click="handleEmbed"
+          >
+            Embed
+          </button>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -202,19 +250,47 @@ interface Props {
   sparklineData?: ChartPoint[]
   isGated?: boolean
   updatedAt?: string | Date | null
+  gateLabel?: string
+  ctaTo?: string
+  ctaLabel?: string
+  disableActions?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   sparklineData: () => [],
   isGated: false,
   updatedAt: null,
+  gateLabel: undefined,
+  ctaTo: undefined,
+  ctaLabel: undefined,
+  disableActions: undefined,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [chartId: string]
   share: [chartId: string]
   embed: [chartId: string]
 }>()
+
+const resolvedGateLabel = computed(() => {
+  return props.gateLabel || 'Pro'
+})
+
+const resolvedCtaTo = computed(() => {
+  if (props.ctaTo) return props.ctaTo
+  if (resolvedGateLabel.value === 'Plus') return '/plus'
+  return '/contact?type=enterprise&topic=pulse'
+})
+
+const resolvedCtaLabel = computed(() => {
+  if (props.ctaLabel) return props.ctaLabel
+  if (resolvedGateLabel.value === 'Plus') return 'Upgrade to Plus'
+  return 'Contact sales'
+})
+
+const resolvedDisableActions = computed(() => {
+  return props.disableActions ?? props.isGated
+})
 
 const updatedAtLabel = computed(() => {
   if (!props.updatedAt) return null
@@ -324,4 +400,19 @@ const areaPath = computed(() => {
   const end = `L ${points[points.length - 1].x},60 Z`
   return `${start} ${line} ${end}`
 })
+
+function handleView() {
+  if (resolvedDisableActions.value) return
+  emit('view', props.metadata.id)
+}
+
+function handleShare() {
+  if (resolvedDisableActions.value) return
+  emit('share', props.metadata.id)
+}
+
+function handleEmbed() {
+  if (resolvedDisableActions.value) return
+  emit('embed', props.metadata.id)
+}
 </script>

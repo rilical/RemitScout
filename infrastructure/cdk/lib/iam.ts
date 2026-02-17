@@ -88,30 +88,24 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     actions: ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'],
     resources: ['*'],
   })
+  const isProdOrStaging = options.envName === 'prod' || options.envName === 'staging'
+  if (isProdOrStaging) {
+    if (!options.sesIdentityArns || options.sesIdentityArns.length === 0) {
+      throw new Error(`sesIdentityArns must be provided for ${options.envName} environment`)
+    }
+    if (!options.snsTopicArns || options.snsTopicArns.length === 0) {
+      throw new Error(`snsTopicArns must be provided for ${options.envName} environment`)
+    }
+  }
+
   const sesPolicyResources =
     options.envName === 'dev'
       ? ['*']
-      : (
-        options.sesIdentityArns && options.sesIdentityArns.length > 0
-          ? options.sesIdentityArns
-          : ['*']
-      )
+      : options.sesIdentityArns ?? []
   const snsPolicyResources =
-    options.snsTopicArns && options.snsTopicArns.length > 0
-      ? options.snsTopicArns
-      : ['*']
-  if (options.envName !== 'dev') {
-    if (!options.sesIdentityArns || options.sesIdentityArns.length === 0) {
-      Annotations.of(scope).addWarning(
-        'SES permissions are wildcarded. Provide sesIdentityArns to scope send permissions.',
-      )
-    }
-    if (!options.snsTopicArns || options.snsTopicArns.length === 0) {
-      Annotations.of(scope).addWarning(
-        'SNS permissions are wildcarded. Provide snsTopicArns to scope publish permissions.',
-      )
-    }
-  }
+    options.envName === 'dev'
+      ? ['*']
+      : options.snsTopicArns ?? []
   const sesPolicy = new PolicyStatement({
     actions: ['ses:SendEmail', 'ses:SendRawEmail'],
     resources: sesPolicyResources,

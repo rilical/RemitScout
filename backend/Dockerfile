@@ -39,5 +39,9 @@ COPY --from=deps /app/pnpm-workspace.yaml pnpm-workspace.yaml
 RUN chown -R node:node /app
 USER node
 
+# ECS health checks hit the shared health server.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "const http=require('http');const r=http.get('http://localhost:8080/healthz',res=>{process.exit(res.statusCode===200?0:1)});r.on('error',()=>process.exit(1))"
+
 # Default entrypoint is Plane B ingestion. Override for other tasks.
 CMD ["node", "backend/dist/plane-b/ingest.js"]

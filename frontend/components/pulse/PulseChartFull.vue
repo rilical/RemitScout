@@ -6,10 +6,10 @@
         <!-- Chart Info -->
         <div>
           <div class="mb-1 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
-            {{ chartData?.metadata.categoryLabel }}
+            {{ chartData?.metadata.categoryLabel || chartMeta?.categoryLabel }}
           </div>
           <h2 class="text-h3 font-bold text-white">
-            {{ chartData?.metadata.title }}
+            {{ chartData?.metadata.title || chartMeta?.title }}
           </h2>
           <p
             v-if="chartData?.insight"
@@ -20,7 +20,10 @@
         </div>
 
         <!-- Controls -->
-        <div class="flex flex-wrap items-center gap-3">
+        <div
+          v-if="!isGated"
+          class="flex flex-wrap items-center gap-3"
+        >
           <!-- Range Selector -->
           <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
             <button
@@ -104,9 +107,22 @@
 
     <!-- Chart / Table Content -->
     <div class="p-6">
+      <div v-if="isGated">
+        <PulsePlusGate
+          :is-gated="true"
+          tier="enterprise"
+          :title="gatedTitle"
+          description="Enterprise feature. Contact sales for access to Pulse Pro charts (stacked, scatter, matrix views)."
+        >
+          <template #preview>
+            <div class="h-80 rounded-lg border border-neutral-700 bg-neutral-900/30" />
+          </template>
+        </PulsePlusGate>
+      </div>
+
       <!-- Loading -->
       <div
-        v-if="loading"
+        v-else-if="loading"
         class="flex h-80 items-center justify-center"
       >
         <div class="flex items-center gap-3 text-neutral-400">
@@ -172,7 +188,10 @@
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-between border-t border-neutral-700 px-6 py-4 text-body-sm">
+    <div
+      v-if="!isGated"
+      class="flex items-center justify-between border-t border-neutral-700 px-6 py-4 text-body-sm"
+    >
       <div class="flex items-center gap-4 text-neutral-400">
         <span v-if="chartData?.metadata.lastUpdated">
           Updated {{ formatLastUpdated(chartData.metadata.lastUpdated) }}
@@ -282,6 +301,7 @@ import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
 import { formatDate } from '~/shared/lib/format'
+import type { PulseLevel } from '~/composables/useEntitlements'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 
 const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'))
@@ -294,12 +314,12 @@ const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue')
 interface Props {
   chartId: string
   filters: PulseFilters
-  isPlus?: boolean
+  pulseLevel?: PulseLevel
   initialRange?: TimeRange
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isPlus: false,
+  pulseLevel: 'none',
   initialRange: '30d',
 })
 
@@ -318,6 +338,19 @@ const viewMode = ref<'chart' | 'table'>('chart')
 
 const chartMeta = computed(() => getChartById(props.chartId))
 
+const isPlus = computed(() => props.pulseLevel !== 'none')
+const isPro = computed(() => props.pulseLevel === 'pro')
+const isProChart = computed(() => {
+  const type = chartMeta.value?.type
+  return type === 'stacked' || type === 'scatter' || type === 'matrix'
+})
+const isGated = computed(() => isProChart.value && !isPro.value)
+
+const gatedTitle = computed(() => {
+  const title = chartMeta.value?.title
+  return title ? `${title} (Pro)` : 'Pulse Pro (Enterprise)'
+})
+
 const ranges = computed(() => {
   const meta = chartMeta.value
   if (!meta) return []
@@ -325,8 +358,8 @@ const ranges = computed(() => {
   return [
     { value: '7d' as TimeRange, label: '7D', isGated: false },
     { value: '30d' as TimeRange, label: '30D', isGated: false },
-    { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', props.isPlus) },
-    { value: '365d' as TimeRange, label: '1Y', isGated: isRangeGated(props.chartId, '365d', props.isPlus) },
+    { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', isPlus.value) },
+    { value: '365d' as TimeRange, label: '1Y', isGated: isRangeGated(props.chartId, '365d', isPlus.value) },
   ]
 })
 
@@ -350,6 +383,13 @@ const chartComponent = computed(() => {
 })
 
 async function loadData() {
+  if (isGated.value) {
+    // Pro charts are enterprise-only; don't mount or fetch anything when gated.
+    chartData.value = null
+    matrixRows.value = []
+    loading.value = false
+    return
+  }
   loading.value = true
   try {
     if (chartMeta.value?.type === 'matrix') {
@@ -369,7 +409,7 @@ async function loadData() {
 }
 
 function selectRange(range: { value: TimeRange, isGated: boolean }) {
-  if (range.isGated && !props.isPlus) return
+  if (range.isGated && !isPlus.value) return
   selectedRange.value = range.value
   emit('range-change', range.value)
   loadData()
@@ -387,6 +427,7 @@ function formatLastUpdated(timestamp: string): string {
 
 watch(() => props.filters, loadData, { deep: true })
 watch(() => props.chartId, loadData)
+watch(() => props.pulseLevel, loadData)
 
 onMounted(loadData)
 </script>

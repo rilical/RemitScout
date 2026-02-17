@@ -11,7 +11,8 @@ import { getErrorMessage, isStripeError } from '../../types/errors'
 const planeAPool = getPool(config.db.planeAUrl)
 
 const verifySessionSchema = z.object({
-  sessionId: z.string().uuid(),
+  // Stripe Checkout Session IDs look like `cs_test_...` / `cs_live_...` (not UUIDs).
+  sessionId: z.string().min(1).refine((value) => value.startsWith('cs_'), 'Invalid sessionId'),
 })
 
 export const verifySessionRoutes = async (app: FastifyInstance) => {
