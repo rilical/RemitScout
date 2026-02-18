@@ -16,6 +16,7 @@ Rules:
 - If it mentions rate anomalies, data quality, poisoned indices, FX rate issues, or data reconciliation, include Data Quality Sentinel.
 - If it mentions release readiness, deploy gate, or pre-deploy validation, use release-readiness-gate skill.
 - If it mentions capacity, scaling projections, or growth limits, use capacity-planner skill.
+- If it mentions IssueOps cases, `.remit-scout/` contracts, the Brain loop, Slack front desk, or skill routing/dispatch, include IssueOps Operator.
 
 Output format (exact):
 Chosen agents: <list>

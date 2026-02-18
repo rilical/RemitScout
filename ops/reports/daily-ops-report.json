@@ -1,0 +1,28 @@
+{
+  "generated_at": null,
+  "environment": null,
+  "status": "PENDING",
+  "summary": {
+    "aws_resources": { "status": "PENDING", "details": null },
+    "provider_health_b2b": { "status": "PENDING", "details": null },
+    "provider_health_b2c": { "status": "PENDING", "details": null },
+    "gold_indices": { "status": "PENDING", "details": null },
+    "exports": { "status": "PENDING", "details": null },
+    "database": { "status": "PENDING", "details": null },
+    "coverage": { "status": "PENDING", "details": null },
+    "codebase_hygiene": { "status": "PENDING", "details": null },
+    "env_drift": { "status": "PENDING", "details": null },
+    "cost": { "status": "PENDING", "details": null },
+    "slo_compliance": { "status": "PENDING", "details": null },
+    "api_smoke": { "status": "PENDING", "details": null },
+    "frontend_e2e": { "status": "PENDING", "details": null },
+    "queue_pipeline": { "status": "PENDING", "details": null },
+    "rate_anomalies": { "status": "PENDING", "details": null },
+    "provider_api_changes": { "status": "PENDING", "details": null },
+    "reconciliation": { "status": "PENDING", "details": null },
+    "fx_rate_health": { "status": "PENDING", "details": null },
+    "capacity_plan": { "status": "PENDING", "details": null }
+  },
+  "action_items": []
+}
+

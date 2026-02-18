@@ -43,6 +43,7 @@ jobs:
       frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
       infra_changed: ${{ steps.filter.outputs.infra_changed }}
       migrations_changed: ${{ steps.filter.outputs.migrations_changed }}
+      issueops_changed: ${{ steps.filter.outputs.issueops_changed }}
       docs_only: ${{ steps.filter.outputs.docs_only }}
       run_backend: ${{ steps.flags.outputs.run_backend }}
       run_frontend: ${{ steps.flags.outputs.run_frontend }}
@@ -73,6 +74,8 @@ jobs:
               - 'pnpm-workspace.yaml'
             migrations_changed:
               - 'backend/db/migrations/**'
+            issueops_changed:
+              - '.remit-scout/**'
             docs_only:
               - 'docs/**'
               - 'README.md'
@@ -185,6 +188,17 @@ jobs:
           pnpm_version: ${{ inputs.pnpm_version }}
       - name: AWS SDK version alignment
         run: pnpm -C backend exec tsx scripts/ci/check-sdk-versions.ts
+      - name: Agent surfaces lint (AGENTS.md + provider registry)
+        run: pnpm -C backend exec tsx scripts/ci/validate-agent-surfaces.ts
+      - name: Reason code registry lint (EvidenceResult reason_code)
+        run: pnpm -C backend exec tsx scripts/ci/validate-reason-codes.ts
+      - name: Skill catalog lint (skills <-> workflows)
+        run: pnpm -C backend exec tsx scripts/ci/validate-skill-catalog.ts
+      - name: Code map lint (LLM Code Map headers)
+        run: pnpm -C backend exec tsx scripts/ci/validate-code-maps.ts --changed-only
+      - name: IssueOps contracts validation
+        if: needs.changes.outputs.issueops_changed == 'true' || (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'issueops:'))
+        run: pnpm -C backend exec tsx scripts/ci/validate-issueops-contracts.ts
       - name: Migration lint
         run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
       - name: SQL interpolation guardrail (changed files)

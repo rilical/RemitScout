@@ -4,7 +4,7 @@
 Automate horizontal scaling by providing a repeatable, deterministic workflow for adding new remittance providers to Remit-Scout. Handles both B2B and B2C providers with full infrastructure wiring.
 
 ## Scope
-- `backend/plane-b/src/providers/` — all 25 existing providers (template reference)
+- `backend/plane-b/src/providers/` — all existing providers (template reference; canonical list in `.remit-scout/providers/catalog.json`)
 - `backend/plane-b/src/providers/index.ts` — provider registry
 - `backend/shared/config.ts` — provider config section
 - `backend/db/migrations/` — migration files for new providers
@@ -19,7 +19,9 @@ Automate horizontal scaling by providing a repeatable, deterministic workflow fo
 1. `remit-scout-provider-onboarding` — 13-step onboarding workflow
 2. `remit-scout-provider-health-probe` — post-onboarding health validation
 
-## Current provider registry (25)
+## Current provider registry (24)
+Canonical inventory lives in `.remit-scout/providers/catalog.json`.
+
 remitly, westernunion, worldremit, instarem, wirebarley, alansari, intermex, xoom, xe, transfergo, paysend, pangea, orbitremit, bossmoney, koronapay, remitbee, singx, placid, ria, dahabshiil, sendwave, mukuru, wise, wellsfargo
 
 ## Onboarding phases

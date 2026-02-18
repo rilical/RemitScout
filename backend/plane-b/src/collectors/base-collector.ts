@@ -5,6 +5,7 @@ import { createPool } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { formatError } from '../../../shared/utils/error-handling'
+import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import type { FetchResult, CollectorRequest } from './types'
 import type { NormalizedQuote } from '../normalize/quote-normalizer'
 import {
@@ -629,6 +630,63 @@ export abstract class BaseCollector {
       freshness_checked: this.freshnessChecked,
       freshness_skipped: this.freshnessSkipped,
       freshness_stale: this.freshnessStale,
+    })
+
+    const environment =
+      config.envName ||
+      process.env.ENVIRONMENT ||
+      process.env.NODE_ENV ||
+      'development'
+
+    // Low-cardinality CloudWatch metrics to catch latency regressions and block storms.
+    // Dimensions are intentionally bounded (no corridor IDs) to avoid cardinality blowups.
+    const dimensions = {
+      ProviderId: this.providerId,
+      CollectorType: this.collectorType,
+      environment,
+    }
+
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_duration_seconds',
+      value: durationSeconds,
+      unit: 'Seconds',
+      dimensions,
+    })
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_attempt_count',
+      value: this.attemptCount,
+      unit: 'Count',
+      dimensions,
+    })
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_success_count',
+      value: this.successCount,
+      unit: 'Count',
+      dimensions,
+    })
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_block_count',
+      value: this.blockCount,
+      unit: 'Count',
+      dimensions,
+    })
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_rate_limit_count',
+      value: this.rateLimitCount,
+      unit: 'Count',
+      dimensions,
+    })
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/Collectors',
+      name: 'collector_avg_attempt_ms',
+      value: avgAttemptMs,
+      unit: 'Milliseconds',
+      dimensions,
     })
   }
 }

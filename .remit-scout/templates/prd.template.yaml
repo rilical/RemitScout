@@ -1,0 +1,21 @@
+case_id: "case-20260218-example"
+created_at: "2026-02-18T00:00:00Z"
+env: dev
+severity: sev2
+signal_sources:
+  - "aws/cloudwatch"
+domain: provider_health
+symptoms: "Provider probe failures detected for wise."
+suspected_components:
+  planes: ["plane_b"]
+  services: ["plane-b-probes"]
+  providers: ["wise"]
+  queues: []
+risk_tier: 1
+human_owner: ""
+links:
+  github_issue: ""
+  github_pr: ""
+  cloudwatch_alarms: []
+  dashboards: []
+

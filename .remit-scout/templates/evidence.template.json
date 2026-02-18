@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "generated_at": "2026-02-18T00:00:00Z",
+  "environment": "staging",
+  "case_id": "case-20260218-example",
+  "dispatch_id": "dispatch-uuid",
+  "skill_id": "evidence.provider_health.github_actions",
+  "summary": "Provider wise shows recent 403 blocks and no successful ingestion runs in the last 6h.",
+  "findings": [
+    {
+      "reason_code": "provider.blocked.http_403",
+      "severity": "sev2",
+      "message": "Provider has recent 403 blocks.",
+      "details": { "provider_id": "wise", "http_status": 403 }
+    }
+  ],
+  "recommended_next_skill_ids": ["probe.provider.github_actions", "forensics.corridor_provider.local"],
+  "pointers": [
+    { "kind": "github_artifact", "ref": "evidence-case-20260218-example-dispatch-uuid-provider-health", "note": "evidence.json" }
+  ],
+  "budgets": {
+    "max_findings": 25,
+    "max_pointer_items": 20,
+    "max_details_bytes_each": 2048
+  }
+}

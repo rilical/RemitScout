@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://remit-scout.local/schema/reason-code.schema.json",
+  "title": "IssueOps Reason Code Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "reason_codes"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "default_severity", "description", "domain"],
+        "properties": {
+          "code": { "type": "string", "minLength": 3, "maxLength": 120 },
+          "default_severity": { "type": "string", "enum": ["sev0", "sev1", "sev2", "sev3"] },
+          "description": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "suggested_next_skill_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "provider_health",
+              "queue",
+              "api_latency",
+              "freshness",
+              "indices",
+              "exports",
+              "infra_drift",
+              "security",
+              "other",
+              "pulse"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+

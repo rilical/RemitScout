@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'path'
 
 import { Duration, Tags } from 'aws-cdk-lib'
@@ -17,6 +18,28 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
+
+type ProviderCatalogFile = {
+  version: number
+  providers: Array<{
+    provider_id: string
+    display_name?: string
+    probe?: {
+      aws_scheduled?: boolean
+      aws_cdk_id?: string
+    }
+  }>
+}
+
+const loadProviderCatalog = (): ProviderCatalogFile => {
+  const repoRoot = path.resolve(__dirname, '..', '..', '..')
+  const catalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
+  const raw = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as ProviderCatalogFile
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.providers)) {
+    throw new Error(`Invalid provider catalog: ${catalogPath}`)
+  }
+  return raw
+}
 
 export type ScheduledJobsResources = {
   goldFxRatesFunction?: IFunction
@@ -1866,21 +1889,14 @@ export const createScheduledJobs = (
   )
 
   // Provider Probe Lambda Functions
-  const probeProviders = [
-    { id: 'Remitly', providerId: 'remitly' },
-    { id: 'WesternUnion', providerId: 'westernunion' },
-    { id: 'Wise', providerId: 'wise' },
-    { id: 'WorldRemit', providerId: 'worldremit' },
-    { id: 'Ria', providerId: 'ria' },
-    { id: 'Dahabshiil', providerId: 'dahabshiil' },
-    { id: 'Sendwave', providerId: 'sendwave' },
-    { id: 'Mukuru', providerId: 'mukuru' },
-    { id: 'Xe', providerId: 'xe' },
-    { id: 'AlAnsari', providerId: 'alansari' },
-    { id: 'Instarem', providerId: 'instarem' },
-    { id: 'Xoom', providerId: 'xoom' },
-    { id: 'Singx', providerId: 'singx' },
-  ]
+  const probeProviders = loadProviderCatalog()
+    .providers
+    .filter((p) => p?.probe?.aws_scheduled === true)
+    .map((p) => ({
+      // IMPORTANT: this must remain stable to avoid CFN logical-id churn.
+      id: p.probe?.aws_cdk_id || p.provider_id,
+      providerId: p.provider_id,
+    }))
 
   const probeFunctions: Record<string, IFunction> = {}
   const probeRules: Record<string, Rule> = {}
@@ -1895,7 +1911,7 @@ export const createScheduledJobs = (
         'backend',
         'scripts',
         'aws',
-        `${providerId}-probe-lambda.ts`,
+        `provider-probe-lambda.ts`,
       ),
       handler: 'handler',
       runtime: Runtime.NODEJS_20_X,
@@ -1907,6 +1923,7 @@ export const createScheduledJobs = (
       tracing: tracingMode,
       environment: {
         JOB_NAME: `${providerId}-probe`,
+        PROVIDER_ID: providerId,
         ENVIRONMENT: options.envName,
         NODE_ENV: 'production',
         PGSSLMODE: 'require',

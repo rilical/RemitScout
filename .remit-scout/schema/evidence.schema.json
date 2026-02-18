@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://remit-scout.local/schema/evidence.schema.json",
+  "title": "IssueOps Evidence Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "success",
+    "generated_at",
+    "environment",
+    "case_id",
+    "skill_id",
+    "summary",
+    "findings",
+    "recommended_next_skill_ids",
+    "pointers",
+    "budgets"
+  ],
+  "properties": {
+    "success": { "type": "boolean" },
+    "generated_at": { "type": "string", "minLength": 10 },
+    "environment": { "type": "string", "enum": ["dev", "staging", "prod"] },
+    "case_id": { "type": "string" },
+    "dispatch_id": { "type": "string" },
+    "skill_id": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason_code", "severity", "message"],
+        "properties": {
+          "reason_code": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "severity": { "type": "string", "enum": ["sev0", "sev1", "sev2", "sev3"] },
+          "message": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "details": { "type": "object" }
+        }
+      }
+    },
+    "recommended_next_skill_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "pointers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["github_artifact", "github_actions_run", "s3", "cloudwatch", "url", "other"]
+          },
+          "ref": { "type": "string", "minLength": 1 },
+          "note": { "type": "string", "maxLength": 200 }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_findings", "max_pointer_items", "max_details_bytes_each"],
+      "properties": {
+        "max_findings": { "type": "integer", "minimum": 1, "maximum": 200 },
+        "max_pointer_items": { "type": "integer", "minimum": 0, "maximum": 200 },
+        "max_details_bytes_each": { "type": "integer", "minimum": 256, "maximum": 65536 }
+      }
+    }
+  }
+}

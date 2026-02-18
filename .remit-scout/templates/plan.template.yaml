@@ -1,0 +1,27 @@
+case_id: "case-20260218-example"
+goal: "Collect evidence, pinpoint root cause, and recommend next steps."
+constraints:
+  - "prod_read_only=true"
+  - "no secrets in artifacts"
+skills:
+  - skill_id: "probe.provider.github_actions"
+    executor: "github_actions"
+    params:
+      provider_id: "wise"
+    expected_artifacts:
+      - "github:artifact:probe-<provider>-results"
+    stop_on_failure: false
+  - skill_id: "forensics.corridor_provider.local"
+    executor: "local_codex"
+    params:
+      corridor_id: "US-PH-USD-PHP"
+      amount: 100
+      method: "bank"
+    expected_artifacts:
+      - "stdout:json"
+    stop_on_failure: false
+guardrails:
+  max_runtime_minutes: 30
+  max_diff_lines: 0
+  prod_read_only: true
+

@@ -1,33 +1,39 @@
-# Remit-Scout Agent Registry (AGENTS.md)
-
-## Purpose
-Registry of the 12 Codex agents (see list below), their roles, and prompts. Architecture and system-wide details are always in `ARCHITECTURE.md` and must be referenced first.
-
 ---
-
-## Permission & File Load Policy
-**Explicitly allowed file paths (for any agent run):**
-- `ARCHITECTURE.md`
-- `agents/AGENT-MATCH.md`
-- `agents/rag/<agent>.md` (exact agent file determined after AGENT-MATCH)
-
-**Before reviewing backend/** or any other code: you must confirm the above paths are loaded. Or give suggested list
-
+entrypoints:
+  - "ARCHITECTURE.md"
+  - "agents/AGENT-MATCH.md"
+  - ".remit-scout/AGENTS.md"
+  - "ops/brain/README.md"
+  - "backend/scripts/brain/brain.ts"
+  - "backend/scripts/frontdesk/slack-frontdesk.ts"
+evidence_skills:
+  - "evidence.provider_health.github_actions"
+  - "evidence.queue_backlog.github_actions"
+  - "evidence.http_latency.github_actions"
+  - "evidence.exports_health.github_actions"
+  - "evidence.freshness_slo.github_actions"
+common_reason_codes:
+  - "evidence.error"
 ---
+# Remit-Scout Agent Registry (AGENTS)
 
-## Run requirements
-1. Confirm the **feedback source** (either “chat transcript” or file path given by the user).
-2. Confirm and state the user’s **goal** (in one phrase; e.g., “AWS readiness”, “data correctness”, etc).
+Primary source of truth:
+- System invariants and plane boundaries are in `ARCHITECTURE.md`.
 
----
+Required load order (before touching code):
+1. `ARCHITECTURE.md`
+1. `agents/AGENT-MATCH.md`
+1. `agents/rag/<agent>.md` (selected by AGENT-MATCH)
 
-## Agent Match protocol
-- Use `agents/AGENT-MATCH.md` to select the correct agent (do not guess).
-- Then, load only the chosen file under `agents/rag/<agent>.md`.
+Run requirements:
+1. Confirm the feedback source (chat transcript or file path).
+1. Confirm the user goal (one phrase).
 
----
+Agent match protocol:
+- Use `agents/AGENT-MATCH.md` to choose the correct agent doc.
+- Do not guess; if ambiguous, ask for the domain (providers, queues, indices, exports, pulse, infra drift).
 
-## Operational prompt template (all agents)
+Operational prompt template (all agents):
 You are the <Agent Name>.
 Scope: <paths>.
 Primary RAG: `ARCHITECTURE.md`.
@@ -48,51 +54,27 @@ Output format (exact, section numbers required):
 6) Questions / Assumptions
 7) RAG/Architecture Updates (proposed or applied)
 
----
+Agent registry:
+| # | Agent | RAG doc |
+|---:|---|---|
+| 1 | Cloud Architect | `agents/rag/cloud-architect.md` |
+| 2 | Plane A API Guardian | `agents/rag/plane-a-api-guardian.md` |
+| 3 | Plane B Ingest & Collectors | `agents/rag/plane-b-ingest-collectors.md` |
+| 4 | Data Lineage (Bronze/Silver/Gold) | `agents/rag/data-lineage.md` |
+| 5 | Queues & Workers | `agents/rag/queues-workers.md` |
+| 6 | Auth & Entitlements | `agents/rag/auth-entitlements.md` |
+| 7 | Observability & Alerts | `agents/rag/observability-alerts.md` |
+| 8 | Performance & Caching | `agents/rag/performance-caching.md` |
+| 9 | Frontend-API Contract | `agents/rag/frontend-api-contract.md` |
+| 10 | Security & Compliance | `agents/rag/security-compliance.md` |
+| 11 | Delta/Drift Agent | `agents/rag/delta-drift.md` |
+| 12 | SLO Police | `agents/rag/slo-police.md` |
+| 13 | Infrastructure Sentinel | `agents/rag/infra-sentinel.md` |
+| 14 | Provider Onboarding | `agents/rag/provider-onboarding.md` |
+| 15 | Data Quality Sentinel | `agents/rag/data-quality-sentinel.md` |
 
-## 15 agents (registry)
-1) Cloud Architect
-   - RAG: `agents/rag/cloud-architect.md`
-2) Plane A API Guardian
-   - RAG: `agents/rag/plane-a-api-guardian.md`
-3) Plane B Ingest & Collectors
-   - RAG: `agents/rag/plane-b-ingest-collectors.md`
-4) Data Lineage (Bronze/Silver/Gold)
-   - RAG: `agents/rag/data-lineage.md`
-5) Queues & Workers
-   - RAG: `agents/rag/queues-workers.md`
-6) Auth & Entitlements
-   - RAG: `agents/rag/auth-entitlements.md`
-7) Observability & Alerts
-   - RAG: `agents/rag/observability-alerts.md`
-8) Performance & Caching
-   - RAG: `agents/rag/performance-caching.md`
-9) Frontend-API Contract
-   - RAG: `agents/rag/frontend-api-contract.md`
-10) Security & Compliance
-    - RAG: `agents/rag/security-compliance.md`
-11) Delta/Drift Agent
-    - RAG: `agents/rag/delta-drift.md`
-12) SLO Police
-    - RAG: `agents/rag/slo-police.md`
-13) Infrastructure Sentinel
-    - RAG: `agents/rag/infra-sentinel.md`
-    - Scope: AWS resource state, environment drift, cost guardrails, DB health, pipeline throughput
-    - Skills: `remit-scout-aws-resource-audit`, `remit-scout-db-observer`, `remit-scout-env-drift-detector`, `remit-scout-daily-ops-report`, `remit-scout-dev-cost-guard`
-14) Provider Onboarding
-    - RAG: `agents/rag/provider-onboarding.md`
-    - Scope: New provider scaffolding, rights-matrix wiring, probe Lambda, CDK integration, validation
-    - Skills: `remit-scout-provider-onboarding`, `remit-scout-provider-health-probe`
-15) Data Quality Sentinel
-    - RAG: `agents/rag/data-quality-sentinel.md`
-    - Scope: Rate anomaly detection, FX rate validation, Silver↔Gold reconciliation, provider API change detection
-    - Skills: `remit-scout-rate-anomaly-detector`, `remit-scout-fx-rate-anomaly-detector`, `remit-scout-silver-gold-reconciliation`, `remit-scout-provider-api-change-detector`
+Environment handling:
+- Dev: speed > rigor; debug only.
+- Staging: mirror prod; verify wiring + alarms.
+- Prod: read-only evidence by default; all changes audited and reviewable.
 
----
-
-## Environment handling
-- **Dev:** Fast iteration, low retention, reduced capacity, prioritize speed. For initial development and debugging only.
-- **Staging:** Mirror prod infra as closely as possible, verify integration and infra before release. Protect against data loss; confirm monitoring/failover.
-- **Prod:** Real users and business ops. Strict SLOs, zero risky or untested changes, full audit, data durability and compliance. All actions must be reviewable.
-
----

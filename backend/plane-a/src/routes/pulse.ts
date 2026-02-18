@@ -1,3 +1,17 @@
+/**
+ * LLM Code Map:
+ * - export `pulseRoutes(app)`: registers all Pulse endpoints (charts, corridors, metadata).
+ * - Caches:
+ *   - `pulseIndicesCache`: short TTL cache for indices-like views.
+ *   - `pulseCorridorsCache`: short TTL cache for corridor lists/filters.
+ * - Normalizers:
+ *   - `normalizePulseCorridor|Method|Timeframe|Range`: sanitize user inputs.
+ * - Storage model:
+ *   - Reads from `gold.pulse_cache` via SQL (`shared/db`).
+ * - Invariants:
+ *   - Never return unbounded payloads; always cap series/annotations sizes.
+ *   - Entitlements gate "Pulse Pro" chart surfaces (Enterprise only).
+ */
 import type { FastifyInstance } from 'fastify'
 
 import { query } from '../../../shared/db'

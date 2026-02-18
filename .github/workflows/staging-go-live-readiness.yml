@@ -1,0 +1,92 @@
+name: staging/go-live-readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_runtime_config_validation:
+        description: Also run backend runtime config schema validation
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        if: vars.AWS_ROLE_TO_ASSUME != '' && vars.AWS_REGION != ''
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Staging go-live readiness (integrations + policy)
+        env:
+          ENVIRONMENT: staging
+          NODE_ENV: staging
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_ROLE_TO_ASSUME: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          SHARED_SECRET_ARN: ${{ secrets.SHARED_SECRET_ARN }}
+          SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
+          SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
+          EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_ID_PLUS: ${{ secrets.STRIPE_PRICE_ID_PLUS }}
+          STRIPE_PRICE_ID_PLUS_ANNUAL: ${{ secrets.STRIPE_PRICE_ID_PLUS_ANNUAL }}
+          PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
+          PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
+          PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_CASES_CHANNEL_ID: ${{ vars.SLACK_CASES_CHANNEL_ID }}
+          ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          BRAIN_DISPATCH_GITHUB_ACTIONS: ${{ vars.BRAIN_DISPATCH_GITHUB_ACTIONS }}
+          BRAIN_INGEST_GITHUB_ACTIONS: ${{ vars.BRAIN_INGEST_GITHUB_ACTIONS }}
+          BRAIN_SLACK_POST_CASE_CARDS: ${{ vars.BRAIN_SLACK_POST_CASE_CARDS }}
+        run: pnpm -C backend ci:staging-go-live-readiness
+
+      - name: Runtime config validation (staging profile)
+        if: inputs.run_runtime_config_validation
+        env:
+          ENVIRONMENT: staging
+          NODE_ENV: staging
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
+          EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
+          ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_ID_PLUS: ${{ secrets.STRIPE_PRICE_ID_PLUS }}
+          STRIPE_PRICE_ID_PLUS_ANNUAL: ${{ secrets.STRIPE_PRICE_ID_PLUS_ANNUAL }}
+        run: pnpm -C backend ci:config-validate

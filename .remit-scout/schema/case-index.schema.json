@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://remit-scout.local/schema/case-index.schema.json",
+  "title": "IssueOps Case Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "env", "status", "updated_at"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "env": { "type": "string", "enum": ["dev", "staging", "prod"] },
+          "status": { "type": "string", "enum": ["open", "blocked", "closed"] },
+          "updated_at": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

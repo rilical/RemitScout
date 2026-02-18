@@ -151,6 +151,14 @@ const sentryEnabled = (() => {
 
 const environmentName = (process.env.ENVIRONMENT || process.env.NODE_ENV || (isStagingOrProd ? 'production' : 'development')).toLowerCase()
 const appVersion = process.env.APP_VERSION || process.env.SENTRY_RELEASE || process.env.GITHUB_SHA || process.env.npm_package_version || ''
+const allowSearchIndexing = (() => {
+  const flag = resolveEnvValue('NUXT_PUBLIC_ALLOW_SEARCH_INDEXING', 'PUBLIC_ALLOW_SEARCH_INDEXING', 'ALLOW_SEARCH_INDEXING')
+  if (flag !== undefined) return parseEnvFlag(flag)
+  return environmentName === 'production'
+})()
+const robotsMetaContent = allowSearchIndexing
+  ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+  : 'noindex, nofollow, noarchive, nosnippet, noimageindex'
 
 const ensureClientPrecomputed = async () => {
   const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
@@ -248,8 +256,8 @@ export default defineNuxtConfig({
           content:
             'money transfer, remittance, international payments, compare rates, send money abroad, wire transfer, foreign exchange',
         },
-        { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
-        { name: 'googlebot', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+        { name: 'robots', content: robotsMetaContent },
+        { name: 'googlebot', content: robotsMetaContent },
         { name: 'author', content: 'Remit-Scout' },
         { name: 'language', content: 'English' },
         { name: 'geo.region', content: 'US' },

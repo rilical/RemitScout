@@ -1,3 +1,15 @@
+/**
+ * LLM Code Map:
+ * - export `quotesRoutes(app)`: registers quote endpoints (live + cached).
+ * - Core concepts:
+ *   - `corridor_id`, `amount_bucket`, `payin`, `payout` drive quote keys.
+ *   - Tier-based freshness SLO via `getTierSloMinutes()` and corridor priority overrides.
+ * - Caching:
+ *   - `latestQuoteCache`: TTL cache for latest quote list responses.
+ * - Invariants:
+ *   - Enforce max quote age (tier-aware) and hard caps for b2c.
+ *   - Normalize provider ids and payment methods before querying.
+ */
 import type { FastifyInstance } from 'fastify'
 import type { Pool } from 'pg'
 import { createHash } from 'crypto'

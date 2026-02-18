@@ -1,4 +1,5 @@
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import fs from 'node:fs'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
@@ -215,7 +216,20 @@ export const createProbeRunner = (options: {
 
 export const outputProbeResult = (result: ProbeResult, format: 'json' | 'text' = 'json') => {
   if (format === 'json') {
-    console.log(JSON.stringify(result, null, 2))
+    const json = JSON.stringify(result, null, 2)
+    console.log(json)
+
+    const outFile = (process.env.PROBE_OUTPUT_FILE || '').trim()
+    if (outFile) {
+      try {
+        fs.writeFileSync(outFile, json + '\n')
+      } catch (error: unknown) {
+        logger.debug('probe_output_file_write_failed', {
+          out_file: outFile,
+          error: formatError(error).message,
+        })
+      }
+    }
   } else {
     console.log(`Probe ${result.success ? 'PASSED' : 'FAILED'}`)
     console.log(`Provider: ${result.providerId}`)

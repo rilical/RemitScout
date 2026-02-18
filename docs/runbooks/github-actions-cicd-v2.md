@@ -48,3 +48,10 @@ Idempotent AWS setup helper:
 - GitHub Actions → `cd/deploy` workflow run
 - AWS CloudFormation stack events for `remit-scout-<env>`
 - ECS task logs for the DB migration task (output key: `DbMigrateTaskDefinitionArn`)
+
+## Staging readiness gate
+Before first staging go-live (and before major integration changes), run:
+- `.github/workflows/staging-go-live-readiness.yml`
+
+Runbook:
+- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/runbooks/staging-go-live.md`

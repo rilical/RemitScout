@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://remit-scout.local/schema/run.schema.json",
+  "title": "IssueOps Case Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "run_id",
+    "started_at",
+    "finished_at",
+    "executor",
+    "skills_executed",
+    "results",
+    "evidence_refs",
+    "next_recommendation"
+  ],
+  "properties": {
+    "case_id": { "type": "string", "minLength": 3 },
+    "run_id": { "type": "string", "minLength": 3 },
+    "dispatch_id": { "type": "string" },
+    "started_at": { "type": "string", "minLength": 10 },
+    "finished_at": { "type": "string", "minLength": 10 },
+    "ingested_at": { "type": "string" },
+    "executor": {
+      "type": "string",
+      "enum": ["github_actions", "aws_scheduled", "local_codex", "manual"]
+    },
+    "github_actions_run_url": { "type": "string" },
+    "github_actions_artifact_url": { "type": "string" },
+    "skills_executed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["skill_id", "status"],
+        "properties": {
+          "skill_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "findings"],
+      "properties": {
+        "success": { "type": "boolean" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reason_code", "message"],
+            "properties": {
+              "reason_code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["github_artifact", "s3", "cloudwatch", "link", "log"] },
+          "ref": { "type": "string" },
+          "checksum": { "type": "string" }
+        }
+      }
+    },
+    "next_recommendation": {
+      "type": "string",
+      "enum": ["iterate", "escalate", "open_pr", "close_case"]
+    }
+  }
+}

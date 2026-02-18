@@ -1,0 +1,34 @@
+{
+  "case_id": "case-20260218-example",
+  "run_id": "run-20260218T000000Z",
+  "dispatch_id": "dispatch-uuid",
+  "started_at": "2026-02-18T00:00:00Z",
+  "finished_at": "2026-02-18T00:01:00Z",
+  "ingested_at": "2026-02-18T00:02:00Z",
+  "executor": "github_actions",
+  "github_actions_run_url": "https://github.com/owner/repo/actions/runs/123",
+  "github_actions_artifact_url": "https://api.github.com/repos/owner/repo/actions/artifacts/456/zip",
+  "skills_executed": [
+    {
+      "skill_id": "probe.provider.github_actions",
+      "status": "pass",
+      "summary": "Probe completed successfully."
+    }
+  ],
+  "results": {
+    "success": true,
+    "findings": [
+      {
+        "reason_code": "example_ok",
+        "message": "No critical issues detected."
+      }
+    ]
+  },
+  "evidence_refs": [
+    {
+      "kind": "github_artifact",
+      "ref": "probe-wise-results"
+    }
+  ],
+  "next_recommendation": "close_case"
+}

@@ -1,3 +1,14 @@
+/**
+ * LLM Code Map:
+ * - `providerRegistry`: canonical registry mapping provider_id -> collector + corridors + rate limits.
+ * - Exports:
+ *   - `getProvider(providerId)`: lookup provider entry.
+ *   - `getProviderIds()`: list all provider ids (used by probes, schedulers, workflows).
+ *   - `hasProvider(providerId)`: membership check.
+ * - Invariants:
+ *   - Do not duplicate provider lists elsewhere; derive from registry/catalog.
+ *   - Any new provider must update this registry (or the scaffolder/catalog if/when registry becomes generated).
+ */
 import type { Pool } from 'pg'
 
 import { runRemitlyCollector } from './remitly/collector'

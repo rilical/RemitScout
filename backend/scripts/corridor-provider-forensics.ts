@@ -381,6 +381,59 @@ export const runCorridorProviderForensics = async () => {
 
     const payload = {
       success: true,
+      findings: (() => {
+        const verdictCounts: Record<string, number> = {}
+        const refreshFailedProviders: string[] = []
+        const refreshPendingProviders: string[] = []
+
+        for (const p of providers as any[]) {
+          const verdict = String(p?.verdict ?? 'unknown')
+          verdictCounts[verdict] = (verdictCounts[verdict] ?? 0) + 1
+
+          if (verdict === 'collecting' && typeof p?.reason === 'string') {
+            if (p.reason.startsWith('refresh_failed:')) refreshFailedProviders.push(String(p?.provider ?? 'unknown'))
+            if (p.reason === 'refresh_pending') refreshPendingProviders.push(String(p?.provider ?? 'unknown'))
+          }
+        }
+
+        const findings: Array<{ reason_code: string; message: string; details?: unknown }> = [
+          {
+            reason_code: 'forensics.verdict_breakdown',
+            message: 'Provider verdict breakdown for corridor forensics.',
+            details: { verdict_counts: verdictCounts },
+          },
+        ]
+
+        if (refreshFailedProviders.length) {
+          findings.push({
+            reason_code: 'quote_refresh.failed',
+            message: 'One or more providers have a failed refresh request for this corridor/bucket.',
+            details: { providers: refreshFailedProviders.sort() },
+          })
+        }
+
+        if (refreshPendingProviders.length) {
+          findings.push({
+            reason_code: 'quote_refresh.pending',
+            message: 'One or more providers have a pending/processing refresh request for this corridor/bucket.',
+            details: { providers: refreshPendingProviders.sort() },
+          })
+        }
+
+        return findings
+      })(),
+      recommended_next_skill_ids: (() => {
+        const verdicts = new Set<string>((providers as any[]).map((p) => String(p?.verdict ?? 'unknown')))
+        const ids: string[] = []
+
+        // Safe next steps: gather evidence and summarize state.
+        if (verdicts.has('collecting') || verdicts.has('excluded_capability') || verdicts.has('excluded_method')) {
+          ids.push('probe.provider.github_actions')
+        }
+        ids.push('observe.dev.local')
+
+        return Array.from(new Set(ids))
+      })(),
       environment: config.envName || config.env,
       corridor_id: corridorId,
       source_country: sourceCountry,

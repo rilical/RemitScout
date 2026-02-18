@@ -1,4 +1,6 @@
 import { Duration } from 'aws-cdk-lib'
+import fs from 'node:fs'
+import path from 'node:path'
 import {
   Alarm,
   ComparisonOperator,
@@ -17,6 +19,27 @@ import type { EcsServiceResources } from './ecs-services'
 import type { DatabaseResources } from './database'
 import type { CacheResources } from './cache'
 import type { Construct } from 'constructs'
+
+type ProviderCatalogFile = {
+  version: number
+  providers: Array<{
+    provider_id: string
+    probe?: {
+      aws_scheduled?: boolean
+      github_actions?: boolean
+    }
+  }>
+}
+
+const loadProviderCatalog = (): ProviderCatalogFile => {
+  const repoRoot = path.resolve(__dirname, '..', '..', '..')
+  const catalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
+  const raw = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as ProviderCatalogFile
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.providers)) {
+    throw new Error(`Invalid provider catalog: ${catalogPath}`)
+  }
+  return raw
+}
 
 export type MonitoringResources = {
   dashboard: Dashboard
@@ -45,6 +68,12 @@ export const createMonitoring = (
   const isStaging = options.envName === 'staging'
   const serviceDimension = 'remit-scout'
   const useExplicitAlarmNames = options.envName !== 'dev'
+
+  const providerCatalog = loadProviderCatalog()
+  const probeProviders = providerCatalog.providers
+    .filter((p) => p?.probe?.aws_scheduled === true)
+    .map((p) => p.provider_id)
+  const collectionProviders = providerCatalog.providers.map((p) => p.provider_id)
 
   const dashboard = new Dashboard(scope, 'RemitScoutDashboard', {
     dashboardName: `remit-scout-${options.envName}`,
@@ -78,6 +107,22 @@ export const createMonitoring = (
       options.queues.goldLiveDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.notificationsDlq.metricApproximateNumberOfMessagesVisible(),
       options.queues.opsAlertsDlq.metricApproximateNumberOfMessagesVisible(),
+    ],
+    period: Duration.minutes(5),
+  })
+
+  const queueAgeWidget = new GraphWidget({
+    title: 'SQS Oldest Message Age (max seconds)',
+    left: [
+      options.queues.quoteRefreshQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.fxRateRefreshQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.exportJobQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.alertEvaluationQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.ingestFanoutQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.ingestFanoutTier2Queue.metricApproximateAgeOfOldestMessage(),
+      options.queues.goldLiveQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.notificationsQueue.metricApproximateAgeOfOldestMessage(),
+      options.queues.opsAlertsQueue.metricApproximateAgeOfOldestMessage(),
     ],
     period: Duration.minutes(5),
   })
@@ -256,6 +301,7 @@ export const createMonitoring = (
   dashboard.addWidgets(
     queueDepthWidget,
     dlqDepthWidget,
+    queueAgeWidget,
     lambdaErrorWidget,
     apiLatencyWidget,
     new GraphWidget({
@@ -300,6 +346,40 @@ export const createMonitoring = (
 
   for (const alarm of dlqAlarms) {
     alarm.addAlarmAction(criticalAction)
+  }
+
+  const quoteRefreshOldestAgeThresholdSeconds = isProd ? 15 * 60 : (isStaging ? 30 * 60 : 60 * 60)
+  const ingestFanoutTier2OldestAgeThresholdSeconds = isProd ? 60 * 60 : (isStaging ? 90 * 60 : 2 * 60 * 60)
+  const queueAgeAlarms = [
+    new Alarm(scope, 'QuoteRefreshOldestAgeAlarm', {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-quote-refresh-oldest-age-high`
+        : undefined,
+      metric: options.queues.quoteRefreshQueue.metricApproximateAgeOfOldestMessage({
+        period: Duration.minutes(5),
+      }),
+      threshold: quoteRefreshOldestAgeThresholdSeconds,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `Quote refresh queue oldest message age >= ${quoteRefreshOldestAgeThresholdSeconds}s`,
+    }),
+    new Alarm(scope, 'IngestFanoutTier2OldestAgeAlarm', {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-ingest-fanout-tier2-oldest-age-high`
+        : undefined,
+      metric: options.queues.ingestFanoutTier2Queue.metricApproximateAgeOfOldestMessage({
+        period: Duration.minutes(5),
+      }),
+      threshold: ingestFanoutTier2OldestAgeThresholdSeconds,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `Tier2 ingest fanout oldest message age >= ${ingestFanoutTier2OldestAgeThresholdSeconds}s`,
+    }),
+  ]
+  for (const alarm of queueAgeAlarms) {
+    alarm.addAlarmAction(isProd ? opsAction : warningAction)
   }
 
   // DLQ send failures are data loss events: DLQ is the last resort when a worker fails a message.
@@ -817,49 +897,7 @@ export const createMonitoring = (
     alarm.addAlarmAction(opsAction)
   })
 
-  // Provider Probe Failure Alarms
-  const probeProviders = [
-    'remitly',
-    'westernunion',
-    'wise',
-    'worldremit',
-    'ria',
-    'dahabshiil',
-    'sendwave',
-    'mukuru',
-    'xe',
-    'alansari',
-    'instarem',
-    'xoom',
-    'singx',
-  ]
-
-  const collectionProviders = [
-    'alansari',
-    'bossmoney',
-    'dahabshiil',
-    'instarem',
-    'intermex',
-    'koronapay',
-    'mukuru',
-    'orbitremit',
-    'pangea',
-    'paysend',
-    'placid',
-    'remitbee',
-    'remitly',
-    'ria',
-    'sendwave',
-    'singx',
-    'transfergo',
-    'wellsfargo',
-    'westernunion',
-    'wirebarley',
-    'wise',
-    'worldremit',
-    'xe',
-    'xoom',
-  ]
+  // Provider Probe Failure Alarms (providers sourced from `.remit-scout/providers/catalog.json`)
   const probeFailureAlarms = probeProviders.map((providerId) =>
     new Alarm(scope, `${providerId.charAt(0).toUpperCase() + providerId.slice(1)}ProbeFailureAlarm`, {
       alarmName: `remit-scout-${options.envName}-${providerId}-probe-failure`,
@@ -1355,6 +1393,42 @@ export const createMonitoring = (
     period: Duration.minutes(15),
   })
 
+  const collectorBlocksWidget = new GraphWidget({
+    title: 'Collector Blocks (health_probe)',
+    left: probeProviders.map((providerId) =>
+      new Metric({
+        namespace: 'RemitScout/Collectors',
+        metricName: 'collector_block_count',
+        dimensionsMap: {
+          ProviderId: providerId,
+          CollectorType: 'health_probe',
+          environment: options.envName,
+        },
+        statistic: 'Sum',
+        period: Duration.minutes(5),
+      }),
+    ),
+    period: Duration.minutes(5),
+  })
+
+  const collectorAvgAttemptWidget = new GraphWidget({
+    title: 'Collector Avg Attempt (health_probe ms)',
+    left: probeProviders.map((providerId) =>
+      new Metric({
+        namespace: 'RemitScout/Collectors',
+        metricName: 'collector_avg_attempt_ms',
+        dimensionsMap: {
+          ProviderId: providerId,
+          CollectorType: 'health_probe',
+          environment: options.envName,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      }),
+    ),
+    period: Duration.minutes(5),
+  })
+
   dashboard.addWidgets(
     dataFreshnessWidget,
     quoteSuccessRateWidget,
@@ -1362,6 +1436,8 @@ export const createMonitoring = (
     sloComplianceWidget,
     indicesReadinessWidget,
     probeHeartbeatWidget,
+    collectorBlocksWidget,
+    collectorAvgAttemptWidget,
   )
 
   return {
