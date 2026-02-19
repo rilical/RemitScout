@@ -129,14 +129,14 @@
       <!-- Side by Side Comparison Boxes -->
       <div
         v-else-if="comparison"
-        class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16"
       >
         <!-- Wells Fargo Box -->
         <div class="bg-surface rounded-3xl border-2 border-danger-600 p-8 shadow-xl hover:shadow-2xl transition-shadow">
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.bank.logoUrl"
-              class="h-24 w-24 flex-shrink-0 flex items-center justify-center overflow-visible"
+              class="h-20 w-20 flex-shrink-0 flex items-center justify-center overflow-visible"
             >
               <NuxtImg
                 :src="comparison.bank.logoUrl"
@@ -150,7 +150,7 @@
             </div>
             <div
               v-else
-              class="h-24 w-24 flex-shrink-0 flex items-center justify-center overflow-visible"
+              class="h-20 w-20 flex-shrink-0 flex items-center justify-center overflow-visible"
             >
               <NuxtImg
                 src="/logos/wellsfargo.svg"
@@ -215,18 +215,7 @@
           <div class="flex items-center gap-4 mb-6">
             <div class="h-24 w-24 flex items-center justify-center flex-shrink-0">
               <NuxtImg
-                v-if="topProviderSlug && topProviderLogoSrc && !topLogoError"
-                :src="topProviderLogoSrc"
-                :alt="comparison.top.name"
-                width="96"
-                height="96"
-                loading="lazy"
-                :format="topProviderLogoSrc?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
-                class="max-h-full max-w-full object-contain"
-                @error="topLogoError = true"
-              />
-              <NuxtImg
-                v-else-if="comparison.top.logoUrl && !topLogoError"
+                v-if="comparison.top.logoUrl"
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
                 width="96"
@@ -234,13 +223,25 @@
                 loading="lazy"
                 :format="comparison.top.logoUrl?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
                 class="max-h-full max-w-full object-contain"
-                @error="topLogoError = true"
               />
               <div
                 v-else
-                class="h-full w-full flex items-center justify-center rounded-xl bg-success-100 text-success-700 text-h1 font-bold"
+                class="h-full w-full flex items-center justify-center rounded-xl bg-success-100 text-success-700"
               >
-                {{ comparison.top.name?.charAt(0) ?? 'P' }}
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  class="h-10 w-10"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="m12 17.75-5.45 2.865.97-6.063L4 9.95l6.06-.88L12 3.75l1.94 5.32L20 9.95l-3.52 4.602.97 6.063z"
+                  />
+                </svg>
               </div>
             </div>
             <div>
@@ -508,11 +509,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
-import { normalizeProviderSlug, getProviderLogoPath } from '~/composables/useProviderLogo'
-
-const topLogoError = ref(false)
 const amount = 500
 
 // Fixed corridor: US → Mexico
@@ -526,20 +524,6 @@ const { data, pending, error } = await useRemittanceApi().useBankVsSpecialist(
 )
 
 const comparison = computed(() => data.value?.data)
-
-const topProviderSlug = computed(() => {
-  const top = comparison.value?.top
-  if (!top) return ''
-  return normalizeProviderSlug(top.providerId || top.name)
-})
-
-const topProviderLogoSrc = computed(() => {
-  const slug = topProviderSlug.value
-  return slug ? getProviderLogoPath(slug) : ''
-})
-
-watch(topProviderSlug, () => { topLogoError.value = false })
-watch(() => comparison.value?.top?.logoUrl, () => { topLogoError.value = false })
 
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''

@@ -26,11 +26,11 @@
           </h2>
           <div class="space-y-4 text-body-lg text-neutral-700 leading-relaxed">
             <p>
-              When <span class="font-semibold text-brand-600">Omar Ghabayen</span> moved from Jordan to study at <span class="font-semibold whitespace-nowrap">Carnegie Mellon University</span>, his family would send him pocket money to help with expenses.
+              When <span class="font-semibold">Omar Ghabayen</span> moved from Jordan to study at <span class="font-semibold whitespace-nowrap">Carnegie Mellon University</span>, his family would send him pocket money to help with expenses.
             </p>
 
             <p>
-              Every single time, <span class="font-semibold text-brand-600">$30 vanished</span>. $15 disappeared at the sending bank in Jordan, another $15 at his receiving bank in the US. For a student living on a tight budget, that wasn't just pocket change it was <span class="font-semibold">two weeks of groceries</span>, or <span class="font-semibold">a textbook</span>, or <span class="font-semibold">a tank of gas</span>.
+              Every single time, <span class="font-semibold">$30 vanished</span>. $15 disappeared at the sending bank in Jordan, another $15 at his receiving bank in the US. For a student living on a tight budget, that wasn't just pocket change it was <span class="font-semibold">two weeks of groceries</span>, or <span class="font-semibold">a textbook</span>, or <span class="font-semibold">a tank of gas</span>.
             </p>
 
             <p>

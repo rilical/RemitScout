@@ -85,7 +85,7 @@
         </defs>
 
         <image
-          href="/world.svg"
+          href="/world.webp"
           x="0"
           y="0"
           width="2000"

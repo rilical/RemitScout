@@ -25,7 +25,7 @@ type PulseTeaserResponse = {
 }
 
 const { request } = useApi()
-const { pulseLevel } = useEntitlements()
+const { isPlus } = useEntitlements()
 
 const { data, pending } = await useAsyncData(
   'pulse:teaser',
@@ -36,11 +36,7 @@ const { data, pending } = await useAsyncData(
 const movers = computed(() => data.value?.movers ?? [])
 const updatedAt = computed(() => data.value?.updatedAt ?? null)
 const windowHours = computed(() => data.value?.windowHours ?? 24)
-const ctaLabel = computed(() => {
-  if (pulseLevel.value === 'pro') return 'Open Pulse Pro'
-  if (pulseLevel.value === 'lite') return 'Open Pulse'
-  return 'Preview Pulse'
-})
+const ctaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pulse'))
 
 const formatPct = (value: number) => {
   const pct = value * 100
@@ -76,7 +72,6 @@ const formatCorridor = (m: PulseTeaserMover) => {
   }
 }
 
-const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP', 'CAD/INR']
 </script>
 
 <template>
@@ -118,7 +113,7 @@ const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP',
 	          v-if="pending"
 	          class="p-6"
 	        >
-	          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div
               v-for="n in 6"
               :key="n"
@@ -159,10 +154,10 @@ const placeholderPairs = ['USD/MXN', 'USD/INR', 'GBP/PKR', 'EUR/NGN', 'USD/PHP',
 
 	        <div
 	          v-else
-	          class="p-4 sm:p-6"
+          class="p-6 sm:p-8"
 	        >
 	          <!-- Live data grid -->
-	          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div
               v-for="m in movers"
               :key="m.corridorId"
