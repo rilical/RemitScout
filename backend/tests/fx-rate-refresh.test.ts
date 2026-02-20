@@ -1,20 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Pool } from 'pg'
-import { QuoteRefreshStatus } from '../plane-b/src/repositories/types/quote-refresh-status'
+import { FxRateRefreshStatus } from '../plane-b/src/repositories/types/fx-rate-refresh-status'
 
 const mockReceiveMessages = vi.fn()
 const mockDeleteMessages = vi.fn()
 const mockSendToDLQ = vi.fn()
 const mockGetQueueDepth = vi.fn().mockResolvedValue(0)
-const mockGetProvider = vi.fn()
-const mockResolveSupport = vi.fn()
-const mockGetLatestCollectedAt = vi.fn()
-const mockGetTtl = vi.fn()
+const mockFetchRate = vi.fn()
 const mockRecordWorkerMetric = vi.fn()
 
-const mockQuoteRefreshRepo = {
+const mockFxRepo = {
   markRequestStatus: vi.fn(),
   markRequestFailed: vi.fn(),
+  markRequestClaimed: vi.fn(),
   claimPendingRequests: vi.fn(),
   claimRequestById: vi.fn(),
   getQueueDepth: vi.fn().mockResolvedValue(0),
@@ -22,6 +20,7 @@ const mockQuoteRefreshRepo = {
 
 vi.mock('../shared/db', () => ({
   createPool: vi.fn().mockReturnValue({ end: vi.fn().mockResolvedValue(undefined) }),
+  query: vi.fn().mockResolvedValue({ rows: [] }),
 }))
 
 vi.mock('../shared/sqs', () => ({
@@ -35,25 +34,14 @@ vi.mock('../shared/worker-metrics', () => ({
   recordWorkerMetric: (...args: any[]) => mockRecordWorkerMetric(...args),
 }))
 
-vi.mock('../plane-b/src/providers', () => ({
-  getProvider: (...args: any[]) => mockGetProvider(...args),
+vi.mock('../shared/oanda-rate-fetcher', () => ({
+  OandaRateFetcher: vi.fn().mockImplementation(() => ({
+    fetchRate: (...args: any[]) => mockFetchRate(...args),
+  })),
 }))
 
 vi.mock('../plane-b/src/repositories', () => ({
-  QuoteRefreshRepository: vi.fn().mockImplementation(() => mockQuoteRefreshRepo),
-  LatestQuoteRepository: vi.fn().mockImplementation(() => ({
-    getLatestCollectedAt: (...args: any[]) => mockGetLatestCollectedAt(...args),
-  })),
-}))
-
-vi.mock('../plane-b/src/services/provider-capability', () => ({
-  resolveProviderSupport: (...args: any[]) => mockResolveSupport(...args),
-}))
-
-vi.mock('../plane-b/src/services/volatility-service', () => ({
-  VolatilityService: vi.fn().mockImplementation(() => ({
-    getCacheTtlForCorridor: (...args: any[]) => mockGetTtl(...args),
-  })),
+  FxRateRefreshRepository: vi.fn().mockImplementation(() => mockFxRepo),
 }))
 
 const loadModule = async (
@@ -67,39 +55,32 @@ const loadModule = async (
     config: {
       db: { planeBUrl: 'postgres://localhost/test' },
       queues: {
-        quoteRefreshMode: queueMode,
-        quoteRefreshUrl: queueUrl,
-        quoteRefreshDlqUrl: 'https://dlq',
-        quoteRefreshDbFallback: false,
+        fxRateRefreshMode: queueMode,
+        fxRateRefreshUrl: queueUrl,
+        fxRateRefreshDlqUrl: 'https://dlq',
+        fxRateRefreshDbFallback: false,
       },
       queueStaleness: {
         enforcementEnabled: stalenessEnabled,
-        staleWindowQuoteRefreshMs: staleWindowMs,
+        staleWindowFxRateRefreshMs: staleWindowMs,
         resumeGraceMs: 0,
       },
-      planeB: {
-        b2cRefreshBatchLimit: 5,
-        b2cRefreshMaxRetries: 2,
-        b2cRefreshConcurrency: 1,
-      },
+      fxRates: { dbFreshnessHours: 1 },
     },
   }))
 
-  return await import('../plane-b/src/quote-refresh')
+  return await import('../plane-b/src/fx-rate-refresh')
 }
 
-describe('quote-refresh', () => {
+describe('fx-rate-refresh', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetLatestCollectedAt.mockResolvedValue(null)
-    mockGetTtl.mockResolvedValue({ ttlSeconds: 60 })
-    mockResolveSupport.mockResolvedValue({ supported: true, reason: null, source: 'cache' })
-    mockGetProvider.mockReturnValue({ run: vi.fn().mockResolvedValue(true) })
-    mockQuoteRefreshRepo.claimRequestById.mockResolvedValue(null)
+    mockFetchRate.mockResolvedValue({ success: true, data: { rate: 1.1 } })
+    mockFxRepo.claimRequestById.mockResolvedValue(null)
   })
 
   it('sends invalid SQS payloads to DLQ and deletes messages', async () => {
-    const { processQuoteRefreshQueue } = await loadModule('queue')
+    const { processFxRateRefreshQueue } = await loadModule('queue')
 
     mockReceiveMessages.mockResolvedValue({
       messages: [
@@ -113,14 +94,14 @@ describe('quote-refresh', () => {
     })
     mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-1'], failed: [] })
 
-    await processQuoteRefreshQueue({ pool: {} as Pool })
+    await processFxRateRefreshQueue({ pool: {} as Pool })
 
     expect(mockSendToDLQ).toHaveBeenCalledTimes(1)
     expect(mockDeleteMessages).toHaveBeenCalledWith('https://queue', ['rh-1'])
   })
 
   it('sends max-retry items to DLQ', async () => {
-    const { processQuoteRefreshQueue } = await loadModule('queue')
+    const { processFxRateRefreshQueue } = await loadModule('queue')
 
     mockReceiveMessages.mockResolvedValue({
       messages: [
@@ -129,34 +110,28 @@ describe('quote-refresh', () => {
           receiptHandle: 'rh-2',
           payload: {
             requestId: 'req-2',
-            providerId: 'wise',
-            corridorId: 'US-MX-USD-MXN',
-            amountBucket: 500,
-            payinMethod: 'bank',
-            payoutMethod: 'bank',
+            baseCurrency: 'USD',
+            quoteCurrency: 'EUR',
           },
-          attributes: { ApproximateReceiveCount: '3' },
+          attributes: { ApproximateReceiveCount: '4' },
         },
       ],
     })
     mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-2'], failed: [] })
 
-    await processQuoteRefreshQueue({ pool: {} as Pool })
+    await processFxRateRefreshQueue({ pool: {} as Pool })
 
     expect(mockSendToDLQ).toHaveBeenCalledTimes(1)
     expect(mockDeleteMessages).toHaveBeenCalledWith('https://queue', ['rh-2'])
   })
 
   it('drops stale envelope messages and marks requests as skipped', async () => {
-    const { processQuoteRefreshQueue } = await loadModule('queue', 'https://queue', true, 1000)
+    const { processFxRateRefreshQueue } = await loadModule('queue', 'https://queue', true, 1000)
 
-    mockQuoteRefreshRepo.claimRequestById.mockResolvedValue({
+    mockFxRepo.claimRequestById.mockResolvedValue({
       request_id: 'req-stale',
-      provider_id: 'wise',
-      corridor_id: 'US-MX-USD-MXN',
-      amount_bucket: 500,
-      payin_method: 'bank',
-      payout_method: 'bank',
+      base_currency: 'USD',
+      quote_currency: 'EUR',
       retry_count: 0,
     })
 
@@ -167,15 +142,12 @@ describe('quote-refresh', () => {
           receiptHandle: 'rh-stale',
           payload: {
             envelopeVersion: 1,
-            queueClass: 'quote-refresh',
+            queueClass: 'fx-rate-refresh',
             producedAtIso: new Date(Date.now() - 60_000).toISOString(),
             payload: {
               requestId: 'req-stale',
-              providerId: 'wise',
-              corridorId: 'US-MX-USD-MXN',
-              amountBucket: 500,
-              payinMethod: 'bank',
-              payoutMethod: 'bank',
+              baseCurrency: 'USD',
+              quoteCurrency: 'EUR',
             },
           },
           attributes: { ApproximateReceiveCount: '1', SentTimestamp: String(Date.now() - 60_000) },
@@ -184,11 +156,11 @@ describe('quote-refresh', () => {
     })
     mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-stale'], failed: [] })
 
-    await processQuoteRefreshQueue({ pool: {} as Pool })
+    await processFxRateRefreshQueue({ pool: {} as Pool })
 
-    expect(mockQuoteRefreshRepo.markRequestStatus).toHaveBeenCalledWith(
+    expect(mockFxRepo.markRequestStatus).toHaveBeenCalledWith(
       'req-stale',
-      QuoteRefreshStatus.SKIPPED,
+      FxRateRefreshStatus.SKIPPED,
       'stale_message',
     )
     expect(mockSendToDLQ).not.toHaveBeenCalled()
@@ -196,7 +168,7 @@ describe('quote-refresh', () => {
   })
 
   it('routes queue-class mismatches to DLQ', async () => {
-    const { processQuoteRefreshQueue } = await loadModule('queue', 'https://queue', true, 1000)
+    const { processFxRateRefreshQueue } = await loadModule('queue')
 
     mockReceiveMessages.mockResolvedValue({
       messages: [
@@ -205,15 +177,12 @@ describe('quote-refresh', () => {
           receiptHandle: 'rh-mismatch',
           payload: {
             envelopeVersion: 1,
-            queueClass: 'fx-rate-refresh',
+            queueClass: 'quote-refresh',
             producedAtIso: new Date().toISOString(),
             payload: {
               requestId: 'req-1',
-              providerId: 'wise',
-              corridorId: 'US-MX-USD-MXN',
-              amountBucket: 500,
-              payinMethod: 'bank',
-              payoutMethod: 'bank',
+              baseCurrency: 'USD',
+              quoteCurrency: 'EUR',
             },
           },
           attributes: { ApproximateReceiveCount: '1' },
@@ -222,7 +191,7 @@ describe('quote-refresh', () => {
     })
     mockDeleteMessages.mockResolvedValue({ succeeded: ['rh-mismatch'], failed: [] })
 
-    await processQuoteRefreshQueue({ pool: {} as Pool })
+    await processFxRateRefreshQueue({ pool: {} as Pool })
 
     expect(mockSendToDLQ).toHaveBeenCalledTimes(1)
     expect(mockSendToDLQ.mock.calls[0][3]).toMatchObject({ reason: 'queue_class_mismatch' })
@@ -230,26 +199,23 @@ describe('quote-refresh', () => {
   })
 
   it('processes claimed requests when queue is off', async () => {
-    const { processQuoteRefreshQueue } = await loadModule('off', '')
+    const { processFxRateRefreshQueue } = await loadModule('off', '')
 
-    mockQuoteRefreshRepo.claimPendingRequests.mockResolvedValue([
+    mockFxRepo.claimPendingRequests.mockResolvedValue([
       {
         request_id: 'req-3',
-        provider_id: 'wise',
-        corridor_id: 'US-MX-USD-MXN',
-        amount_bucket: 500,
-        payin_method: 'bank',
-        payout_method: 'bank',
+        base_currency: 'USD',
+        quote_currency: 'EUR',
         retry_count: 0,
       },
     ])
 
-    const processed = await processQuoteRefreshQueue({ pool: {} as Pool })
+    const processed = await processFxRateRefreshQueue({ pool: {} as Pool })
 
     expect(processed).toBe(1)
-    expect(mockQuoteRefreshRepo.markRequestStatus).toHaveBeenCalledWith(
+    expect(mockFxRepo.markRequestStatus).toHaveBeenCalledWith(
       'req-3',
-      QuoteRefreshStatus.COMPLETED,
+      FxRateRefreshStatus.COMPLETED,
       null,
     )
   })

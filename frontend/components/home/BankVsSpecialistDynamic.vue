@@ -312,29 +312,29 @@
     <div class="container">
       <!-- Section Header -->
       <div class="text-center mb-16">
-        <h3 class="text-h1 font-bold text-white mb-6">
-          Deconstructing the Spread.
+        <h3 class="text-h1 font-bold text-white mb-6 [text-wrap:balance]">
+          The cost is in the rate, not the fee.
         </h3>
-        <p class="text-h4 text-neutral-300 max-w-4xl mx-auto leading-relaxed">
-          The "Zero Fee" claim is an arbitrage strategy. Institutions generate revenue by offering exchange rates below the mid-market reference price. We visualize this gap.
+        <p class="text-h4 text-neutral-300 max-w-3xl mx-auto leading-relaxed [text-wrap:balance]">
+          "Zero fee" transfers are rarely free. Providers move their margin into the exchange rate — a gap called the spread. We measure it on every quote.
         </p>
       </div>
 
       <!-- 3 Horizontal Steps -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-        <!-- Step 1: Spread Delta -->
+        <!-- Step 1: The Rate Markup -->
         <div class="bg-surface rounded-3xl border-2 border-neutral-200 p-8 shadow-xl">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-h3 font-bold mb-6">
             1
           </div>
           <h4 class="text-h3 font-bold text-neutral-900 mb-4">
-            The Spread Delta
+            The Rate Markup
           </h4>
-          <p class="text-neutral-700 leading-relaxed mb-4">
-            Banks typically widen the FX Spread by <strong class="text-brand-700">3% to 5%</strong> above the mid-market rate. This is an invisible tax on your capital.
+          <p class="text-neutral-700 leading-relaxed mb-4 [text-wrap:pretty]">
+            Banks advertise low or zero fees, but earn by quoting an exchange rate below the true mid-market reference — typically <strong class="text-brand-700">3–5% below</strong>. That gap is the real cost of your transfer.
           </p>
-          <p class="text-neutral-700 leading-relaxed mb-6 text-body-sm">
-            The mid-market rate is the reference price institutions use between themselves. The spread delta is the margin captured by the intermediary.
+          <p class="text-neutral-600 leading-relaxed mb-6 text-body-sm [text-wrap:pretty]">
+            The mid-market rate is the wholesale price institutions transact at among themselves. Most consumers never see it. We show you exactly how far your quoted rate sits from that benchmark.
           </p>
           <div
             v-if="comparison"
@@ -361,35 +361,35 @@
                 class="pt-2 border-t border-primary-200"
               >
                 <div class="flex justify-between text-body-sm">
-                  <span class="text-neutral-600">Spread delta impact:</span>
+                  <span class="text-neutral-600">Rate markup cost:</span>
                   <span class="font-bold text-brand-700">{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }}</span>
                 </div>
                 <p class="text-body-sm text-neutral-500 mt-1">
-                  Even with a competitive fee, FX Spread reduces Net Delivered Value
+                  Hidden in the rate — not listed as a fee
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Step 2: Comparative Indexing -->
+        <!-- Step 2: Provider vs Benchmark -->
         <div class="bg-surface rounded-3xl border-2 border-neutral-200 p-8 shadow-xl">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-h3 font-bold mb-6">
             2
           </div>
           <h4 class="text-h3 font-bold text-neutral-900 mb-4">
-            Comparative Indexing
+            Provider vs Benchmark
           </h4>
-          <p class="text-neutral-700 leading-relaxed mb-6">
-            We overlay provider rates against the live mid-market benchmark. This reveals the exact margin being captured by the intermediary.
+          <p class="text-neutral-700 leading-relaxed mb-6 [text-wrap:pretty]">
+            We fetch live quotes from every provider and benchmark them against the OANDA mid-market rate. The gap between what a provider quotes and the true rate is the total cost passed to your recipient.
           </p>
           <div
             v-if="comparison"
             class="space-y-4"
           >
             <div class="bg-primary-50 border border-primary-200 rounded-xl p-4">
-              <p class="text-body-sm text-neutral-600 mb-2">
-                Lower Effective Rate:
+              <p class="text-body-sm text-neutral-500 mb-2">
+                Lower effective rate
               </p>
               <p class="text-body-sm font-bold text-neutral-900 mb-1">
                 {{ comparison.bank.name }}
@@ -398,12 +398,12 @@
                 {{ comparison.bank.fxRate.toFixed(2) }} {{ comparison.corridor.recvCurrency }}
               </p>
               <p class="text-body-sm text-neutral-600 mt-2">
-                Net Delivered Value: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
+                Recipient gets: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </p>
             </div>
             <div class="bg-brand-600 rounded-xl p-4 text-white">
-              <p class="text-body-sm text-primary-100 mb-2">
-                Higher Effective Rate:
+              <p class="text-body-sm text-white/60 mb-2">
+                Higher effective rate
               </p>
               <p class="text-body-sm font-bold mb-1">
                 {{ comparison.top.name }}
@@ -411,53 +411,53 @@
               <p class="text-body-sm">
                 {{ comparison.top.fxRate.toFixed(2) }} {{ comparison.corridor.recvCurrency }}
               </p>
-              <p class="text-body-sm text-primary-100 mt-2">
-                Net Delivered Value: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
+              <p class="text-body-sm text-white/70 mt-2">
+                Recipient gets: {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.top.recipientGets).toLocaleString() }}
               </p>
               <p
                 v-if="comparison.savings && comparison.savings.recipientGetsDifference > 0"
-                class="text-body-sm font-bold mt-2"
+                class="text-body-sm font-bold mt-2 pt-2 border-t border-white/20"
               >
-                +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer
+                +{{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} more delivered per transfer
               </p>
             </div>
           </div>
         </div>
 
-        <!-- Step 3: Yield Optimization -->
+        <!-- Step 3: The Compounding Effect -->
         <div class="bg-surface rounded-3xl border-2 border-neutral-200 p-8 shadow-xl flex flex-col">
           <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-600 text-white text-h3 font-bold mb-6">
             3
           </div>
           <h4 class="text-h3 font-bold text-neutral-900 mb-4">
-            Yield Optimization
+            The Compounding Effect
           </h4>
-          <p class="text-neutral-700 leading-relaxed mb-6">
-            For recurring transfers, spread optimization compounds. A 2% tighter spread on monthly volume materially improves annual retained capital and capital preservation.
+          <p class="text-neutral-700 leading-relaxed mb-6 [text-wrap:pretty]">
+            For regular senders, provider selection compounds. Saving 1–2% on every monthly transfer adds up meaningfully over a year — without changing your routine at all.
           </p>
           <div
             v-if="comparison?.savings"
             class="bg-brand-600 rounded-xl p-4 text-white mt-auto"
           >
-            <p class="text-body-sm text-primary-100 mb-2">
-              Annual retained capital:
+            <p class="text-body-sm text-white/60 mb-2">
+              Annual difference by switching
             </p>
             <p class="text-body-lg font-bold mb-1">
               {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference * 12).toLocaleString() }}
             </p>
-            <p class="text-body-sm text-primary-100 mb-2">
-              ≈ {{ formatMoney(Math.round((comparison.savings.recipientGetsDifference * 12) / comparison.midRate), comparison.corridor.sendCurrency) }} USD per year
+            <p class="text-body-sm text-white/70 mb-2">
+              ≈ {{ formatMoney(Math.round((comparison.savings.recipientGetsDifference * 12) / comparison.midRate), comparison.corridor.sendCurrency) }} recovered per year
             </p>
-            <p class="text-body-sm text-primary-100 mt-2 pt-2 border-t border-primary-500">
-              {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} Net Delivered Value delta per transfer × 12 months
+            <p class="text-body-sm text-white/50 mt-2 pt-2 border-t border-white/20">
+              {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.savings.recipientGetsDifference).toLocaleString() }} per transfer × 12 months
             </p>
           </div>
           <div
             v-else
-            class="bg-primary-50 border border-primary-200 rounded-xl p-4 mt-auto"
+            class="bg-neutral-50 border border-neutral-200 rounded-xl p-4 mt-auto"
           >
-            <p class="text-body-sm text-neutral-700 text-center">
-              Compare quotes to see annual retained capital
+            <p class="text-body-sm text-neutral-500 text-center">
+              Compare quotes to see the annual difference
             </p>
           </div>
         </div>
@@ -483,13 +483,13 @@
           </div>
           <div class="flex-1 text-center lg:text-left">
             <h4 class="text-h2 font-bold text-neutral-900 mb-4">
-              The Bottom Line
+              The bottom line
             </h4>
-            <p class="text-neutral-700 text-body-lg leading-relaxed mb-4">
-              Incumbents benefit from opaque FX Spread when transfers are executed without comparison. A disciplined quote audit surfaces tighter spreads and higher Net Delivered Value across corridors.
+            <p class="text-neutral-700 text-body-lg leading-relaxed mb-3 [text-wrap:pretty]">
+              When you send money without comparing, you're paying the spread — and never seeing it. Remit-Scout surfaces the true cost of every quote so your decision is based on what your recipient actually receives.
             </p>
-            <p class="text-neutral-600 text-body leading-relaxed">
-              Remit-Scout publishes real-time quotes from licensed providers so execution decisions are based on measurable cost and liquidity.
+            <p class="text-neutral-500 text-body leading-relaxed [text-wrap:pretty]">
+              Every quote is benchmarked against the OANDA mid-market rate in real time.
             </p>
           </div>
         </div>

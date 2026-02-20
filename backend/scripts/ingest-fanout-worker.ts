@@ -18,10 +18,12 @@ import {
   createVisibilityTimeoutExtender,
   drainAndStop,
   sendJsonMessage,
+  sendToDLQ,
   getQueueStats,
   type SqsMessage,
   type VisibilityTimeoutExtender,
 } from '../shared/sqs'
+import type { B2bSweepTaskKey } from '../plane-b/src/repositories/interfaces/b2b-sweep-repository.interface'
 import { providerRegistry } from '../plane-b/src/providers'
 import { B2bSweepRepository, ProviderCapabilityRepository } from '../plane-b/src/repositories'
 import { resolveProviderSupport } from '../plane-b/src/services/provider-capability'
@@ -34,6 +36,8 @@ import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
 import { createShutdownHandler } from '../shared/shutdown'
 import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
 import { emitOpsEvent } from '../shared/ops-events'
+import { isStale, resolveMessageAgeMs, unwrapEnvelopeOrLegacy } from '../shared/queue-staleness'
+import type { QueueClass } from '../shared/queue-envelope'
 
 type IngestFanoutMessage = {
   providerId: string
@@ -82,6 +86,8 @@ type IngestFanoutPayload = IngestFanoutMessage | IngestFanoutCorridorMessage
 const logger = createLogger('script.ingest-fanout-worker')
 const queueUrl = config.queues.ingestFanout.url
 const queueMode = config.queues.ingestFanout.mode
+const queueTier = (process.env.PLANE_B_INGEST_FANOUT_QUEUE_TIER || '').toLowerCase()
+const expectedQueueClass: QueueClass = queueTier === 'tier2' ? 'ingest-fanout-t2' : 'ingest-fanout-t1'
 
 initTracing('ingest-fanout-worker')
 initErrorTracking('ingest-fanout-worker')
@@ -89,6 +95,17 @@ initErrorTracking('ingest-fanout-worker')
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getQueueName = (url: string | null): string => {
+  if (!url) return 'ingest-fanout'
+  const parts = url.split('/').filter(Boolean)
+  return parts[parts.length - 1] || 'ingest-fanout'
+}
+
+const parseSentTimestampMs = (value: string | undefined): number | null => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const batchSize = toNumber(process.env.INGEST_FANOUT_BATCH_SIZE, 5)
@@ -100,6 +117,12 @@ const providerConcurrency = Math.max(
   toNumber(process.env.INGEST_FANOUT_PROVIDER_CONCURRENCY, 3),
 )
 const maxAttempts = Math.max(1, toNumber(process.env.INGEST_FANOUT_MAX_ATTEMPTS, 3))
+const stalenessEnabled = config.queueStaleness.enforcementEnabled
+const staleWindowMs = expectedQueueClass === 'ingest-fanout-t2'
+  ? config.queueStaleness.staleWindowIngestFanoutT2Ms
+  : config.queueStaleness.staleWindowIngestFanoutT1Ms
+const staleGraceMs = config.queueStaleness.resumeGraceMs
+const queueName = getQueueName(queueUrl)
 const loopJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_LOOP_JITTER_MS)
 const messageJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_MESSAGE_JITTER_MS, 500)
 const providerJitterMs = resolveJitterMs(process.env.INGEST_FANOUT_PROVIDER_JITTER_MS, 200)
@@ -284,6 +307,60 @@ const buildTaskKeys = (payload: IngestFanoutMessage) => {
     }
   }
   return keys
+}
+
+const buildTaskKeysBySweepRun = (
+  payload: IngestFanoutPayload,
+): Map<string, B2bSweepTaskKey[]> => {
+  const byRun = new Map<string, B2bSweepTaskKey[]>()
+  const push = (runId: string | undefined, key: B2bSweepTaskKey) => {
+    if (!runId) return
+    const bucket = byRun.get(runId)
+    if (bucket) {
+      bucket.push(key)
+    } else {
+      byRun.set(runId, [key])
+    }
+  }
+
+  if (isCorridorPayload(payload)) {
+    for (const task of payload.providers) {
+      const runId = task.sweepRunId ?? payload.sweepRunId
+      for (const amountBucket of task.amountBuckets) {
+        push(runId, {
+          providerId: task.providerId,
+          corridorId: payload.corridorId,
+          amountBucket,
+          payinMethod: task.payinMethod,
+          payoutMethod: task.payoutMethod,
+        })
+      }
+    }
+    return byRun
+  }
+
+  for (const key of buildTaskKeys(payload)) {
+    push(payload.sweepRunId, key)
+  }
+  return byRun
+}
+
+const markSweepTasksStale = async (
+  sweepRepo: B2bSweepRepository,
+  payload: IngestFanoutPayload,
+  context: Record<string, unknown>,
+) => {
+  const byRun = buildTaskKeysBySweepRun(payload)
+  for (const [runId, keys] of byRun.entries()) {
+    await runSweepUpdate(runId, context, async () => {
+      await sweepRepo.markTasksFinishedBatch(runId, keys, 'failed', 'stale_message')
+      const summary = await sweepRepo.getRunSummary(runId)
+      if (summary.remaining === 0) {
+        const status = summary.failed > 0 ? 'failed' : 'completed'
+        await sweepRepo.updateSweepRunStatus(runId, status, new Date())
+      }
+    })
+  }
 }
 
 const resolveCorridorMethods = async (
@@ -831,7 +908,7 @@ const processMessagesWithConcurrency = async (
   capabilityRepo: ProviderCapabilityRepository,
   capabilityCache: Map<string, MethodSets | null>,
   sweepRepo: B2bSweepRepository,
-  messages: Array<SqsMessage<IngestFanoutPayload>>,
+  messages: Array<SqsMessage<unknown>>,
 ): Promise<string[]> => {
   const deleteHandles: string[] = []
   let index = 0
@@ -842,9 +919,72 @@ const processMessagesWithConcurrency = async (
       if (!current) return
       index += 1
 
-      const payload = current.payload
+      const parsedMessage = unwrapEnvelopeOrLegacy<IngestFanoutPayload>(
+        current.payload,
+        expectedQueueClass,
+      )
+      if (!parsedMessage.ok) {
+        const reason = parsedMessage.reason === 'queue_class_mismatch'
+          ? 'queue_class_mismatch'
+          : 'envelope_parse_error'
+        logger.warn('fanout_item_invalid_envelope', {
+          message_id: current.messageId,
+          reason,
+          detail: parsedMessage.message,
+        })
+        await sendToDLQ(queueUrl!, current, new Error(parsedMessage.message), {
+          reason,
+          queueClass: expectedQueueClass,
+        })
+        await recordWorkerMetric('ingest-fanout-worker', 'envelope_parse_error', 1, {
+          queue_class: expectedQueueClass,
+          queue_name: queueName,
+          reason,
+        })
+        deleteHandles.push(current.receiptHandle)
+        continue
+      }
+
+      const payload = parsedMessage.payload
       if (!validatePayload(payload)) {
         logger.warn('fanout_item_invalid', { message_id: current.messageId })
+        await sendToDLQ(queueUrl!, current, new Error('invalid_ingest_fanout_payload'), {
+          reason: 'envelope_parse_error',
+          queueClass: expectedQueueClass,
+        })
+        await recordWorkerMetric('ingest-fanout-worker', 'envelope_parse_error', 1, {
+          queue_class: expectedQueueClass,
+          queue_name: queueName,
+          reason: 'invalid_payload',
+        })
+        deleteHandles.push(current.receiptHandle)
+        continue
+      }
+
+      const age = resolveMessageAgeMs({
+        envelopeProducedAtMs: parsedMessage.producedAtMs,
+        legacyTimestampIso: payload.requestedAt,
+        sentTimestampMs: parseSentTimestampMs(current.attributes.SentTimestamp),
+      })
+      if (stalenessEnabled && isStale(age.ageMs, staleWindowMs, staleGraceMs)) {
+        await markSweepTasksStale(sweepRepo, payload, {
+          message_id: current.messageId,
+          age_ms: age.ageMs,
+          age_source: age.source,
+          stale_window_ms: staleWindowMs,
+        })
+        await recordWorkerMetric('ingest-fanout-worker', 'stale_dropped', 1, {
+          queue_class: expectedQueueClass,
+          queue_name: queueName,
+          reason: age.source,
+        })
+        logger.info('fanout_item_stale_dropped', {
+          message_id: current.messageId,
+          sweep_run_id: payload.sweepRunId ?? null,
+          age_ms: age.ageMs,
+          age_source: age.source,
+          stale_window_ms: staleWindowMs,
+        })
         deleteHandles.push(current.receiptHandle)
         continue
       }
@@ -876,10 +1016,14 @@ const runWorker = async () => {
   logger.info('fanout_worker_boot', {
     queue_mode: queueMode,
     queue_url: queueUrl ? 'set' : 'missing',
+    queue_class: expectedQueueClass,
     batch_size: batchSize,
     concurrency: maxConcurrency,
     provider_concurrency: providerConcurrency,
     max_attempts: maxAttempts,
+    staleness_enabled: stalenessEnabled,
+    stale_window_ms: staleWindowMs,
+    stale_grace_ms: staleGraceMs,
   })
   if (queueMode !== 'queue') {
     logger.warn('fanout_worker_disabled', { mode: queueMode })
@@ -919,6 +1063,9 @@ const runWorker = async () => {
       concurrency: maxConcurrency,
       provider_concurrency: providerConcurrency,
       backpressure_threshold: backpressureThreshold,
+      staleness_enabled: stalenessEnabled,
+      stale_window_ms: staleWindowMs,
+      stale_grace_ms: staleGraceMs,
     })
     while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'ingest_fanout_loop', loopJitterMs)
@@ -930,7 +1077,7 @@ const runWorker = async () => {
           error: error instanceof Error ? error.message : String(error),
         })
       }
-      const { messages, error: receiveError } = await receiveJsonMessages<IngestFanoutPayload>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<unknown>(queueUrl, batchSize)
       if (receiveError) {
         logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
       }

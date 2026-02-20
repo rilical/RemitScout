@@ -21,6 +21,7 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { getRedisClient } from '../shared/redis'
 import { sendJsonMessage } from '../shared/sqs'
+import { wrapEnvelope } from '../shared/queue-staleness'
 import { isMacroCorridor } from '../shared/macro-corridors'
 import { parseCorridorId } from '../shared/corridor'
 import { FIXED_EXCHANGE_RATES } from '../shared/currency-limits'
@@ -351,14 +352,21 @@ const enqueueRefreshRequests = async (
 
       const requestId = result.rows[0]?.request_id
       if (requestId && queueUrl) {
-        await sendJsonMessage(queueUrl, {
-          requestId,
-          providerId,
-          corridorId,
-          amountBucket,
-          payinMethod,
-          payoutMethod,
-        })
+        await sendJsonMessage(
+          queueUrl,
+          wrapEnvelope(
+            'quote-refresh',
+            {
+              requestId,
+              providerId,
+              corridorId,
+              amountBucket,
+              payinMethod,
+              payoutMethod,
+            },
+            { correlationId: requestId },
+          ),
+        )
         enqueued++
       }
     } catch (error) {

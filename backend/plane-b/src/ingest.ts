@@ -7,6 +7,7 @@ import { initErrorTracking } from '../../shared/error-tracker'
 import { createShutdownHandler } from '../../shared/shutdown'
 import { initTracing, startSpan, getCurrentSpan } from '../../shared/tracing'
 import { getQueueAgeSeconds, getQueueStats, sendBatchJsonMessages, sendJsonMessage } from '../../shared/sqs'
+import { wrapEnvelope } from '../../shared/queue-staleness'
 import { partitionCorridors } from '../../shared/sharding'
 import { parseCorridorId } from '../../shared/corridor'
 import { getCountryByCode } from '../../shared/countries-currencies'
@@ -212,6 +213,10 @@ const resolveIngestFanoutQueueUrl = (priorityTier?: string): string | null => {
   return ingestFanoutQueueUrl || null
 }
 
+const resolveIngestQueueClassFromPriorityTier = (priorityTier?: string) => {
+  return priorityTier === 'tier_2' ? 'ingest-fanout-t2' as const : 'ingest-fanout-t1' as const
+}
+
 const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolean> => {
   const queueUrl = resolveIngestFanoutQueueUrl(
     isCorridorPayload(payload)
@@ -230,7 +235,23 @@ const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolea
     : payload.collectorType
 
   try {
-    await sendJsonMessage(queueUrl, payload)
+    await sendJsonMessage(
+      queueUrl,
+      wrapEnvelope(
+        resolveIngestQueueClassFromPriorityTier(
+          isCorridorPayload(payload)
+            ? payload.providers[0]?.priorityTier
+            : payload.priorityTier,
+        ),
+        payload,
+        {
+          runId: payload.sweepRunId,
+          correlationId: isCorridorPayload(payload)
+            ? payload.corridorId
+            : payload.corridors[0],
+        },
+      ),
+    )
     return true
   } catch (error) {
     logger.warn('ingest_fanout_enqueue_failed', {
@@ -1653,8 +1674,8 @@ export const runIngestion = async (options: IngestOptions = {}) => {
         const tasks = Array.from(corridorFanoutTasks.values())
         if (tasks.length > 0) {
           const now = new Date().toISOString()
-          const messagesByQueue = new Map<string, Array<{ id: string; payload: IngestFanoutCorridorMessage }>>()
-          const pushMessage = (queueUrl: string, message: { id: string; payload: IngestFanoutCorridorMessage }) => {
+          const messagesByQueue = new Map<string, Array<{ id: string; payload: unknown; traceId?: string; providerIds: string[] }>>()
+          const pushMessage = (queueUrl: string, message: { id: string; payload: unknown; traceId?: string; providerIds: string[] }) => {
             const bucket = messagesByQueue.get(queueUrl)
             if (bucket) {
               bucket.push(message)
@@ -1693,22 +1714,32 @@ export const runIngestion = async (options: IngestOptions = {}) => {
               }
               for (let batchIndex = 0; batchIndex < batches.length; batchIndex += 1) {
                 const batchProviders = batches[batchIndex]
+                const rawPayload = {
+                  version: 'corridor_v1' as const,
+                  corridorId: task.corridorId,
+                  providers: batchProviders,
+                  requestedAt: now,
+                  traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
+                }
                 pushMessage(queueUrl, {
                   id: `${index}-${tier}-${batchIndex}`,
-                  payload: {
-                    version: 'corridor_v1',
-                    corridorId: task.corridorId,
-                    providers: batchProviders,
-                    requestedAt: now,
-                    traceId: getCurrentSpan()?.spanContext().traceId ?? randomUUID(),
-                  },
+                  payload: wrapEnvelope(
+                    resolveIngestQueueClassFromPriorityTier(tier),
+                    rawPayload,
+                    {
+                      runId: rawPayload.providers[0]?.sweepRunId,
+                      correlationId: task.corridorId,
+                    },
+                  ),
+                  traceId: rawPayload.traceId,
+                  providerIds: batchProviders.map((provider) => provider.providerId),
                 })
               }
             }
           }
           const traceIdSample = Array.from(messagesByQueue.values())
             .flat()
-            .map((message) => message.payload.traceId)
+            .map((message) => message.traceId)
             .filter((value): value is string => Boolean(value))
             .slice(0, 3)
           const providerEnqueueFailures = new Map<string, number>()
@@ -1722,12 +1753,12 @@ export const runIngestion = async (options: IngestOptions = {}) => {
               for (const result of results) {
                 if (result.success) continue
                 failedMessages += 1
-                const failedPayload = batch.find((entry) => entry.id === result.id)?.payload
+                const failedPayload = batch.find((entry) => entry.id === result.id)
                 if (!failedPayload) continue
-                for (const provider of failedPayload.providers) {
+                for (const providerId of failedPayload.providerIds) {
                   providerEnqueueFailures.set(
-                    provider.providerId,
-                    (providerEnqueueFailures.get(provider.providerId) ?? 0) + 1,
+                    providerId,
+                    (providerEnqueueFailures.get(providerId) ?? 0) + 1,
                   )
                 }
               }

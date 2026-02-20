@@ -48,6 +48,8 @@ This document lists every context key consumed by `infrastructure/cdk/lib/remit-
 | `oandaSecretArn` | `string` | `(unset)` | `all` |
 | `oandaSsmName` | `string` | `(unset)` | `all` |
 | `opsPauseRuleAllowlist` | `string[]` | `(unset)` | `all` |
+| `purgeQueuesOnResume` | `boolean` | `dev/staging:true, prod:false` | `all` |
+| `purgeQueueAllowlist` | `string[]` | `ingest-fanout,ingest-fanout-tier2,gold-live,quote-refresh,fx-rate-refresh` | `all` |
 | `otelLambdaLayerArn` | `string` | `(unset)` | `all` |
 | `pagerDutyIntegrationKey` | `string` | `(unset)` | `all` |
 | `pipelineConnectionArn` | `string` | `(unset)` | `all` |

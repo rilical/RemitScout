@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
@@ -69,7 +69,7 @@
             <div class="space-y-4 w-full">
               <!-- Delivered Value - 40% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-surface overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <div class="bg-gradient-to-r from-success-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="bg-success-50 p-4 flex items-center justify-center flex-shrink-0 w-20">
                   <div class="text-h1">
                     💰
                   </div>
@@ -94,7 +94,7 @@
 
               <!-- Reliability & Success - 20% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-surface overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <div class="bg-gradient-to-r from-primary-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="bg-brand-50 p-4 flex items-center justify-center flex-shrink-0 w-20">
                   <div class="text-h1">
                     🛡️
                   </div>
@@ -119,7 +119,7 @@
 
               <!-- Friction & Speed - 15% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-surface overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <div class="bg-gradient-to-r from-accent-600 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="bg-brand-50 p-4 flex items-center justify-center flex-shrink-0 w-20">
                   <div class="text-h1">
                     ⚡
                   </div>
@@ -144,7 +144,7 @@
 
               <!-- Support & Refunds - 15% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-surface overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <div class="bg-gradient-to-r from-warning-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="bg-warning-50 p-4 flex items-center justify-center flex-shrink-0 w-20">
                   <div class="text-h1">
                     🎯
                   </div>
@@ -169,7 +169,7 @@
 
               <!-- Trust & Safety - 10% -->
               <div class="flex w-full border-2 border-neutral-200 rounded-2xl bg-surface overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <div class="bg-gradient-to-r from-neutral-50 to-white p-4 flex items-center justify-center flex-shrink-0 w-20">
+                <div class="bg-neutral-50 p-4 flex items-center justify-center flex-shrink-0 w-20">
                   <div class="text-h1">
                     🔒
                   </div>
@@ -358,44 +358,62 @@
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
-        <h2 class="text-h2 font-bold text-neutral-900 mb-8 text-center">
-          Related Resources
+        <h2 class="text-h2 font-bold text-white mb-8 text-center">
+          Related Guides
         </h2>
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/methodology"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-body-lg font-bold text-white mb-3">
               Full Methodology
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               Deep dive into how we compare providers and calculate scores.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
           <NuxtLink
-            to="/providers"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            to="/learn/providers"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-body-lg font-bold text-white mb-3">
               Provider Reviews
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               See Remit-Scores for all providers and read detailed reviews.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
           <NuxtLink
             to="/legal/how-we-make-money"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-body-lg font-bold text-white mb-3">
               How We Make Money
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               Learn how we maintain independence and why rankings aren't for sale.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </NuxtLink>
         </div>
       </div>
@@ -406,12 +424,11 @@
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
-  { name: 'Remit-Score', path: '/learn/how-remit-score-works' },
+  { name: 'Guides', path: '/learn' },
+  { name: 'How Remit-Score Works', path: '/learn/how-remit-score-works' },
 ]
 
 const runtimeConfig = useRuntimeConfig()

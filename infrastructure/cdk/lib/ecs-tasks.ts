@@ -558,6 +558,21 @@ export const createEcsTasks = (
   if (opsAlertsMode) {
     sharedEnv.PLANE_B_OPS_ALERT_QUEUE_MODE = opsAlertsMode
   }
+  const queueStalenessEnvKeys = [
+    'QUEUE_STALENESS_ENFORCEMENT_ENABLED',
+    'STALE_WINDOW_GOLD_LIVE_MS',
+    'STALE_WINDOW_FX_RATE_REFRESH_MS',
+    'STALE_WINDOW_INGEST_FANOUT_T1_MS',
+    'STALE_WINDOW_INGEST_FANOUT_T2_MS',
+    'STALE_WINDOW_QUOTE_REFRESH_MS',
+    'STALE_RESUME_GRACE_MS',
+  ] as const
+  for (const key of queueStalenessEnvKeys) {
+    const value = process.env[key]
+    if (value !== undefined && value !== '') {
+      sharedEnv[key] = value
+    }
+  }
   if (bronzeBucketName) {
     sharedEnv.BRONZE_S3_BUCKET = bronzeBucketName
   }

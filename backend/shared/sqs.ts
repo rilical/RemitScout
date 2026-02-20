@@ -350,6 +350,11 @@ export const sendToDLQ = async <T>(
   queueUrl: string,
   originalMessage: SqsMessage<T>,
   error: Error,
+  options?: {
+    reason?: string
+    queueClass?: string
+    ageMs?: number | null
+  },
 ): Promise<void> => {
   try {
     const dlqUrl = await getDLQUrl(queueUrl)
@@ -368,6 +373,9 @@ export const sendToDLQ = async <T>(
       originalQueueUrl: queueUrl,
       originalMessageId: originalMessage.messageId,
       receiptHandle: originalMessage.receiptHandle,
+      reason: options?.reason || null,
+      queueClass: options?.queueClass || null,
+      ageMs: Number.isFinite(options?.ageMs as number) ? options?.ageMs : null,
       error: {
         message: error.message,
         name: error.name,

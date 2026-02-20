@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
@@ -11,14 +11,14 @@
         />
 
         <div class="mt-12 max-w-4xl">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-surface/10 backdrop-blur-sm px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
             Money Transfer Basics
           </div>
           <h1 class="text-hero font-bold tracking-tight text-white mb-6">
-            Payment Method <span class="text-brand-400">Playbook</span>
+            Payment Method <span class="text-brand-600">Playbook</span>
           </h1>
           <p class="text-h4 text-neutral-300 font-medium mb-6 leading-relaxed">
-            Bank Transfer vs Card vs Cash Pickup vs Mobile Wallet: Which is <span class="font-bold text-brand-400">cheapest and safest</span>?
+            Bank Transfer vs Card vs Cash Pickup vs Mobile Wallet: Which is <span class="font-bold text-brand-600">cheapest and safest</span>?
           </p>
           <p class="text-body-lg text-neutral-300 leading-relaxed mb-6">
             Your choice of payment method and payout method dramatically affects cost, speed, and safety. Here's how to choose the right option for your needs.
@@ -51,7 +51,7 @@
                   </p>
                 </div>
 
-                <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
+                <div class="flex-1 rounded-2xl bg-neutral-900 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
                   <h3 class="font-bold text-h3 mb-4">
                     The Bottom Line
                   </h3>
@@ -65,7 +65,7 @@
               </div>
 
               <!-- Right Column -->
-              <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-10 shadow-xl">
+              <div class="rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-10 shadow-xl">
                 <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                   Quick Takeaways
                 </h3>
@@ -169,7 +169,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="bg-surface rounded-lg p-4 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-4 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-2">
                       Cons:
                     </p>
@@ -230,7 +230,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="bg-surface rounded-lg p-4 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-4 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-2">
                       Cons:
                     </p>
@@ -306,7 +306,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="bg-surface rounded-lg p-4 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-4 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-2">
                       Cons:
                     </p>
@@ -364,7 +364,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="bg-surface rounded-lg p-4 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-4 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-2">
                       Cons:
                     </p>
@@ -422,7 +422,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="bg-surface rounded-lg p-4 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-4 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-2">
                       Cons:
                     </p>
@@ -452,7 +452,7 @@
           </div>
 
           <!-- Cost Comparison -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-12 shadow-xl">
+          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-12 shadow-xl">
             <h2 class="text-h3 font-bold text-neutral-900 mb-4">
               <span class="text-brand-600">Cost Comparison</span>: Real Examples
             </h2>
@@ -530,7 +530,7 @@
                   Cash Pickup
                 </h3>
                 <div class="space-y-3">
-                  <div class="bg-danger-600 rounded-lg p-3 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-3 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-1">
                       Critical: Name Matching
                     </p>
@@ -560,7 +560,7 @@
                   Mobile Wallet
                 </h3>
                 <div class="space-y-3">
-                  <div class="bg-danger-600 rounded-lg p-3 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-3 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-1">
                       Check Limits First
                     </p>
@@ -590,7 +590,7 @@
                   Bank Transfer
                 </h3>
                 <div class="space-y-3">
-                  <div class="bg-danger-600 rounded-lg p-3 border border-danger-600">
+                  <div class="bg-danger-50 rounded-lg p-3 border border-danger-200">
                     <p class="text-body-sm font-semibold text-danger-600 mb-1">
                       Verify Account Details
                     </p>
@@ -626,56 +626,56 @@
               These mistakes cost people time and money. Avoid them by understanding how payment and payout methods work.
             </p>
             <div class="grid md:grid-cols-2 gap-6">
-              <div class="rounded-xl border-2 border-danger-600 bg-danger-600 p-6 shadow-sm">
+              <div class="rounded-xl border-2 border-danger-200 bg-danger-50 p-6 shadow-sm">
                 <h3 class="text-body-lg font-bold text-neutral-900 mb-3">
                   Choosing Card Payment for Large Amounts
                 </h3>
                 <p class="text-body-sm text-neutral-700 leading-relaxed mb-3">
                   Card fees are percentage-based. On a $2,000 transfer, a 3% card fee costs $60 vs. $3 for a bank transfer. That's a $57 difference for the same transfer.
                 </p>
-                <div class="bg-surface rounded-lg p-3 border border-danger-600">
+                <div class="bg-brand-50 rounded-lg p-3 border border-brand-200">
                   <p class="text-body-sm text-neutral-600">
                     <strong>Solution:</strong> Use bank funding for amounts over $500. The 1-2 day delay is worth the savings.
                   </p>
                 </div>
               </div>
 
-              <div class="rounded-xl border-2 border-danger-600 bg-danger-600 p-6 shadow-sm">
+              <div class="rounded-xl border-2 border-danger-200 bg-danger-50 p-6 shadow-sm">
                 <h3 class="text-body-lg font-bold text-neutral-900 mb-3">
                   Cash Pickup Name Mismatch
                 </h3>
                 <p class="text-body-sm text-neutral-700 leading-relaxed mb-3">
                   If the name doesn't match the recipient's ID exactly, they can't pick up the money. You'll need to cancel and resend with correct name, losing time and possibly paying fees twice.
                 </p>
-                <div class="bg-surface rounded-lg p-3 border border-danger-600">
+                <div class="bg-brand-50 rounded-lg p-3 border border-brand-200">
                   <p class="text-body-sm text-neutral-600">
                     <strong>Solution:</strong> Verify exact name spelling from recipient's ID before sending. Include middle names if on ID.
                   </p>
                 </div>
               </div>
 
-              <div class="rounded-xl border-2 border-danger-600 bg-danger-600 p-6 shadow-sm">
+              <div class="rounded-xl border-2 border-danger-200 bg-danger-50 p-6 shadow-sm">
                 <h3 class="text-body-lg font-bold text-neutral-900 mb-3">
                   Mobile Wallet Daily Limits
                 </h3>
                 <p class="text-body-sm text-neutral-700 leading-relaxed mb-3">
                   Some wallets limit how much can be received per day ($500-2,000). Sending $3,000 might require the recipient to wait 2-3 days to receive it all, or they may need to upgrade their account.
                 </p>
-                <div class="bg-surface rounded-lg p-3 border border-danger-600">
+                <div class="bg-brand-50 rounded-lg p-3 border border-brand-200">
                   <p class="text-body-sm text-neutral-600">
                     <strong>Solution:</strong> Check wallet limits before sending large amounts. Consider bank transfer or cash pickup for large sums.
                   </p>
                 </div>
               </div>
 
-              <div class="rounded-xl border-2 border-danger-600 bg-danger-600 p-6 shadow-sm">
+              <div class="rounded-xl border-2 border-danger-200 bg-danger-50 p-6 shadow-sm">
                 <h3 class="text-body-lg font-bold text-neutral-900 mb-3">
                   Assuming Bank Transfer is Always Cheapest
                 </h3>
                 <p class="text-body-sm text-neutral-700 leading-relaxed mb-3">
                   While bank transfers usually have the lowest fees, some providers charge higher FX markup on bank transfers. Always compare "recipient gets" not just fees.
                 </p>
-                <div class="bg-surface rounded-lg p-3 border border-danger-600">
+                <div class="bg-brand-50 rounded-lg p-3 border border-brand-200">
                   <p class="text-body-sm text-neutral-600">
                     <strong>Solution:</strong> Compare total cost ("recipient gets") across all methods, not just fees. FX markup can offset fee savings.
                   </p>
@@ -693,7 +693,7 @@
               Use this decision framework to match payment and payout methods to your needs:
             </p>
             <div class="grid md:grid-cols-2 gap-6">
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   For Regular Transfers
                 </h3>
@@ -712,7 +712,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   For Urgent Transfers
                 </h3>
@@ -731,7 +731,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   For Large Amounts ($1,000+)
                 </h3>
@@ -750,7 +750,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   For Rural Recipients
                 </h3>
@@ -773,7 +773,7 @@
           </div>
 
           <!-- CTA Section -->
-          <div class="rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-600 to-brand-600 p-8 lg:p-12 text-white mb-12">
+          <div class="rounded-3xl border-2 border-brand-500 bg-brand-600 p-8 lg:p-12 text-white mb-12">
             <h2 class="text-h3 font-bold mb-4">
               Compare All Methods Side by Side
             </h2>
@@ -805,7 +805,7 @@
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
         <h2 class="text-h2 font-bold text-white mb-8 text-center">
           Related Guides
@@ -813,7 +813,7 @@
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/learn/hidden-exchange-rate-fees-explained"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Hidden Exchange Rate Fees Explained
@@ -840,7 +840,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/how-to-read-remittance-quote"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               How to Read a Remittance Quote
@@ -867,7 +867,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/why-compare-before-every-transfer"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Why Compare Before Every Transfer
@@ -902,12 +902,11 @@
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
-  { name: 'Payment Methods', path: '/learn/bank-transfer-vs-card-vs-cash-pickup' },
+  { name: 'Guides', path: '/learn' },
+  { name: 'Payment Method Playbook', path: '/learn/bank-transfer-vs-card-vs-cash-pickup' },
 ]
 
 const runtimeConfig = useRuntimeConfig()

@@ -20,15 +20,12 @@ type PricingPayload = {
 const CACHE_TTL_MS = 60 * 60 * 1000
 let cached: { expiresAt: number; payload: PricingPayload } | null = null
 
-const shouldUseDevFallbackPricing = () => {
-  const envName = (process.env.ENVIRONMENT || '').toLowerCase()
-  return config.env === 'development' || envName === 'dev' || envName === 'local'
-}
+export const clearPricingCache = () => { cached = null }
 
-const DEV_FALLBACK = {
+const FALLBACK_PRICES = {
   currency: 'USD',
   plusMonthly: 6,
-  plusAnnual: 34,
+  plusAnnual: 46,
 } as const
 
 const toAmount = (unitAmount: Stripe.Price['unit_amount']) => {
@@ -69,20 +66,19 @@ export const billingPricingRoutes = async (app: FastifyInstance) => {
     const priceIdYear = config.billing.stripe.priceIdPlusAnnual || null
 
     if (!isStripeConfigured() || !priceIdMonth) {
-      const useFallback = shouldUseDevFallbackPricing()
       const payload: PricingPayload = {
         success: true,
         configured: false,
         trialDays,
         plus: {
           month: {
-            amount: useFallback ? DEV_FALLBACK.plusMonthly : null,
-            currency: useFallback ? DEV_FALLBACK.currency : null,
+            amount: FALLBACK_PRICES.plusMonthly,
+            currency: FALLBACK_PRICES.currency,
             priceId: priceIdMonth,
           },
           year: {
-            amount: useFallback ? DEV_FALLBACK.plusAnnual : null,
-            currency: useFallback ? DEV_FALLBACK.currency : null,
+            amount: FALLBACK_PRICES.plusAnnual,
+            currency: FALLBACK_PRICES.currency,
             priceId: priceIdYear,
           },
         },

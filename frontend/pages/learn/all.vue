@@ -1,43 +1,37 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-white via-primary-50/20 to-white">
-    <div class="container py-12 sm:py-16">
-      <Breadcrumbs :items="breadcrumbItems" />
+  <div class="min-h-screen bg-surface">
 
-      <!-- Hero Section -->
-      <section class="mb-12 text-center">
-        <div class="inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white shadow-sm mb-4">
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-            />
-          </svg>
-          Complete Library
+    <!-- Hero -->
+    <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
+      <div class="mx-auto max-w-page px-page-x">
+        <Breadcrumbs
+          :items="breadcrumbItems"
+          :dark="true"
+        />
+        <div class="mt-12 max-w-4xl">
+          <p class="text-body-sm font-semibold text-brand-400 uppercase tracking-wide mb-3">
+            Complete Library
+          </p>
+          <h1 class="text-hero font-bold tracking-tight text-white mb-6 [text-wrap:balance]">
+            All <span class="text-brand-600">Guides</span>
+          </h1>
+          <p class="text-h4 text-neutral-300 font-medium leading-relaxed max-w-3xl [text-wrap:balance]">
+            {{ guideCount }} guides covering money transfers, fees, delivery speed, and exchange rates.
+          </p>
         </div>
-        <h1 class="text-h1 font-bold text-neutral-900 mb-4">
-          All Guides
-        </h1>
-        <p class="mx-auto max-w-2xl text-body-lg text-neutral-600 mb-8">
-          Browse our complete collection of {{ guideCount }} guides covering money transfers, fees, delivery speed, and exchange rates.
-        </p>
-      </section>
+      </div>
+    </section>
 
-      <!-- All Guides Grid -->
-      <section class="mb-16">
+    <!-- Guides Grid -->
+    <section class="py-16 lg:py-20 bg-surface">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <article
             v-for="guide in guides"
             :key="guide.slug"
-            class="group flex flex-col rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-200 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-brand-300"
           >
-            <div class="space-y-4 flex-1">
+            <div class="space-y-3 flex-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="rounded-full bg-brand-50 px-3 py-1.5 text-body-sm font-semibold text-brand-700">
                   {{ getCategoryLabel(guide.categoryKey) }}
@@ -45,89 +39,34 @@
                 <span class="text-body-sm text-neutral-500">
                   {{ guide.readTime }}
                 </span>
-                <span class="text-body-sm text-neutral-500">
-                  {{ guide.level }}
-                </span>
               </div>
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 transition-colors"
+                class="block text-body-lg font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors"
               >
-                <RichHtml
-tag="span"
-:content="guide.title"
-/>
+                <RichHtml tag="span" :content="guide.title" />
               </NuxtLink>
               <p class="text-body-sm text-neutral-600 leading-relaxed">
                 {{ guide.excerpt }}
               </p>
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="tag in guide.tags"
-                  :key="tag"
-                  class="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-body-sm font-medium text-neutral-700"
-                >
-                  {{ tag }}
-                </span>
-              </div>
             </div>
-            <div class="mt-6 flex items-center justify-between pt-4 border-t border-neutral-100">
-              <span class="text-body-sm text-neutral-500">
-                Updated {{ guide.updated }}
-              </span>
+            <div class="mt-6 pt-4 border-t border-neutral-100">
               <NuxtLink
                 :to="`/learn/${guide.slug}`"
-                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 transition-all"
+                class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
-                Read
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
+                Read guide
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </NuxtLink>
             </div>
           </article>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- CTA Section -->
-      <section class="rounded-3xl bg-gradient-to-r from-brand-600 to-brand-600 p-8 shadow-xl sm:p-12 text-center text-white">
-        <h3 class="text-h2 font-bold mb-4">
-          Ready to Compare Providers?
-        </h3>
-        <p class="mx-auto max-w-2xl text-body-lg text-white/90 mb-8">
-          Use what you've learned to find the best rates and save on your next transfer.
-        </p>
-        <NuxtLink
-          to="/"
-          class="inline-flex items-center gap-2 rounded-xl bg-surface px-8 py-4 text-body font-bold text-brand-600 shadow-lg hover:bg-neutral-50 transition-all hover:scale-105"
-        >
-          Compare Rates Now
-          <svg
-            class="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </NuxtLink>
-      </section>
-    </div>
+    <TrustMetricsStrip />
   </div>
 </template>
 
@@ -136,10 +75,11 @@ import { computed } from 'vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useArticles } from '~/composables/useArticles'
 import { LEARN_STATIC_ARTICLES } from '~/lib/learnStaticArticles'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
+  { name: 'Guides', path: '/learn' },
   { name: 'All Guides', path: '/learn/all' },
 ]
 

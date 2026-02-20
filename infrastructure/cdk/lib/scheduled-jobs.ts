@@ -234,6 +234,8 @@ export const createScheduledJobs = (
 ): ScheduledJobsResources => {
   const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
+  // Deploy-time pause invariant: RemitScoutStack passes `paused: devPaused` here.
+  // When paused, producer schedules must be disabled to prevent stale queue buildup.
   const rulesEnabled = !options.paused
   const ruleName = (suffix: string) => `remit-scout-${options.envName}-${suffix}`
   const allowPublicSubnet = false

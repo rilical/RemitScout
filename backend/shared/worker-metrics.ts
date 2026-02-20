@@ -20,7 +20,13 @@ const getCloudWatchClient = (): CloudWatchClient => {
  */
 export const recordWorkerMetric = async (
   workerName: string,
-  operation: 'message_processed' | 'message_failed' | 'dlq_sent' | 'lock_failed',
+  operation:
+    | 'message_processed'
+    | 'message_failed'
+    | 'dlq_sent'
+    | 'lock_failed'
+    | 'stale_dropped'
+    | 'envelope_parse_error',
   count: number = 1,
   additionalDimensions?: Record<string, string>,
 ): Promise<void> => {
@@ -201,4 +207,3 @@ export const recordDLQMessageCount = async (
     })
   }
 }
-

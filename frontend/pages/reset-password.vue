@@ -26,7 +26,7 @@
       <div class="rounded-2xl border border-rs-border bg-surface p-8 shadow-xl">
         <div
           v-if="success"
-          class="rounded-xl border-2 border-success-600 bg-success-600 px-4 py-4 text-center"
+          class="rounded-xl border-2 border-success-200 bg-success-50 px-4 py-4 text-center"
         >
           <svg
             class="w-12 h-12 text-success-600 mx-auto mb-2"
@@ -41,15 +41,15 @@
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p class="text-body-sm font-semibold text-success-600 mb-1">
+          <p class="text-body-sm font-semibold text-success-700 mb-1">
             Password updated
           </p>
-          <p class="text-body-sm text-success-600 mb-4">
+          <p class="text-body-sm text-success-700 mb-4">
             You can now sign in with your new password.
           </p>
           <NuxtLink
             to="/sign-in"
-            class="inline-block text-body-sm font-semibold text-success-600 hover:text-success-600 underline"
+            class="inline-block text-body-sm font-semibold text-success-700 hover:text-success-800 underline"
           >
             Go to sign in
           </NuxtLink>

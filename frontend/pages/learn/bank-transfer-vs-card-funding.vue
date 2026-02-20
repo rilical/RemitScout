@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
@@ -11,11 +11,11 @@
         />
 
         <div class="mt-12 max-w-4xl">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-surface/10 backdrop-blur-sm px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
             Money Transfer Basics
           </div>
           <h1 class="text-hero font-bold tracking-tight text-white mb-6">
-            Bank Transfer vs <span class="text-brand-400">Card Funding</span>
+            Bank Transfer vs <span class="text-brand-600">Card Funding</span>
           </h1>
           <p class="text-h4 text-neutral-300 font-medium mb-6 leading-relaxed">
             Which is cheaper and when? Learn how your funding method changes total cost, speed, and delivery time.
@@ -51,7 +51,7 @@
                   </p>
                 </div>
 
-                <div class="flex-1 rounded-2xl bg-brand-600 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
+                <div class="flex-1 rounded-2xl bg-neutral-900 text-white p-8 lg:p-10 shadow-xl flex flex-col justify-center">
                   <h3 class="font-bold text-h3 mb-4">
                     The Bottom Line
                   </h3>
@@ -65,7 +65,7 @@
               </div>
 
               <!-- Right Column -->
-              <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-10 shadow-xl">
+              <div class="rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-10 shadow-xl">
                 <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                   Quick Takeaways
                 </h3>
@@ -306,7 +306,7 @@
           </div>
 
           <!-- Speed Differences -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-12 shadow-xl">
+          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-12 shadow-xl">
             <h2 class="text-h3 font-bold text-neutral-900 mb-4">
               <span class="text-brand-600">Speed Differences</span>: Typical Patterns
             </h2>
@@ -598,7 +598,7 @@
                     <strong class="text-danger-600">Speed:</strong> Fast, but may have delays
                   </p>
                 </div>
-                <div class="bg-danger-600 rounded-lg p-3 border border-danger-600">
+                <div class="bg-danger-50 rounded-lg p-3 border border-danger-200">
                   <p class="text-body-sm text-neutral-600">
                     Most expensive, use only for emergencies
                   </p>
@@ -643,7 +643,7 @@
                 </div>
               </div>
             </div>
-            <div class="mt-6 bg-danger-600 rounded-lg p-6 border-2 border-danger-600">
+            <div class="mt-6 bg-danger-50 rounded-lg p-6 border-2 border-danger-200">
               <h4 class="font-bold text-neutral-900 mb-2">
                 Chargebacks: Use With Caution
               </h4>
@@ -670,7 +670,7 @@
               Use this framework to choose the right funding method for each transfer:
             </p>
             <div class="grid md:grid-cols-2 gap-6">
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   If your priority is...
                 </h3>
@@ -693,7 +693,7 @@
                   </li>
                 </ul>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <h3 class="font-bold text-body-lg mb-3">
                   Quick decision guide:
                 </h3>
@@ -752,7 +752,7 @@
           </div>
 
           <!-- CTA Section -->
-          <div class="rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-600 to-brand-600 p-8 lg:p-12 text-white mb-12">
+          <div class="rounded-3xl border-2 border-brand-500 bg-brand-600 p-8 lg:p-12 text-white mb-12">
             <h2 class="text-h3 font-bold mb-4">
               Compare Both Funding Methods Side by Side
             </h2>
@@ -784,7 +784,7 @@
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
         <h2 class="text-h2 font-bold text-white mb-8 text-center">
           Related Guides
@@ -792,7 +792,7 @@
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/learn/bank-transfer-vs-card-vs-cash-pickup"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Payment Method Playbook
@@ -819,7 +819,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/how-to-read-remittance-quote"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               How to Read a Remittance Quote
@@ -846,7 +846,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/why-compare-before-every-transfer"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Why Compare Before Every Transfer
@@ -881,11 +881,10 @@
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
+  { name: 'Guides', path: '/learn' },
   { name: 'Bank Transfer vs Card Funding', path: '/learn/bank-transfer-vs-card-funding' },
 ]
 

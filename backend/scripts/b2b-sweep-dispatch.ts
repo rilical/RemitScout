@@ -30,6 +30,7 @@ import { emitOpsEvent } from '../shared/ops-events'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { initErrorTracking } from '../shared/error-tracker'
 import { initTracing } from '../shared/tracing'
+import { wrapEnvelope } from '../shared/queue-staleness'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { providerRegistry as _providerRegistry, type ProviderRegistryEntry as _ProviderRegistryEntry } from '../plane-b/src/providers'
 import {
@@ -273,6 +274,10 @@ const resolveIngestFanoutQueueUrl = (priorityTier?: string): string | null => {
     return priorityTier === 'tier_2' ? ingestFanoutQueueTier2Url : ingestFanoutQueueTier1Url
   }
   return ingestFanoutQueueUrl || null
+}
+
+const resolveIngestQueueClassFromPriorityTier = (priorityTier?: string) => {
+  return priorityTier === 'tier_2' ? 'ingest-fanout-t2' as const : 'ingest-fanout-t1' as const
 }
 
 const isNativeCurrencyCorridor = (corridorId: string): boolean => {
@@ -606,7 +611,14 @@ const _enqueueIngestFanout = async (payload: IngestFanoutMessage): Promise<boole
     return false
   }
   try {
-    await sendJsonMessage(queueUrl, payload)
+    await sendJsonMessage(
+      queueUrl,
+      wrapEnvelope(
+        resolveIngestQueueClassFromPriorityTier(payload.priorityTier),
+        payload,
+        { runId: payload.sweepRunId },
+      ),
+    )
     return true
   } catch (error) {
     logger.warn('ingest_fanout_enqueue_failed', {
@@ -1322,21 +1334,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     const nowIso = new Date().toISOString()
     const messagePayloadsByQueue = new Map<string, Array<{
       id: string
-      payload: {
-        version: 'corridor_v1'
-        corridorId: string
-        providers: Array<{
-          providerId: string
-          collectorType: string
-          amountBuckets: number[]
-          payinMethod: string
-          payoutMethod: string
-          priorityTier: string
-          freshnessSloMinutes: number
-        }>
-        requestedAt: string
-        sweepRunId?: string
-      }
+      payload: unknown
     }>>()
 
     for (let idx = 0; idx < tasks.length; idx += 1) {
@@ -1351,7 +1349,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
         continue
       }
       const sweepRunId = task.tier === 'tier_1' ? tier1RunId : tier2RunId
-      const payload = {
+      const rawPayload = {
         version: 'corridor_v1' as const,
         corridorId: task.corridorId,
         providers: task.providers.map(providerId => ({
@@ -1366,6 +1364,14 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
         requestedAt: nowIso,
         sweepRunId,
       }
+      const payload = wrapEnvelope(
+        resolveIngestQueueClassFromPriorityTier(cfg.label),
+        rawPayload,
+        {
+          runId: sweepRunId,
+          correlationId: task.corridorId,
+        },
+      )
       const bucket = messagePayloadsByQueue.get(queueUrl)
       if (bucket) {
         bucket.push({ id: `${idx}-${task.tier}`, payload })
