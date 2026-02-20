@@ -11,11 +11,11 @@
           <!-- Left: Provider Info -->
           <div>
             <div class="flex items-center gap-4 mb-6">
-              <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface p-3 shadow-xl">
+              <div class="flex h-40 w-40 items-center justify-center rounded-2xl bg-surface p-3 shadow-xl">
                 <ProviderLogo
                   slug="sendwave"
                   alt="Sendwave"
-                  size="small"
+                  size="xlarge"
                 />
               </div>
               <div>
@@ -43,26 +43,7 @@
             </p>
 
             <div class="flex flex-wrap gap-4">
-              <NuxtLink
-                to="/send-money?provider=sendwave"
-                class="inline-flex items-center gap-2 rounded-xl border border-neutral-100 bg-surface text-neutral-900 px-6 py-3 text-body font-semibold shadow-lg motion-safe:transition-all"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                Compare Sendwave Now
-              </NuxtLink>
-              <a
+                            <a
                 href="#review"
                 class="inline-flex items-center gap-2 rounded-xl border border-brand-500 bg-brand-600 text-white px-6 py-3 text-body font-semibold motion-safe:transition-all"
               >
@@ -1267,49 +1248,6 @@
                 </NuxtLink>
               </div>
 
-              <!-- More Providers -->
-              <div class="rounded-2xl border border-rs-border bg-surface p-6">
-                <h3 class="text-body-lg font-bold text-rs-fg mb-4">
-                  More Provider Reviews
-                </h3>
-                <ul class="space-y-3">
-                  <li>
-                    <NuxtLink
-                      to="/learn/providers/remitly"
-                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
-                    >
-                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-brand-600">R</div>
-                      <span>Remitly Review</span>
-                    </NuxtLink>
-                  </li>
-                  <li>
-                    <NuxtLink
-                      to="/learn/providers/wise"
-                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
-                    >
-                      <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-body-sm font-bold text-brand-600">W</div>
-                      <span>Wise Review</span>
-                    </NuxtLink>
-                  </li>
-                  <li>
-                    <NuxtLink
-                      to="/learn/providers/worldremit"
-                      class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
-                    >
-                      <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-body-sm font-bold text-brand-600">W</div>
-                      <span>WorldRemit Review</span>
-                    </NuxtLink>
-                  </li>
-                  <li>
-                    <NuxtLink
-                      to="/learn/providers"
-                      class="flex items-center gap-3 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-                    >
-                      View all providers →
-                    </NuxtLink>
-                  </li>
-                </ul>
-              </div>
             </div>
           </div>
         </div>

@@ -214,9 +214,6 @@
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p class="text-body-sm text-white/60">
             © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
-            <NuxtLink to="/legal/do-not-sell" class="text-white/30 hover:text-white/60 motion-safe:transition-colors ml-2">
-              Do Not Sell
-            </NuxtLink>
           </p>
         </div>
       </div>

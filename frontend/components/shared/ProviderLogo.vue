@@ -1,9 +1,11 @@
 <template>
-  <div class="inline-block">
+  <div
+    :class="fit ? 'flex items-center justify-center w-full h-full' : 'inline-block max-w-full max-h-full'"
+  >
     <NuxtImg
       :src="logoSrc"
       :alt="alt || slug"
-      :class="[logoSize, 'object-contain']"
+      :class="fit ? 'max-w-full max-h-full object-contain' : [logoSize, 'object-contain max-w-full max-h-full']"
       :width="logoDimensions.width"
       :height="logoDimensions.height"
       :format="logoFormat"
@@ -15,38 +17,42 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getProviderLogoPath, getProviderLogoSize } from '~/composables/useProviderLogo'
+import { getProviderLogoPath, getProviderLogoSize, getProviderLogoDimensions } from '~/composables/useProviderLogo'
 
 interface Props {
   slug: string
   alt?: string
   size?: 'small' | 'default' | 'large' | 'xlarge'
+  fit?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   alt: undefined,
   size: 'default',
+  fit: false,
 })
 
 const logoSrc = computed(() => getProviderLogoPath(props.slug))
 const logoSize = computed(() => getProviderLogoSize(props.slug, props.size))
 const logoDimensions = computed(() => {
+  const dims = getProviderLogoDimensions(props.slug)
   switch (props.size) {
     case 'small':
-      return { width: 96, height: 32 }
+      return dims
     case 'large':
-      return { width: 192, height: 64 }
+      return { width: dims.width * 2, height: dims.height * 2 }
     case 'xlarge':
-      return { width: 240, height: 80 }
+      return { width: Math.round(dims.width * 2.5), height: Math.round(dims.height * 2.5) }
     case 'default':
     default:
-      return { width: 144, height: 48 }
+      return { width: Math.round(dims.width * 1.5), height: Math.round(dims.height * 1.5) }
   }
 })
 const logoFormat = computed(() => {
   // Don't attempt raster format conversion for SVGs.
   return logoSrc.value.toLowerCase().endsWith('.svg') ? undefined : 'webp'
 })
+
 
 const handleImageError = (event: Event | string) => {
   if (typeof event === 'string') return

@@ -1,15 +1,15 @@
 <template>
   <div class="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-surface motion-safe:transition-all hover:border-brand-500 hover:shadow-2xl">
-    <!-- Header Section with Gradient Background -->
-    <div class="relative bg-gradient-to-br from-neutral-50 via-white to-brand-50/30 px-6 py-6">
+    <!-- Header Section -->
+    <div class="relative bg-neutral-50 px-6 py-6">
       <!-- Logo and Name -->
       <div class="mb-6 grid grid-cols-[auto_1fr] gap-4 items-center">
-        <div class="flex h-20 w-20 items-center justify-center">
+        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100 p-2.5">
           <ProviderLogo
             :slug="provider?.slug || ''"
             :alt="provider?.name"
-            size="large"
-            class="max-h-16 w-auto object-contain"
+            size="small"
+            fit
           />
         </div>
         <div>
@@ -33,7 +33,7 @@
               {{ scoreDisplay }}
             </div>
           </div>
-          <!-- Score Ring Animation -->
+          <!-- Score Ring Glow -->
           <div
             class="absolute inset-0 rounded-full opacity-0 motion-safe:transition-opacity group-hover:opacity-100"
             :style="{ background: `radial-gradient(circle, ${scoreColor}15 0%, transparent 70%)` }"
@@ -44,16 +44,7 @@
             class="text-body-sm font-bold uppercase tracking-wider"
             :class="scoreTextClass"
           >Remit-Scout Score</span>
-          <span class="text-body-sm font-medium text-neutral-500">Scored on 0-10 scale</span>
-          <div class="mt-1 flex items-center gap-1">
-            <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200">
-              <div
-                class="h-full motion-safe:transition-all motion-safe:duration-500"
-                :class="scoreTextClass.replace('text-', 'bg-')"
-                :style="{ width: `${(props.provider?.score || 0) * 10}%` }"
-              />
-            </div>
-          </div>
+          <span class="text-body-sm font-medium text-neutral-500">Scored on 0–10 scale</span>
         </div>
       </div>
     </div>
@@ -69,7 +60,7 @@
       <div class="flex gap-3">
         <NuxtLink
           :to="`/learn/providers/${provider?.slug}`"
-          class="flex-1 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-3.5 text-center text-body-sm font-semibold text-white shadow-md motion-safe:transition-all hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          class="flex-1 rounded-xl bg-brand-600 px-6 py-3.5 text-center text-body-sm font-semibold text-white shadow-md motion-safe:transition-all hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           Read Review
         </NuxtLink>
@@ -167,9 +158,5 @@ const scoreTextClass = computed(() => {
   if (score >= 8.0) return 'text-brand-600'
   if (score >= 7.0) return 'text-warning-600'
   return 'text-neutral-600'
-})
-
-const scoreBorderClass = computed(() => {
-  return 'border-4'
 })
 </script>

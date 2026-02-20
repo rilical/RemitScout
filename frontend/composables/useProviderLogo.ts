@@ -18,7 +18,7 @@ export function getProviderLogoPath(slug: string): string {
     'xoom': '/png/SVG/PROVIDERS/XOOM_LOGO.svg',
     'transfergo': '/png/SVG/PROVIDERS/TRANSFERGO_LOGO.svg',
     'paysend': '/png/SVG/PROVIDERS/PAYSEND_LOGO.svg',
-    'pangea': '/png/SVG/PROVIDERS/PANGEA_LOGO.svg',
+    'pangea': '/png/SVG/PROVIDERS/PANGEA_LOGO.png',
     'orbitremit': '/png/SVG/PROVIDERS/ORBITREMIT_LOGO.png',
     'bossmoney': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',
     'boss-money': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',
@@ -70,18 +70,20 @@ export function getProviderLogoSize(slug: string, context: 'default' | 'large' |
       'xoom': 'h-16 w-auto', // viewBox 200x69 (2.9:1) - moderate
       'transfergo': 'h-12 w-auto', // viewBox 121x20 (6:1) - very wide
       'paysend': 'h-16 w-auto', // viewBox 220x60 (3.7:1) - moderate
-      'pangea': 'h-16 w-auto', // 289x105 (2.8:1) - moderate
-      'orbitremit': 'h-16 w-auto',
-      'bossmoney': 'h-16 w-auto',
-      'boss-money': 'h-16 w-auto',
-      'instarem': 'h-12 w-auto', // viewBox 182x32 (5.7:1) - very wide
-      'wirebarley': 'h-12 w-auto', // 492x96 (5.1:1) - very wide
-      'intermex': 'h-12 w-auto',
-      'koronapay': 'h-14 w-auto', // viewBox 1450x362 (4:1) - wide
-      'remitbee': 'h-16 w-auto', // square-ish logo mark
-      'singx': 'h-16 w-auto',
-      'placid': 'h-16 w-auto',
-      'mukuru': 'h-16 w-auto',
+      'orbitremit': 'h-12 w-auto',
+      'bossmoney': 'h-12 w-auto',
+      'boss-money': 'h-12 w-auto',
+      'instarem': 'h-10 w-auto', // viewBox 182x32 (5.7:1) - very wide
+      'wirebarley': 'h-10 w-auto', // 492x96 (5.1:1) - very wide
+      'intermex': 'h-10 w-auto',
+      'koronapay': 'h-12 w-auto', // viewBox 1450x362 (4:1) - wide
+      'remitbee': 'h-14 w-auto', // square-ish logo mark
+      'singx': 'h-12 w-auto',
+      'placid': 'h-12 w-auto',
+      'mukuru': 'h-12 w-auto',
+      'pangea': 'h-12 w-auto', // 289x105 (2.8:1) - moderate
+      'al-ansari-exchange': 'h-12 w-auto',
+      'alansari': 'h-12 w-auto',
     },
     default: {
       'wise': 'h-18 w-auto', // viewBox 219.7x50 (4.4:1) (30% bigger: h-14 -> h-18)
@@ -168,6 +170,46 @@ export function getProviderLogoSize(slug: string, context: 'default' | 'large' |
 
   const sizeMap = contextSizes[context]
   return sizeMap[normalizedSlug] || 'h-16 w-auto'
+}
+
+/**
+ * Get IPX request dimensions per provider to preserve aspect ratio and avoid cropping.
+ * Used for small context (provider cards).
+ */
+export function getProviderLogoDimensions(slug: string): { width: number, height: number } {
+  const normalizedSlug = slug.toLowerCase().trim()
+  const dimensions: Record<string, { width: number, height: number }> = {
+    'wise': { width: 220, height: 50 },
+    'remitly': { width: 230, height: 100 },
+    'worldremit': { width: 320, height: 98 },
+    'western-union': { width: 300, height: 70 },
+    'westernunion': { width: 300, height: 70 },
+    'xe-money': { width: 96, height: 96 },
+    'xe': { width: 96, height: 96 },
+    'ria': { width: 145, height: 67 },
+    'dahabshiil': { width: 192, height: 51 },
+    'sendwave': { width: 200, height: 69 },
+    'xoom': { width: 200, height: 69 },
+    'transfergo': { width: 240, height: 40 },
+    'paysend': { width: 220, height: 60 },
+    'orbitremit': { width: 192, height: 58 },
+    'bossmoney': { width: 128, height: 128 },
+    'boss-money': { width: 128, height: 128 },
+    'instarem': { width: 182, height: 32 },
+    'wirebarley': { width: 128, height: 128 },
+    'intermex': { width: 192, height: 47 },
+    'koronapay': { width: 192, height: 48 },
+    'remitbee': { width: 128, height: 128 },
+    'singx': { width: 128, height: 128 },
+    'placid': { width: 192, height: 97 },
+    'mukuru': { width: 192, height: 61 },
+    'pangea': { width: 289, height: 105 },
+    'al-ansari-exchange': { width: 192, height: 64 },
+    'alansari': { width: 192, height: 64 },
+    'wellsfargo': { width: 192, height: 64 },
+    'wells-fargo': { width: 192, height: 64 },
+  }
+  return dimensions[normalizedSlug] ?? { width: 192, height: 64 }
 }
 
 /**

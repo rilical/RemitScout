@@ -306,6 +306,28 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Pulse access — full-width flagship card -->
+          <div
+            v-if="pulseEnabled"
+            class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg"
+          >
+            <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
+              <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <Icon name="signal" :size="22" class="text-white" />
+              </div>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-h3 font-bold text-white mb-2">Pulse access</h3>
+              <p class="text-body text-white/80 leading-relaxed">
+                See send-timing signals and live provider quotes for your corridor. Pulse tells you if now is a good time to send — based on real market data, not guesswork.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/50 lg:max-w-xs lg:text-right lg:flex-shrink-0 lg:border-l lg:border-white/20 lg:pl-6">
+              Free users have no Pulse access — Plus unlocks it entirely.
+            </p>
+          </div>
+
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
@@ -413,9 +435,6 @@
       </div>
     </section>
 
-    <!-- Pulse Teaser -->
-    <PulseTeaserSection v-if="pulseEnabled" />
-
     <!-- FAQ -->
     <section class="py-16 bg-surface">
       <div class="mx-auto max-w-3xl px-page-x">
@@ -496,7 +515,6 @@
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
-import PulseTeaserSection from '~/components/home/PulseTeaserSection.vue'
 import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
