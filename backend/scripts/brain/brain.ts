@@ -563,6 +563,20 @@ const deterministicDecider = (input: BrainInput): BrainDecision => {
     })
   }
 
+  // Security DAST evidence
+  if (primary.domain === 'security' && primary.target_url) {
+    selected.push({
+      skill_id: 'evidence.security_dast.github_actions',
+      params: {
+        env: primary.env,
+        target_url: primary.target_url,
+        run_authenticated: 'true',
+        run_full_scan: 'false',
+      },
+      stop_on_failure: false,
+    })
+  }
+
   // Corridor forensics (read-only)
   if (primary.corridor_id) {
     selected.push({

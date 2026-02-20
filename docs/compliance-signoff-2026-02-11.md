@@ -33,14 +33,25 @@ Scope: staging and planned production launch
 ## 5) Security Validation Summary
 
 - WAF managed rules + rate limits configured.
-- CI security checks include CodeQL, Snyk, pnpm audit, secret scanning.
-- OWASP ZAP baseline/full scans configured for staging URL (`ZAP_TARGET_URL`).
+- CI security checks use zero-cost tooling: CodeQL, Trivy filesystem scan, pnpm audit, Semgrep, and secret scanning.
+- DAST coverage on staging is configured with hard-fail medium+ policy:
+  - OWASP ZAP baseline unauthenticated (nightly + manual)
+  - OWASP ZAP API authenticated (nightly + manual)
+  - OWASP ZAP full authenticated (manual only)
+  - Nuclei unauthenticated/authenticated (nightly + manual)
+- DAST configuration:
+  - Staging target: `ZAP_TARGET_URL` (or manual dispatch `target_url`)
+  - Required auth secret for authenticated scans: `DAST_AUTH_BEARER_TOKEN`
+  - Optional auth header variable: `DAST_AUTH_HEADER_NAME` (defaults to `Authorization`)
 - Manual security artifacts prepared:
   - Burp runbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/burp-manual-security-session.md`
   - STRIDE session brief: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-session-brief.md`
   - STRIDE model artifact: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
   - Findings register: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
-- Status: **Pending execution of Burp/STRIDE session and triage report completion**.
+- Pentest operator assets:
+  - Playbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/pentest-playbook.md`
+  - Prompt pack: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/pentest-prompts.md`
+- Status: **Pending scan execution evidence attachment and triage report completion**.
 
 ## Final Decision
 
@@ -48,7 +59,7 @@ Scope: staging and planned production launch
 - Current blockers (2026-02-11):
   - Staging/prod stacks are not deployed yet in `us-east-1`.
   - SES accounts are still in sandbox mode (`ProductionAccessEnabled=false`), so non-verified recipients are blocked.
-  - Pentest + DAST evidence tracking files are in place; execution evidence must be attached in:
+  - Pentest + DAST workflows are in place; execution evidence must be attached in:
     - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
     - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
 - Required approvers:

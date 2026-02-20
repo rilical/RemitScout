@@ -1,7 +1,9 @@
 {
+  "maxCritical": 0,
   "maxHigh": 0,
   "maxMedium": 0,
   "allowed": {
+    "critical": [],
     "high": [],
     "medium": []
   }

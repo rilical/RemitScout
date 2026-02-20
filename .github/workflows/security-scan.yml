@@ -6,208 +6,121 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    - cron: '0 2 * * 1' # Every Monday at 2 AM
+    - cron: '10 4 * * *' # Daily at 04:10 UTC
   workflow_dispatch:
+    inputs:
+      target_url:
+        description: Optional DAST target URL override (falls back to repo var ZAP_TARGET_URL)
+        required: false
+        type: string
+      run_full_scan:
+        description: Run authenticated ZAP full scan (manual dispatch only)
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      run_authenticated:
+        description: Run authenticated DAST jobs (requires DAST_AUTH_BEARER_TOKEN)
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
-# Security scanning automation for Remit-Scout
-# Includes: Dependency scanning (Snyk, npm audit), DAST (OWASP ZAP), Secret scanning (TruffleHog)
+concurrency:
+  group: security-scan-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  snyk-security-scan:
-    name: Snyk Security Scan
+  resolve-target:
+    name: Resolve DAST Target
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      should_run_dast: ${{ steps.resolve.outputs.should_run_dast }}
+      target_url: ${{ steps.resolve.outputs.target_url }}
+      run_authenticated: ${{ steps.resolve.outputs.run_authenticated }}
+      run_full_scan: ${{ steps.resolve.outputs.run_full_scan }}
+      auth_header_name: ${{ steps.resolve.outputs.auth_header_name }}
+    steps:
+      - id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          should_run_dast="false"
+          target_url=""
+          run_authenticated="false"
+          run_full_scan="false"
+          auth_header_name="${{ vars.DAST_AUTH_HEADER_NAME }}"
+
+          if [ -z "${auth_header_name}" ]; then
+            auth_header_name="Authorization"
+          fi
+
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            should_run_dast="true"
+
+            target_url="${{ inputs.target_url }}"
+            if [ -z "${target_url}" ]; then
+              target_url="${{ vars.ZAP_TARGET_URL }}"
+            fi
+            target_url="$(echo "${target_url}" | tr -d '[:space:]')"
+
+            if [ -z "${target_url}" ]; then
+              echo "::error::DAST target URL is empty. Set workflow input target_url or repo var ZAP_TARGET_URL."
+              exit 1
+            fi
+
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              run_authenticated="${{ inputs.run_authenticated }}"
+              run_full_scan="${{ inputs.run_full_scan }}"
+            else
+              run_authenticated="true"
+              run_full_scan="false"
+            fi
+          fi
+
+          echo "should_run_dast=${should_run_dast}" >> "$GITHUB_OUTPUT"
+          echo "target_url=${target_url}" >> "$GITHUB_OUTPUT"
+          echo "run_authenticated=${run_authenticated}" >> "$GITHUB_OUTPUT"
+          echo "run_full_scan=${run_full_scan}" >> "$GITHUB_OUTPUT"
+          echo "auth_header_name=${auth_header_name}" >> "$GITHUB_OUTPUT"
+
+  trivy-filesystem-scan:
+    name: Trivy Filesystem Security Scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Run Trivy filesystem scan (MEDIUM/HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          node-version: 20.19.6
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          vuln-type: os,library
+          exit-code: '1'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.19.0
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Snyk CLI
-        run: npm i -g snyk
-
-      - name: Run Snyk (SARIF)
-        id: snyk
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-          snyk auth "$SNYK_TOKEN"
-          snyk test --all-projects --severity-threshold=high --sarif-file-output=snyk.sarif
-
-      - name: Upload Snyk SARIF to GitHub Security
+      - name: Upload Trivy SARIF to GitHub Security
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: snyk.sarif
+          sarif_file: trivy-results.sarif
           wait-for-processing: true
-
-  owasp-zap-baseline:
-    name: OWASP ZAP Baseline (Staging)
-    runs-on: ubuntu-latest
-    if: vars.ZAP_TARGET_URL != ''
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.19.6
-
-      - name: Run ZAP baseline against staging
-        run: |
-          docker run --rm \
-            -v "$PWD:/zap/wrk/:rw" \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py \
-              -t "${{ vars.ZAP_TARGET_URL }}" \
-              -J zap-baseline.json \
-              -w zap-baseline.md \
-              -r zap-baseline.html \
-              -I
-
-      - name: Enforce ZAP baseline policy
-        run: |
-          node scripts/ci/check-zap-findings.mjs \
-            --input zap-baseline.json \
-            --baseline .security/zap-allowlist.json \
-            --profile baseline \
-            --out zap-baseline-summary.json
-
-      - name: Upload ZAP baseline artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-baseline
-          path: |
-            zap-baseline.json
-            zap-baseline.md
-            zap-baseline.html
-            zap-baseline-summary.json
-          retention-days: 90
-          if-no-files-found: ignore
-
-      - name: Alert Slack on baseline failure
-        if: failure() && vars.SLACK_WEBHOOK_URL != ''
-        shell: bash
-        env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
-        run: |
-          set -euo pipefail
-          payload='{"text":"[Security] OWASP ZAP baseline failed on '"${GITHUB_REPOSITORY}"' @ '"${GITHUB_SHA}"'"}'
-          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
-
-      - name: Alert PagerDuty on baseline failure
-        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
-        shell: bash
-        env:
-          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
-        run: |
-          set -euo pipefail
-          curl -sS https://events.pagerduty.com/v2/enqueue \
-            -H 'Content-Type: application/json' \
-            -d '{
-              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
-              "event_action":"trigger",
-              "payload":{
-                "summary":"OWASP ZAP baseline failed ('"${GITHUB_REPOSITORY}"')",
-                "source":"github-actions/security-scan",
-                "severity":"error"
-              }
-            }' >/dev/null
-
-  owasp-zap-full-scan:
-    name: OWASP ZAP Full Scan (Staging)
-    runs-on: ubuntu-latest
-    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && vars.ZAP_TARGET_URL != ''
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.19.6
-
-      - name: Run ZAP full scan against staging
-        run: |
-          docker run --rm \
-            -v "$PWD:/zap/wrk/:rw" \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py \
-              -t "${{ vars.ZAP_TARGET_URL }}" \
-              -J zap-full.json \
-              -w zap-full.md \
-              -r zap-full.html \
-              -I
-
-      - name: Enforce ZAP full scan policy
-        run: |
-          node scripts/ci/check-zap-findings.mjs \
-            --input zap-full.json \
-            --baseline .security/zap-allowlist.json \
-            --profile full \
-            --out zap-full-summary.json
-
-      - name: Upload ZAP full scan artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-full-scan
-          path: |
-            zap-full.json
-            zap-full.md
-            zap-full.html
-            zap-full-summary.json
-          retention-days: 180
-          if-no-files-found: ignore
-
-      - name: Alert Slack on full scan failure
-        if: failure() && vars.SLACK_WEBHOOK_URL != ''
-        shell: bash
-        env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
-        run: |
-          set -euo pipefail
-          payload='{"text":"[Security] OWASP ZAP full scan failed on '"${GITHUB_REPOSITORY}"' @ '"${GITHUB_SHA}"'"}'
-          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
-
-      - name: Alert PagerDuty on full scan failure
-        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
-        shell: bash
-        env:
-          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
-        run: |
-          set -euo pipefail
-          curl -sS https://events.pagerduty.com/v2/enqueue \
-            -H 'Content-Type: application/json' \
-            -d '{
-              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
-              "event_action":"trigger",
-              "payload":{
-                "summary":"OWASP ZAP full scan failed ('"${GITHUB_REPOSITORY}"')",
-                "source":"github-actions/security-scan",
-                "severity":"error"
-              }
-            }' >/dev/null
 
   npm-audit:
     name: NPM Audit Security Scan
@@ -277,3 +190,382 @@ jobs:
                 });
               }
             }
+
+  zap-baseline-unauth:
+    name: ZAP Baseline Unauthenticated (Staging)
+    needs: [resolve-target]
+    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
+      - name: Run ZAP baseline against staging
+        env:
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+              -t "${TARGET_URL}" \
+              -J zap-baseline.json \
+              -w zap-baseline.md \
+              -r zap-baseline.html \
+              -I
+
+      - name: Enforce ZAP baseline policy (medium+)
+        run: |
+          node scripts/ci/check-zap-findings.mjs \
+            --input zap-baseline.json \
+            --baseline .security/zap-allowlist.json \
+            --profile baseline \
+            --out zap-baseline-summary.json
+
+      - name: Upload ZAP baseline artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-unauth
+          path: |
+            zap-baseline.json
+            zap-baseline.md
+            zap-baseline.html
+            zap-baseline-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+  zap-api-auth:
+    name: ZAP API Authenticated (Staging)
+    needs: [resolve-target]
+    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
+      - name: Validate auth token secret is configured
+        env:
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DAST_AUTH_BEARER_TOKEN}" ]; then
+            echo "::error::Missing staging secret DAST_AUTH_BEARER_TOKEN"
+            exit 1
+          fi
+
+      - name: Generate staging OpenAPI for authenticated DAST
+        env:
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs')
+          const input = 'docs/openapi/api.yaml'
+          const output = 'zap-api-openapi.yaml'
+          const target = String(process.env.TARGET_URL || '').trim()
+          if (!target) {
+            throw new Error('Missing TARGET_URL')
+          }
+          const source = fs.readFileSync(input, 'utf8')
+          const replaced = source.replace(
+            /servers:\n(?:  - url:.*\n    description:.*\n)+/m,
+            `servers:\n  - url: ${target}\n    description: Staging DAST target\n`,
+          )
+          if (replaced === source) {
+            throw new Error('Unable to rewrite OpenAPI servers block')
+          }
+          fs.writeFileSync(output, replaced)
+          NODE
+
+      - name: Run ZAP API scan with bearer auth header
+        env:
+          AUTH_HEADER_NAME: ${{ needs.resolve-target.outputs.auth_header_name }}
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-api-scan.py \
+              -f openapi \
+              -t /zap/wrk/zap-api-openapi.yaml \
+              -J zap-api-auth.json \
+              -w zap-api-auth.md \
+              -r zap-api-auth.html \
+              -I \
+              -z "-config replacer.full_list(0).description=auth-header -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=${AUTH_HEADER_NAME} -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer ${DAST_AUTH_BEARER_TOKEN}"
+
+      - name: Enforce ZAP authenticated API policy (medium+)
+        run: |
+          node scripts/ci/check-zap-findings.mjs \
+            --input zap-api-auth.json \
+            --baseline .security/zap-allowlist.json \
+            --profile api-auth \
+            --out zap-api-auth-summary.json
+
+      - name: Upload ZAP authenticated API artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-api-auth
+          path: |
+            zap-api-openapi.yaml
+            zap-api-auth.json
+            zap-api-auth.md
+            zap-api-auth.html
+            zap-api-auth-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+  zap-full-auth:
+    name: ZAP Full Authenticated (Staging, Manual)
+    needs: [resolve-target]
+    if: needs.resolve-target.result == 'success' && github.event_name == 'workflow_dispatch' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true' && needs.resolve-target.outputs.run_full_scan == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
+      - name: Validate auth token secret is configured
+        env:
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DAST_AUTH_BEARER_TOKEN}" ]; then
+            echo "::error::Missing staging secret DAST_AUTH_BEARER_TOKEN"
+            exit 1
+          fi
+
+      - name: Run ZAP full authenticated scan
+        env:
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+          AUTH_HEADER_NAME: ${{ needs.resolve-target.outputs.auth_header_name }}
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/zap/wrk/:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+              -t "${TARGET_URL}" \
+              -J zap-full-auth.json \
+              -w zap-full-auth.md \
+              -r zap-full-auth.html \
+              -I \
+              -z "-config replacer.full_list(0).description=auth-header -config replacer.full_list(0).enabled=true -config replacer.full_list(0).matchtype=REQ_HEADER -config replacer.full_list(0).matchstr=${AUTH_HEADER_NAME} -config replacer.full_list(0).regex=false -config replacer.full_list(0).replacement=Bearer ${DAST_AUTH_BEARER_TOKEN}"
+
+      - name: Enforce ZAP full authenticated policy (medium+)
+        run: |
+          node scripts/ci/check-zap-findings.mjs \
+            --input zap-full-auth.json \
+            --baseline .security/zap-allowlist.json \
+            --profile full-auth \
+            --out zap-full-auth-summary.json
+
+      - name: Upload ZAP full authenticated artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-full-auth
+          path: |
+            zap-full-auth.json
+            zap-full-auth.md
+            zap-full-auth.html
+            zap-full-auth-summary.json
+          retention-days: 180
+          if-no-files-found: ignore
+
+  nuclei-unauth:
+    name: Nuclei Unauthenticated (Staging)
+    needs: [resolve-target]
+    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
+      - name: Run Nuclei unauthenticated scan (curated templates)
+        env:
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/work" \
+            projectdiscovery/nuclei:latest \
+            -u "${TARGET_URL}" \
+            -t http/ \
+            -t ssl/ \
+            -t misconfiguration/ \
+            -jsonl \
+            -silent \
+            -duc \
+            > nuclei-unauth.jsonl
+
+      - name: Enforce Nuclei policy (medium+)
+        run: |
+          node scripts/ci/check-nuclei-findings.mjs \
+            --input nuclei-unauth.jsonl \
+            --baseline .security/nuclei-allowlist.json \
+            --out nuclei-unauth-summary.json
+
+      - name: Upload Nuclei unauthenticated artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuclei-unauth
+          path: |
+            nuclei-unauth.jsonl
+            nuclei-unauth-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+  nuclei-auth:
+    name: Nuclei Authenticated (Staging)
+    needs: [resolve-target]
+    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
+      - name: Validate auth token secret is configured
+        env:
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DAST_AUTH_BEARER_TOKEN}" ]; then
+            echo "::error::Missing staging secret DAST_AUTH_BEARER_TOKEN"
+            exit 1
+          fi
+
+      - name: Run Nuclei authenticated scan (curated templates)
+        env:
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+          DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD:/work" \
+            projectdiscovery/nuclei:latest \
+            -u "${TARGET_URL}" \
+            -H "Authorization: Bearer ${DAST_AUTH_BEARER_TOKEN}" \
+            -t http/ \
+            -t ssl/ \
+            -t misconfiguration/ \
+            -jsonl \
+            -silent \
+            -duc \
+            > nuclei-auth.jsonl
+
+      - name: Enforce Nuclei authenticated policy (medium+)
+        run: |
+          node scripts/ci/check-nuclei-findings.mjs \
+            --input nuclei-auth.jsonl \
+            --baseline .security/nuclei-allowlist.json \
+            --out nuclei-auth-summary.json
+
+      - name: Upload Nuclei authenticated artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuclei-auth
+          path: |
+            nuclei-auth.jsonl
+            nuclei-auth-summary.json
+          retention-days: 90
+          if-no-files-found: ignore
+
+  alert-dast-failure:
+    name: Alert on DAST Failure
+    needs:
+      - resolve-target
+      - zap-baseline-unauth
+      - zap-api-auth
+      - zap-full-auth
+      - nuclei-unauth
+      - nuclei-auth
+    if: |
+      always() &&
+      needs.resolve-target.result == 'success' &&
+      (
+        needs.zap-baseline-unauth.result == 'failure' ||
+        needs.zap-api-auth.result == 'failure' ||
+        needs.zap-full-auth.result == 'failure' ||
+        needs.nuclei-unauth.result == 'failure' ||
+        needs.nuclei-auth.result == 'failure'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Alert Slack on DAST failure
+        if: vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+        run: |
+          set -euo pipefail
+          payload="{\"text\":\"[Security] DAST failure on ${GITHUB_REPOSITORY} @ ${GITHUB_SHA} (target=${TARGET_URL})\"}"
+          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
+
+      - name: Alert PagerDuty on DAST failure
+        if: secrets.PAGERDUTY_ROUTING_KEY != ''
+        shell: bash
+        env:
+          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+          TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
+        run: |
+          set -euo pipefail
+          summary="DAST failure (${GITHUB_REPOSITORY}, target=${TARGET_URL})"
+          curl -sS https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
+              "event_action":"trigger",
+              "payload":{
+                "summary":"'"${summary}"'",
+                "source":"github-actions/security-scan",
+                "severity":"error"
+              }
+            }' >/dev/null

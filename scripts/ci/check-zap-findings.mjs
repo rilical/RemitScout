@@ -127,15 +127,18 @@ const main = () => {
   const newMedium = mediumFindings.filter((f) => !allowedMedium.has(f.fingerprint))
 
   const maxHigh = Number.isFinite(Number(baseline?.maxHigh)) ? Number(baseline.maxHigh) : 0
+  const maxMedium = Number.isFinite(Number(baseline?.maxMedium)) ? Number(baseline.maxMedium) : 0
 
   const violations = []
-  if (highFindings.length > maxHigh) {
+  if (newHigh.length > maxHigh) {
     violations.push(
-      `High-risk findings (${highFindings.length}) exceed allowed max (${maxHigh})`,
+      `Non-allowlisted high-risk findings (${newHigh.length}) exceed allowed max (${maxHigh})`,
     )
   }
-  if (newHigh.length > 0) {
-    violations.push(`Found ${newHigh.length} new high-risk findings not in allowlist`)
+  if (newMedium.length > maxMedium) {
+    violations.push(
+      `Non-allowlisted medium-risk findings (${newMedium.length}) exceed allowed max (${maxMedium})`,
+    )
   }
 
   const summary = {
@@ -152,8 +155,13 @@ const main = () => {
       high: newHigh.length,
       medium: newMedium.length,
     },
+    nonAllowlistedTotals: {
+      high: newHigh.length,
+      medium: newMedium.length,
+    },
     violations,
     newHighFingerprints: newHigh.map((f) => f.fingerprint),
+    newMediumFingerprints: newMedium.map((f) => f.fingerprint),
   }
 
   if (args.out) {

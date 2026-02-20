@@ -159,6 +159,22 @@ skills:
       file: "evidence.json"
     risk_tier: 1
 
+  - skill_id: "evidence.security_dast.github_actions"
+    purpose: "Generate bounded security DAST evidence (ZAP + Nuclei unauth/auth) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-security-dast.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      target_url: "string"
+      run_authenticated: "true|false"
+      run_full_scan: "true|false"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-security-dast"
+      file: "evidence.json"
+    risk_tier: 1
+
   - skill_id: "forensics.corridor_provider.local"
     purpose: "Explain why a provider is missing for a corridor (rights/capability/quotes/refresh)."
     executor: "local_codex"

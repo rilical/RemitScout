@@ -302,6 +302,25 @@ reason_codes:
     description: "Aggregate DB health stats (informational)."
     domain: "infra_drift"
 
+  - code: "security.dast_medium_or_higher"
+    default_severity: "sev2"
+    description: "DAST scan produced medium-or-higher severity findings."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "security"
+
+  - code: "security.auth_scan_failed"
+    default_severity: "sev2"
+    description: "Authenticated DAST scan could not run or failed."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "security"
+
+  - code: "security.scan_stats"
+    default_severity: "sev0"
+    description: "Aggregate security scan stats (informational)."
+    domain: "security"
+
   - code: "evidence.error"
     default_severity: "sev2"
     description: "Evidence skill encountered an unexpected error."
