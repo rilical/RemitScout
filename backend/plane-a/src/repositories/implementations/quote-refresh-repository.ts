@@ -2,6 +2,7 @@ import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
+import { wrapEnvelope } from '../../../../shared/queue-staleness'
 import { sendJsonMessage } from '../../../../shared/sqs'
 import type {
   IQuoteRefreshRepository,
@@ -71,14 +72,21 @@ export class QuoteRefreshRepository implements IQuoteRefreshRepository {
 
     if (requestId && queueEnabled && shouldEnqueue) {
       try {
-        await sendJsonMessage(queueUrl, {
-          requestId,
-          providerId: input.providerId,
-          corridorId: input.corridorId,
-          amountBucket: input.amountBucket,
-          payinMethod: input.payinMethod,
-          payoutMethod: input.payoutMethod,
-        })
+        await sendJsonMessage(
+          queueUrl,
+          wrapEnvelope(
+            'quote-refresh',
+            {
+              requestId,
+              providerId: input.providerId,
+              corridorId: input.corridorId,
+              amountBucket: input.amountBucket,
+              payinMethod: input.payinMethod,
+              payoutMethod: input.payoutMethod,
+            },
+            { correlationId: requestId },
+          ),
+        )
       } catch (error) {
         this.logger.warn('queue_enqueue_failed', {
           request_id: requestId,

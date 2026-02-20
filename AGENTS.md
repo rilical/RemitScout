@@ -78,3 +78,7 @@ Environment handling:
 - Staging: mirror prod; verify wiring + alarms.
 - Prod: read-only evidence by default; all changes audited and reviewable.
 
+OpsPause invariants:
+- Pause must disable producer schedules and prevent scheduled backlog growth.
+- Resume may purge only explicit non-DLQ volatile queues before worker restore.
+- Pause/resume flows must validate expected EventBridge + ECS state and report drift.

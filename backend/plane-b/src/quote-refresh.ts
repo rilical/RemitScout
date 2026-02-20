@@ -8,10 +8,12 @@ import {
   deleteMessages,
   getQueueDepth as getSqsQueueDepth,
   receiveJsonMessages,
-  sendJsonMessage,
+  sendToDLQ,
 } from '../../shared/sqs'
+import { isStale, resolveMessageAgeMs, unwrapEnvelopeOrLegacy } from '../../shared/queue-staleness'
 import { applyJitter, resolveJitterMs } from '../../shared/worker-jitter'
 import { startSpan } from '../../shared/tracing'
+import { recordWorkerMetric } from '../../shared/worker-metrics'
 import { getProvider } from './providers'
 import { QuoteRefreshRepository } from './repositories'
 import type { QuoteRefreshRequestRecord } from './repositories/interfaces/quote-refresh-repository.interface'
@@ -38,6 +40,7 @@ export type QuoteRefreshMessage = {
   amountBucket: number
   payinMethod: string
   payoutMethod: string
+  requestedAt?: string
 }
 
 export type QuoteRefreshQueueOptions = {
@@ -134,6 +137,17 @@ const shouldDeleteMessage = (
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getQueueName = (queueUrl: string | null) => {
+  if (!queueUrl) return 'quote-refresh'
+  const parts = queueUrl.split('/').filter(Boolean)
+  return parts[parts.length - 1] || 'quote-refresh'
+}
+
+const parseSentTimestampMs = (value: string | undefined): number | null => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const buildRequestFromMessage = (
@@ -256,9 +270,13 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
   const queueMode = config.queues.quoteRefreshMode
   const queueUrl = config.queues.quoteRefreshUrl || null
   const dlqUrl = config.queues.quoteRefreshDlqUrl || null
+  const queueName = getQueueName(queueUrl)
   const useQueue = queueMode === 'queue' && Boolean(queueUrl)
   const activeQueueUrl = useQueue ? (queueUrl as string) : null
   const dbFallbackEnabled = config.queues.quoteRefreshDbFallback && queueMode === 'queue'
+  const stalenessEnabled = config.queueStaleness.enforcementEnabled
+  const staleWindowMs = config.queueStaleness.staleWindowQuoteRefreshMs
+  const staleGraceMs = config.queueStaleness.resumeGraceMs
   // Always update DB statuses so refresh-status can track SQS-backed runs.
   const writeDb = true
   const repo = container.repositories.quoteRefresh
@@ -350,7 +368,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
       if (!activeQueueUrl) {
         throw new Error('quote_refresh_queue_missing')
       }
-      const { messages, error: receiveError } = await receiveJsonMessages<QuoteRefreshMessage>(activeQueueUrl, limit)
+      const { messages, error: receiveError } = await receiveJsonMessages<unknown>(activeQueueUrl, limit)
       if (receiveError) {
         logger.error('sqs_receive_failed', { queue_url: activeQueueUrl, error: receiveError.message })
       }
@@ -378,17 +396,77 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
           0,
           toNumber(message.attributes.ApproximateReceiveCount, 1) - 1,
         )
-        if (!message.payload) {
-          logger.warn('queue_item_invalid', { message_id: message.messageId })
+        const parsedMessage = unwrapEnvelopeOrLegacy<QuoteRefreshMessage>(
+          message.payload,
+          'quote-refresh',
+        )
+        if (!parsedMessage.ok) {
+          const reason = parsedMessage.reason === 'queue_class_mismatch'
+            ? 'queue_class_mismatch'
+            : 'envelope_parse_error'
+          logger.warn('queue_item_invalid_envelope', {
+            message_id: message.messageId,
+            reason,
+            detail: parsedMessage.message,
+          })
+          await sendToDLQ(activeQueueUrl, message, new Error(parsedMessage.message), {
+            reason,
+            queueClass: 'quote-refresh',
+          })
+          await recordWorkerMetric('b2c-refresh-worker', 'envelope_parse_error', 1, {
+            queue_class: 'quote-refresh',
+            queue_name: queueName,
+            reason,
+          })
           deleteHandles.push(message.receiptHandle)
           continue
         }
 
-        const request = buildRequestFromMessage(message.payload, retryCount)
+        const payload = parsedMessage.payload
+        const age = resolveMessageAgeMs({
+          envelopeProducedAtMs: parsedMessage.producedAtMs,
+          legacyTimestampIso: payload.requestedAt ?? null,
+          sentTimestampMs: parseSentTimestampMs(message.attributes.SentTimestamp),
+        })
+        if (stalenessEnabled && isStale(age.ageMs, staleWindowMs, staleGraceMs)) {
+          if (writeDb && payload.requestId) {
+            const staleRequest = await repo.claimRequestById(payload.requestId, maxRetries, retryCount)
+            if (staleRequest) {
+              await repo.markRequestStatus(staleRequest.request_id, QuoteRefreshStatus.SKIPPED, 'stale_message')
+            }
+          }
+          await recordWorkerMetric('b2c-refresh-worker', 'stale_dropped', 1, {
+            queue_class: 'quote-refresh',
+            queue_name: queueName,
+            reason: age.source,
+          })
+          logger.info('queue_item_stale_dropped', {
+            message_id: message.messageId,
+            request_id: payload.requestId,
+            retry_count: retryCount,
+            age_ms: age.ageMs,
+            age_source: age.source,
+            stale_window_ms: staleWindowMs,
+          })
+          deleteHandles.push(message.receiptHandle)
+          continue
+        }
+
+        const request = buildRequestFromMessage(payload, retryCount)
         if (!request) {
           logger.warn('queue_item_invalid', {
             message_id: message.messageId,
-            payload: message.payload,
+            payload,
+          })
+          await sendToDLQ(activeQueueUrl, message, new Error('invalid_quote_refresh_payload'), {
+            reason: 'envelope_parse_error',
+            queueClass: 'quote-refresh',
+            ageMs: age.ageMs,
+          })
+          await recordWorkerMetric('b2c-refresh-worker', 'envelope_parse_error', 1, {
+            queue_class: 'quote-refresh',
+            queue_name: queueName,
+            reason: 'invalid_payload',
           })
           deleteHandles.push(message.receiptHandle)
           continue
@@ -403,25 +481,22 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
               request_id: request.request_id,
               retry_count: retryCount,
             })
-            if (dlqUrl && message.payload) {
-              try {
-                await sendJsonMessage(dlqUrl, {
-                  ...message.payload,
-                  failedAt: new Date().toISOString(),
-                  retryCount,
-                  failureReason: 'max_retries_exceeded',
-                })
-                logger.info('queue_item_dlq_sent', {
-                  request_id: request.request_id,
-                  retry_count: retryCount,
-                })
-              } catch (error) {
-                logger.warn('queue_item_dlq_failed', {
-                  request_id: request.request_id,
-                  retry_count: retryCount,
-                  error: error instanceof Error ? error.message : String(error),
-                })
-              }
+            try {
+              await sendToDLQ(activeQueueUrl, message, new Error('max_retries_exceeded'), {
+                reason: 'max_retries_exceeded',
+                queueClass: 'quote-refresh',
+                ageMs: age.ageMs,
+              })
+              logger.info('queue_item_dlq_sent', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+              })
+            } catch (error) {
+              logger.warn('queue_item_dlq_failed', {
+                request_id: request.request_id,
+                retry_count: retryCount,
+                error: error instanceof Error ? error.message : String(error),
+              })
             }
           })())
           deleteHandles.push(message.receiptHandle)
@@ -430,7 +505,7 @@ export const processQuoteRefreshQueue = async (options: QuoteRefreshQueueOptions
 
         workItems.push({
           requestId: request.request_id,
-          payload: message.payload,
+          payload,
           receiptHandle: message.receiptHandle,
           retryCount,
           messageId: message.messageId,

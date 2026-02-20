@@ -828,6 +828,15 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('opsPauseRuleAllowlist') ??
         process.env.OPS_PAUSE_RULE_ALLOWLIST,
     )
+    const purgeQueuesOnResume =
+      toOptionalBool(
+        this.node.tryGetContext('purgeQueuesOnResume') ??
+          process.env.PURGE_QUEUES_ON_RESUME,
+      ) ?? (envName === 'dev' || envName === 'staging')
+    const purgeQueueAllowlist = toList(
+      this.node.tryGetContext('purgeQueueAllowlist') ??
+        process.env.PURGE_QUEUE_ALLOWLIST,
+    )
     const hardStopEnabled = envName !== 'prod'
     const minimalMode = envName === 'dev' && devMinimalInfra
 
@@ -866,6 +875,55 @@ export class RemitScoutStack extends Stack {
               ]
             : [])
           : []))
+    const defaultPurgeQueueAllowlist = [
+      'ingest-fanout',
+      'ingest-fanout-tier2',
+      'gold-live',
+      'quote-refresh',
+      'fx-rate-refresh',
+    ]
+    const resolvedPurgeQueueAllowlist = purgeQueueAllowlist.length > 0
+      ? purgeQueueAllowlist
+      : defaultPurgeQueueAllowlist
+    const dedupedPurgeQueueAllowlist = [...new Set(
+      resolvedPurgeQueueAllowlist.map((suffix) => suffix.trim()).filter(Boolean),
+    )]
+    const purgeQueueTargetsBySuffix = {
+      'ingest-fanout': {
+        url: queues.ingestFanoutQueue.queueUrl,
+        arn: queues.ingestFanoutQueue.queueArn,
+      },
+      'ingest-fanout-tier2': {
+        url: queues.ingestFanoutTier2Queue.queueUrl,
+        arn: queues.ingestFanoutTier2Queue.queueArn,
+      },
+      'gold-live': {
+        url: queues.goldLiveQueue.queueUrl,
+        arn: queues.goldLiveQueue.queueArn,
+      },
+      'quote-refresh': {
+        url: queues.quoteRefreshQueue.queueUrl,
+        arn: queues.quoteRefreshQueue.queueArn,
+      },
+      'fx-rate-refresh': {
+        url: queues.fxRateRefreshQueue.queueUrl,
+        arn: queues.fxRateRefreshQueue.queueArn,
+      },
+    } as const
+    const unknownPurgeQueueSuffixes = dedupedPurgeQueueAllowlist.filter(
+      (suffix) => !(suffix in purgeQueueTargetsBySuffix),
+    )
+    if (unknownPurgeQueueSuffixes.length > 0) {
+      throw new Error(
+        `Unknown purgeQueueAllowlist values: ${unknownPurgeQueueSuffixes.join(', ')}.`,
+      )
+    }
+    const resolvedPurgeQueueUrls = dedupedPurgeQueueAllowlist.map(
+      (suffix) => purgeQueueTargetsBySuffix[suffix as keyof typeof purgeQueueTargetsBySuffix].url,
+    )
+    const resolvedPurgeQueueArns = dedupedPurgeQueueAllowlist.map(
+      (suffix) => purgeQueueTargetsBySuffix[suffix as keyof typeof purgeQueueTargetsBySuffix].arn,
+    )
 
     const compute = createCompute(this, {
       envName,
@@ -1361,6 +1419,9 @@ export class RemitScoutStack extends Stack {
       redisTransitEncryption: true,
       redisAtRestEncryption: true,
       redisAutoMinorVersionUpgrade: true,
+      purgeQueuesOnResume,
+      purgeQueueUrls: purgeQueuesOnResume ? resolvedPurgeQueueUrls : [],
+      purgeQueueArns: purgeQueuesOnResume ? resolvedPurgeQueueArns : [],
       role: iam.opsPauseLambdaRole,
     })
 

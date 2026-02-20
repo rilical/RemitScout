@@ -21,6 +21,9 @@ export type OpsPauseOptions = {
   ecsBaselineDesired: Record<string, number>
   eventRulePrefix: string
   eventRuleAllowlist?: string[]
+  purgeQueuesOnResume?: boolean
+  purgeQueueUrls?: string[]
+  purgeQueueArns?: string[]
   hardStopEnabled?: boolean
   dbClusterIdentifier?: string
   redisReplicationGroupId?: string
@@ -81,6 +84,8 @@ export const createOpsPause = (
       ECS_BASELINE_JSON: JSON.stringify(options.ecsBaselineDesired),
       EVENT_RULE_PREFIX: options.eventRulePrefix,
       EVENT_RULE_ALLOWLIST: JSON.stringify(options.eventRuleAllowlist ?? []),
+      PURGE_QUEUES_ON_RESUME: options.purgeQueuesOnResume ? '1' : '0',
+      PURGE_QUEUE_URLS_JSON: JSON.stringify(options.purgeQueueUrls ?? []),
       DB_CLUSTER_ID: options.dbClusterIdentifier ?? '',
       REDIS_REPLICATION_GROUP_ID: options.redisReplicationGroupId ?? '',
       REDIS_SUBNET_GROUP_NAME: options.redisSubnetGroupName ?? '',
@@ -126,6 +131,12 @@ export const createOpsPause = (
     actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],
     resources: ['*'],
   }))
+  if ((options.purgeQueueArns?.length ?? 0) > 0) {
+    options.role.addToPolicy(new PolicyStatement({
+      actions: ['sqs:PurgeQueue', 'sqs:GetQueueAttributes'],
+      resources: options.purgeQueueArns,
+    }))
+  }
   if (options.dbClusterIdentifier && options.hardStopEnabled) {
     options.role.addToPolicy(new PolicyStatement({
       actions: ['rds:StartDBCluster', 'rds:StopDBCluster'],

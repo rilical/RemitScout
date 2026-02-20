@@ -12,6 +12,8 @@ OpsPause uses an optional **EventBridge allowlist**:
 - **Pause**: always disables *all* rules by prefix (`remit-scout-<env>-*`) to avoid spend leaks.
 - **Resume**: if an allowlist is configured, it enables *only* those rules (low-noise dev observation).
   Everything else stays disabled unless you enable it intentionally.
+- **Resume purge**: if `purgeQueuesOnResume=true`, OpsPause purges only the
+  explicit non-DLQ `purgeQueueAllowlist` before restoring worker desired counts.
 
 If you’re running a structured dev observation window, follow:
 - `docs/runbooks/dev-observation-session.md`
@@ -60,6 +62,8 @@ make status-dev
 - ECS services desired > 0 (per context defaults)
 - EventBridge rules enabled
 - Aurora cluster available
+- Allowlisted volatile queues purged before workers restore (when `purgeQueuesOnResume=true`)
+- Pause-state validation logs emitted (`pause_state_validation_ok` or `pause_state_validation_drift`)
 
 ## Drift policy
 - **No console/manual toggles** for ECS or EventBridge rules.

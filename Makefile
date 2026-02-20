@@ -10,6 +10,8 @@ COMMUNICATIONS_SECRET_ARN ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws secretsmanag
 # Single source of truth for dev pause/resume behavior (ops allowlist + nightly auto-pause).
 DEV_RUNTIME_CONFIG ?= ops/dev-runtime.json
 OPS_PAUSE_RULE_ALLOWLIST ?= $(shell jq -r '.opsPauseRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
+PURGE_QUEUES_ON_RESUME ?= $(shell jq -r '.purgeQueuesOnResume // true' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "true")
+PURGE_QUEUE_ALLOWLIST ?= $(shell jq -r '.purgeQueueAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
 DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "false")
 DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
@@ -23,6 +25,8 @@ pause-dev:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=true \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
+				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
 				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
 				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
@@ -36,6 +40,8 @@ resume-dev:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=false \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
+				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
 				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
 				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \
@@ -49,6 +55,8 @@ resume-dev-minimal:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=false -c devMinimalInfra=true \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
+				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
 				-c devNightlyPauseTimezone="$(DEV_NIGHTLY_PAUSE_TIMEZONE)" \
 				-c devNightlyPauseCron="$(DEV_NIGHTLY_PAUSE_CRON)" \

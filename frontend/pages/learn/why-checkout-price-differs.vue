@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
@@ -11,7 +11,7 @@
         />
 
         <div class="mt-12 max-w-4xl">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-surface/10 backdrop-blur-sm px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
             Money Transfer Basics
           </div>
           <h1 class="text-hero font-bold tracking-tight text-white mb-6">
@@ -60,7 +60,7 @@
               </div>
 
               <!-- Right Column -->
-              <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-10 shadow-xl">
+              <div class="rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-10 shadow-xl">
                 <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                   Quick Takeaways
                 </h3>
@@ -294,7 +294,7 @@
           </div>
 
           <!-- How to Lock In Best Outcome -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-8 lg:p-12">
+          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-neutral-50 p-8 lg:p-12">
             <h2 class="text-h3 font-bold text-neutral-900 mb-6">
               How to lock in the best outcome
             </h2>
@@ -336,7 +336,7 @@
           </div>
 
           <!-- CTA Section -->
-          <div class="rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-600 to-brand-600 p-8 lg:p-12 text-white">
+          <div class="rounded-3xl border-2 border-brand-500 bg-brand-600 p-8 lg:p-12 text-white">
             <h2 class="text-h3 font-bold mb-4">
               Ready to Find Your Best Rate?
             </h2>
@@ -368,7 +368,7 @@
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
         <h2 class="text-h2 font-bold text-white mb-8 text-center">
           Related Guides
@@ -376,7 +376,7 @@
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/learn/hidden-exchange-rate-fees-explained"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Hidden Exchange Rate Fees Explained
@@ -403,7 +403,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/how-to-read-remittance-quote"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               How to Read a Remittance Quote
@@ -430,7 +430,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/why-compare-before-every-transfer"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Why Compare Before Every Transfer
@@ -464,12 +464,11 @@
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
-  { name: 'Checkout Differences', path: '/learn/why-checkout-price-differs' },
+  { name: 'Guides', path: '/learn' },
+  { name: 'Why Checkout Price Differs', path: '/learn/why-checkout-price-differs' },
 ]
 
 const runtimeConfig = useRuntimeConfig()

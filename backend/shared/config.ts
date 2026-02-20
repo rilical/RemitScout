@@ -875,6 +875,15 @@ const rawConfig = {
       mode: toQueueMode(process.env.GOLD_LIVE_QUEUE_MODE),
     },
   },
+  queueStaleness: {
+    enforcementEnabled: toBoolean(process.env.QUEUE_STALENESS_ENFORCEMENT_ENABLED),
+    staleWindowGoldLiveMs: Math.max(0, toNumber(process.env.STALE_WINDOW_GOLD_LIVE_MS, 600000)),
+    staleWindowFxRateRefreshMs: Math.max(0, toNumber(process.env.STALE_WINDOW_FX_RATE_REFRESH_MS, 1800000)),
+    staleWindowIngestFanoutT1Ms: Math.max(0, toNumber(process.env.STALE_WINDOW_INGEST_FANOUT_T1_MS, 1200000)),
+    staleWindowIngestFanoutT2Ms: Math.max(0, toNumber(process.env.STALE_WINDOW_INGEST_FANOUT_T2_MS, 14400000)),
+    staleWindowQuoteRefreshMs: Math.max(0, toNumber(process.env.STALE_WINDOW_QUOTE_REFRESH_MS, 1800000)),
+    resumeGraceMs: Math.max(0, toNumber(process.env.STALE_RESUME_GRACE_MS, 0)),
+  },
   exports: {
     maxActivePerUser: toNumber(process.env.EXPORT_JOB_MAX_ACTIVE_PER_USER, 2),
   },

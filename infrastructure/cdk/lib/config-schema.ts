@@ -199,6 +199,8 @@ const cdkContextShape = {
   slackOpsChannelId: z.string().optional(),
   pagerDutyIntegrationKey: z.string().optional(),
   opsPauseRuleAllowlist: optionalStringList,
+  purgeQueuesOnResume: optionalBool,
+  purgeQueueAllowlist: optionalStringList,
 
   // Route53 custom domains (optional)
   planeADomainName: z.string().optional(),

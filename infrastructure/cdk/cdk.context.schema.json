@@ -171,6 +171,14 @@
       "type": "array",
       "description": "List of EventBridge rule suffixes to pause when ops pause is enabled (prod only)"
     },
+    "purgeQueuesOnResume": {
+      "type": "boolean",
+      "description": "Toggle queue purge during ops-resume. Defaults to true for dev/staging and false for prod."
+    },
+    "purgeQueueAllowlist": {
+      "type": "array",
+      "description": "List of queue name suffixes eligible for purge on resume (for example: ingest-fanout,gold-live)."
+    },
     "devPaused": {
       "type": "boolean",
       "description": "Pause dev ECS services and EventBridge schedules when true"

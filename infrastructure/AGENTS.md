@@ -23,6 +23,8 @@ Entrypoints:
 Common failure modes:
 - Alarm TreatMissingData configured incorrectly (missing == ok).
 - Schedules disabled in one env causing silent freshness drift.
+- Producers still enabled while workers are paused causing stale queue backlog.
+- Resume paths restore workers before purging volatile queues.
 
 Evidence skills to run:
 - `evidence.queue_backlog.github_actions`
@@ -30,4 +32,6 @@ Evidence skills to run:
 
 Do-not-break rules:
 - Avoid high-cardinality CloudWatch metrics unless explicitly enabled.
-
+- OpsPause pause must disable producer schedules.
+- OpsPause resume purge must be allowlisted and exclude DLQs.
+- OpsPause must validate and report pause-state drift after toggles.

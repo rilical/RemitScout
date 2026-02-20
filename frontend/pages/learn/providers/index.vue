@@ -1,19 +1,19 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
-    <section class="relative bg-gradient-to-b from-neutral-50 via-white to-white py-16 lg:py-20">
+    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-page px-page-x">
-        <Breadcrumbs :items="breadcrumbItems" />
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="mt-10 text-center">
           <h1 class="text-h1 font-bold leading-tight mb-4">
-            <span class="text-neutral-900">Supported</span>
+            <span class="text-white">Supported</span>
             <span class="text-brand-600"> Money Transfer </span>
-            <span class="text-neutral-900">Providers</span>
+            <span class="text-white">Providers</span>
           </h1>
-          <p class="text-h4 leading-relaxed text-neutral-600 mb-8">
+          <p class="text-h4 leading-relaxed text-neutral-300 mb-8">
             Compare trusted money transfer providers with Remit-Scout scores to find the best service for your needs.
             Our data-driven methodology evaluates providers based on delivered value, reliability, and transparency.
           </p>
@@ -324,7 +324,6 @@
 import { computed } from 'vue'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import ProviderCard from '~/components/shared/ProviderCard.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HelpFooter from '~/components/home/HelpFooter.vue'

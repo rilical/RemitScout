@@ -356,7 +356,7 @@
           </div>
 
           <!-- Compare Now CTA -->
-          <div class="rounded-lg bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white">
+          <div class="rounded-lg bg-brand-600 p-5 text-white">
             <h4 class="font-semibold mb-2">
               Ready to send money?
             </h4>

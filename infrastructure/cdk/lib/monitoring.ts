@@ -127,6 +127,28 @@ export const createMonitoring = (
     period: Duration.minutes(5),
   })
 
+  const queueStaleDropWidget = new GraphWidget({
+    title: 'Queue Stale Drops',
+    left: [
+      'ingest-fanout-worker',
+      'gold-live-worker',
+      'b2c-refresh-worker',
+      'fx-rate-refresh-worker',
+    ].map((workerName) =>
+      new Metric({
+        namespace: 'RemitScout/Workers',
+        metricName: 'stale_dropped',
+        dimensionsMap: {
+          WorkerName: workerName,
+          environment: options.envName,
+        },
+        statistic: 'Sum',
+        period: Duration.minutes(5),
+      }),
+    ),
+    period: Duration.minutes(5),
+  })
+
   const lambdaErrorWidget = new GraphWidget({
     title: 'Lambda Errors',
     left: [
@@ -302,6 +324,7 @@ export const createMonitoring = (
     queueDepthWidget,
     dlqDepthWidget,
     queueAgeWidget,
+    queueStaleDropWidget,
     lambdaErrorWidget,
     apiLatencyWidget,
     new GraphWidget({
@@ -1147,6 +1170,38 @@ export const createMonitoring = (
     })
     alarm.addAlarmAction(opsAction)
   })
+
+  if (isProd || isStaging) {
+    const envelopeParseErrorWorkers = [
+      'ingest-fanout-worker',
+      'gold-live-worker',
+      'b2c-refresh-worker',
+      'fx-rate-refresh-worker',
+    ]
+    envelopeParseErrorWorkers.forEach((worker) => {
+      const alarm = new Alarm(scope, `EnvelopeParseError-${worker}`, {
+        alarmName: useExplicitAlarmNames
+          ? `remit-scout-${options.envName}-${worker}-envelope-parse-error`
+          : undefined,
+        metric: new Metric({
+          namespace: 'RemitScout/Workers',
+          metricName: 'envelope_parse_error',
+          statistic: 'Sum',
+          period: Duration.minutes(5),
+          dimensionsMap: {
+            WorkerName: worker,
+            environment: options.envName,
+          },
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+        alarmDescription: `${worker} observed envelope parse errors in the last 5 minutes`,
+      })
+      alarm.addAlarmAction(opsAction)
+    })
+  }
 
   // Additional Dashboard Widgets for Data Health
   const dataFreshnessWidget = new GraphWidget({

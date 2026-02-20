@@ -5,6 +5,7 @@ import { createLogger } from '../../../shared/logger'
 import { requireCorridorId } from '../../../shared/corridor'
 import { getTracer } from '../../../shared/tracing'
 import { sendJsonMessage } from '../../../shared/sqs'
+import { wrapEnvelope } from '../../../shared/queue-staleness'
 import type { NormalizedQuote } from '../normalize/quote-normalizer'
 import { detectAnomaly } from '../signals/anomaly-detector'
 import {
@@ -94,7 +95,12 @@ const enqueueGoldLiveUpdate = async (
   }
 
   try {
-    await sendJsonMessage(goldLiveQueueUrl, payload)
+    await sendJsonMessage(
+      goldLiveQueueUrl,
+      wrapEnvelope('gold-live', payload, {
+        correlationId: `${payload.providerId}:${payload.corridorId}`,
+      }),
+    )
     return true
   } catch (error) {
     logger.warn('gold_live_queue_enqueue_failed', {

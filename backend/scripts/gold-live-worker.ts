@@ -30,6 +30,7 @@ import {
   sendToDLQ,
   type VisibilityTimeoutExtender,
 } from '../shared/sqs'
+import { isStale, resolveMessageAgeMs, unwrapEnvelopeOrLegacy } from '../shared/queue-staleness'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { recordWorkerMetric } from '../shared/worker-metrics'
 import { recordSLOValue } from '../shared/slo-tracker'
@@ -50,6 +51,17 @@ initErrorTracking('gold-live-worker')
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
+}
+
+const getQueueName = (queueUrl: string | null) => {
+  if (!queueUrl) return 'gold-live'
+  const parts = queueUrl.split('/').filter(Boolean)
+  return parts[parts.length - 1] || 'gold-live'
+}
+
+const parseSentTimestampMs = (value: string | undefined): number | null => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const batchSize = toNumber(process.env.GOLD_LIVE_QUEUE_BATCH_SIZE, 10)
@@ -279,6 +291,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
   const goldPool = createPool(config.db.planeCUrl)
   const publisher = new GoldPublisherLive(silverPool, goldPool)
   const debouncer = new CorridorDebouncer(debounceWindowMs)
+  const stalenessEnabled = config.queueStaleness.enforcementEnabled
+  const staleWindowMs = config.queueStaleness.staleWindowGoldLiveMs
+  const staleGraceMs = config.queueStaleness.resumeGraceMs
+  const queueName = getQueueName(queueUrl)
 
   logger.info('gold_live_worker_start', {
     batch_size: batchSize,
@@ -307,20 +323,74 @@ export const runGoldLiveWorker = async (): Promise<number> => {
     }
     while (!shutdown.isShuttingDown()) {
       await applyJitter(logger, 'gold_live_loop', loopJitterMs)
-      const { messages, error: receiveError } = await receiveJsonMessages<GoldLiveMessage>(queueUrl, batchSize)
+      const { messages, error: receiveError } = await receiveJsonMessages<unknown>(queueUrl, batchSize)
       if (receiveError) {
         logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
       }
 
-      const invalidHandles: string[] = []
+      const deleteHandles: string[] = []
       const stopExtenders: VisibilityTimeoutExtender[] = []
 
       for (const message of messages) {
         await applyJitter(logger, 'gold_live_message', messageJitterMs)
-        const payload = message.payload
+        const parsedMessage = unwrapEnvelopeOrLegacy<GoldLiveMessage>(message.payload, 'gold-live')
+        if (!parsedMessage.ok) {
+          const reason = parsedMessage.reason === 'queue_class_mismatch'
+            ? 'queue_class_mismatch'
+            : 'envelope_parse_error'
+          logger.warn('gold_live_message_invalid_envelope', {
+            message_id: message.messageId,
+            reason,
+            detail: parsedMessage.message,
+          })
+          await sendToDLQ(queueUrl, message, new Error(parsedMessage.message), {
+            reason,
+            queueClass: 'gold-live',
+          })
+          await recordWorkerMetric('gold-live-worker', 'envelope_parse_error', 1, {
+            queue_class: 'gold-live',
+            queue_name: queueName,
+            reason,
+          })
+          deleteHandles.push(message.receiptHandle)
+          continue
+        }
+
+        const payload = parsedMessage.payload
         if (!validatePayload(payload)) {
           logger.warn('gold_live_message_invalid', { message_id: message.messageId })
-          invalidHandles.push(message.receiptHandle)
+          await sendToDLQ(queueUrl, message, new Error('invalid_gold_live_payload'), {
+            reason: 'envelope_parse_error',
+            queueClass: 'gold-live',
+          })
+          await recordWorkerMetric('gold-live-worker', 'envelope_parse_error', 1, {
+            queue_class: 'gold-live',
+            queue_name: queueName,
+            reason: 'invalid_payload',
+          })
+          deleteHandles.push(message.receiptHandle)
+          continue
+        }
+
+        const age = resolveMessageAgeMs({
+          envelopeProducedAtMs: parsedMessage.producedAtMs,
+          legacyTimestampIso: payload.collectedAt,
+          sentTimestampMs: parseSentTimestampMs(message.attributes.SentTimestamp),
+        })
+        if (stalenessEnabled && isStale(age.ageMs, staleWindowMs, staleGraceMs)) {
+          await recordWorkerMetric('gold-live-worker', 'stale_dropped', 1, {
+            queue_class: 'gold-live',
+            queue_name: queueName,
+            reason: age.source,
+          })
+          logger.info('gold_live_message_stale_dropped', {
+            message_id: message.messageId,
+            corridor_id: payload.corridorId,
+            age_ms: age.ageMs,
+            age_source: age.source,
+            stale_window_ms: staleWindowMs,
+          })
+          deleteHandles.push(message.receiptHandle)
           continue
         }
 
@@ -330,7 +400,17 @@ export const runGoldLiveWorker = async (): Promise<number> => {
             message_id: message.messageId,
             collected_at: payload.collectedAt,
           })
-          invalidHandles.push(message.receiptHandle)
+          await sendToDLQ(queueUrl, message, new Error('invalid_collected_at_timestamp'), {
+            reason: 'envelope_parse_error',
+            queueClass: 'gold-live',
+            ageMs: age.ageMs,
+          })
+          await recordWorkerMetric('gold-live-worker', 'envelope_parse_error', 1, {
+            queue_class: 'gold-live',
+            queue_name: queueName,
+            reason: 'invalid_timestamp',
+          })
+          deleteHandles.push(message.receiptHandle)
           continue
         }
 
@@ -348,8 +428,8 @@ export const runGoldLiveWorker = async (): Promise<number> => {
         debouncer.add(payload.corridorId, message.receiptHandle, lagSeconds, traceContext, traceId)
       }
 
-      if (invalidHandles.length > 0) {
-        const { failed } = await deleteMessages(queueUrl, invalidHandles)
+      if (deleteHandles.length > 0) {
+        const { failed } = await deleteMessages(queueUrl, deleteHandles)
         if (failed.length > 0) {
           logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
         }
@@ -399,7 +479,10 @@ export const runGoldLiveWorker = async (): Promise<number> => {
           )
 
           for (const message of messages.filter((m) => batch.receiptHandles.includes(m.receiptHandle))) {
-            await sendToDLQ(queueUrl, message, err)
+            await sendToDLQ(queueUrl, message, err, {
+              reason: 'processing_failure',
+              queueClass: 'gold-live',
+            })
             await recordWorkerMetric('gold-live-worker', 'dlq_sent', 1)
           }
           const { failed } = await deleteMessages(queueUrl, batch.receiptHandles)

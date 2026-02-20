@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
@@ -11,14 +11,14 @@
         />
 
         <div class="mt-12 max-w-4xl">
-          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-surface/10 backdrop-blur-sm px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-300/30 bg-white/10 px-4 py-2 text-body-sm font-semibold text-white shadow-md mb-6">
             Money Transfer Basics
           </div>
           <h1 class="text-hero font-bold tracking-tight text-white mb-6">
-            Promo Codes & <span class="text-brand-400">Intro Rates</span>
+            Promo Codes & <span class="text-brand-600">Intro Rates</span>
           </h1>
           <p class="text-h4 text-neutral-300 font-medium mb-6 leading-relaxed">
-            When <span class="font-bold text-brand-400">"Best Deal"</span> is real savings versus temporary marketing tactics. Here's how to tell the difference and use promos wisely.
+            When <span class="font-bold text-brand-600">"Best Deal"</span> is real savings versus temporary marketing tactics. Here's how to tell the difference and use promos wisely.
           </p>
           <div class="flex items-center gap-4 text-body-sm text-neutral-400">
             <span>8 min read</span>
@@ -62,7 +62,7 @@
               </div>
 
               <!-- Right Column -->
-              <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-10 shadow-xl">
+              <div class="rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-10 shadow-xl">
                 <h3 class="text-h4 font-bold text-neutral-900 mb-6">
                   Quick Takeaways
                 </h3>
@@ -336,7 +336,7 @@
             <p class="text-body-lg text-neutral-700 leading-relaxed mb-6">
               Provider rankings on comparison sites change frequently, and promotions are a major reason why. Understanding this helps you interpret rankings correctly and make better decisions.
             </p>
-            <div class="rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-white to-primary-50 p-8 lg:p-12 shadow-xl mb-6">
+            <div class="rounded-3xl border-2 border-brand-200 bg-brand-50 p-8 lg:p-12 shadow-xl mb-6">
               <h3 class="text-h3 font-bold text-neutral-900 mb-4">
                 Why Provider A May Be #1 Today and #5 Tomorrow
               </h3>
@@ -490,7 +490,7 @@
                   </div>
                 </div>
               </div>
-              <div class="rounded-xl border-2 border-danger-600 bg-danger-600 p-6 shadow-sm">
+              <div class="rounded-xl border-2 border-danger-200 bg-danger-50 p-6 shadow-sm">
                 <h3 class="text-body-lg font-bold text-neutral-900 mb-4">
                   Don'ts
                 </h3>
@@ -561,7 +561,7 @@
               Here's a smart approach to using promos without getting trapped in a cycle of provider switching:
             </p>
             <div class="grid md:grid-cols-3 gap-6">
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <div class="w-10 h-10 rounded-lg bg-surface text-brand-600 flex items-center justify-center font-bold mb-4">
                   1
                 </div>
@@ -572,7 +572,7 @@
                   Use the best first-transfer promo available. This is legitimate savings, so take advantage of it. But while you're at it, check what the standard rates will be for future transfers.
                 </p>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <div class="w-10 h-10 rounded-lg bg-surface text-brand-600 flex items-center justify-center font-bold mb-4">
                   2
                 </div>
@@ -583,7 +583,7 @@
                   Compare standard rates across providers (ignore promos for this comparison). Find 2-3 providers with consistently good rates for your corridor and stick with them.
                 </p>
               </div>
-              <div class="bg-surface/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div class="bg-white/10 rounded-xl p-5 border border-white/20">
                 <div class="w-10 h-10 rounded-lg bg-surface text-brand-600 flex items-center justify-center font-bold mb-4">
                   3
                 </div>
@@ -598,7 +598,7 @@
           </div>
 
           <!-- CTA Section -->
-          <div class="rounded-3xl border-2 border-brand-500 bg-gradient-to-br from-brand-600 to-brand-600 p-8 lg:p-12 text-white mb-12">
+          <div class="rounded-3xl border-2 border-brand-500 bg-brand-600 p-8 lg:p-12 text-white mb-12">
             <h2 class="text-h3 font-bold mb-4">
               Compare Live Rates with Promos Included
             </h2>
@@ -630,7 +630,7 @@
     </section>
 
     <!-- Related Guides -->
-    <section class="py-16 lg:py-20 bg-gradient-to-r from-brand-600 to-brand-700">
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
         <h2 class="text-h2 font-bold text-white mb-8 text-center">
           Related Guides
@@ -638,7 +638,7 @@
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/learn/why-checkout-price-differs"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Why Checkout Price Can Differ
@@ -665,7 +665,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/why-compare-before-every-transfer"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Why Compare Before Every Transfer
@@ -692,7 +692,7 @@
           </NuxtLink>
           <NuxtLink
             to="/learn/hidden-exchange-rate-fees-explained"
-            class="group flex flex-col rounded-2xl border border-white/20 bg-surface/10 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-lg hover:border-white/30 hover:bg-surface/15 hover:-translate-y-1"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
             <h3 class="text-body-lg font-bold text-white mb-3 group-hover:text-brand-200 transition-colors">
               Hidden Exchange Rate Fees Explained
@@ -726,12 +726,11 @@
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
-  { name: 'Promotions', path: '/learn/promo-codes-intro-rates' },
+  { name: 'Guides', path: '/learn' },
+  { name: 'Intro Rates & Promos', path: '/learn/promo-codes-intro-rates' },
 ]
 
 const runtimeConfig = useRuntimeConfig()

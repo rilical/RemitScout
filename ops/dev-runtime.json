@@ -2,6 +2,14 @@
   "opsPauseRuleAllowlist": [
     "b2b-sweep-scheduler"
   ],
+  "purgeQueuesOnResume": true,
+  "purgeQueueAllowlist": [
+    "ingest-fanout",
+    "ingest-fanout-tier2",
+    "gold-live",
+    "quote-refresh",
+    "fx-rate-refresh"
+  ],
   "nightlyAutoPause": {
     "enabled": true,
     "timezone": "America/New_York",

@@ -10,4 +10,14 @@ describe('ingest fanout worker script wiring', () => {
     expect(content).toContain('createShutdownHandler(')
     expect(content).toContain('withWorkerRetry(')
   })
+
+  it('tracks stale drops and marks sweep tasks as stale_message', () => {
+    const file = path.join(process.cwd(), 'scripts', 'ingest-fanout-worker.ts')
+    const content = readFileSync(file, 'utf8')
+
+    expect(content).toContain('markTasksFinishedBatch')
+    expect(content).toContain("'stale_message'")
+    expect(content).toContain("'stale_dropped'")
+    expect(content).toContain('deleteHandles.push(current.receiptHandle)')
+  })
 })

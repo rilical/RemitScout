@@ -94,22 +94,30 @@
               </div>
             </div>
 
-            <ul class="space-y-3 mb-8 flex-grow">
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-neutral-500 flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-neutral-700">Compare 30+ providers</span>
+            <ul class="space-y-4 mb-8 flex-grow">
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Provider comparisons</span>
+                <span class="text-body-sm font-semibold text-neutral-900">30+</span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-neutral-500 flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-neutral-700">3 watchlist corridors</span>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Watchlist corridors</span>
+                <span class="text-body-sm font-semibold text-neutral-900">3</span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-neutral-500 flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-neutral-700">1 active rate alert</span>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Active rate alerts</span>
+                <span class="text-body-sm font-semibold text-neutral-900">1</span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-neutral-500 flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-neutral-700">30-day rate history</span>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Rate history</span>
+                <span class="text-body-sm font-semibold text-neutral-900">30 days</span>
+              </li>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Data exports</span>
+                <span class="text-body-sm font-semibold text-neutral-400">—</span>
+              </li>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-neutral-700">Ad-free</span>
+                <span class="text-body-sm font-semibold text-neutral-400">—</span>
               </li>
             </ul>
 
@@ -151,54 +159,53 @@
               </p>
               <div class="text-hero font-bold text-white mb-0.5">
                 <span v-if="pricingLoading">—</span>
-                <span v-else-if="billingInterval === 'year' && billedAnnuallyMonthlyPrice">{{ billedAnnuallyMonthlyPrice }}</span>
-                <span v-else-if="plusPriceDisplay">{{ plusPriceDisplay }}</span>
-                <span v-else>See pricing</span>
+                <span v-else-if="billingInterval === 'year'">{{ billedAnnuallyMonthlyPrice }}</span>
+                <span v-else>{{ plusPriceDisplay }}</span>
               </div>
               <div class="text-body-sm text-white/70">
                 {{ plusPriceSuffix }}
               </div>
               <p v-if="billedAnnuallyMonthlyDisplay" class="mt-1 text-body-sm text-white/60">
-                {{ plusPriceDisplay }} billed annually
+                ${{ resolvedYear.amount }} billed annually
               </p>
               <p class="mt-2 text-body-sm text-white/60">
                 Cancel anytime
               </p>
             </div>
 
-            <ul class="space-y-3 mb-8 flex-grow">
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-white font-medium">Everything in Free</span>
+            <ul class="space-y-4 mb-8 flex-grow">
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Provider comparisons</span>
+                <span class="text-body-sm font-semibold text-white">30+</span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <div>
-                  <span class="text-body-sm text-white font-medium">16 smart alerts</span>
-                  <p class="text-[12px] text-white/60 mt-0.5">Target-rate and send-score alerts</p>
-                </div>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Watchlist corridors</span>
+                <span class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-white">
+                  <span class="text-white/40 line-through font-normal">3</span>
+                  16
+                </span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <div>
-                  <span class="text-body-sm text-white font-medium">16 watchlist corridors</span>
-                  <p class="text-[12px] text-white/60 mt-0.5">Up from 3 on free</p>
-                </div>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Active rate alerts</span>
+                <span class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-white">
+                  <span class="text-white/40 line-through font-normal">1</span>
+                  16
+                </span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <div>
-                  <span class="text-body-sm text-white font-medium">365-day rate history</span>
-                  <p class="text-[12px] text-white/60 mt-0.5">Full year of corridor data</p>
-                </div>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Rate history</span>
+                <span class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-white">
+                  <span class="text-white/40 line-through font-normal">30d</span>
+                  365 days
+                </span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-white font-medium">Data exports (CSV & PDF)</span>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Data exports</span>
+                <span class="text-body-sm font-semibold text-white">CSV & PDF</span>
               </li>
-              <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-white flex-shrink-0 mt-0.5" />
-                <span class="text-body-sm text-white font-medium">Ad-free experience</span>
+              <li class="flex items-center justify-between gap-3">
+                <span class="text-body-sm text-white/80">Ad-free</span>
+                <span class="text-body-sm font-semibold text-white">✓</span>
               </li>
             </ul>
 
@@ -287,92 +294,127 @@
     <TrustMetricsStrip bg-class="bg-brand-600" />
 
     <!-- Features -->
-    <section class="py-16 bg-neutral-50">
+    <section class="py-16 sm:py-20 bg-neutral-900">
       <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-12">
-          <h2 class="text-h2 font-bold text-rs-fg mb-3">
+          <h2 class="text-h2 font-bold text-white mb-3">
             Everything you get with Plus
           </h2>
-          <p class="text-body-lg text-neutral-600">
+          <p class="text-body-lg text-neutral-400 [text-wrap:balance]">
             Built for people who send money regularly
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="bell-alert" :size="22" class="text-brand-600" />
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="bell-alert" :size="20" class="text-brand-400" />
+              </div>
+              <div class="flex items-center gap-2 text-body-sm">
+                <span class="text-white/30 line-through">1</span>
+                <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">16</span>
+              </div>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              Smart rate alerts
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Set target rates and get notified the moment your corridor hits the threshold. Up to 16 active alerts across all your routes.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">Smart alerts</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                Target-rate and send-score alerts. Get notified the moment your corridor hits the threshold you set.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: 1 alert</p>
           </div>
 
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="chart-bar" :size="22" class="text-brand-600" />
+          <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="bookmark" :size="20" class="text-brand-400" />
+              </div>
+              <div class="flex items-center gap-2 text-body-sm">
+                <span class="text-white/30 line-through">3</span>
+                <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">16</span>
+              </div>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              Full year of history
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Access 365 days of rate data. Spot volatility patterns and identify the best windows for recurring transfers.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">Watchlist corridors</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                Track up to 16 corridors at once. Weekly digests show what moved so you never miss a shift.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: 3 corridors</p>
           </div>
 
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="arrow-down-tray" :size="22" class="text-brand-600" />
+          <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="chart-bar" :size="20" class="text-brand-400" />
+              </div>
+              <div class="flex items-center gap-2 text-body-sm">
+                <span class="text-white/30 line-through">30d</span>
+                <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">365d</span>
+              </div>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              Export your data
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Download rate history and transfer records as CSV or PDF. Ready for tax records, accounting, and expense tracking.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">Rate history</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                A full year of corridor data. Spot patterns, time recurring transfers, and see how rates trended.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: 30-day history only</p>
           </div>
 
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="bookmark" :size="22" class="text-brand-600" />
+          <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="arrow-down-tray" :size="20" class="text-brand-400" />
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              16-corridor watchlist
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Track up to 16 corridors at once. Weekly digest emails surface what moved so you never miss a shift.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">Data exports</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                Download rate history and transfer records as CSV or PDF. Ready for tax records and expense tracking.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: no exports</p>
           </div>
 
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="sparkles" :size="22" class="text-brand-600" />
+          <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="shield-check" :size="20" class="text-brand-400" />
+              </div>
+              <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              Ad-free experience
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              No sponsor banners, no display ads, no promotional clutter. Clean data and tools to find the best rate — nothing else.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">Ad-free dashboard</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                No banners, no sponsored placements. Just clean data and the tools you need to make better decisions.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: ads shown</p>
           </div>
 
-          <div class="rounded-2xl bg-surface border border-rs-border p-6">
-            <div class="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-4">
-              <Icon name="shield-check" :size="22" class="text-brand-600" />
+          <div class="flex flex-col gap-3 bg-white/5 border border-dashed border-white/20 rounded-2xl p-6">
+            <div class="flex items-center justify-between">
+              <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
+                <Icon name="sparkles" :size="20" class="text-brand-400" />
+              </div>
             </div>
-            <h3 class="text-body-lg font-bold text-rs-fg mb-2">
-              Rankings stay identical
-            </h3>
-            <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Plus unlocks tools — not better rankings. All comparisons remain data-driven and identical regardless of subscription status.
-            </p>
+            <div class="flex-1">
+              <h3 class="text-body-lg font-bold text-white mb-1">More coming</h3>
+              <p class="text-body-sm text-white/60 leading-relaxed">
+                New features are in the pipeline. Plus subscribers get early access.
+              </p>
+            </div>
+            <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Stay tuned</p>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- Pulse Teaser -->
+    <PulseTeaserSection v-if="pulseEnabled" />
 
     <!-- FAQ -->
     <section class="py-16 bg-surface">
@@ -454,12 +496,13 @@
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import PulseTeaserSection from '~/components/home/PulseTeaserSection.vue'
 import { Icon } from '~/ui'
 import { formatMoney as formatMoneyUtil } from '~/shared/lib/format'
 
 const { isAuthenticated } = useAuth()
 const { isPlus } = useEntitlements()
-const { enterpriseEnabled } = useFeatureFlags()
+const { enterpriseEnabled, pulseEnabled } = useFeatureFlags()
 const billingActions = useBilling()
 const checkoutLoading = computed(() => billingActions.checkoutLoading.value)
 const portalLoading = computed(() => billingActions.portalLoading.value)
@@ -482,47 +525,48 @@ const { data: pricing, pending: pricingLoading } = await useAsyncData(
   { server: true },
 )
 
-const selectedPrice = computed(() => (
-  billingInterval.value === 'year' ? pricing.value?.plus.year : pricing.value?.plus.month
-))
+const PRICE_FALLBACK = { monthlyUsd: 6, annualUsd: 46, currency: 'USD' }
+
+const resolvedMonth = computed(() => {
+  const a = pricing.value?.plus.month.amount
+  const c = pricing.value?.plus.month.currency
+  return { amount: (typeof a === 'number' && a > 0) ? a : PRICE_FALLBACK.monthlyUsd, currency: c || PRICE_FALLBACK.currency }
+})
+
+const resolvedYear = computed(() => {
+  const a = pricing.value?.plus.year.amount
+  const c = pricing.value?.plus.year.currency
+  return { amount: (typeof a === 'number' && a > 0) ? a : PRICE_FALLBACK.annualUsd, currency: c || PRICE_FALLBACK.currency }
+})
 
 const formatMoney = (amount: number | null | undefined, currency: string | null | undefined) => {
   if (amount === null || amount === undefined || !currency) return null
   return formatMoneyUtil(amount, { currency })
 }
 
-const plusPriceDisplay = computed(() => formatMoney(selectedPrice.value?.amount, selectedPrice.value?.currency))
+const plusPriceDisplay = computed(() => {
+  const p = billingInterval.value === 'year' ? resolvedYear.value : resolvedMonth.value
+  return formatMoney(p.amount, p.currency)
+})
 
 const billedAnnuallyMonthlyPrice = computed(() => {
   if (billingInterval.value !== 'year') return null
-  const annualAmount = pricing.value?.plus.year.amount
-  const currency = pricing.value?.plus.year.currency
-  if (typeof annualAmount !== 'number' || !Number.isFinite(annualAmount) || annualAmount <= 0) return null
-  if (!currency) return null
-  return formatMoney(annualAmount / 12, currency)
+  return formatMoney(resolvedYear.value.amount / 12, resolvedYear.value.currency)
 })
 
 const billedAnnuallyMonthlyDisplay = computed(() => (
-  billingInterval.value === 'year'
-  && Boolean(billedAnnuallyMonthlyPrice.value)
-  && Boolean(plusPriceDisplay.value)
+  billingInterval.value === 'year' && Boolean(billedAnnuallyMonthlyPrice.value)
 ))
 
 const plusPriceSuffix = computed(() => {
-  if (billingInterval.value === 'year' && billedAnnuallyMonthlyPrice.value) {
-    return 'per month (billed annually)'
-  }
-  if (plusPriceDisplay.value) {
-    return 'per month'
-  }
-  return ''
+  if (billingInterval.value === 'year') return 'per month (billed annually)'
+  return 'per month'
 })
 
 const annualSavingsPct = computed(() => {
-  const month = pricing.value?.plus.month.amount
-  const year = pricing.value?.plus.year.amount
-  if (typeof month !== 'number' || typeof year !== 'number') return null
-  if (!Number.isFinite(month) || !Number.isFinite(year) || month <= 0 || year <= 0) return null
+  const month = resolvedMonth.value.amount
+  const year = resolvedYear.value.amount
+  if (!month || !year) return null
   const pct = (1 - year / (month * 12)) * 100
   if (!Number.isFinite(pct)) return null
   return Math.max(0, Math.round(pct))

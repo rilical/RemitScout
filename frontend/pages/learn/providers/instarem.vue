@@ -1,28 +1,11 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-page px-page-x relative">
-        <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70 relative z-10">
-          <NuxtLink
-            to="/"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
-          >Home</NuxtLink>
-          <span class="text-white/50">›</span>
-          <NuxtLink
-            to="/learn"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
-          >Learn</NuxtLink>
-          <span class="text-white/50">›</span>
-          <NuxtLink
-            to="/learn/providers"
-            class="hover:text-white transition-colors cursor-pointer underline-offset-2 hover:underline relative z-10"
-          >Providers</NuxtLink>
-          <span class="text-white/50">›</span>
-          <span class="font-medium text-white">Instarem Review</span>
-        </nav>
+        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left: Provider Info -->
@@ -62,8 +45,7 @@
             <div class="flex flex-wrap gap-4">
               <NuxtLink
                 to="/send-money?provider=instarem"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold shadow-lg transition-all"
-                style="background-color: rgba(255, 255, 255, 1); border-color: rgba(239, 246, 255, 1); color: rgba(0, 0, 0, 1);"
+                class="inline-flex items-center gap-2 rounded-xl border border-neutral-100 bg-surface text-neutral-900 px-6 py-3 text-body font-semibold shadow-lg motion-safe:transition-all"
               >
                 <svg
                   class="w-5 h-5"
@@ -82,8 +64,7 @@
               </NuxtLink>
               <a
                 href="#review"
-                class="inline-flex items-center gap-2 rounded-xl border px-6 py-3 text-body font-semibold text-white transition-all"
-                style="background-color: rgba(37, 99, 235, 1); border-color: rgba(239, 246, 255, 0.01);"
+                class="inline-flex items-center gap-2 rounded-xl border border-brand-500 bg-brand-600 text-white px-6 py-3 text-body font-semibold motion-safe:transition-all"
               >
                 Read Full Review
                 <svg
@@ -154,14 +135,12 @@
 
               <div class="mt-6 pt-6 border-t border-rs-border text-center">
                 <p
-                  class="text-body-sm"
-                  style="color: rgba(17, 24, 39, 1);"
+                  class="text-body-sm text-neutral-900"
                 >
                   Based on our independent methodology.<br>
                   <NuxtLink
                     to="/methodology"
-                    class="font-semibold hover:text-brand-700"
-                    style="color: rgba(37, 99, 235, 1);"
+                    class="font-semibold text-brand-600 hover:text-brand-700"
                   >Learn how we score →</NuxtLink>
                 </p>
               </div>
@@ -222,7 +201,7 @@
           <div class="lg:col-span-2">
             <article class="max-w-none">
               <!-- Introduction -->
-              <div class="relative mb-12 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border shadow-sm">
+              <div class="relative mb-12 p-8 rounded-2xl bg-neutral-50 border-2 border-rs-border shadow-sm">
                 <div class="absolute top-4 right-4">
                   <svg
                     class="w-12 h-12 text-brand-600/20"
@@ -245,10 +224,10 @@
 
               <div class="mb-12">
                 <h2 class="text-h2 font-bold text-rs-fg mb-6 flex items-center gap-3">
-                  <div class="w-1 h-8 bg-gradient-to-b from-brand-600 to-brand-700 rounded-full" />
+                  <div class="w-1 h-8 bg-brand-600 rounded-full" />
                   Auditor Notes (Verbatim)
                 </h2>
-                <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                <div class="p-6 rounded-xl bg-neutral-50 border-2 border-rs-border">
                   <p class="text-body-lg text-neutral-800 leading-relaxed italic m-0">
                     "Instarem (8.4): Asia corridor specialist; value strong where focused; good speed; breadth limits score ceiling."
                   </p>
@@ -279,9 +258,9 @@
                 </p>
               </div>
 
-              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 via-primary-50/50 to-brand-50 p-8 shadow-lg">
+              <div class="not-prose my-8 rounded-2xl border-2 border-brand-200 bg-brand-50 p-8 shadow-lg">
                 <div class="flex items-center gap-4 mb-6">
-                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-h3 shadow-md">
+                  <div class="flex-shrink-0 w-16 h-16 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-h3 shadow-md">
                     8.4
                   </div>
                   <div>
@@ -396,7 +375,7 @@
 
               <!-- Best For / Not Ideal For -->
               <div class="grid md:grid-cols-2 gap-6 mb-12">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                <div class="p-6 rounded-xl bg-success-50 border-2 border-success-200">
                   <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -465,7 +444,7 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                <div class="p-6 rounded-xl bg-warning-50 border-2 border-warning-200">
                   <h3 class="text-h4 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
                       class="w-6 h-6 text-warning-800"
@@ -537,7 +516,7 @@
 
               <!-- Pros and Cons -->
               <div class="grid md:grid-cols-2 gap-6 mb-12">
-                <div class="p-6 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                <div class="p-6 rounded-xl bg-success-50 border-2 border-success-200">
                   <h3 class="text-h4 font-bold text-rs-fg mb-4">
                     Pros
                   </h3>
@@ -593,7 +572,7 @@
                   </ul>
                 </div>
 
-                <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                <div class="p-6 rounded-xl bg-warning-50 border-2 border-warning-200">
                   <h3 class="text-h4 font-bold text-rs-fg mb-4">
                     Cons
                   </h3>
@@ -654,7 +633,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     1
                   </div>
                   <h2 class="text-h2 font-bold text-rs-fg">
@@ -726,7 +705,7 @@
                   </ul>
                 </div>
 
-                <div class="mt-6 p-5 rounded-xl bg-gradient-to-br from-primary-50 to-neutral-50 border-2 border-primary-200">
+                <div class="mt-6 p-5 rounded-xl bg-neutral-50 border-2 border-primary-200">
                   <p class="font-semibold text-rs-fg mb-3 text-body">
                     Quote vs delivered accuracy
                   </p>
@@ -750,7 +729,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     2
                   </div>
                   <h2 class="text-h2 font-bold text-rs-fg">
@@ -758,7 +737,7 @@
                   </h2>
                 </div>
                 <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Quote success / availability
                     </p>
@@ -773,7 +752,7 @@
                       That supports the auditor's "breadth limits score ceiling" comment: the product can be reliable where available, but it won't be an option for every sender geography.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Pricing stability
                     </p>
@@ -781,7 +760,7 @@
                       Instarem's pricing is "stable" in the sense that it discloses that fees/rates vary by corridor and payment method and shows the fees upfront—so you can verify before confirming.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Data freshness signals
                     </p>
@@ -794,7 +773,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     3
                   </div>
                   <h2 class="text-h2 font-bold text-rs-fg">
@@ -802,7 +781,7 @@
                   </h2>
                 </div>
                 <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-success-600 to-success-50 border-2 border-success-600">
+                  <div class="mt-5 p-5 rounded-xl bg-success-50 border-2 border-success-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       ETA / speed buckets
                     </p>
@@ -814,7 +793,7 @@
                       <li>• Separately, Instarem notes processing can take up to 2 business days from the time it receives funds, and that certain countries/payment methods can take longer.</li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Payout methods
                     </p>
@@ -828,7 +807,7 @@
                       For cash pickup, Instarem's Canada page notes cash pickup service is available only in the Philippines.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery-speed behavior
                     </p>
@@ -841,7 +820,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     4
                   </div>
                   <h2 class="text-h2 font-bold text-rs-fg">
@@ -849,7 +828,7 @@
                   </h2>
                 </div>
                 <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Support access
                     </p>
@@ -857,7 +836,7 @@
                       Instarem's support hub states you can reach out via 24/7 chat or submit an enquiry through the help center.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund experience (documented expectations)
                     </p>
@@ -872,7 +851,7 @@
                       It also provides corridor-specific refund guidance for some cases (e.g., India cancellations note refunds usually take 72 hours, but correspondent bank returns can take longer).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Dispute handling and post-issue friction
                     </p>
@@ -891,7 +870,7 @@
 
               <div class="mb-10">
                 <div class="flex items-center gap-3 mb-6">
-                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-brand-600 to-brand-700 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-body-lg shadow-lg">
                     5
                   </div>
                   <h2 class="text-h2 font-bold text-rs-fg">
@@ -902,7 +881,7 @@
                   <p>
                     We keep this "where available" and verifiable.
                   </p>
-                  <div class="mt-5 p-5 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+                  <div class="mt-5 p-5 rounded-xl bg-brand-50 border-2 border-brand-200">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Public licensing / regulatory signals (where available)
                     </p>
@@ -922,7 +901,7 @@
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <!-- How to get the best rate -->
-              <div class="mb-12 p-6 rounded-xl bg-gradient-to-br from-brand-50 to-primary-50 border-2 border-brand-200">
+              <div class="mb-12 p-6 rounded-xl bg-brand-50 border-2 border-brand-200">
                 <h2 class="text-h3 font-bold text-rs-fg mb-4">
                   How to get the best rate with Instarem
                 </h2>
@@ -1016,7 +995,7 @@
                   Two alternatives (from the Remit-Scout list) and when they beat Instarem
                 </h2>
                 <div class="space-y-6">
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <div class="p-6 rounded-xl bg-neutral-50 border-2 border-rs-border">
                     <h3 class="text-h4 font-bold text-rs-fg mb-3">
                       1) Remitly (9.1)
                     </h3>
@@ -1027,7 +1006,7 @@
                       It can also be a better choice when you want an explicit speed/value choice (Express vs Economy) in applicable corridors.
                     </p>
                   </div>
-                  <div class="p-6 rounded-xl bg-gradient-to-br from-neutral-50 to-primary-50 border-2 border-rs-border">
+                  <div class="p-6 rounded-xl bg-neutral-50 border-2 border-rs-border">
                     <h3 class="text-h4 font-bold text-rs-fg mb-3">
                       2) Wise
                     </h3>
@@ -1044,7 +1023,7 @@
               <div class="my-12 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent" />
 
               <!-- Bottom line -->
-              <div class="mb-12 p-8 rounded-2xl bg-gradient-to-br from-neutral-50 via-primary-50/30 to-neutral-50 border-2 border-rs-border">
+              <div class="mb-12 p-8 rounded-2xl bg-neutral-50 border-2 border-rs-border">
                 <h2 class="text-h2 font-bold text-rs-fg mb-4">
                   Bottom line
                 </h2>
@@ -1065,7 +1044,7 @@
           <div class="lg:col-span-1">
             <div class="sticky top-40 space-y-6">
               <!-- Compare CTA -->
-              <div class="rounded-2xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-6">
+              <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6">
                 <h3 class="text-body-lg font-bold text-rs-fg mb-2">
                   Ready to Compare?
                 </h3>
@@ -1074,7 +1053,7 @@
                 </p>
                 <NuxtLink
                   to="/send-money?provider=instarem"
-                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  class="block w-full rounded-xl bg-brand-600 px-4 py-3 text-center text-body-sm font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
                 >
                   Compare Rates Now
                 </NuxtLink>
@@ -1224,7 +1203,7 @@
                       to="/learn/providers/wise"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-700">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-body-sm font-bold text-brand-600">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>
@@ -1242,7 +1221,7 @@
                       to="/learn/providers/xe-money"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-body-sm font-bold text-primary-600">XE</div>
+                      <div class="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center text-body-sm font-bold text-brand-600">XE</div>
                       <span>XE Money Review</span>
                     </NuxtLink>
                   </li>
@@ -1268,7 +1247,6 @@
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { getProviderLogoPath } from '~/composables/useProviderLogo'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },

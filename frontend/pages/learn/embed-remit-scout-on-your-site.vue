@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-    <CompareWidget />
+
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
@@ -84,7 +84,7 @@
           </div>
 
           <!-- White-Label Rules -->
-          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-gradient-to-br from-brand-50 to-primary-50 p-8 lg:p-12">
+          <div class="mb-12 rounded-3xl border-2 border-brand-200 bg-neutral-50 p-8 lg:p-12">
             <h2 class="text-h3 font-bold text-neutral-900 mb-4">
               White-Label Rules
             </h2>
@@ -99,7 +99,7 @@
                   <li>Layout and positioning</li>
                 </ul>
               </div>
-              <div class="rounded-xl border border-danger-600 bg-danger-600 p-5">
+              <div class="rounded-xl border border-danger-200 bg-danger-50 p-5">
                 <h3 class="text-body font-bold text-neutral-900 mb-2">
                   ✗ What Partners Cannot Change
                 </h3>
@@ -226,7 +226,7 @@
                   <li>Request a white-label embed</li>
                 </ul>
               </div>
-              <div class="rounded-xl border border-danger-600 bg-danger-600 p-4">
+              <div class="rounded-xl border border-danger-200 bg-danger-50 p-4">
                 <h3 class="text-body font-bold text-neutral-900 mb-2">
                   ✗ Partners Cannot:
                 </h3>
@@ -294,45 +294,54 @@
       </div>
     </section>
 
-    <!-- Related Resources -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <!-- Related Guides -->
+    <section class="py-16 lg:py-20 bg-brand-600">
       <div class="mx-auto max-w-page px-page-x">
-        <h2 class="text-h2 font-bold text-neutral-900 mb-8 text-center">
-          Related Resources
+        <h2 class="text-h2 font-bold text-white mb-8 text-center">
+          Related Guides
         </h2>
         <div class="grid gap-6 md:grid-cols-3">
           <NuxtLink
             to="/partnerships"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-body-lg font-bold text-white mb-3">
               Partnerships
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               Learn about our partnership program and how we work with providers and publishers.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </span>
           </NuxtLink>
           <NuxtLink
             to="/legal/how-we-make-money"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
-              Data Licensing
+            <h3 class="text-body-lg font-bold text-white mb-3">
+              How We Make Money
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               See how we offer B2B products while maintaining editorial independence.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </span>
           </NuxtLink>
           <NuxtLink
             to="/learn/how-remit-score-works"
-            class="group rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm transition-all hover:shadow-xl hover:border-brand-300"
+            class="group flex flex-col rounded-2xl border border-white/20 bg-white/10 p-6 shadow-sm motion-safe:transition-all hover:shadow-lg hover:border-white/30 hover:bg-white/15"
           >
-            <h3 class="text-body-lg font-bold text-neutral-900 mb-2 group-hover:text-brand-600">
+            <h3 class="text-body-lg font-bold text-white mb-3">
               How Remit-Score Works
             </h3>
-            <p class="text-body-sm text-neutral-600">
+            <p class="text-body-sm text-white/90 leading-relaxed mb-4 flex-1">
               Understand our scoring methodology and why rankings can't be influenced.
             </p>
+            <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
+              Read guide <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </span>
           </NuxtLink>
         </div>
       </div>
@@ -343,11 +352,10 @@
 <script setup lang="ts">
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
-  { name: 'Learn', path: '/learn' },
+  { name: 'Guides', path: '/learn' },
   { name: 'For Publishers', path: '/learn/embed-remit-scout-on-your-site' },
 ]
 

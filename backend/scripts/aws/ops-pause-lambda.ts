@@ -1,4 +1,5 @@
 import {
+  DescribeServicesCommand,
   DescribeTasksCommand,
   ECSClient,
   ListTasksCommand,
@@ -24,16 +25,23 @@ import {
   DescribeReplicationGroupsCommand,
 } from '@aws-sdk/client-elasticache'
 import {
+  GetQueueAttributesCommand,
+  PurgeQueueCommand,
+  SQSClient,
+} from '@aws-sdk/client-sqs'
+import {
   SSMClient,
   GetParameterCommand,
   PutParameterCommand,
 } from '@aws-sdk/client-ssm'
 
+import { recordCloudWatchMetric } from '../../shared/cloudwatch-metrics'
 import { createLogger } from '../../shared/logger'
 
 const logger = createLogger('script.ops-pause')
 
 type PauseEvent = { paused?: boolean }
+type RuleStateSnapshot = { name: string; state: string }
 
 const chunkArray = <T>(items: T[], chunkSize: number): T[][] => {
   if (!Number.isFinite(chunkSize) || chunkSize <= 0) return [items]
@@ -61,22 +69,54 @@ const normalizeRuleName = (prefix: string, name: string): string => {
   return name.startsWith(prefix) ? name : `${prefix}${name}`
 }
 
-const listRulesByPrefix = async (
+const emitOpsPauseMetric = (
+  name: 'ops_pause_queues_purged' | 'ops_pause_purge_failed' | 'ops_pause_drift_detected',
+  value: number,
+  envName: string,
+): void => {
+  if (!Number.isFinite(value)) return
+  try {
+    recordCloudWatchMetric({
+      name,
+      value,
+      dimensions: { environment: envName },
+    })
+  } catch (error) {
+    logger.debug('ops_pause_metric_emit_failed', {
+      metric: name,
+      error: String(error),
+    })
+  }
+}
+
+const listRuleStatesByPrefix = async (
   client: EventBridgeClient,
   prefix: string,
-): Promise<string[]> => {
-  const names: string[] = []
+): Promise<RuleStateSnapshot[]> => {
+  const rules: RuleStateSnapshot[] = []
   let nextToken: string | undefined
   do {
     const response = await client.send(
       new ListRulesCommand({ NamePrefix: prefix, NextToken: nextToken }),
     )
     response.Rules?.forEach((rule) => {
-      if (rule.Name) names.push(rule.Name)
+      if (!rule.Name) return
+      rules.push({
+        name: rule.Name,
+        state: rule.State ?? 'UNKNOWN',
+      })
     })
     nextToken = response.NextToken
   } while (nextToken)
-  return names
+  return rules
+}
+
+const listRulesByPrefix = async (
+  client: EventBridgeClient,
+  prefix: string,
+): Promise<string[]> => {
+  const snapshots = await listRuleStatesByPrefix(client, prefix)
+  return snapshots.map((rule) => rule.name)
 }
 
 const listRunningTaskArns = async (
@@ -211,6 +251,125 @@ const setEcsDesiredCounts = async (
       }
     }),
   )
+}
+
+const isPurgeQueueInProgressError = (error: unknown): boolean => {
+  const message = String(error)
+  return message.includes('PurgeQueueInProgress')
+}
+
+const purgeQueues = async (
+  client: SQSClient,
+  queueUrls: string[],
+): Promise<{ purged: number; failed: number }> => {
+  let purged = 0
+  let failed = 0
+  for (const queueUrl of queueUrls) {
+    let visibleMessages = 0
+    let inFlightMessages = 0
+    try {
+      const attributes = await client.send(new GetQueueAttributesCommand({
+        QueueUrl: queueUrl,
+        AttributeNames: [
+          'ApproximateNumberOfMessages',
+          'ApproximateNumberOfMessagesNotVisible',
+        ],
+      }))
+      visibleMessages = Number(attributes.Attributes?.ApproximateNumberOfMessages ?? '0')
+      inFlightMessages = Number(attributes.Attributes?.ApproximateNumberOfMessagesNotVisible ?? '0')
+    } catch (error) {
+      logger.warn('queue_attr_read_failed', {
+        queueUrl,
+        error: String(error),
+      })
+    }
+
+    try {
+      await client.send(new PurgeQueueCommand({ QueueUrl: queueUrl }))
+      purged += 1
+      logger.info('queue_purged', {
+        queueUrl,
+        visibleMessages,
+        inFlightMessages,
+      })
+    } catch (error) {
+      failed += 1
+      if (isPurgeQueueInProgressError(error)) {
+        logger.warn('queue_purge_in_progress', {
+          queueUrl,
+          error: String(error),
+        })
+      } else {
+        logger.warn('queue_purge_failed', {
+          queueUrl,
+          error: String(error),
+        })
+      }
+    }
+  }
+
+  return { purged, failed }
+}
+
+const validatePauseState = async (
+  events: EventBridgeClient,
+  ecs: ECSClient,
+  options: {
+    rulePrefix: string
+    clusterName: string
+    ecsServiceNames: string[]
+    expectedEnabledRules: Set<string>
+    expectedDesiredMap: Record<string, number>
+  },
+): Promise<{ valid: boolean; drift: string[] }> => {
+  const drift: string[] = []
+
+  try {
+    const rules = await listRuleStatesByPrefix(events, options.rulePrefix)
+    for (const rule of rules) {
+      const isEnabled = rule.state === 'ENABLED'
+      const shouldBeEnabled = options.expectedEnabledRules.has(rule.name)
+      if (isEnabled !== shouldBeEnabled) {
+        drift.push(
+          `rule:${rule.name}:actual=${rule.state}:expected=${shouldBeEnabled ? 'ENABLED' : 'DISABLED'}`,
+        )
+      }
+    }
+  } catch (error) {
+    drift.push(`rules_validation_failed:${String(error)}`)
+  }
+
+  for (const servicesChunk of chunkArray(options.ecsServiceNames, 10)) {
+    try {
+      const response = await ecs.send(new DescribeServicesCommand({
+        cluster: options.clusterName,
+        services: servicesChunk,
+      }))
+      for (const service of response.services ?? []) {
+        const serviceName = service.serviceName
+        if (!serviceName) continue
+        const actualDesiredCount = service.desiredCount ?? 0
+        const expectedDesiredCount = options.expectedDesiredMap[serviceName] ?? 0
+        if (actualDesiredCount !== expectedDesiredCount) {
+          drift.push(
+            `service:${serviceName}:actual=${actualDesiredCount}:expected=${expectedDesiredCount}`,
+          )
+        }
+      }
+      for (const failure of response.failures ?? []) {
+        drift.push(
+          `service_describe_failure:${failure.arn ?? failure.reason ?? 'unknown'}`,
+        )
+      }
+    } catch (error) {
+      drift.push(`services_validation_failed:${String(error)}`)
+    }
+  }
+
+  return {
+    valid: drift.length === 0,
+    drift,
+  }
 }
 
 const stopDbCluster = async (
@@ -384,6 +543,10 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const rulePrefix = process.env.EVENT_RULE_PREFIX ?? `remit-scout-${envName}-`
   const allowlistRaw = parseJson<string[]>(process.env.EVENT_RULE_ALLOWLIST, [])
   const allowlist = allowlistRaw.map((name) => normalizeRuleName(rulePrefix, name))
+  const purgeQueuesOnResume = toBool(process.env.PURGE_QUEUES_ON_RESUME ?? '0')
+  const purgeQueueUrls = parseJson<string[]>(process.env.PURGE_QUEUE_URLS_JSON, [])
+    .map((queueUrl) => queueUrl.trim())
+    .filter(Boolean)
 
   const dbClusterId = process.env.DB_CLUSTER_ID
   const redisReplicationGroupId = process.env.REDIS_REPLICATION_GROUP_ID
@@ -405,6 +568,11 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const events = new EventBridgeClient({})
   const rds = new RDSClient({})
   const elasticache = new ElastiCacheClient({})
+  const sqs = new SQSClient({})
+  let expectedEnabledRules = new Set<string>()
+  let expectedDesiredMap: Record<string, number> = Object.fromEntries(
+    ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]),
+  )
 
   const snsRecords = Array.isArray((event as { Records?: unknown }).Records)
     ? (event as { Records?: Array<{ Sns?: { Subject?: string; Message?: string } }> }).Records
@@ -461,10 +629,12 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
     if (shouldPause) {
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
+      expectedEnabledRules = new Set()
 
       const desiredMap = pauseEcs
         ? Object.fromEntries(ecsServiceNames.map((name) => [name, 0]))
         : Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
+      expectedDesiredMap = desiredMap
       if (pauseEcs) {
         await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
       }
@@ -534,6 +704,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         allowlist.length > 0
           ? allowlist
           : (envName === 'dev' ? [] : allRules)
+      expectedEnabledRules = new Set(rulesToEnable)
       if (rulesToEnable.length === 0 && envName === 'dev') {
         logger.warn('resume_allowlist_empty_dev', {
           envName,
@@ -545,9 +716,16 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         await setRulesEnabled(events, rulesToEnable, true)
       }
 
+      if (purgeQueuesOnResume && purgeQueueUrls.length > 0) {
+        const purgeResult = await purgeQueues(sqs, purgeQueueUrls)
+        emitOpsPauseMetric('ops_pause_queues_purged', purgeResult.purged, envName)
+        emitOpsPauseMetric('ops_pause_purge_failed', purgeResult.failed, envName)
+      }
+
       const desiredMap = pauseEcs
         ? Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
         : Object.fromEntries(ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]))
+      expectedDesiredMap = desiredMap
       await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
     }
   } else {
@@ -555,6 +733,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
     if (shouldPause) {
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
+      expectedEnabledRules = new Set()
     } else {
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
@@ -562,6 +741,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         allowlist.length > 0
           ? allowlist
           : (envName === 'dev' ? [] : allRules)
+      expectedEnabledRules = new Set(rulesToEnable)
       if (rulesToEnable.length === 0 && envName === 'dev') {
         logger.warn('resume_allowlist_empty_dev', {
           envName,
@@ -571,6 +751,12 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         })
       } else {
         await setRulesEnabled(events, rulesToEnable, true)
+      }
+
+      if (purgeQueuesOnResume && purgeQueueUrls.length > 0) {
+        const purgeResult = await purgeQueues(sqs, purgeQueueUrls)
+        emitOpsPauseMetric('ops_pause_queues_purged', purgeResult.purged, envName)
+        emitOpsPauseMetric('ops_pause_purge_failed', purgeResult.failed, envName)
       }
     }
 
@@ -579,6 +765,7 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
       : Object.fromEntries(
           ecsServiceNames.map((name) => [name, ecsBaseline[name] ?? 0]),
         )
+    expectedDesiredMap = desiredMap
     if (pauseEcs || !shouldPause) {
       await setEcsDesiredCounts(ecs, ecsClusterName, ecsServiceNames, desiredMap)
     }
@@ -589,6 +776,37 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
         reason: 'ops-pause: stop orphaned events-rule task',
       })
     }
+  }
+
+  try {
+    const validation = await validatePauseState(events, ecs, {
+      rulePrefix,
+      clusterName: ecsClusterName,
+      ecsServiceNames,
+      expectedEnabledRules,
+      expectedDesiredMap,
+    })
+    emitOpsPauseMetric('ops_pause_drift_detected', validation.drift.length, envName)
+    if (validation.valid) {
+      logger.info('pause_state_validation_ok', {
+        envName,
+        shouldPause,
+        expectedEnabledRules: expectedEnabledRules.size,
+      })
+    } else {
+      logger.warn('pause_state_validation_drift', {
+        envName,
+        shouldPause,
+        drift: validation.drift,
+      })
+    }
+  } catch (error) {
+    emitOpsPauseMetric('ops_pause_drift_detected', 1, envName)
+    logger.warn('pause_state_validation_failed', {
+      envName,
+      shouldPause,
+      error: String(error),
+    })
   }
 
   return { paused: shouldPause }
