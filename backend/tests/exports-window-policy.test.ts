@@ -67,6 +67,17 @@ describe('exports route plan window enforcement', () => {
     app = {
       get: vi.fn(),
       post: vi.fn(),
+      container: {
+        pool: {},
+        repositories: {
+          exportJob: {
+            countByUserAndStatus: mockCountByUserAndStatus,
+            create: mockCreate,
+            listByUserId: vi.fn(),
+            getById: vi.fn(),
+          },
+        },
+      },
     } as any
 
     mockReply = {
@@ -98,13 +109,12 @@ describe('exports route plan window enforcement', () => {
       },
     } as any
 
-    const result = await handler(request, mockReply)
-
-    expect(vi.mocked(mockReply.code as any)).toHaveBeenCalledWith(400)
-    expect(result).toMatchObject({
-      error: 'export_window_exceeds_plan_limit',
-      allowedDays: 30,
-      windowDays: 31,
+    await expect(handler(request, mockReply)).rejects.toMatchObject({
+      details: {
+        error: 'export_window_exceeds_plan_limit',
+        allowedDays: 30,
+        windowDays: 31,
+      },
     })
     expect(mockCreate).not.toHaveBeenCalled()
   })
@@ -127,17 +137,16 @@ describe('exports route plan window enforcement', () => {
       },
     } as any
 
-    const result = await handler(request, mockReply)
-
-    expect(vi.mocked(mockReply.code as any)).toHaveBeenCalledWith(400)
-    expect(result).toMatchObject({
-      error: 'export_date_range_required',
-      allowedDays: 30,
+    await expect(handler(request, mockReply)).rejects.toMatchObject({
+      details: {
+        error: 'export_date_range_required',
+        allowedDays: 30,
+      },
     })
     expect(mockCreate).not.toHaveBeenCalled()
   })
 
-  it('allows enterprise exports for large windows', async () => {
+  it('enforces the hard cap even for enterprise exports', async () => {
     const call = vi.mocked(app.post).mock.calls.find((c) => c[0] === '/exports')
     const handler = call?.[2] as any
 
@@ -152,19 +161,18 @@ describe('exports route plan window enforcement', () => {
       body: {
         dataType: 'history',
         format: 'csv',
-        dateFrom: '2020-01-01',
-        dateTo: '2026-01-31',
+        dateFrom: '2025-01-01',
+        dateTo: '2025-02-15',
       },
     } as any
 
-    const result = await handler(request, mockReply)
-
-    expect(result.success).toBe(true)
-    expect(result.job).toMatchObject({
-      id: 'job_1',
-      status: 'queued',
-      jobType: 'history_csv',
+    await expect(handler(request, mockReply)).rejects.toMatchObject({
+      details: {
+        error: 'export_window_exceeds_plan_limit',
+        allowedDays: 30,
+        windowDays: 46,
+      },
     })
-    expect(mockCreate).toHaveBeenCalled()
+    expect(mockCreate).not.toHaveBeenCalled()
   })
 })

@@ -8,35 +8,81 @@ const logger = createLogger('shared.error-tracker')
 
 let initialized = false
 
-const SENSITIVE_FIELDS = ['password', 'token', 'secret', 'key', 'api_key', 'apiKey', 'accessToken', 'refreshToken']
+const SENSITIVE_FIELDS = [
+  'password',
+  'token',
+  'secret',
+  'key',
+  'api_key',
+  'apikey',
+  'access_token',
+  'accesstoken',
+  'refresh_token',
+  'refreshtoken',
+  'session',
+  'credential',
+]
 const SENSITIVE_HEADERS = ['authorization', 'cookie', 'x-api-key', 'x-auth-token']
 const IGNORE_ERRORS = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNRESET', 'AbortError']
+const MAX_REDACTION_DEPTH = 8
+
+const normalizeKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+const shouldRedactKey = (key: string): boolean => {
+  const normalized = normalizeKey(key)
+  return SENSITIVE_FIELDS.some((entry) => normalized.includes(normalizeKey(entry)))
+}
+
+const redactUnknown = (value: unknown, depth = 0): unknown => {
+  if (value === null || value === undefined) return value
+  if (depth >= MAX_REDACTION_DEPTH) return value
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactUnknown(entry, depth + 1))
+  }
+  if (typeof value !== 'object') {
+    return value
+  }
+
+  const redacted: Record<string, unknown> = {}
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (shouldRedactKey(key)) {
+      redacted[key] = '[REDACTED]'
+      continue
+    }
+    redacted[key] = redactUnknown(entry, depth + 1)
+  }
+  return redacted
+}
+
+const redactHeaders = (
+  headers: Record<string, unknown>,
+): Record<string, unknown> => {
+  const redacted: Record<string, unknown> = {}
+  for (const [rawKey, value] of Object.entries(headers)) {
+    const key = rawKey.toLowerCase()
+    if (SENSITIVE_HEADERS.includes(key) || shouldRedactKey(key)) {
+      redacted[rawKey] = '[REDACTED]'
+      continue
+    }
+    redacted[rawKey] = redactUnknown(value, 1)
+  }
+  return redacted
+}
 
 const filterSensitiveData = (event: Sentry.ErrorEvent): Sentry.ErrorEvent | null => {
   if (!event) return null
 
   if (event.request?.headers) {
-    for (const header of SENSITIVE_HEADERS) {
-      if (event.request.headers[header]) {
-        event.request.headers[header] = '[REDACTED]'
-      }
-    }
+    event.request.headers = redactHeaders(event.request.headers as Record<string, unknown>)
   }
 
-  if (event.request?.data && typeof event.request.data === 'object') {
-    for (const field of SENSITIVE_FIELDS) {
-      if (field in event.request.data) {
-        (event.request.data as Record<string, unknown>)[field] = '[REDACTED]'
-      }
-    }
+  if (event.request?.data !== undefined) {
+    event.request.data = redactUnknown(event.request.data)
   }
 
-  if (event.extra && typeof event.extra === 'object') {
-    for (const field of SENSITIVE_FIELDS) {
-      if (field in event.extra) {
-        (event.extra as Record<string, unknown>)[field] = '[REDACTED]'
-      }
-    }
+  if (event.extra) {
+    event.extra = redactUnknown(event.extra) as Record<string, unknown>
   }
 
   return event

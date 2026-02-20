@@ -10,6 +10,7 @@ import {
   SMART_ALERT_MIN_SAMPLE_DAYS,
 } from '../../../../shared/constants'
 import { ValidationError } from '../../../../shared/errors'
+import { requireAuth } from '../../plugins/auth-plugin'
 import {
   checkCorridorSignalData,
   computeFxCoverage,
@@ -23,8 +24,11 @@ import {
 export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
   const { pool, repositories } = app.container
   const rightsMatrixRepository = repositories.rightsMatrix
+  const environmentName = (process.env.ENVIRONMENT || '').toLowerCase()
+  const exposePublicInRuntime = environmentName === 'dev' || config.env === 'development'
+  const nonProdGuard = exposePublicInRuntime ? undefined : requireAuth()
 
-  app.get('/alerts/corridor-eligibility', async (request, _reply) => {
+  app.get('/alerts/corridor-eligibility', nonProdGuard ? { preHandler: nonProdGuard } : {}, async (request, _reply) => {
     const startTime = Date.now()
 
     const queryParams = request.query as {
@@ -180,7 +184,7 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/alerts/macro-corridors', async (_request, _reply) => {
+  app.get('/alerts/macro-corridors', nonProdGuard ? { preHandler: nonProdGuard } : {}, async (_request, _reply) => {
     const startTime = Date.now()
 
     const macroCorridors = getMacroCorridors()

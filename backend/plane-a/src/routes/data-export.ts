@@ -1,73 +1,17 @@
 import type { FastifyInstance } from 'fastify'
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { query } from '../../../shared/db'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { sendJsonMessage } from '../../../shared/sqs'
 import { requireAuth } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
-import { type ExportJobType } from '../repositories'
 import { NotFoundError } from '../../../shared/errors'
+import {
+  enqueueExportJob,
+  getExportPipelineStatus,
+  getSignedExportDownload,
+} from './exports.service'
 
 const logger = createLogger('plane-a.data-export')
-const s3Client = new S3Client({})
-
-const getBucket = () => config.storage.exports?.bucket || ''
-
-const getQueueConfig = () => {
-  const queueMode = config.queues.exports?.mode ?? 'off'
-  const queueUrl = config.queues.exports?.url ?? ''
-  const queueEnabled = queueMode !== 'off' && Boolean(queueUrl)
-  return { queueMode, queueUrl, queueEnabled }
-}
-
-const getExportPipelineStatus = () => {
-  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
-  if (!queueEnabled) {
-    return {
-      ok: false,
-      error: 'exports_queue_disabled',
-      message: queueMode === 'off'
-        ? 'Exports are disabled in this environment.'
-        : 'Exports queue is missing a URL.',
-      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
-    }
-  }
-
-  const bucket = getBucket()
-  if (!bucket) {
-    return {
-      ok: false,
-      error: 'exports_bucket_not_configured',
-      message: 'Exports bucket is not configured.',
-      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
-    }
-  }
-
-  return { ok: true }
-}
-
-const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: string) => {
-  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
-
-  if (!queueEnabled) {
-    if (queueMode === 'queue') {
-      logger.warn('export_queue_missing', { queue_url_set: Boolean(queueUrl) })
-    }
-    return
-  }
-
-  try {
-    await sendJsonMessage(queueUrl, { jobId, jobType, userId })
-  } catch (error) {
-    logger.warn('export_queue_enqueue_failed', {
-      job_id: jobId,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
-}
 
 export const dataExportRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
@@ -175,6 +119,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
         },
       }
     } catch (error) {
+      if (error instanceof NotFoundError) throw error
       logger.error('gdpr_export_status_failed', {
         user_id: user.user_id,
         job_id: jobId,
@@ -203,20 +148,11 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
         return { error: 'export_expired' }
       }
 
-      const bucket = getBucket()
-      if (!bucket) {
+      const signed = await getSignedExportDownload(job.s3_key)
+      if (!signed) {
         reply.code(500)
         return { error: 'exports_bucket_not_configured' }
       }
-
-      const url = await getSignedUrl(
-        s3Client,
-        new GetObjectCommand({
-          Bucket: bucket,
-          Key: job.s3_key,
-        }),
-        { expiresIn: 900 },
-      )
 
       try {
         await logAuditEvent(planeAPool, {
@@ -243,10 +179,11 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
 
       return {
         success: true,
-        url,
-        expiresIn: 900,
+        url: signed.url,
+        expiresIn: signed.expiresIn,
       }
     } catch (error) {
+      if (error instanceof NotFoundError) throw error
       logger.error('gdpr_export_download_failed', {
         user_id: user.user_id,
         job_id: jobId,

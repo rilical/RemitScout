@@ -3,9 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildZip = exports.renderPdf = exports.buildCsvSections = exports.buildCsv = exports.escapeCsv = void 0;
+exports.buildParquetBuffer = exports.buildZip = exports.renderPdf = exports.buildCsvSections = exports.buildCsv = exports.escapeCsv = void 0;
+const node_stream_1 = require("node:stream");
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const archiver_1 = __importDefault(require("archiver"));
+const parquetjs_lite_1 = require("parquetjs-lite");
 const escapeCsv = (value) => {
     if (value === null || value === undefined)
         return '';
@@ -80,3 +82,22 @@ const buildZip = async (entries, onWarning) => {
     });
 };
 exports.buildZip = buildZip;
+const buildParquetBuffer = async (schemaDefinition, rows) => {
+    const schema = new parquetjs_lite_1.ParquetSchema(schemaDefinition);
+    const stream = new node_stream_1.PassThrough();
+    const chunks = [];
+    stream.on('data', (chunk) => {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    const writer = await parquetjs_lite_1.ParquetWriter.openStream(schema, stream);
+    for (const row of rows) {
+        await writer.appendRow(row);
+    }
+    await writer.close();
+    await new Promise((resolve, reject) => {
+        stream.on('finish', () => resolve());
+        stream.on('error', (error) => reject(error));
+    });
+    return Buffer.concat(chunks);
+};
+exports.buildParquetBuffer = buildParquetBuffer;

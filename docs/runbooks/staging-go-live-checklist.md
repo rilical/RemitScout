@@ -107,6 +107,10 @@ Source template:
 - [ ] Plane A health and key API routes respond.
 - [ ] Provider evidence workflows run and upload artifacts.
 - [ ] Queue/freshness/exports/db evidence workflows run and upload artifacts.
+- [ ] Burp manual security session completed using `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/burp-manual-security-session.md`.
+- [ ] Claude STRIDE output reviewed and triaged; artifacts updated:
+  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
+  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
 - [ ] Stripe test checkout succeeds.
 - [ ] Stripe webhook signature verification succeeds.
 - [ ] Supabase login + protected route behavior verified.

@@ -78,19 +78,32 @@ export const PLANE_A_ACCOUNT_ROUTE_PREFIXES = [
   '/api/v1/sessions',
 ] as const
 
-export const PLANE_A_AUTH_BYPASS_PATHS_BASE = [
-  '/api/v1/billing/webhook',
-  '/api/v1/alerts/unsubscribe',
-] as const
+export const PLANE_A_AUTH_BYPASS_ROUTE_POLICIES = {
+  '/api/v1/billing/webhook': {
+    reason: 'Stripe webhook signature verification route',
+    owner: 'billing',
+    envScope: 'all',
+  },
+  '/api/v1/alerts/unsubscribe': {
+    reason: 'Email unsubscribe link must work without authentication',
+    owner: 'alerts',
+    envScope: 'all',
+  },
+} as const
+
+export const PLANE_A_AUTH_BYPASS_PATHS_BASE = Object.entries(PLANE_A_AUTH_BYPASS_ROUTE_POLICIES)
+  .filter(([, policy]) => policy.envScope === 'all')
+  .map(([path]) => path)
 
 export const getPlaneAAuthBypassPaths = () => {
-  const authBypassPaths = new Set<string>(PLANE_A_AUTH_BYPASS_PATHS_BASE)
-  const allowUnauthedAlerts =
-    config.env === 'development' || config.env === 'test' || process.env.ENVIRONMENT === 'dev'
-  if (allowUnauthedAlerts) {
-    authBypassPaths.add('/api/v1/alerts/corridor-eligibility')
-    authBypassPaths.add('/api/v1/alerts/macro-corridors')
+  const authBypassPaths = new Set<string>()
+
+  for (const [path, policy] of Object.entries(PLANE_A_AUTH_BYPASS_ROUTE_POLICIES)) {
+    if (policy.envScope === 'all') {
+      authBypassPaths.add(path)
+    }
   }
+
   return authBypassPaths
 }
 
@@ -122,11 +135,27 @@ export const buildApp = async (options?: {
   // This reduces cold start time
   const getPlaneAPool = () => getPool(config.db.planeAUrl)
   app.decorate('container', planeAContainer)
+  const environmentName = (process.env.ENVIRONMENT ?? '').toLowerCase()
+  const isProdLike = environmentName
+    ? ['prod', 'production', 'staging'].includes(environmentName)
+    : config.env === 'production' || config.env === 'staging'
 
-  if (config.planeA.adminEmails.length === 0) {
+  const hasAdminAllowlist =
+    config.planeA.adminEmails.length > 0 || config.planeA.adminEmailDomains.length > 0
+
+  if (!hasAdminAllowlist && config.planeA.adminRequireAllowlist) {
+    logger.error('admin_allowlist_required_but_unconfigured', {
+      message:
+        'PLANE_A_ADMIN_REQUIRE_ALLOWLIST is enabled, but no admin emails/domains are configured.',
+      env: config.env,
+    })
+    throw new Error('PLANE_A_ADMIN_REQUIRE_ALLOWLIST is enabled without PLANE_A_ADMIN_EMAILS or PLANE_A_ADMIN_EMAIL_DOMAINS.')
+  }
+
+  if (!hasAdminAllowlist) {
     const logger = createLogger('plane-a.app')
     logger.warn('admin_emails_empty', {
-      message: 'PLANE_A_ADMIN_EMAILS is not set or empty. Admin routes will be inaccessible.',
+      message: 'No admin allowlist configured. Admin access depends on admin role checks only.',
       env: config.env,
     })
   }
@@ -173,7 +202,7 @@ export const buildApp = async (options?: {
       : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: config.planeA.cors.allowedHeaders.length > 0
       ? config.planeA.cors.allowedHeaders
-      : ['authorization', 'content-type', 'x-request-id', 'x-api-key'],
+      : ['authorization', 'content-type', 'x-request-id', 'x-correlation-id', 'x-api-key'],
     // API Gateway specific: expose custom headers
     exposedHeaders: ['X-API-Version', 'X-API-Deprecation-Warning', 'Sunset', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
   })
@@ -213,6 +242,15 @@ export const buildApp = async (options?: {
   setupPayloadSizeMonitor(app)
   setupLambdaOptimizations(app)
   setupRdsProxyMonitor(app)
+  const adminIpAllowlistRaw = (process.env.ADMIN_IP_ALLOWLIST || '').trim()
+  if (isProdLike && !adminIpAllowlistRaw) {
+    logger.error('admin_ip_allowlist_missing', {
+      message: 'ADMIN_IP_ALLOWLIST must be configured for production/staging runtime.',
+      env: config.env,
+      environment: process.env.ENVIRONMENT || '',
+    })
+    throw new Error('ADMIN_IP_ALLOWLIST is required in production/staging runtime.')
+  }
   registerAdminIpAllowlist(app)
 
   // Security headers (API responses).
@@ -221,11 +259,7 @@ export const buildApp = async (options?: {
     reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     reply.header('X-Content-Type-Options', 'nosniff')
 
-    const prodLike =
-      config.env === 'production'
-      || config.env === 'staging'
-      || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
-    if (prodLike) {
+    if (isProdLike) {
       reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
     }
 
@@ -278,6 +312,10 @@ export const buildApp = async (options?: {
       return toPerWindow(600)
     }
 
+    if (path === '/api/v1/compliance/status') {
+      return toPerWindow(60)
+    }
+
     // Auth-sensitive paths (lower ceilings).
     if (method === 'POST' && (path === '/api/v1/billing/checkout-session' || path === '/api/v1/stripe/create-checkout')) {
       return toPerWindow(10)
@@ -303,13 +341,8 @@ export const buildApp = async (options?: {
     return request.user ? base * 5 : base
   }
 
-  const isProdLike =
-    config.env === 'production'
-    || config.env === 'staging'
-    || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
-  
-  if (isAwsRuntime && config.redis.url) {
-    // Use Redis for distributed rate limiting in Lambda
+  if (isAwsRuntime) {
+    // AWS runtime uses Redis-backed rate limiting with explicit fallback behavior.
     await registerRedisRateLimit(app, {
       timeWindow: config.planeA.rateLimitWindowMs,
       max: maxRequestsForPath,
@@ -319,12 +352,11 @@ export const buildApp = async (options?: {
         if (request.user) return `user:${request.user.user_id}`
         return `ip:${request.ip}`
       },
-      // In prod/staging, do not skip; fall back to in-memory limiter to avoid fail-open.
-      skipOnError: !isProdLike,
+      skipOnError: !isProdLike && config.planeA.rateLimitFallbackMode === 'skip',
+      fallbackMode: config.planeA.rateLimitFallbackMode,
     })
   } else {
-    // Fallback to in-memory rate limiting (local dev or Redis unavailable)
-    // Note: In Lambda, this only works within a single invocation
+    // Local runtime uses in-memory rate limiting.
     registerMemoryRateLimit(app, {
       timeWindow: config.planeA.rateLimitWindowMs,
       max: maxRequestsForPath,
@@ -361,7 +393,14 @@ export const buildApp = async (options?: {
   const tracer = getTracer('plane-a')
 
   app.addHook('onRequest', async (request) => {
-    request.traceId = request.id
+    const correlationHeader = request.headers['x-correlation-id']
+    const correlationId = typeof correlationHeader === 'string' && correlationHeader.trim()
+      ? correlationHeader.trim()
+      : Array.isArray(correlationHeader) && correlationHeader[0]
+        ? correlationHeader[0]
+        : request.id
+
+    request.traceId = correlationId
 
     // Start OpenTelemetry span for the request
     const route = request.routeOptions?.url || request.url.split('?')[0]
@@ -372,6 +411,7 @@ export const buildApp = async (options?: {
       'http.route': route,
       'http.user_agent': request.headers['user-agent'] || '',
       'http.request_id': request.id,
+      'app.correlation_id': correlationId,
     })
     // Store span on request for later use
     request.span = span

@@ -1,157 +1,26 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { z } from 'zod'
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import type { FastifyInstance } from 'fastify'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { sendJsonMessage } from '../../../shared/sqs'
-import { DEFAULT_LIMIT_MAX, EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '../../../shared/constants'
+import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import {
-  type ExportJobType,
-} from '../repositories'
-import { ValidationError, NotFoundError } from '../../../shared/errors'
+  enqueueExportJob,
+  getAuditActorId,
+  getExportPipelineStatus,
+  getSignedExportDownload,
+  mapExportJob,
+  resolveActor,
+  resolveCreateExport,
+} from './exports.service'
+import {
+  exportCreateSchema,
+  exportJobParamsSchema,
+  exportListSchema,
+} from './exports.schema'
 
 const logger = createLogger('plane-a.exports')
-
-const s3Client = new S3Client({})
-
-const exportCreateSchema = z.object({
-  dataType: z.enum(['history', 'watchlist', 'alerts', 'all', 'indices']),
-  format: z.enum(['csv', 'pdf', 'parquet']),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  itemIds: z.array(z.string()).optional(),
-  corridorIds: z.array(z.string().min(1)).max(50).optional(),
-})
-
-const exportListSchema = z.object({
-  status: z.enum(['queued', 'running', 'done', 'failed']).optional(),
-  limit: z.coerce.number().int().positive().max(DEFAULT_LIMIT_MAX).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
-})
-
-const exportJobParamsSchema = z.object({
-  id: z.string().uuid(),
-})
-
-const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
-const DAY_MS = 24 * 60 * 60 * 1000
-
-const toDateFromOrNull = (value?: string) => {
-  if (!value) return null
-  const parsed = DATE_ONLY_RE.test(value)
-    ? new Date(`${value}T00:00:00.000Z`)
-    : new Date(value)
-  if (Number.isNaN(parsed.getTime())) return null
-  return parsed
-}
-
-const toDateToOrNull = (value?: string) => {
-  if (!value) return null
-  const parsed = DATE_ONLY_RE.test(value)
-    ? new Date(`${value}T23:59:59.999Z`)
-    : new Date(value)
-  if (Number.isNaN(parsed.getTime())) return null
-  return parsed
-}
-
-const getInclusiveWindowDays = (dateFrom: Date, dateTo: Date): number => {
-  const diff = dateTo.getTime() - dateFrom.getTime()
-  return Math.floor(diff / DAY_MS) + 1
-}
-
-const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
-  history: { csv: 'history_csv', pdf: 'history_pdf', parquet: 'history_parquet' },
-  watchlist: { csv: 'watchlist_csv', pdf: 'watchlist_pdf', parquet: 'watchlist_parquet' },
-  alerts: { csv: 'alerts_csv', pdf: 'alerts_pdf', parquet: 'alerts_parquet' },
-  all: { csv: 'all_csv', pdf: 'all_pdf', parquet: 'all_parquet' },
-  indices: { csv: 'indices_csv', pdf: 'indices_pdf', parquet: 'indices_parquet' },
-}
-
-const resolveActor = (
-  request: FastifyRequest,
-  reply: FastifyReply,
-): { userId: string; actorType: 'user' | 'api_key'; actorRole?: string; apiKeyId?: string } | null => {
-  if (request.user) {
-    return {
-      userId: request.user.user_id,
-      actorType: 'user',
-      actorRole: request.user.role ?? undefined,
-    }
-  }
-  if (request.apiKey) {
-    return {
-      userId: request.apiKey.user_id,
-      actorType: 'api_key',
-      apiKeyId: request.apiKey.key_id,
-    }
-  }
-  reply.code(401)
-  reply.send({ error: 'unauthorized' })
-  return null
-}
-
-const getBucket = () => config.storage.exports?.bucket || ''
-
-const getQueueConfig = () => {
-  const queueMode = config.queues.exports?.mode ?? 'off'
-  const queueUrl = config.queues.exports?.url ?? ''
-  const queueEnabled = queueMode !== 'off' && Boolean(queueUrl)
-  return { queueMode, queueUrl, queueEnabled }
-}
-
-const getExportPipelineStatus = () => {
-  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
-  if (!queueEnabled) {
-    return {
-      ok: false,
-      error: 'exports_queue_disabled',
-      message: queueMode === 'off'
-        ? 'Exports are disabled in this environment.'
-        : 'Exports queue is missing a URL.',
-      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
-    }
-  }
-
-  const bucket = getBucket()
-  if (!bucket) {
-    return {
-      ok: false,
-      error: 'exports_bucket_not_configured',
-      message: 'Exports bucket is not configured.',
-      meta: { queueMode, queueUrlSet: Boolean(queueUrl) },
-    }
-  }
-
-  return { ok: true }
-}
-
-const enqueueExportJob = async (jobId: string, jobType: ExportJobType, userId: string) => {
-  const { queueMode, queueUrl, queueEnabled } = getQueueConfig()
-
-  if (!queueEnabled) {
-    if (queueMode === 'queue') {
-      logger.warn('export_queue_missing', { queue_url_set: Boolean(queueUrl) })
-    }
-    return
-  }
-
-  try {
-    await sendJsonMessage(queueUrl, {
-      jobId,
-      jobType,
-      userId,
-    })
-  } catch (error) {
-    logger.warn('export_queue_enqueue_failed', {
-      job_id: jobId,
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
-}
 
 export const exportsRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
@@ -160,11 +29,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.post('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const parsed = exportCreateSchema.safeParse(request.body)
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
     }
 
     const actor = resolveActor(request, reply)
     if (!actor) return
+
     const pipeline = getExportPipelineStatus()
     if (!pipeline.ok) {
       reply.code(503)
@@ -173,95 +45,8 @@ export const exportsRoutes = async (app: FastifyInstance) => {
         message: pipeline.message,
       }
     }
-    const { dataType, format } = parsed.data
-    const jobType = exportJobTypeMap[dataType][format]
-    if (format === 'parquet') {
-      const parquetEnabled = config.exports?.parquetEnabled ?? false
-      const entitlements = request.entitlementsContext?.entitlements
-      const bulkExportEnabled = Boolean(entitlements?.bulk_export)
-      if (!parquetEnabled) {
-        throw new ValidationError('Invalid request', { details: { error: 'parquet_not_enabled' } })
-      }
-      if (!bulkExportEnabled) {
-        throw new ValidationError('Invalid request', { details: { error: 'parquet_not_allowed' } })
-      }
-    }
 
-    const exportMaxDays = request.entitlementsContext?.entitlements.exports_max_days ?? null
-    const planMaxDays = typeof exportMaxDays === 'number' && exportMaxDays > 0
-      ? exportMaxDays
-      : null
-    // Always enforce a hard cap even if a plan reports "unlimited".
-    const effectiveMaxDays = Math.max(
-      1,
-      Math.min(
-        EXPORTS_MAX_WINDOW_DAYS_HARD_CAP,
-        planMaxDays ?? EXPORTS_MAX_WINDOW_DAYS_HARD_CAP,
-      ),
-    )
-
-    const dateFrom = toDateFromOrNull(parsed.data.dateFrom)
-    const dateTo = toDateToOrNull(parsed.data.dateTo)
-
-    if (parsed.data.dateFrom && !dateFrom) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'dateFrom' } })
-    }
-    if (parsed.data.dateTo && !dateTo) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_date', field: 'dateTo' } })
-    }
-
-    const requiresDateRange = dataType === 'history' || dataType === 'all' || dataType === 'indices'
-    if (requiresDateRange && (!dateFrom || !dateTo)) {
-      throw new ValidationError('Invalid request', {
-        details: { error: 'export_date_range_required', allowedDays: effectiveMaxDays },
-      })
-    }
-
-    if (dataType === 'indices' && (!parsed.data.corridorIds || parsed.data.corridorIds.length === 0)) {
-      throw new ValidationError('Invalid request', {
-        details: {
-          error: 'indices_corridor_required',
-          message: 'Corridor IDs are required for TEER/RCI/RVI exports.',
-        },
-      })
-    }
-
-    if (dateFrom && dateTo) {
-      if (dateFrom.getTime() > dateTo.getTime()) {
-                throw new ValidationError('Invalid request', { details: { error: 'invalid_date_range' } })
-      }
-
-      const windowDays = getInclusiveWindowDays(dateFrom, dateTo)
-      if (windowDays > effectiveMaxDays) {
-        throw new ValidationError('Invalid request', {
-          details: {
-            error: 'export_window_exceeds_plan_limit',
-            allowedDays: effectiveMaxDays,
-            windowDays,
-          },
-        })
-      }
-    }
-
-    const params: Record<string, unknown> = {
-      dataType,
-      format,
-    }
-    if (request.apiKey) {
-      params.exportAudience = 'institutional'
-    }
-    if (dateFrom) {
-      params.dateFrom = dateFrom.toISOString()
-    }
-    if (dateTo) {
-      params.dateTo = dateTo.toISOString()
-    }
-    if (parsed.data.itemIds?.length) {
-      params.itemIds = parsed.data.itemIds
-    }
-    if (parsed.data.corridorIds?.length) {
-      params.corridorIds = parsed.data.corridorIds
-    }
+    const { jobType, params } = resolveCreateExport(request, parsed.data)
 
     try {
       const activeCount = await exportJobRepository.countByUserAndStatus(actor.userId)
@@ -285,7 +70,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
       try {
         await logAuditEvent(planeAPool, {
-          actorId: actor.actorType === 'api_key' ? actor.apiKeyId ?? actor.userId : actor.userId,
+          actorId: getAuditActorId(actor),
           actorType: actor.actorType,
           actorRole: actor.actorRole,
           action: 'export.request',
@@ -330,11 +115,14 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const parsed = exportListSchema.safeParse(request.query)
     if (!parsed.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
     }
 
     const actor = resolveActor(request, reply)
     if (!actor) return
+
     const limit = parsed.data.limit ?? 50
     const offset = parsed.data.offset ?? 0
 
@@ -346,16 +134,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
       return {
         success: true,
-        jobs: filtered.map((job) => ({
-          id: job.id,
-          jobType: job.job_type,
-          status: job.status,
-          createdAt: job.created_at.toISOString(),
-          startedAt: job.started_at ? job.started_at.toISOString() : null,
-          finishedAt: job.finished_at ? job.finished_at.toISOString() : null,
-          expiresAt: job.expires_at ? job.expires_at.toISOString() : null,
-          error: job.error,
-        })),
+        jobs: filtered.map(mapExportJob),
       }
     } catch (error) {
       logger.error('export_job_list_failed', {
@@ -370,32 +149,26 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports/:id', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
+
     const parsedParams = exportJobParamsSchema.safeParse(request.params)
     if (!parsedParams.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
+      throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
     }
+
     const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== actor.userId) {
-                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
+        throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
 
       return {
         success: true,
-        job: {
-          id: job.id,
-          jobType: job.job_type,
-          status: job.status,
-          createdAt: job.created_at.toISOString(),
-          startedAt: job.started_at ? job.started_at.toISOString() : null,
-          finishedAt: job.finished_at ? job.finished_at.toISOString() : null,
-          expiresAt: job.expires_at ? job.expires_at.toISOString() : null,
-          error: job.error,
-        },
+        job: mapExportJob(job),
       }
     } catch (error) {
+      if (error instanceof NotFoundError) throw error
       logger.error('export_job_get_failed', {
         user_id: actor.userId,
         job_id: jobId,
@@ -409,16 +182,18 @@ export const exportsRoutes = async (app: FastifyInstance) => {
   app.get('/exports/:id/download', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
+
     const parsedParams = exportJobParamsSchema.safeParse(request.params)
     if (!parsedParams.success) {
-            throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
+      throw new ValidationError('Invalid request', { details: { error: 'invalid_export_id' } })
     }
+
     const jobId = parsedParams.data.id
 
     try {
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== actor.userId) {
-                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
+        throw new NotFoundError('Not found', { details: { error: 'not_found' } })
       }
       if (job.status !== 'done' || !job.s3_key) {
         reply.code(409)
@@ -429,20 +204,11 @@ export const exportsRoutes = async (app: FastifyInstance) => {
         return { error: 'export_expired' }
       }
 
-      const bucket = getBucket()
-      if (!bucket) {
+      const signed = await getSignedExportDownload(job.s3_key)
+      if (!signed) {
         reply.code(500)
         return { error: 'exports_bucket_not_configured' }
       }
-
-      const url = await getSignedUrl(
-        s3Client,
-        new GetObjectCommand({
-          Bucket: bucket,
-          Key: job.s3_key,
-        }),
-        { expiresIn: 900 },
-      )
 
       try {
         const metadata: Record<string, unknown> = {
@@ -455,7 +221,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
         }
 
         await logAuditEvent(planeAPool, {
-          actorId: actor.actorType === 'api_key' ? actor.apiKeyId ?? actor.userId : actor.userId,
+          actorId: getAuditActorId(actor),
           actorType: actor.actorType,
           actorRole: actor.actorRole,
           action: 'export.download',
@@ -475,10 +241,11 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
       return {
         success: true,
-        url,
-        expiresIn: 900,
+        url: signed.url,
+        expiresIn: signed.expiresIn,
       }
     } catch (error) {
+      if (error instanceof NotFoundError) throw error
       logger.error('export_job_download_failed', {
         user_id: actor.userId,
         job_id: jobId,

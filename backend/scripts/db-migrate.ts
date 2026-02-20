@@ -57,7 +57,15 @@ const resolveMigratorUrl = (baseUrl?: string): string | undefined => {
     process.env.DATABASE_URL_PLANE_B_MIGRATOR ||
     process.env.DATABASE_URL_PLANE_C_MIGRATOR ||
     process.env.DATABASE_URL_MIGRATOR
-  return (migrator && migrator.trim()) || baseUrl
+  if (migrator && migrator.trim()) {
+    if (process.env.ALLOW_DB_MIGRATOR_URL !== '1') {
+      throw new Error(
+        'Migrator URL supplied without ALLOW_DB_MIGRATOR_URL=1. Refusing to run with privileged credentials.',
+      )
+    }
+    return migrator.trim()
+  }
+  return baseUrl
 }
 
 export const applyMigrations = async (

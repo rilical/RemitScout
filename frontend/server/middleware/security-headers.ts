@@ -19,9 +19,11 @@ export default defineEventHandler((event) => {
   // CSP: Start in Report-Only mode so we can observe violations before enforcing.
   // To enforce, switch to `Content-Security-Policy` instead of `...-Report-Only`.
   //
-  // NOTE: This CSP currently includes `unsafe-inline` for scripts because some
-  // analytics snippets are injected inline (see `frontend/app.vue`). Nonce-based
-  // CSP is a follow-up. Doing it correctly requires:
+  // NOTE: This CSP currently includes `unsafe-inline` for scripts because Nuxt
+  // runtime bootstrapping and JSON-LD structured data still rely on inline script
+  // blocks. Analytics tags in `frontend/app.vue` are now loaded via programmatic
+  // script element injection rather than inline script bodies. Nonce-based CSP is
+  // a follow-up. Doing it correctly requires:
   // 1) Generating a per-response nonce (must not be cached across responses).
   // 2) Passing that nonce to inline script tags (e.g. via `useRequestEvent().context`).
   // 3) Removing `unsafe-inline` from `script-src` only after the nonce is wired.
@@ -32,11 +34,11 @@ export default defineEventHandler((event) => {
   const frameAncestors = isEmbed ? '*' : '\'none\''
   const csp = [
     'default-src \'self\'',
-    'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.ezojs.com https://*.ezoic.net',
+    'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://snap.licdn.com https://analytics.tiktok.com https://www.ezojs.com https://*.ezoic.net',
     'style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com',
     'img-src \'self\' data: https: blob:',
     'font-src \'self\' https://fonts.gstatic.com',
-    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co',
+    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://www.clarity.ms https://www.facebook.com https://px.ads.linkedin.com https://analytics.tiktok.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co',
     'frame-src \'self\' https://js.stripe.com https://*.ezoic.net',
     `frame-ancestors ${frameAncestors}`,
   ].join('; ')

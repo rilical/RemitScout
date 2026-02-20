@@ -10,6 +10,7 @@ metadata:
 spec:
   # Run daily at 02:00 UTC
   schedule: "0 2 * * *"
+  suspend: true
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -48,4 +49,3 @@ spec:
               limits:
                 memory: "256Mi"
                 cpu: "200m"
-

@@ -27,6 +27,7 @@ const start = async () => {
     await runStartupChecks({
       requirements: {
         requirePlaneCDb: true,
+        requirePlaneCInternalAuth: config.planeC.requireInternalAuth,
         requireRedis: true,
         requireQueues: false,
         requireStorage: false,

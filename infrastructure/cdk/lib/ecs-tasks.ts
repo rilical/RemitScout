@@ -374,12 +374,21 @@ export const createEcsTasks = (
   const goldLiveSecrets = buildGoldLiveSecrets()
   const goldLiveSecretsConfig =
     Object.keys(goldLiveSecrets).length > 0 ? { secrets: goldLiveSecrets } : {}
+  const planeBDbRoute =
+    planeBDbHost && (planeBDbHost.includes('.proxy-') || planeBDbHost.includes('proxy-'))
+      ? 'proxy'
+      : 'direct'
   const sharedEnv: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
+    STRICT_CONFIG: '1',
+    ALLOW_DB_FALLBACK: '0',
     NODE_OPTIONS: '--require /app/backend/shared/node-polyfills.js',
     PGSSLMODE: 'require',
-    DB_DISABLE_STATEMENT_TIMEOUT: '1',
+    DB_DISABLE_STATEMENT_TIMEOUT: '0',
+    DB_CONNECTION_ROUTE: planeBDbRoute,
+    DB_STATEMENT_TIMEOUT_POLICY:
+      planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
     TRACING_EXPORTER: tracingExporter,
     OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
@@ -1515,6 +1524,7 @@ export const createEcsTasks = (
       ...(planeBDbMigratorSecretArn
         ? { PLANE_B_DB_MIGRATOR_SECRET_ARN: planeBDbMigratorSecretArn }
         : {}),
+      ALLOW_DB_MIGRATOR_URL: '1',
       HEALTH_PORT: '8080',
     },
     ...secretsConfig,

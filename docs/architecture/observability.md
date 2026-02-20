@@ -4,6 +4,7 @@
 Core monitoring wiring:
 - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/monitoring.ts`
 - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/scheduled-jobs.ts`
+- Trace validation runbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/ops/tracing-validation.md`
 
 Evidence packs (bounded JSON for agents):
 - Schema: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.remit-scout/schema/evidence.schema.json`
@@ -34,4 +35,3 @@ Evidence packs (bounded JSON for agents):
 - RVI: dispersion of effective rates; published as bps relative to TEER
 
 See `backend/scripts/provider-weighting-job.ts` and `backend/scripts/data-health-slo-job.ts` for implementation details.
-

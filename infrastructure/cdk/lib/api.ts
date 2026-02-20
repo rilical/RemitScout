@@ -55,7 +55,10 @@ export type ApiOptions = {
   communicationsSecretArn?: string
   sentrySecretArn?: string
   sentrySecretJsonKey?: string
+  sharedSecretArn?: string
+  planeCInternalApiTokenSecretJsonKey?: string
   planeAAdminEmails?: string[]
+  planeAAdminIpAllowlist?: string[]
   planeACorsOrigins?: string[]
   planeACorsAllowedHeaders?: string[]
   planeACorsAllowedMethods?: string[]
@@ -136,6 +139,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const isDev = options.envName === 'dev'
   const isStaging = options.envName === 'staging'
   const isProd = options.envName === 'prod'
+  const enablePlaneCIamAuth =
+    options.enablePlaneCIamAuth ?? (options.envName === 'prod' || options.envName === 'staging')
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
@@ -298,6 +303,9 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.planeAAdminEmails && options.planeAAdminEmails.length > 0) {
     planeAEnvironment.PLANE_A_ADMIN_EMAILS = options.planeAAdminEmails.join(',')
   }
+  if (options.planeAAdminIpAllowlist && options.planeAAdminIpAllowlist.length > 0) {
+    planeAEnvironment.ADMIN_IP_ALLOWLIST = options.planeAAdminIpAllowlist.join(',')
+  }
   if (options.planeACorsOrigins && options.planeACorsOrigins.length > 0) {
     planeAEnvironment.PLANE_A_CORS_ORIGINS = options.planeACorsOrigins.join(',')
   }
@@ -324,6 +332,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const planeCEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
+    PLANE_C_ENABLE_IAM_AUTH: enablePlaneCIamAuth ? '1' : '0',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     TRACING_EXPORTER: tracingExporter,
@@ -457,8 +466,19 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   if (options.redisSsmName) {
     planeCFunction.addEnvironment('REDIS_SSM_NAME', options.redisSsmName)
   }
+  if (options.sharedSecretArn && options.planeCInternalApiTokenSecretJsonKey) {
+    const sharedSecret = Secret.fromSecretCompleteArn(
+      scope,
+      'PlaneCInternalAuthSecret',
+      options.sharedSecretArn,
+    )
+    sharedSecret.grantRead(planeCFunction)
+    const tokenValue = sharedSecret.secretValueFromJson(
+      options.planeCInternalApiTokenSecretJsonKey,
+    )
+    planeCFunction.addEnvironment('PLANE_C_INTERNAL_API_TOKEN', tokenValue.toString())
+  }
 
-  const enablePlaneCIamAuth = options.enablePlaneCIamAuth ?? options.envName === 'prod'
   if (enablePlaneCIamAuth && !options.disablePlaneCExecuteEndpoint) {
     Annotations.of(scope).addWarning(
       'Plane C IAM auth enabled but execute-api endpoint is still enabled. Consider setting disablePlaneCExecuteEndpoint=true or placing Plane C behind a private domain.',
@@ -675,8 +695,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/pulse/teaser',
     '/api/v1/bank-vs-specialist',
     '/api/v1/alerts/unsubscribe',
-    '/api/v1/alerts/corridor-eligibility',
-    '/api/v1/alerts/macro-corridors',
+    ...(isDev
+      ? [
+          '/api/v1/alerts/corridor-eligibility',
+          '/api/v1/alerts/macro-corridors',
+        ]
+      : []),
     '/api/v1/newsletter/subscribe',
     '/api/v1/newsletter/confirm',
     '/api/v1/newsletter/unsubscribe',

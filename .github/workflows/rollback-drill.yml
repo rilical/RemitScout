@@ -224,3 +224,34 @@ jobs:
             api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
           API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+
+      - name: Build rollback drill evidence
+        if: always()
+        shell: bash
+        env:
+          ENV_NAME: ${{ steps.tags.outputs.ENV_NAME }}
+          CURRENT_TAG: ${{ steps.tags.outputs.CURRENT_TAG }}
+          ROLLBACK_TAG: ${{ steps.tags.outputs.ROLLBACK_TAG }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          cat > artifacts/rollback-drill-evidence.json <<EOF
+          {
+            "environment": "${ENV_NAME}",
+            "currentTag": "${CURRENT_TAG}",
+            "rollbackTagTested": "${ROLLBACK_TAG}",
+            "workflow": "${GITHUB_WORKFLOW}",
+            "runId": "${GITHUB_RUN_ID}",
+            "runNumber": "${GITHUB_RUN_NUMBER}",
+            "sha": "${GITHUB_SHA}",
+            "completedAtUtc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+      - name: Upload rollback drill evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-drill-evidence
+          path: artifacts/rollback-drill-evidence.json
+          retention-days: 180

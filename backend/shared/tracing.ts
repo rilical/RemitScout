@@ -1,5 +1,6 @@
 import {
   trace,
+  propagation,
   SpanStatusCode,
   type Tracer,
   type Span,
@@ -252,6 +253,21 @@ export const startChildSpan = async <T>(
  */
 export const getCurrentSpan = (): Span | undefined => {
   return trace.getSpan(context.active())
+}
+
+export type TraceCarrier = Record<string, string>
+
+export const injectTraceContextToCarrier = (
+  carrier: TraceCarrier = {},
+): TraceCarrier => {
+  propagation.inject(context.active(), carrier)
+  return carrier
+}
+
+export const extractTraceContextFromCarrier = (
+  carrier: TraceCarrier,
+): ReturnType<typeof context.active> => {
+  return propagation.extract(context.active(), carrier)
 }
 
 /**

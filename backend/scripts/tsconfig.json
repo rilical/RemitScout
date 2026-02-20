@@ -4,7 +4,7 @@
     "rootDir": ".",
     "outDir": "../dist/scripts"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "**/*.d.ts"],
   "references": [
     { "path": "../plane-a" },
     { "path": "../shared" },

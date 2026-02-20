@@ -47,6 +47,7 @@ const hasAuthGuard = (routeOptions: any): boolean => {
 
   return tags.includes('requireAuth')
     || tags.includes('requireAdmin')
+    || tags.includes('requireSuperAdmin')
     || tags.some((t) => t.startsWith('requireEntitlement:'))
 }
 

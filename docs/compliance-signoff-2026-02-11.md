@@ -35,7 +35,12 @@ Scope: staging and planned production launch
 - WAF managed rules + rate limits configured.
 - CI security checks include CodeQL, Snyk, pnpm audit, secret scanning.
 - OWASP ZAP baseline/full scans configured for staging URL (`ZAP_TARGET_URL`).
-- Status: **Pending scan execution and triage report**.
+- Manual security artifacts prepared:
+  - Burp runbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/burp-manual-security-session.md`
+  - STRIDE session brief: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-session-brief.md`
+  - STRIDE model artifact: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
+  - Findings register: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+- Status: **Pending execution of Burp/STRIDE session and triage report completion**.
 
 ## Final Decision
 
@@ -43,7 +48,9 @@ Scope: staging and planned production launch
 - Current blockers (2026-02-11):
   - Staging/prod stacks are not deployed yet in `us-east-1`.
   - SES accounts are still in sandbox mode (`ProductionAccessEnabled=false`), so non-verified recipients are blocked.
-  - Pentest + DAST execution evidence not attached yet.
+  - Pentest + DAST evidence tracking files are in place; execution evidence must be attached in:
+    - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+    - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
 - Required approvers:
   - Security:
   - Platform:

@@ -17,7 +17,9 @@ Detailed docs live under:
 4. Queues: `docs/architecture/queues.md`
 5. Observability: `docs/architecture/observability.md`
 6. Security posture: `docs/architecture/security.md`
-7. Runbooks (human-facing): `docs/runbooks/`
+7. Deploy strategy: `docs/architecture/deploy-strategy.md`
+8. Runbooks (human-facing): `docs/runbooks/`
+9. DR runbook: `docs/runbooks/disaster-recovery.md`
 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.
@@ -35,6 +37,7 @@ Detailed docs live under:
   `bucket_delta_pct`. If outside tolerance, reject or enqueue a new request. B2B remains exact.
 - Method filters must only allow methods supported by providers.
 - Indices must respect rights-matrix allowlists (`allowed_in_teer`, `allowed_in_rci`, `allowed_in_rvi`) in both Gold and live API computations.
+- Cross-plane trace continuity is required for public request paths (A -> C -> B) using propagated trace context and correlation identifiers.
 
 ## Environment model
 - **dev**: optimized for speed of iteration, short TTLs, lower capacity.
@@ -81,3 +84,10 @@ Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/archi
 - When diagnosing: prefer running a skill/evidence pack over reading raw logs.
 - Prefer bounded EvidenceResult JSON + pointers over copying multi-megabyte outputs into context.
 - When changing wiring: update the canonical catalogs (`.remit-scout/*`) first and derive other lists from them where possible.
+
+## Security invariants (2026-02 hardening)
+- Plane C `/internal/*` routes must be protected by IAM authorizer and/or explicit internal auth token checks.
+- Plane C production/staging deployments must not run with `PLANE_C_ENABLE_IAM_AUTH=0` unless `PLANE_C_INTERNAL_API_TOKEN` is configured.
+- Plane A production/staging runtime requires `ADMIN_IP_ALLOWLIST`; deploy-time wiring must supply it.
+- Plane A rate-limit fallback in production/staging is fail-closed (`reject`); skip/memory fallbacks are non-prod only.
+- Marketing helper routes under `/api/v1/alerts/*` are dev-only public surfaces; staging/prod requires auth.

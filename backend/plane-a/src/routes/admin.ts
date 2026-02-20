@@ -99,6 +99,9 @@ export const adminRoutes = async (app: FastifyInstance) => {
 
       const whereClause = filters.length > 0 ? `WHERE ${filters.join(' AND ')}` : ''
       const limit = parsed.data.limit ?? 100
+      const limitParam = `$${paramIndex}`
+      params.push(limit)
+      paramIndex++
 
       const result = await query<UserWithPlan>(
         `
@@ -117,7 +120,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
         JOIN silver.user_plan p ON u.user_id = p.user_id
         ${whereClause}
         ORDER BY p.updated_at DESC NULLS LAST, u.created_at DESC
-        LIMIT ${limit}
+        LIMIT ${limitParam}
         `,
         params,
         planeAPool,

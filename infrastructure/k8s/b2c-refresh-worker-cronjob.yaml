@@ -10,6 +10,7 @@ metadata:
 spec:
   # Run every 2 minutes
   schedule: "*/2 * * * *"
+  suspend: true
   # Prevent overlapping runs (if previous job still running, skip)
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -58,6 +59,7 @@ metadata:
 spec:
   # Run every 15 minutes
   schedule: "*/15 * * * *"
+  suspend: true
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -91,4 +93,3 @@ spec:
               limits:
                 memory: "256Mi"
                 cpu: "200m"
-

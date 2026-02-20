@@ -1,0 +1,95 @@
+name: perf/load-testing
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment profile to run against
+        required: true
+        default: staging
+        type: choice
+        options:
+          - dev
+          - staging
+      profile:
+        description: Load profile to execute
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - plane-a
+          - plane-c
+          - b2c-cache
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run load suites
+        shell: bash
+        env:
+          PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'all' }}
+          PLANE_A_BASE_URL: ${{ vars.PLANE_A_BASE_URL }}
+          PLANE_C_BASE_URL: ${{ vars.PLANE_C_BASE_URL }}
+          PLANE_C_INTERNAL_TOKEN: ${{ secrets.PLANE_C_INTERNAL_API_TOKEN }}
+          CORRIDOR_ID: ${{ vars.LOAD_TEST_CORRIDOR_ID || 'US-IN-USD-INR' }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/load-tests
+          failures=0
+
+          run_case() {
+            local name="$1"
+            local script="$2"
+            local title="$3"
+            if ! k6 run --summary-export "artifacts/load-tests/${name}.json" "$script"; then
+              failures=1
+            fi
+            node scripts/ci/render-k6-summary.mjs \
+              --input "artifacts/load-tests/${name}.json" \
+              --output "artifacts/load-tests/${name}.html" \
+              --title "$title"
+          }
+
+          if [ "${PROFILE}" = "all" ] || [ "${PROFILE}" = "plane-a" ]; then
+            run_case "plane-a-quotes" "backend/tests/load/plane-a-quotes.mjs" "Plane A Quotes Load Summary"
+          fi
+
+          if [ "${PROFILE}" = "all" ] || [ "${PROFILE}" = "plane-c" ]; then
+            run_case "plane-c-publisher" "backend/tests/load/plane-c-publisher.mjs" "Plane C Publisher Load Summary"
+          fi
+
+          if [ "${PROFILE}" = "all" ] || [ "${PROFILE}" = "b2c-cache" ]; then
+            run_case "b2c-cache-reads" "backend/tests/load/b2c-cache-reads.mjs" "B2C Cache Reads Load Summary"
+          fi
+
+          exit "${failures}"
+
+      - name: Upload load artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-testing-artifacts
+          path: artifacts/load-tests
+          retention-days: 30
+          if-no-files-found: error
+

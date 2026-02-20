@@ -1,6 +1,8 @@
 import Fastify, { type FastifyInstance } from 'fastify'
+import { SpanStatusCode } from '@opentelemetry/api'
 import { config } from '../../shared/config'
 import { getPool } from '../../shared/db'
+import { getTracer } from '../../shared/tracing'
 import {
   recordRequest,
   getMetrics as getApiMetrics,
@@ -17,6 +19,7 @@ export const buildApp = (): PlaneCApp => {
   const app = Fastify({
     logger: { level: config.env === 'production' ? 'info' : 'debug' },
   })
+  const tracer = getTracer('plane-c')
 
   const pool = getPool(config.db.planeCUrl)
 
@@ -71,6 +74,27 @@ export const buildApp = (): PlaneCApp => {
     }
   })
 
+  app.addHook('onRequest', async (request) => {
+    const correlationHeader = request.headers['x-correlation-id']
+    const correlationId = typeof correlationHeader === 'string' && correlationHeader.trim()
+      ? correlationHeader.trim()
+      : Array.isArray(correlationHeader) && correlationHeader[0]
+        ? correlationHeader[0]
+        : request.id
+    request.traceId = correlationId
+
+    const route = request.routeOptions?.url || request.url.split('?')[0]
+    const span = tracer.startSpan(`HTTP ${request.method} ${route}`)
+    span.setAttributes({
+      'http.method': request.method,
+      'http.url': request.url,
+      'http.route': route,
+      'http.request_id': request.id,
+      'app.correlation_id': correlationId,
+    })
+    request.span = span
+  })
+
   app.addHook('onResponse', async (request, reply) => {
     try {
       const method = request.method
@@ -78,6 +102,20 @@ export const buildApp = (): PlaneCApp => {
       const statusCode = reply.statusCode
       const durationSeconds = reply.elapsedTime / 1000
       recordRequest(method, route, statusCode, durationSeconds)
+
+      const span = request.span
+      if (span) {
+        span.setAttributes({
+          'http.status_code': statusCode,
+          'http.response_content_length': reply.getHeader('content-length') || 0,
+        })
+        if (statusCode >= 500) {
+          span.setStatus({ code: SpanStatusCode.ERROR, message: `HTTP ${statusCode}` })
+        } else {
+          span.setStatus({ code: SpanStatusCode.OK })
+        }
+        span.end()
+      }
     } catch (error) {
       app.log.debug({
         event: 'plane_c_request_metric_record_failed',

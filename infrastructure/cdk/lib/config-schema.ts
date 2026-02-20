@@ -33,6 +33,8 @@ const optionalStringList = z.preprocess((value: unknown) => toStringList(value),
 
 const queueMode = z.enum(['off', 'queue', 'shadow'])
 const cpuArchitecture = z.enum(['arm64', 'x86_64', 'x86', 'amd64'])
+const providerProbeMode = z.enum(['per_provider', 'fan_in'])
+const interfaceEndpointsMode = z.enum(['all', 'minimal', 'none'])
 
 const cdkContextShape = {
   // Core
@@ -107,6 +109,9 @@ const cdkContextShape = {
   pipelineEnableDeploy: optionalBool,
   pipelineRequireApproval: optionalBool,
   devMorningResumeCron: z.string().optional(),
+  providerProbeMode: providerProbeMode.optional(),
+  stagingInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
+  prodInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
 
   // Queue / worker mode controls
   planeBIngestFanoutMode: queueMode.optional(),
@@ -121,6 +126,8 @@ const cdkContextShape = {
 
   // Numeric capacity / throttling knobs
   devNatGateways: optionalNumber,
+  stagingNatGateways: optionalNumber,
+  prodNatGateways: optionalNumber,
   costBudgetAmountUsd: optionalNumber,
   costAnomalyThresholdUsd: optionalNumber,
   planeBB2bTargetMinutes: optionalNumber,

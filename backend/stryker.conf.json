@@ -3,16 +3,19 @@
   "testRunner": "vitest",
   "checkers": ["typescript"],
   "tsconfigFile": "tsconfig.json",
-  "reporters": ["html", "clear-text", "progress"],
+  "reporters": ["html", "json", "clear-text", "progress"],
   "coverageAnalysis": "off",
   "mutate": [
     "plane-a/src/services/alert-evaluator.ts",
     "plane-a/src/services/entitlements.ts",
-    "plane-a/src/routes/billing/**/*.ts"
+    "plane-a/src/routes/billing/**/*.ts",
+    "shared/corridor.ts",
+    "plane-a/src/routes/popular-corridors.ts",
+    "plane-b/src/normalize/quote-normalizer.ts"
   ],
   "thresholds": {
-    "high": 80,
-    "low": 60,
-    "break": 70
+    "high": 85,
+    "low": 70,
+    "break": 75
   }
 }

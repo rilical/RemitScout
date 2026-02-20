@@ -36,6 +36,12 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
   const isDev = options.envName === 'dev'
   const isStaging = options.envName === 'staging'
   const enableProxy = options.enableProxy ?? true
+  const sensitiveSqlLoggingEnabled =
+    isDev && (process.env.DB_SENSITIVE_SQL_LOGGING_ENABLED || '').trim() === '1'
+  const pgAuditLogLevel = sensitiveSqlLoggingEnabled ? 'all' : 'write,ddl,role'
+  const pgAuditLogParameter = sensitiveSqlLoggingEnabled ? 'on' : 'off'
+  const statementLogLevel = sensitiveSqlLoggingEnabled ? 'all' : 'ddl'
+  const slowQueryLogMs = isDev ? '750' : '1000'
 
   const encryptionKey = new Key(scope, 'DatabaseEncryptionKey', {
     description: `RemitScout ${options.envName} Aurora encryption key`,
@@ -50,15 +56,15 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     parameters: {
       shared_preload_libraries: 'pgaudit',
-      'pgaudit.log': 'all',
+      'pgaudit.log': pgAuditLogLevel,
       'pgaudit.log_catalog': 'on',
-      'pgaudit.log_parameter': 'on',
+      'pgaudit.log_parameter': pgAuditLogParameter,
       'pgaudit.log_relation': 'on',
       'pgaudit.log_statement_once': 'on',
       log_connections: '1',
       log_disconnections: '1',
-      log_statement: 'all',
-      log_min_duration_statement: '1000',
+      log_statement: statementLogLevel,
+      log_min_duration_statement: slowQueryLogMs,
     },
   })
 

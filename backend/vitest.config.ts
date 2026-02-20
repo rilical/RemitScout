@@ -4,8 +4,9 @@ import path from 'node:path'
 const includeProviderFixtures = process.env.RUN_PROVIDER_FIXTURES === '1'
 const enforceCoverage = process.env.ENFORCE_COVERAGE === '1'
 
-// Coverage target timeline (starting Feb 12, 2026):
-// Reach statements 50%, branches 40%, functions 50%, lines 50% within 3 months.
+// Coverage enforcement policy:
+// - Global gate: 80%+ in CI.
+// - Critical-path gates (shared / plane-a / plane-c / billing) are enforced in Codecov flags at 85%+.
 export default defineConfig({
   test: {
     allowOnly: !process.env.CI,
@@ -49,11 +50,10 @@ export default defineConfig({
       ],
       thresholds: enforceCoverage
         ? {
-            // Starting thresholds (raise every sprint as coverage improves).
-            statements: 20,
-            branches: 15,
-            functions: 25,
-            lines: 20,
+            statements: 80,
+            branches: 80,
+            functions: 80,
+            lines: 80,
           }
         : {
             statements: 0,

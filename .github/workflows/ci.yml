@@ -349,9 +349,36 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/lcov.info
-          flags: backend
+          flags: backend,backend_shared,backend_plane_a,backend_plane_c,backend_billing
           name: backend-coverage
           fail_ci_if_error: true
+
+  mutation-critical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [changes, lockfile-integrity]
+    if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - name: Run critical mutation suite
+        run: pnpm -C backend test:mutation:critical
+      - name: Enforce mutation survivor gate
+        env:
+          MUTATION_MAX_SURVIVED: '0'
+        run: pnpm -C backend ci:mutation-gate
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-mutation-critical
+          path: |
+            backend/reports/mutation
+            backend/reports/mutation/**/*.json
+          if-no-files-found: ignore
 
   backend-docker-native-deps:
     runs-on: ubuntu-latest

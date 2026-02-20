@@ -11,3 +11,10 @@ export declare const buildZip: (entries: Array<{
     name: string;
     content: Buffer | string;
 }>, onWarning?: (warning: Error) => void) => Promise<Buffer>;
+export type ParquetFieldType = 'UTF8' | 'DOUBLE' | 'INT32' | 'BOOLEAN';
+export type ParquetFieldDefinition = {
+    type: ParquetFieldType;
+    optional?: boolean;
+};
+export type ParquetSchemaDefinition = Record<string, ParquetFieldDefinition>;
+export declare const buildParquetBuffer: (schemaDefinition: ParquetSchemaDefinition, rows: Array<Record<string, unknown>>) => Promise<Buffer>;

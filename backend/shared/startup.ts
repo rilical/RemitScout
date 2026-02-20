@@ -32,13 +32,24 @@ const checkDbConnectivity = async (databaseUrl: string): Promise<boolean> => {
   }
 }
 
-const resolveDbUrlsToCheck = (): string[] => {
+const resolveDbUrlsToCheck = (requirements: RuntimeConfigRequirements = {}): string[] => {
   const urls: string[] = []
+  const requiresAnyPlaneDb =
+    requirements.requirePlaneA === true
+    || requirements.requirePlaneB === true
+    || requirements.requirePlaneCDb === true
 
-  // Prefer explicit plane URLs when present (ECS entrypoints resolve these).
-  if (process.env.DATABASE_URL_PLANE_A && config.db.planeAUrl) urls.push(config.db.planeAUrl)
-  if (process.env.DATABASE_URL_PLANE_B && config.db.planeBUrl) urls.push(config.db.planeBUrl)
-  if (process.env.DATABASE_URL_PLANE_C && config.db.planeCUrl) urls.push(config.db.planeCUrl)
+  if (requirements.requirePlaneA && config.db.planeAUrl) urls.push(config.db.planeAUrl)
+  if (requirements.requirePlaneB && config.db.planeBUrl) urls.push(config.db.planeBUrl)
+  if (requirements.requirePlaneCDb && config.db.planeCUrl) urls.push(config.db.planeCUrl)
+
+  // If this startup check is DB-related but does not specify a plane requirement, check all
+  // available plane URLs to avoid masking plane-specific wiring gaps.
+  if (!requiresAnyPlaneDb) {
+    if (config.db.planeAUrl) urls.push(config.db.planeAUrl)
+    if (config.db.planeBUrl) urls.push(config.db.planeBUrl)
+    if (config.db.planeCUrl) urls.push(config.db.planeCUrl)
+  }
 
   // Fall back to whatever default DB URL is configured.
   if (urls.length === 0 && config.db.url) urls.push(config.db.url)
@@ -65,6 +76,7 @@ const checkRedisConnectivity = async (): Promise<boolean> => {
 
 export const waitForDependencies = async (opts: {
   db?: boolean
+  dbUrls?: string[]
   redis?: boolean
   sqs?: boolean
   maxWaitMs?: number
@@ -83,7 +95,9 @@ export const waitForDependencies = async (opts: {
   while (Date.now() < deadline) {
     const checks: Array<Promise<boolean>> = []
     if (wantsDb) {
-      const dbUrls = resolveDbUrlsToCheck()
+      const dbUrls = opts.dbUrls && opts.dbUrls.length > 0
+        ? Array.from(new Set(opts.dbUrls)).filter(Boolean)
+        : resolveDbUrlsToCheck()
       if (dbUrls.length === 0) {
         checks.push(Promise.resolve(false))
       } else {
@@ -122,6 +136,7 @@ export const runStartupChecks = async (params: {
   const requirements = params.requirements ?? {}
   const queueShouldValidate = requirements.requireQueues === true
   const storageShouldValidate = requirements.requireStorage === true
+  const requiredDbUrls = resolveDbUrlsToCheck(requirements)
 
   const resolveRequiredQueues = (): ValidationOptions['requiredQueues'] => {
     const queueRequirements = new Set<NonNullable<ValidationOptions['requiredQueues']>[number]>()
@@ -240,6 +255,7 @@ export const runStartupChecks = async (params: {
 
     await waitForDependencies({
       db: !derived.skipDatabase,
+      dbUrls: !derived.skipDatabase ? requiredDbUrls : undefined,
       redis: !derived.skipRedis,
       sqs: !derived.skipSQS,
       maxWaitMs: 30_000,

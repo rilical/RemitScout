@@ -14,9 +14,20 @@ vi.mock('../shared/config', () => ({
     },
     planeA: {
       adminEmails: [],
+      adminEmailDomains: [],
+      adminRequireAllowlist: false,
+      adminAllowlistStrict: false,
       enterpriseApiRateLimitMax: 0,
       enterpriseApiRateLimitWindowMs: 60000,
       enterpriseApiKeyMax: 10,
+    },
+    env: 'test',
+    privacy: {
+      kAnonymityMinimum: 5,
+      corridorMinDataPoints24h: 100,
+      providerMinQuotesPerCorridor: 50,
+      trendMinLookbackDays: 7,
+      corridorMaxTrendPct: 50,
     },
   },
 }))
@@ -62,4 +73,3 @@ describe('auth tombstone guard', () => {
     )
   })
 })
-

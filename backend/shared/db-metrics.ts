@@ -79,13 +79,19 @@ export const recordQueryFromSql = (
     name: 'db_query_duration_seconds',
     value: durationSeconds,
     unit: 'Seconds',
-    dimensions: { operation, table },
+    dimensions: { operation, table, environment: environmentDimension },
+  })
+  recordCloudWatchMetric({
+    name: 'db_query_duration_seconds_env',
+    value: durationSeconds,
+    unit: 'Seconds',
+    dimensions: { environment: environmentDimension },
   })
   recordCloudWatchMetric({
     name: 'db_queries_total',
     value: 1,
     unit: 'Count',
-    dimensions: { operation, table, status },
+    dimensions: { operation, table, status, environment: environmentDimension },
   })
 }
 
@@ -127,4 +133,3 @@ export const updateConnectionPoolMetrics = (
 }
 
 export { getMetrics, metricsContentType }
-

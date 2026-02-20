@@ -98,14 +98,28 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     }
   }
 
+  const sesIdentityArns = (options.sesIdentityArns ?? []).filter(Boolean)
+  const snsTopicArns = (options.snsTopicArns ?? []).filter(Boolean)
   const sesPolicyResources =
-    options.envName === 'dev'
-      ? ['*']
-      : options.sesIdentityArns ?? []
+    sesIdentityArns.length > 0
+      ? sesIdentityArns
+      : ['arn:aws:ses:*:*:identity/*']
   const snsPolicyResources =
-    options.envName === 'dev'
-      ? ['*']
-      : options.snsTopicArns ?? []
+    snsTopicArns.length > 0
+      ? snsTopicArns
+      : ['arn:aws:sns:*:*:remit-scout-*']
+  if (options.envName === 'dev') {
+    if (sesIdentityArns.length === 0) {
+      Annotations.of(scope).addWarning(
+        'No SES identity ARNs provided for dev; falling back to scoped wildcard identity ARN pattern.',
+      )
+    }
+    if (snsTopicArns.length === 0) {
+      Annotations.of(scope).addWarning(
+        'No SNS topic ARNs provided for dev; falling back to scoped remit-scout topic ARN pattern.',
+      )
+    }
+  }
   const sesPolicy = new PolicyStatement({
     actions: ['ses:SendEmail', 'ses:SendRawEmail'],
     resources: sesPolicyResources,

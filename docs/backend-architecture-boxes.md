@@ -85,7 +85,7 @@ For the full end-to-end narrative, see `docs/backend-architecture-a-z.md`.
 - Providers: remitly, westernunion, wise, worldremit, ria, dahabshiil, sendwave,
   mukuru, xe, alansari, instarem, xoom, remitbee, singx, placid, koronapay,
   wirebarley, intermex.
-- Entrypoints: `backend/scripts/aws/<provider>-probe-lambda.ts`.
+- Entrypoint: `backend/scripts/aws/provider-probe-lambda.ts` (`PROVIDER_ID` is injected per schedule rule).
 
 ### ECS Scheduled Task
 - b2b-sweep-scheduler: `backend/scripts/aws/b2b-sweep-scheduler-ecs.ts`.

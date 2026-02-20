@@ -1,4 +1,7 @@
 import { randomBytes } from 'crypto'
+import { mkdir, writeFile } from 'fs/promises'
+import { dirname, resolve } from 'path'
+import { pathToFileURL } from 'url'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
@@ -14,6 +17,7 @@ type ScriptArgs = {
   force: boolean
   supabaseOnly: boolean
   printPasswords: boolean
+  passwordOutputPath: string | null
 }
 
 type SupabaseUser = {
@@ -60,7 +64,7 @@ const launchUsers: LaunchUserSpec[] = [
 const usage = () => {
   console.log(`
 Usage:
-  tsx backend/scripts/seed-launch-users.ts [--supabase-only] [--force] [--print-passwords]
+  tsx backend/scripts/seed-launch-users.ts [--supabase-only] [--force] [--print-passwords --password-output <path>]
 
 Password env vars (optional):
   LAUNCH_PASSWORD_OMAR
@@ -74,13 +78,20 @@ SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.
 
 Notes:
   - By default, this script does NOT print plaintext passwords.
+  - To enable password export, set SEED_PRINT_PASSWORDS_ENABLED=1.
   - Use --print-passwords only for controlled, temporary credentials (dev/staging).
 `)
 }
 
-const parseArgs = (): ScriptArgs => {
-  const args: ScriptArgs = { force: false, supabaseOnly: false, printPasswords: false }
-  for (const arg of process.argv.slice(2)) {
+export const parseArgsFromArgv = (argv: string[]): ScriptArgs => {
+  const args: ScriptArgs = {
+    force: false,
+    supabaseOnly: false,
+    printPasswords: false,
+    passwordOutputPath: null,
+  }
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index]
     if (arg === '--help') {
       usage()
       process.exit(0)
@@ -97,11 +108,49 @@ const parseArgs = (): ScriptArgs => {
       args.printPasswords = true
       continue
     }
+    if (arg === '--password-output') {
+      const outputPath = argv[index + 1]
+      if (!outputPath || outputPath.startsWith('--')) {
+        throw new Error('--password-output requires a file path')
+      }
+      args.passwordOutputPath = outputPath.trim()
+      index += 1
+      continue
+    }
+    if (arg.startsWith('--password-output=')) {
+      const outputPath = arg.slice('--password-output='.length).trim()
+      if (!outputPath) {
+        throw new Error('--password-output requires a file path')
+      }
+      args.passwordOutputPath = outputPath
+      continue
+    }
     if (arg.startsWith('--')) {
       throw new Error(`Unknown option: ${arg}`)
     }
   }
   return args
+}
+
+const parseArgs = (): ScriptArgs => parseArgsFromArgv(process.argv.slice(2))
+
+export const printPasswordsEnabled = (env: NodeJS.ProcessEnv = process.env) => {
+  const value = (env.SEED_PRINT_PASSWORDS_ENABLED || '').trim().toLowerCase()
+  return value === '1' || value === 'true' || value === 'yes'
+}
+
+export const validatePasswordExportArgs = (
+  args: ScriptArgs,
+  env: NodeJS.ProcessEnv = process.env,
+) => {
+  if (args.printPasswords && !printPasswordsEnabled(env)) {
+    throw new Error(
+      'Password export is disabled. Set SEED_PRINT_PASSWORDS_ENABLED=1 to allow --print-passwords.',
+    )
+  }
+  if (args.printPasswords && !args.passwordOutputPath) {
+    throw new Error('When using --print-passwords, you must provide --password-output <path>.')
+  }
 }
 
 const requireSupabaseConfig = () => {
@@ -352,8 +401,14 @@ const main = async () => {
   if (isProdLike && !args.force) {
     throw new Error('Refusing to run in prod without --force')
   }
+  validatePasswordExportArgs(args)
+
+  const resolvedPasswordOutputPath = args.passwordOutputPath
+    ? resolve(args.passwordOutputPath)
+    : null
 
   const outputs: Array<Record<string, string>> = []
+  const passwordOutputs: Array<Record<string, string>> = []
 
   const pool = args.supabaseOnly ? null : createPool(config.db.planeAUrl)
   try {
@@ -383,8 +438,14 @@ const main = async () => {
         app_role: user.appRole,
         plan_code: user.planCode,
         password_source: password.source,
-        ...(args.printPasswords ? { password: password.value } : {}),
       })
+      if (args.printPasswords) {
+        passwordOutputs.push({
+          email: user.email,
+          user_id: supabase.userId,
+          password: password.value,
+        })
+      }
     }
   } finally {
     if (pool) {
@@ -392,13 +453,34 @@ const main = async () => {
     }
   }
 
+  if (args.printPasswords && resolvedPasswordOutputPath) {
+    await mkdir(dirname(resolvedPasswordOutputPath), { recursive: true })
+    await writeFile(
+      resolvedPasswordOutputPath,
+      `${JSON.stringify(passwordOutputs, null, 2)}\n`,
+      { mode: 0o600 },
+    )
+    logger.warn('launch_user_passwords_written', {
+      output_path: resolvedPasswordOutputPath,
+      user_count: passwordOutputs.length,
+    })
+  }
+
   console.log(JSON.stringify(outputs, null, 2))
 }
 
-main().catch((error) => {
-  logger.error('seed_launch_users_failed', {
-    error: error instanceof Error ? error.message : String(error),
+const isDirectExecution = (() => {
+  const entrypoint = process.argv[1]
+  if (!entrypoint) return true
+  return import.meta.url === pathToFileURL(entrypoint).href
+})()
+
+if (isDirectExecution) {
+  main().catch((error) => {
+    logger.error('seed_launch_users_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    usage()
+    process.exit(1)
   })
-  usage()
-  process.exit(1)
-})
+}

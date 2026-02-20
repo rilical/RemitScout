@@ -358,11 +358,8 @@ export const requireAdmin = () => {
     const email = request.user.email?.toLowerCase()
     const allowlist = config.planeA.adminEmails
     const domainAllowlist = config.planeA.adminEmailDomains
+    const hasAllowlist = allowlist.length > 0 || domainAllowlist.length > 0
     const supabaseRole = request.user.role
-    // Never lock out super admins because an allowlist was misconfigured.
-    if (supabaseRole === 'super_admin') {
-      return
-    }
 
     let appRole: string | null = null
     try {
@@ -372,14 +369,26 @@ export const requireAdmin = () => {
         planeAPool,
       )
       appRole = result.rows[0]?.app_role ?? null
-      if (appRole === 'super_admin') {
-        return
-      }
     } catch (error) {
       logger.warn('admin_role_lookup_failed', {
         user_id: request.user.user_id,
         error: getErrorMessage(error),
       })
+    }
+
+    const hasAdminRole =
+      supabaseRole === 'admin'
+      || supabaseRole === 'super_admin'
+      || appRole === 'admin'
+      || appRole === 'super_admin'
+    if (!hasAdminRole) {
+      logger.warn('admin_role_required', {
+        user_id: request.user.user_id,
+        supabase_role: supabaseRole,
+        app_role: appRole,
+      })
+      reply.code(403)
+      return reply.send({ error: 'forbidden' })
     }
 
     const domainAllowed = (() => {
@@ -388,27 +397,29 @@ export const requireAdmin = () => {
       if (!domain) return false
       return domainAllowlist.includes(domain)
     })()
-    const allowlisted = allowlist.length > 0 && email ? allowlist.includes(email) : false
+    const allowlisted = email ? allowlist.includes(email) : false
     const privilegedByEmail = allowlisted || domainAllowed
-    if (privilegedByEmail) {
-      return
-    }
+    const requireAllowlist = config.planeA.adminRequireAllowlist || config.planeA.adminAllowlistStrict
 
-    // If an allowlist is configured (emails or domains), require it for non-super-admin access.
-    if (allowlist.length > 0 || domainAllowlist.length > 0) {
+    if (requireAllowlist && !hasAllowlist) {
+      logger.error('admin_allowlist_required_but_unconfigured', {
+        env: config.env,
+        user_id: request.user.user_id,
+      })
       reply.code(403)
       return reply.send({ error: 'forbidden' })
     }
 
-    if (supabaseRole === 'admin') {
-      return
-    }
-    if (appRole === 'admin') {
-      return
+    if ((hasAllowlist || requireAllowlist) && !privilegedByEmail) {
+      logger.warn('admin_allowlist_denied', {
+        user_id: request.user.user_id,
+        has_email: Boolean(email),
+      })
+      reply.code(403)
+      return reply.send({ error: 'forbidden' })
     }
 
-    reply.code(403)
-    return reply.send({ error: 'forbidden' })
+    return
   }
   ;(handler as { __guardTag?: string }).__guardTag = 'requireAdmin'
   return handler

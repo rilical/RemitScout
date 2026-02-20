@@ -108,6 +108,12 @@ const run = () => {
     policyViolations.push('PUBLIC_API_BASE must contain a staging hostname')
   }
 
+  const wafAdminAllowlist = getValue('WAF_ADMIN_ALLOWLIST_IPS')
+  const adminIpAllowlist = getValue('ADMIN_IP_ALLOWLIST')
+  if (!wafAdminAllowlist && !adminIpAllowlist) {
+    policyViolations.push('Either WAF_ADMIN_ALLOWLIST_IPS or ADMIN_IP_ALLOWLIST must be set for admin route protection')
+  }
+
   const stripeSecret = getValue('STRIPE_SECRET_KEY')
   if (stripeSecret && !stripeSecret.startsWith('sk_test_')) {
     policyViolations.push('STRIPE_SECRET_KEY must be Stripe test-mode key (sk_test_*) for staging')

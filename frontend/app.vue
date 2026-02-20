@@ -146,96 +146,240 @@ onErrorCaptured((err) => {
   return false
 })
 
-useHead(() => {
-  const script: Array<Record<string, any>> = []
-  const noscript: Array<Record<string, any>> = []
+type DynamicWindow = Window & typeof globalThis & Record<string, any>
 
-  // Google tags (GA4 and/or Google Ads) are loaded only when analytics consent is granted.
+const ensureExternalScript = (id: string, src: string) => {
+  if (!import.meta.client) return
+  if (document.getElementById(id)) return
+  const script = document.createElement('script')
+  script.id = id
+  script.async = true
+  script.src = src
+  document.head.appendChild(script)
+}
+
+const ensureTrackingPixel = (id: string, src: string) => {
+  if (!import.meta.client) return
+  if (document.getElementById(id)) return
+  const img = document.createElement('img')
+  img.id = id
+  img.src = src
+  img.alt = ''
+  img.width = 1
+  img.height = 1
+  img.style.display = 'none'
+  ;(document.body || document.documentElement).appendChild(img)
+}
+
+let googleTagsReady = false
+let metaPixelReady = false
+let clarityReady = false
+let linkedInReady = false
+let tikTokReady = false
+let ezoicReady = false
+
+const ensureGoogleTags = () => {
+  if (!import.meta.client) return
+  if (!allowAnalytics.value) return
   const googleTagId = ga4Id || googleAdsConversionId
-  if (allowAnalytics.value && googleTagId) {
-    script.push(
-      {
-        key: 'ga4-src',
-        src: `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleTagId)}`,
-        async: true,
-      },
-      {
-        key: 'ga4-init',
-        innerHTML: [
-          'window.dataLayer=window.dataLayer||[];',
-          'function gtag(){dataLayer.push(arguments);}',
-          `gtag('js', new Date());`,
-          ga4Id ? `gtag('config','${ga4Id}',{anonymize_ip:true,send_page_view:false});` : '',
-          googleAdsConversionId ? `gtag('config','${googleAdsConversionId}');` : '',
-        ].filter(Boolean).join(''),
-      },
+  if (!googleTagId || googleTagsReady) return
+
+  const win = window as DynamicWindow
+  win.dataLayer = Array.isArray(win.dataLayer) ? win.dataLayer : []
+  if (typeof win.gtag !== 'function') {
+    win.gtag = (...args: unknown[]) => {
+      win.dataLayer.push(args)
+    }
+  }
+
+  ensureExternalScript(
+    'rs-ga4-src',
+    `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleTagId)}`,
+  )
+
+  win.gtag('js', new Date())
+  if (ga4Id) {
+    win.gtag('config', ga4Id, { anonymize_ip: true, send_page_view: false })
+  }
+  if (googleAdsConversionId) {
+    win.gtag('config', googleAdsConversionId)
+  }
+
+  googleTagsReady = true
+}
+
+const ensureMetaPixel = () => {
+  if (!import.meta.client) return
+  if (!allowMarketing.value || !metaPixelId || metaPixelReady) return
+
+  const win = window as DynamicWindow
+  if (typeof win.fbq !== 'function') {
+    const fbq = (...args: unknown[]) => {
+      const scoped = fbq as typeof fbq & {
+        callMethod?: (...args: unknown[]) => void
+        queue?: unknown[][]
+        loaded?: boolean
+        version?: string
+      }
+      if (typeof scoped.callMethod === 'function') {
+        scoped.callMethod(...args)
+        return
+      }
+      scoped.queue = scoped.queue || []
+      scoped.queue.push(args)
+    }
+    const scoped = fbq as typeof fbq & {
+      queue?: unknown[][]
+      loaded?: boolean
+      version?: string
+    }
+    scoped.queue = []
+    scoped.loaded = true
+    scoped.version = '2.0'
+    win.fbq = fbq
+    win._fbq = fbq
+  }
+
+  ensureExternalScript('rs-meta-pixel-src', 'https://connect.facebook.net/en_US/fbevents.js')
+  win.fbq('init', metaPixelId)
+  ensureTrackingPixel(
+    'rs-meta-pixel-noscript',
+    `https://www.facebook.com/tr?id=${encodeURIComponent(metaPixelId)}&ev=PageView&noscript=1`,
+  )
+  metaPixelReady = true
+}
+
+const ensureClarity = () => {
+  if (!import.meta.client) return
+  if (!allowAnalytics.value || !clarityProjectId || clarityReady) return
+
+  const win = window as DynamicWindow
+  if (typeof win.clarity !== 'function') {
+    win.clarity = (...args: unknown[]) => {
+      win.clarity.q = win.clarity.q || []
+      win.clarity.q.push(args)
+    }
+  }
+  ensureExternalScript(
+    'rs-clarity-src',
+    `https://www.clarity.ms/tag/${encodeURIComponent(clarityProjectId)}`,
+  )
+  clarityReady = true
+}
+
+const ensureLinkedInInsight = () => {
+  if (!import.meta.client) return
+  if (!allowMarketing.value || !linkedinPartnerId || linkedInReady) return
+
+  const win = window as DynamicWindow
+  win._linkedin_partner_id = linkedinPartnerId
+  win._linkedin_data_partner_ids = Array.isArray(win._linkedin_data_partner_ids)
+    ? win._linkedin_data_partner_ids
+    : []
+  if (!win._linkedin_data_partner_ids.includes(linkedinPartnerId)) {
+    win._linkedin_data_partner_ids.push(linkedinPartnerId)
+  }
+
+  if (typeof win.lintrk !== 'function') {
+    win.lintrk = (action: unknown, data: unknown) => {
+      win.lintrk.q = win.lintrk.q || []
+      win.lintrk.q.push([action, data])
+    }
+    win.lintrk.q = []
+  }
+
+  ensureExternalScript('rs-linkedin-insight-src', 'https://snap.licdn.com/li.lms-analytics/insight.min.js')
+  ensureTrackingPixel(
+    'rs-linkedin-insight-noscript',
+    `https://px.ads.linkedin.com/collect/?pid=${encodeURIComponent(linkedinPartnerId)}&fmt=gif`,
+  )
+  linkedInReady = true
+}
+
+const ensureTikTokPixel = () => {
+  if (!import.meta.client) return
+  if (!allowMarketing.value || !tiktokPixelId || tikTokReady) return
+
+  const win = window as DynamicWindow
+  win.TiktokAnalyticsObject = 'ttq'
+  const ttq = (win.ttq = win.ttq || [])
+  ttq.methods = ttq.methods || [
+    'page',
+    'track',
+    'identify',
+    'instances',
+    'debug',
+    'on',
+    'off',
+    'once',
+    'ready',
+    'alias',
+    'group',
+    'enableCookie',
+    'disableCookie',
+  ]
+  ttq.setAndDefer = ttq.setAndDefer || ((target: Record<string, any>, method: string) => {
+    target[method] = (...args: unknown[]) => {
+      target.push([method, ...args])
+    }
+  })
+  for (const method of ttq.methods) {
+    if (typeof ttq[method] !== 'function') {
+      ttq.setAndDefer(ttq, method)
+    }
+  }
+  ttq.instance = ttq.instance || ((instanceId: string) => {
+    const instance = ttq._i?.[instanceId] || []
+    for (const method of ttq.methods) {
+      if (typeof instance[method] !== 'function') {
+        ttq.setAndDefer(instance, method)
+      }
+    }
+    return instance
+  })
+  ttq.load = ttq.load || ((pixelId: string, options?: Record<string, unknown>) => {
+    const src = 'https://analytics.tiktok.com/i18n/pixel/events.js'
+    ttq._i = ttq._i || {}
+    ttq._i[pixelId] = ttq._i[pixelId] || []
+    ttq._i[pixelId]._u = src
+    ttq._t = ttq._t || {}
+    ttq._t[pixelId] = Date.now()
+    ttq._o = ttq._o || {}
+    ttq._o[pixelId] = options || {}
+    ensureExternalScript(
+      'rs-tiktok-pixel-src',
+      `${src}?sdkid=${encodeURIComponent(pixelId)}&lib=ttq`,
     )
-  }
+  })
 
-  if (allowMarketing.value && metaPixelId) {
-    script.push({
-      key: 'meta-pixel',
-      innerHTML: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${metaPixelId}');`,
-    })
-    noscript.push({
-      key: 'meta-pixel-noscript',
-      innerHTML: `<img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id=${metaPixelId}&ev=PageView&noscript=1" />`,
-    })
-  }
+  ttq.load(tiktokPixelId)
+  ttq.page()
+  tikTokReady = true
+}
 
-  // Microsoft Clarity (heatmaps/session replay). Treated as analytics.
-  if (allowAnalytics.value && clarityProjectId) {
-    script.push({
-      key: 'clarity',
-      innerHTML: `((c,l,a,r,i,t,y)=>{c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window, document, "clarity", "script", "${clarityProjectId}");`,
-    })
-  }
+const ensureEzoic = () => {
+  if (!import.meta.client) return
+  if (!allowEzoic.value || ezoicReady) return
+  const win = window as DynamicWindow
+  win.ezstandalone = win.ezstandalone || {}
+  win.ezstandalone.cmd = Array.isArray(win.ezstandalone.cmd) ? win.ezstandalone.cmd : []
+  ensureExternalScript('rs-ezoic-header', 'https://www.ezojs.com/ezoic/sa.min.js')
+  ezoicReady = true
+}
 
-  // LinkedIn Insight Tag. Treated as marketing.
-  if (allowMarketing.value && linkedinPartnerId) {
-    script.push(
-      {
-        key: 'linkedin-insight-base',
-        innerHTML: `window._linkedin_partner_id="${linkedinPartnerId}";window._linkedin_data_partner_ids=window._linkedin_data_partner_ids||[];window._linkedin_data_partner_ids.push(window._linkedin_partner_id);`,
-      },
-      {
-        key: 'linkedin-insight-src',
-        innerHTML: `(function(l){if(!l){window.lintrk=function(a,b){window.lintrk.q.push([a,b])};window.lintrk.q=[]}var s=document.getElementsByTagName("script")[0];var b=document.createElement("script");b.type="text/javascript";b.async=true;b.src="https://snap.licdn.com/li.lms-analytics/insight.min.js";s.parentNode.insertBefore(b,s)})(window.lintrk);`,
-      },
-    )
-    noscript.push({
-      key: 'linkedin-insight-noscript',
-      innerHTML: `<img height="1" width="1" alt="" style="display:none" src="https://px.ads.linkedin.com/collect/?pid=${linkedinPartnerId}&fmt=gif" />`,
-    })
+const ensureMarketingTags = () => {
+  if (!import.meta.client) return
+  if (allowAnalytics.value) {
+    ensureGoogleTags()
+    ensureClarity()
   }
-
-  // TikTok Pixel. Treated as marketing.
-  if (allowMarketing.value && tiktokPixelId) {
-    script.push({
-      key: 'tiktok-pixel',
-      innerHTML: `!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=d.createElement("script");o.type="text/javascript";o.async=!0;o.src=i+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load("${tiktokPixelId}");ttq.page();}(window,document,'ttq');`,
-    })
+  if (allowMarketing.value) {
+    ensureMetaPixel()
+    ensureLinkedInInsight()
+    ensureTikTokPixel()
   }
-
-  if (allowEzoic.value) {
-    script.push(
-      {
-        key: 'ezoic-init',
-        innerHTML: 'window.ezstandalone=window.ezstandalone||{};ezstandalone.cmd=ezstandalone.cmd||[];',
-      },
-      {
-        key: 'ezoic-header',
-        async: true,
-        src: 'https://www.ezojs.com/ezoic/sa.min.js',
-      },
-    )
-  }
-
-  return {
-    script,
-    noscript,
-  }
-})
+  ensureEzoic()
+}
 
 onMounted(() => {
   void initSession()
@@ -270,6 +414,8 @@ watch(
 watch(
   () => [allowAnalytics.value, allowMarketing.value] as const,
   async ([analyticsOk, marketingOk]) => {
+    if (!import.meta.client) return
+    ensureMarketingTags()
     if (!analyticsOk && !marketingOk) return
     await nextTick()
     void initMarketing()
@@ -322,6 +468,7 @@ watch(
   async (enabled) => {
     if (!enabled) return
     if (!import.meta.client) return
+    ensureEzoic()
     await nextTick()
     const win = window as typeof window & { ezstandalone?: any }
     win.ezstandalone = win.ezstandalone || {}

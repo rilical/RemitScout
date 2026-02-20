@@ -4,7 +4,7 @@
  * AWS Lambda wrapper for provider health probes.
  *
  * Required env:
- * - PROVIDER_ID
+ * - PROVIDER_ID (single-provider mode) OR PROVIDER_IDS (fan-in mode, comma-separated)
  *
  * This handler resolves AWS parameters (DB/Redis) and then runs the generic probe.
  * It is designed so CDK can schedule N providers with one shared code asset,
@@ -16,19 +16,57 @@ import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { runGenericProbe } from '../lib/generic-probe'
 import { formatError } from '../../shared/utils/error-handling'
 
-const providerId = (process.env.PROVIDER_ID || '').trim()
-const logger = createLogger(`script.provider-probe-lambda.${providerId || 'unknown'}`)
+type ProbeInvocationResult = {
+  providerId: string
+  success: boolean
+  result?: unknown
+  error?: string
+}
 
-export const handler = async (): Promise<{ success: boolean; result?: unknown; error?: string }> => {
+type ProbeLambdaResponse = {
+  success: boolean
+  result?: unknown
+  results?: ProbeInvocationResult[]
+  error?: string
+}
+
+const parseProviderIds = (): string[] => {
+  const providerIdsRaw = (process.env.PROVIDER_IDS || '').trim()
+  if (providerIdsRaw) {
+    return Array.from(new Set(
+      providerIdsRaw
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ))
+  }
+  const providerId = (process.env.PROVIDER_ID || '').trim()
+  return providerId ? [providerId] : []
+}
+
+const logger = createLogger('script.provider-probe-lambda')
+
+export const handler = async (): Promise<ProbeLambdaResponse> => {
   const startTime = Date.now()
   const lambdaTimeoutMs = Number(process.env.AWS_LAMBDA_FUNCTION_TIMEOUT) * 1000 || 300000
   const timeoutWarningThreshold = lambdaTimeoutMs * 0.8
+  const providerIds = parseProviderIds()
+  const probeTimeoutOverride = Number(process.env.PROBE_TIMEOUT_MS)
+  const requestedProbeTimeoutMs = Number.isFinite(probeTimeoutOverride) && probeTimeoutOverride > 0
+    ? probeTimeoutOverride
+    : 300000
+  const probeRetries = Number(process.env.PROBE_RETRIES) || 0
 
-  if (!providerId) {
-    const error = 'Missing PROVIDER_ID'
+  if (providerIds.length === 0) {
+    const error = 'Missing PROVIDER_ID or PROVIDER_IDS'
     logger.error('probe_lambda_failed', { error })
     return { success: false, error }
   }
+
+  logger.info('probe_lambda_start', {
+    provider_count: providerIds.length,
+    provider_ids: providerIds,
+  })
 
   try {
     // Resolve database URL (Plane B)
@@ -54,7 +92,7 @@ export const handler = async (): Promise<{ success: boolean; result?: unknown; e
     } catch (error: unknown) {
       const { message, stack } = formatError(error)
       logger.error('database_url_resolution_failed', {
-        job_name: `${providerId}-probe`,
+        job_name: process.env.JOB_NAME || 'provider-probe',
         env_vars_attempted: [
           'DATABASE_URL_PLANE_B',
           'PLANE_B_DB_SECRET_ARN',
@@ -83,7 +121,7 @@ export const handler = async (): Promise<{ success: boolean; result?: unknown; e
     } catch (error: unknown) {
       const { message, stack } = formatError(error)
       logger.error('aws_env_resolution_failed', {
-        job_name: `${providerId}-probe`,
+        job_name: process.env.JOB_NAME || 'provider-probe',
         env_vars_attempted: ['REDIS_URL', 'REDIS_SECRET_ARN', 'REDIS_SSM_NAME'],
         error: message,
         stack,
@@ -94,31 +132,81 @@ export const handler = async (): Promise<{ success: boolean; result?: unknown; e
     const elapsed = Date.now() - startTime
     if (elapsed > timeoutWarningThreshold) {
       logger.warn('lambda_timeout_warning', {
-        job_name: `${providerId}-probe`,
+        job_name: 'provider-probe',
         elapsed_ms: elapsed,
         timeout_ms: lambdaTimeoutMs,
         threshold_ms: timeoutWarningThreshold,
       })
     }
 
-    const result = await runGenericProbe({
-      providerId,
-      timeoutMs: Math.min(Number(process.env.PROBE_TIMEOUT_MS) || 300000, lambdaTimeoutMs - 10000),
-      retries: Number(process.env.PROBE_RETRIES) || 0,
-      outputFormat: 'json',
-    })
+    const results: ProbeInvocationResult[] = []
+    for (const providerId of providerIds) {
+      const elapsedMs = Date.now() - startTime
+      const remainingMs = lambdaTimeoutMs - elapsedMs
+      if (remainingMs <= 15000) {
+        const error = 'Insufficient Lambda time remaining to run probe'
+        logger.warn('probe_skipped_insufficient_time', {
+          provider_id: providerId,
+          remaining_ms: remainingMs,
+          duration_ms: elapsedMs,
+        })
+        results.push({ providerId, success: false, error })
+        continue
+      }
 
+      const perProbeTimeoutMs = Math.min(
+        requestedProbeTimeoutMs,
+        Math.max(10000, remainingMs - 5000),
+      )
+
+      try {
+        const result = await runGenericProbe({
+          providerId,
+          timeoutMs: perProbeTimeoutMs,
+          retries: probeRetries,
+          outputFormat: 'json',
+        })
+
+        logger.info('probe_lambda_provider_complete', {
+          provider_id: providerId,
+          success: result.success,
+          duration_ms: Date.now() - startTime,
+          timeout_ms: perProbeTimeoutMs,
+        })
+        results.push({ providerId, success: result.success, result })
+      } catch (error: unknown) {
+        const { message, stack } = formatError(error)
+        logger.error('probe_lambda_provider_failed', {
+          provider_id: providerId,
+          error: message,
+          stack,
+          duration_ms: Date.now() - startTime,
+          timeout_ms: perProbeTimeoutMs,
+        })
+        results.push({ providerId, success: false, error: message })
+      }
+    }
+
+    const success = results.every((result) => result.success)
     logger.info('probe_lambda_complete', {
-      provider_id: providerId,
-      success: result.success,
+      success,
+      provider_count: providerIds.length,
+      failures: results.filter((result) => !result.success).map((result) => result.providerId),
       duration_ms: Date.now() - startTime,
     })
 
-    return { success: result.success, result }
+    if (providerIds.length === 1) {
+      return {
+        success,
+        result: results[0]?.result,
+        results,
+      }
+    }
+    return { success, results }
   } catch (error: unknown) {
     const { message, stack } = formatError(error)
     logger.error('probe_lambda_failed', {
-      provider_id: providerId,
+      provider_ids: providerIds,
       error: message,
       stack,
       duration_ms: Date.now() - startTime,
@@ -127,4 +215,3 @@ export const handler = async (): Promise<{ success: boolean; result?: unknown; e
     return { success: false, error: message }
   }
 }
-

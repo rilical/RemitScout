@@ -41,6 +41,24 @@ const toComplianceStatus = (
   return fallback
 }
 
+const toRateLimitFallbackMode = (value: string | undefined): 'memory' | 'reject' | 'skip' => {
+  const normalized = (value || '').trim().toLowerCase()
+  const nodeEnv = (process.env.NODE_ENV || '').trim().toLowerCase()
+  const envName = (process.env.ENVIRONMENT || '').trim().toLowerCase()
+  const prodLike = envName
+    ? envName === 'production' || envName === 'prod' || envName === 'staging'
+    : nodeEnv === 'production' || nodeEnv === 'staging'
+
+  if (normalized === 'memory' || normalized === 'reject' || normalized === 'skip') {
+    if (prodLike && normalized !== 'reject') {
+      return 'reject'
+    }
+    return normalized
+  }
+
+  return prodLike ? 'reject' : 'memory'
+}
+
 const isAwsRuntime = Boolean(
   process.env.AWS_EXECUTION_ENV ||
   process.env.AWS_LAMBDA_FUNCTION_NAME ||
@@ -52,6 +70,22 @@ const isAwsRuntime = Boolean(
 const isStaging = process.env.NODE_ENV === 'staging'
 const isStrictConfig =
   process.env.NODE_ENV === 'production' || isStaging || toBoolean(process.env.STRICT_CONFIG)
+const envName = (process.env.ENVIRONMENT || '').trim().toLowerCase()
+const isProdLikeEnvironment =
+  envName === 'prod' || envName === 'production' || envName === 'staging'
+const defaultAdminAllowlistStrict = envName ? isProdLikeEnvironment : isStrictConfig
+const planeCIamAuthEnabled = toBoolean(process.env.PLANE_C_ENABLE_IAM_AUTH)
+const defaultPlaneCInternalAuthStrict =
+  (envName ? isProdLikeEnvironment : isStrictConfig) && !planeCIamAuthEnabled
+const allowDbFallback = (() => {
+  if (isStrictConfig || isProdLikeEnvironment || isAwsRuntime) {
+    return false
+  }
+  if (process.env.ALLOW_DB_FALLBACK !== undefined) {
+    return toBoolean(process.env.ALLOW_DB_FALLBACK)
+  }
+  return true
+})()
 
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
@@ -61,7 +95,7 @@ const getDatabaseUrl = (primary?: string, fallback?: string) => {
   if (primary && primary.trim()) {
     return primary.trim()
   }
-  if (!isStrictConfig && fallback && fallback.trim()) {
+  if (allowDbFallback && fallback && fallback.trim()) {
     return fallback.trim()
   }
   return ''
@@ -163,6 +197,7 @@ const rawConfig = {
     isAwsRuntime,
     isStaging,
     isStrictConfig,
+    allowDbFallback,
     isLambda: Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME),
     isEcs: Boolean(
       process.env.ECS_CONTAINER_METADATA_URI || process.env.ECS_CONTAINER_METADATA_URI_V4,
@@ -197,6 +232,7 @@ const rawConfig = {
     port: toNumber(process.env.PLANE_A_PORT, 4000),
     rateLimitMax: toNumber(process.env.PLANE_A_RATE_LIMIT_MAX, 120),
     rateLimitWindowMs: toNumber(process.env.PLANE_A_RATE_LIMIT_WINDOW_MS, 60000),
+    rateLimitFallbackMode: toRateLimitFallbackMode(process.env.PLANE_A_RATE_LIMIT_FALLBACK_MODE),
     enterpriseApiRateLimitMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_MAX, 600),
     enterpriseApiRateLimitWindowMs: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_WINDOW_MS, 60000),
     enterpriseApiKeyMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_KEY_MAX, 5),
@@ -224,6 +260,14 @@ const rawConfig = {
       }
       return configured
     })(),
+    adminRequireAllowlist: toBoolean(
+      process.env.PLANE_A_ADMIN_REQUIRE_ALLOWLIST,
+      defaultAdminAllowlistStrict,
+    ),
+    adminAllowlistStrict: toBoolean(
+      process.env.PLANE_A_ADMIN_ALLOWLIST_STRICT,
+      defaultAdminAllowlistStrict,
+    ),
     // Optional: internal admin users can be treated as enterprise for feature access even without Stripe.
     // Default: enabled for dev/staging; disabled for production unless explicitly enabled.
     internalUsersGetEnterprise: toBoolean(
@@ -267,6 +311,11 @@ const rawConfig = {
   },
   planeC: {
     port: toNumber(process.env.PLANE_C_PORT, 4100),
+    internalApiToken: process.env.PLANE_C_INTERNAL_API_TOKEN || '',
+    requireInternalAuth: toBoolean(
+      process.env.PLANE_C_REQUIRE_INTERNAL_AUTH,
+      defaultPlaneCInternalAuthStrict,
+    ),
   },
   planeB: {
     useSeedData: toBoolean(process.env.PLANE_B_USE_SEED_DATA),
@@ -987,6 +1036,7 @@ const rawConfig = {
     },
   },
   db: {
+    resolutionMode: allowDbFallback ? 'lenient' : 'strict',
     url: getDatabaseUrl(process.env.DATABASE_URL, defaultLocalDbUrl),
     planeAUrl: getDatabaseUrl(
       process.env.DATABASE_URL_PLANE_A,
@@ -1206,7 +1256,12 @@ const rawConfig = {
     minOverride: toNumber(process.env.DB_POOL_MIN, NaN),
     applicationName: process.env.DB_APPLICATION_NAME || process.env.PGAPPNAME || '',
     sslMode: process.env.DB_SSL_MODE || process.env.PGSSLMODE || '',
+    queryTimeoutEnabled: toBoolean(process.env.DB_QUERY_TIMEOUT_ENABLED, true),
     queryTimeoutMs: toNumber(process.env.DB_QUERY_TIMEOUT_MS, 30000),
+    proxyQueryTimeoutMs: toNumber(
+      process.env.DB_PROXY_QUERY_TIMEOUT_MS,
+      toNumber(process.env.DB_QUERY_TIMEOUT_MS, 30000),
+    ),
     connectionTimeoutMs: toNumber(process.env.DB_CONNECTION_TIMEOUT_MS, 10000),
     idleTimeoutMs: toNumber(process.env.DB_IDLE_TIMEOUT_MS, 30000),
     keepAliveEnabled: process.env.DB_KEEPALIVE !== '0',
@@ -1226,6 +1281,8 @@ export type RuntimeConfigRequirements = {
   requirePlaneC?: boolean
   // Plane C server/lambda runtime DB requirements.
   requirePlaneCDb?: boolean
+  // Plane C internal endpoint protection.
+  requirePlaneCInternalAuth?: boolean
   requireRedis?: boolean
   requireSupabase?: boolean
   requireStripe?: boolean
@@ -1263,6 +1320,9 @@ export const assertRuntimeConfig = (
   }
   if (requirements.requirePlaneCDb && !config.db.planeCUrl) {
     missing.push('DATABASE_URL_PLANE_C')
+  }
+  if (requirements.requirePlaneCInternalAuth && !config.planeC.internalApiToken) {
+    missing.push('PLANE_C_INTERNAL_API_TOKEN')
   }
   if (requirements.requirePlaneC && !config.planeA.planeCBaseUrl) {
     missing.push('PLANE_C_BASE_URL')

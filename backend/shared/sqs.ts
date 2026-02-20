@@ -16,6 +16,7 @@ import { isRetryableError, isThrottlingError } from './aws-errors'
 import { retry } from './retry'
 import { registerCloudWatchClient, registerSQSClient } from './connection-manager'
 import { startSpan } from './tracing'
+import { getCurrentTraceCorrelation, type TraceCorrelation } from './types/correlation'
 import { withAbortTimeout } from './utils/timeout'
 import {
   trackMessageSent,
@@ -76,6 +77,7 @@ export type SqsMessage<T> = {
   attributes: Record<string, string>
   messageAttributes: Record<string, string>
   traceContext?: Context
+  correlation?: TraceCorrelation
   raw: Message
 }
 
@@ -84,11 +86,19 @@ const VISIBILITY_EXTENSION_THRESHOLD = 0.5
 
 const visibilityTimeoutCache = new Map<string, number>()
 
-const buildTraceMessageAttributes = (): Record<string, { DataType: 'String'; StringValue: string }> | undefined => {
-  const activeSpan = trace.getSpan(otelContext.active())
-  if (!activeSpan) return undefined
+const buildTraceMessageAttributes = (
+  correlationId?: string,
+): Record<string, { DataType: 'String'; StringValue: string }> | undefined => {
   const carrier: Record<string, string> = {}
   propagation.inject(otelContext.active(), carrier)
+  const traceCorrelation = getCurrentTraceCorrelation(correlationId)
+  if (traceCorrelation.traceId) {
+    carrier['x-trace-id'] = traceCorrelation.traceId
+  }
+  if (traceCorrelation.correlationId) {
+    carrier['x-correlation-id'] = traceCorrelation.correlationId
+  }
+
   const entries = Object.entries(carrier).filter(([, value]) => Boolean(value))
   if (entries.length === 0) return undefined
   const attributes: Record<string, { DataType: 'String'; StringValue: string }> = {}
@@ -424,7 +434,7 @@ export const sendToDLQ = async <T>(
 export const sendJsonMessage = async <T>(
   queueUrl: string,
   payload: T,
-  options?: { maxRetries?: number; retryDelayMs?: number },
+  options?: { maxRetries?: number; retryDelayMs?: number; correlationId?: string },
 ): Promise<void> => {
   const maxRetries = options?.maxRetries ?? 3
   const retryDelayMs = options?.retryDelayMs ?? 100
@@ -432,7 +442,7 @@ export const sendJsonMessage = async <T>(
 
   const sendAttempt = async (): Promise<void> => {
     const sqs = getClient()
-    const traceAttributes = buildTraceMessageAttributes()
+    const traceAttributes = buildTraceMessageAttributes(options?.correlationId)
     await startSpan(
       'sqs.send_json_message',
       async () => {
@@ -489,7 +499,7 @@ export const sendJsonMessage = async <T>(
 export const sendBatchJsonMessages = async <T>(
   queueUrl: string,
   messages: Array<{ id: string; payload: T }>,
-  options?: { maxRetries?: number; retryDelayMs?: number },
+  options?: { maxRetries?: number; retryDelayMs?: number; correlationId?: string },
 ): Promise<Array<{ id: string; success: boolean; error?: string }>> => {
   if (messages.length === 0) return []
   if (messages.length > 10) {
@@ -502,7 +512,7 @@ export const sendBatchJsonMessages = async <T>(
 
   const sendBatchAttempt = async (): Promise<void> => {
     const sqs = getClient()
-    const traceAttributes = buildTraceMessageAttributes()
+    const traceAttributes = buildTraceMessageAttributes(options?.correlationId)
     await startSpan(
       'sqs.send_batch_json_messages',
       async () => {
@@ -654,6 +664,15 @@ export const receiveJsonMessages = async <T>(
         const traceContext = Object.keys(messageAttributes).length > 0
           ? propagation.extract(otelContext.active(), messageAttributes)
           : undefined
+        const correlation: TraceCorrelation | undefined =
+          messageAttributes['x-trace-id'] || messageAttributes['x-correlation-id']
+            ? {
+              traceId: messageAttributes['x-trace-id'] ?? null,
+              parentSpanId: null,
+              correlationId: messageAttributes['x-correlation-id'] ?? null,
+              sampled: null,
+            }
+            : undefined
 
         return {
           messageId: message.MessageId ?? '',
@@ -662,6 +681,7 @@ export const receiveJsonMessages = async <T>(
           attributes: message.Attributes ?? {},
           messageAttributes,
           traceContext,
+          correlation,
           raw: message,
         }
       }),

@@ -65,8 +65,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
       - name: Run ZAP baseline against staging
-        continue-on-error: true
         run: |
           docker run --rm \
             -v "$PWD:/zap/wrk/:rw" \
@@ -78,6 +82,14 @@ jobs:
               -r zap-baseline.html \
               -I
 
+      - name: Enforce ZAP baseline policy
+        run: |
+          node scripts/ci/check-zap-findings.mjs \
+            --input zap-baseline.json \
+            --baseline .security/zap-allowlist.json \
+            --profile baseline \
+            --out zap-baseline-summary.json
+
       - name: Upload ZAP baseline artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,7 +99,38 @@ jobs:
             zap-baseline.json
             zap-baseline.md
             zap-baseline.html
+            zap-baseline-summary.json
+          retention-days: 90
           if-no-files-found: ignore
+
+      - name: Alert Slack on baseline failure
+        if: failure() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          payload='{"text":"[Security] OWASP ZAP baseline failed on '"${GITHUB_REPOSITORY}"' @ '"${GITHUB_SHA}"'"}'
+          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
+
+      - name: Alert PagerDuty on baseline failure
+        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
+        shell: bash
+        env:
+          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+        run: |
+          set -euo pipefail
+          curl -sS https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
+              "event_action":"trigger",
+              "payload":{
+                "summary":"OWASP ZAP baseline failed ('"${GITHUB_REPOSITORY}"')",
+                "source":"github-actions/security-scan",
+                "severity":"error"
+              }
+            }' >/dev/null
 
   owasp-zap-full-scan:
     name: OWASP ZAP Full Scan (Staging)
@@ -99,8 +142,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+
       - name: Run ZAP full scan against staging
-        continue-on-error: true
         run: |
           docker run --rm \
             -v "$PWD:/zap/wrk/:rw" \
@@ -112,6 +159,14 @@ jobs:
               -r zap-full.html \
               -I
 
+      - name: Enforce ZAP full scan policy
+        run: |
+          node scripts/ci/check-zap-findings.mjs \
+            --input zap-full.json \
+            --baseline .security/zap-allowlist.json \
+            --profile full \
+            --out zap-full-summary.json
+
       - name: Upload ZAP full scan artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -121,7 +176,38 @@ jobs:
             zap-full.json
             zap-full.md
             zap-full.html
+            zap-full-summary.json
+          retention-days: 180
           if-no-files-found: ignore
+
+      - name: Alert Slack on full scan failure
+        if: failure() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          payload='{"text":"[Security] OWASP ZAP full scan failed on '"${GITHUB_REPOSITORY}"' @ '"${GITHUB_SHA}"'"}'
+          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
+
+      - name: Alert PagerDuty on full scan failure
+        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
+        shell: bash
+        env:
+          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+        run: |
+          set -euo pipefail
+          curl -sS https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
+              "event_action":"trigger",
+              "payload":{
+                "summary":"OWASP ZAP full scan failed ('"${GITHUB_REPOSITORY}"')",
+                "source":"github-actions/security-scan",
+                "severity":"error"
+              }
+            }' >/dev/null
 
   npm-audit:
     name: NPM Audit Security Scan

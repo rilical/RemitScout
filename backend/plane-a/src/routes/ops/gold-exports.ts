@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
+import PDFDocument from 'pdfkit'
 import { z } from 'zod'
 import { getPool, query } from '../../../../shared/db'
-import { renderPdf } from '../../../../scripts/export-generators'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { requireAdmin } from '../../plugins/auth-plugin'
@@ -118,7 +118,40 @@ const buildPdfContent = async (
         }],
       }]
 
-  return renderPdf(`${fileName} · Remit-Scout Gold Export`, sections)
+  return renderGoldExportPdf(`${fileName} · Remit-Scout Gold Export`, sections)
+}
+
+type PdfSection = {
+  title: string
+  headers: string[]
+  rows: Array<Record<string, unknown>>
+}
+
+const renderGoldExportPdf = async (title: string, sections: PdfSection[]): Promise<Buffer> => {
+  return await new Promise<Buffer>((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40 })
+    const chunks: Buffer[] = []
+    doc.on('data', (chunk) => chunks.push(chunk))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    doc.fontSize(18).text(title)
+    doc.moveDown()
+
+    for (const section of sections) {
+      doc.fontSize(14).text(section.title)
+      doc.moveDown(0.5)
+      doc.fontSize(10).text(section.headers.join(' | '))
+      doc.moveDown(0.25)
+      for (const row of section.rows) {
+        const line = section.headers.map((header) => String(row[header] ?? '')).join(' | ')
+        doc.text(line)
+      }
+      doc.moveDown()
+    }
+
+    doc.end()
+  })
 }
 
 const fileBaseName = (

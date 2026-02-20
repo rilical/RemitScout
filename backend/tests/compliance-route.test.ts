@@ -18,18 +18,15 @@ describe('compliance route', () => {
 
     expect(response).toMatchObject({
       certifications: {
-        gdpr: { status: expect.any(String) },
-        ccpa: { status: expect.any(String) },
-        soc2_type_ii: { status: expect.any(String) },
+        gdpr: expect.any(String),
+        ccpa: expect.any(String),
+        soc2_type_ii: expect.any(String),
       },
       privacy_controls: {
-        k_anonymity_min: expect.any(Number),
-        corridor_min_datapoints_24h: expect.any(Number),
-        provider_min_quotes_per_corridor: expect.any(Number),
-        trend_min_lookback_days: expect.any(Number),
-        geography_scope: 'country',
+        data_minimization: 'enforced',
+        ip_handling: 'truncate_then_hash',
+        session_identity: 'rotating_non_persistent',
       },
     })
   })
 })
-

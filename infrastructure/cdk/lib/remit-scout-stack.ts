@@ -62,6 +62,27 @@ const toList = (value: string | string[] | undefined): string[] => {
   return []
 }
 
+type ProviderProbeMode = 'per_provider' | 'fan_in'
+type InterfaceEndpointMode = 'all' | 'minimal' | 'none'
+
+const toProviderProbeMode = (value: unknown): ProviderProbeMode | undefined => {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'per_provider' || normalized === 'fan_in') {
+    return normalized
+  }
+  return undefined
+}
+
+const toInterfaceEndpointMode = (value: unknown): InterfaceEndpointMode | undefined => {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'all' || normalized === 'minimal' || normalized === 'none') {
+    return normalized
+  }
+  return undefined
+}
+
 const normalizeOrigin = (value?: string): string => {
   if (!value) return ''
   try {
@@ -162,10 +183,18 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('devMinimalInfra') ??
           process.env.DEV_MINIMAL_INFRA,
       ) ?? false
-    const costAlertEmails = toList(
+    const costAlertEmailsRaw =
       this.node.tryGetContext('costAlertEmails') ??
-        process.env.COST_ALERT_EMAILS,
-    )
+      process.env.COST_ALERT_EMAILS
+    const costAlertEmails = toList(costAlertEmailsRaw)
+    const costAlertEmailsExplicitlyConfigured = costAlertEmailsRaw !== undefined
+    const costAlertEmailsExplicitlyEmpty =
+      costAlertEmailsExplicitlyConfigured && costAlertEmails.length === 0
+    if (enableCostGuardrails && envName !== 'dev' && costAlertEmailsExplicitlyEmpty) {
+      throw new Error(
+        'costAlertEmails cannot be explicitly empty when cost guardrails are enabled in staging/prod.',
+      )
+    }
     const resolvedCostAlertEmails =
       costAlertEmails.length > 0 ? costAlertEmails : ['alerts@remit-scout.com']
     const costBudgetAmountUsd = toOptionalNumber(
@@ -207,8 +236,66 @@ export class RemitScoutStack extends Stack {
             process.env.DEV_NAT_GATEWAYS,
         )
       : undefined
+    const stagingNatGateways = envName === 'staging'
+      ? toOptionalNumber(
+          this.node.tryGetContext('stagingNatGateways') ??
+            process.env.STAGING_NAT_GATEWAYS,
+        )
+      : undefined
+    const prodNatGateways = envName === 'prod'
+      ? toOptionalNumber(
+          this.node.tryGetContext('prodNatGateways') ??
+            process.env.PROD_NAT_GATEWAYS,
+        )
+      : undefined
+    const natGateways = envName === 'dev'
+      ? devNatGateways
+      : envName === 'staging'
+        ? stagingNatGateways
+        : envName === 'prod'
+          ? prodNatGateways
+          : undefined
+    if (envName !== 'dev' && typeof natGateways === 'number' && natGateways < 1) {
+      throw new Error('stagingNatGateways/prodNatGateways must be >= 1 in non-dev environments.')
+    }
+    const stagingInterfaceEndpointsMode = envName === 'staging'
+      ? toInterfaceEndpointMode(
+          this.node.tryGetContext('stagingInterfaceEndpointsMode') ??
+            process.env.STAGING_INTERFACE_ENDPOINTS_MODE,
+        )
+      : undefined
+    const prodInterfaceEndpointsMode = envName === 'prod'
+      ? toInterfaceEndpointMode(
+          this.node.tryGetContext('prodInterfaceEndpointsMode') ??
+            process.env.PROD_INTERFACE_ENDPOINTS_MODE,
+        )
+      : undefined
+    const interfaceEndpointMode: InterfaceEndpointMode = envName === 'staging'
+      ? (stagingInterfaceEndpointsMode ?? 'all')
+      : envName === 'prod'
+        ? (prodInterfaceEndpointsMode ?? 'all')
+        : 'none'
+    const providerProbeMode =
+      toProviderProbeMode(
+        this.node.tryGetContext('providerProbeMode') ??
+          process.env.PROVIDER_PROBE_MODE,
+      ) ?? 'per_provider'
+    if (envName === 'prod' && providerProbeMode === 'fan_in') {
+      Annotations.of(this).addWarning(
+        'providerProbeMode=fan_in enabled in prod. Roll out via staging evidence before keeping this mode in production.',
+      )
+    }
+    if ((envName === 'staging' || envName === 'prod') && interfaceEndpointMode !== 'all') {
+      Annotations.of(this).addWarning(
+        `Interface endpoint mode '${interfaceEndpointMode}' is enabled for ${envName}. Verify NAT data and endpoint connectivity before promotion.`,
+      )
+    }
 
-    const networking = createNetworking(this, { envName, natGateways: devNatGateways })
+    const networking = createNetworking(this, {
+      envName,
+      natGateways,
+      interfaceEndpointMode,
+    })
     const iam = createIam(this, {
       envName,
       sharedSecretArns: [sharedSecretArn],
@@ -255,63 +342,7 @@ export class RemitScoutStack extends Stack {
     const storage = createStorage(this, { envName, exportsPrefix })
     const queues = createQueues(this, { envName })
 
-    const snowflakePartnerRole = (() => {
-      if (snowflakePartnerAccountIds.length === 0) {
-        return undefined
-      }
-      if (!snowflakePartnerExternalId) {
-        Annotations.of(this).addWarning('snowflakePartnerAccountIds configured without snowflakePartnerExternalId; skipping partner role.')
-        return undefined
-      }
-
-      const principals = snowflakePartnerAccountIds.map((accountId) => new AccountPrincipal(accountId))
-      const assumedBy = principals.length === 1
-        ? principals[0]
-        : new CompositePrincipal(...principals)
-      assumedBy.addConditions({
-        StringEquals: {
-          'sts:ExternalId': snowflakePartnerExternalId,
-        },
-      })
-
-      const role = new Role(this, 'SnowflakePartnerRole', {
-        roleName: snowflakePartnerRoleName || `remit-scout-${envName}-snowflake-partner`,
-        assumedBy,
-      })
-
-      const allowedPrefixes = ['indices/', 'parquet/']
-      role.addToPolicy(new PolicyStatement({
-        actions: ['s3:GetObject', 's3:GetObjectVersion'],
-        resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
-      }))
-      role.addToPolicy(new PolicyStatement({
-        actions: ['s3:GetBucketLocation', 's3:ListBucket'],
-        resources: [storage.exportsBucket.bucketArn],
-        conditions: {
-          StringLike: {
-            's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
-          },
-        },
-      }))
-
-      storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
-        principals: [role],
-        actions: ['s3:GetObject', 's3:GetObjectVersion'],
-        resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
-      }))
-      storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
-        principals: [role],
-        actions: ['s3:GetBucketLocation', 's3:ListBucket'],
-        resources: [storage.exportsBucket.bucketArn],
-        conditions: {
-          StringLike: {
-            's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
-          },
-        },
-      }))
-
-      return role
-    })()
+    let snowflakePartnerRole: Role | undefined
 
     const planeADbSecretArn =
       this.node.tryGetContext('planeADbSecretArn') ??
@@ -508,6 +539,59 @@ export class RemitScoutStack extends Stack {
     const snowflakePartnerRoleName =
       this.node.tryGetContext('snowflakePartnerRoleName') ??
       process.env.SNOWFLAKE_PARTNER_ROLE_NAME
+    if (snowflakePartnerAccountIds.length > 0) {
+      if (!snowflakePartnerExternalId) {
+        Annotations.of(this).addWarning('snowflakePartnerAccountIds configured without snowflakePartnerExternalId; skipping partner role.')
+      } else {
+        const principals = snowflakePartnerAccountIds.map((accountId) => new AccountPrincipal(accountId))
+        const principal = principals.length === 1
+          ? principals[0]
+          : new CompositePrincipal(...principals)
+        const assumedBy = principal.withConditions({
+          StringEquals: {
+            'sts:ExternalId': snowflakePartnerExternalId,
+          },
+        })
+
+        const role = new Role(this, 'SnowflakePartnerRole', {
+          roleName: snowflakePartnerRoleName || `remit-scout-${envName}-snowflake-partner`,
+          assumedBy,
+        })
+
+        const allowedPrefixes = ['indices/', 'parquet/']
+        role.addToPolicy(new PolicyStatement({
+          actions: ['s3:GetObject', 's3:GetObjectVersion'],
+          resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
+        }))
+        role.addToPolicy(new PolicyStatement({
+          actions: ['s3:GetBucketLocation', 's3:ListBucket'],
+          resources: [storage.exportsBucket.bucketArn],
+          conditions: {
+            StringLike: {
+              's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
+            },
+          },
+        }))
+
+        storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
+          principals: [role],
+          actions: ['s3:GetObject', 's3:GetObjectVersion'],
+          resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
+        }))
+        storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
+          principals: [role],
+          actions: ['s3:GetBucketLocation', 's3:ListBucket'],
+          resources: [storage.exportsBucket.bucketArn],
+          conditions: {
+            StringLike: {
+              's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
+            },
+          },
+        }))
+
+        snowflakePartnerRole = role
+      }
+    }
     const planeBDisableTier1 = toOptionalBool(
       this.node.tryGetContext('planeBDisableTier1') ??
         process.env.PLANE_B_DISABLE_TIER1,
@@ -641,7 +725,7 @@ export class RemitScoutStack extends Stack {
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
         process.env.PLANE_B_QUEUE_WORKER_MAX,
-    ) ?? (envName === 'prod' ? 20 : envName === 'dev' ? 1 : 50)
+    ) ?? (envName === 'prod' ? 20 : envName === 'dev' ? 1 : 10)
     const planeBQueueWorkerSpotOnly = toOptionalBool(
       this.node.tryGetContext('planeBQueueWorkerSpotOnly') ??
         process.env.PLANE_B_QUEUE_WORKER_SPOT_ONLY,
@@ -771,6 +855,8 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('enablePlaneCIamAuth') ??
         process.env.PLANE_C_ENABLE_IAM_AUTH,
     )
+    const planeCInternalApiTokenSecretJsonKey =
+      process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
     const disablePlaneAExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneAExecuteEndpoint') ??
         process.env.PLANE_A_DISABLE_EXECUTE_ENDPOINT,
@@ -819,6 +905,18 @@ export class RemitScoutStack extends Stack {
       }
       return []
     })()
+    const planeAAdminIpAllowlist = (() => {
+      const raw = process.env.ADMIN_IP_ALLOWLIST
+      if (typeof raw === 'string' && raw.trim()) {
+        return raw.split(',').map((value) => value.trim()).filter(Boolean)
+      }
+      return wafAdminAllowListIps
+    })()
+    if ((envName === 'staging' || envName === 'prod') && planeAAdminIpAllowlist.length === 0) {
+      throw new Error(
+        'ADMIN_IP_ALLOWLIST or WAF_ADMIN_ALLOWLIST_IPS is required for staging/prod deployments.',
+      )
+    }
     const wafEnableBotControl = toOptionalBool(
       this.node.tryGetContext('wafEnableBotControl') ??
         process.env.WAF_ENABLE_BOT_CONTROL,
@@ -1017,6 +1115,15 @@ export class RemitScoutStack extends Stack {
     const planeCDbHost = database.proxy?.endpoint ?? database.cluster.clusterEndpoint.hostname
     const planeCDbPort = '5432'
     const planeCDbName = 'remit_scout'
+    const planeADbConnectionRoute = database.proxy ? 'proxy' : 'direct'
+    const planeBDbConnectionRoute = database.proxy ? 'proxy' : 'direct'
+    const planeCDbConnectionRoute = database.proxy ? 'proxy' : 'direct'
+    const planeADbTimeoutPolicy =
+      planeADbConnectionRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout'
+    const planeBDbTimeoutPolicy =
+      planeBDbConnectionRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout'
+    const planeCDbTimeoutPolicy =
+      planeCDbConnectionRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout'
 
 		    const tasks = createEcsTasks(this, {
 		      envName,
@@ -1132,7 +1239,10 @@ export class RemitScoutStack extends Stack {
       communicationsSecretArn,
       sentrySecretArn,
       sentrySecretJsonKey,
+      sharedSecretArn,
+      planeCInternalApiTokenSecretJsonKey,
       planeAAdminEmails,
+      planeAAdminIpAllowlist,
       planeAB2cMaxBucketDeltaPct,
       planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
       planeACorsOrigins,
@@ -1483,6 +1593,7 @@ export class RemitScoutStack extends Stack {
       planeCDbHost,
       planeCDbPort,
       planeCDbName,
+      providerProbeMode,
     })
 
     const queueWorkerBaseline = planeBQueueWorkerDesiredCount ?? 0
@@ -1652,6 +1763,18 @@ export class RemitScoutStack extends Stack {
       value: networking.vpc.vpcId,
       description: 'Remit-Scout VPC ID',
     })
+    new CfnOutput(this, 'NatGatewayCount', {
+      value: String(natGateways ?? (envName === 'prod' ? 2 : 1)),
+      description: 'Configured NAT gateway count for this environment',
+    })
+    new CfnOutput(this, 'InterfaceEndpointMode', {
+      value: interfaceEndpointMode,
+      description: 'VPC interface endpoint mode (all|minimal|none)',
+    })
+    new CfnOutput(this, 'ProviderProbeMode', {
+      value: providerProbeMode,
+      description: 'Provider probe scheduler mode (per_provider|fan_in)',
+    })
     new CfnOutput(this, 'PublicSubnetIds', {
       value: networking.vpc.publicSubnets.map((subnet) => subnet.subnetId).join(','),
       description: 'Public subnet IDs',
@@ -1692,6 +1815,30 @@ export class RemitScoutStack extends Stack {
         description: 'RDS Proxy endpoint',
       })
     }
+    new CfnOutput(this, 'PlaneADbConnectionRoute', {
+      value: planeADbConnectionRoute,
+      description: 'Plane A database connection route (proxy/direct)',
+    })
+    new CfnOutput(this, 'PlaneBDbConnectionRoute', {
+      value: planeBDbConnectionRoute,
+      description: 'Plane B database connection route (proxy/direct)',
+    })
+    new CfnOutput(this, 'PlaneCDbConnectionRoute', {
+      value: planeCDbConnectionRoute,
+      description: 'Plane C database connection route (proxy/direct)',
+    })
+    new CfnOutput(this, 'PlaneADbStatementTimeoutPolicy', {
+      value: planeADbTimeoutPolicy,
+      description: 'Plane A DB statement timeout policy',
+    })
+    new CfnOutput(this, 'PlaneBDbStatementTimeoutPolicy', {
+      value: planeBDbTimeoutPolicy,
+      description: 'Plane B DB statement timeout policy',
+    })
+    new CfnOutput(this, 'PlaneCDbStatementTimeoutPolicy', {
+      value: planeCDbTimeoutPolicy,
+      description: 'Plane C DB statement timeout policy',
+    })
     new CfnOutput(this, 'AuroraCredentialsSecretArn', {
       value: database.credentialsSecret.secretArn,
       description: 'Secrets Manager ARN for Aurora credentials',

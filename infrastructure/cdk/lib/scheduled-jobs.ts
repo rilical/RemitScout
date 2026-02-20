@@ -31,6 +31,8 @@ type ProviderCatalogFile = {
   }>
 }
 
+type ProviderProbeMode = 'per_provider' | 'fan_in'
+
 const loadProviderCatalog = (): ProviderCatalogFile => {
   const repoRoot = path.resolve(__dirname, '..', '..', '..')
   const catalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
@@ -139,6 +141,7 @@ export type ScheduledJobsOptions = {
   minimalMode?: boolean
   institutionalExportFormat?: string
   institutionalExportWriteManifest?: boolean
+  providerProbeMode?: ProviderProbeMode
 }
 
 const tagManagedRule = (rule: Rule, envName: string): void => {
@@ -285,6 +288,7 @@ export const createScheduledJobs = (
   const exportWorkerIntervalMinutes = isDev ? 5 : 1
   const alertEvaluationIntervalMinutes = isDev ? 15 : 1
   const probeIntervalMinutes = isDev ? 30 : 5
+  const providerProbeMode: ProviderProbeMode = options.providerProbeMode ?? 'per_provider'
 
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
   const planeALambdaNetworking = {
@@ -1904,9 +1908,9 @@ export const createScheduledJobs = (
 
   const probeFunctions: Record<string, IFunction> = {}
   const probeRules: Record<string, Rule> = {}
-
-  for (const { id, providerId } of probeProviders) {
-    const fn = new NodejsFunction(scope, `${id}ProbeFunction`, {
+  if (providerProbeMode === 'fan_in') {
+    const providerIds = probeProviders.map((provider) => provider.providerId)
+    const probeFanInFunction = new NodejsFunction(scope, 'ProviderProbeFanInFunction', {
       entry: path.resolve(
         __dirname,
         '..',
@@ -1920,14 +1924,14 @@ export const createScheduledJobs = (
       handler: 'handler',
       runtime: Runtime.NODEJS_20_X,
       architecture: options.lambdaArchitecture,
-      memorySize: 512,
-      timeout: Duration.minutes(5),
+      memorySize: 1024,
+      timeout: Duration.minutes(15),
       ...planeBLambdaNetworking,
       role: options.roles.planeBLambdaRole,
       tracing: tracingMode,
       environment: {
-        JOB_NAME: `${providerId}-probe`,
-        PROVIDER_ID: providerId,
+        JOB_NAME: 'provider-probe-fan-in',
+        PROVIDER_IDS: providerIds.join(','),
         ENVIRONMENT: options.envName,
         NODE_ENV: 'production',
         PGSSLMODE: 'require',
@@ -1948,8 +1952,8 @@ export const createScheduledJobs = (
 
     applySentryEnv(
       scope,
-      fn,
-      `${id}ProbeSentrySecret`,
+      probeFanInFunction,
+      'ProviderProbeFanInSentrySecret',
       options.sentrySecretArn,
       options.sentrySecretJsonKey,
     )
@@ -1957,35 +1961,117 @@ export const createScheduledJobs = (
     if (planeBDbSecretArn) {
       const secret = Secret.fromSecretCompleteArn(
         scope,
-        `${id}ProbeDbSecret`,
+        'ProviderProbeFanInDbSecret',
         planeBDbSecretArn,
       )
-      secret.grantRead(fn)
-      fn.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
+      secret.grantRead(probeFanInFunction)
+      probeFanInFunction.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
     }
     if (planeBDbSsmName) {
-      fn.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
+      probeFanInFunction.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
     }
     applyRedisEnv(
       scope,
-      fn,
-      `${id}ProbeRedisSecret`,
+      probeFanInFunction,
+      'ProviderProbeFanInRedisSecret',
       redisSecretArn,
       redisSsmName,
       redisUrl,
     )
 
-    const rule = new Rule(scope, `${id}ProbeSchedule`, {
+    const probeFanInRule = new Rule(scope, 'ProviderProbeFanInSchedule', {
       schedule: Schedule.rate(Duration.minutes(probeIntervalMinutes)),
-      description: `Runs ${providerId} provider health probe every ${probeIntervalMinutes} minutes.`,
+      description: `Runs all scheduled provider probes every ${probeIntervalMinutes} minutes via a consolidated Lambda.`,
       enabled: rulesEnabled,
     })
-    tagManagedRule(rule, options.envName)
+    tagManagedRule(probeFanInRule, options.envName)
+    probeFanInRule.addTarget(new LambdaFunction(probeFanInFunction, { retryAttempts: 1 }))
 
-    rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
+    probeFunctions.providerProbeFanInFunction = probeFanInFunction
+    probeRules.providerProbeFanInRule = probeFanInRule
+  } else {
+    for (const { id, providerId } of probeProviders) {
+      const fn = new NodejsFunction(scope, `${id}ProbeFunction`, {
+        entry: path.resolve(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          'backend',
+          'scripts',
+          'aws',
+          `provider-probe-lambda.ts`,
+        ),
+        handler: 'handler',
+        runtime: Runtime.NODEJS_20_X,
+        architecture: options.lambdaArchitecture,
+        memorySize: 512,
+        timeout: Duration.minutes(5),
+        ...planeBLambdaNetworking,
+        role: options.roles.planeBLambdaRole,
+        tracing: tracingMode,
+        environment: {
+          JOB_NAME: `${providerId}-probe`,
+          PROVIDER_ID: providerId,
+          ENVIRONMENT: options.envName,
+          NODE_ENV: 'production',
+          PGSSLMODE: 'require',
+          DB_DISABLE_STATEMENT_TIMEOUT: '1',
+          TRACING_EXPORTER: tracingExporter,
+          ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+          CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
+          CLOUDWATCH_NAMESPACE: 'RemitScout',
+          CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
+          CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+          ...providerThrottleEnv,
+          ...(planeBDbHost && { PLANE_B_DB_HOST: planeBDbHost }),
+          ...(planeBDbPort && { PLANE_B_DB_PORT: planeBDbPort }),
+          ...(planeBDbName && { PLANE_B_DB_NAME: planeBDbName }),
+        },
+        layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+      })
 
-    probeFunctions[`${providerId}ProbeFunction`] = fn
-    probeRules[`${providerId}ProbeRule`] = rule
+      applySentryEnv(
+        scope,
+        fn,
+        `${id}ProbeSentrySecret`,
+        options.sentrySecretArn,
+        options.sentrySecretJsonKey,
+      )
+
+      if (planeBDbSecretArn) {
+        const secret = Secret.fromSecretCompleteArn(
+          scope,
+          `${id}ProbeDbSecret`,
+          planeBDbSecretArn,
+        )
+        secret.grantRead(fn)
+        fn.addEnvironment('PLANE_B_DB_SECRET_ARN', planeBDbSecretArn)
+      }
+      if (planeBDbSsmName) {
+        fn.addEnvironment('PLANE_B_DB_SSM_NAME', planeBDbSsmName)
+      }
+      applyRedisEnv(
+        scope,
+        fn,
+        `${id}ProbeRedisSecret`,
+        redisSecretArn,
+        redisSsmName,
+        redisUrl,
+      )
+
+      const rule = new Rule(scope, `${id}ProbeSchedule`, {
+        schedule: Schedule.rate(Duration.minutes(probeIntervalMinutes)),
+        description: `Runs ${providerId} provider health probe every ${probeIntervalMinutes} minutes.`,
+        enabled: rulesEnabled,
+      })
+      tagManagedRule(rule, options.envName)
+
+      rule.addTarget(new LambdaFunction(fn, { retryAttempts: 1 }))
+
+      probeFunctions[`${providerId}ProbeFunction`] = fn
+      probeRules[`${providerId}ProbeRule`] = rule
+    }
   }
 
   return {

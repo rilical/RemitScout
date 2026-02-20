@@ -89,6 +89,16 @@ export const handler = async (): Promise<void> => {
     jsonKeys: ['url', 'DATABASE_URL_PLANE_B_MIGRATOR', 'database_url'],
   })
 
+  const allowMigratorUrl = process.env.ALLOW_DB_MIGRATOR_URL === '1'
+  if (process.env.DATABASE_URL_PLANE_B_MIGRATOR && !allowMigratorUrl) {
+    throw new Error(
+      'DATABASE_URL_PLANE_B_MIGRATOR is set but ALLOW_DB_MIGRATOR_URL=1 was not provided',
+    )
+  }
+  if (!allowMigratorUrl) {
+    delete process.env.DATABASE_URL_PLANE_B_MIGRATOR
+  }
+
   const { runStartupChecks } = await import('../../shared/startup')
   await runStartupChecks({
     requirements: {

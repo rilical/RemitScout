@@ -50,3 +50,8 @@ Preferred evidence:
 - Evidence artifacts should be uploaded as GitHub Actions artifacts by default.
 - Large blobs (logs, traces) should be referenced by pointer, not pasted into Case contracts.
 
+## On-call + Status Page References
+- Escalation policy: PagerDuty primary + secondary rotation (configured via SNS integration in CDK).
+- External uptime monitor: `.github/workflows/uptime-synthetic.yml` and CDK synthetics alarms.
+- Public status updates: maintain customer-facing status page links in incident comms templates.
+- Reference: `docs/ops/status-page-and-escalation.md`.

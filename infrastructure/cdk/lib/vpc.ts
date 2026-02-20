@@ -25,7 +25,10 @@ export type NetworkingResources = {
 export type NetworkingOptions = {
   envName: string
   natGateways?: number
+  interfaceEndpointMode?: InterfaceEndpointMode
 }
+
+export type InterfaceEndpointMode = 'all' | 'minimal' | 'none'
 
 export const createNetworking = (
   scope: Construct,
@@ -33,6 +36,9 @@ export const createNetworking = (
 ): NetworkingResources => {
   const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
+  const interfaceEndpointMode: InterfaceEndpointMode = isDev
+    ? 'none'
+    : (options.interfaceEndpointMode ?? 'all')
   const natGateways =
     typeof options.natGateways === 'number' && Number.isFinite(options.natGateways)
       ? options.natGateways
@@ -73,8 +79,9 @@ export const createNetworking = (
   // - We rely on NAT for AWS service access (SecretsManager/SSM/etc) and external provider access.
   // - Avoid interface VPC endpoints in dev, as they incur hourly costs and add drift risk.
   //
-  // Staging/prod keep interface endpoints for tighter egress and lower NAT data usage.
-  if (!isDev) {
+  // Staging/prod default to full endpoint coverage.
+  // Controlled cost experiments can switch to `minimal` or `none` via context.
+  if (interfaceEndpointMode !== 'none') {
     const endpointSecurityGroup = new SecurityGroup(scope, 'VpcEndpointSecurityGroup', {
       vpc,
       description: 'Security group for VPC interface endpoints.',
@@ -86,42 +93,26 @@ export const createNetworking = (
       'Allow VPC access to interface endpoints',
     )
     const endpointSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+    const endpointDefinitions = [
+      { id: 'EcrApiEndpoint', service: InterfaceVpcEndpointAwsService.ECR, minimal: false },
+      { id: 'EcrDockerEndpoint', service: InterfaceVpcEndpointAwsService.ECR_DOCKER, minimal: false },
+      { id: 'CloudWatchLogsEndpoint', service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS, minimal: false },
+      { id: 'SecretsManagerEndpoint', service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER, minimal: true },
+      { id: 'SsmEndpoint', service: InterfaceVpcEndpointAwsService.SSM, minimal: true },
+      { id: 'StsEndpoint', service: InterfaceVpcEndpointAwsService.STS, minimal: true },
+      { id: 'SqsEndpoint', service: InterfaceVpcEndpointAwsService.SQS, minimal: false },
+    ] as const
+    const selectedEndpoints = interfaceEndpointMode === 'minimal'
+      ? endpointDefinitions.filter((endpoint) => endpoint.minimal)
+      : endpointDefinitions
 
-    vpc.addInterfaceEndpoint('EcrApiEndpoint', {
-      service: InterfaceVpcEndpointAwsService.ECR,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
-      service: InterfaceVpcEndpointAwsService.ECR_DOCKER,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('CloudWatchLogsEndpoint', {
-      service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
-      service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('SsmEndpoint', {
-      service: InterfaceVpcEndpointAwsService.SSM,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('StsEndpoint', {
-      service: InterfaceVpcEndpointAwsService.STS,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
-    vpc.addInterfaceEndpoint('SqsEndpoint', {
-      service: InterfaceVpcEndpointAwsService.SQS,
-      subnets: endpointSubnets,
-      securityGroups: [endpointSecurityGroup],
-    })
+    for (const endpoint of selectedEndpoints) {
+      vpc.addInterfaceEndpoint(endpoint.id, {
+        service: endpoint.service,
+        subnets: endpointSubnets,
+        securityGroups: [endpointSecurityGroup],
+      })
+    }
   }
 
   const planeASecurityGroup = new SecurityGroup(scope, 'PlaneASecurityGroup', {

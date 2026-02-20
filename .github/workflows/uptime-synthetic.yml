@@ -1,0 +1,80 @@
+name: ops/uptime-synthetic
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: Absolute health endpoint URL (optional override)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  uptime-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Resolve target
+        id: target
+        shell: bash
+        env:
+          TARGET_INPUT: ${{ inputs.target_url }}
+          TARGET_DEFAULT: ${{ vars.EXTERNAL_UPTIME_TARGET_URL }}
+        run: |
+          set -euo pipefail
+          target="${TARGET_INPUT:-${TARGET_DEFAULT:-}}"
+          target="$(echo "$target" | tr -d ' ')"
+          if [ -z "$target" ]; then
+            echo "Missing target URL. Set vars.EXTERNAL_UPTIME_TARGET_URL or pass workflow input."
+            exit 1
+          fi
+          echo "target=${target}" >> "$GITHUB_OUTPUT"
+
+      - name: Run synthetic uptime check
+        shell: bash
+        env:
+          TARGET_URL: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          http_code="$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "$TARGET_URL")"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 400 ]; then
+            echo "Synthetic check failed: status=${http_code} target=${TARGET_URL}"
+            exit 1
+          fi
+          echo "Synthetic check passed: status=${http_code} target=${TARGET_URL}"
+
+      - name: Alert Slack on outage
+        if: failure() && vars.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          TARGET_URL: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          payload='{"text":"[Synthetic] Uptime check failed for '"${TARGET_URL}"' ('"${GITHUB_REPOSITORY}"')"}'
+          curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
+
+      - name: Alert PagerDuty on outage
+        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
+        shell: bash
+        env:
+          PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
+          TARGET_URL: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          curl -sS https://events.pagerduty.com/v2/enqueue \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "routing_key":"'"${PAGERDUTY_ROUTING_KEY}"'",
+              "event_action":"trigger",
+              "payload":{
+                "summary":"External uptime check failed ('"${TARGET_URL}"')",
+                "source":"github-actions/uptime-synthetic",
+                "severity":"critical"
+              }
+            }' >/dev/null
+

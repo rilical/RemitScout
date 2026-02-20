@@ -57,6 +57,10 @@ const baseConfigSchema = z.object({
     planeCBaseUrl: z.string(),
     requireJwt: booleanSchema,
   }).passthrough(),
+  planeC: z.object({
+    internalApiToken: z.string(),
+    requireInternalAuth: booleanSchema,
+  }).passthrough(),
   alerts: z.object({
     slackWebhookUrl: z.string(),
     email: z.object({
@@ -114,6 +118,9 @@ const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
     }
     if (requirements.requirePlaneCDb && !cfg.db.planeCUrl) {
       addMissing(ctx, 'DATABASE_URL_PLANE_C', ['db', 'planeCUrl'])
+    }
+    if (requirements.requirePlaneCInternalAuth && !cfg.planeC.internalApiToken) {
+      addMissing(ctx, 'PLANE_C_INTERNAL_API_TOKEN', ['planeC', 'internalApiToken'])
     }
     if (requirements.requirePlaneC && !cfg.planeA.planeCBaseUrl) {
       addMissing(ctx, 'PLANE_C_BASE_URL', ['planeA', 'planeCBaseUrl'])

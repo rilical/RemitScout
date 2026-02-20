@@ -25,7 +25,7 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:report": "vitest run --coverage",
     "test:mutation": "stryker run",
-    "test:mutation:critical": "stryker run --mutate \"plane-a/src/services/alert-evaluator.ts,plane-a/src/services/entitlements.ts,plane-a/src/routes/billing/**/*.ts\"",
+    "test:mutation:critical": "stryker run --mutate \"plane-a/src/services/alert-evaluator.ts,plane-a/src/services/entitlements.ts,plane-a/src/routes/billing/**/*.ts,shared/corridor.ts,plane-b/src/normalize/quote-normalizer.ts,plane-a/src/routes/popular-corridors.ts\"",
     "check:provider-score-drift": "node ../tools/check-provider-score-drift.mjs",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:seed": "tsx scripts/ingest-run.ts",
@@ -119,7 +119,11 @@
     "ci:config-validate": "tsx scripts/ci/validate-runtime-config.ts",
     "ci:staging-go-live-readiness": "tsx scripts/ci/staging-go-live-readiness.ts",
     "ci:observability": "tsx scripts/ci/observability-check.ts",
-    "ci:export-openapi": "tsx scripts/ci/export-openapi.ts --out ../artifacts/openapi.json --pretty"
+    "ci:export-openapi": "tsx scripts/ci/export-openapi.ts --out ../artifacts/openapi.json --pretty",
+    "ci:mutation-gate": "tsx scripts/ci/check-mutation-report.ts",
+    "chaos:run": "tsx scripts/chaos/run-chaos-scenario.ts",
+    "ci:audit:iam-wildcards": "tsx scripts/ci/audit-iam-wildcards.ts",
+    "ci:audit:storage-encryption": "tsx scripts/ci/audit-storage-encryption.ts"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.981.0",

@@ -68,6 +68,7 @@ export const createMonitoring = (
   const isStaging = options.envName === 'staging'
   const serviceDimension = 'remit-scout'
   const useExplicitAlarmNames = options.envName !== 'dev'
+  const dbRunbookRef = 'ops/brain/README.md#database-incidents'
 
   const providerCatalog = loadProviderCatalog()
   const probeProviders = providerCatalog.providers
@@ -178,6 +179,31 @@ export const createMonitoring = (
           Stage: '$default',
         },
         statistic: 'p95',
+      }),
+    ],
+    period: Duration.minutes(5),
+  })
+
+  const traceContinuityWidget = new GraphWidget({
+    title: 'Cross-plane Trace Health',
+    left: [
+      new Metric({
+        namespace: 'RemitScout/Tracing',
+        metricName: 'cross_plane_hop_duration_ms',
+        dimensionsMap: {
+          environment: options.envName,
+        },
+        statistic: 'p95',
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'RemitScout/Tracing',
+        metricName: 'cross_plane_error_amplification',
+        dimensionsMap: {
+          environment: options.envName,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
       }),
     ],
     period: Duration.minutes(5),
@@ -327,6 +353,7 @@ export const createMonitoring = (
     queueStaleDropWidget,
     lambdaErrorWidget,
     apiLatencyWidget,
+    traceContinuityWidget,
     new GraphWidget({
       title: 'API 5xx Error Rate',
       left: [planeA5xxRate, planeC5xxRate],
@@ -563,6 +590,53 @@ export const createMonitoring = (
     alarmDescription: 'Aurora disk queue depth above 10',
   })
   auroraDiskQueueDepthAlarm.addAlarmAction(warningAction)
+
+  const rdsDeadlockAlarm = new Alarm(scope, 'RdsDeadlockAlarm', {
+    alarmName: `remit-scout-${options.envName}-rds-deadlocks`,
+    metric: options.database.cluster.metric('Deadlocks', {
+      statistic: 'Sum',
+      period: Duration.minutes(5),
+    }),
+    threshold: 0,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Aurora deadlocks detected. Runbook: ${dbRunbookRef}`,
+  })
+  rdsDeadlockAlarm.addAlarmAction(opsAction)
+
+  const replicaLagAlarm = new Alarm(scope, 'RdsReplicaLagAlarm', {
+    alarmName: `remit-scout-${options.envName}-rds-replica-lag-high`,
+    metric: options.database.cluster.metric('AuroraReplicaLagMaximum', {
+      statistic: 'Maximum',
+      period: Duration.minutes(5),
+    }),
+    threshold: isProd ? 5000 : 10000,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Aurora replica lag is elevated. Runbook: ${dbRunbookRef}`,
+  })
+  replicaLagAlarm.addAlarmAction(isProd ? opsAction : warningAction)
+
+  const longQueryDurationAlarm = new Alarm(scope, 'DbLongQueryDurationAlarm', {
+    alarmName: `remit-scout-${options.envName}-db-query-duration-p95-high`,
+    metric: new Metric({
+      namespace: 'RemitScout',
+      metricName: 'db_query_duration_seconds_env',
+      dimensionsMap: {
+        environment: options.envName,
+      },
+      statistic: 'p95',
+      period: Duration.minutes(5),
+    }),
+    threshold: isProd ? 2 : 4,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Database query p95 is elevated. Runbook: ${dbRunbookRef}`,
+  })
+  longQueryDurationAlarm.addAlarmAction(opsAction)
 
   const redisCurrConnectionsMetric = new Metric({
     namespace: 'AWS/ElastiCache',
@@ -988,15 +1062,35 @@ export const createMonitoring = (
       },
     })
   }
+  // CloudWatch alarms on math expressions can include at most 10 underlying metrics.
+  // Build chunk expressions and then sum the chunks so provider cardinality can grow.
+  const providerChunkSize = 10
+  const probeFailureChunks: MathExpression[] = []
+  for (let chunkStart = 0; chunkStart < probeProviders.length; chunkStart += providerChunkSize) {
+    const chunkProviders = probeProviders.slice(chunkStart, chunkStart + providerChunkSize)
+    const chunkMetrics: Record<string, Metric> = {}
+    chunkProviders.forEach((providerId, idx) => {
+      const metricKey = `m${chunkStart + idx + 1}`
+      chunkMetrics[metricKey] = probeFailureMetricsByProvider[providerId]
+    })
+    const chunkExpression = chunkProviders
+      .map((_, idx) => `FILL(m${chunkStart + idx + 1}, 0)`)
+      .join(' + ')
+    probeFailureChunks.push(new MathExpression({
+      label: `Probe failures chunk ${Math.floor(chunkStart / providerChunkSize) + 1}`,
+      expression: chunkExpression || '0',
+      usingMetrics: chunkMetrics,
+      period: Duration.minutes(5),
+    }))
+  }
 
-  const probeFailureSumExpression = probeProviders
-    .map((providerId, idx) => `FILL(m${idx + 1}, 0)`)
-    .join(' + ')
-  const probeFailureUsingMetrics: Record<string, Metric> = {}
-  probeProviders.forEach((providerId, idx) => {
-    probeFailureUsingMetrics[`m${idx + 1}`] = probeFailureMetricsByProvider[providerId]
+  const probeFailureUsingMetrics: Record<string, MathExpression> = {}
+  probeFailureChunks.forEach((chunkMetric, idx) => {
+    probeFailureUsingMetrics[`c${idx + 1}`] = chunkMetric
   })
-
+  const probeFailureSumExpression = Object.keys(probeFailureUsingMetrics)
+    .map((metricKey) => `FILL(${metricKey}, 0)`)
+    .join(' + ')
   const probeFailuresAllProviders5m = new MathExpression({
     label: 'Probe failures (all providers)',
     expression: probeFailureSumExpression || '0',
@@ -1082,6 +1176,45 @@ export const createMonitoring = (
     alarmDescription: 'Plane A API p99 latency exceeds 5s for 3 datapoints',
   })
   apiP99LatencyAlarm.addAlarmAction(warningAction)
+
+  const crossPlaneHopLatencyThreshold = isProd ? 1200 : (isStaging ? 1800 : 2500)
+  const crossPlaneHopLatencyAlarm = new Alarm(scope, 'CrossPlaneHopLatencyAlarm', {
+    alarmName: `remit-scout-${options.envName}-cross-plane-hop-latency-high`,
+    metric: new Metric({
+      namespace: 'RemitScout/Tracing',
+      metricName: 'cross_plane_hop_duration_ms',
+      dimensionsMap: {
+        environment: options.envName,
+      },
+      statistic: 'p95',
+      period: Duration.minutes(5),
+    }),
+    threshold: crossPlaneHopLatencyThreshold,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: `Cross-plane hop p95 exceeds ${crossPlaneHopLatencyThreshold}ms`,
+  })
+  crossPlaneHopLatencyAlarm.addAlarmAction(isProd ? opsAction : warningAction)
+
+  const crossPlaneErrorAmplificationAlarm = new Alarm(scope, 'CrossPlaneErrorAmplificationAlarm', {
+    alarmName: `remit-scout-${options.envName}-cross-plane-error-amplification-high`,
+    metric: new Metric({
+      namespace: 'RemitScout/Tracing',
+      metricName: 'cross_plane_error_amplification',
+      dimensionsMap: {
+        environment: options.envName,
+      },
+      statistic: 'Average',
+      period: Duration.minutes(5),
+    }),
+    threshold: 1.2,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Cross-plane error amplification ratio exceeds 1.2',
+  })
+  crossPlaneErrorAmplificationAlarm.addAlarmAction(isProd ? opsAction : warningAction)
 
   // API Endpoint Down: Lambda function errors
   const apiEndpointDownAlarm = new Alarm(scope, 'APIEndpointDownAlarm', {

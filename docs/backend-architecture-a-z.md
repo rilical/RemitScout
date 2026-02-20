@@ -216,7 +216,7 @@ This section maps each diagram box to code and runtime behavior.
 **Provider probe Lambdas**
 - Providers: remitly, westernunion, wise, worldremit, ria, dahabshiil, sendwave, mukuru,
   xe, alansari, instarem, xoom, remitbee, singx, placid, koronapay, wirebarley, intermex.
-- Entrypoints: `backend/scripts/aws/<provider>-probe-lambda.ts`.
+- Entrypoint: `backend/scripts/aws/provider-probe-lambda.ts` (`PROVIDER_ID` is injected per schedule rule).
 - Function: `runGenericProbe` in `backend/scripts/lib/generic-probe.ts`.
 
 **ECS scheduled task**

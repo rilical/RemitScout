@@ -1,4 +1,4 @@
-import { Pool, type PoolClient, type QueryResultRow } from 'pg'
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from 'pg'
 import { config } from './config'
 import { recordQueryFromSql, updateConnectionPoolMetrics } from './db-metrics'
 import { registerDatabasePool } from './connection-manager'
@@ -19,6 +19,28 @@ const isProxyConnectionString = (connectionString: string): boolean => {
     })
     return connectionString.includes('.proxy-') || connectionString.includes('proxy-')
   }
+}
+
+const isTransactionControlStatement = (sql: string): boolean =>
+  /^\s*(begin|start\s+transaction|commit|rollback|savepoint|release|set\s+transaction)\b/i
+    .test(sql)
+
+export type ConnectionRoute = 'direct' | 'proxy'
+export type StatementTimeoutPolicy =
+  | 'server-statement-timeout'
+  | 'proxy-guarded'
+  | 'disabled'
+
+type PoolPolicyMetadata = {
+  connectionRoute: ConnectionRoute
+  statementTimeoutPolicy: StatementTimeoutPolicy
+}
+
+type PoolWithPolicy = Pool & {
+  __skipStatementTimeout?: boolean
+  __validateConnectionOnCheckout?: boolean
+  __connectionRoute?: ConnectionRoute
+  __statementTimeoutPolicy?: StatementTimeoutPolicy
 }
 
 const registerPoolForCleanup = (pool: Pool) => {
@@ -123,6 +145,7 @@ export const normalizeConnectionStringForSslMode = (
 export const createPool = (connectionString?: string) => {
   const sslMode = config.dbPool.sslMode
   const sslEnabled = sslMode === 'require' || sslMode === 'verify-full' || sslMode === 'verify-ca'
+  const queryTimeoutEnabled = config.dbPool.queryTimeoutEnabled
   const queryTimeoutMs = config.dbPool.queryTimeoutMs
   const connectionTimeoutMs = config.dbPool.connectionTimeoutMs
   const idleTimeoutMs = config.dbPool.idleTimeoutMs
@@ -149,12 +172,19 @@ export const createPool = (connectionString?: string) => {
       return `${normalizedConnectionString}${delimiter}application_name=${encodeURIComponent(applicationName)}`
     }
   })()
+  const connectionRoute: ConnectionRoute = isProxyConnectionString(connectionStringWithAppName)
+    ? 'proxy'
+    : 'direct'
   const disableStatementTimeout = (() => {
     if (config.dbPool.disableStatementTimeoutExplicit) return true
-    if (!connectionStringWithAppName) return false
-    return isProxyConnectionString(connectionStringWithAppName)
+    return connectionRoute === 'proxy'
   })()
-  const validateConnectionOnCheckout = isProxyConnectionString(connectionStringWithAppName)
+  const validateConnectionOnCheckout = connectionRoute === 'proxy'
+  const statementTimeoutPolicy: StatementTimeoutPolicy = (() => {
+    if (config.dbPool.disableStatementTimeoutExplicit) return 'disabled'
+    if (connectionRoute === 'proxy') return 'proxy-guarded'
+    return 'server-statement-timeout'
+  })()
 
   // Safety: if someone disables statement_timeout explicitly in production, make it visible in logs.
   if (config.dbPool.disableStatementTimeoutExplicit && config.env === 'production') {
@@ -175,7 +205,7 @@ export const createPool = (connectionString?: string) => {
     connectionString: connectionStringWithAppName,
     ssl: sslConfig,
     ...(disableStatementTimeout ? {} : { statement_timeout: queryTimeoutMs }),
-    query_timeout: queryTimeoutMs,
+    ...(queryTimeoutEnabled ? { query_timeout: queryTimeoutMs } : {}),
     connectionTimeoutMillis: connectionTimeoutMs,
     max: poolLimits.max,
     min: poolLimits.min,
@@ -185,9 +215,24 @@ export const createPool = (connectionString?: string) => {
     ...(maxUses > 0 ? { maxUses } : {}),
     allowExitOnIdle: true,
   })
-  ;(pool as { __skipStatementTimeout?: boolean }).__skipStatementTimeout = disableStatementTimeout
-  ;(pool as { __validateConnectionOnCheckout?: boolean }).__validateConnectionOnCheckout =
+  const poolWithPolicy = pool as PoolWithPolicy
+  poolWithPolicy.__skipStatementTimeout = disableStatementTimeout
+  poolWithPolicy.__validateConnectionOnCheckout =
     validateConnectionOnCheckout
+  poolWithPolicy.__connectionRoute = connectionRoute
+  poolWithPolicy.__statementTimeoutPolicy = statementTimeoutPolicy
+
+  const poolPolicyMetadata: PoolPolicyMetadata = {
+    connectionRoute,
+    statementTimeoutPolicy,
+  }
+  logger.info('db_pool_policy_configured', {
+    connectionRoute: poolPolicyMetadata.connectionRoute,
+    statementTimeoutPolicy: poolPolicyMetadata.statementTimeoutPolicy,
+    queryTimeoutEnabled,
+    queryTimeoutMs,
+    disableStatementTimeout,
+  })
 
   // Make pool.end idempotent to avoid double-close during shutdown handlers.
   let poolClosed = false
@@ -288,7 +333,6 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
   timeoutMs?: number,
 ) => {
   const startTime = Date.now()
-  const queryTimeout = timeoutMs ?? config.dbPool.queryTimeoutMs
 
   try {
     // Set query timeout if pool client supports it
@@ -299,9 +343,28 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
       && 'mock' in (poolInstance as Pool).query
     const shouldUseConnect = canConnect && !isMockedQuery && !isPoolClient
     const skipStatementTimeout =
-      Boolean((poolInstance as { __skipStatementTimeout?: boolean }).__skipStatementTimeout)
+      Boolean((poolInstance as PoolWithPolicy).__skipStatementTimeout)
       || config.dbPool.disableStatementTimeoutExplicit
-    const queryConfig = { text, values: params, query_timeout: queryTimeout }
+    const connectionRoute = (poolInstance as PoolWithPolicy).__connectionRoute ?? 'direct'
+    const statementTimeoutPolicy =
+      (poolInstance as PoolWithPolicy).__statementTimeoutPolicy
+      ?? (skipStatementTimeout ? 'disabled' : 'server-statement-timeout')
+    const shouldSetSessionStatementTimeout =
+      config.dbPool.queryTimeoutEnabled && statementTimeoutPolicy !== 'disabled'
+    const queryTimeoutDefault = skipStatementTimeout
+      ? config.dbPool.proxyQueryTimeoutMs
+      : config.dbPool.queryTimeoutMs
+    const queryTimeout = Math.max(
+      1,
+      Math.floor(timeoutMs ?? queryTimeoutDefault ?? config.dbPool.queryTimeoutMs),
+    )
+    const queryConfig: { text: string; values: unknown[]; query_timeout?: number } = {
+      text,
+      values: params,
+    }
+    if (config.dbPool.queryTimeoutEnabled) {
+      queryConfig.query_timeout = queryTimeout
+    }
     if (shouldUseConnect) {
       const pool = poolInstance as Pool
       const client = await pool.connect()
@@ -310,10 +373,47 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
           // RDS Proxy can hand out stale connections after rotation; validate before running workload.
           await client.query('SELECT 1')
         }
-        if (!skipStatementTimeout) {
+        const shouldApplyProxyTimeoutGuard =
+          connectionRoute === 'proxy'
+          && shouldSetSessionStatementTimeout
+          && !isTransactionControlStatement(text)
+
+        if (shouldSetSessionStatementTimeout) {
           await client.query(`SET statement_timeout = ${queryTimeout}`)
         }
-        const result = await client.query<T>(queryConfig)
+
+        let result: QueryResult<T>
+        if (shouldApplyProxyTimeoutGuard) {
+          let transactionOpened = false
+          try {
+            await client.query('BEGIN')
+            transactionOpened = true
+            await client.query(`SET LOCAL statement_timeout = ${queryTimeout}`)
+            result = await client.query<T>(queryConfig)
+            await client.query('COMMIT')
+          } catch (proxyError) {
+            if (transactionOpened) {
+              try {
+                await client.query('ROLLBACK')
+              } catch (rollbackError) {
+                logger.warn('db_proxy_timeout_guard_rollback_failed', {
+                  error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+                })
+              }
+            }
+            const message = proxyError instanceof Error ? proxyError.message : String(proxyError)
+            if (/statement timeout|query read timeout|query_timeout|canceling statement/i.test(message)) {
+              logger.warn('db_proxy_query_timeout', {
+                timeoutMs: queryTimeout,
+                error: message,
+              })
+            }
+            throw proxyError
+          }
+        } else {
+          result = await client.query<T>(queryConfig)
+        }
+
         try {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordQueryFromSql(text, durationSeconds, 'success')

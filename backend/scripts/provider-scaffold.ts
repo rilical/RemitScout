@@ -292,18 +292,25 @@ const providerSkeletonFiles = (providerId: string) => {
 }
 
 const patchProviderIndexRegistry = (repoRoot: string, providerId: string, displayName: string) => {
-  const filePath = path.join(repoRoot, 'backend', 'plane-b', 'src', 'providers', 'index.ts')
+  const filePath = path.join(
+    repoRoot,
+    'backend',
+    'plane-b',
+    'src',
+    'providers',
+    'provider-definitions.ts',
+  )
   const content = readUtf8(filePath)
 
   if (content.includes(`'${providerId}'`)) {
-    throw new Error(`providers/index.ts already references provider '${providerId}'`)
+    throw new Error(`provider-definitions.ts already references provider '${providerId}'`)
   }
 
   const upper = providerId.toUpperCase()
   const pascal = providerId.slice(0, 1).toUpperCase() + providerId.slice(1)
 
-  const importInsertionPoint = content.indexOf('\n/**\n * Common run options passed through the provider registry to collectors.\n */')
-  if (importInsertionPoint < 0) throw new Error(`providers/index.ts import insertion marker not found`)
+  const importInsertionPoint = content.indexOf('\n/**\n * Single source of provider collector wiring and static metadata.\n */')
+  if (importInsertionPoint < 0) throw new Error(`provider-definitions.ts import insertion marker not found`)
 
   const importLines = [
     `import { run${pascal}Collector } from './${providerId}/collector'`,
@@ -318,12 +325,12 @@ const patchProviderIndexRegistry = (repoRoot: string, providerId: string, displa
     importLines +
     content.slice(importInsertionPoint)
 
-  const arrayMarker = 'export const providerRegistry: ProviderRegistryEntry[] = ['
+  const arrayMarker = 'export const providerDefinitions: ProviderDefinition[] = ['
   const start = withImports.indexOf(arrayMarker)
-  if (start < 0) throw new Error(`providers/index.ts providerRegistry marker not found`)
+  if (start < 0) throw new Error(`provider-definitions.ts providerDefinitions marker not found`)
 
   const arrayStart = withImports.indexOf('[', start)
-  if (arrayStart < 0) throw new Error(`providers/index.ts providerRegistry array start not found`)
+  if (arrayStart < 0) throw new Error(`provider-definitions.ts providerDefinitions array start not found`)
 
   let depth = 0
   let arrayEnd = -1
@@ -338,7 +345,7 @@ const patchProviderIndexRegistry = (repoRoot: string, providerId: string, displa
       }
     }
   }
-  if (arrayEnd < 0) throw new Error(`providers/index.ts providerRegistry array end not found`)
+  if (arrayEnd < 0) throw new Error(`provider-definitions.ts providerDefinitions array end not found`)
 
   const entry = [
     `  {`,
@@ -349,27 +356,7 @@ const patchProviderIndexRegistry = (repoRoot: string, providerId: string, displa
     `      rpm: ${providerId}Limits.rpm,`,
     `      perCorridorRpm: ${providerId}Limits.perCorridorRpm,`,
     `    },`,
-    `    run: (options) => run${pascal}Collector({`,
-    `      pool: options.pool,`,
-    `      collectorType: options.collectorType,`,
-    `      corridors: options.corridors,`,
-    `      amountBuckets: options.amountBuckets,`,
-    `      payinMethod: options.payinMethod,`,
-    `      payoutMethod: options.payoutMethod,`,
-    `      locale: options.locale,`,
-    `      delayMs: options.delayMs,`,
-    `      jitterMs: options.jitterMs,`,
-    `      rateLimitBackoffMs: options.rateLimitBackoffMs,`,
-    `      rateLimitJitterMs: options.rateLimitJitterMs,`,
-    `      rateLimitMaxRetries: options.rateLimitMaxRetries,`,
-    `      corridorDelayMs: options.corridorDelayMs,`,
-    `      corridorJitterMs: options.corridorJitterMs,`,
-    `      freshnessSloMinutes: options.freshnessSloMinutes,`,
-    `      freshnessSloEnabled: options.freshnessSloEnabled,`,
-    `      rpmOverride: options.rpmOverride,`,
-    `      perCorridorRpmOverride: options.perCorridorRpmOverride,`,
-    `      closePool: false,`,
-    `    } as any),`,
+    `    runCollector: run${pascal}Collector,`,
     `  },`,
     ``,
   ].join('\n')

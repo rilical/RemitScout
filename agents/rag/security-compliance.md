@@ -199,3 +199,16 @@ Data exposure + exports:
 - Any admin route without auth middleware.
 - Any JWT verification path that allows unsigned tokens.
 
+## Route/auth control matrix (must hold)
+- Plane C `/internal/publisher/validate`:
+  - Require IAM-authenticated request context OR valid internal token.
+  - If internal auth is required by runtime policy and token is missing, startup must fail.
+- Plane A admin/ops surfaces:
+  - `ADMIN_IP_ALLOWLIST` required in staging/prod.
+  - Missing allowlist in staging/prod is a startup/deploy blocker.
+- Plane A rate limiting:
+  - Production/staging fallback mode must be `reject` (fail-closed).
+  - Any configured `skip`/`memory` fallback in prod-like runtime is overridden and logged.
+- Plane A public route posture:
+  - `/api/v1/alerts/corridor-eligibility` and `/api/v1/alerts/macro-corridors` are dev-only public routes.
+  - Staging/prod access to these routes requires auth.

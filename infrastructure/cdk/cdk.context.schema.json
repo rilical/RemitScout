@@ -6,7 +6,11 @@
   "properties": {
     "env": {
       "type": "string",
-      "enum": ["dev", "staging", "prod"],
+      "enum": [
+        "dev",
+        "staging",
+        "prod"
+      ],
       "description": "Environment name (dev, staging, prod)",
       "default": "dev"
     },
@@ -17,11 +21,16 @@
     },
     "sharedSecretArn": {
       "type": "string",
-      "description": "ARN of the shared Secrets Manager secret used for runtime config (Supabase/Stripe/Redis/etc)"
+      "description": "Shared secret ARN for Supabase/Stripe/Redis"
     },
     "cpuArchitecture": {
       "type": "string",
-      "enum": ["x86_64", "arm64"],
+      "enum": [
+        "x86_64",
+        "arm64",
+        "x86",
+        "amd64"
+      ],
       "description": "CPU architecture for ECS/Lambda where configurable"
     },
     "devNatGateways": {
@@ -79,10 +88,6 @@
     "supabaseSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for Supabase config (URL + keys)"
-    },
-    "sharedSecretArn": {
-      "type": "string",
-      "description": "Shared secret ARN for Supabase/Stripe/Redis"
     },
     "devSharedSecretArn": {
       "type": "string",
@@ -154,17 +159,29 @@
     },
     "planeBIngestFanoutMode": {
       "type": "string",
-      "enum": ["off", "queue", "shadow"],
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
       "description": "Ingest fanout queue mode"
     },
     "planeBNotificationsMode": {
       "type": "string",
-      "enum": ["off", "queue", "shadow"],
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
       "description": "Notifications queue mode"
     },
     "planeBOpsAlertsMode": {
       "type": "string",
-      "enum": ["off", "queue", "shadow"],
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
       "description": "Ops alerts queue mode"
     },
     "opsPauseRuleAllowlist": {
@@ -236,12 +253,20 @@
     },
     "quoteRefreshQueueMode": {
       "type": "string",
-      "enum": ["off", "queue", "shadow"],
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
       "description": "Quote refresh queue mode"
     },
     "fxRateRefreshQueueMode": {
       "type": "string",
-      "enum": ["off", "queue", "shadow"],
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
       "description": "FX rate refresh queue mode"
     },
     "planeBB2cQueueInSweep": {
@@ -549,7 +574,181 @@
     "pagerDutyIntegrationKey": {
       "type": "string",
       "description": "PagerDuty integration key for critical alerts"
+    },
+    "alertEvaluationDesiredCount": {
+      "type": "number",
+      "description": "Desired count for alert evaluation ECS service"
+    },
+    "alertEvaluationServiceEnabled": {
+      "type": "boolean",
+      "description": "Enable alert evaluation ECS service"
+    },
+    "auditLogsPrefix": {
+      "type": "string",
+      "description": "S3 prefix for audit logs storage"
+    },
+    "enableBackup": {
+      "type": "boolean",
+      "description": "Enable backup resources (AWS Backup)"
+    },
+    "enableCostGuardrails": {
+      "type": "boolean",
+      "description": "Enable cost guardrails (budget + anomaly monitor + optional CUR)"
+    },
+    "enableDbProxy": {
+      "type": "boolean",
+      "description": "Enable RDS proxy for app connections"
+    },
+    "exportJobQueueMode": {
+      "type": "string",
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
+      "description": "Export job queue mode"
+    },
+    "exportServiceEnabled": {
+      "type": "boolean",
+      "description": "Enable export worker ECS service"
+    },
+    "exportWorkerDesiredCount": {
+      "type": "number",
+      "description": "Desired count for export worker ECS service"
+    },
+    "exportsPrefix": {
+      "type": "string",
+      "description": "S3 prefix for exports storage"
+    },
+    "goldLiveQueueMode": {
+      "type": "string",
+      "enum": [
+        "off",
+        "queue",
+        "shadow"
+      ],
+      "description": "Gold live queue mode"
+    },
+    "pipelineEnabled": {
+      "type": "boolean",
+      "description": "Enable CI/CD pipeline resources"
+    },
+    "pipelineRequireApproval": {
+      "type": "boolean",
+      "description": "Require manual approval in pipeline for protected stages"
+    },
+    "planeAB2cMaxBucketDeltaPct": {
+      "type": "number",
+      "description": "Maximum bucket delta percentage allowed for B2C approximate bucket matching"
+    },
+    "planeBB2bObservationMode": {
+      "type": "string",
+      "description": "B2B sweep observation mode flag"
+    },
+    "planeBB2bTargetMinutes": {
+      "type": "number",
+      "description": "Target cadence in minutes for B2B sweep scheduling"
+    },
+    "planeBB2cRefreshServiceEnabled": {
+      "type": "boolean",
+      "description": "Enable B2C refresh ECS service"
+    },
+    "planeBIngestFanoutMessageMode": {
+      "type": "string",
+      "enum": [
+        "corridor",
+        "provider"
+      ],
+      "description": "Fanout message partitioning mode for Plane B ingest fanout workers"
+    },
+    "planeBQueueWorkerSpotOnly": {
+      "type": "boolean",
+      "description": "Run queue worker services on Fargate Spot only"
+    },
+    "publicAdsEnabled": {
+      "type": "boolean",
+      "description": "Enable ads on public frontend"
+    },
+    "publicGa4MeasurementId": {
+      "type": "string",
+      "description": "Public GA4 measurement ID for frontend analytics"
+    },
+    "publicMetaPixelId": {
+      "type": "string",
+      "description": "Public Meta Pixel ID for frontend analytics"
+    },
+    "publicPulseEnabled": {
+      "type": "boolean",
+      "description": "Enable Pulse surfaces on public frontend"
+    },
+    "publicSupabaseAnonKeySecretJsonKey": {
+      "type": "string",
+      "description": "JSON key used to read PUBLIC_SUPABASE_ANON_KEY from shared secret"
+    },
+    "publicSupabaseUrlSecretJsonKey": {
+      "type": "string",
+      "description": "JSON key used to read PUBLIC_SUPABASE_URL from shared secret"
+    },
+    "slackCriticalChannelId": {
+      "type": "string",
+      "description": "Slack channel ID for critical alerts"
+    },
+    "slackOpsChannelId": {
+      "type": "string",
+      "description": "Slack channel ID for ops alerts"
+    },
+    "slackWarningChannelId": {
+      "type": "string",
+      "description": "Slack channel ID for warning alerts"
+    },
+    "slackWorkspaceId": {
+      "type": "string",
+      "description": "Slack workspace ID for Chatbot subscriptions"
+    },
+    "tagOwner": {
+      "type": "string",
+      "description": "Owner tag value applied to stack resources"
+    },
+    "userAssetsPrefix": {
+      "type": "string",
+      "description": "S3 prefix for user asset storage"
+    },
+    "providerProbeMode": {
+      "type": "string",
+      "enum": [
+        "per_provider",
+        "fan_in"
+      ],
+      "description": "Provider probe scheduling mode (per_provider uses one rule per provider; fan_in uses one consolidated rule)"
+    },
+    "stagingInterfaceEndpointsMode": {
+      "type": "string",
+      "enum": [
+        "all",
+        "minimal",
+        "none"
+      ],
+      "description": "Staging VPC interface endpoint mode"
+    },
+    "prodInterfaceEndpointsMode": {
+      "type": "string",
+      "enum": [
+        "all",
+        "minimal",
+        "none"
+      ],
+      "description": "Production VPC interface endpoint mode"
+    },
+    "stagingNatGateways": {
+      "type": "number",
+      "description": "Staging NAT gateway count override"
+    },
+    "prodNatGateways": {
+      "type": "number",
+      "description": "Production NAT gateway count override"
     }
   },
-  "required": ["env"]
+  "required": [
+    "env"
+  ]
 }
