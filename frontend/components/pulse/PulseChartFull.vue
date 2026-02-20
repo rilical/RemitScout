@@ -339,6 +339,7 @@ const viewMode = ref<'chart' | 'table'>('chart')
 const chartMeta = computed(() => getChartById(props.chartId))
 
 const isPlus = computed(() => props.pulseLevel !== 'none')
+const isFullAccess = computed(() => props.pulseLevel === 'full')
 const isPro = computed(() => props.pulseLevel === 'full')
 const isProChart = computed(() => {
   const type = chartMeta.value?.type
@@ -358,8 +359,8 @@ const ranges = computed(() => {
   return [
     { value: '7d' as TimeRange, label: '7D', isGated: false },
     { value: '30d' as TimeRange, label: '30D', isGated: false },
-    { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', isPlus.value) },
-    { value: '365d' as TimeRange, label: '1Y', isGated: isRangeGated(props.chartId, '365d', isPlus.value) },
+    { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', isFullAccess.value) },
+    { value: '365d' as TimeRange, label: '1Y', isGated: isRangeGated(props.chartId, '365d', isFullAccess.value) },
   ]
 })
 
@@ -409,7 +410,7 @@ async function loadData() {
 }
 
 function selectRange(range: { value: TimeRange, isGated: boolean }) {
-  if (range.isGated && !isPlus.value) return
+  if (range.isGated && !isFullAccess.value) return
   selectedRange.value = range.value
   emit('range-change', range.value)
   loadData()

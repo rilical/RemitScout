@@ -24,7 +24,7 @@
       </h3>
 
       <div
-        v-if="isGated"
+        v-if="isGated && !isTeaserLocked"
         class="mb-4 rounded-lg border border-neutral-700 bg-neutral-900/40 p-3"
       >
         <div class="text-body-sm font-semibold text-neutral-200">
@@ -32,6 +32,29 @@
         </div>
         <div class="mt-1 text-body-sm text-neutral-400">
           {{ metadata.description }}
+        </div>
+        <NuxtLink
+          :to="resolvedCtaTo"
+          class="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-500 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-600 transition-colors"
+        >
+          {{ resolvedCtaLabel }}
+          <Icon
+            name="arrow-right"
+            :size="16"
+            class="text-current"
+          />
+        </NuxtLink>
+      </div>
+
+      <div
+        v-else-if="isTeaserLocked"
+        class="mb-4 rounded-lg border border-neutral-700 bg-neutral-900/40 p-3"
+      >
+        <div class="text-body-sm font-semibold text-neutral-200">
+          Preview unlocked for 7 days
+        </div>
+        <div class="mt-1 text-body-sm text-neutral-400">
+          Live data is shown for the last 7 days. Unlock full history for complete trend analysis.
         </div>
         <NuxtLink
           :to="resolvedCtaTo"
@@ -115,9 +138,9 @@
         {{ updatedAtLabel }}
       </p>
 
-      <div class="mb-4 h-16 w-full">
+      <div class="relative mb-4 h-16 w-full">
         <div
-          v-if="isGated"
+          v-if="isGated && !isTeaserLocked"
           class="h-full w-full rounded-lg border border-neutral-700 bg-neutral-900/30"
         />
         <svg
@@ -157,6 +180,14 @@
             stroke-linejoin="round"
           />
         </svg>
+        <div
+          v-if="isTeaserLocked && sparklinePoints.length >= 2"
+          class="pointer-events-none absolute inset-y-0 right-0 w-[38%] border-l border-neutral-700/90 bg-gradient-to-r from-transparent via-neutral-900/65 to-neutral-900/95"
+        >
+          <div class="flex h-full items-center justify-center px-2 text-center text-[11px] font-semibold uppercase tracking-wider text-neutral-300">
+            Unlock full history
+          </div>
+        </div>
         <div
           v-else-if="!displayInsight"
           class="flex h-full w-full items-center"
@@ -249,6 +280,7 @@ interface Props {
   insight: string
   sparklineData?: ChartPoint[]
   isGated?: boolean
+  teaserMode?: boolean
   updatedAt?: string | Date | null
   gateLabel?: string
   ctaTo?: string
@@ -259,6 +291,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   sparklineData: () => [],
   isGated: false,
+  teaserMode: false,
   updatedAt: null,
   gateLabel: undefined,
   ctaTo: undefined,
@@ -292,6 +325,8 @@ const resolvedDisableActions = computed(() => {
   return props.disableActions ?? props.isGated
 })
 
+const isTeaserLocked = computed(() => props.isGated && props.teaserMode)
+
 const updatedAtLabel = computed(() => {
   if (!props.updatedAt) return null
   return formatUpdatedLabel(props.updatedAt)
@@ -301,7 +336,16 @@ const sparklineColor = computed(() => {
   return '#2563EB'
 })
 
-const sparklinePoints = computed(() => props.sparklineData)
+const sparklinePoints = computed(() => {
+  const points = props.sparklineData
+  if (!isTeaserLocked.value || points.length < 3) return points
+
+  const latestTs = points[points.length - 1]?.t
+  if (!Number.isFinite(latestTs)) return points
+  const cutoff = Number(latestTs) - 7 * 24 * 60 * 60 * 1000
+  const trimmed = points.filter(point => Number(point.t) >= cutoff)
+  return trimmed.length >= 2 ? trimmed : points.slice(-2)
+})
 
 const isNumericUnit = computed(() => {
   const unit = String(props.metadata.unit || '').toLowerCase()

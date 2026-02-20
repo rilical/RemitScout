@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
     <div
       v-for="tile in tiles"
       :key="tile.id"

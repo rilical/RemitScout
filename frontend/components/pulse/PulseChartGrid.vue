@@ -38,7 +38,8 @@
           :insight="getChartInsight(chart.id)"
           :sparkline-data="getSparklineData(chart.id)"
           :is-gated="isChartGated(chart)"
-          :gate-label="isChartGated(chart) ? 'Pulse' : undefined"
+          :teaser-mode="isTeaserChart(chart)"
+          :gate-label="isChartGated(chart) ? 'Full' : undefined"
           :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
           :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
           :disable-actions="isChartGated(chart)"
@@ -75,7 +76,16 @@ const emit = defineEmits<{
   embed: [chartId: string]
 }>()
 
-const categories = computed(() => getAllCategories())
+const categories = computed(() => {
+  const all = getAllCategories()
+  if (props.pulseLevel === 'full') return all
+  return all
+    .map(cat => ({
+      ...cat,
+      charts: cat.charts.filter(c => !ENTERPRISE_ONLY_CHART_IDS.has(c.id) && !TEASER_CHART_IDS.has(c.id)),
+    }))
+    .filter(cat => cat.charts.length > 0)
+})
 
 function getChartInsight(chartId: string): string {
   const data = props.chartData[chartId]
@@ -88,10 +98,25 @@ function getSparklineData(chartId: string) {
   return data.series[0].points
 }
 
-const PRO_TYPES = new Set<ChartMetadata['type']>(['stacked', 'scatter', 'matrix'])
+const TEASER_CHART_IDS = new Set([
+  'provider-winner',
+  'pass-through-latency',
+  'quote-anomalies',
+  'data-freshness',
+  'indices-confidence',
+  'indices-provider-count',
+  'indices-suppression',
+])
+const ENTERPRISE_ONLY_CHART_IDS = new Set(['corridor-liquidity'])
+
+function isTeaserChart(chart: ChartMetadata): boolean {
+  return props.pulseLevel !== 'full' && TEASER_CHART_IDS.has(chart.id)
+}
 
 function isChartGated(chart: ChartMetadata): boolean {
-  return PRO_TYPES.has(chart.type) && props.pulseLevel !== 'full'
+  if (props.pulseLevel === 'full') return false
+  if (ENTERPRISE_ONLY_CHART_IDS.has(chart.id)) return true
+  return TEASER_CHART_IDS.has(chart.id)
 }
 
 function handleView(chartId: string) {

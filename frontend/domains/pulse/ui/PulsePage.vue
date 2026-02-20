@@ -3,113 +3,349 @@
     <!-- Public preview (no Plus required) -->
     <div
       v-if="!isPlus"
-      class="min-h-screen py-12 px-page-x"
+      class="min-h-screen"
     >
-      <div class="mx-auto max-w-page">
-        <div class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-2xl">
-            <div class="mb-3 text-[11px] font-mono uppercase tracking-widest text-neutral-500">
-              Pulse Preview
-            </div>
-            <h1 class="text-hero font-bold text-white leading-tight">
-              Pulse for Remittance Markets
-            </h1>
-            <p class="mt-3 text-body-lg text-neutral-300 leading-relaxed">
-              A market-screener-first view of what is moving across corridors, with honest timestamps.
-            </p>
-            <p class="mt-2 text-body-sm text-neutral-400">
-              Public preview shows corridor moves only. Plus unlocks Pulse Lite (market snapshot, trends, and basic deep dives). Enterprise unlocks Pulse (screener, market depth, benchmarking, and alerts).
-            </p>
-          </div>
-
-          <div class="flex flex-col sm:flex-row gap-3">
-            <NuxtLink
-              to="/plus"
-              class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-body font-bold text-white hover:bg-brand-600 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Icon
-                name="sparkles"
-                :size="20"
-                class="text-current"
-              />
-              Unlock Plus
-            </NuxtLink>
-            <NuxtLink
-              to="/sign-in"
-              class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-6 py-3 text-body font-semibold text-white hover:bg-neutral-700 transition-colors"
-            >
-              Sign in
-            </NuxtLink>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div class="lg:col-span-7">
-            <PulseMoversList
-              variant="public"
-              :limit="10"
-            />
-          </div>
-
-          <div class="lg:col-span-5 space-y-6">
-            <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
-              <div class="mb-4 flex items-center justify-between gap-3">
-                <h2 class="text-body-lg font-bold text-white">
-                  Your Watchlist Screener
-                </h2>
-                <span class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-neutral-300">
-                  Locked
+      <!-- Hero -->
+      <div class="py-16 px-page-x">
+        <div class="mx-auto max-w-page">
+          <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-2xl space-y-4">
+              <h1 class="text-hero font-bold leading-tight">
+                <span class="text-white">Remit</span><span class="text-brand-600">-</span><span class="text-brand-600">Pulse</span>
+              </h1>
+              <p class="text-body-lg text-neutral-300 leading-relaxed">
+                Market intelligence for remittance pricing across 150+ corridors.
+              </p>
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="rounded-full border border-neutral-700 bg-neutral-800 px-3.5 py-1.5 text-body-sm font-semibold text-neutral-200">
+                  18 Charts
+                </span>
+                <span class="rounded-full border border-neutral-700 bg-neutral-800 px-3.5 py-1.5 text-body-sm font-semibold text-neutral-200">
+                  4 Categories
+                </span>
+                <span class="rounded-full border border-neutral-700 bg-neutral-800 px-3.5 py-1.5 text-body-sm font-semibold text-neutral-200">
+                  150+ Corridors
                 </span>
               </div>
-              <p class="text-body-sm text-neutral-400 mb-4">
-                Enterprise unlocks the watchlist screener with best-provider ranking, spread risk, and freshness across corridors.
-              </p>
-              <div class="space-y-3 opacity-70 blur-[1.5px] select-none pointer-events-none">
-                <div
-                  v-for="n in 4"
-                  :key="n"
-                  class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
-                >
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="text-body-sm font-semibold text-white">
-                      🇺🇸 USD → PHP
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <NuxtLink
+                to="/plus"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body font-bold text-white hover:bg-brand-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                <Icon
+                  name="sparkles"
+                  :size="20"
+                  class="text-current"
+                />
+                Unlock Plus
+              </NuxtLink>
+              <NuxtLink
+                to="/sign-in"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-6 py-3 text-body font-semibold text-white hover:bg-neutral-700 transition-colors"
+              >
+                Sign in
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Movers + Screener -->
+      <div class="px-page-x pb-12">
+        <div class="mx-auto max-w-page">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div class="lg:col-span-6">
+              <PulseMoversList
+                variant="public"
+                :limit="10"
+              />
+            </div>
+
+            <div class="lg:col-span-6">
+              <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                  <h2 class="text-body-lg font-bold text-white">
+                    Your Watchlist Screener
+                  </h2>
+                  <span class="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1 text-[11px] font-semibold text-neutral-300">
+                    Locked
+                  </span>
+                </div>
+                <p class="text-body-sm text-neutral-400 mb-4">
+                  Enterprise unlocks the watchlist screener with best-provider ranking, spread risk, and freshness across corridors.
+                </p>
+                <div class="space-y-3 opacity-70 blur-[1.5px] select-none pointer-events-none">
+                  <div
+                    v-for="row in previewScreenerRows"
+                    :key="row.corridor"
+                    class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="text-body-sm font-semibold text-white">
+                        {{ row.flag }} {{ row.corridor }}
+                      </div>
+                      <div class="rounded-lg bg-neutral-800 px-2.5 py-1 text-[11px] font-bold text-neutral-200 border border-neutral-700">
+                        {{ row.badge }}
+                      </div>
                     </div>
-                    <div class="rounded-lg bg-neutral-800 px-2.5 py-1 text-[11px] font-bold text-neutral-200 border border-neutral-700">
-                      Great
+                    <div class="mt-2 text-body-sm text-neutral-400">
+                      {{ row.detail }}
                     </div>
-                  </div>
-                  <div class="mt-2 text-body-sm text-neutral-400">
-                    Best: Provider • Gets: PHP 56,000
-                  </div>
-                  <div class="mt-3 grid grid-cols-2 gap-3 text-[10px] font-mono uppercase tracking-wider text-neutral-600">
-                    <div>Spread (bps)</div>
-                    <div class="text-right">
-                      Updated
+                    <div class="mt-3 grid grid-cols-2 gap-3 text-[10px] font-mono uppercase tracking-wider text-neutral-600">
+                      <div>Spread (bps)</div>
+                      <div class="text-right">
+                        Updated
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div class="rounded-2xl border border-primary-500/40 bg-gradient-to-br from-primary-500/15 to-neutral-800 p-6 shadow-lg">
-              <h2 class="text-body-lg font-bold text-white">
-                Unlock Pulse Plus
-              </h2>
-              <p class="mt-2 text-body-sm text-neutral-300">
-                Plus unlocks Pulse Lite: market snapshot, trends, and exports. Enterprise unlocks Pulse: screener, market depth, benchmarking, and arbitrage alerts.
-              </p>
+      <!-- Chart Preview Grid -->
+      <div class="border-t border-neutral-800 px-page-x py-16">
+        <div class="mx-auto max-w-page">
+          <div class="mb-8">
+            <h2 class="text-h2 font-bold text-white">
+              What's Inside Pulse
+            </h2>
+            <p class="mt-2 text-body text-neutral-400">
+              18 market charts across pricing, competition, volatility, and operational coverage.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              v-for="chart in previewCharts"
+              :key="chart.id"
+              class="group relative rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden transition-all duration-200 hover:border-brand-600"
+            >
+              <div class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-body-sm font-semibold text-brand-600">
+                <svg
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                {{ chart.gate }}
+              </div>
+
+              <div class="p-5">
+                <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+                  {{ chart.categoryLabel }}
+                </div>
+                <h3 class="mb-2 text-body-lg font-bold text-white group-hover:text-brand-600 transition-colors">
+                  {{ chart.title }}
+                </h3>
+                <p class="mb-4 text-body-sm text-neutral-400">
+                  {{ chart.description }}
+                </p>
+
+                <div class="relative h-16 w-full overflow-hidden rounded-lg">
+                  <svg
+                    viewBox="0 0 200 60"
+                    class="h-full w-full opacity-40 blur-[1px]"
+                    preserveAspectRatio="none"
+                  >
+                    <defs>
+                      <linearGradient
+                        :id="`preview-grad-${chart.id}`"
+                        x1="0%"
+                        y1="0%"
+                        x2="0%"
+                        y2="100%"
+                      >
+                        <stop
+                          offset="0%"
+                          style="stop-color: #2563EB; stop-opacity: 0.3"
+                        />
+                        <stop
+                          offset="100%"
+                          style="stop-color: #2563EB; stop-opacity: 0"
+                        />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      :d="chart.areaPath"
+                      :fill="`url(#preview-grad-${chart.id})`"
+                    />
+                    <polyline
+                      :points="chart.sparkline"
+                      fill="none"
+                      stroke="#2563EB"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between border-t border-neutral-700 px-5 py-3">
+                <NuxtLink
+                  :to="chart.ctaTo"
+                  class="text-body-sm font-semibold text-brand-600 hover:text-brand-500 transition-colors inline-flex items-center gap-1.5"
+                >
+                  {{ chart.ctaLabel }}
+                  <svg
+                    class="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Showcase: Plus vs Enterprise -->
+      <div class="border-t border-neutral-800 px-page-x py-16">
+        <div class="mx-auto max-w-page">
+          <div class="mb-8 text-center">
+            <h2 class="text-h2 font-bold text-white">
+              Choose Your Plan
+            </h2>
+            <p class="mt-2 text-body text-neutral-400">
+              From market snapshots to institutional analytics.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- Plus -->
+            <div class="rounded-2xl border border-brand-600/30 bg-neutral-800 p-8">
+              <div class="mb-6">
+                <h3 class="text-h4 font-bold text-white">
+                  Plus
+                </h3>
+                <p class="mt-1 text-body-sm text-neutral-400">
+                  Market snapshots, trends, and basic deep dives.
+                </p>
+              </div>
+              <ul class="space-y-3">
+                <li
+                  v-for="f in plusFeatures"
+                  :key="f"
+                  class="flex items-start gap-3"
+                >
+                  <svg
+                    class="mt-0.5 h-5 w-5 shrink-0 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span class="text-body-sm text-neutral-200">{{ f }}</span>
+                </li>
+              </ul>
               <NuxtLink
                 to="/plus"
-                class="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-primary-500 px-6 py-3 text-body font-bold text-white hover:bg-brand-600 transition-colors shadow-lg hover:shadow-xl"
+                class="mt-8 inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-body font-bold text-white hover:bg-brand-700 transition-colors"
               >
-                Upgrade to Plus
+                Get Plus
               </NuxtLink>
-              <div class="mt-4 text-body-sm text-neutral-400">
-                Enterprise teams: <NuxtLink
-                  to="/contact?type=enterprise&topic=pulse"
-                  class="text-primary-400 hover:text-primary-300 underline"
-                >Contact sales</NuxtLink>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="relative rounded-2xl border border-brand-600 bg-neutral-800 p-8">
+              <span class="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+                Recommended
+              </span>
+              <div class="mb-6">
+                <h3 class="text-h4 font-bold text-white">
+                  Enterprise
+                </h3>
+                <p class="mt-1 text-body-sm text-neutral-400">
+                  Full analytics, screener, and institutional data access.
+                </p>
               </div>
+              <ul class="space-y-3">
+                <li
+                  v-for="f in enterpriseFeatures"
+                  :key="f"
+                  class="flex items-start gap-3"
+                >
+                  <svg
+                    class="mt-0.5 h-5 w-5 shrink-0 text-brand-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span class="text-body-sm text-neutral-200">{{ f }}</span>
+                </li>
+              </ul>
+              <NuxtLink
+                to="/contact?type=enterprise&topic=pulse"
+                class="mt-8 inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-body font-bold text-white hover:bg-brand-700 transition-colors"
+              >
+                Contact Sales
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final CTA Banner -->
+      <div class="border-t border-neutral-800 px-page-x py-16">
+        <div class="mx-auto max-w-page">
+          <div class="rounded-2xl border border-brand-600/40 bg-gradient-to-r from-brand-600/20 via-neutral-800 to-brand-600/20 p-10 text-center">
+            <h2 class="text-h2 font-bold text-white">
+              Unlock Pulse
+            </h2>
+            <p class="mx-auto mt-3 max-w-lg text-body text-neutral-300">
+              Start with Plus for market snapshots, or go Enterprise for full analytics.
+            </p>
+            <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <NuxtLink
+                to="/plus"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-8 py-3.5 text-body font-bold text-white hover:bg-brand-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                <Icon
+                  name="sparkles"
+                  :size="20"
+                  class="text-current"
+                />
+                Get Plus
+              </NuxtLink>
+              <NuxtLink
+                to="/contact?type=enterprise&topic=pulse"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-8 py-3.5 text-body font-semibold text-white hover:bg-neutral-700 transition-colors"
+              >
+                Contact Enterprise Sales
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -158,7 +394,10 @@
             <!-- Action Links -->
             <div class="flex flex-col items-end gap-4">
               <!-- View Mode Toggle -->
-              <div class="flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 p-1">
+              <div
+                v-if="isPro"
+                class="flex items-center gap-1 rounded-xl border border-neutral-700 bg-neutral-900 p-1"
+              >
                 <button
                   type="button"
                   class="rounded-lg px-4 py-2 text-body-sm font-bold uppercase tracking-wider transition-colors"
@@ -175,6 +414,12 @@
                 >
                   Deep Dive
                 </button>
+              </div>
+              <div
+                v-else
+                class="rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-bold uppercase tracking-wider text-white"
+              >
+                Sender View
               </div>
               <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-medium text-neutral-300">
                 Verified Pipeline v2.4.1
@@ -208,75 +453,157 @@
         </div>
       </div>
 
-      <div class="py-8">
-        <!-- Screener-first (Enterprise) -->
-        <div class="mb-8 px-page-x">
-          <div class="mx-auto max-w-page grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <div
-              v-if="pulseScreenerEnabled"
-              class="lg:col-span-7"
-            >
-              <PulsePlusGate
-                :is-gated="!isPro"
-                tier="enterprise"
-                title="Watchlist Screener (Enterprise)"
-                description="Enterprise unlocks the corridor screener, best-provider ranking, spread risk, and freshness across your watchlist."
+      <div class="flex flex-col py-8">
+        <!-- Sender-First Gauge (mobile-first: renders at top on small screens) -->
+        <div
+          id="decision"
+          ref="decisionPanelRef"
+          class="mb-10 px-page-x order-first md:order-none"
+        >
+          <div class="mx-auto max-w-page">
+            <div class="space-y-6">
+              <PulseSmartGauge />
+
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl bg-brand-600 px-4 py-3 text-body font-bold text-white hover:bg-brand-700 transition-colors"
+                @click="handleCreateAlert"
               >
-                <PulseScreener
-                  :rows="screenerRows"
-                  :loading="screenerLoading"
-                  :error="screenerError"
-                  :selected-corridor-id="store.corridor.corridorId || null"
-                  @select="handleScreenerSelect"
-                />
-                <template #preview>
-                  <div class="rounded-2xl border border-neutral-700 bg-neutral-800 shadow-lg overflow-hidden">
-                    <div class="border-b border-neutral-700 px-6 py-5">
-                      <div class="flex items-end justify-between gap-3">
-                        <div>
-                          <div class="text-body-lg font-bold text-white">
-                            Your Watchlist Screener
-                          </div>
-                          <div class="mt-1 text-body-sm text-neutral-400">
-                            Ranked corridors, best provider, spread risk, and freshness.
-                          </div>
-                        </div>
-                        <div class="text-[11px] font-mono uppercase tracking-wider text-neutral-500">
-                          $1000 • bank→bank • 7D
-                        </div>
-                      </div>
-                    </div>
-                    <div class="p-6 space-y-3">
-                      <div
-                        v-for="n in 5"
-                        :key="n"
-                        class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
-                      >
-                        <SkeletonBlock
-                          width="11rem"
-                          height="14"
-                          tone="dark"
-                        />
-                        <div class="mt-3 grid grid-cols-2 gap-3">
-                          <SkeletonBlock
-                            width="5rem"
-                            height="12"
-                            tone="dark"
-                          />
-                          <SkeletonBlock
-                            width="6rem"
-                            height="12"
-                            tone="dark"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </PulsePlusGate>
+                Set alert
+              </button>
+
+              <PulseHeadlineTiles
+                :tiles="headlineTiles"
+                @tile-click="handleHeadlineTileClick"
+              />
+
+              <PulseNarrative
+                :summary="narrative?.summary"
+                :generated-at="narrative?.generatedAt || null"
+                :loading="highlightsLoading"
+              />
+
+              <PulsePersonalHistory
+                :data="personalHistory"
+                :loading="highlightsLoading"
+              />
+
+              <PulseHeroChart metric="rate" />
+
+              <PulseMarketQuotes />
             </div>
 
-            <div :class="pulseScreenerEnabled ? 'lg:col-span-5' : 'lg:col-span-12'">
+            <!-- Actions Bar -->
+            <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
+              <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div class="text-body-sm font-semibold text-white">
+                    Actions
+                  </div>
+                  <div class="text-body-sm text-neutral-400">
+                    Compare now, set a smart alert, and export a snapshot for your records.
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <NuxtLink
+                    :to="compareCorridorUrl"
+                    class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors"
+                  >
+                    Compare quotes
+                  </NuxtLink>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
+                    @click="handleAddToWatchlist"
+                  >
+                    Add to watchlist
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
+                    @click="handleCreateAlert"
+                  >
+                    Create alert
+                  </button>
+                  <NuxtLink
+                    :to="{ path: '/dashboard', query: { tab: 'account', section: 'notifications' } }"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
+                  >
+                    Enable notifications
+                  </NuxtLink>
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    :disabled="snapshotExporting"
+                    @click="downloadSnapshotCsv"
+                  >
+                    {{ snapshotExporting ? 'Exporting...' : 'Export snapshot CSV' }}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-if="actionError || actionStatus || snapshotExportError || snapshotExportStatus"
+                class="mt-3 text-body-sm"
+              >
+                <p
+                  v-if="actionError"
+                  class="text-danger-600"
+                >
+                  {{ actionError }}
+                </p>
+                <p
+                  v-else-if="snapshotExportError"
+                  class="text-danger-600"
+                >
+                  {{ snapshotExportError }}
+                </p>
+                <p
+                  v-else
+                  class="text-neutral-400"
+                >
+                  {{ actionStatus || snapshotExportStatus }}
+                </p>
+              </div>
+            </div>
+
+            <div
+              v-if="isPro && store.viewMode === 'sender'"
+              class="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-body-sm text-neutral-300"
+            >
+              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Deep Dive.
+              <button
+                type="button"
+                class="ml-2 inline-flex items-center gap-2 text-brand-600 hover:text-brand-500 font-semibold"
+                @click="setViewMode('analyst')"
+              >
+                Switch to Deep Dive →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screener-first (Enterprise) -->
+        <div class="mb-8 px-page-x order-2 md:order-none">
+          <div class="mx-auto max-w-page grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div
+              v-if="isPro && pulseScreenerEnabled"
+              class="lg:col-span-7"
+            >
+              <PulseScreener
+                :rows="screenerRows"
+                :loading="screenerLoading"
+                :error="screenerError"
+                :selected-corridor-id="store.corridor.corridorId || null"
+                :pinned-corridor-ids="pinnedCorridorIds"
+                @select="handleScreenerSelect"
+                @pin="handlePinCorridor"
+                @unpin="handleUnpinCorridor"
+              />
+            </div>
+
+            <div :class="isPro && pulseScreenerEnabled ? 'lg:col-span-5' : 'lg:col-span-12'">
               <PulseMoversList
                 variant="plus"
                 :limit="10"
@@ -290,7 +617,7 @@
           <div class="mx-auto max-w-page mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="text-body-sm text-neutral-400">
               <template v-if="isPro && pulseScreenerEnabled">
-                Tip: Click a screener row or mover to load the decision panel below.
+                Tip: Click a screener row or mover to load the decision panel.
                 <span
                   v-if="screenerUpdatedAt"
                   class="ml-2 text-neutral-500"
@@ -434,108 +761,7 @@
           </div>
         </div>
 
-        <!-- Sender-First Pulse -->
-        <div
-          id="decision"
-          ref="decisionPanelRef"
-          class="mb-10 px-page-x"
-        >
-          <div class="mx-auto max-w-page">
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <PulseSmartGauge />
-              <PulseMarketQuotes />
-            </div>
-
-            <!-- Actions Bar -->
-            <div class="mt-6 rounded-xl border border-neutral-700 bg-neutral-800 p-4">
-              <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div class="text-body-sm font-semibold text-white">
-                    Actions
-                  </div>
-                  <div class="text-body-sm text-neutral-400">
-                    Compare now, set a smart alert, and export a snapshot for your records.
-                  </div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                  <NuxtLink
-                    :to="compareCorridorUrl"
-                    class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors"
-                  >
-                    Compare quotes
-                  </NuxtLink>
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
-                    @click="handleAddToWatchlist"
-                  >
-                    Add to watchlist
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
-                    @click="handleCreateAlert"
-                  >
-                    Create alert
-                  </button>
-                  <NuxtLink
-                    :to="{ path: '/dashboard', query: { tab: 'account', section: 'notifications' } }"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
-                  >
-                    Enable notifications
-                  </NuxtLink>
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                    :disabled="snapshotExporting"
-                    @click="downloadSnapshotCsv"
-                  >
-                    {{ snapshotExporting ? 'Exporting...' : 'Export snapshot CSV' }}
-                  </button>
-                </div>
-              </div>
-
-              <div
-                v-if="actionError || actionStatus || snapshotExportError || snapshotExportStatus"
-                class="mt-3 text-body-sm"
-              >
-                <p
-                  v-if="actionError"
-                  class="text-danger-600"
-                >
-                  {{ actionError }}
-                </p>
-                <p
-                  v-else-if="snapshotExportError"
-                  class="text-danger-600"
-                >
-                  {{ snapshotExportError }}
-                </p>
-                <p
-                  v-else
-                  class="text-neutral-400"
-                >
-                  {{ actionStatus || snapshotExportStatus }}
-                </p>
-              </div>
-            </div>
-
-            <div
-              v-if="store.viewMode === 'sender'"
-              class="mt-4 rounded-xl border border-neutral-700 bg-neutral-900/40 p-4 text-body-sm text-neutral-300"
-            >
-              Want deeper analytics (dispersion, reliability, deep dives)? Switch to Deep Dive.
-              <button
-                type="button"
-                class="ml-2 inline-flex items-center gap-2 text-brand-600 hover:text-brand-500 font-semibold"
-                @click="setViewMode('analyst')"
-              >
-                Switch to Deep Dive →
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- Decision panel is now rendered above with order-first on mobile -->
 
         <div v-if="store.viewMode === 'analyst'">
           <!-- Navigation Bar -->
@@ -562,20 +788,29 @@
                 >
                   Provider Competition
                 </button>
-                <span class="text-neutral-700">|</span>
-                <button
-                  class="hover:text-white"
-                  @click="scrollToSection('reliability')"
-                >
-                  Reliability
-                </button>
-                <span class="text-neutral-700">|</span>
-                <button
-                  class="hover:text-white"
-                  @click="scrollToSection('risk')"
-                >
-                  Risk & Anomalies
-                </button>
+                <template v-if="isPro">
+                  <span class="text-neutral-700">|</span>
+                  <button
+                    class="hover:text-white"
+                    @click="scrollToSection('reliability')"
+                  >
+                    Reliability
+                  </button>
+                  <span class="text-neutral-700">|</span>
+                  <button
+                    class="hover:text-white"
+                    @click="scrollToSection('indices')"
+                  >
+                    Indices
+                  </button>
+                  <span class="text-neutral-700">|</span>
+                  <button
+                    class="hover:text-white"
+                    @click="scrollToSection('risk')"
+                  >
+                    Risk & Anomalies
+                  </button>
+                </template>
                 <span class="text-neutral-700">|</span>
                 <button
                   class="hover:text-white"
@@ -590,13 +825,15 @@
                 >
                   Exports
                 </button>
-                <span class="text-neutral-700">|</span>
-                <button
-                  class="hover:text-white"
-                  @click="scrollToSection('enterprise')"
-                >
-                  Enterprise
-                </button>
+                <template v-if="isPro">
+                  <span class="text-neutral-700">|</span>
+                  <button
+                    class="hover:text-white"
+                    @click="scrollToSection('enterprise')"
+                  >
+                    Enterprise
+                  </button>
+                </template>
                 <span class="text-neutral-700">|</span>
                 <button
                   class="hover:text-white"
@@ -733,35 +970,20 @@
                   <PulseHeroChart :metric="activeMetric" />
                 </div>
                 <div
+                  v-if="isPro"
                   id="market-spread"
                   class="lg:col-span-4"
                   :class="highlightedSection === 'market-spread' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
                 >
-                  <PulsePlusGate
-                    :is-gated="!isPro"
-                    tier="enterprise"
-                    title="Market Depth (Enterprise)"
-                    description="Enterprise unlocks market depth: best-to-worst dispersion and spread structure."
-                  >
-                    <PulseMarketDepth />
-                    <template #preview>
-                      <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                        <SkeletonBlock
-                          width="10rem"
-                          height="16"
-                          tone="dark"
-                        />
-                        <div class="mt-4 h-56 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                      </div>
-                    </template>
-                  </PulsePlusGate>
+                  <PulseMarketDepth />
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- 3. Provider Benchmarking -->
+          <!-- 3. Provider Benchmarking (Enterprise only) -->
           <section
+            v-if="isPro"
             id="competition"
             class="mb-10 px-page-x"
             :class="highlightedSection === 'competition' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
@@ -776,49 +998,8 @@
                 </p>
               </div>
               <div class="grid grid-cols-1 gap-6">
-                <PulsePlusGate
-                  :is-gated="!isPro"
-                  tier="enterprise"
-                  title="Provider Leaderboard (Enterprise)"
-                  description="Enterprise unlocks institutional provider ranking and benchmarking."
-                >
-                  <PulseProviderLeaderboard />
-                  <template #preview>
-                    <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                      <SkeletonBlock
-                        width="12rem"
-                        height="16"
-                        tone="dark"
-                      />
-                      <div class="mt-4 space-y-2">
-                        <div
-                          v-for="n in 6"
-                          :key="n"
-                          class="h-10 rounded-lg border border-neutral-700 bg-neutral-900/30"
-                        />
-                      </div>
-                    </div>
-                  </template>
-                </PulsePlusGate>
-
-                <PulsePlusGate
-                  :is-gated="!isPro"
-                  tier="enterprise"
-                  title="Provider Heatmap (Enterprise)"
-                  description="Enterprise unlocks winner timelines and provider dominance analytics."
-                >
-                  <PulseProviderHeatmap />
-                  <template #preview>
-                    <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                      <SkeletonBlock
-                        width="10rem"
-                        height="16"
-                        tone="dark"
-                      />
-                      <div class="mt-4 h-56 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                    </div>
-                  </template>
-                </PulsePlusGate>
+                <PulseProviderLeaderboard />
+                <PulseProviderHeatmap />
               </div>
             </div>
           </section>
@@ -853,8 +1034,9 @@
             </div>
           </section>
 
-          <!-- 5. Reliability & Coverage -->
+          <!-- 5. Reliability & Coverage (Enterprise only) -->
           <section
+            v-if="isPro"
             id="reliability"
             class="mb-10 px-page-x"
             :class="highlightedSection === 'reliability' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
@@ -868,56 +1050,60 @@
                   Quote success rates, method support, and data freshness.
                 </p>
               </div>
-              <PulsePlusGate
-                :is-gated="!isPro"
-                tier="enterprise"
-                title="Reliability & Coverage (Enterprise)"
-                description="Enterprise unlocks method coverage and operational diagnostics for this corridor."
-              >
-                <PulseReliabilityCoverage :is-pro="isPro" />
-                <template #preview>
-                  <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                      <div class="space-y-3 lg:col-span-4">
-                        <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
-                          <SkeletonBlock
-                            width="9rem"
-                            height="14"
-                            tone="dark"
-                          />
-                          <SkeletonBlock
-                            class="mt-3"
-                            width="6rem"
-                            height="28"
-                            tone="dark"
-                          />
-                        </div>
-                        <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
-                          <SkeletonBlock
-                            width="8rem"
-                            height="14"
-                            tone="dark"
-                          />
-                          <SkeletonBlock
-                            class="mt-3"
-                            width="7rem"
-                            height="28"
-                            tone="dark"
-                          />
-                        </div>
-                      </div>
-                      <div class="lg:col-span-8">
-                        <div class="h-72 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </PulsePlusGate>
+              <PulseReliabilityCoverage :is-pro="isPro" />
             </div>
           </section>
 
-          <!-- 6. Risk & Anomalies -->
+          <!-- 5b. Gold Indices Health (Enterprise only) -->
           <section
+            v-if="isPro"
+            id="indices"
+            class="mb-10 px-page-x"
+            :class="highlightedSection === 'indices' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
+          >
+            <div class="mx-auto max-w-page">
+              <div class="mb-4">
+                <h2 class="text-h3 font-bold text-white">
+                  Gold Indices Health
+                </h2>
+                <p class="text-body-sm text-neutral-400">
+                  Coverage confidence, provider eligibility, and suppression diagnostics for TEER/RCI/RVI.
+                </p>
+              </div>
+              <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <button
+                  v-for="chart in indicesCharts"
+                  :key="chart.id"
+                  type="button"
+                  class="rounded-xl border border-neutral-700 bg-neutral-800 p-5 text-left transition-colors hover:border-brand-600/60"
+                  @click="navigateToChart(chart.id)"
+                >
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+                    {{ chart.categoryLabel }}
+                  </div>
+                  <div class="mt-1 text-body font-bold text-white">
+                    {{ chart.title }}
+                  </div>
+                  <p class="mt-2 text-body-sm text-neutral-400">
+                    {{ chart.description }}
+                  </p>
+                  <div
+                    v-if="chartData[chart.id]?.insight"
+                    class="mt-3 rounded-lg bg-neutral-900 px-3 py-2 text-body-sm text-neutral-300"
+                  >
+                    {{ chartData[chart.id]?.insight }}
+                  </div>
+                  <div class="mt-3 text-body-sm font-semibold text-brand-600 hover:text-brand-500">
+                    View chart →
+                  </div>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. Risk & Anomalies (Enterprise only) -->
+          <section
+            v-if="isPro"
             id="risk"
             class="mb-10 px-page-x"
             :class="highlightedSection === 'risk' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
@@ -934,54 +1120,12 @@
               <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
                 <div class="lg:col-span-7 flex">
                   <div class="flex-1">
-                    <PulsePlusGate
-                      :is-gated="!isPro"
-                      tier="enterprise"
-                      title="Market Events (Enterprise)"
-                      description="Enterprise unlocks anomaly events and corridor risk signals."
-                    >
-                      <PulseEventFeed @view="navigateToChart" />
-                      <template #preview>
-                        <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                          <SkeletonBlock
-                            width="10rem"
-                            height="16"
-                            tone="dark"
-                          />
-                          <div class="mt-4 space-y-3">
-                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                            <div class="h-16 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                          </div>
-                        </div>
-                      </template>
-                    </PulsePlusGate>
+                    <PulseEventFeed @view="navigateToChart" />
                   </div>
                 </div>
                 <div class="lg:col-span-5 flex">
                   <div class="flex-1">
-                    <PulsePlusGate
-                      :is-gated="!isPro"
-                      tier="enterprise"
-                      title="Arbitrage Alerts (Enterprise)"
-                      description="Enterprise unlocks spread anomaly detection and arbitrage signals."
-                    >
-                      <PulseArbitrageAlert />
-                      <template #preview>
-                        <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-                          <SkeletonBlock
-                            width="11rem"
-                            height="16"
-                            tone="dark"
-                          />
-                          <div class="mt-4 space-y-3">
-                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                            <div class="h-12 rounded-lg border border-neutral-700 bg-neutral-900/30" />
-                          </div>
-                        </div>
-                      </template>
-                    </PulsePlusGate>
+                    <PulseArbitrageAlert />
                   </div>
                 </div>
               </div>
@@ -1076,8 +1220,9 @@
             </div>
           </section>
 
-          <!-- 8b. Enterprise Access -->
+          <!-- 8b. Enterprise Access (Enterprise only) -->
           <section
+            v-if="isPro"
             id="enterprise"
             class="mb-10 px-page-x"
             :class="highlightedSection === 'enterprise' ? 'ring-1 ring-primary-500/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
@@ -1268,9 +1413,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug } from '~/domains/pulse/infrastructure/pulseApi'
-import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
+import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow, HeadlineTile } from '~/types/pulse'
+import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug, getPulseOverview, getPulseNarrative, getPulsePersonalHistory, getPulsePinnedCorridors, pinPulseCorridor, unpinPulseCorridor } from '~/domains/pulse/infrastructure/pulseApi'
+import type { PulseNarrativeData, PulsePersonalHistoryData } from '~/domains/pulse/infrastructure/pulseApi'
+import { pulseChartRegistry, getChartById } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
 import { Icon } from '~/ui'
 import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/format'
@@ -1307,6 +1453,63 @@ const route = useRoute()
 const store = usePulseStore()
 const { isPlus, pulseLevel, limits } = useEntitlements()
 const isPro = computed(() => pulseLevel.value === 'full')
+
+const previewScreenerRows = [
+  { flag: '🇺🇸', corridor: 'USD → PHP', badge: 'Great', detail: 'Best: Provider • Gets: PHP 56,000' },
+  { flag: '🇬🇧', corridor: 'GBP → NGN', badge: 'Good', detail: 'Best: Provider • Gets: NGN 870,000' },
+  { flag: '🇪🇺', corridor: 'EUR → INR', badge: 'Great', detail: 'Best: Provider • Gets: INR 46,200' },
+  { flag: '🇺🇸', corridor: 'USD → MXN', badge: 'Fair', detail: 'Best: Provider • Gets: MXN 17,400' },
+]
+
+const PREVIEW_CHART_IDS = ['all-in-cost', 'fx-markup', 'provider-winner', 'volatility-pulse', 'quote-success', 'indices-confidence'] as const
+const PREVIEW_SPARKLINES: Record<string, { sparkline: string, areaPath: string }> = {
+  'all-in-cost': { sparkline: '0,40 33,35 66,42 100,30 133,38 166,25 200,20', areaPath: 'M 0,60 L 0,40 L 33,35 L 66,42 L 100,30 L 133,38 L 166,25 L 200,20 L 200,60 Z' },
+  'fx-markup': { sparkline: '0,45 33,38 66,30 100,35 133,28 166,32 200,22', areaPath: 'M 0,60 L 0,45 L 33,38 L 66,30 L 100,35 L 133,28 L 166,32 L 200,22 L 200,60 Z' },
+  'provider-winner': { sparkline: '0,30 33,25 66,35 100,20 133,30 166,15 200,25', areaPath: 'M 0,60 L 0,30 L 33,25 L 66,35 L 100,20 L 133,30 L 166,15 L 200,25 L 200,60 Z' },
+  'volatility-pulse': { sparkline: '0,50 33,35 66,45 100,25 133,40 166,30 200,35', areaPath: 'M 0,60 L 0,50 L 33,35 L 66,45 L 100,25 L 133,40 L 166,30 L 200,35 L 200,60 Z' },
+  'quote-success': { sparkline: '0,20 33,15 66,18 100,10 133,12 166,8 200,5', areaPath: 'M 0,60 L 0,20 L 33,15 L 66,18 L 100,10 L 133,12 L 166,8 L 200,5 L 200,60 Z' },
+  'indices-confidence': { sparkline: '0,35 33,30 66,25 100,28 133,20 166,22 200,15', areaPath: 'M 0,60 L 0,35 L 33,30 L 66,25 L 100,28 L 133,20 L 166,22 L 200,15 L 200,60 Z' },
+}
+const ENTERPRISE_CHART_IDS = new Set(['provider-winner', 'indices-confidence'])
+
+const previewCharts = computed(() =>
+  PREVIEW_CHART_IDS
+    .map((id) => {
+      const meta = getChartById(id)
+      if (!meta) return null
+      const isEnterprise = ENTERPRISE_CHART_IDS.has(id)
+      const paths = PREVIEW_SPARKLINES[id] ?? { sparkline: '0,40 100,30 200,35', areaPath: 'M 0,60 L 0,40 L 100,30 L 200,35 L 200,60 Z' }
+      return {
+        id: meta.id,
+        title: meta.title,
+        categoryLabel: meta.categoryLabel,
+        description: meta.description,
+        gate: isEnterprise ? 'Enterprise' : 'Plus',
+        ctaTo: isEnterprise ? '/contact?type=enterprise&topic=pulse' : '/plus',
+        ctaLabel: isEnterprise ? 'Contact sales' : 'Upgrade to Plus',
+        sparkline: paths.sparkline,
+        areaPath: paths.areaPath,
+      }
+    })
+    .filter((c): c is NonNullable<typeof c> => c != null),
+)
+
+const plusFeatures = [
+  'Corridor movers and market snapshot',
+  'Headline tiles and trend deltas',
+  '7-day chart history (basic line charts)',
+  'Smart alert creation',
+  'CSV snapshot export',
+]
+
+const enterpriseFeatures = [
+  'Everything in Plus',
+  'Full 365-day chart history',
+  'Stacked, scatter, and matrix chart types',
+  'Watchlist screener with provider rankings',
+  'Gold Indices health dashboard',
+]
+
 const watchlist = useWatchlist()
 const saveAlertModal = useSaveAlertModal()
 const exportsApi = useExports()
@@ -1316,9 +1519,69 @@ const activeMetric = ref<'rate' | 'markup'>('rate')
 const highlightedSection = ref<string | null>(null)
 let highlightTimer: ReturnType<typeof setTimeout> | null = null
 
-const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
+const timeframes = computed<PulseTimeframe[]>(() => {
+  if (isPro.value) return ['24H', '7D', '30D', '1Y', 'MAX']
+  return ['7D', '30D']
+})
 const summary = ref<PulseCoverageSummary | null>(null)
+const overview = ref<{ tiles: HeadlineTile[], lastUpdated?: string } | null>(null)
+const narrative = ref<PulseNarrativeData | null>(null)
+const personalHistory = ref<PulsePersonalHistoryData | null>(null)
+const highlightsLoading = ref(false)
 const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdated || null))
+
+const defaultHeadlineTiles: HeadlineTile[] = [
+  {
+    id: 'best-rate',
+    label: 'Best rate',
+    value: 'Loading...',
+    delta: 'n/a',
+    deltaType: 'neutral',
+    deltaLabel: 'now',
+    tooltip: 'Current cheapest provider and fee for this corridor.',
+    chartId: 'all-in-cost',
+    icon: 'trending',
+  },
+  {
+    id: 'avg-fee',
+    label: 'Avg fee',
+    value: 'Loading...',
+    delta: 'n/a',
+    deltaType: 'neutral',
+    deltaLabel: 'now',
+    tooltip: 'Average fee across currently live providers.',
+    chartId: 'fee-vs-markup',
+    icon: 'percent',
+  },
+  {
+    id: 'provider-count',
+    label: 'Provider count',
+    value: 'Loading...',
+    delta: 'n/a',
+    deltaType: 'neutral',
+    deltaLabel: 'live',
+    tooltip: 'How many providers are currently live for this corridor.',
+    chartId: 'provider-availability',
+    icon: 'trophy',
+  },
+  {
+    id: 'send-benchmark',
+    label: 'Send benchmark',
+    value: 'Loading...',
+    delta: 'n/a',
+    deltaType: 'neutral',
+    deltaLabel: '30d',
+    tooltip: 'Percentile rank of today versus trailing 30-day cost trend.',
+    chartId: 'all-in-cost',
+    icon: 'activity',
+  },
+]
+
+const headlineTiles = computed<HeadlineTile[]>(() => {
+  const tiles = overview.value?.tiles
+  if (Array.isArray(tiles) && tiles.length >= 4) return tiles.slice(0, 4)
+  return defaultHeadlineTiles
+})
 
 const amountInput = ref(store.amount || 1000)
 
@@ -1425,6 +1688,37 @@ const screenerRows = ref<PulseScreenerRow[]>([])
 const screenerLoading = ref(false)
 const screenerError = ref<string | null>(null)
 const screenerUpdatedAt = ref<string | null>(null)
+
+// Pinned corridors (Enterprise watchlist)
+const pinnedCorridorIds = ref<string[]>([])
+
+const loadPinnedCorridors = async () => {
+  if (!isPro.value) return
+  try {
+    const pinned = await getPulsePinnedCorridors()
+    pinnedCorridorIds.value = pinned.map((p) => p.corridorId)
+  } catch {
+    pinnedCorridorIds.value = []
+  }
+}
+
+const handlePinCorridor = async (corridorId: string) => {
+  try {
+    await pinPulseCorridor(corridorId)
+    pinnedCorridorIds.value = [...pinnedCorridorIds.value, corridorId]
+  } catch (error: any) {
+    actionError.value = error?.message || 'Failed to pin corridor'
+  }
+}
+
+const handleUnpinCorridor = async (corridorId: string) => {
+  try {
+    await unpinPulseCorridor(corridorId)
+    pinnedCorridorIds.value = pinnedCorridorIds.value.filter((id) => id !== corridorId)
+  } catch (error: any) {
+    actionError.value = error?.message || 'Failed to unpin corridor'
+  }
+}
 
 const loadScreener = async () => {
   if (!isPro.value) return
@@ -1680,6 +1974,10 @@ const compareCorridorUrl = computed(() => {
 })
 
 function setViewMode(mode: PulseViewMode) {
+  if (!isPro.value && mode === 'analyst') {
+    store.setViewMode('sender')
+    return
+  }
   store.setViewMode(mode)
   const nextQuery = { ...route.query } as Record<string, any>
   if (mode === 'sender') {
@@ -1828,6 +2126,12 @@ const legacyFilters = computed<PulseFilters>(() => ({
 }))
 
 const chartData = ref<Record<string, ChartData | null>>({})
+
+const INDICES_CHART_IDS = ['indices-confidence', 'indices-provider-count', 'indices-suppression'] as const
+const indicesCharts = computed(() =>
+  INDICES_CHART_IDS.map(id => getChartById(id)).filter((c): c is NonNullable<typeof c> => c != null),
+)
+
 const snapshotSummary = ref<PulseSnapshotSummary | null>(null)
 const chartLoadKey = computed(() => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}`)
 const chartLoadedKey = ref<string | null>(null)
@@ -1853,9 +2157,9 @@ async function loadChartData() {
   if (chartLoadedKey.value === key) return
   try {
     chartLoading.value = true
-    const proTypes = new Set(['stacked', 'scatter', 'matrix'])
+    const enterpriseOnlyChartIds = new Set(['corridor-liquidity'])
     const chartIds = pulseChartRegistry
-      .filter(c => isPro.value || !proTypes.has(c.type))
+      .filter(c => isPro.value || !enterpriseOnlyChartIds.has(c.id))
       .map(c => c.id)
     const promises = chartIds.map(async (id) => {
       const data = await getChartData(id, legacyFilters.value)
@@ -1955,6 +2259,40 @@ function formatMethods(methods: string[]): string {
   return methods.map(method => method.charAt(0).toUpperCase() + method.slice(1)).join(', ')
 }
 
+function handleHeadlineTileClick(tile: HeadlineTile) {
+  if (!tile.chartId) return
+  navigateToChart(tile.chartId)
+}
+
+async function loadSenderHighlights() {
+  if (!isPlus.value) return
+  highlightsLoading.value = true
+  try {
+    const [overviewResponse, narrativeResponse, personalHistoryResponse] = await Promise.all([
+      getPulseOverview(legacyFilters.value),
+      getPulseNarrative(store.corridor, store.timeframe, store.amount),
+      getPulsePersonalHistory(store.corridor, store.amount),
+    ])
+
+    overview.value = {
+      tiles: overviewResponse.tiles || [],
+      lastUpdated: overviewResponse.lastUpdated,
+    }
+    narrative.value = narrativeResponse
+    personalHistory.value = personalHistoryResponse
+
+    if (overviewResponse.lastUpdated) {
+      store.setLastUpdated(overviewResponse.lastUpdated)
+    }
+  }
+  catch (e) {
+    useLogger('PulsePage').error('Failed to load sender highlights', e)
+  }
+  finally {
+    highlightsLoading.value = false
+  }
+}
+
 async function loadCoverageSummary() {
   if (!isPlus.value) return
   try {
@@ -1977,6 +2315,7 @@ watch(
     // Entitlements hydrate client-side; refresh Plus-gated data once we know the plan.
     void refreshTrackedCorridors()
     void loadCoverageSummary()
+    void loadSenderHighlights()
     if (store.viewMode === 'analyst') {
       void loadSnapshotSummary()
       void setupDeepDivesObserver()
@@ -1996,12 +2335,30 @@ watch(
 )
 
 watch(
+  () => isPro.value,
+  (pro) => {
+    if (pro) return
+    if (store.timeframe !== '7D' && store.timeframe !== '30D') {
+      store.setTimeframe('30D')
+    }
+    if (store.viewMode !== 'sender') {
+      store.setViewMode('sender')
+      const nextQuery = { ...route.query } as Record<string, any>
+      delete nextQuery.mode
+      void router.replace({ path: route.path, query: nextQuery })
+    }
+  },
+  { immediate: true },
+)
+
+watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => {
     if (!isPlus.value) return
-    loadSnapshotSummary()
-    loadChartData()
-    loadCoverageSummary()
+    void loadSnapshotSummary()
+    void loadChartData()
+    void loadCoverageSummary()
+    void loadSenderHighlights()
   },
   { deep: true },
 )
@@ -2011,11 +2368,12 @@ watch(
   (mode) => {
     if (!isPlus.value) return
     if (mode === 'analyst') {
-      loadSnapshotSummary()
-      loadCoverageSummary()
+      void loadSnapshotSummary()
+      void loadCoverageSummary()
       void setupDeepDivesObserver()
       return
     }
+    void loadSenderHighlights()
     teardownDeepDivesObserver()
   },
 )
@@ -2044,10 +2402,12 @@ onMounted(async () => {
     void refreshTrackedCorridors()
     if (isPro.value) {
       void loadScreener()
+      void loadPinnedCorridors()
     }
-    loadSnapshotSummary()
-    loadChartData()
-    loadCoverageSummary()
+    void loadSnapshotSummary()
+    void loadChartData()
+    void loadCoverageSummary()
+    void loadSenderHighlights()
     void setupDeepDivesObserver()
   }
 })

@@ -9,6 +9,18 @@ export {
   getCorridorById,
   getCorridorBySlug,
   getPulseCoverageSummary,
+  getPulseOverview,
+  getPulseNarrative,
+  getPulsePersonalHistory,
+  getPulsePinnedCorridors,
   getPulseScreener,
   getPulseSnapshotSummary,
+  pinPulseCorridor,
+  unpinPulseCorridor,
+} from '~/lib/pulseApi'
+
+export type {
+  PulseNarrativeData,
+  PulsePersonalHistoryData,
+  PulsePinnedCorridor,
 } from '~/lib/pulseApi'

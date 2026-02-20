@@ -23,6 +23,7 @@ import { initTracing } from '../shared/tracing'
 import {
   buildPulseCacheKey,
   PULSE_AMOUNTS,
+  PULSE_NARRATIVE_BASE_KEY,
   PULSE_TIMEFRAMES,
   type PulseCacheFilters,
 } from '../shared/pulse-cache-keys'
@@ -53,6 +54,93 @@ const serializeJson = (value: unknown) => {
       error: error instanceof Error ? error.message : String(error),
     })
     return JSON.stringify(String(value))
+  }
+}
+
+const formatCorridorLabel = (slug: string | null | undefined) => {
+  if (!slug) return 'this corridor'
+  const parts = slug.split('-').map((part) => part.trim().toUpperCase()).filter(Boolean)
+  if (parts.length !== 2) return 'this corridor'
+  return `${parts[0]}→${parts[1]}`
+}
+
+const buildNarrativeSummary = (
+  filters: PulseCacheFilters,
+  cacheData: Map<string, unknown>,
+) => {
+  const corridorLabel = formatCorridorLabel(filters.corridor)
+  const nowIso = new Date().toISOString()
+
+  const costTrendRaw = cacheData.get('pulse:cost-trend')
+  const costTrend = Array.isArray(costTrendRaw)
+    ? costTrendRaw.filter((row): row is Record<string, unknown> => typeof row === 'object' && row !== null)
+    : []
+
+  const smartSendRaw = cacheData.get('pulse:smart-send')
+  const smartSend = (smartSendRaw && typeof smartSendRaw === 'object')
+    ? smartSendRaw as Record<string, unknown>
+    : null
+
+  const providerHeatmapRaw = cacheData.get('pulse:provider-heatmap')
+  const providerHeatmap = (providerHeatmapRaw && typeof providerHeatmapRaw === 'object')
+    ? providerHeatmapRaw as Record<string, unknown>
+    : null
+
+  const summaryFallback = {
+    summary: `${corridorLabel} pricing is being tracked. Live quote coverage is limited right now, so timing confidence is moderate.`,
+    generatedAt: nowIso,
+    source: 'rule_based',
+  }
+
+  if (costTrend.length === 0) {
+    return summaryFallback
+  }
+
+  const latestPoint = costTrend[costTrend.length - 1]
+  const firstPoint = costTrend[0]
+
+  const latestCost = toNumber((latestPoint as any)?.bestProviderCost, null)
+  const firstCost = toNumber((firstPoint as any)?.bestProviderCost, null)
+  const latestProvider = typeof (latestPoint as any)?.bestProvider === 'string'
+    ? String((latestPoint as any).bestProvider)
+    : null
+
+  let trendPhrase = 'is broadly stable'
+  if (latestCost !== null && firstCost !== null && firstCost > 0) {
+    const changePct = ((latestCost - firstCost) / firstCost) * 100
+    if (changePct <= -2) trendPhrase = `has tightened ${Math.abs(changePct).toFixed(1)}% over the selected window`
+    else if (changePct >= 2) trendPhrase = `has widened ${changePct.toFixed(1)}% over the selected window`
+  }
+
+  let leaderPhrase = latestProvider ? `${latestProvider} is currently leading` : 'leader rotation is active'
+  const providerStats = providerHeatmap && typeof providerHeatmap.providerStats === 'object' && providerHeatmap.providerStats
+    ? providerHeatmap.providerStats as Record<string, { wins?: string | number | null }>
+    : {}
+  let dominantProvider: string | null = null
+  let dominantWins = 0
+  for (const [provider, stats] of Object.entries(providerStats)) {
+    const wins = toNumber(stats?.wins ?? null, 0) ?? 0
+    if (wins > dominantWins) {
+      dominantWins = wins
+      dominantProvider = provider
+    }
+  }
+  if (dominantProvider && dominantWins > 0) {
+    leaderPhrase = `${dominantProvider} led ${dominantWins} day${dominantWins === 1 ? '' : 's'}`
+  }
+
+  let volatilityPhrase = 'volatility is moderate'
+  const smartLevel = typeof smartSend?.level === 'string' ? smartSend.level : null
+  if (smartLevel === 'great' || smartLevel === 'good') {
+    volatilityPhrase = 'pricing conditions are favorable'
+  } else if (smartLevel === 'wait') {
+    volatilityPhrase = 'short-term volatility remains elevated'
+  }
+
+  return {
+    summary: `${corridorLabel} pricing ${trendPhrase}. ${leaderPhrase}, and ${volatilityPhrase}.`,
+    generatedAt: nowIso,
+    source: 'rule_based',
   }
 }
 
@@ -278,6 +366,12 @@ export const runGoldPulseCacheJob = async (
         if (filters === baseFilters) {
           entries.set(baseKey, payload)
         }
+      }
+
+      if (filters.corridor) {
+        const narrativePayload = buildNarrativeSummary(filters, cacheData)
+        const narrativeKey = buildPulseCacheKey(PULSE_NARRATIVE_BASE_KEY, filters)
+        entries.set(narrativeKey, narrativePayload)
       }
 
       filtersProcessed += 1

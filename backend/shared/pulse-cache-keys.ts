@@ -11,6 +11,7 @@ export const PULSE_RANGES: PulseRangeKey[] = ['7d', '30d', '90d', '365d']
 export const PULSE_AMOUNTS = [100, 200, 500, 1000]
 export const PULSE_PAYIN_METHODS: PulseMethodKey[] = ['bank', 'card', 'cash']
 export const PULSE_PAYOUT_METHODS: PulseMethodKey[] = ['bank', 'cash', 'wallet']
+export const PULSE_NARRATIVE_BASE_KEY = 'pulse:narrative'
 
 export const PULSE_CHART_IDS = [
   'all-in-cost',
@@ -28,6 +29,9 @@ export const PULSE_CHART_IDS = [
   'provider-availability',
   'data-freshness',
   'corridor-liquidity',
+  'indices-confidence',
+  'indices-provider-count',
+  'indices-suppression',
 ] as const
 
 const normalizeToken = (value: string | null | undefined) => {

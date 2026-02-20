@@ -172,6 +172,77 @@ describe('alert-evaluator', () => {
     expect(mockAlertRepository.updateAlertEventStatus).toHaveBeenCalledWith('event-1', 'sent')
   })
 
+  it('evaluates rci_threshold alerts from Gold indices', async () => {
+    mockAlertRepository.getAlertWithWatchlist.mockResolvedValue({
+      alert: { ...baseAlert, metric: 'rci_threshold', comparator: 'lt', threshold: 2 },
+      watchlist_item: {
+        user_id: 'user-1',
+        target_type: 'corridor',
+        target_payload: {
+          corridorId: 'US-MX-USD-MXN',
+        },
+      },
+      state: null,
+    })
+
+    vi.mocked(query).mockResolvedValueOnce({
+      rows: [{
+        rci_ratio: 0.015,
+        rvi_bps: 25,
+        suppression_flag: false,
+      }],
+    })
+
+    const result = await evaluateAlert(mockPool, 'alert-1')
+
+    expect(result).toBe(true)
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('FROM gold_export.cdp_daily'),
+      ['US-MX-USD-MXN', expect.any(Number)],
+      mockPool,
+    )
+    expect(mockAlertRepository.updateAlertState).toHaveBeenCalledWith(
+      'alert-1',
+      expect.objectContaining({
+        in_alarm: true,
+        last_value: 1.5,
+      }),
+    )
+  })
+
+  it('evaluates rvi_threshold alerts from Gold indices', async () => {
+    mockAlertRepository.getAlertWithWatchlist.mockResolvedValue({
+      alert: { ...baseAlert, metric: 'rvi_threshold', comparator: 'gt', threshold: 40 },
+      watchlist_item: {
+        user_id: 'user-1',
+        target_type: 'corridor',
+        target_payload: {
+          corridorId: 'US-MX-USD-MXN',
+        },
+      },
+      state: null,
+    })
+
+    vi.mocked(query).mockResolvedValueOnce({
+      rows: [{
+        rci_ratio: 0.02,
+        rvi_bps: 45,
+        suppression_flag: false,
+      }],
+    })
+
+    const result = await evaluateAlert(mockPool, 'alert-1')
+
+    expect(result).toBe(true)
+    expect(mockAlertRepository.updateAlertState).toHaveBeenCalledWith(
+      'alert-1',
+      expect.objectContaining({
+        in_alarm: true,
+        last_value: 45,
+      }),
+    )
+  })
+
   it('honors smart alert eligibility from corridor signals', async () => {
     mockAlertRepository.getAlertWithWatchlist.mockResolvedValue({
       alert: { ...baseAlert, metric: 'sendScore', comparator: 'gte', threshold: 80 },

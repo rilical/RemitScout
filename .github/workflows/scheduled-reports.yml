@@ -1,0 +1,69 @@
+name: scheduled-reports
+
+on:
+  schedule:
+    # Run weekly reports every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      schedule:
+        description: 'Report schedule type (weekly or monthly)'
+        required: false
+        default: 'weekly'
+        type: choice
+        options:
+          - weekly
+          - monthly
+
+permissions:
+  contents: read
+
+env:
+  NODE_ENV: production
+
+jobs:
+  weekly-report:
+    name: Generate scheduled reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'schedule' || github.event.inputs.schedule == 'weekly'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run weekly report job
+        run: pnpm -C backend scheduled-report
+        env:
+          REPORT_SCHEDULE: weekly
+          DATABASE_URL_PLANE_C: ${{ secrets.DATABASE_URL_PLANE_C }}
+          EXPORTS_S3_BUCKET: ${{ secrets.EXPORTS_S3_BUCKET }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  monthly-report:
+    name: Generate monthly reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event.inputs.schedule == 'monthly'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run monthly report job
+        run: pnpm -C backend scheduled-report
+        env:
+          REPORT_SCHEDULE: monthly
+          DATABASE_URL_PLANE_C: ${{ secrets.DATABASE_URL_PLANE_C }}
+          EXPORTS_S3_BUCKET: ${{ secrets.EXPORTS_S3_BUCKET }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

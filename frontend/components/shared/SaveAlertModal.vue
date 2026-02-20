@@ -692,7 +692,7 @@ import { useFocusTrap } from '~/composables/useFocusTrap'
 const { isOpen, context, close: closeModal } = useSaveAlertModal()
 const alerts = useAlerts()
 const watchlist = useWatchlist()
-const { isPlus } = useEntitlements()
+const { isPlus, isEnterprise } = useEntitlements()
 const { request } = useApi()
 const route = useRoute()
 
@@ -1049,6 +1049,10 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
           unavailableReason: smartAlertDisabledMessage.value,
         })
       }
+      options.push(
+        { value: 'rci_threshold' as const, label: 'RCI Threshold', locked: !isEnterprise.value },
+        { value: 'rvi_threshold' as const, label: 'RVI Threshold', locked: !isEnterprise.value },
+      )
       break
     case 'fxPair':
       options.push({ value: 'rate' as const, label: 'FX rate' })
@@ -1169,6 +1173,8 @@ const limitMetricLabels: Record<string, string> = {
   rate: 'Rate',
   sendScore: 'Intelligent alert',
   index: 'Index',
+  rci_threshold: 'RCI',
+  rvi_threshold: 'RVI',
 }
 
 const limitComparatorLabels: Record<string, string> = {
@@ -1184,6 +1190,8 @@ const formatLimitAlertValue = (metric: string, threshold: number) => {
   if (!Number.isFinite(threshold)) return '—'
   if (metric === 'sendScore') return Math.round(threshold).toString()
   if (metric === 'rate' || metric === 'midMarketRate') return threshold.toFixed(4)
+  if (metric === 'rci_threshold') return `${threshold.toFixed(1)}%`
+  if (metric === 'rvi_threshold') return `${Math.round(threshold)} bps`
   return threshold.toFixed(2)
 }
 
@@ -1229,14 +1237,18 @@ const handleLimitRemove = async (id: string) => {
 }
 
 const isSmartMetric = computed(() => metric.value === 'sendScore')
+const isIndexThresholdMetric = computed(() => metric.value === 'rci_threshold' || metric.value === 'rvi_threshold')
 const showCurrency = computed(() => (
   target.value.type === 'corridor'
   && !isSmartMetric.value
+  && !isIndexThresholdMetric.value
   && metric.value !== 'rate'
   && metric.value !== 'midMarketRate'
 ))
 const valueStep = computed(() => {
   if (isSmartMetric.value) return 1
+  if (metric.value === 'rci_threshold') return 0.1
+  if (metric.value === 'rvi_threshold') return 1
   if (metric.value === 'rate' || metric.value === 'midMarketRate') return 0.0001
   return 0.01
 })
@@ -1246,12 +1258,16 @@ const formLocked = computed(() => !metricReady.value)
 
 const roundForMetric = (raw: number, metricValue: AlertRule['metric']) => {
   if (metricValue === 'sendScore') return Math.round(raw)
+  if (metricValue === 'rci_threshold') return Math.round(raw * 10) / 10
+  if (metricValue === 'rvi_threshold') return Math.round(raw)
   if (metricValue === 'rate' || metricValue === 'midMarketRate') return Math.round(raw * 10000) / 10000
   return Math.round(raw * 100) / 100
 }
 
 const defaultValueForMetric = (metricValue: AlertRule['metric']) => {
   if (metricValue === 'sendScore') return 90
+  if (metricValue === 'rci_threshold') return 1.5
+  if (metricValue === 'rvi_threshold') return 50
   if (metricValue === 'rate' || metricValue === 'midMarketRate') {
     return roundForMetric(currentRateValue.value ?? 0, metricValue)
   }

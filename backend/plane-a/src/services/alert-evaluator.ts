@@ -50,6 +50,8 @@ const formatMetricValue = (metric: string, rawValue: number) => {
   const value = Number(rawValue)
   if (!Number.isFinite(value)) return 'n/a'
   if (metric === 'sendScore') return `${Math.round(value)}`
+  if (metric === 'rci_threshold') return `${value.toFixed(2)}%`
+  if (metric === 'rvi_threshold') return `${value.toFixed(1)} bps`
   if (metric === 'rate' || metric === 'midMarketRate') return value.toFixed(4)
   return value.toFixed(2)
 }
@@ -70,6 +72,10 @@ const metricLabel = (metric: string) => {
       return 'Rate'
     case 'index':
       return 'Index'
+    case 'rci_threshold':
+      return 'RCI'
+    case 'rvi_threshold':
+      return 'RVI'
     default:
       return 'Value'
   }
@@ -131,6 +137,7 @@ const SMART_ALERT_MIN_SAMPLE_DAYS = config.alerts.smart.minSampleDays
 const WEEKLY_SEND_DOW = config.alerts.smart.weeklySendDow
 const WEEKLY_SEND_HOUR = config.alerts.smart.weeklySendHour
 const ALERT_EVALUATION_CONCURRENCY = config.alerts.evaluation.concurrency
+const GOLD_ALERT_AMOUNT_BUCKET = config.indices.amountBucket
 
 export async function evaluateAlert(
   pool: Pool,
@@ -312,6 +319,44 @@ export async function evaluateAlert(
 
         if (bestValue !== null) {
           currentValue = bestValue
+        }
+      }
+    } else if ((alert.metric === 'rci_threshold' || alert.metric === 'rvi_threshold') && watchlist_item.target_type === 'corridor') {
+      const corridorId = resolveCorridorId(targetPayload)
+      if (!corridorId) {
+        logger.warn('alert_corridor_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
+
+      const result = await query<{
+        rci_ratio: number | null
+        rvi_bps: number | null
+        suppression_flag: boolean
+      }>(
+        `SELECT rci_ratio::double precision AS rci_ratio,
+                rvi_bps::double precision AS rvi_bps,
+                suppression_flag
+           FROM gold_export.cdp_daily
+          WHERE corridor_id = $1
+            AND amount_bucket = $2
+            AND method_profile = 'standard_bank'
+          ORDER BY date DESC, created_at DESC
+          LIMIT 1`,
+        [corridorId, GOLD_ALERT_AMOUNT_BUCKET],
+        pool,
+      )
+
+      const row = result.rows[0]
+      if (row && !row.suppression_flag) {
+        if (alert.metric === 'rci_threshold' && row.rci_ratio !== null) {
+          currentValue = Number(row.rci_ratio) * 100
+        }
+        if (alert.metric === 'rvi_threshold' && row.rvi_bps !== null) {
+          currentValue = Number(row.rvi_bps)
         }
       }
     } else if (alert.metric === 'sendScore' && watchlist_item.target_type === 'corridor') {

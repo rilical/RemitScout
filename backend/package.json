@@ -93,6 +93,7 @@
     "gold:popular-corridors": "tsx scripts/gold-popular-corridors-job.ts",
     "gold:fx-rates": "tsx scripts/gold-fx-rates-job.ts",
     "gold:pulse-cache": "tsx scripts/gold-pulse-cache-job.ts",
+    "scheduled-report": "tsx scripts/scheduled-report-job.ts",
     "gold:indices": "tsx scripts/gold-indices-job.ts",
     "weights:providers": "tsx scripts/provider-weighting-job.ts",
     "gold:publisher": "tsx scripts/gold-publisher-job.ts",

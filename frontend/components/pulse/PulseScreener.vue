@@ -9,11 +9,25 @@ const props = defineProps<{
   loading?: boolean
   error?: string | null
   selectedCorridorId?: string | null
+  pinnedCorridorIds?: string[]
 }>()
 
 const emit = defineEmits<{
   (e: 'select', corridorId: string): void
+  (e: 'pin', corridorId: string): void
+  (e: 'unpin', corridorId: string): void
 }>()
+
+const pinnedSet = computed(() => new Set(props.pinnedCorridorIds ?? []))
+
+const handlePinToggle = (event: Event, row: PulseScreenerRow) => {
+  event.stopPropagation()
+  if (pinnedSet.value.has(row.corridorId)) {
+    emit('unpin', row.corridorId)
+  } else {
+    emit('pin', row.corridorId)
+  }
+}
 
 const hasRows = computed(() => props.rows && props.rows.length > 0)
 
@@ -177,6 +191,30 @@ const handleSelect = (row: PulseScreenerRow) => {
             </div>
 
             <div class="flex items-center gap-2">
+              <button
+                v-if="pinnedCorridorIds"
+                type="button"
+                class="inline-flex items-center justify-center rounded-lg p-1 text-neutral-500 hover:text-brand-400 transition-colors"
+                :class="pinnedSet.has(row.corridorId) ? 'text-brand-400' : ''"
+                :title="pinnedSet.has(row.corridorId) ? 'Unpin corridor' : 'Pin corridor'"
+                @click="handlePinToggle($event, row)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="h-4 w-4"
+                >
+                  <path
+                    v-if="pinnedSet.has(row.corridorId)"
+                    d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z"
+                  />
+                  <path
+                    v-else
+                    d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3z"
+                  />
+                </svg>
+              </button>
               <span
                 class="inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-bold"
                 :class="levelClass(row.smartSendLevel)"

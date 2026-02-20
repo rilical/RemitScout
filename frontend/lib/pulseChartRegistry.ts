@@ -366,8 +366,8 @@ export function getRelatedCharts(chartId: string, limit = 3): ChartMetadata[] {
   return [...sameCategory, ...otherCharts].slice(0, limit)
 }
 
-export function isRangeGated(chartId: string, range: string, isPlus: boolean): boolean {
-  if (isPlus) return false
+export function isRangeGated(chartId: string, range: string, hasFullAccess: boolean): boolean {
+  if (hasFullAccess) return false
   const chart = getChartById(chartId)
   if (!chart) return false
   return chart.plusRanges.includes(range as '90d' | '365d')

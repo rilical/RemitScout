@@ -37,6 +37,7 @@ import { recordRequest } from '../../../shared/api-metrics'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
 import type { PlaneAContainer } from '../container'
+import { getCountryByCode } from '../../../shared/countries-currencies'
 
 const logger = createLogger('plane-a.pulse')
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
@@ -50,9 +51,18 @@ const INDEX_CHART_IDS = new Set([
   'indices-provider-count',
   'indices-suppression',
 ])
-// Chart IDs that represent institutional "Pulse Pro" analysis surfaces (Enterprise only).
-// Keep this in sync with the frontend Pulse chart registry types (stacked/scatter/matrix).
-const PULSE_PRO_CHART_IDS = new Set(['provider-winner', 'quote-anomalies'])
+// Non-full plans can preview teaser charts with 7d real data only.
+const PULSE_TEASER_CHART_IDS = new Set([
+  'provider-winner',
+  'pass-through-latency',
+  'quote-anomalies',
+  'data-freshness',
+  'indices-confidence',
+  'indices-provider-count',
+  'indices-suppression',
+])
+// Enterprise-only charts are hidden/forbidden for non-full plans.
+const PULSE_ENTERPRISE_ONLY_CHART_IDS = new Set(['corridor-liquidity'])
 
 const arrow = '\u2192'
 
@@ -535,6 +545,31 @@ const buildPulseFilters = (query: Record<string, unknown>): PulseCacheFilters =>
   }
 }
 
+const clampLiteTimeframe = (value: string | null | undefined): string => {
+  const normalized = normalizePulseTimeframe(value)
+  if (normalized === '7d') return '7d'
+  if (normalized === '30d') return '30d'
+  return '30d'
+}
+
+const clampLiteRange = (value: string | null | undefined): string => {
+  const normalized = normalizePulseRange(value)
+  if (normalized === '7d') return '7d'
+  return '30d'
+}
+
+const applyLiteTimeWindowIfNeeded = (
+  filters: PulseCacheFilters,
+  pulseAccess: string | null | undefined,
+): PulseCacheFilters => {
+  if (pulseAccess === 'full') return filters
+  return {
+    ...filters,
+    timeframe: clampLiteTimeframe(filters.timeframe),
+    range: clampLiteRange(filters.range),
+  }
+}
+
 const deriveMethodsIncluded = (payload: unknown): string[] => {
   if (!Array.isArray(payload)) return []
   const methods = new Set<string>()
@@ -834,6 +869,9 @@ const mapOverview = (
   overviewPayload: unknown,
   coveragePayload: unknown,
   snapshotPayload: unknown,
+  marketSnapshotPayload: unknown,
+  providerBenchmarkingPayload: unknown,
+  costTrendPayload: unknown,
   updatedAt: string,
   corridorName?: string,
 ) => {
@@ -849,62 +887,90 @@ const mapOverview = (
   const overview = isObject(overviewPayload) ? overviewPayload : {}
   const coverage = isObject(coveragePayload) ? coveragePayload : {}
   const snapshot = isObject(snapshotPayload) ? snapshotPayload : {}
+  const marketSnapshot = isObject(marketSnapshotPayload) ? marketSnapshotPayload : {}
 
-  const coveragePct = toNumber(coverage.coverage_percentage, 0)
   const activeProviders = toNumber(
-    snapshot.unique_providers ?? overview.active_providers ?? 0,
+    snapshot.unique_providers ?? overview.active_providers ?? coverage.covered_corridors ?? 0,
     0,
   )
-  const corridorsLive = toNumber(
-    overview.corridors_with_quotes ?? coverage.covered_corridors ?? 0,
-    0,
-  )
-  const freshnessMinutes = toNumber(overview.avg_freshness_minutes, 0)
+
+  const quotes = Array.isArray((marketSnapshot as any).quotes)
+    ? ((marketSnapshot as any).quotes as Array<Record<string, unknown>>)
+    : []
+  const bestQuote = quotes[0]
+  const bestProvider = typeof bestQuote?.provider === 'string' ? bestQuote.provider : 'n/a'
+  const bestFee = toSafeNumber(bestQuote?.fee)
+
+  const benchmarkingRows = Array.isArray(providerBenchmarkingPayload)
+    ? providerBenchmarkingPayload.filter((row): row is Record<string, unknown> => isObject(row))
+    : []
+  const avgFeeValues = benchmarkingRows
+    .map((row) => toSafeNumber((row as any).avg_fee ?? (row as any).fee))
+    .filter((value): value is number => value !== null)
+  const avgFee = avgFeeValues.length > 0
+    ? avgFeeValues.reduce((sum, value) => sum + value, 0) / avgFeeValues.length
+    : null
+
+  const costTrendRows = Array.isArray(costTrendPayload)
+    ? costTrendPayload
+      .filter((row): row is Record<string, unknown> => isObject(row))
+      .map((row) => toSafeNumber((row as any).bestProviderCost))
+      .filter((value): value is number => value !== null)
+    : []
+  const latestCost = costTrendRows.length > 0 ? costTrendRows[costTrendRows.length - 1] : null
+  let sendBenchmarkPct = 0
+  if (latestCost !== null && costTrendRows.length > 1) {
+    const historical = costTrendRows.slice(0, -1)
+    const beatCount = historical.filter((value) => value > latestCost).length
+    sendBenchmarkPct = Math.round((beatCount / historical.length) * 100)
+  }
 
   return {
     tiles: [
       {
-        id: 'coverage',
-        label: 'Coverage',
-        value: `${coveragePct.toFixed(1)}%`,
+        id: 'best-rate',
+        label: 'Best rate',
+        value: bestFee !== null
+          ? `${bestProvider} • Fee $${bestFee.toFixed(2)}`
+          : `${bestProvider}`,
         delta: 'n/a',
         deltaType: 'neutral',
-        deltaLabel: '24h',
-        tooltip: 'Percent of corridors with recent quotes.',
-        chartId: 'quote-success',
-        icon: 'check',
-      },
-      {
-        id: 'active-providers',
-        label: 'Active Providers',
-        value: `${activeProviders}`,
-        delta: 'n/a',
-        deltaType: 'neutral',
-        deltaLabel: '24h',
-        tooltip: 'Providers with fresh quotes.',
-        chartId: 'provider-winner',
-        icon: 'trophy',
-      },
-      {
-        id: 'corridors-live',
-        label: 'Active Corridors',
-        value: `${corridorsLive}`,
-        delta: 'n/a',
-        deltaType: 'neutral',
-        deltaLabel: '24h',
-        tooltip: 'Corridors with recent quotes.',
+        deltaLabel: 'now',
+        tooltip: 'Current cheapest provider and fee for this corridor.',
         chartId: 'all-in-cost',
         icon: 'trending',
       },
       {
-        id: 'avg-freshness',
-        label: 'Avg Freshness',
-        value: `${freshnessMinutes.toFixed(1)} min`,
+        id: 'avg-fee',
+        label: 'Avg fee',
+        value: avgFee !== null ? `$${avgFee.toFixed(2)}` : 'n/a',
         delta: 'n/a',
         deltaType: 'neutral',
-        deltaLabel: 'p50',
-        tooltip: 'Average quote age in minutes.',
-        chartId: 'quote-success',
+        deltaLabel: 'now',
+        tooltip: 'Average fee across currently live providers.',
+        chartId: 'fee-vs-markup',
+        icon: 'percent',
+      },
+      {
+        id: 'provider-count',
+        label: 'Provider count',
+        value: `${activeProviders}`,
+        delta: 'n/a',
+        deltaType: 'neutral',
+        deltaLabel: 'live',
+        tooltip: 'How many providers are currently live for this corridor.',
+        chartId: 'provider-availability',
+        icon: 'trophy',
+      },
+      {
+        id: 'send-benchmark',
+        label: 'Send benchmark',
+        value: `Today's rate beats ${sendBenchmarkPct}% of last 30 days`,
+        delta: sendBenchmarkPct >= 70 ? 'Good timing' : sendBenchmarkPct >= 40 ? 'Average timing' : 'Consider waiting',
+        deltaType: sendBenchmarkPct >= 70 ? 'positive' : sendBenchmarkPct >= 40 ? 'neutral' : 'negative',
+        deltaLabel: '30d',
+        tooltip: 'Percentile rank of today versus trailing 30-day cost trend.',
+        chartId: 'all-in-cost',
         icon: 'activity',
       },
     ],
@@ -1040,6 +1106,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
   const pulseCacheRepository = repositories.pulseCache
   const goldIndicesRepository = repositories.goldIndices
+  const comparisonHistoryRepository = repositories.comparisonHistory
   const guardLite = { preHandler: requireEntitlement('pulse') }
   const guardPro = { preHandler: requireEntitlement('pulse_full') }
   const loadPulse = (
@@ -1052,6 +1119,37 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     filters: PulseCacheFilters,
     query: Record<string, unknown>,
   ) => loadIndicesChartData(goldIndicesRepository, chartId, filters, query)
+
+  const buildRequestFilters = (
+    request: { entitlementsContext?: { entitlements?: { pulse_access?: string | null } } },
+    query: Record<string, unknown>,
+  ): PulseCacheFilters => {
+    const filters = buildPulseFilters(query)
+    return applyLiteTimeWindowIfNeeded(filters, request.entitlementsContext?.entitlements?.pulse_access)
+  }
+
+  const resolvePulseMethodFromHistory = (raw: unknown): 'bank' | 'card' | 'cash' => {
+    if (typeof raw !== 'string') return 'bank'
+    const normalized = raw.trim().toLowerCase()
+    if (normalized.includes('card')) return 'card'
+    if (normalized.includes('cash')) return 'cash'
+    return 'bank'
+  }
+
+  const resolveAmountBucket = (amount: number): number => {
+    if (!Number.isFinite(amount) || amount <= 0) return PULSE_AMOUNTS[0] || 500
+    return PULSE_AMOUNTS.reduce((best, candidate) => {
+      const bestDelta = Math.abs(best - amount)
+      const candidateDelta = Math.abs(candidate - amount)
+      return candidateDelta < bestDelta ? candidate : best
+    }, PULSE_AMOUNTS[0] || 500)
+  }
+
+  const formatWeekdayLabel = (dateInput: string): string => {
+    const date = new Date(`${dateInput}T00:00:00.000Z`)
+    if (Number.isNaN(date.getTime())) return dateInput
+    return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+  }
 
   app.get('/pulse/corridors', guardLite, async () => {
     const cacheKey = [
@@ -1387,20 +1485,33 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/overview', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const corridorName = formatCorridorLabelFromSlug(
       typeof request.query === 'object' && request.query ? (request.query as any).corridor : undefined,
     )
-    const [overview, coverage, snapshot] = await Promise.all([
+    const [overview, coverage, snapshot, marketSnapshot, providerBenchmarking, costTrend] = await Promise.all([
       loadPulse('overview', filters, null),
       loadPulse('coverage-summary', filters, null),
       loadPulse('snapshot-summary', filters, null),
+      loadPulse('market-snapshot', filters, pulseDefaults.marketSnapshot),
+      loadPulse('provider-benchmarking', filters, pulseDefaults.providerBenchmarking),
+      loadPulse('cost-trend', filters, pulseDefaults.costTrend),
     ])
-    const updatedAt = overview.updatedAt
+    const updatedAt = [
+      overview.updatedAt,
+      coverage.updatedAt,
+      snapshot.updatedAt,
+      marketSnapshot.updatedAt,
+      providerBenchmarking.updatedAt,
+      costTrend.updatedAt,
+    ].filter(Boolean).sort().slice(-1)[0] || ''
     const payload = mapOverview(
       overview.payload,
       coverage.payload,
       snapshot.payload,
+      marketSnapshot.payload,
+      providerBenchmarking.payload,
+      costTrend.payload,
       updatedAt,
       corridorName,
     )
@@ -1422,14 +1533,18 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       )
       const chartIdsUnique = Array.from(new Set(chartIdsRaw))
         .filter((value) => typeof value === 'string' && value.trim().length > 0)
-      const isProAccess = request.entitlementsContext?.entitlements.pulse_access === 'full'
+      const isFullAccess = request.entitlementsContext?.entitlements.pulse_access === 'full'
       const defaultChartIds = [...PULSE_CHART_IDS]
       const chartIds = chartIdsUnique.length > 0
         ? chartIdsUnique
-        : (isProAccess ? defaultChartIds : defaultChartIds.filter((id) => !PULSE_PRO_CHART_IDS.has(id)))
+        : (
+            isFullAccess
+              ? defaultChartIds
+              : defaultChartIds.filter((id) => !PULSE_ENTERPRISE_ONLY_CHART_IDS.has(id))
+          )
 
-      if (!isProAccess && chartIdsUnique.length > 0) {
-        const forbidden = chartIds.filter((id) => PULSE_PRO_CHART_IDS.has(id))
+      if (!isFullAccess && chartIdsUnique.length > 0) {
+        const forbidden = chartIds.filter((id) => PULSE_ENTERPRISE_ONLY_CHART_IDS.has(id))
         if (forbidden.length > 0) {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('GET', '/pulse/charts', 403, durationSeconds)
@@ -1459,11 +1574,19 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      const filters = buildPulseFilters(queryParams)
+      const filters = buildRequestFilters(request, queryParams)
 
       const charts = await Promise.all(chartIds.map(async (chartId) => {
+        const isTeaserChart = !isFullAccess && PULSE_TEASER_CHART_IDS.has(chartId)
+        const chartFilters = isTeaserChart
+          ? { ...filters, timeframe: '7d', range: '7d' }
+          : filters
+        const indicesQuery = isTeaserChart
+          ? { ...queryParams, range: '7d' }
+          : queryParams
+
         if (INDEX_CHART_IDS.has(chartId)) {
-          const indices = await loadIndices(chartId, filters, queryParams)
+          const indices = await loadIndices(chartId, chartFilters, indicesQuery)
           const dataAvailable = Array.isArray(indices.series) && indices.series.length > 0
           const updatedAt = indices.metadata?.lastUpdated || null
           return {
@@ -1471,6 +1594,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             dataAvailable,
             updatedAt: updatedAt || null,
             source: 'gold_export' as const,
+            previewLocked: isTeaserChart,
             chart: {
               ...indices,
               dataAvailable,
@@ -1480,7 +1604,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
           }
         }
 
-        const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, filters, null)
+        const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, chartFilters, null)
         const normalized = normalizeChartPayload(chartId, payload, updatedAt)
         const dataAvailable = Boolean(updatedAt)
 
@@ -1489,6 +1613,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
           dataAvailable,
           updatedAt: updatedAt || null,
           source: updatedAt ? ('gold_cache' as const) : ('none' as const),
+          previewLocked: isTeaserChart,
           chart: {
             ...normalized,
             dataAvailable,
@@ -1527,21 +1652,30 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     if (!chartId) {
       throw new ValidationError('Invalid request', { details: { error: 'missing_chart_id' } })
     }
+    const isFullAccess = request.entitlementsContext?.entitlements.pulse_access === 'full'
     if (
-      PULSE_PRO_CHART_IDS.has(chartId)
-      && request.entitlementsContext?.entitlements.pulse_access !== 'full'
+      PULSE_ENTERPRISE_ONLY_CHART_IDS.has(chartId)
+      && !isFullAccess
     ) {
       reply.code(403)
       return reply.send({ error: 'forbidden', entitlement: 'pulse_full' })
     }
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const isTeaserChart = !isFullAccess && PULSE_TEASER_CHART_IDS.has(chartId)
+    const baseFilters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
+    const filters = isTeaserChart
+      ? { ...baseFilters, timeframe: '7d', range: '7d' }
+      : baseFilters
+    const indicesQuery = isTeaserChart
+      ? { ...((request.query ?? {}) as Record<string, unknown>), range: '7d' }
+      : ((request.query ?? {}) as Record<string, unknown>)
     if (INDEX_CHART_IDS.has(chartId)) {
-      const indices = await loadIndices(chartId, filters, (request.query ?? {}) as Record<string, unknown>)
+      const indices = await loadIndices(chartId, filters, indicesQuery)
       return {
         ...indices,
         dataAvailable: Array.isArray(indices.series) && indices.series.length > 0,
         updatedAt: indices.metadata?.lastUpdated || null,
         source: 'gold_export',
+        previewLocked: isTeaserChart,
       }
     }
     const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, filters, null)
@@ -1550,6 +1684,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       dataAvailable: Boolean(updatedAt),
       updatedAt: updatedAt || null,
       source: updatedAt ? 'gold_cache' : 'none',
+      previewLocked: isTeaserChart,
     }
   })
 
@@ -1557,7 +1692,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const startTime = Date.now()
     try {
       const queryParams = (request.query ?? {}) as Record<string, unknown>
-      const filters = buildPulseFilters(queryParams)
+      const filters = buildRequestFilters(request, queryParams)
 
       const sendCurrenciesRaw = parseCorridorIdsParam(queryParams.send_currencies)
       const requestedCurrencies = (sendCurrenciesRaw.length ? sendCurrenciesRaw : ['USD', 'AED', 'GBP', 'EUR'])
@@ -1703,7 +1838,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const startTime = Date.now()
     try {
       const queryParams = (request.query ?? {}) as Record<string, unknown>
-      const filters = buildPulseFilters(queryParams)
+      const filters = buildRequestFilters(request, queryParams)
 
       const sendCurrencyRaw = typeof queryParams.send_currency === 'string'
         ? queryParams.send_currency.trim().toUpperCase()
@@ -2051,7 +2186,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/method-coverage', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload } = await loadPulse('method-coverage', filters, pulseDefaults.methodCoverage)
     return mapMethodCoverage(payload)
   })
@@ -2061,13 +2196,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const amount = toNumber(query.amount, 1000)
     const page = Math.max(1, toNumber(query.page, 1))
     const pageSize = Math.max(1, toNumber(query.pageSize, 20))
-    const filters = buildPulseFilters(query)
+    const filters = buildRequestFilters(request, query)
     const { payload } = await loadPulse('table', filters, pulseDefaults.table)
     return mapTableData(payload, amount, page, pageSize)
   })
 
   app.get('/pulse/hero', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse('hero', filters, pulseDefaults.hero)
     if (isObject(payload)) {
       return {
@@ -2087,7 +2222,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/coverage-summary', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const [coverage, methodCoverage, overview, snapshot] = await Promise.all([
       loadPulse('coverage-summary', filters, pulseDefaults.coverageSummary),
       loadPulse('method-coverage', filters, pulseDefaults.methodCoverage),
@@ -2112,7 +2247,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   app.get('/pulse/snapshot-summary', guardLite, async (request) => {
     const query = (request.query ?? {}) as Record<string, unknown>
     const amount = toNumber(query.amount, 1000)
-    const filters = buildPulseFilters(query)
+    const filters = buildRequestFilters(request, query)
     const [snapshot, methodCoverage, providerBenchmarking] = await Promise.all([
       loadPulse('snapshot-summary', filters, pulseDefaults.snapshotSummary),
       loadPulse('method-coverage', filters, pulseDefaults.methodCoverage),
@@ -2141,7 +2276,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   app.get('/pulse/providers/benchmarking', guardPro, async (request) => {
     const query = (request.query ?? {}) as Record<string, unknown>
     const amount = toNumber(query.amount, 1000)
-    const filters = buildPulseFilters(query)
+    const filters = buildRequestFilters(request, query)
     const { payload } = await loadPulse(
       'provider-benchmarking',
       filters,
@@ -2151,13 +2286,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/events', guardPro, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload } = await loadPulse('events', filters, pulseDefaults.events)
     return mapEvents(payload)
   })
 
   app.get('/pulse/providers/heatmap', guardPro, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse(
       'provider-heatmap',
       filters,
@@ -2181,7 +2316,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/smart-send', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse('smart-send', filters, pulseDefaults.smartSend)
     if (isObject(payload)) {
       return {
@@ -2200,8 +2335,134 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  app.get('/pulse/narrative', guardLite, async (request) => {
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
+    const { payload, updatedAt } = await loadPulse('narrative', filters, pulseDefaults.narrative)
+
+    const typed = isObject(payload) ? payload : {}
+    const summary = typeof typed.summary === 'string' ? typed.summary.trim() : ''
+    const generatedAt = typeof typed.generatedAt === 'string' && typed.generatedAt.trim().length > 0
+      ? typed.generatedAt
+      : updatedAt || null
+    const source = typeof typed.source === 'string' && typed.source.trim().length > 0
+      ? typed.source
+      : 'rule_based'
+
+    return {
+      summary,
+      generatedAt,
+      source,
+      dataAvailable: summary.length > 0,
+      updatedAt: updatedAt || null,
+    }
+  })
+
+  app.get('/pulse/personal-history', guardLite, async (request) => {
+    const fallback = {
+      available: false,
+      message: 'Compare a corridor to unlock personalized send timing insights.',
+    }
+
+    const userId = request.user?.user_id
+    if (!userId) return fallback
+
+    try {
+      const recent = await comparisonHistoryRepository.listByUserId(userId, 1, 0)
+      const latest = recent[0]
+      if (!latest) return fallback
+
+      const sourceCurrency = getCountryByCode(latest.from_country)?.currency?.toUpperCase() ?? null
+      const destCurrency = getCountryByCode(latest.to_country)?.currency?.toUpperCase() ?? null
+      if (!sourceCurrency || !destCurrency) return fallback
+
+      const corridor = `${sourceCurrency.toLowerCase()}-${destCurrency.toLowerCase()}`
+      const originalAmount = Number(latest.amount)
+      const amountBucket = resolveAmountBucket(originalAmount)
+      const payin = resolvePulseMethodFromHistory(latest.method)
+
+      const filters = buildRequestFilters(request, {
+        corridor,
+        amount: amountBucket,
+        payin,
+        payout: 'bank',
+        timeframe: '7d',
+        range: '7d',
+      })
+
+      const { payload, updatedAt } = await loadPulse('cost-trend', filters, pulseDefaults.costTrend)
+      if (!Array.isArray(payload) || payload.length < 2) {
+        return {
+          ...fallback,
+          corridor,
+          amount: amountBucket,
+          updatedAt: updatedAt || null,
+        }
+      }
+
+      const rows = payload
+        .filter((row): row is Record<string, unknown> => isObject(row))
+        .map((row) => ({
+          date: typeof row.date === 'string' ? row.date : '',
+          bestProvider: typeof row.bestProvider === 'string' ? row.bestProvider : null,
+          bestProviderCost: toSafeNumber(row.bestProviderCost),
+        }))
+        .filter((row) => row.date && row.bestProviderCost !== null)
+
+      if (rows.length < 2) {
+        return {
+          ...fallback,
+          corridor,
+          amount: amountBucket,
+          updatedAt: updatedAt || null,
+        }
+      }
+
+      const latestPoint = rows[rows.length - 1]
+      const bestPoint = rows.reduce((best, row) => {
+        if (best.bestProviderCost === null) return row
+        if (row.bestProviderCost === null) return best
+        return row.bestProviderCost < best.bestProviderCost ? row : best
+      }, rows[0])
+
+      if (latestPoint.bestProviderCost === null || bestPoint.bestProviderCost === null) {
+        return {
+          ...fallback,
+          corridor,
+          amount: amountBucket,
+          updatedAt: updatedAt || null,
+        }
+      }
+
+      const savingsAmount = Math.max(0, latestPoint.bestProviderCost - bestPoint.bestProviderCost)
+      const bestDayLabel = formatWeekdayLabel(bestPoint.date)
+      const currentDayLabel = formatWeekdayLabel(latestPoint.date)
+      const message = savingsAmount > 0
+        ? `If you had sent $${amountBucket} on ${bestDayLabel} instead of ${currentDayLabel}, you would have saved $${savingsAmount.toFixed(2)}.`
+        : `Current timing is near your 7-day best window for this corridor.`
+
+      return {
+        available: true,
+        corridor,
+        amount: amountBucket,
+        originalAmount: Number.isFinite(originalAmount) ? originalAmount : null,
+        bestDate: bestPoint.date,
+        currentDate: latestPoint.date,
+        bestProvider: bestPoint.bestProvider,
+        savingsAmount: Number(savingsAmount.toFixed(2)),
+        message,
+        updatedAt: updatedAt || null,
+      }
+    } catch (error) {
+      logger.warn('pulse_personal_history_failed', {
+        user_id: userId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return fallback
+    }
+  })
+
   app.get('/pulse/market-snapshot', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse(
       'market-snapshot',
       filters,
@@ -2225,13 +2486,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/true-cost', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload } = await loadPulse('true-cost', filters, pulseDefaults.trueCost)
     return Array.isArray(payload) ? payload : pulseDefaults.trueCost
   })
 
   app.get('/pulse/market-depth', guardPro, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse('market-depth', filters, pulseDefaults.marketDepth)
     if (isObject(payload)) {
       return {
@@ -2250,7 +2511,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/arbitrage', guardPro, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse('arbitrage', filters, pulseDefaults.arbitrage)
     if (isObject(payload)) {
       return {
@@ -2264,7 +2525,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/bank-comparison', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload, updatedAt } = await loadPulse(
       'bank-comparison',
       filters,
@@ -2287,13 +2548,111 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/cost-trend', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const { payload } = await loadPulse('cost-trend', filters, pulseDefaults.costTrend)
     return Array.isArray(payload) ? payload : pulseDefaults.costTrend
   })
 
+  // --- Pulse Pinned Corridors (Enterprise watchlist) ---
+
+  app.get('/pulse/watchlist', guardPro, async (request) => {
+    const userId = request.user?.user_id
+    if (!userId) return { corridors: [] }
+
+    const result = await query<{ id: string; corridor_id: string; label: string | null; created_at: Date }>(
+      `SELECT id, corridor_id, label, created_at
+       FROM silver.pulse_pinned_corridor
+       WHERE user_id = $1
+       ORDER BY created_at`,
+      [userId],
+      planeAPool,
+    )
+
+    return {
+      corridors: result.rows.map((row) => ({
+        id: row.id,
+        corridorId: row.corridor_id,
+        label: row.label,
+        createdAt: row.created_at?.toISOString() ?? null,
+      })),
+    }
+  })
+
+  app.post('/pulse/watchlist', guardPro, async (request, reply) => {
+    const userId = request.user?.user_id
+    if (!userId) {
+      reply.code(401)
+      return { error: 'Authentication required' }
+    }
+
+    const body = request.body as Record<string, unknown> | null
+    const corridorId = typeof body?.corridorId === 'string' ? body.corridorId.trim() : null
+    if (!corridorId) {
+      reply.code(400)
+      return { error: 'corridorId is required' }
+    }
+
+    // Enforce 50 corridor limit
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM silver.pulse_pinned_corridor WHERE user_id = $1`,
+      [userId],
+      planeAPool,
+    )
+    const currentCount = parseInt(countResult.rows[0]?.count ?? '0', 10)
+    if (currentCount >= 50) {
+      reply.code(422)
+      return { error: 'Maximum of 50 pinned corridors reached' }
+    }
+
+    const label = typeof body?.label === 'string' ? body.label.trim() || null : null
+
+    const result = await query<{ id: string; corridor_id: string; created_at: Date }>(
+      `INSERT INTO silver.pulse_pinned_corridor (user_id, corridor_id, label)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, corridor_id) DO NOTHING
+       RETURNING id, corridor_id, created_at`,
+      [userId, corridorId, label],
+      planeAPool,
+    )
+
+    if (result.rows.length === 0) {
+      // Already pinned
+      return { status: 'already_pinned', corridorId }
+    }
+
+    const row = result.rows[0]
+    return {
+      status: 'pinned',
+      id: row.id,
+      corridorId: row.corridor_id,
+      createdAt: row.created_at?.toISOString() ?? null,
+    }
+  })
+
+  app.delete('/pulse/watchlist/:corridorId', guardPro, async (request, reply) => {
+    const userId = request.user?.user_id
+    if (!userId) {
+      reply.code(401)
+      return { error: 'Authentication required' }
+    }
+
+    const corridorId = (request.params as Record<string, string>)?.corridorId
+    if (!corridorId) {
+      reply.code(400)
+      return { error: 'corridorId is required' }
+    }
+
+    await query(
+      `DELETE FROM silver.pulse_pinned_corridor WHERE user_id = $1 AND corridor_id = $2`,
+      [userId, corridorId],
+      planeAPool,
+    )
+
+    return { status: 'unpinned', corridorId }
+  })
+
   app.get('/pulse/fx-rate-history', guardLite, async (request) => {
-    const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
+    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
     const pair = parseCurrencyPairFromSlug(filters.corridor)
     const fallback = {
       baseCurrency: pair?.base ?? null,

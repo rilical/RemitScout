@@ -12,24 +12,19 @@
         v-if="shouldShow"
         class="fixed right-4 top-20 z-40 w-[min(20rem,calc(100vw-2rem))]"
       >
-        <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-2xl">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <p class="text-body-sm font-semibold text-neutral-900">
-                Your last corridor search
-              </p>
-              <p class="mt-1 text-body-sm text-neutral-600">
-                Want to check out your corridor again?
-              </p>
-            </div>
+        <div class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-body-sm font-semibold text-neutral-900">
+              Your last corridor
+            </p>
             <button
               type="button"
-              class="text-neutral-400 hover:text-neutral-600"
+              class="-m-1 rounded-lg p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
               aria-label="Dismiss prompt"
               @click="dismiss"
             >
               <svg
-                class="h-5 w-5"
+                class="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -43,26 +38,26 @@
               </svg>
             </button>
           </div>
-        </div>
 
-        <div class="mt-4 flex items-center gap-3 rounded-xl border border-rs-border bg-neutral-50 px-4 py-3">
-          <div class="text-h4">
-            <span>{{ fromFlag }}</span>
-            <span class="mx-2 text-neutral-400">→</span>
-            <span>{{ toFlag }}</span>
-          </div>
-          <div class="min-w-0">
-            <div class="truncate text-body-sm font-semibold text-rs-fg">
-              {{ fromLabel }} → {{ toLabel }}
+          <button
+            type="button"
+            class="mt-3 flex w-full items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-left transition-colors hover:border-brand-200 hover:bg-brand-50"
+            @click="viewCorridor"
+          >
+            <span class="text-xl leading-none">{{ fromFlag }}</span>
+            <span class="text-neutral-400">→</span>
+            <span class="text-xl leading-none">{{ toFlag }}</span>
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-body-sm font-semibold text-neutral-900">
+                {{ fromLabel }} → {{ toLabel }}
+              </div>
+              <div class="text-xs text-neutral-500">
+                View rates
+              </div>
             </div>
-            <div class="truncate text-body-sm text-rs-muted">
-              View rates for this corridor again.
-            </div>
-          </div>
-        </div>
+          </button>
 
-        <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex gap-2">
+          <div class="mt-4 flex flex-wrap items-center gap-2">
             <button
               type="button"
               class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700"
@@ -72,20 +67,19 @@
             </button>
             <button
               type="button"
-              class="rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              class="rounded-lg border border-neutral-200 px-4 py-2 text-body-sm font-medium text-neutral-600 hover:bg-neutral-50"
               @click="dismiss"
             >
               Dismiss
             </button>
+            <NuxtLink
+              to="/send-money"
+              class="text-body-sm font-medium text-brand-600 hover:text-brand-700"
+              @click="dismiss"
+            >
+              Choose different corridor
+            </NuxtLink>
           </div>
-
-          <NuxtLink
-            to="/send-money"
-            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-            @click="dismiss"
-          >
-            Choose a different corridor
-          </NuxtLink>
         </div>
       </div>
     </Transition>

@@ -31,6 +31,8 @@ import {
   updateAlertUsage,
 } from './shared'
 
+const INDEX_THRESHOLD_METRICS = new Set(['rci_threshold', 'rvi_threshold'])
+
 export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
   const { pool, repositories } = app.container
   const alertRepository = repositories.alert
@@ -137,6 +139,20 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       }
 
       const plan = await getUserPlan(pool, user.user_id)
+      const isEnterpriseActive = !!plan && plan.plan_code === 'enterprise' && isPlanActiveStatus(plan.status)
+
+      if (INDEX_THRESHOLD_METRICS.has(body.rule.metric)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        if (!isEnterpriseActive) {
+          recordRequest('POST', '/alerts', 403, durationSeconds)
+          reply.code(403)
+          return {
+            success: false,
+            error: 'forbidden',
+            message: 'Index threshold alerts are available for Enterprise members only.',
+          }
+        }
+      }
 
       if (body.frequency === 'daily' && !isPlusEntitled(plan)) {
         const durationSeconds = (Date.now() - startTime) / 1000
@@ -454,6 +470,23 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       const requiresPlus = nextMetric === 'sendScore' || resolvedFrequency === 'daily'
 
       const plan = requiresPlus ? await getUserPlan(pool, user.user_id) : null
+      const planForMetric = plan ?? await getUserPlan(pool, user.user_id)
+      const isEnterpriseActive = !!planForMetric
+        && planForMetric.plan_code === 'enterprise'
+        && isPlanActiveStatus(planForMetric.status)
+
+      if (INDEX_THRESHOLD_METRICS.has(nextMetric)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        if (!isEnterpriseActive) {
+          recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
+          reply.code(403)
+          return {
+            success: false,
+            error: 'forbidden',
+            message: 'Index threshold alerts are available for Enterprise members only.',
+          }
+        }
+      }
 
       if (resolvedFrequency === 'daily' && !isPlusEntitled(plan)) {
         const durationSeconds = (Date.now() - startTime) / 1000

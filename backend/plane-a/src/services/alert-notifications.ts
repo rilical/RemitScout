@@ -451,6 +451,10 @@ export async function sendAlertEmail(
           return 'Rate'
         case 'index':
           return 'Index'
+        case 'rci_threshold':
+          return 'RCI'
+        case 'rvi_threshold':
+          return 'RVI'
         default:
           return 'Value'
       }

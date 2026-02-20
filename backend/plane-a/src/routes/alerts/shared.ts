@@ -52,7 +52,17 @@ export const updateAlertUsage = async (
 }
 
 export const alertRuleSchema = z.object({
-  metric: z.enum(['rate', 'recipientGets', 'totalCost', 'fee', 'index', 'midMarketRate', 'sendScore']),
+  metric: z.enum([
+    'rate',
+    'recipientGets',
+    'totalCost',
+    'fee',
+    'index',
+    'midMarketRate',
+    'sendScore',
+    'rci_threshold',
+    'rvi_threshold',
+  ]),
   comparator: z.enum(['gt', 'gte', 'lt', 'lte', 'crosses_above', 'crosses_below']),
   value: z.number(),
   currency: z.string().optional(),

@@ -1,6 +1,15 @@
 export type AlertRuleInput = {
   watchlist_item_id: string
-  metric: 'rate' | 'recipientGets' | 'totalCost' | 'fee' | 'index' | 'midMarketRate' | 'sendScore'
+  metric:
+    | 'rate'
+    | 'recipientGets'
+    | 'totalCost'
+    | 'fee'
+    | 'index'
+    | 'midMarketRate'
+    | 'sendScore'
+    | 'rci_threshold'
+    | 'rvi_threshold'
   comparator: 'gt' | 'gte' | 'lt' | 'lte' | 'crosses_above' | 'crosses_below'
   threshold: number
   currency?: string | null

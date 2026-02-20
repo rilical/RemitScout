@@ -72,6 +72,40 @@ const getProviderColor = (provider: string) => {
   return PROVIDER_COLORS[normalized] || '#64748b'
 }
 
+const RIGHTS_ACTIVE_CONDITION = `
+  rm.allowed_collect = true
+  AND rm.allowed_b2c = true
+  AND rm.stoplist_status = 'active'
+  AND (
+    rm.source_countries IS NOT NULL
+    AND array_length(rm.source_countries, 1) > 0
+    AND c.source_country = ANY(rm.source_countries)
+  )
+  AND (
+    (
+      rm.destination_countries IS NOT NULL
+      AND array_length(rm.destination_countries, 1) > 0
+      AND c.dest_country = ANY(rm.destination_countries)
+    )
+    OR rm.provider_id = 'wise'
+  )
+`
+
+const RIGHTS_NAMED_PROVIDER_CONDITION = `
+  COALESCE(rm.allowed_provider_attribution, true) = true
+  AND COALESCE(rm.allowed_derived_only, false) = false
+`
+
+const applyRightsConditions = (
+  conditions: string[],
+  options: { requireNamedProvider?: boolean } = {},
+) => {
+  conditions.push(`(${RIGHTS_ACTIVE_CONDITION})`)
+  if (options.requireNamedProvider) {
+    conditions.push(`(${RIGHTS_NAMED_PROVIDER_CONDITION})`)
+  }
+}
+
 const parseCorridorSlug = (slug: string | null) => {
   if (!slug) return null
   const parts = slug.split('-').map((part) => part.trim()).filter(Boolean)
@@ -491,15 +525,18 @@ export class PulseCacheRepository implements IPulseCacheRepository {
         c.dest_country AS to_country,
         c.source_currency AS send_currency,
         c.dest_currency AS recv_currency,
-        COUNT(DISTINCT lqp.provider_id) AS provider_count,
-        MAX(lqp.collected_at) AS last_updated
+        COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN lqp.provider_id END) AS provider_count,
+        MAX(CASE WHEN rm.provider_id IS NOT NULL THEN lqp.collected_at END) AS last_updated
        FROM silver.corridor c
        LEFT JOIN silver.latest_quote_by_provider lqp
          ON lqp.corridor_id = c.corridor_id
         AND lqp.status = 'ok'
         AND lqp.collected_at >= NOW() - $1::interval
+       LEFT JOIN silver.rights_matrix rm
+         ON rm.provider_id = lqp.provider_id
+        AND ${RIGHTS_ACTIVE_CONDITION}
        GROUP BY c.corridor_id, c.source_country, c.dest_country, c.source_currency, c.dest_currency
-       HAVING COUNT(DISTINCT lqp.provider_id) >= 1
+       HAVING COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN lqp.provider_id END) >= 1
        ORDER BY provider_count DESC, last_updated DESC NULLS LAST`,
       [interval],
       this.pool,
@@ -523,6 +560,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
     const interval = resolvePulseInterval(filters.timeframe)
     const intervalParam = addParam(interval)
     const conditions = [`lqp.status = 'ok'`, `lqp.collected_at >= NOW() - ${intervalParam}::interval`]
+    applyRightsConditions(conditions)
     const corridorConditions = buildCorridorConditions(filters, params)
     if (corridorConditions.length > 0) {
       conditions.push(...corridorConditions)
@@ -539,6 +577,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
       `SELECT DISTINCT lqp.payin, lqp.payout
        FROM silver.latest_quote_by_provider lqp
        JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
+       JOIN silver.rights_matrix rm ON rm.provider_id = lqp.provider_id
        ${whereClause}
        ORDER BY lqp.payin, lqp.payout`,
       params,
@@ -574,6 +613,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
 
       const latestParams: Array<string | number> = []
       const latestConditions = buildQuoteFilters(filters, 'lqp', latestParams)
+      applyRightsConditions(latestConditions, { requireNamedProvider: true })
       const corridorConditions = buildCorridorConditions(filters, latestParams)
       if (corridorConditions.length > 0) {
         latestConditions.push(...corridorConditions)
@@ -586,6 +626,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
         includePayin: false,
         includePayout: false,
       })
+      applyRightsConditions(methodConditions, { requireNamedProvider: true })
       const methodCorridorConditions = buildCorridorConditions(filters, methodParams)
       if (methodCorridorConditions.length > 0) {
         methodConditions.push(...methodCorridorConditions)
@@ -594,6 +635,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
 
       const dailyParams: Array<string | number> = []
       const dailyConditions = buildQuoteFilters(filters, 'qr', dailyParams, { intervalOverride: rangeInterval })
+      applyRightsConditions(dailyConditions)
       const dailyCorridorConditions = buildCorridorConditions(filters, dailyParams)
       if (dailyCorridorConditions.length > 0) {
         dailyConditions.push(...dailyCorridorConditions)
@@ -602,6 +644,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
 
       const attemptParams: Array<string | number> = []
       const attemptConditions = buildAttemptFilters(filters, 'qa', attemptParams)
+      applyRightsConditions(attemptConditions)
       const attemptCorridorConditions = buildCorridorConditions(filters, attemptParams)
       if (attemptCorridorConditions.length > 0) {
         attemptConditions.push(...attemptCorridorConditions)
@@ -616,6 +659,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
 
       const eventParams: Array<string | number> = []
       const eventConditions = buildEventFilters(filters, 'oe', eventParams)
+      applyRightsConditions(eventConditions, { requireNamedProvider: true })
       const eventCorridorConditions = buildCorridorConditions(filters, eventParams)
       if (eventCorridorConditions.length > 0) {
         eventConditions.push(...eventCorridorConditions)
@@ -637,13 +681,14 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             lqp.delivery_time_max_minutes,
             lqp.promotional_rate,
             lqp.base_rate,
-            lqp.promotional_cap_amount,
-            lqp.payin,
-            lqp.payout,
-            c.dest_currency
+           lqp.promotional_cap_amount,
+           lqp.payin,
+           lqp.payout,
+           c.dest_currency
            FROM silver.latest_quote_by_provider lqp
            JOIN silver.provider p ON p.provider_id = lqp.provider_id
            JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = lqp.provider_id
            ${latestWhere}
            ORDER BY lqp.implied_fx_rate DESC`,
           latestParams,
@@ -663,6 +708,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             AVG(qr.fee_amount) AS avg_fee
            FROM silver.quote_record qr
            JOIN silver.corridor c ON c.corridor_id = qr.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = qr.provider_id
            ${dailyWhere}
            GROUP BY bucket
            ORDER BY bucket`,
@@ -681,6 +727,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
            FROM silver.quote_record qr
            JOIN silver.provider p ON p.provider_id = qr.provider_id
            JOIN silver.corridor c ON c.corridor_id = qr.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = qr.provider_id
            ${dailyWhere}
            GROUP BY bucket, qr.provider_id, p.display_name
            ORDER BY bucket, p.display_name`,
@@ -701,6 +748,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
            FROM silver.latest_quote_by_provider lqp
            JOIN silver.provider p ON p.provider_id = lqp.provider_id
            JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = lqp.provider_id
            ${methodWhere}
            GROUP BY lqp.provider_id, p.display_name
            ORDER BY p.display_name`,
@@ -710,14 +758,17 @@ export class PulseCacheRepository implements IPulseCacheRepository {
         withCircuitBreaker('pulse-cache', async () => withRetry(async () => query(
           `SELECT
             COUNT(DISTINCT c.corridor_id) AS total_corridors,
-            COUNT(DISTINCT lqp.provider_id) AS active_providers,
-            COUNT(DISTINCT lqp.corridor_id) AS corridors_with_quotes,
-            AVG(EXTRACT(EPOCH FROM (NOW() - lqp.collected_at)) / 60) AS avg_freshness_minutes
+            COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN lqp.provider_id END) AS active_providers,
+            COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN lqp.corridor_id END) AS corridors_with_quotes,
+            AVG(CASE WHEN rm.provider_id IS NOT NULL THEN EXTRACT(EPOCH FROM (NOW() - lqp.collected_at)) / 60 ELSE NULL END) AS avg_freshness_minutes
            FROM silver.corridor c
            LEFT JOIN silver.latest_quote_by_provider lqp
              ON lqp.corridor_id = c.corridor_id
             AND lqp.status = 'ok'
             AND lqp.collected_at >= NOW() - $1::interval
+           LEFT JOIN silver.rights_matrix rm
+             ON rm.provider_id = lqp.provider_id
+            AND ${RIGHTS_ACTIVE_CONDITION}
            ${overviewWhere}`,
           overviewParams,
           this.pool,
@@ -725,9 +776,9 @@ export class PulseCacheRepository implements IPulseCacheRepository {
         withCircuitBreaker('pulse-cache', async () => withRetry(async () => query(
           `SELECT
             COUNT(DISTINCT c.corridor_id) AS total_corridors,
-            COUNT(DISTINCT CASE WHEN lqp.provider_id IS NOT NULL THEN c.corridor_id END) AS covered_corridors,
+            COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN c.corridor_id END) AS covered_corridors,
             ROUND(
-              100.0 * COUNT(DISTINCT CASE WHEN lqp.provider_id IS NOT NULL THEN c.corridor_id END) /
+              100.0 * COUNT(DISTINCT CASE WHEN rm.provider_id IS NOT NULL THEN c.corridor_id END) /
               NULLIF(COUNT(DISTINCT c.corridor_id), 0),
               2
             ) AS coverage_percentage
@@ -736,6 +787,9 @@ export class PulseCacheRepository implements IPulseCacheRepository {
              ON lqp.corridor_id = c.corridor_id
             AND lqp.status = 'ok'
             AND lqp.collected_at >= NOW() - $1::interval
+           LEFT JOIN silver.rights_matrix rm
+             ON rm.provider_id = lqp.provider_id
+            AND ${RIGHTS_ACTIVE_CONDITION}
            ${overviewWhere}`,
           overviewParams,
           this.pool,
@@ -749,6 +803,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             MAX(qr.collected_at) AS newest_quote
            FROM silver.quote_record qr
            JOIN silver.corridor c ON c.corridor_id = qr.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = qr.provider_id
            ${dailyWhere}`,
           dailyParams,
           this.pool,
@@ -764,6 +819,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
            FROM silver.latest_quote_by_provider lqp
            JOIN silver.provider p ON p.provider_id = lqp.provider_id
            JOIN silver.corridor c ON c.corridor_id = lqp.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = lqp.provider_id
            ${latestWhere}
            GROUP BY lqp.provider_id, p.display_name
            HAVING COUNT(*) >= 1
@@ -778,9 +834,10 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             oe.corridor_id,
             oe.block_reason,
             oe.http_status,
-            oe.created_at
+           oe.created_at
            FROM silver.ops_alert_event oe
            JOIN silver.corridor c ON c.corridor_id = oe.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = oe.provider_id
            ${eventWhere}
            ORDER BY oe.created_at DESC
            LIMIT 100`,
@@ -794,6 +851,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             SUM(CASE WHEN qa.success THEN 1 ELSE 0 END) AS success_count
            FROM silver.quote_attempt qa
            JOIN silver.corridor c ON c.corridor_id = qa.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = qa.provider_id
            ${attemptWhere}
            GROUP BY bucket
            ORDER BY bucket`,
@@ -807,6 +865,7 @@ export class PulseCacheRepository implements IPulseCacheRepository {
             COUNT(*) AS total_count
            FROM silver.quote_attempt qa
            JOIN silver.corridor c ON c.corridor_id = qa.corridor_id
+           JOIN silver.rights_matrix rm ON rm.provider_id = qa.provider_id
            ${attemptWhere}
            GROUP BY qa.provider_id`,
           attemptParams,

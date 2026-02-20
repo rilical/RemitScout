@@ -43,7 +43,7 @@ test('welcome-back prompt shows only on next visit; top-right; dismiss persists 
   await page.goto('/about')
 
   // Same visit: must NOT show.
-  await expect(page.getByText('Your last corridor search')).toHaveCount(0)
+  await expect(page.getByText('Your last corridor')).toHaveCount(0)
 
   // New visit (new page): prompt should show.
   const page2 = await context.newPage()
@@ -57,7 +57,7 @@ test('welcome-back prompt shows only on next visit; top-right; dismiss persists 
     return await page2.evaluate(() => window.localStorage.getItem('remitscout:compare:history'))
   }).not.toBeNull()
 
-  const promptTitle = page2.getByText('Your last corridor search')
+  const promptTitle = page2.getByText('Your last corridor')
   await expect(promptTitle).toBeVisible()
   await expect(page2.getByRole('button', { name: 'View corridor' })).toBeVisible()
 
@@ -66,11 +66,11 @@ test('welcome-back prompt shows only on next visit; top-right; dismiss persists 
   await expect(page2).toHaveURL(corridorUrl)
 
   await page2.goto('/about')
-  await expect(page2.getByText('Your last corridor search')).toHaveCount(0)
+  await expect(page2.getByText('Your last corridor')).toHaveCount(0)
 
   const page3 = await context.newPage()
   await page3.goto('/about')
-  await expect(page3.getByText('Your last corridor search')).toHaveCount(0)
+  await expect(page3.getByText('Your last corridor')).toHaveCount(0)
 })
 
 test('reject non-essential: welcome-back prompt never shows', async ({ page, context }) => {
@@ -101,9 +101,9 @@ test('reject non-essential: welcome-back prompt never shows', async ({ page, con
   }, { compareHistoryKey })
 
   await page.goto('/about')
-  await expect(page.getByText('Your last corridor search')).toHaveCount(0)
+  await expect(page.getByText('Your last corridor')).toHaveCount(0)
 
   const page2 = await context.newPage()
   await page2.goto('/about')
-  await expect(page2.getByText('Your last corridor search')).toHaveCount(0)
+  await expect(page2.getByText('Your last corridor')).toHaveCount(0)
 })

@@ -209,6 +209,11 @@ export const pulseDefaults = {
     rationale: [],
     lastUpdated,
   },
+  narrative: {
+    summary: '',
+    generatedAt: '',
+    source: 'rule_based',
+  },
   marketSnapshot: {
     quotes: [],
     midMarketRate: 0,
@@ -247,6 +252,7 @@ export const pulseDefaults = {
 export const pulseDefaultKeys = [
   'pulse:corridors',
   'pulse:overview',
+  'pulse:narrative',
   'pulse:method-coverage',
   'pulse:table',
   'pulse:hero',

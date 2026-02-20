@@ -85,6 +85,27 @@ export interface SmartSendData {
   percentile?: number
 }
 
+export interface PulseNarrativeData {
+  summary: string
+  generatedAt: string | null
+  source: string
+  dataAvailable: boolean
+  updatedAt: string | null
+}
+
+export interface PulsePersonalHistoryData {
+  available: boolean
+  message: string
+  corridor?: string
+  amount?: number
+  originalAmount?: number | null
+  bestDate?: string
+  currentDate?: string
+  bestProvider?: string | null
+  savingsAmount?: number
+  updatedAt?: string | null
+}
+
 let corridorCache: CorridorOption[] | null = null
 
 const buildPulseQuery = (filters: PulseFilters, extra: Record<string, unknown> = {}) => ({
@@ -201,6 +222,7 @@ export interface PulseChartsBatchItem {
   dataAvailable: boolean
   updatedAt: string | null
   source: PulseChartSource
+  previewLocked?: boolean
   chart: ChartData
 }
 
@@ -408,6 +430,23 @@ export async function getSmartSendData(
   return await request<SmartSendData>('/pulse/smart-send', { query: { corridor: corridor.slug, timeframe, amount } })
 }
 
+export async function getPulseNarrative(
+  corridor: PulseCorridor,
+  timeframe: PulseTimeframe,
+  amount: number = 1000,
+): Promise<PulseNarrativeData> {
+  const { request } = useApi()
+  return await request<PulseNarrativeData>('/pulse/narrative', { query: { corridor: corridor.slug, timeframe, amount } })
+}
+
+export async function getPulsePersonalHistory(
+  corridor: PulseCorridor,
+  amount: number = 1000,
+): Promise<PulsePersonalHistoryData> {
+  const { request } = useApi()
+  return await request<PulsePersonalHistoryData>('/pulse/personal-history', { query: { corridor: corridor.slug, amount } })
+}
+
 export async function getMarketSnapshot(
   corridor: PulseCorridor,
   amount: number = 1000,
@@ -498,4 +537,34 @@ export async function getPulseScreener(options?: {
   if (typeof options?.includeMovers === 'boolean') query.include_movers = options.includeMovers ? '1' : '0'
 
   return await request<PulseScreenerResponse>('/pulse/screener', { query })
+}
+
+// --- Pulse Pinned Corridors (Enterprise watchlist) ---
+
+export type PulsePinnedCorridor = {
+  id: string
+  corridorId: string
+  label: string | null
+  createdAt: string | null
+}
+
+export async function getPulsePinnedCorridors(): Promise<PulsePinnedCorridor[]> {
+  const { request } = useApi()
+  const data = await request<{ corridors: PulsePinnedCorridor[] }>('/pulse/watchlist')
+  return data.corridors ?? []
+}
+
+export async function pinPulseCorridor(corridorId: string, label?: string): Promise<{ status: string; id?: string }> {
+  const { request } = useApi()
+  return await request<{ status: string; id?: string }>('/pulse/watchlist', {
+    method: 'POST',
+    body: { corridorId, label },
+  })
+}
+
+export async function unpinPulseCorridor(corridorId: string): Promise<{ status: string }> {
+  const { request } = useApi()
+  return await request<{ status: string }>(`/pulse/watchlist/${encodeURIComponent(corridorId)}`, {
+    method: 'DELETE',
+  })
 }
