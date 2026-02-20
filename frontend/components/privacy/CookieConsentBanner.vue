@@ -3,7 +3,7 @@
     v-if="shouldShowBanner"
     class="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-3xl rounded-2xl border border-rs-border bg-surface/95 p-4 shadow-xl backdrop-blur"
   >
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex flex-col gap-4">
       <div class="text-body-sm text-neutral-700">
         <p class="font-semibold text-rs-fg">
           Ads keep the free plan free
@@ -11,7 +11,7 @@
         <p class="mt-1 text-neutral-600">
           We only use non-essential cookies (functional, analytics, marketing) if you opt in. You can change this anytime.
         </p>
-        <div class="mt-2 flex gap-3 text-body-sm">
+        <div class="mt-2 flex flex-wrap gap-3 text-body-sm">
           <NuxtLink
             to="/legal/privacy"
             class="text-brand-600 hover:text-brand-700"
@@ -20,13 +20,9 @@
             to="/cookies"
             class="text-brand-600 hover:text-brand-700"
           >Cookie Policy</NuxtLink>
-          <NuxtLink
-            to="/legal/do-not-sell"
-            class="text-brand-600 hover:text-brand-700"
-          >Do Not Sell</NuxtLink>
         </div>
       </div>
-      <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+      <div class="flex flex-wrap items-center gap-2 sm:justify-end">
         <button
           type="button"
           class="rounded-lg border border-rs-border px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100"
