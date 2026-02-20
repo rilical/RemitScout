@@ -350,7 +350,7 @@ export const createMonitoring = (
 
   const quoteRefreshOldestAgeThresholdSeconds = isProd ? 15 * 60 : (isStaging ? 30 * 60 : 60 * 60)
   const ingestFanoutTier2OldestAgeThresholdSeconds = isProd ? 60 * 60 : (isStaging ? 90 * 60 : 2 * 60 * 60)
-  const queueAgeAlarms = [
+  const priorityQueueAgeAlarms = [
     new Alarm(scope, 'QuoteRefreshOldestAgeAlarm', {
       alarmName: useExplicitAlarmNames
         ? `remit-scout-${options.envName}-quote-refresh-oldest-age-high`
@@ -378,7 +378,7 @@ export const createMonitoring = (
       alarmDescription: `Tier2 ingest fanout oldest message age >= ${ingestFanoutTier2OldestAgeThresholdSeconds}s`,
     }),
   ]
-  for (const alarm of queueAgeAlarms) {
+  for (const alarm of priorityQueueAgeAlarms) {
     alarm.addAlarmAction(isProd ? opsAction : warningAction)
   }
 

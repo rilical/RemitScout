@@ -9,6 +9,10 @@ on:
         description: 'Optional: run a single provider probe (provider_id from .remit-scout/providers/catalog.json)'
         required: false
         type: string
+      corridors_csv:
+        description: 'Optional: comma-separated corridors for cache TTL probe (e.g., US-MX-USD-MXN,US-PH-USD-PHP)'
+        required: false
+        type: string
       case_id:
         description: 'Optional: IssueOps case_id for traceability'
         required: false
@@ -112,4 +116,5 @@ jobs:
         env:
           PROBE_TIMEOUT_MS: 60000
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          CACHE_TTL_TEST_CORRIDORS: ${{ github.event.inputs.corridors_csv }}
         run: pnpm -C backend probe:cache-ttl

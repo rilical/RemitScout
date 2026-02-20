@@ -1041,7 +1041,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   const pulseCacheRepository = repositories.pulseCache
   const goldIndicesRepository = repositories.goldIndices
   const guardLite = { preHandler: requireEntitlement('pulse') }
-  const guardPro = { preHandler: requireEntitlement('pulse_pro') }
+  const guardPro = { preHandler: requireEntitlement('pulse_full') }
   const loadPulse = (
     baseKey: string,
     filters: PulseCacheFilters,
@@ -1422,7 +1422,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       )
       const chartIdsUnique = Array.from(new Set(chartIdsRaw))
         .filter((value) => typeof value === 'string' && value.trim().length > 0)
-      const isProAccess = request.entitlementsContext?.entitlements.pulse_access === 'pro'
+      const isProAccess = request.entitlementsContext?.entitlements.pulse_access === 'full'
       const defaultChartIds = [...PULSE_CHART_IDS]
       const chartIds = chartIdsUnique.length > 0
         ? chartIdsUnique
@@ -1434,7 +1434,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('GET', '/pulse/charts', 403, durationSeconds)
           reply.code(403)
-          return reply.send({ error: 'forbidden', entitlement: 'pulse_pro' })
+          return reply.send({ error: 'forbidden', entitlement: 'pulse_full' })
         }
       }
 
@@ -1529,10 +1529,10 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
     if (
       PULSE_PRO_CHART_IDS.has(chartId)
-      && request.entitlementsContext?.entitlements.pulse_access !== 'pro'
+      && request.entitlementsContext?.entitlements.pulse_access !== 'full'
     ) {
       reply.code(403)
-      return reply.send({ error: 'forbidden', entitlement: 'pulse_pro' })
+      return reply.send({ error: 'forbidden', entitlement: 'pulse_full' })
     }
     const filters = buildPulseFilters((request.query ?? {}) as Record<string, unknown>)
     if (INDEX_CHART_IDS.has(chartId)) {

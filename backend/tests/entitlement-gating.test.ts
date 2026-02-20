@@ -113,7 +113,7 @@ describe('entitlement gating', () => {
     })
 
     expect(response.statusCode).toBe(403)
-    expect(response.json()).toEqual({ error: 'forbidden', entitlement: 'pulse_pro' })
+    expect(response.json()).toEqual({ error: 'forbidden', entitlement: 'pulse_full' })
   })
 
   it('maps entitlements by plan tier', () => {
@@ -130,7 +130,7 @@ describe('entitlement gating', () => {
     expect(plus.exports_enabled).toBe(true)
     expect(plus.api_access).toBe(false)
 
-    expect(enterprise.pulse_access).toBe('pro')
+    expect(enterprise.pulse_access).toBe('full')
     expect(enterprise.exports_enabled).toBe(true)
     expect(enterprise.api_access).toBe(true)
     expect(enterprise.api_tier).toBe(2)

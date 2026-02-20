@@ -6,6 +6,7 @@ import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { AppError, RateLimitError, ValidationError } from '../../../shared/errors'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
+import { anonymizeIpAddress, extractBrowserFamily } from '../services/privacy-utils'
 
 const logger = createLogger('plane-a.marketing')
 
@@ -70,6 +71,7 @@ const insertEvent = async (
   fbc?: string | null
   fbp?: string | null
   client_ip?: string | null
+  client_ip_hash?: string | null
   user_agent?: string | null
 }) => {
   const result = await query(
@@ -95,9 +97,10 @@ const insertEvent = async (
        fbc,
        fbp,
        client_ip,
+       client_ip_hash,
        user_agent
      ) VALUES (
-       $1, $2, to_timestamp($3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18, $19, $20, $21, $22
+       $1, $2, to_timestamp($3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
      )
      ON CONFLICT (event_id) DO NOTHING`,
     [
@@ -122,6 +125,7 @@ const insertEvent = async (
       input.fbc ?? null,
       input.fbp ?? null,
       input.client_ip ?? null,
+      input.client_ip_hash ?? null,
       input.user_agent ?? null,
     ],
     pool,
@@ -205,6 +209,21 @@ const shouldSkipMarketing = async (
   }
 }
 
+const getClientPrivacyContext = (request: {
+  ip?: string
+  headers: Record<string, unknown>
+}) => {
+  const rawUserAgent = typeof request.headers['user-agent'] === 'string'
+    ? request.headers['user-agent']
+    : null
+  const anonymizedIp = anonymizeIpAddress(request.ip)
+  return {
+    clientIp: anonymizedIp.truncatedIp,
+    clientIpHash: anonymizedIp.ipHash,
+    userAgentFamily: extractBrowserFamily(rawUserAgent),
+  }
+}
+
 export const marketingRoutes = async (app: FastifyInstance) => {
   const pool = app.container.pool
   const userAccountRepository = app.container.repositories.userAccount
@@ -218,22 +237,23 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const input = parsed.data
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
-    const seed = `${request.ip || 'unknown'}:${input.event_name}`
+    const privacyContext = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
+    const seed = `${privacyContext.clientIpHash || privacyContext.clientIp || 'unknown'}:${input.event_name}`
     const rateKey = buildRateLimitKey('marketing:meta', seed)
     if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
       throw new RateLimitError()
     }
     const user = request.user
-    const userAgent = typeof request.headers['user-agent'] === 'string'
-      ? request.headers['user-agent']
-      : undefined
 
     try {
       if (await shouldSkipMarketing(userAccountRepository, user?.user_id)) {
         return { success: true, skipped: 'opt_out' }
       }
 
-     const inserted = await insertEvent(pool, {
+      const inserted = await insertEvent(pool, {
         event_name: input.event_name,
         event_id: eventId,
         event_time: eventTime,
@@ -254,8 +274,9 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         li_fat_id: input.li_fat_id ?? null,
         fbc: input.fbc ?? null,
         fbp: input.fbp ?? null,
-        client_ip: request.ip,
-        user_agent: userAgent,
+        client_ip: privacyContext.clientIp ?? null,
+        client_ip_hash: privacyContext.clientIpHash ?? null,
+        user_agent: privacyContext.userAgentFamily ?? null,
       })
 
       if (!inserted) {
@@ -263,8 +284,6 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       }
 
       const userData: Record<string, string | undefined> = {
-        client_ip_address: request.ip,
-        client_user_agent: userAgent,
         fbc: input.fbc,
         fbp: input.fbp,
         em: hashValue(user?.email),
@@ -316,6 +335,10 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const input = parsed.data
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
+    const privacyContext = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
 
     const inserted = await insertEvent(pool, {
       event_name: input.event_name,
@@ -338,8 +361,9 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       li_fat_id: input.li_fat_id ?? null,
       fbc: input.fbc ?? null,
       fbp: input.fbp ?? null,
-      client_ip: request.ip,
-      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+      client_ip: privacyContext.clientIp ?? null,
+      client_ip_hash: privacyContext.clientIpHash ?? null,
+      user_agent: privacyContext.userAgentFamily ?? null,
     })
 
     return {
@@ -358,6 +382,10 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const input = parsed.data
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
+    const privacyContext = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
 
     const inserted = await insertEvent(pool, {
       event_name: input.event_name,
@@ -380,8 +408,9 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       li_fat_id: input.li_fat_id ?? null,
       fbc: input.fbc ?? null,
       fbp: input.fbp ?? null,
-      client_ip: request.ip,
-      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+      client_ip: privacyContext.clientIp ?? null,
+      client_ip_hash: privacyContext.clientIpHash ?? null,
+      user_agent: privacyContext.userAgentFamily ?? null,
     })
 
     return {
@@ -400,6 +429,10 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     const input = parsed.data
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
+    const privacyContext = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
 
     const inserted = await insertEvent(pool, {
       event_name: input.event_name,
@@ -422,8 +455,9 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       li_fat_id: input.li_fat_id ?? null,
       fbc: input.fbc ?? null,
       fbp: input.fbp ?? null,
-      client_ip: request.ip,
-      user_agent: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'] : undefined,
+      client_ip: privacyContext.clientIp ?? null,
+      client_ip_hash: privacyContext.clientIpHash ?? null,
+      user_agent: privacyContext.userAgentFamily ?? null,
     })
 
     return {

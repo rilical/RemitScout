@@ -84,7 +84,7 @@ onBeforeUnmount(() => {
           </div>
           <div
             v-if="isPlus"
-            class="mt-2 inline-flex items-center gap-1 rounded-full bg-success-600 px-2 py-0.5 text-body-sm font-medium text-success-600"
+            class="mt-2 inline-flex items-center gap-1 rounded-full bg-success-100 px-2 py-0.5 text-body-sm font-medium text-success-700"
           >
             <svg
               class="h-3 w-3"

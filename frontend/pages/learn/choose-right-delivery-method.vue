@@ -537,19 +537,19 @@
                 </h3>
                 <ul class="space-y-2 text-body-sm text-neutral-700 mb-4">
                   <li class="flex items-start gap-2">
-                    <span class="text-warning-600 mt-1">•</span>
+                    <span class="text-warning-800 mt-1">•</span>
                     <span>Higher fees than bank deposit (often $5 to $15 more)</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <span class="text-warning-600 mt-1">•</span>
+                    <span class="text-warning-800 mt-1">•</span>
                     <span>FX rate may be slightly worse</span>
                   </li>
                   <li class="flex items-start gap-2">
-                    <span class="text-warning-600 mt-1">•</span>
+                    <span class="text-warning-800 mt-1">•</span>
                     <span>No receiving fees (money is cash)</span>
                   </li>
                 </ul>
-                <div class="bg-warning-600 rounded-lg p-3 border border-warning-600">
+                <div class="bg-warning-50 rounded-lg p-3 border-l-4 border-warning-600">
                   <p class="text-body-sm text-neutral-600">
                     <strong>Tradeoff:</strong> Higher cost for speed and access
                   </p>

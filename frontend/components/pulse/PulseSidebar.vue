@@ -49,7 +49,7 @@
                 </svg>
               </div>
               <div>
-                <span class="text-body-sm font-bold text-white">Unlock Pro Features</span>
+                <span class="text-body-sm font-bold text-white">Unlock Pulse Features</span>
               </div>
             </div>
             <p class="mb-4 text-body-sm text-neutral-400">

@@ -164,4 +164,3 @@ const formatUpdatedAt = (value: string | null) => {
   return formatUpdatedLabel(value)
 }
 </script>
-

@@ -7,7 +7,8 @@ const stripUrlQuery = (value: string): string => {
     url.search = ''
     url.hash = ''
     return url.toString()
-  } catch {
+  }
+ catch {
     return value.split('?')[0] || value
   }
 }
@@ -96,7 +97,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       if (!analyticsConsent.value) return
       try {
         Sentry.setUser(userId ? { id: userId } : null)
-      } catch {
+      }
+ catch {
         // ignore
       }
     },

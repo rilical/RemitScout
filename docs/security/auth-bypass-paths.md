@@ -54,6 +54,7 @@ Rules:
     "/api/v1/contact",
     "/api/v1/newsletter",
     "/api/v1/marketing",
+    "/api/v1/compliance",
     "/api/v1/bank-vs-specialist",
     "/api/v1/geo"
   ],
@@ -79,5 +80,6 @@ Rules:
 - `/api/v1/alerts/unsubscribe`: email unsubscribe (token validation in handler).
 - `/api/v1/alerts/corridor-eligibility`, `/api/v1/alerts/macro-corridors`: allowed unauthenticated only in dev/test for UI bootstrapping.
 - Public read-only API endpoints (quotes/providers/rates/etc): used by unauthenticated discovery flows; must not expose PII.
+- `/api/v1/compliance/*`: exposes non-sensitive certification posture and privacy threshold metadata.
 - Telemetry write endpoints: accept anonymous events; must avoid PII and be rate-limited.
 - `/api/v1/indices/health`: public readiness summary for indices (no user data).

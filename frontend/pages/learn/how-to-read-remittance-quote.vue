@@ -207,7 +207,7 @@
                       1-2 business days
                     </div>
                   </div>
-                  <div class="text-body-sm text-neutral-500 bg-success-600 text-success-600 px-3 py-1 rounded-full">
+                  <div class="text-body-sm text-neutral-500 bg-success-100 text-success-700 px-3 py-1 rounded-full">
                     Fast
                   </div>
                 </div>
@@ -406,23 +406,23 @@
             </h3>
             <ul class="space-y-2 text-body text-neutral-700">
               <li class="flex items-start gap-3">
-                <span class="text-warning-600 mt-1">•</span>
+                <span class="text-warning-800 mt-1">•</span>
                 <span><strong class="font-semibold text-neutral-900">Different payout methods:</strong> Cash pickup may have different pricing than bank deposit.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-warning-600 mt-1">•</span>
+                <span class="text-warning-800 mt-1">•</span>
                 <span><strong class="font-semibold text-neutral-900">Rate not locked:</strong> If the rate changes before you confirm, the quote you saw earlier isn't the final.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-warning-600 mt-1">•</span>
+                <span class="text-warning-800 mt-1">•</span>
                 <span><strong class="font-semibold text-neutral-900">Recipient-side fees:</strong> Rare, but some banks deduct fees from incoming transfers.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-warning-600 mt-1">•</span>
+                <span class="text-warning-800 mt-1">•</span>
                 <span><strong class="font-semibold text-neutral-900">Incorrect recipient details:</strong> Can delay payout or force reprocessing.</span>
               </li>
               <li class="flex items-start gap-3">
-                <span class="text-warning-600 mt-1">•</span>
+                <span class="text-warning-800 mt-1">•</span>
                 <span><strong class="font-semibold text-neutral-900">Card issuer charges:</strong> Your bank may add fees on top of what the provider shows.</span>
               </li>
             </ul>

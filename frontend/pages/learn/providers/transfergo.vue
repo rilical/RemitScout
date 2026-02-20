@@ -368,7 +368,7 @@
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -454,7 +454,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -777,7 +777,7 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                <div class="rounded-xl border-2 border-success-500 bg-success-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -807,10 +807,10 @@
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                <div class="rounded-xl border-2 border-warning-500 bg-warning-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -824,15 +824,15 @@
                   </h3>
                   <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Delivered Value: Funding method matters: TransferGo explains card payments cost more (percentage-based costs + exchange-rate constraints), while bank transfers use a fixed fee structure that can be cheaper.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Reliability & Success: Coverage isn't "global from anywhere"—TransferGo states sending is from Europe only, which affects quote availability and corridor breadth.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Friction & Speed: Payout options are destination-dependent (e.g., cash pickup in Morocco is described, while Ukraine explicitly notes no cash pickup).
                     </li>
                   </ul>
@@ -914,7 +914,7 @@
                 <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
                   <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -931,7 +931,7 @@
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -947,7 +947,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -963,7 +963,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1329,7 +1329,7 @@
                       to="/learn/providers/wise"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-700">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>

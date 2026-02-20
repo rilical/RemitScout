@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
     <div class="w-full max-w-md rounded-2xl border border-rs-border bg-surface p-8 shadow-xl text-center">
       <div v-if="status === 'error'">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-600 text-danger-600">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-100 text-danger-700">
           <svg
             class="h-6 w-6"
             fill="none"
@@ -31,7 +31,7 @@
         </NuxtLink>
       </div>
       <div v-else-if="status === 'success'">
-        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-600 text-success-600">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success-100 text-success-700">
           <svg
             class="h-6 w-6"
             fill="none"

@@ -266,7 +266,7 @@
                 </h2>
                 <div class="space-y-4 text-body-lg leading-relaxed text-neutral-700">
                   <p>
-                    Wise earns a <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-success-600 text-success-600 font-bold text-body">9.3/10</span> because it is elite on Delivered Value - transparent fees, typically tight spreads, and strong "money that arrives." It stays strong on reliability with stable quoting and low "surprise delta" risk, and it performs well on speed in many corridors - while acknowledging the real-world limitation that bank rails aren't always instant.
+                    Wise earns a <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-success-100 text-success-700 font-bold text-body">9.3/10</span> because it is elite on Delivered Value - transparent fees, typically tight spreads, and strong "money that arrives." It stays strong on reliability with stable quoting and low "surprise delta" risk, and it performs well on speed in many corridors - while acknowledging the real-world limitation that bank rails aren't always instant.
                   </p>
                   <p>
                     Support is good, not always premium in edge disputes, and trust signals are strong based on licensing/registration footprint where available.
@@ -323,7 +323,7 @@
                       <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-success-600 text-success-600 text-body-sm font-bold">Elite</span>
+                      <span class="px-2.5 py-1 rounded-full bg-success-100 text-success-700 text-body-sm font-bold">Elite</span>
                     </div>
                     <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
@@ -365,7 +365,7 @@
                       <div class="font-semibold text-rs-fg text-body-sm">
                         Support & Refunds
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-warning-600 text-warning-600 text-body-sm font-bold">Good</span>
+                      <span class="px-2.5 py-1 rounded-full bg-warning-100 text-warning-700 text-body-sm font-bold">Good</span>
                     </div>
                     <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
@@ -392,7 +392,7 @@
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -457,8 +457,8 @@
                 </div>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Why this isn't a 10/10 on value:</strong> Wise is not always the absolute cheapest on every corridor or every payment method. If your priority is "lowest possible cost today" and you're willing to chase promotions or switch funding methods, you may occasionally beat it.
                 </p>
               </div>
@@ -580,7 +580,7 @@
                   <p>
                     Wise is rated "Good" here. Support is generally solid, but it may not be best‑in‑class "white glove" when you hit edge disputes (the messy, ambiguous cases where users want proactive ownership and faster human escalation).
                   </p>
-                  <div class="mt-5 p-4 rounded-lg bg-warning-600 border-l-4 border-warning-600">
+                  <div class="mt-5 p-4 rounded-lg bg-warning-50 border-l-4 border-warning-600">
                     <p class="m-0 text-neutral-800">
                       <strong class="text-rs-fg">What to expect:</strong> In routine situations, the experience is typically fine. In edge cases, you may need more persistence than you would with providers known specifically for premium dispute handling.
                     </p>
@@ -606,8 +606,8 @@
                   </p>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. Treat this as a "do the basics check out?" signal - not a guarantee for every use case.
                 </p>
               </div>
@@ -632,7 +632,7 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                <div class="rounded-xl border-2 border-success-500 bg-success-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -666,10 +666,10 @@
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                <div class="rounded-xl border-2 border-warning-500 bg-warning-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -683,19 +683,19 @@
                   </h3>
                   <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Speed varies by bank rails
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Not always cheapest on every corridor
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Support can require persistence in edge cases
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       No cash pickup option
                     </li>
                   </ul>
@@ -793,7 +793,7 @@
                 <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
                   <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -810,7 +810,7 @@
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -826,7 +826,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -842,7 +842,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -858,7 +858,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1024,7 +1024,7 @@
                 </h2>
                 <div class="space-y-5 text-body-lg leading-relaxed text-neutral-700">
                   <p>
-                    Wise earns its <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-success-600 text-success-600 font-bold text-body">9.3/10 Remit-Score</span> by excelling where it matters most: getting more money to your recipient through transparent pricing and tight spreads. It's reliable, fast on many corridors, and backed by strong trust signals.
+                    Wise earns its <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-success-100 text-success-700 font-bold text-body">9.3/10 Remit-Score</span> by excelling where it matters most: getting more money to your recipient through transparent pricing and tight spreads. It's reliable, fast on many corridors, and backed by strong trust signals.
                   </p>
                   <p>
                     It's not perfect - speed depends on bank rails, it's not always the cheapest option, and support could be better for complex disputes. But for most senders who want predictable, data-first value without chasing daily promos, Wise is one of the best choices in the market.

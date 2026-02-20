@@ -49,7 +49,8 @@ export default defineNuxtPlugin(() => {
           navigationType: metric.navigationType,
         },
       })
-    } catch {
+    }
+ catch {
       // ignore
     }
   }

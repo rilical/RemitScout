@@ -1,3 +1,39 @@
+export type SuppressionReason =
+  | 'below_k_threshold'
+  | 'insufficient_datapoints'
+  | 'insufficient_provider_quotes'
+  | 'outlier'
+  | 'low_volume_grouped'
+
+export type AnalyticsPrivacyEnvelope = {
+  applied: true
+  minUniqueUsers: number
+  reason?: string
+}
+
+export type AnalyticsAggregationWindow = {
+  startDate: string
+  endDate: string
+  minDatapoints24h: number
+  minProviderQuotesPerCorridor: number
+  minTrendLookbackDays: number
+}
+
+export type PrivacyAnnotatedRow = {
+  privacy?: AnalyticsPrivacyEnvelope
+  aggregationWindow?: AnalyticsAggregationWindow
+  aggregation_window?: AnalyticsAggregationWindow
+  suppressed?: boolean
+  suppressionReason?: SuppressionReason
+  suppression_reason?: SuppressionReason
+  sampleSize?: number
+  sample_size?: number
+  thresholdApplied?: number
+  threshold_applied?: number
+  aggregationBasis?: string
+  aggregation_basis?: string
+}
+
 export type PopularCorridor = {
   corridor_id: string
   from_country: string
@@ -7,14 +43,15 @@ export type PopularCorridor = {
   unique_users: number
   trend: 'up' | 'down' | 'stable'
   trend_percentage: number
-}
+} & PrivacyAnnotatedRow
 
 export type CorridorTrend = {
   time_bucket: Date
   corridor_id: string
   search_count: number
   click_count: number
-}
+  unique_users?: number
+} & PrivacyAnnotatedRow
 
 export type FavoriteProvider = {
   provider_id: string
@@ -23,7 +60,8 @@ export type FavoriteProvider = {
   search_count: number
   click_through_rate: number
   unique_users: number
-}
+  quote_count?: number
+} & PrivacyAnnotatedRow
 
 export type ProviderCTR = {
   provider_id: string
@@ -32,7 +70,7 @@ export type ProviderCTR = {
   searches: number
   ctr: number
   time_bucket: Date
-}
+} & PrivacyAnnotatedRow
 
 export type EngagementMetric = {
   time_bucket: Date
@@ -57,7 +95,7 @@ export type HeatmapData = {
   search_count: number
   click_count: number
   unique_users: number
-}
+} & PrivacyAnnotatedRow
 
 export type SavingsMetric = {
   corridor_id?: string
@@ -96,7 +134,8 @@ export type ProviderImpactSummary = {
   unique_conversions: number
   conversion_rate: number
   conversion_values: Record<string, number> | null
-}
+  quote_count?: number
+} & PrivacyAnnotatedRow
 
 export type ProviderCorridorImpact = {
   provider_id: string
@@ -107,7 +146,8 @@ export type ProviderCorridorImpact = {
   conversions: number
   conversion_rate: number
   conversion_values: Record<string, number> | null
-}
+  quote_count?: number
+} & PrivacyAnnotatedRow
 
 export interface IAnalyticsRepository {
   getPopularCorridors(params: {
@@ -150,7 +190,7 @@ export interface IAnalyticsRepository {
   getGeographicHeatmap(params: {
     startDate: Date
     endDate: Date
-    aggregation: 'country' | 'city'
+    aggregation: 'country'
   }): Promise<HeatmapData[]>
 
   getSavingsMetrics(params: {

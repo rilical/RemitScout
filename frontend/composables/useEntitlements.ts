@@ -1,17 +1,17 @@
 export type Plan = 'free' | 'plus' | 'enterprise'
 
-export type PulseLevel = 'none' | 'lite' | 'pro'
+export type PulseLevel = 'none' | 'lite' | 'full'
 
 export function planToPulseLevel(plan: Plan): PulseLevel {
-  if (plan === 'enterprise') return 'pro'
+  if (plan === 'enterprise') return 'full'
   if (plan === 'plus') return 'lite'
   return 'none'
 }
 
-type BackendPulseAccess = 'none' | 'lite' | 'pro'
+type BackendPulseAccess = 'none' | 'lite' | 'full'
 
 const pulseAccessToPulseLevel = (access: BackendPulseAccess): PulseLevel => {
-  if (access === 'pro') return 'pro'
+  if (access === 'full') return 'full'
   if (access === 'lite') return 'lite'
   return 'none'
 }

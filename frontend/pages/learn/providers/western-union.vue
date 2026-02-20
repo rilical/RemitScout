@@ -301,7 +301,7 @@
                       <div class="font-semibold text-rs-fg text-body-sm">
                         Delivered Value
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-warning-600 text-warning-600 text-body-sm font-bold">Inconsistent</span>
+                      <span class="px-2.5 py-1 rounded-full bg-warning-100 text-warning-700 text-body-sm font-bold">Inconsistent</span>
                     </div>
                     <div class="text-body-sm text-rs-muted mb-2">
                       40% weight
@@ -315,7 +315,7 @@
                       <div class="font-semibold text-rs-fg text-body-sm">
                         Reliability
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-success-600 text-success-600 text-body-sm font-bold">Elite</span>
+                      <span class="px-2.5 py-1 rounded-full bg-success-100 text-success-700 text-body-sm font-bold">Elite</span>
                     </div>
                     <div class="text-body-sm text-rs-muted mb-2">
                       20% weight
@@ -329,7 +329,7 @@
                       <div class="font-semibold text-rs-fg text-body-sm">
                         Friction & Speed
                       </div>
-                      <span class="px-2.5 py-1 rounded-full bg-success-600 text-success-600 text-body-sm font-bold">Elite</span>
+                      <span class="px-2.5 py-1 rounded-full bg-success-100 text-success-700 text-body-sm font-bold">Elite</span>
                     </div>
                     <div class="text-body-sm text-rs-muted mb-2">
                       15% weight
@@ -370,7 +370,7 @@
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -444,7 +444,7 @@
                   <ul class="space-y-2 text-neutral-700">
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -484,8 +484,8 @@
                 </p>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Delivered Value verdict:</strong> Western Union is transparent that it charges both fees and FX margin, and those together make delivered value inconsistent versus price-leading digital specialists. That is the core reason the score lands at 8.2, not 9+.
                 </p>
               </div>
@@ -553,7 +553,7 @@
                       Western Union also flags that fees/rates can vary by channel and location and are subject to change without notice—so the "best" price can shift depending on whether you pay in-store vs online, card vs bank, etc.
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-500">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Reliability caveat: compliance holds can happen
                     </p>
@@ -619,7 +619,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -651,7 +651,7 @@
                       Mobile wallet in some corridors ("where available").
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-500">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Typical delivery-speed behavior
                     </p>
@@ -683,7 +683,7 @@
                       Western Union offers customer support via its help center and contact channels (chat/contact pages vary by country).
                     </p>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-500">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Refund and cancellation experience (what to expect)
                     </p>
@@ -693,7 +693,7 @@
                     <ul class="space-y-2.5 text-neutral-700">
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -709,7 +709,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -725,7 +725,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-500">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Dispute handling and post-issue friction
                     </p>
@@ -807,7 +807,7 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="mt-5 p-5 rounded-xl bg-warning-600 border-2 border-warning-600">
+                  <div class="mt-5 p-5 rounded-xl bg-warning-50 border-2 border-warning-500">
                     <p class="font-semibold text-rs-fg mb-3 text-body">
                       Safety behavior and compliance friction (real-world)
                     </p>
@@ -817,8 +817,8 @@
                   </div>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
                 </p>
               </div>
@@ -843,7 +843,7 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                <div class="rounded-xl border-2 border-success-500 bg-success-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -873,10 +873,10 @@
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                <div class="rounded-xl border-2 border-warning-500 bg-warning-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -890,15 +890,15 @@
                   </h3>
                   <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Delivered Value:</strong> Western Union's FX rate is interbank + margin, and any difference between the customer rate and what Western Union receives is kept by Western Union (sometimes also agents/wallet providers) — this is often where higher effective cost shows up.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Delivered Value / Accuracy:</strong> Fees and FX rates vary by brand/channel/location/payment method, and in some countries the rate shown can be only an estimate until payout (regulatory constraints).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong>Support & Refunds:</strong> Cancellations/refunds are time- and status-dependent (e.g., in the US you have a 30‑minute cancellation right for remittance transfers; after payout, refunds typically aren't possible).</span>
                     </li>
                   </ul>
@@ -980,7 +980,7 @@
                 <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
                   <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -997,7 +997,7 @@
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1013,7 +1013,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1029,7 +1029,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1378,7 +1378,7 @@
                       to="/learn/providers/wise"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-700">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>

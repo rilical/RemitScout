@@ -87,8 +87,8 @@ export const accountRoutes = async (app: FastifyInstance) => {
           analytics: settings?.analytics_enabled ?? parsed.data.analytics,
           marketing: settings?.marketing_enabled ?? (parsed.data.marketing ?? false),
           personalization: settings?.personalization_enabled ?? parsed.data.personalization,
-          // Never fabricate timestamps; use DB value when available.
-          updated_at: settings?.updated_at ?? null,
+          // Use DB value when available; fall back to now so hasConsent is true after save.
+          updated_at: settings?.updated_at ?? new Date().toISOString(),
         },
       }
     } catch (error) {

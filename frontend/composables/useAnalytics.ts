@@ -25,7 +25,7 @@ type EngagementParams = AnalyticsDateRange & {
 }
 
 type HeatmapParams = AnalyticsDateRange & {
-  aggregation?: 'country' | 'city'
+  aggregation?: 'country'
   metric?: 'search_count' | 'click_count' | 'unique_users'
 }
 
@@ -43,9 +43,79 @@ type RevenueParams = AnalyticsDateRange & {
   limit?: number
 }
 
-type PopularCorridorsResponse = { corridors: any[] }
-type FavoriteProvidersResponse = { providers: any[] }
-type HeatmapResponse = { heatmap: any[] }
+type SuppressionReason =
+  | 'below_k_threshold'
+  | 'insufficient_datapoints'
+  | 'insufficient_provider_quotes'
+  | 'outlier'
+  | 'low_volume_grouped'
+
+type PrivacyEnvelope = {
+  applied: true
+  minUniqueUsers: number
+  reason?: string
+}
+
+type AggregationWindow = {
+  startDate: string
+  endDate: string
+  minDatapoints24h: number
+  minProviderQuotesPerCorridor: number
+  minTrendLookbackDays: number
+}
+
+type PrivacyAnnotated = {
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+  suppressed?: boolean
+  suppressionReason?: SuppressionReason
+  sampleSize?: number
+  thresholdApplied?: number
+  aggregationBasis?: string
+}
+
+type PopularCorridor = PrivacyAnnotated & {
+  corridor_id: string
+  from_country: string
+  to_country: string
+  search_count: number
+  click_count: number
+  unique_users: number
+  trend: 'up' | 'down' | 'stable'
+  trend_percentage: number
+}
+
+type FavoriteProvider = PrivacyAnnotated & {
+  provider_id: string
+  provider_name?: string | null
+  click_count?: number
+  click_through_rate: number
+  quote_count?: number
+}
+
+type HeatmapRow = PrivacyAnnotated & {
+  country_code: string
+  country_name: string | null
+  search_count: number
+  click_count: number
+  unique_users: number
+}
+
+type PopularCorridorsResponse = {
+  corridors: PopularCorridor[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
+type FavoriteProvidersResponse = {
+  providers: FavoriteProvider[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
+type HeatmapResponse = {
+  heatmap: HeatmapRow[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
 type SavingsSummary = {
   total_searches: number
   total_savings_fees: number
@@ -57,8 +127,31 @@ type SavingsSummary = {
 type SavingsMetricsResponse = { summary: SavingsSummary }
 type UserBehaviorPatternsResponse = { patterns: any[] }
 type ProviderImpactResponse = {
-  providers: any[]
-  corridors: any[]
+  providers: Array<PrivacyAnnotated & {
+    provider_id: string
+    provider_name?: string | null
+    total_clicks: number
+    unique_clicks: number
+    affiliate_clicks: number
+    conversions: number
+    unique_conversions: number
+    conversion_rate: number
+    conversion_values: Record<string, number> | null
+    quote_count?: number
+  }>
+  corridors: Array<PrivacyAnnotated & {
+    provider_id: string
+    provider_name?: string | null
+    corridor_id: string | null
+    total_clicks: number
+    unique_clicks: number
+    conversions: number
+    conversion_rate: number
+    conversion_values: Record<string, number> | null
+    quote_count?: number
+  }>
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
 }
 type SessionMetricsResponse = {
   total_sessions: number

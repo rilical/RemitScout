@@ -293,10 +293,7 @@
               Audit Log
             </button>
           </div>
-
-          <!-- Data Notes -->
-          <PulseDataNotes :chart-id="chartId" />
-        </div>
+</div>
 
         <!-- Sidebar -->
         <div class="lg:col-span-4 space-y-6">

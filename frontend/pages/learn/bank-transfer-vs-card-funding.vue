@@ -456,7 +456,7 @@
           </div>
 
           <!-- When Credit Card Makes Sense -->
-          <div class="mb-12 rounded-xl border-2 border-warning-600 bg-warning-600 p-6 shadow-sm">
+          <div class="mb-12 rounded-xl border-2 border-warning-500 bg-warning-50 p-6 shadow-sm">
             <h3 class="text-h4 font-bold text-neutral-900 mb-4">
               When <span class="text-brand-600">Credit Card</span> Funding Can Make Sense (But Be Careful)
             </h3>

@@ -231,7 +231,7 @@
           </div>
 
           <!-- What We Don't Do -->
-          <div class="mb-12 rounded-3xl border-2 border-success-600 bg-success-600 p-8 lg:p-12">
+          <div class="mb-12 rounded-3xl border-2 border-success-500 bg-success-50 p-8 lg:p-12">
             <h2 class="text-h3 font-bold text-neutral-900 mb-4">
               What We Don't Do
             </h2>

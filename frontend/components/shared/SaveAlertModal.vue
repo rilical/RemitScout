@@ -422,7 +422,7 @@
 	                    </div>
 	                    <span
 	                      v-if="selectedMetricOption?.unavailable"
-	                      class="inline-flex items-center gap-1 rounded-full bg-warning-600 px-2 py-0.5 text-body-sm font-medium text-warning-600"
+	                      class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-medium text-warning-700"
 	                      :title="selectedMetricOption?.unavailableReason"
 	                    >
 	                      <svg
@@ -498,14 +498,14 @@
 
               <div
                 v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'rolling_out'"
-                class="mt-2 rounded-lg border border-warning-600 bg-warning-600 px-3 py-2 text-body-sm text-warning-600"
+                class="mt-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-body-sm text-warning-800"
               >
                 {{ smartRollingOutCopy }}
               </div>
 
               <div
                 v-else-if="target.type === 'corridor' && corridorEligibility && !eligibilityLoading && smartStatus === 'available'"
-                class="mt-2 rounded-lg border border-success-600 bg-success-600 px-3 py-2 text-body-sm text-success-600"
+                class="mt-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-body-sm text-success-800"
               >
                 {{ SMART_AVAILABLE_COPY }}
               </div>

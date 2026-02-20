@@ -1,7 +1,10 @@
 import type { Pool } from 'pg'
 import { query } from '../../../../shared/db'
+import { config } from '../../../../shared/config'
 import { COUNTRIES } from '../../../../shared/countries-currencies'
 import type {
+  AnalyticsAggregationWindow,
+  AnalyticsPrivacyEnvelope,
   CorridorTrend,
   EngagementMetric,
   FavoriteProvider,
@@ -13,11 +16,86 @@ import type {
   ProviderImpactSummary,
   RevenueMetric,
   SavingsMetric,
+  SuppressionReason,
   SessionMetric,
   UserBehaviorPattern,
 } from '../interfaces/analytics-repository.interface'
 
 const countryNameMap = new Map(COUNTRIES.map((country) => [country.code, country.name]))
+
+const privacyThresholds = {
+  kMin: Math.max(1, Math.floor(config.privacy.kAnonymityMinimum || 5)),
+  corridorMinDatapoints24h: Math.max(1, Math.floor(config.privacy.corridorMinDataPoints24h || 100)),
+  providerMinQuotesPerCorridor: Math.max(1, Math.floor(config.privacy.providerMinQuotesPerCorridor || 50)),
+  trendMinLookbackDays: Math.max(1, Math.floor(config.privacy.trendMinLookbackDays || 7)),
+}
+
+const buildAggregationWindow = (
+  startDate: Date,
+  endDate: Date,
+): AnalyticsAggregationWindow => ({
+  startDate: startDate.toISOString(),
+  endDate: endDate.toISOString(),
+  minDatapoints24h: privacyThresholds.corridorMinDatapoints24h,
+  minProviderQuotesPerCorridor: privacyThresholds.providerMinQuotesPerCorridor,
+  minTrendLookbackDays: privacyThresholds.trendMinLookbackDays,
+})
+
+const attachPrivacyMetadata = <T extends Record<string, unknown>>(
+  row: T,
+  params: {
+    startDate: Date
+    endDate: Date
+    sampleSize: number
+    thresholdApplied: number
+    aggregationBasis: string
+    suppressed?: boolean
+    suppressionReason?: SuppressionReason
+    reason?: string
+  },
+) => {
+  const privacy: AnalyticsPrivacyEnvelope = {
+    applied: true,
+    minUniqueUsers: privacyThresholds.kMin,
+    ...(params.reason ? { reason: params.reason } : {}),
+  }
+  const aggregationWindow = buildAggregationWindow(params.startDate, params.endDate)
+  const suppressionReason = params.suppressionReason
+  const suppressed = Boolean(params.suppressed)
+
+  return {
+    ...row,
+    privacy,
+    aggregationWindow,
+    aggregation_window: aggregationWindow,
+    suppressed,
+    ...(suppressionReason ? { suppressionReason, suppression_reason: suppressionReason } : {}),
+    sampleSize: params.sampleSize,
+    sample_size: params.sampleSize,
+    thresholdApplied: params.thresholdApplied,
+    threshold_applied: params.thresholdApplied,
+    aggregationBasis: params.aggregationBasis,
+    aggregation_basis: params.aggregationBasis,
+  }
+}
+
+const percentile = (values: number[], p: number): number | null => {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const index = (sorted.length - 1) * p
+  const lower = Math.floor(index)
+  const upper = Math.ceil(index)
+  if (lower === upper) return sorted[lower]
+  const weight = index - lower
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight
+}
+
+const getOutlierThreshold = (values: number[]): number | null => {
+  const q1 = percentile(values, 0.25)
+  const q3 = percentile(values, 0.75)
+  if (q1 === null || q3 === null) return null
+  return q3 + (q3 - q1) * 1.5
+}
 
 const buildTrend = (current: number, previous: number) => {
   if (previous === 0 && current === 0) {
@@ -43,6 +121,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
     limit?: number
   }): Promise<PopularCorridor[]> {
     const limit = params.limit ?? 20
+    const fetchLimit = Math.min(Math.max(limit * 5, limit), 500)
     const durationMs = params.endDate.getTime() - params.startDate.getTime()
     const prevStart = new Date(params.startDate.getTime() - durationMs)
     const prevEnd = params.startDate
@@ -81,7 +160,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       LEFT JOIN click_counts cc ON cc.corridor_id = sc.corridor_id
       ORDER BY sc.search_count DESC
       LIMIT $3`,
-      [params.startDate, params.endDate, limit],
+      [params.startDate, params.endDate, fetchLimit],
       this.pool,
     )
 
@@ -95,21 +174,89 @@ export class AnalyticsRepository implements IAnalyticsRepository {
     )
 
     const prevMap = new Map(previous.rows.map((row) => [row.corridor_id, row.search_count]))
+    const outlierThreshold = getOutlierThreshold(current.rows.map((row) => row.search_count))
 
-    return current.rows.map((row) => {
+    const publishedRows: PopularCorridor[] = []
+    let lowVolumeSearchCount = 0
+    let lowVolumeClickCount = 0
+    let lowVolumeUniqueUsers = 0
+    let lowVolumePrevSearchCount = 0
+
+    for (const row of current.rows) {
       const prev = prevMap.get(row.corridor_id) ?? 0
-      const { trend, trend_percentage } = buildTrend(row.search_count, prev)
-      return {
-        corridor_id: row.corridor_id,
-        from_country: row.from_country,
-        to_country: row.to_country,
-        search_count: row.search_count,
-        click_count: row.click_count,
-        unique_users: row.unique_users,
-        trend,
-        trend_percentage,
+      const belowK = row.unique_users < privacyThresholds.kMin
+      const belowDatapoints = row.search_count < privacyThresholds.corridorMinDatapoints24h
+      const outlier = outlierThreshold !== null && row.search_count > outlierThreshold
+
+      if (outlier) {
+        continue
       }
-    })
+
+      if (belowK || belowDatapoints) {
+        lowVolumeSearchCount += row.search_count
+        lowVolumeClickCount += row.click_count
+        lowVolumeUniqueUsers += row.unique_users
+        lowVolumePrevSearchCount += prev
+        continue
+      }
+
+      const { trend, trend_percentage } = buildTrend(row.search_count, prev)
+      publishedRows.push(
+        attachPrivacyMetadata(
+          {
+            corridor_id: row.corridor_id,
+            from_country: row.from_country,
+            to_country: row.to_country,
+            search_count: row.search_count,
+            click_count: row.click_count,
+            unique_users: row.unique_users,
+            trend,
+            trend_percentage,
+          },
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_users,
+            thresholdApplied: privacyThresholds.kMin,
+            aggregationBasis: 'corridor',
+          },
+        ),
+      )
+    }
+
+    if (lowVolumeSearchCount > 0) {
+      const { trend, trend_percentage } = buildTrend(lowVolumeSearchCount, lowVolumePrevSearchCount)
+      publishedRows.push(
+        attachPrivacyMetadata(
+          {
+            corridor_id: 'REGIONAL-AGGREGATE',
+            from_country: 'REGIONAL',
+            to_country: 'AGGREGATE',
+            search_count: lowVolumeSearchCount,
+            click_count: lowVolumeClickCount,
+            unique_users: lowVolumeUniqueUsers,
+            trend,
+            trend_percentage,
+          },
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: lowVolumeUniqueUsers,
+            thresholdApplied: Math.max(
+              privacyThresholds.kMin,
+              privacyThresholds.corridorMinDatapoints24h,
+            ),
+            aggregationBasis: 'regional_aggregate',
+            suppressionReason: 'low_volume_grouped',
+            reason: 'Low-volume corridor rows are grouped into a regional aggregate.',
+          },
+        ),
+      )
+    }
+
+    return publishedRows
+      .sort((a, b) => b.search_count - a.search_count)
+      .slice(0, limit)
   }
 
   async getCorridorTrends(params: {
@@ -124,11 +271,13 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       corridor_id: string
       search_count: number
       click_count: number
+      unique_users: number
     }>(
       `WITH search_counts AS (
         SELECT date_trunc($3, ts) AS time_bucket,
                corridor_id,
-               COUNT(*)::int AS search_count
+               COUNT(*)::int AS search_count,
+               COUNT(DISTINCT COALESCE(user_id::text, anon_session_id))::int AS unique_users
         FROM silver.telemetry_search_event
         WHERE ts >= $1 AND ts <= $2
           AND ($4::text IS NULL OR corridor_id = $4)
@@ -147,7 +296,8 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       SELECT COALESCE(s.time_bucket, c.time_bucket) AS time_bucket,
              COALESCE(s.corridor_id, c.corridor_id) AS corridor_id,
              COALESCE(s.search_count, 0) AS search_count,
-             COALESCE(c.click_count, 0) AS click_count
+             COALESCE(c.click_count, 0) AS click_count,
+             COALESCE(s.unique_users, 0) AS unique_users
       FROM search_counts s
       FULL JOIN click_counts c
         ON s.time_bucket = c.time_bucket AND s.corridor_id = c.corridor_id
@@ -156,7 +306,23 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       this.pool,
     )
 
-    return result.rows
+    const eligibleRows = result.rows.filter((row) => row.unique_users >= privacyThresholds.kMin)
+    const outlierThreshold = getOutlierThreshold(eligibleRows.map((row) => row.click_count))
+
+    return eligibleRows
+      .filter((row) => outlierThreshold === null || row.click_count <= outlierThreshold)
+      .map((row) =>
+        attachPrivacyMetadata(
+          row,
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_users,
+            thresholdApplied: privacyThresholds.kMin,
+            aggregationBasis: `corridor:${params.bucket}`,
+          },
+        ),
+      )
   }
 
   async getFavoriteProviders(params: {
@@ -172,6 +338,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       search_count: number
       click_through_rate: number
       unique_users: number
+      quote_count: number
     }>(
       `WITH search_total AS (
         SELECT COUNT(*)::int AS search_count
@@ -185,6 +352,21 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         FROM silver.telemetry_outbound_click
         WHERE ts >= $1 AND ts <= $2
         GROUP BY provider_id
+      ),
+      quote_counts_by_corridor AS (
+        SELECT provider_id,
+               corridor_id,
+               COUNT(*)::int AS quote_count
+        FROM silver.quote_record
+        WHERE collected_at >= $1 AND collected_at <= $2
+          AND status = 'ok'
+        GROUP BY provider_id, corridor_id
+      ),
+      provider_quote_counts AS (
+        SELECT provider_id,
+               SUM(quote_count) FILTER (WHERE quote_count >= $4)::int AS quote_count
+        FROM quote_counts_by_corridor
+        GROUP BY provider_id
       )
       SELECT c.provider_id,
              p.display_name AS provider_name,
@@ -195,17 +377,41 @@ export class AnalyticsRepository implements IAnalyticsRepository {
                THEN ROUND(c.click_count::numeric / st.search_count * 100, 2)
                ELSE 0
              END AS click_through_rate,
-             c.unique_users
+             c.unique_users,
+             COALESCE(pq.quote_count, 0)::int AS quote_count
       FROM clicks c
       CROSS JOIN search_total st
       LEFT JOIN silver.provider p ON p.provider_id = c.provider_id
+      LEFT JOIN provider_quote_counts pq ON pq.provider_id = c.provider_id
+      WHERE COALESCE(pq.quote_count, 0) >= $4
       ORDER BY c.click_count DESC
       LIMIT $3`,
-      [params.startDate, params.endDate, limit],
+      [
+        params.startDate,
+        params.endDate,
+        limit,
+        privacyThresholds.providerMinQuotesPerCorridor,
+      ],
       this.pool,
     )
 
     return result.rows
+      .filter((row) => row.unique_users >= privacyThresholds.kMin)
+      .map((row) =>
+        attachPrivacyMetadata(
+          row,
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_users,
+            thresholdApplied: Math.max(
+              privacyThresholds.kMin,
+              privacyThresholds.providerMinQuotesPerCorridor,
+            ),
+            aggregationBasis: 'provider',
+          },
+        ),
+      )
   }
 
   async getProviderClickThroughRates(params: {
@@ -383,7 +589,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
   async getGeographicHeatmap(params: {
     startDate: Date
     endDate: Date
-    aggregation: 'country' | 'city'
+    aggregation: 'country'
   }): Promise<HeatmapData[]> {
     const result = await query<{
       country_code: string
@@ -418,13 +624,26 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       this.pool,
     )
 
-    return result.rows.map((row) => ({
-      country_code: row.country_code,
-      country_name: countryNameMap.get(row.country_code) ?? null,
-      search_count: row.search_count,
-      click_count: row.click_count,
-      unique_users: row.unique_users,
-    }))
+    return result.rows
+      .filter((row) => row.unique_users >= privacyThresholds.kMin)
+      .map((row) =>
+        attachPrivacyMetadata(
+          {
+            country_code: row.country_code,
+            country_name: countryNameMap.get(row.country_code) ?? null,
+            search_count: row.search_count,
+            click_count: row.click_count,
+            unique_users: row.unique_users,
+          },
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_users,
+            thresholdApplied: privacyThresholds.kMin,
+            aggregationBasis: params.aggregation,
+          },
+        ),
+      )
   }
 
   async getSavingsMetrics(params: {
@@ -725,7 +944,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
     const limit = params.limit ?? 100
     const providerId = params.providerId ?? null
 
-    const result = await query<ProviderImpactSummary>(
+    const result = await query<ProviderImpactSummary & { quote_count: number }>(
       `WITH provider_keys AS (
         SELECT provider_id
         FROM silver.telemetry_outbound_click
@@ -734,6 +953,21 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         SELECT provider_id
         FROM silver.telemetry_affiliate_conversion
         WHERE ts >= $1 AND ts <= $2
+      ),
+      quote_counts_by_corridor AS (
+        SELECT provider_id,
+               corridor_id,
+               COUNT(*)::int AS quote_count
+        FROM silver.quote_record
+        WHERE collected_at >= $1 AND collected_at <= $2
+          AND status = 'ok'
+        GROUP BY provider_id, corridor_id
+      ),
+      provider_quote_counts AS (
+        SELECT provider_id,
+               SUM(quote_count) FILTER (WHERE quote_count >= $5)::int AS quote_count
+        FROM quote_counts_by_corridor
+        GROUP BY provider_id
       ),
       clicks AS (
         SELECT provider_id,
@@ -778,20 +1012,48 @@ export class AnalyticsRepository implements IAnalyticsRepository {
                THEN ROUND(COALESCE(conv.conversions, 0)::numeric / c.total_clicks * 100, 2)::float
                ELSE 0
              END AS conversion_rate,
-             cv.conversion_values
+             cv.conversion_values,
+             COALESCE(pq.quote_count, 0)::int AS quote_count
       FROM provider_keys k
       LEFT JOIN clicks c ON c.provider_id = k.provider_id
       LEFT JOIN conversions conv ON conv.provider_id = k.provider_id
       LEFT JOIN conversion_values cv ON cv.provider_id = k.provider_id
+      LEFT JOIN provider_quote_counts pq ON pq.provider_id = k.provider_id
       LEFT JOIN silver.provider p ON p.provider_id = k.provider_id
       WHERE ($3::text IS NULL OR k.provider_id = $3)
+        AND COALESCE(pq.quote_count, 0) >= $5
       ORDER BY total_clicks DESC, conversions DESC
       LIMIT $4`,
-      [params.startDate, params.endDate, providerId, limit],
+      [
+        params.startDate,
+        params.endDate,
+        providerId,
+        limit,
+        privacyThresholds.providerMinQuotesPerCorridor,
+      ],
       this.pool,
     )
 
-    return result.rows
+    const eligibleRows = result.rows.filter((row) => row.unique_clicks >= privacyThresholds.kMin)
+    const outlierThreshold = getOutlierThreshold(eligibleRows.map((row) => row.total_clicks))
+
+    return eligibleRows
+      .filter((row) => outlierThreshold === null || row.total_clicks <= outlierThreshold)
+      .map((row) =>
+        attachPrivacyMetadata(
+          row,
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_clicks,
+            thresholdApplied: Math.max(
+              privacyThresholds.kMin,
+              privacyThresholds.providerMinQuotesPerCorridor,
+            ),
+            aggregationBasis: 'provider_impact_summary',
+          },
+        ),
+      )
   }
 
   async getProviderCorridorImpact(params: {
@@ -805,7 +1067,7 @@ export class AnalyticsRepository implements IAnalyticsRepository {
     const providerId = params.providerId ?? null
     const corridorId = params.corridorId ?? null
 
-    const result = await query<ProviderCorridorImpact>(
+    const result = await query<ProviderCorridorImpact & { quote_count: number }>(
       `WITH corridor_keys AS (
         SELECT provider_id,
                corridor_id
@@ -818,6 +1080,16 @@ export class AnalyticsRepository implements IAnalyticsRepository {
         FROM silver.telemetry_affiliate_conversion
         WHERE ts >= $1 AND ts <= $2
           AND corridor_id IS NOT NULL
+      ),
+      quote_counts AS (
+        SELECT provider_id,
+               corridor_id,
+               COUNT(*)::int AS quote_count
+        FROM silver.quote_record
+        WHERE collected_at >= $1 AND collected_at <= $2
+          AND status = 'ok'
+          AND corridor_id IS NOT NULL
+        GROUP BY provider_id, corridor_id
       ),
       clicks AS (
         SELECT provider_id,
@@ -866,7 +1138,8 @@ export class AnalyticsRepository implements IAnalyticsRepository {
                THEN ROUND(COALESCE(conv.conversions, 0)::numeric / c.total_clicks * 100, 2)::float
                ELSE 0
              END AS conversion_rate,
-             cv.conversion_values
+             cv.conversion_values,
+             COALESCE(q.quote_count, 0)::int AS quote_count
       FROM corridor_keys k
       LEFT JOIN clicks c
         ON c.provider_id = k.provider_id
@@ -877,15 +1150,45 @@ export class AnalyticsRepository implements IAnalyticsRepository {
       LEFT JOIN conversion_values cv
         ON cv.provider_id = k.provider_id
        AND cv.corridor_id IS NOT DISTINCT FROM k.corridor_id
+      LEFT JOIN quote_counts q
+        ON q.provider_id = k.provider_id
+       AND q.corridor_id IS NOT DISTINCT FROM k.corridor_id
       LEFT JOIN silver.provider p ON p.provider_id = k.provider_id
       WHERE ($3::text IS NULL OR k.provider_id = $3)
         AND ($4::text IS NULL OR k.corridor_id = $4)
+        AND COALESCE(q.quote_count, 0) >= $6
       ORDER BY total_clicks DESC, conversions DESC
       LIMIT $5`,
-      [params.startDate, params.endDate, providerId, corridorId, limit],
+      [
+        params.startDate,
+        params.endDate,
+        providerId,
+        corridorId,
+        limit,
+        privacyThresholds.providerMinQuotesPerCorridor,
+      ],
       this.pool,
     )
 
-    return result.rows
+    const eligibleRows = result.rows.filter((row) => row.unique_clicks >= privacyThresholds.kMin)
+    const outlierThreshold = getOutlierThreshold(eligibleRows.map((row) => row.total_clicks))
+
+    return eligibleRows
+      .filter((row) => outlierThreshold === null || row.total_clicks <= outlierThreshold)
+      .map((row) =>
+        attachPrivacyMetadata(
+          row,
+          {
+            startDate: params.startDate,
+            endDate: params.endDate,
+            sampleSize: row.unique_clicks,
+            thresholdApplied: Math.max(
+              privacyThresholds.kMin,
+              privacyThresholds.providerMinQuotesPerCorridor,
+            ),
+            aggregationBasis: 'provider_corridor_impact',
+          },
+        ),
+      )
   }
 }

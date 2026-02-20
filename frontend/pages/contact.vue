@@ -1,18 +1,11 @@
 <template>
-  <PageContainer
-    no-pad-y
-    class="min-h-screen bg-neutral-50"
-  >
+  <div class="min-h-screen bg-surface">
     <div class="py-10">
-      <Breadcrumbs :items="breadcrumbItems" />
-
-      <div class="mx-auto max-w-page">
+      <div class="mx-auto max-w-page px-page-x">
+        <Breadcrumbs :items="breadcrumbItems" />
         <!-- Hero Section -->
         <div class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl relative overflow-hidden">
-          <div class="absolute inset-0">
-            <div class="h-full w-full bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_60%)]" />
-          </div>
-          <div class="relative">
+          <div>
             <div class="inline-flex items-center gap-2 rounded-full border border-rs-border bg-surface px-4 py-2 text-body-sm font-semibold uppercase tracking-[0.2em] text-neutral-600 mb-6">
               Contact
             </div>
@@ -20,41 +13,25 @@
               Get in touch with <span class="text-brand-600">Remit-Scout</span>
             </h1>
             <p class="mb-4 text-body-lg text-neutral-600">
-              Have questions about money transfers or need help choosing the right provider? We're
-              here to help.
+              Have questions about our data, a provider, or working with us? We're here to help.
             </p>
             <p class="text-body-sm text-rs-muted">
-              Advertiser disclosure -
-              <NuxtLink
-                to="/legal/disclosure"
-                class="font-semibold text-brand-600 hover:text-brand-700 underline"
-              >Read disclosure</NuxtLink>
+              Advertiser disclosure —
+              <NuxtLink to="/legal/disclosure" class="font-semibold text-brand-600 hover:text-brand-700 underline">Read disclosure</NuxtLink>
             </p>
-            <p class="mb-6 mt-4 text-neutral-600">
-              We are not able to answer questions about individual money transfers. Please refer to our frequently asked
-              questions or use the form below for general inquiries.
+            <p class="mb-6 mt-3 text-body-sm text-neutral-600">
+              We can't assist with individual transactions — please contact the provider directly for transfer support.
             </p>
 
             <!-- Important Note -->
             <div class="mb-8 rounded-xl border border-warning-200 bg-warning-50 p-4">
-              <div class="flex">
-                <svg
-                  class="mr-3 h-6 w-6 flex-shrink-0 text-warning-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clip-rule="evenodd"
-                  />
+              <div class="flex items-start gap-3">
+                <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-warning-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                 </svg>
-                <div>
-                  <p class="text-body-sm font-medium text-warning-800">
-                    If you have a question about an ongoing transaction, the fastest path is to contact the provider's
-                    support team directly.
-                  </p>
-                </div>
+                <p class="text-body-sm font-medium text-warning-800">
+                  For an ongoing transaction, contact the provider's support team directly — they have access to your transfer details and can resolve it fastest.
+                </p>
               </div>
             </div>
 
@@ -66,405 +43,237 @@
                 </h2>
 
                 <form
-                  class="space-y-6"
+                  class="space-y-5"
                   @submit.prevent="handleSubmit"
                 >
                   <div
                     v-if="submitSuccess"
                     class="rounded-lg bg-success-50 border border-success-200 p-4"
                   >
-                    <div class="flex">
-                      <svg
-                        class="h-5 w-5 text-success-600 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clip-rule="evenodd"
-                        />
+                    <div class="flex items-center gap-2">
+                      <svg class="h-5 w-5 text-success-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                       </svg>
-                      <p class="text-body-sm text-success-800">
-                        {{ submitSuccess }}
-                      </p>
+                      <p class="text-body-sm text-success-800">{{ submitSuccess }}</p>
                     </div>
                   </div>
 
                   <div
                     v-if="submitError"
-                    class="rounded-lg bg-danger-600 border border-danger-600 p-4"
+                    class="rounded-lg bg-danger-50 border border-danger-200 p-4"
                   >
-                    <div class="flex">
-                      <svg
-                        class="h-5 w-5 text-danger-600 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clip-rule="evenodd"
-                        />
+                    <div class="flex items-center gap-2">
+                      <svg class="h-5 w-5 text-danger-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                       </svg>
-                      <p class="text-body-sm text-danger-600">
-                        {{ submitError }}
-                      </p>
+                      <p class="text-body-sm text-danger-600">{{ submitError }}</p>
                     </div>
                   </div>
 
                   <div>
-                    <label
-                      for="name"
-                      class="mb-2 block text-body-sm font-medium text-neutral-600"
-                    >Name <span class="text-danger-600">*</span></label>
+                    <label for="name" class="mb-1.5 block text-body-sm font-medium text-neutral-600">
+                      Name <span class="text-danger-600">*</span>
+                    </label>
                     <input
                       id="name"
                       v-model="form.name"
                       type="text"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
-                      :class="errors.name ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
+                      class="w-full rounded-lg border px-3 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.name ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-brand-500'"
                     >
-                    <p
-                      v-if="errors.name"
-                      class="mt-1 text-body-sm text-danger-600"
-                    >
-                      {{ errors.name }}
-                    </p>
+                    <p v-if="errors.name" class="mt-1 text-body-sm text-danger-600">{{ errors.name }}</p>
                   </div>
 
                   <div>
-                    <label
-                      for="email"
-                      class="mb-2 block text-body-sm font-medium text-neutral-600"
-                    >Email <span class="text-danger-600">*</span></label>
+                    <label for="email" class="mb-1.5 block text-body-sm font-medium text-neutral-600">
+                      Email <span class="text-danger-600">*</span>
+                    </label>
                     <input
                       id="email"
                       v-model="form.email"
                       type="email"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
-                      :class="errors.email ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
+                      class="w-full rounded-lg border px-3 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.email ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-brand-500'"
                     >
-                    <p
-                      v-if="errors.email"
-                      class="mt-1 text-body-sm text-danger-600"
-                    >
-                      {{ errors.email }}
-                    </p>
+                    <p v-if="errors.email" class="mt-1 text-body-sm text-danger-600">{{ errors.email }}</p>
                   </div>
 
+                  <!-- Subject picker -->
                   <div>
-                    <label
-                      for="subject"
-                      class="mb-2 block text-body-sm font-medium text-neutral-600"
-                    >Subject <span class="text-danger-600">*</span></label>
-                    <select
-                      id="subject"
-                      v-model="form.subject"
-                      required
-                      :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-neutral-900 bg-surface focus:outline-none focus:ring-2 motion-safe:transition-colors"
-                      :class="errors.subject ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
-                    >
-                      <option
-                        value=""
-                        disabled
+                    <p class="mb-2 text-body-sm font-medium text-neutral-600">
+                      What's this about? <span class="text-danger-600">*</span>
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="opt in subjectOptions"
+                        :key="opt.value"
+                        type="button"
+                        :disabled="isSubmitting"
+                        class="rounded-full px-4 py-1.5 text-body-sm font-semibold border motion-safe:transition-all focus:outline-none"
+                        :class="form.subject === opt.value
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                          : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-700'"
+                        @click="form.subject = opt.value"
                       >
-                        Select a subject
-                      </option>
-                      <option value="General Question">
-                        General Question
-                      </option>
-                      <option value="Provider Comparison">
-                        Provider Comparison
-                      </option>
-                      <option value="Technical Support">
-                        Technical Support
-                      </option>
-                      <option value="Partnership Inquiry">
-                        Partnership Inquiry
-                      </option>
-                      <option value="Other">
-                        Other
-                      </option>
-                    </select>
-                    <p
-                      v-if="errors.subject"
-                      class="mt-1 text-body-sm text-danger-600"
-                    >
-                      {{ errors.subject }}
-                    </p>
+                        {{ opt.label }}
+                      </button>
+                    </div>
+                    <p v-if="errors.subject" class="mt-1 text-body-sm text-danger-600">{{ errors.subject }}</p>
                   </div>
 
                   <div>
-                    <label
-                      for="message"
-                      class="mb-2 block text-body-sm font-medium text-neutral-600"
-                    >Message <span class="text-danger-600">*</span></label>
+                    <label for="message" class="mb-1.5 block text-body-sm font-medium text-neutral-600">
+                      Message <span class="text-danger-600">*</span>
+                    </label>
                     <textarea
                       id="message"
                       v-model="form.message"
-                      rows="6"
+                      rows="5"
                       required
                       :disabled="isSubmitting"
-                      class="w-full rounded-md border px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
-                      :class="errors.message ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-primary-500'"
+                      class="w-full rounded-lg border px-3 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 motion-safe:transition-colors"
+                      :class="errors.message ? 'border-danger-600 focus:ring-danger-600' : 'border-neutral-300 focus:ring-brand-500'"
                     />
-                    <p
-                      v-if="errors.message"
-                      class="mt-1 text-body-sm text-danger-600"
-                    >
-                      {{ errors.message }}
-                    </p>
-                    <p class="mt-1 text-body-sm text-neutral-500">
-                      {{ form.message.length }}/5000 characters
-                    </p>
+                    <div class="mt-1 flex items-center justify-between">
+                      <p v-if="errors.message" class="text-body-sm text-danger-600">{{ errors.message }}</p>
+                      <p class="ml-auto text-body-sm text-neutral-500">{{ form.message.length }}/5000</p>
+                    </div>
                   </div>
 
-                    <button
-                      type="submit"
-                      :disabled="isSubmitting"
-                      class="w-full rounded-md px-4 py-2 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 motion-safe:transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      :class="isSubmitting ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'"
-                    >
-                    <span
-                      v-if="isSubmitting"
-                      class="flex items-center justify-center"
-                    >
-                      <svg
-                        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          class="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          stroke-width="4"
-                        />
-                        <path
-                          class="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
+                  <button
+                    type="submit"
+                    :disabled="isSubmitting"
+                    class="w-full rounded-lg px-4 py-2.5 text-body font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 motion-safe:transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    :class="isSubmitting ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand-600 hover:bg-brand-700'"
+                  >
+                    <span v-if="isSubmitting" class="flex items-center justify-center gap-2">
+                      <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Sending...
+                      Sending…
                     </span>
-                    <span v-else>Send Message</span>
+                    <span v-else>Send message</span>
                   </button>
                 </form>
               </div>
 
               <!-- Resources -->
-              <div>
-                <!-- Internal Links -->
-                <div class="rounded-xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-6 shadow-sm">
-                  <h3 class="mb-5 text-h4 font-bold text-neutral-900">
-                    Explore Our Resources
-                  </h3>
-                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <NuxtLink
-                      to="/learn/providers"
-                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                    >
-                      <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
-                          <svg
-                            class="w-5 h-5 text-brand-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                            />
-                          </svg>
-                        </div>
-                        <div class="flex-1">
-                          <span class="font-semibold text-neutral-900 group-hover:text-primary-700">Provider Reviews</span>
-                          <p class="mt-1 text-body-sm text-neutral-600">Compare trusted money transfer services</p>
-                        </div>
-                      </div>
-                      <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </NuxtLink>
+              <div class="space-y-3">
+                <h3 class="text-h4 font-bold text-neutral-900 mb-4">
+                  Explore resources
+                </h3>
 
-                    <NuxtLink
-                      to="/learn"
-                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                    >
-                      <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
-                          <svg
-                            class="w-5 h-5 text-brand-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                            />
-                          </svg>
-                        </div>
-                        <div class="flex-1">
-                          <span class="font-semibold text-neutral-900 group-hover:text-primary-700">Learn Guides</span>
-                          <p class="mt-1 text-body-sm text-neutral-600">Expert guides and insights</p>
-                        </div>
-                      </div>
-                      <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </NuxtLink>
-
-                    <NuxtLink
-                      to="/about"
-                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                    >
-                      <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
-                          <svg
-                            class="w-5 h-5 text-brand-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        </div>
-                        <div class="flex-1">
-                          <span class="font-semibold text-neutral-900 group-hover:text-primary-700">About Us</span>
-                          <p class="mt-1 text-body-sm text-neutral-600">Our story and mission</p>
-                        </div>
-                      </div>
-                      <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </NuxtLink>
-
-                    <NuxtLink
-                      to="/methodology"
-                      class="group relative flex flex-col rounded-lg border border-neutral-200 bg-surface p-4 shadow-sm motion-safe:transition-all motion-safe:duration-200 hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5"
-                    >
-                      <div class="mb-2 flex items-center gap-3">
-                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-brand-50">
-                          <svg
-                            class="w-5 h-5 text-brand-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                            />
-                          </svg>
-                        </div>
-                        <div class="flex-1">
-                          <span class="font-semibold text-neutral-900 group-hover:text-primary-700">Our Methodology</span>
-                          <p class="mt-1 text-body-sm text-neutral-600">How we compare providers</p>
-                        </div>
-                      </div>
-                      <svg
-                        class="absolute right-4 top-4 h-4 w-4 text-neutral-400 motion-safe:transition-transform group-hover:translate-x-1 group-hover:text-primary-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </NuxtLink>
+                <NuxtLink
+                  to="/learn/providers"
+                  class="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 hover:border-brand-300 hover:bg-brand-50 motion-safe:transition-all"
+                >
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+                    <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                   </div>
-                </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-neutral-900 group-hover:text-brand-700">Provider Reviews</p>
+                    <p class="text-body-sm text-neutral-500">Compare trusted money transfer services</p>
+                  </div>
+                  <svg class="h-4 w-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 group-hover:text-brand-600 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
+
+                <NuxtLink
+                  to="/learn"
+                  class="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 hover:border-brand-300 hover:bg-brand-50 motion-safe:transition-all"
+                >
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+                    <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-neutral-900 group-hover:text-brand-700">Guides</p>
+                    <p class="text-body-sm text-neutral-500">Expert guides and insights on remittances</p>
+                  </div>
+                  <svg class="h-4 w-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 group-hover:text-brand-600 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
+
+                <NuxtLink
+                  to="/methodology"
+                  class="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 hover:border-brand-300 hover:bg-brand-50 motion-safe:transition-all"
+                >
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+                    <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-neutral-900 group-hover:text-brand-700">Our Methodology</p>
+                    <p class="text-body-sm text-neutral-500">How we compare and score providers</p>
+                  </div>
+                  <svg class="h-4 w-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 group-hover:text-brand-600 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
+
+                <NuxtLink
+                  to="/about"
+                  class="group flex items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 hover:border-brand-300 hover:bg-brand-50 motion-safe:transition-all"
+                >
+                  <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-100">
+                    <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-neutral-900 group-hover:text-brand-700">About Remit-Scout</p>
+                    <p class="text-body-sm text-neutral-500">Our story and mission</p>
+                  </div>
+                  <svg class="h-4 w-4 text-neutral-400 flex-shrink-0 group-hover:translate-x-0.5 group-hover:text-brand-600 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Mini FAQ Section -->
-        <div class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl">
-          <h2 class="mb-6 text-h2 font-bold text-rs-fg">
-            Frequently Asked Questions
-          </h2>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <section class="py-16 bg-neutral-50">
+      <div class="mx-auto max-w-page px-page-x">
+        <div class="mx-auto max-w-3xl">
+          <div class="text-center mb-10">
+            <h2 class="mb-2 text-h2 font-bold text-neutral-900">
+              Frequently asked questions
+            </h2>
+            <p class="text-body text-neutral-600">
+              Common questions about our data, comparisons, and how to get the most from Remit-Scout.
+            </p>
+          </div>
           <FaqAccordion :faqs="contactFaqs" />
-          <div class="mt-6 text-center">
+          <div class="mt-8 text-center">
             <NuxtLink
               to="/faq"
               class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-white font-semibold hover:bg-brand-700 motion-safe:transition-colors"
             >
-              View All FAQs
-              <svg
-                class="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
+              View all FAQs
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </NuxtLink>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Why You Can Trust Us Section -->
     <WhyTrustUs />
@@ -522,7 +331,7 @@
         </div>
       </div>
     </Teleport>
-  </PageContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -531,7 +340,6 @@ import FaqAccordion from '~/components/shared/FaqAccordion.vue'
 import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
 import { setSeo, jsonLdBreadcrumb, jsonLdOrganization } from '~/composables/useSeo'
 import { useApi } from '~/composables/useApi'
-import PageContainer from '~/components/shared/PageContainer.vue'
 
 // Breadcrumbs
 const breadcrumbItems = [
@@ -603,6 +411,17 @@ const closeExternalLinkModal = () => {
   showExternalLinkModal.value = false
   pendingExternalUrl.value = ''
 }
+
+const subjectOptions = [
+  { value: 'General Question', label: 'General question' },
+  { value: 'Rate or Data Issue', label: 'Rate or data issue' },
+  { value: 'Missing Provider or Corridor', label: 'Missing provider or corridor' },
+  { value: 'Partnership & Affiliate', label: 'Partnership & affiliate' },
+  { value: 'Institutional Data Access', label: 'Institutional data access' },
+  { value: 'Press & Media', label: 'Press & media' },
+  { value: 'Bug Report', label: 'Bug report' },
+  { value: 'Other', label: 'Other' },
+]
 
 // Contact form state
 const { request } = useApi()

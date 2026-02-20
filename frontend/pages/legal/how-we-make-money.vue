@@ -29,7 +29,7 @@
         <li v-if="enterpriseEnabled">
           <strong>Partnerships & data access:</strong> White-label data access for partners; no impact on consumer rankings.
         </li>
-        <li><strong>Premium tooling:</strong> Optional business-tier analytics (coming soon).</li>
+        <li><strong>Remit-Scout Plus:</strong> Paid subscription for power users — alerts, watchlists, and advanced features.</li>
       </ul>
 
       <h2
@@ -56,9 +56,9 @@
         signals. If a provider we do not partner with beats a partner on cost or speed, it still
         appears higher.
       </p>
-      <div class="rounded-lg border border-success-600 bg-success-600 p-4">
-        <strong class="text-success-600">Example:</strong>
-        <p class="text-success-600 mb-0">
+      <div class="rounded-lg border-l-4 border-success-600 bg-success-50 p-4">
+        <strong class="text-success-800">Example:</strong>
+        <p class="text-success-800 mb-0">
           If Provider A (no affiliate link) pays the recipient more than Provider B (affiliate), Provider A ranks above Provider B for that corridor/amount.
         </p>
       </div>
@@ -81,13 +81,15 @@
       >
         Questions?
       </h2>
-      <p>
-        Email <a
-          href="mailto:support@remit-scout.com"
-          class="text-primary-600 hover:text-primary-700"
-        >support@remit-scout.com</a>
-        if you want more detail about any partnership, ad placement, or ranking decision.
+      <p class="mb-4">
+        Have a question about a partnership, ad placement, or ranking decision?
       </p>
+      <a
+        href="mailto:support@remit-scout.com?subject=Transparency%20question"
+        class="not-prose inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-3 text-body font-semibold text-white hover:bg-brand-700 transition-colors"
+      >
+        Contact support
+      </a>
     </div>
   </LegalPageShell>
 </template>

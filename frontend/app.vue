@@ -103,7 +103,8 @@ const hardReload = () => {
 const goHome = async () => {
   try {
     await navigateTo('/')
-  } catch {
+  }
+ catch {
     hardReload()
   }
 }
@@ -114,7 +115,8 @@ const makeCrashId = () => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID()
     }
-  } catch {
+  }
+ catch {
     // ignore
   }
   return `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
@@ -135,7 +137,8 @@ onErrorCaptured((err) => {
       .catch(() => {
         // ignore
       })
-  } catch {
+  }
+ catch {
     // ignore
   }
 

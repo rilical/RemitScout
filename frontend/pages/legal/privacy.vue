@@ -449,7 +449,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span><strong class="text-white">Minimum k=5:</strong> No corridor data published unless ≥5 unique users</span>
+                <span><strong class="text-white">Minimum k={{ kAnonymityMin }}:</strong> No corridor data published unless ≥{{ kAnonymityMin }} unique users</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg
@@ -499,7 +499,7 @@
                   Corridor Analytics
                 </p>
                 <p class="text-body-sm text-white font-semibold">
-                  ≥100 data points / 24h
+                  ≥{{ corridorMinDatapoints24h }} data points / 24h
                 </p>
               </div>
               <div class="rounded-lg bg-neutral-800 p-3">
@@ -507,7 +507,7 @@
                   Provider Metrics
                 </p>
                 <p class="text-body-sm text-white font-semibold">
-                  ≥50 quotes / corridor
+                  ≥{{ providerMinQuotesPerCorridor }} quotes / corridor
                 </p>
               </div>
               <div class="rounded-lg bg-neutral-800 p-3">
@@ -515,7 +515,7 @@
                   Trend Reports
                 </p>
                 <p class="text-body-sm text-white font-semibold">
-                  ≥7 days lookback
+                  ≥{{ trendMinLookbackDays }} days lookback
                 </p>
               </div>
               <div class="rounded-lg bg-neutral-800 p-3">
@@ -548,7 +548,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span>GDPR compliant for EU user data</span>
+                <span>{{ gdprStatusLabel }}</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg
@@ -564,7 +564,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span>CCPA compliant for California residents</span>
+                <span>{{ ccpaStatusLabel }}</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg
@@ -580,7 +580,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span>SOC 2 Type II certification (in progress)</span>
+                <span>{{ soc2StatusLabel }}</span>
               </li>
             </ul>
           </div>
@@ -624,6 +624,97 @@ import LegalPageShell from '~/components/legal/LegalPageShell.vue'
 import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+const { request } = useApi()
+
+type ComplianceStatusResponse = {
+  certifications?: {
+    gdpr?: { status?: string }
+    ccpa?: { status?: string }
+    soc2_type_ii?: {
+      status?: string
+      report_date?: string | null
+      expires_on?: string | null
+    }
+  }
+  privacy_controls?: {
+    k_anonymity_min?: number
+    corridor_min_datapoints_24h?: number
+    provider_min_quotes_per_corridor?: number
+    trend_min_lookback_days?: number
+  }
+}
+
+const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
+  'legal-compliance-status',
+  async () => {
+    try {
+      return await request<ComplianceStatusResponse>('/compliance/status', { method: 'GET' })
+    }
+    catch {
+      return {
+        certifications: {
+          gdpr: { status: 'compliant' },
+          ccpa: { status: 'compliant' },
+          soc2_type_ii: { status: 'in_progress' },
+        },
+        privacy_controls: {
+          k_anonymity_min: 5,
+          corridor_min_datapoints_24h: 100,
+          provider_min_quotes_per_corridor: 50,
+          trend_min_lookback_days: 7,
+        },
+      }
+    }
+  },
+  {
+    default: () => ({
+      certifications: {
+        gdpr: { status: 'compliant' },
+        ccpa: { status: 'compliant' },
+        soc2_type_ii: { status: 'in_progress' },
+      },
+      privacy_controls: {
+        k_anonymity_min: 5,
+        corridor_min_datapoints_24h: 100,
+        provider_min_quotes_per_corridor: 50,
+        trend_min_lookback_days: 7,
+      },
+    }),
+  },
+)
+
+const formatStatusLabel = (status?: string) => {
+  switch ((status || '').toLowerCase()) {
+    case 'compliant':
+      return 'Compliant'
+    case 'in_progress':
+      return 'In progress'
+    case 'not_started':
+      return 'Not started'
+    case 'not_applicable':
+      return 'Not applicable'
+    default:
+      return 'In progress'
+  }
+}
+
+const privacyControls = computed(() => complianceStatus.value?.privacy_controls ?? {})
+const corridorMinDatapoints24h = computed(() => privacyControls.value.corridor_min_datapoints_24h ?? 100)
+const providerMinQuotesPerCorridor = computed(() => privacyControls.value.provider_min_quotes_per_corridor ?? 50)
+const trendMinLookbackDays = computed(() => privacyControls.value.trend_min_lookback_days ?? 7)
+const kAnonymityMin = computed(() => privacyControls.value.k_anonymity_min ?? 5)
+
+const gdprStatusLabel = computed(() =>
+  `GDPR: ${formatStatusLabel(complianceStatus.value?.certifications?.gdpr?.status)} for EU user data`,
+)
+const ccpaStatusLabel = computed(() =>
+  `CCPA: ${formatStatusLabel(complianceStatus.value?.certifications?.ccpa?.status)} for California residents`,
+)
+const soc2StatusLabel = computed(() => {
+  const soc2 = complianceStatus.value?.certifications?.soc2_type_ii
+  const status = formatStatusLabel(soc2?.status)
+  return `SOC 2 Type II: ${status.toLowerCase()}`
+})
 
 const lastUpdatedIso = '2026-01-17'
 const lastUpdatedLabel = 'January 17, 2026'

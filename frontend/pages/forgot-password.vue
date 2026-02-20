@@ -66,7 +66,7 @@
         >
           <div
             v-if="errorMessage"
-            class="rounded-lg border border-danger-600 bg-danger-600 px-4 py-3 text-body-sm text-danger-600"
+            class="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-body-sm text-danger-800"
           >
             {{ errorMessage }}
           </div>

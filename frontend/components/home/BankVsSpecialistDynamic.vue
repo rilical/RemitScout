@@ -129,10 +129,10 @@
       <!-- Side by Side Comparison Boxes -->
       <div
         v-else-if="comparison"
-        class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-16"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto mb-10"
       >
         <!-- Wells Fargo Box -->
-        <div class="bg-surface rounded-3xl border-2 border-danger-600 p-8 shadow-xl hover:shadow-2xl transition-shadow">
+        <div class="bg-surface rounded-3xl border-2 border-red-200 p-8 shadow-xl hover:shadow-2xl transition-shadow">
           <div class="flex items-center gap-4 mb-6">
             <div
               v-if="comparison.bank.logoUrl"
@@ -172,37 +172,37 @@
           </div>
 
           <div class="space-y-4">
-            <div class="bg-danger-600 rounded-xl p-5 border border-danger-600">
+            <div class="bg-red-50 rounded-xl p-5 border border-red-200">
               <div class="text-body-sm text-neutral-600 mb-2">
                 Exchange Rate
               </div>
               <div class="text-h3 font-bold text-neutral-900">
                 {{ formatRate(comparison.bank.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
               </div>
-              <div class="text-body-sm text-danger-600 font-medium mt-2">
+              <div class="text-body-sm text-red-600 font-medium mt-2">
                 {{ comparison.bank.marginPct.toFixed(1) }}% below market rate
               </div>
             </div>
 
-            <div class="bg-danger-600 rounded-xl p-5 border border-danger-600">
+            <div class="bg-red-50 rounded-xl p-5 border border-red-200">
               <div class="text-body-sm text-neutral-600 mb-2">
                 Transfer Fee
               </div>
-              <div class="text-h3 font-bold text-danger-600">
+              <div class="text-h3 font-bold text-red-600">
                 {{ formatMoney(comparison.bank.fee, comparison.corridor.sendCurrency) }}
               </div>
             </div>
 
-            <div class="bg-danger-600 rounded-2xl p-6 border-2 border-danger-600">
-              <div class="text-body-sm text-danger-600 mb-2">
+            <div class="bg-red-50 rounded-2xl p-6 border-2 border-red-300">
+              <div class="text-body-sm text-red-700 mb-2">
                 Net Delivered Value
               </div>
-              <div class="text-h1 font-bold text-danger-600 mb-2">
+              <div class="text-h1 font-bold text-red-900 mb-2">
                 {{ comparison.corridor.recvCurrency }} {{ Math.round(comparison.bank.recipientGets).toLocaleString() }}
               </div>
               <div
                 v-if="comparison.midRate && comparison.midRate > 0"
-                class="text-body-sm text-danger-600"
+                class="text-body-sm text-red-600"
               >
                 ≈ {{ formatMoney(Math.round(comparison.bank.recipientGets / comparison.midRate), comparison.corridor.sendCurrency) }} USD
               </div>
@@ -211,18 +211,18 @@
         </div>
 
         <!-- Best Specialist Box -->
-        <div class="bg-surface rounded-3xl border-3 border-success-600 p-8 shadow-2xl relative overflow-hidden">
+        <div class="bg-surface rounded-3xl border-3 border-emerald-500 p-8 shadow-2xl relative overflow-hidden">
           <div class="flex items-center gap-4 mb-6">
-            <div class="h-24 w-24 flex items-center justify-center flex-shrink-0">
+            <div class="h-14 flex-shrink-0 flex items-center justify-center">
               <NuxtImg
                 v-if="comparison.top.logoUrl"
                 :src="comparison.top.logoUrl"
                 :alt="comparison.top.name"
-                width="96"
-                height="96"
+                width="140"
+                height="56"
                 loading="lazy"
                 :format="comparison.top.logoUrl?.toLowerCase().endsWith('.svg') ? undefined : 'webp'"
-                class="max-h-full max-w-full object-contain"
+                class="h-14 w-auto max-w-[160px] object-contain"
               />
               <div
                 v-else
@@ -248,35 +248,35 @@
               <h3 class="text-h3 font-bold text-neutral-900">
                 {{ comparison.top.name }}
               </h3>
-              <p class="text-body-sm text-success-600 font-medium">
+              <p class="text-body-sm text-emerald-700 font-medium">
                 Money Transfer Specialist
               </p>
             </div>
           </div>
 
           <div class="space-y-4">
-            <div class="bg-success-600 rounded-xl p-5 border border-success-600">
+            <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-200">
               <div class="text-body-sm text-neutral-600 mb-2">
                 Exchange Rate
               </div>
-              <div class="text-h3 font-bold text-success-600">
+              <div class="text-h3 font-bold text-emerald-700">
                 {{ formatRate(comparison.top.fxRate, comparison.corridor.sendCurrency, comparison.corridor.recvCurrency) }}
               </div>
-              <div class="text-body-sm text-success-600 font-medium mt-2">
+              <div class="text-body-sm text-emerald-600 font-medium mt-2">
                 Above mid-market rate
               </div>
             </div>
 
-            <div class="bg-success-600 rounded-xl p-5 border border-success-600">
+            <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-200">
               <div class="text-body-sm text-neutral-600 mb-2">
                 Transfer Fee
               </div>
-              <div class="text-h3 font-bold text-success-600">
+              <div class="text-h3 font-bold text-emerald-600">
                 {{ formatMoney(comparison.top.fee, comparison.corridor.sendCurrency) }}
               </div>
             </div>
 
-            <div class="bg-success-600 rounded-2xl p-6 border-2 border-success-600 text-white">
+            <div class="bg-emerald-600 rounded-2xl p-6 border-2 border-emerald-400 text-white">
               <div class="text-body-sm opacity-90 mb-2">
                 Net Delivered Value
               </div>
@@ -511,6 +511,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
+
 const amount = 500
 
 // Fixed corridor: US → Mexico

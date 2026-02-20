@@ -61,6 +61,7 @@ import { adminRoutes } from './routes/admin'
 import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
+import { complianceRoutes } from './routes/compliance'
 
 const logger = createLogger('plane-a.app')
 
@@ -509,6 +510,7 @@ export const buildApp = async (options?: {
   app.register(notificationsRoutes, { prefix: '/api/v1' })
   app.register(adsRoutes, { prefix: '/api/v1' })
   app.register(marketingRoutes, { prefix: '/api/v1' })
+  app.register(complianceRoutes, { prefix: '/api/v1' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api/v1' })
   app.register(geoRoutes, { prefix: '/api/v1' })
 

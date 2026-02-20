@@ -336,11 +336,11 @@
               >
                 <div
                   v-if="formError"
-                  class="rounded-lg bg-danger-600 border border-danger-600 p-3 text-body-sm text-danger-600"
+                  class="rounded-lg bg-red-50 border border-red-200 p-3 text-body-sm text-red-800"
                 >
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-danger-600"
+                      class="h-5 w-5 flex-shrink-0 text-red-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -357,11 +357,11 @@
                 </div>
                 <div
                   v-if="formSuccess"
-                  class="rounded-lg bg-success-600 border border-success-600 p-3 text-body-sm text-success-600"
+                  class="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-body-sm text-emerald-800"
                 >
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-success-600"
+                      class="h-5 w-5 flex-shrink-0 text-emerald-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -386,10 +386,10 @@
                 aria-atomic="true"
                 class="mb-4"
               >
-                <div class="rounded-lg bg-danger-600 border border-danger-600 p-3 text-body-sm text-danger-600">
+                <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-body-sm text-red-800">
                   <div class="flex items-start gap-2">
                     <svg
-                      class="h-5 w-5 flex-shrink-0 text-danger-600"
+                      class="h-5 w-5 flex-shrink-0 text-red-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -617,7 +617,7 @@ const isCorridorUnavailableError = computed(() => {
 
 const currentMobileStep = ref(1)
 
-const { recordSearch, useRecentSearches } = useRemittanceApi()
+const { recordSearch } = useRemittanceApi()
 const { request } = useApi()
 
 const fromCurrencyRef = computed({
@@ -756,8 +756,6 @@ defineExpose({
     Object.assign(moneyForm.value, data)
   },
 })
-
-const { data: recentData } = await useRecentSearches(100)
 
 const mapPreserveAspectRatio = ref('xMidYMid slice')
 
@@ -1145,13 +1143,6 @@ const handleAmountKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const preventNegative = (event: KeyboardEvent) => {
-  // Only prevent specific problematic keys, allow normal typing
-  if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
-    event.preventDefault()
-  }
-}
-
 const handleMoneySubmit = async () => {
   const { from, to, amount, method } = moneyForm.value
 
@@ -1208,7 +1199,7 @@ const handleMoneySubmit = async () => {
     }
     // Note: isSubmitting will be reset by navigation if successful
   }
-  catch (error) {
+  catch {
     formError.value = 'An error occurred. Please try again.'
     isSubmitting.value = false
   }

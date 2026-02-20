@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createLogger } from '../../../shared/logger'
+import { config } from '../../../shared/config'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
 
@@ -8,6 +9,7 @@ const logger = createLogger('plane-a.analytics')
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const MAX_WINDOW_DAYS = 90
+const MIN_TREND_LOOKBACK_DAYS = Math.max(1, Math.floor(config.privacy.trendMinLookbackDays || 7))
 
 const dateRangeSchema = z.object({
   start_date: z.string().min(1),
@@ -85,6 +87,20 @@ const parseAndValidateDateRange = (input: { start_date: string; end_date: string
   return { start, end }
 }
 
+const buildPrivacyEnvelope = (reason?: string) => ({
+  applied: true as const,
+  minUniqueUsers: Math.max(1, Math.floor(config.privacy.kAnonymityMinimum || 5)),
+  ...(reason ? { reason } : {}),
+})
+
+const buildAggregationWindow = (start: Date, end: Date) => ({
+  startDate: start.toISOString(),
+  endDate: end.toISOString(),
+  minDatapoints24h: Math.max(1, Math.floor(config.privacy.corridorMinDataPoints24h || 100)),
+  minProviderQuotesPerCorridor: Math.max(1, Math.floor(config.privacy.providerMinQuotesPerCorridor || 50)),
+  minTrendLookbackDays: MIN_TREND_LOOKBACK_DAYS,
+})
+
 export const analyticsRoutes = async (app: FastifyInstance) => {
   const analyticsRepository = app.container.repositories.analytics
 
@@ -105,6 +121,8 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
 
       return {
         corridors,
+        privacy: buildPrivacyEnvelope(),
+        aggregationWindow: buildAggregationWindow(range.start, range.end),
         period: {
           start_date: range.start.toISOString(),
           end_date: range.end.toISOString(),
@@ -126,6 +144,15 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
     }
 
     const range = parseAndValidateDateRange(parsed.data)
+    const lookbackDays = (range.end.getTime() - range.start.getTime()) / DAY_MS
+    if (lookbackDays < MIN_TREND_LOOKBACK_DAYS) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'trend_lookback_too_small',
+          min_days: MIN_TREND_LOOKBACK_DAYS,
+        },
+      })
+    }
 
     try {
       const trends = await analyticsRepository.getCorridorTrends({
@@ -135,7 +162,11 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
         bucket: parsed.data.bucket ?? 'day',
       })
 
-      return { trends }
+      return {
+        trends,
+        privacy: buildPrivacyEnvelope(),
+        aggregationWindow: buildAggregationWindow(range.start, range.end),
+      }
     } catch (error) {
       logger.error('analytics_corridor_trends_failed', {
         error: error instanceof Error ? error.message : String(error),
@@ -160,7 +191,11 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
         limit: parsed.data.limit ?? 20,
       })
 
-      return { providers }
+      return {
+        providers,
+        privacy: buildPrivacyEnvelope(),
+        aggregationWindow: buildAggregationWindow(range.start, range.end),
+      }
     } catch (error) {
       logger.error('analytics_providers_failed', {
         error: error instanceof Error ? error.message : String(error),
@@ -197,6 +232,8 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
       return {
         providers,
         corridors,
+        privacy: buildPrivacyEnvelope(),
+        aggregationWindow: buildAggregationWindow(range.start, range.end),
         period: {
           start_date: range.start.toISOString(),
           end_date: range.end.toISOString(),
@@ -293,15 +330,27 @@ export const analyticsRoutes = async (app: FastifyInstance) => {
     }
 
     const range = parseAndValidateDateRange(parsed.data)
+    if (parsed.data.aggregation && parsed.data.aggregation !== 'country') {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'unsupported_aggregation',
+          message: 'Only country-level geographic aggregation is supported.',
+        },
+      })
+    }
 
     try {
       const heatmap = await analyticsRepository.getGeographicHeatmap({
         startDate: range.start,
         endDate: range.end,
-        aggregation: parsed.data.aggregation ?? 'country',
+        aggregation: 'country',
       })
 
-      return { heatmap }
+      return {
+        heatmap,
+        privacy: buildPrivacyEnvelope(),
+        aggregationWindow: buildAggregationWindow(range.start, range.end),
+      }
     } catch (error) {
       logger.error('analytics_heatmap_failed', {
         error: error instanceof Error ? error.message : String(error),

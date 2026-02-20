@@ -301,7 +301,7 @@ class="mt-2"
           >
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div class="flex items-start gap-4">
-                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-600 text-success-600">
+                <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-100 text-success-700">
                   <Icon
                     name="check-circle"
                     :size="24"
@@ -462,7 +462,7 @@ class="ml-1 text-[10px] text-neutral-400"
                         <span
                             v-if="currentRate.change !== null"
                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium"
-                            :class="currentRate.change >= 0 ? 'bg-success-600 text-success-600' : 'bg-danger-600 text-danger-600'"
+                            :class="currentRate.change >= 0 ? 'bg-success-100 text-success-700' : 'bg-danger-100 text-danger-700'"
                           >
                             <Icon
                               name="arrow-up"
@@ -1049,7 +1049,7 @@ class="bg-brand-600 rounded-xl p-5 text-white"
                 <span
                   v-if="limits.watchlistItems !== 'unlimited'"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-body-sm font-medium"
-                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-warning-600 text-warning-600' : 'bg-neutral-100 text-neutral-600'"
+                  :class="watchlistLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : watchlistLimitPercent >= 66 ? 'bg-warning-100 text-warning-700' : 'bg-neutral-100 text-neutral-600'"
                 >
                   {{ watchlistCount }}/{{ limits.watchlistItems }} used
                 </span>
@@ -1253,7 +1253,7 @@ class="flex flex-col sm:flex-row gap-3"
                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-body-sm font-semibold"
                       :class="!getWatchlistSnapshot(item.id).hasChange
                         ? 'bg-neutral-100 text-rs-muted'
-                        : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-success-600 text-success-600' : 'bg-danger-600 text-danger-600')"
+                        : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-success-100 text-success-700' : 'bg-danger-100 text-danger-700')"
 	                    >
 	                      <Icon
 	                        name="arrow-up"
@@ -1535,7 +1535,7 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
                 <span
                   v-if="limits.alerts !== 'unlimited'"
                   class="inline-flex items-center px-2 py-0.5 rounded-full text-body-sm font-medium"
-                  :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-warning-600 text-warning-600' : 'bg-neutral-100 text-neutral-600'"
+                  :class="alertsLimitPercent >= 100 ? 'bg-brand-100 text-brand-700' : alertsLimitPercent >= 66 ? 'bg-warning-100 text-warning-700' : 'bg-neutral-100 text-neutral-600'"
                 >
                   {{ alertsCount }}/{{ limits.alerts }} used
                 </span>
@@ -1694,7 +1694,7 @@ class="p-4 border-b"
 	                    </div>
                     <span
                       class="px-2 py-0.5 rounded-full text-body-sm font-medium"
-                      :class="alert.enabled ? 'bg-success-600 text-success-600' : 'bg-neutral-200 text-neutral-600'"
+                      :class="alert.enabled ? 'bg-success-100 text-success-700' : 'bg-neutral-200 text-neutral-600'"
                     >
                       {{ alert.enabled ? 'Active' : 'Paused' }}
                     </span>
@@ -2215,7 +2215,7 @@ class="text-neutral-600"
                   This will permanently delete your account and remove your personal data.
                   Export your data before continuing if you need a copy.
                 </p>
-                <div class="rounded-lg border border-warning-600 bg-warning-600 px-3 py-2 text-warning-600">
+                <div class="rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-warning-800">
                   This action is irreversible.
                 </div>
               </div>
@@ -2552,7 +2552,7 @@ class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
 
           <div
 v-if="!apiAccess"
-class="mb-6 rounded-xl border border-warning-600 bg-warning-600 px-4 py-3 text-body-sm text-warning-600"
+class="mb-6 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-body-sm text-warning-800"
 >
             API access is not enabled for this account. Contact support to enable enterprise API access.
           </div>
@@ -2616,7 +2616,7 @@ class="text-body-sm text-danger-600"
 
 	              <div
 	v-if="apiKeyToken"
-	class="rounded-lg border border-success-600 bg-success-600 px-3 py-3 text-body-sm text-success-600"
+	class="rounded-lg border border-success-200 bg-success-50 px-3 py-3 text-body-sm text-success-800"
 	>
                 <div class="flex items-center justify-between gap-3">
                   <div class="font-semibold">New token (save now)</div>
@@ -2677,7 +2677,7 @@ class="mt-1 text-[11px] text-success-600"
 	                  >Revoked</span>
 	                  <span
 	                    v-else
-	                    class="rounded-full bg-success-600 px-2 py-0.5 text-body-sm text-success-600"
+	                    class="rounded-full bg-success-100 px-2 py-0.5 text-body-sm text-success-700"
 	                  >Active</span>
 	                </template>
 
@@ -2711,9 +2711,16 @@ class="mt-1 text-[11px] text-success-600"
                   @click="showApiReference = !showApiReference"
                 >
                   <span>API Reference</span>
-                  <Icon :name="showApiReference ? 'chevron-up' : 'chevron-down'" :size="16" class="text-neutral-400" />
+                  <Icon
+:name="showApiReference ? 'chevron-up' : 'chevron-down'"
+:size="16"
+class="text-neutral-400"
+/>
                 </button>
-                  <div v-if="showApiReference" class="space-y-3 text-body-sm">
+                  <div
+v-if="showApiReference"
+class="space-y-3 text-body-sm"
+>
                     <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-rs-muted">
                       <span>Rate limit</span><span class="text-rs-fg font-medium">600 req/min</span>
                       <span>Max keys</span><span class="text-rs-fg font-medium">{{ activeApiKeyCount }}/{{ maxApiKeys }}</span>
@@ -3008,7 +3015,7 @@ class="bg-surface rounded-xl border border-rs-border overflow-hidden"
                     <div class="text-body-sm font-semibold text-rs-fg">{{ provider.label }}</div>
                     <span
                       v-if="opsState[provider.id]?.affiliate === true"
-                      class="inline-flex items-center rounded-full bg-success-600 px-2 py-0.5 text-[11px] font-semibold text-success-600"
+                      class="inline-flex items-center rounded-full bg-success-100 px-2 py-0.5 text-[11px] font-semibold text-success-700"
                     >
                       Affiliate
                     </span>
@@ -3020,7 +3027,7 @@ class="bg-surface rounded-xl border border-rs-border overflow-hidden"
                     </span>
                     <span
                       v-else
-                      class="inline-flex items-center rounded-full bg-warning-600 px-2 py-0.5 text-[11px] font-semibold text-warning-600"
+                      class="inline-flex items-center rounded-full bg-warning-100 px-2 py-0.5 text-[11px] font-semibold text-warning-700"
                     >
                       Unknown
                     </span>
@@ -3044,8 +3051,19 @@ class="bg-surface rounded-xl border border-rs-border overflow-hidden"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle
+class="opacity-25"
+cx="12"
+cy="12"
+r="10"
+stroke="currentColor"
+stroke-width="4"
+/>
+                      <path
+class="opacity-75"
+fill="currentColor"
+d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+/>
                     </svg>
                     {{ opsLoading[provider.id] ? 'Loading...' : 'Refresh' }}
                   </button>
@@ -3125,7 +3143,10 @@ class="font-medium"
                             age {{ corridor.last_attempt_age_minutes ?? 'n/a' }} | http {{ corridor.last_attempt_http_status ?? 'n/a' }}
                           </div>
                         </td>
-                        <td class="px-3 py-2 text-right tabular-nums" :class="(corridor.last_quote_age_minutes ?? 999) > 120 ? 'text-warning-600 font-medium' : 'text-neutral-600'">
+                        <td
+class="px-3 py-2 text-right tabular-nums"
+:class="(corridor.last_quote_age_minutes ?? 999) > 120 ? 'text-warning-600 font-medium' : 'text-neutral-600'"
+>
                           {{ corridor.last_quote_age_minutes ?? '—' }}<span class="text-neutral-400">m</span>
                         </td>
                         <td class="px-4 py-3 text-body-sm text-rs-muted">
@@ -3280,7 +3301,10 @@ class="text-body-sm text-warning-600"
                     </p>
                   </div>
                   <p class="mt-2 text-body-sm text-neutral-400">
-                    <NuxtLink to="/admin/enterprise" class="font-semibold text-brand-600 hover:text-brand-700">
+                    <NuxtLink
+to="/admin/enterprise"
+class="font-semibold text-brand-600 hover:text-brand-700"
+>
                       Enterprise console →
                     </NuxtLink>
                   </p>
@@ -3384,11 +3408,36 @@ class="overflow-auto"
                       <table class="min-w-full text-body-sm">
                         <thead class="text-body-sm uppercase text-neutral-400">
                           <tr>
-                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">From</th>
-                            <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">To</th>
-                            <th v-if="telemetryMetric === 'popular_corridors'" class="px-3 py-2 text-left">Corridor</th>
-                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Provider</th>
-                            <th v-if="telemetryMetric === 'provider_favorites'" class="px-3 py-2 text-left">Corridor</th>
+                            <th
+v-if="telemetryMetric === 'heatmap'"
+class="px-3 py-2 text-left"
+>
+From
+</th>
+                            <th
+v-if="telemetryMetric === 'heatmap'"
+class="px-3 py-2 text-left"
+>
+To
+</th>
+                            <th
+v-if="telemetryMetric === 'popular_corridors'"
+class="px-3 py-2 text-left"
+>
+Corridor
+</th>
+                            <th
+v-if="telemetryMetric === 'provider_favorites'"
+class="px-3 py-2 text-left"
+>
+Provider
+</th>
+                            <th
+v-if="telemetryMetric === 'provider_favorites'"
+class="px-3 py-2 text-left"
+>
+Corridor
+</th>
                             <th class="px-3 py-2 text-right">{{ telemetryMetric === 'provider_favorites' ? 'Clicks' : 'Searches' }}</th>
                           </tr>
                         </thead>
@@ -3466,8 +3515,19 @@ class="py-3 text-center text-body-sm text-neutral-400"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle
+class="opacity-25"
+cx="12"
+cy="12"
+r="10"
+stroke="currentColor"
+stroke-width="4"
+/>
+                      <path
+class="opacity-75"
+fill="currentColor"
+d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+/>
                     </svg>
                     {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
                   </button>
@@ -3478,8 +3538,15 @@ class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
 >
                   {{ opsAnalyticsError }}
                 </p>
+                <p
+v-if="!opsAnalyticsError && opsPrivacyThresholdSummary"
+class="mt-3 text-body-sm text-neutral-600 bg-neutral-50 rounded-lg px-3 py-2"
+>
+                  Privacy thresholds: {{ opsPrivacyThresholdSummary }}
+                  <span v-if="opsSuppressedCount > 0"> • {{ opsSuppressedCount }} row{{ opsSuppressedCount === 1 ? '' : 's' }} suppressed/grouped</span>
+                </p>
                 <div
-v-else
+v-if="!opsAnalyticsError"
 class="mt-4 grid gap-6 md:grid-cols-2 text-body-sm"
 >
                   <div>
@@ -3494,6 +3561,10 @@ class="flex items-center justify-between gap-4"
                         <span class="text-body-sm text-rs-muted">
                           {{ row.search_count }} searches
                           <span v-if="row.trend_percentage !== undefined"> • {{ formatTrendPercentage(row.trend_percentage) }}</span>
+                          <span
+v-if="row.suppressionReason"
+class="ml-1 text-neutral-400"
+> • {{ row.suppressionReason === 'low_volume_grouped' ? 'grouped' : row.suppressionReason }}</span>
                         </span>
                       </li>
                       <li
@@ -3513,7 +3584,10 @@ v-for="row in opsFavoriteProviders"
 class="flex items-center justify-between gap-4"
 >
                         <span class="text-neutral-700">{{ row.provider_name || row.provider_id }}</span>
-                        <span class="text-body-sm text-rs-muted">{{ row.click_through_rate }}% CTR</span>
+                        <span class="text-body-sm text-rs-muted">
+                          {{ row.click_through_rate }}% CTR
+                          <span v-if="row.quote_count"> • {{ formatOpsNumber(row.quote_count, 0) }} quotes</span>
+                        </span>
                       </li>
                       <li
 v-if="!opsAnalyticsLoading && opsFavoriteProviders.length === 0"
@@ -3551,8 +3625,19 @@ class="font-semibold text-brand-600 hover:text-brand-700"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle
+class="opacity-25"
+cx="12"
+cy="12"
+r="10"
+stroke="currentColor"
+stroke-width="4"
+/>
+                      <path
+class="opacity-75"
+fill="currentColor"
+d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+/>
                     </svg>
                     {{ opsAuditLoading ? 'Loading...' : 'Refresh' }}
                   </button>
@@ -3627,8 +3712,19 @@ class="font-semibold text-brand-600 hover:text-brand-700"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <circle
+class="opacity-25"
+cx="12"
+cy="12"
+r="10"
+stroke="currentColor"
+stroke-width="4"
+/>
+                  <path
+class="opacity-75"
+fill="currentColor"
+d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+/>
                 </svg>
                 {{ opsAnalyticsLoading ? 'Loading...' : 'Refresh' }}
               </button>
@@ -3639,8 +3735,15 @@ class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
 >
               {{ opsAnalyticsError }}
             </p>
+            <p
+v-if="!opsAnalyticsError && opsPrivacyThresholdSummary"
+class="mt-3 text-body-sm text-neutral-600 bg-neutral-50 rounded-lg px-3 py-2"
+>
+              Privacy thresholds: {{ opsPrivacyThresholdSummary }}
+              <span v-if="opsSuppressedCount > 0"> • {{ opsSuppressedCount }} row{{ opsSuppressedCount === 1 ? '' : 's' }} suppressed/grouped</span>
+            </p>
             <div
-v-else
+v-if="!opsAnalyticsError"
 class="mt-4 space-y-6"
 >
               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-body-sm text-neutral-700">
@@ -3895,19 +3998,19 @@ class="space-y-6"
                 </div>
                 <div
                   v-if="checkoutNotice === 'success'"
-                  class="rounded-lg border border-success-600 bg-success-600 px-4 py-3 text-body-sm text-success-600"
+                  class="rounded-lg border border-success-200 bg-success-50 px-3 py-3 text-body-sm text-success-800"
                 >
                   Subscription updated successfully. Your entitlements have been refreshed.
                 </div>
                 <div
                   v-else-if="checkoutNotice === 'cancel'"
-                  class="rounded-lg border border-warning-600 bg-warning-600 px-4 py-3 text-body-sm text-warning-600"
+                  class="rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-warning-800"
                 >
                   Checkout canceled. No changes were made to your subscription.
                 </div>
                 <div
                   v-if="billingActionMessage"
-                  class="rounded-lg border border-danger-600 bg-danger-600 px-4 py-3 text-body-sm text-danger-600"
+                  class="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-body-sm text-danger-800"
                 >
                   {{ billingActionMessage }}
                 </div>
@@ -4277,13 +4380,13 @@ class="space-y-6"
                   </div>
                   <div
 v-if="passwordUpdateError"
-class="mt-4 rounded-lg bg-danger-600 px-3 py-2 text-body-sm text-danger-600"
+class="mt-4 rounded-lg bg-danger-50 px-3 py-2 text-body-sm text-danger-800"
 >
                     {{ passwordUpdateError }}
                   </div>
                   <div
 v-else-if="passwordUpdateSuccess"
-class="mt-4 rounded-lg bg-success-600 px-3 py-2 text-body-sm text-success-600"
+class="mt-4 rounded-lg bg-success-50 px-3 py-2 text-body-sm text-success-800"
 >
                     Password updated successfully.
                   </div>
@@ -4481,7 +4584,7 @@ class="text-body-sm text-danger-600"
                       </div>
                       <button
                         type="button"
-                        class="rounded-lg bg-danger-600 px-3 py-1.5 text-body-sm font-medium text-danger-600 hover:bg-danger-600 transition-colors"
+                        class="rounded-lg bg-danger-100 px-3 py-1.5 text-body-sm font-medium text-danger-700 hover:bg-danger-200 transition-colors"
                         @click="openDeleteAccountModal"
                       >
                         Delete Account
@@ -4800,7 +4903,7 @@ const corridorWatchlistItems = computed(() =>
 	const limitModalItems = computed(() => {
 	  const sliceLimit = limitModalLimit.value || 0
 	  if (limitModalFeature.value === 'alert') {
-	    const items = alertItems.value.map((alert) => ({
+	    const items = alertItems.value.map(alert => ({
 	      id: alert.id,
 	      label: watchlistFindById(alert.watchlistItemId)?.label || 'Alert',
 	      meta: formatRuleSummary(alert.rule),
@@ -4930,7 +5033,7 @@ type ExportJobListResponse = {
 
 type ExportJobCreateResponse = {
   success: boolean
-  job: { id: string; status: string; jobType: string; createdAt: string }
+  job: { id: string, status: string, jobType: string, createdAt: string }
 }
 
 const historyDaysByTimeframe: Record<string, number> = {
@@ -5550,7 +5653,29 @@ type TelemetryListRow = {
   count: number
 }
 
-type OpsAnalyticsCorridor = {
+type OpsPrivacyEnvelope = {
+  applied: true
+  minUniqueUsers: number
+  reason?: string
+}
+
+type OpsAggregationWindow = {
+  startDate: string
+  endDate: string
+  minDatapoints24h: number
+  minProviderQuotesPerCorridor: number
+  minTrendLookbackDays: number
+}
+
+type OpsPrivacyAnnotated = {
+  suppressed?: boolean
+  suppressionReason?: string
+  sampleSize?: number
+  thresholdApplied?: number
+  aggregationBasis?: string
+}
+
+type OpsAnalyticsCorridor = OpsPrivacyAnnotated & {
   corridor_id: string
   from_country: string
   to_country: string
@@ -5560,11 +5685,12 @@ type OpsAnalyticsCorridor = {
   trend_percentage?: number
 }
 
-type OpsAnalyticsProvider = {
+type OpsAnalyticsProvider = OpsPrivacyAnnotated & {
   provider_id: string
   provider_name?: string | null
   click_count?: number
   click_through_rate: number
+  quote_count?: number
 }
 
 type OpsRevenueMetric = {
@@ -5577,7 +5703,7 @@ type OpsRevenueMetric = {
   unique_users: number
 }
 
-type OpsProviderImpactSummary = {
+type OpsProviderImpactSummary = OpsPrivacyAnnotated & {
   provider_id: string
   provider_name?: string | null
   total_clicks: number
@@ -5587,9 +5713,10 @@ type OpsProviderImpactSummary = {
   unique_conversions: number
   conversion_rate: number
   conversion_values: Record<string, number> | null
+  quote_count?: number
 }
 
-type OpsProviderCorridorImpact = {
+type OpsProviderCorridorImpact = OpsPrivacyAnnotated & {
   provider_id: string
   provider_name?: string | null
   corridor_id?: string | null
@@ -5598,6 +5725,7 @@ type OpsProviderCorridorImpact = {
   conversions: number
   conversion_rate: number
   conversion_values: Record<string, number> | null
+  quote_count?: number
 }
 
 type OpsAuditLog = {
@@ -5738,6 +5866,8 @@ const opsFavoriteProviders = ref<OpsAnalyticsProvider[]>([])
 const opsRevenueRows = ref<OpsRevenueMetric[]>([])
 const opsProviderImpact = ref<OpsProviderImpactSummary[]>([])
 const opsProviderCorridors = ref<OpsProviderCorridorImpact[]>([])
+const opsAnalyticsPrivacy = ref<OpsPrivacyEnvelope | null>(null)
+const opsAnalyticsAggregationWindow = ref<OpsAggregationWindow | null>(null)
 const opsAnalyticsHasLoaded = ref(false)
 
 const opsAuditLoading = ref(false)
@@ -5755,7 +5885,8 @@ const toggleProviderExpanded = (providerId: string) => {
   const next = new Set(opsExpandedProviders.value)
   if (next.has(providerId)) {
     next.delete(providerId)
-  } else {
+  }
+ else {
     next.add(providerId)
   }
   opsExpandedProviders.value = next
@@ -5800,16 +5931,20 @@ const opsSummary = computed(() => {
     staleCorridors += staleCount
     if (staleCount === 0) {
       healthy++
-    } else {
+    }
+ else {
       stale++
     }
   }
 
   const loaded = healthy + stale + errored
-  const status: 'ok' | 'warning' | 'critical' | 'unknown' =
-    loaded === 0 ? 'unknown'
-    : errored > 2 || staleCorridors > totalCorridors * 0.3 ? 'critical'
-    : errored > 0 || staleCorridors > 0 ? 'warning'
+  const status: 'ok' | 'warning' | 'critical' | 'unknown'
+    = loaded === 0
+? 'unknown'
+    : errored > 2 || staleCorridors > totalCorridors * 0.3
+? 'critical'
+    : errored > 0 || staleCorridors > 0
+? 'warning'
     : 'ok'
 
   return { total, healthy, stale, errored, loaded, totalCorridors, staleCorridors, status }
@@ -6042,6 +6177,20 @@ const opsConversionSummary = computed(() => {
   return totals
 })
 
+const opsSuppressedCount = computed(() => {
+  const fromCorridors = opsPopularCorridors.value.filter(row => row.suppressed).length
+  const fromProviders = opsFavoriteProviders.value.filter(row => row.suppressed).length
+  const fromImpactProviders = opsProviderImpact.value.filter(row => row.suppressed).length
+  const fromImpactCorridors = opsProviderCorridors.value.filter(row => row.suppressed).length
+  return fromCorridors + fromProviders + fromImpactProviders + fromImpactCorridors
+})
+
+const opsPrivacyThresholdSummary = computed(() => {
+  const meta = opsAnalyticsAggregationWindow.value
+  if (!meta) return null
+  return `k>=${opsAnalyticsPrivacy.value?.minUniqueUsers ?? 5}, ${meta.minDatapoints24h} datapoints/24h, ${meta.minProviderQuotesPerCorridor} quotes/corridor, ${meta.minTrendLookbackDays}d trends`
+})
+
 const loadOpsHealth = async (providerId: OpsProviderId) => {
   const provider = opsProviders.find(item => item.id === providerId)
   if (!provider) return
@@ -6162,13 +6311,26 @@ const loadOpsAnalytics = async () => {
   const range = buildOpsDateRange(7)
   try {
     const results = await Promise.allSettled([
-      request<{ corridors: OpsAnalyticsCorridor[] }>('/analytics/corridors', {
+      request<{
+        corridors: OpsAnalyticsCorridor[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
+      }>('/analytics/corridors', {
         query: { ...range, limit: 6 },
       }),
-      request<{ providers: OpsAnalyticsProvider[] }>('/analytics/providers', {
+      request<{
+        providers: OpsAnalyticsProvider[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
+      }>('/analytics/providers', {
         query: { ...range, limit: 6 },
       }),
-      request<{ providers: OpsProviderImpactSummary[], corridors: OpsProviderCorridorImpact[] }>('/analytics/providers/impact', {
+      request<{
+        providers: OpsProviderImpactSummary[]
+        corridors: OpsProviderCorridorImpact[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
+      }>('/analytics/providers/impact', {
         query: { ...range, limit: 8, corridor_limit: 8 },
       }),
       request<{ revenue: OpsRevenueMetric[] }>('/analytics/revenue', {
@@ -6181,10 +6343,25 @@ const loadOpsAnalytics = async () => {
     opsProviderImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers ?? []) : []
     opsProviderCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors ?? []) : []
     opsRevenueRows.value = revenue.status === 'fulfilled' ? (revenue.value?.revenue ?? []) : []
+    opsAnalyticsPrivacy.value = corridors.status === 'fulfilled'
+      ? (corridors.value?.privacy ?? null)
+      : providers.status === 'fulfilled'
+        ? (providers.value?.privacy ?? null)
+        : impact.status === 'fulfilled'
+          ? (impact.value?.privacy ?? null)
+          : null
+    opsAnalyticsAggregationWindow.value = corridors.status === 'fulfilled'
+      ? (corridors.value?.aggregationWindow ?? null)
+      : providers.status === 'fulfilled'
+        ? (providers.value?.aggregationWindow ?? null)
+        : impact.status === 'fulfilled'
+          ? (impact.value?.aggregationWindow ?? null)
+          : null
     const failures = results.filter(r => r.status === 'rejected')
     if (failures.length === results.length) {
       opsAnalyticsError.value = toOpsErrorMessage((failures[0] as PromiseRejectedResult).reason)
-    } else if (failures.length > 0) {
+    }
+ else if (failures.length > 0) {
       opsAnalyticsError.value = `${failures.length} of ${results.length} analytics endpoints failed to load.`
     }
   }
@@ -6195,6 +6372,8 @@ const loadOpsAnalytics = async () => {
     opsProviderImpact.value = []
     opsProviderCorridors.value = []
     opsRevenueRows.value = []
+    opsAnalyticsPrivacy.value = null
+    opsAnalyticsAggregationWindow.value = null
   }
  finally {
     opsAnalyticsLoading.value = false
@@ -6702,10 +6881,10 @@ const formatBillingAmount = (amount: number | null | undefined, currency: string
 const billingStatusBadge = computed(() => {
   const status = billingStatus.value
   if (status === 'active' || status === 'trialing') {
-    return { label: 'Active', classes: 'bg-success-600 text-success-600' }
+    return { label: 'Active', classes: 'bg-success-100 text-success-700' }
   }
   if (status === 'past_due') {
-    return { label: 'Past due', classes: 'bg-warning-600 text-warning-600' }
+    return { label: 'Past due', classes: 'bg-warning-100 text-warning-700' }
   }
   if (status === 'canceled' || status === 'incomplete_expired') {
     return { label: 'Canceled', classes: 'bg-neutral-100 text-neutral-600' }

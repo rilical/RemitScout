@@ -1,477 +1,259 @@
 <template>
-  <div class="bg-gradient-to-b from-neutral-50 to-white min-h-screen">
+  <div class="min-h-screen bg-neutral-50">
     <!-- Hero Section -->
-    <section class="relative py-10 lg:py-12 overflow-hidden bg-neutral-50">
-      <div class="container relative mx-auto max-w-page px-page-x z-10">
+    <section class="py-10 lg:py-12 bg-neutral-50">
+      <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-8">
-          <h1 class="text-h2 font-bold text-rs-fg mb-4">
-            Stop <span class="text-brand-600">Overpaying</span> on International Transfers
+          <h1 class="text-h2 font-bold text-rs-fg mb-3">
+            Find the best rate for your transfer
           </h1>
-          <p class="text-body-lg text-neutral-600 max-w-3xl mx-auto break-words">
-            Get the best rates for your international money transfer and see exactly how much your recipient will receive.
+          <p class="text-body-lg text-neutral-600 max-w-2xl mx-auto [text-wrap:balance]">
+            Compare live quotes from 30+ licensed providers and see exactly what your recipient will receive.
           </p>
         </div>
 
         <!-- Two Column Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Article Section -->
-          <article class="bg-surface rounded-2xl shadow-lg p-6 border border-rs-border flex flex-col">
+          <article class="bg-surface rounded-2xl shadow-sm p-6 border border-rs-border flex flex-col">
             <h2 class="text-h3 font-bold text-rs-fg mb-4">
-              Your Money Transfer Comparison Engine
+              How the comparison works
             </h2>
 
-            <div class="space-y-5 flex-1 flex flex-col">
+            <div class="space-y-4 flex-1 flex flex-col">
               <p class="text-body text-neutral-700 leading-relaxed">
-                Compare rates from <NuxtLink
-                  to="/learn/providers"
-                  class="text-brand-600 hover:text-brand-700 font-medium"
-                >30+ licensed providers</NuxtLink> including
-                <NuxtLink
-                  to="/learn/providers/wise"
-                  class="text-brand-600 hover:text-brand-700 font-medium"
-                >Wise</NuxtLink>,
-                <NuxtLink
-                  to="/learn/providers/remitly"
-                  class="text-brand-600 hover:text-brand-700 font-medium"
-                >Remitly</NuxtLink>,
-                <NuxtLink
-                  to="/learn/providers/western-union"
-                  class="text-brand-600 hover:text-brand-700 font-medium"
-                >Western Union</NuxtLink>,
-                <NuxtLink
-                  to="/learn/providers/xe"
-                  class="text-brand-600 hover:text-brand-700 font-medium"
-                >XE</NuxtLink>, and many more.
-                All providers are fully licensed and regulated in their respective jurisdictions.
+                We pull live exchange rates and fees from provider APIs and partner feeds. Every quote shows the exact amount your recipient receives — after all fees and FX markup are deducted.
               </p>
 
-              <div>
-                <h3 class="text-body-lg font-bold text-rs-fg mb-3">
-                  What Makes Our Comparison Different
-                </h3>
-                <p class="text-body-sm text-neutral-700 leading-relaxed">
-                  We refresh our data every few minutes by directly querying provider APIs, showing you current and accurate rates—not outdated estimates. Unlike other comparison sites that may show cached or estimated rates, we calculate the true total cost by comparing every provider's rate against the mid-market rate, revealing both visible fees and hidden exchange rate markups. Our rankings are 100% independent, ranking purely on total cost, transfer speed, and reliability based on real user experiences.
-                </p>
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p class="text-body-sm text-neutral-700 leading-relaxed">
+                    <span class="font-semibold text-neutral-900">No pay-to-rank.</span> Providers cannot buy better placement — rankings are determined solely by delivered value.
+                  </p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p class="text-body-sm text-neutral-700 leading-relaxed">
+                    <span class="font-semibold text-neutral-900">True total cost.</span> We surface fees and hidden FX markup together so you can compare on equal terms.
+                  </p>
+                </div>
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p class="text-body-sm text-neutral-700 leading-relaxed">
+                    <span class="font-semibold text-neutral-900">Provider coverage.</span> <NuxtLink to="/learn/providers" class="text-brand-600 hover:text-brand-700 font-medium">30+ licensed providers</NuxtLink> including <NuxtLink to="/learn/providers/wise" class="text-brand-600 hover:text-brand-700 font-medium">Wise</NuxtLink>, <NuxtLink to="/learn/providers/remitly" class="text-brand-600 hover:text-brand-700 font-medium">Remitly</NuxtLink>, <NuxtLink to="/learn/providers/western-union" class="text-brand-600 hover:text-brand-700 font-medium">Western Union</NuxtLink>, and more.
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <h3 class="text-body-lg font-bold text-rs-fg mb-3">
-                  How Our Comparison Works
-                </h3>
-                <p class="text-body-sm text-neutral-700 mb-3 leading-relaxed">
-                  We pull live exchange rates and fees directly from provider APIs every few minutes. When you enter your transfer details, we calculate the exact amount your recipient will receive after all fees and exchange rate markups. The best provider changes based on your specific corridor, amount, and transfer method.
-                </p>
-                <p class="text-body-sm text-neutral-700 leading-relaxed">
-                  Our rankings are 100% independent. Providers cannot pay for better placement. We rank purely on total cost (fees plus exchange rate markup), transfer speed, and reliability based on real user experiences.
-                </p>
-              </div>
-
-              <div class="mt-auto pt-6 border-t border-rs-border">
+              <div class="mt-auto pt-5 border-t border-rs-border">
                 <NuxtLink
                   to="/learn"
-                  class="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-body px-6 py-3 transition-all shadow-md hover:shadow-lg"
+                  class="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-body px-6 py-3 motion-safe:transition-colors"
                 >
-                  <span>Read More Money Transfer Guides on Our Blog</span>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
+                  Explore guides
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </NuxtLink>
               </div>
             </div>
           </article>
 
-          <!-- Extended Comparison Widget -->
-          <div class="space-y-6">
-            <div class="bg-surface rounded-2xl shadow-lg border border-rs-border flex flex-col overflow-hidden">
-              <div class="border-b border-neutral-100 bg-brand-600 px-6 py-5">
-                <h3 class="text-h4 font-bold text-white mb-1">
-                  Find Your Best Rate Now
-                </h3>
-                <p class="text-body-sm text-white/90">
-                  Compare live rates from 30+ providers
-                </p>
-              </div>
+          <!-- Comparison Form -->
+          <div class="bg-surface rounded-2xl shadow-sm border border-rs-border flex flex-col overflow-hidden">
+            <div class="bg-brand-600 px-6 py-5">
+              <h3 class="text-h4 font-bold text-white mb-1">
+                Compare providers
+              </h3>
+              <p class="text-body-sm text-white/80">
+                Live quotes from 30+ providers
+              </p>
+            </div>
 
-              <form
-                class="p-6 space-y-4"
-                @submit.prevent="handleMoneySubmit"
-              >
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label
-                      for="from-country"
-                      class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
-                    >
-                      Sending from
-                    </label>
-                    <CountrySelect
-                      id="from-country"
-                      v-model="moneyForm.from"
-                      label="Sending from"
-                      :exclude-country="moneyForm.to"
-                      placeholder="United States"
-                    />
-                    <p class="mt-2 text-body-sm text-rs-muted">
-                      Select your sending country to see the best rates.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      for="to-country"
-                      class="mb-2 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
-                    >
-                      Receiving in
-                    </label>
-                    <CountrySelect
-                      id="to-country"
-                      v-model="moneyForm.to"
-                      label="Receiving in"
-                      :exclude-country="moneyForm.from"
-                      placeholder="Select country"
-                    />
-                    <p class="mt-2 text-body-sm text-rs-muted">
-                      Choose where your recipient will receive the money.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label
-                      for="from-currency"
-                      class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
-                    >
-                      From currency
-                    </label>
-                    <CurrencySelect
-                      id="from-currency"
-                      v-model="moneyForm.fromCurrency"
-                      :country-code="moneyForm.from"
-                      :exclude-currency="moneyForm.toCurrency"
-                      placeholder="USD"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      for="to-currency"
-                      class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
-                    >
-                      To currency
-                    </label>
-                    <CurrencySelect
-                      id="to-currency"
-                      v-model="moneyForm.toCurrency"
-                      :country-code="moneyForm.to"
-                      :exclude-currency="moneyForm.fromCurrency"
-                      :placeholder="moneyForm.to ? 'Select currency' : 'Select country first'"
-                      :disabled="!moneyForm.to"
-                    />
-                  </div>
+            <form
+              class="p-6 space-y-4"
+              @submit.prevent="handleMoneySubmit"
+            >
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label
+                    for="from-country"
+                    class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
+                  >
+                    Sending from
+                  </label>
+                  <CountrySelect
+                    id="from-country"
+                    v-model="moneyForm.from"
+                    label="Sending from"
+                    :exclude-country="moneyForm.to"
+                    placeholder="United States"
+                  />
                 </div>
 
                 <div>
                   <label
-                    for="amount"
+                    for="to-country"
                     class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
                   >
-                    Amount to send
+                    Receiving in
                   </label>
-                  <input
-                    id="amount"
-                    v-model.number="moneyForm.amount"
-                    type="number"
-                    min="1"
-                    step="1"
-                    class="h-10 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-rs-fg transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
-                    placeholder="500"
-                  >
-                </div>
-
-                <div class="rounded-lg bg-primary-50 border border-primary-200 p-4">
-                  <div class="flex items-start gap-3">
-                    <div class="flex-shrink-0">
-                      <svg
-                        class="w-7 h-7 text-brand-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div class="text-body-sm text-primary-900">
-                      <p class="font-semibold mb-1.5">
-                        Live Rate Comparison
-                      </p>
-                      <p class="text-brand-700 text-body-sm mb-2">
-                        Rates are updated in real-time directly from provider APIs. See the exact amount your recipient will receive before you send.
-                      </p>
-                      <ul class="space-y-1 text-brand-700 text-body-sm">
-                        <li class="flex items-center gap-2">
-                          <svg
-                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span>No hidden fees, total cost shown</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                          <svg
-                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span>100% independent rankings</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                          <svg
-                            class="w-3.5 h-3.5 text-brand-600 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span>Exact recipient amounts shown</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  :disabled="!isFormValid || isWaitingForQuotes"
-                  class="w-full h-11 rounded-lg bg-brand-600 px-6 text-body-sm font-semibold text-white transition-all hover:bg-brand-700 hover:shadow-lg disabled:bg-neutral-300 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
-                >
-                  <span v-if="isWaitingForQuotes">Checking...</span>
-                  <span v-else>Compare Providers</span>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </button>
-
-                <p
-                  v-if="formError"
-                  class="text-body-sm text-danger-600"
-                  role="alert"
-                >
-                  {{ formError }}
-                </p>
-                <p
-                  v-else-if="formInfo"
-                  class="text-body-sm text-neutral-600"
-                  role="status"
-                >
-                  {{ formInfo }}
-                </p>
-
-                <div class="pt-4 border-t border-rs-border">
-                  <p class="text-center text-body-sm text-rs-muted mb-3">
-                    Need help? Learn more about our comparison process
-                  </p>
-                  <div class="flex justify-center gap-4 flex-wrap">
-                    <NuxtLink
-                      to="/methodology"
-                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      How we compare
-                    </NuxtLink>
-                    <span class="text-neutral-300">•</span>
-                    <NuxtLink
-                      to="/faq"
-                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      FAQ
-                    </NuxtLink>
-                    <span class="text-neutral-300">•</span>
-                    <NuxtLink
-                      to="/learn/providers"
-                      class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      All Providers
-                    </NuxtLink>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            <!-- Market Snapshot Box -->
-            <PulseSnapshotBox
-              v-if="pulseEnabled"
-              title="Market Snapshot"
-              description="Track live market trends and pricing intelligence across global corridors with Remit-Pulse."
-              link="/pulse"
-              link-text="View Market Data"
-            />
-          </div>
-
-          <!-- Trust & Independence Card - Spans both columns -->
-          <div class="lg:col-span-2 bg-brand-600 rounded-2xl shadow-xl p-6 lg:p-8 text-white relative overflow-hidden">
-            <div class="relative z-10">
-              <div class="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                <!-- Icon and Title -->
-                <div class="flex items-center gap-4 flex-shrink-0">
-                  <div class="w-12 h-12 rounded-xl bg-surface/20 backdrop-blur-sm flex items-center justify-center">
-                    <svg
-                      class="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 class="text-h4 font-bold">
-                    Trust & Independence
-                  </h3>
-                </div>
-
-                <!-- Main Description -->
-                <div class="flex-1">
-                  <p class="text-white/95 leading-relaxed text-body-lg mb-4">
-                    <strong class="text-white font-bold">100% independent rankings.</strong> Providers cannot pay for better placement.
-                  </p>
-                  <p class="text-white/95 leading-relaxed text-body-lg mb-4">
-                    Our methodology is fully transparent and publicly available. We update our data continuously to ensure accuracy.
-                  </p>
-
-                  <!-- Key Features - Horizontal -->
-                  <div class="flex flex-wrap items-center gap-4 mb-4">
-                    <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
-                        <svg
-                          class="w-3 h-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span class="text-white text-body-sm font-medium">No paid placements</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
-                        <svg
-                          class="w-3 h-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span class="text-white text-body-sm font-medium">Real-time rate updates</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="w-5 h-5 rounded-full bg-surface/20 flex items-center justify-center flex-shrink-0">
-                        <svg
-                          class="w-3 h-3 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                      <span class="text-white text-body-sm font-medium">Transparent methodology</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- CTA Link -->
-                <div class="flex-shrink-0">
-                  <NuxtLink
-                    to="/methodology"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-surface/20 hover:bg-surface/30 backdrop-blur-sm rounded-lg text-white font-semibold text-body-sm transition-all hover:scale-105"
-                  >
-                    <span>Methodology</span>
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
+                  <CountrySelect
+                    id="to-country"
+                    v-model="moneyForm.to"
+                    label="Receiving in"
+                    :exclude-country="moneyForm.from"
+                    placeholder="Select country"
+                  />
                 </div>
               </div>
+
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label
+                    for="from-currency"
+                    class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
+                  >
+                    From currency
+                  </label>
+                  <CurrencySelect
+                    id="from-currency"
+                    v-model="moneyForm.fromCurrency"
+                    :country-code="moneyForm.from"
+                    :exclude-currency="moneyForm.toCurrency"
+                    placeholder="USD"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="to-currency"
+                    class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
+                  >
+                    To currency
+                  </label>
+                  <CurrencySelect
+                    id="to-currency"
+                    v-model="moneyForm.toCurrency"
+                    :country-code="moneyForm.to"
+                    :exclude-currency="moneyForm.fromCurrency"
+                    :placeholder="moneyForm.to ? 'Select currency' : 'Select country first'"
+                    :disabled="!moneyForm.to"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  for="amount"
+                  class="mb-1.5 block text-body-sm font-semibold uppercase tracking-wide text-neutral-600"
+                >
+                  Amount to send
+                </label>
+                <input
+                  id="amount"
+                  v-model.number="moneyForm.amount"
+                  type="number"
+                  min="1"
+                  step="1"
+                  class="h-10 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-rs-fg motion-safe:transition-colors focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20"
+                  placeholder="500"
+                >
+              </div>
+
+              <button
+                type="submit"
+                :disabled="!isFormValid || isWaitingForQuotes"
+                class="w-full h-11 rounded-xl bg-brand-600 px-6 text-body-sm font-semibold text-white motion-safe:transition-colors hover:bg-brand-700 disabled:bg-neutral-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <span v-if="isWaitingForQuotes">Checking rates…</span>
+                <span v-else>Compare providers</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+
+              <p
+                v-if="formError"
+                class="text-body-sm text-danger-600"
+                role="alert"
+              >
+                {{ formError }}
+              </p>
+              <p
+                v-else-if="formInfo"
+                class="text-body-sm text-neutral-600"
+                role="status"
+              >
+                {{ formInfo }}
+              </p>
+
+              <div class="pt-3 border-t border-rs-border flex items-center justify-center gap-4 flex-wrap">
+                <NuxtLink to="/methodology" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                  Methodology
+                </NuxtLink>
+                <span class="text-neutral-300">·</span>
+                <NuxtLink to="/faq" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                  FAQ
+                </NuxtLink>
+                <span class="text-neutral-300">·</span>
+                <NuxtLink to="/learn/providers" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                  All providers
+                </NuxtLink>
+              </div>
+            </form>
+          </div>
+
+          <!-- Trust strip — spans both columns -->
+          <div class="lg:col-span-2 rounded-2xl bg-brand-600 px-6 py-5 text-white flex flex-col sm:flex-row sm:items-center gap-4">
+            <div class="flex-1 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
+                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                No pay-to-rank
+              </span>
+              <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
+                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Live quotes
+              </span>
+              <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
+                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Affiliate transparency
+              </span>
+              <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
+                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Algorithmic rankings
+              </span>
             </div>
+            <NuxtLink
+              to="/methodology"
+              class="flex-shrink-0 inline-flex items-center gap-1.5 text-body-sm font-semibold text-white/80 hover:text-white motion-safe:transition-colors group"
+            >
+              Read our methodology
+              <svg class="w-4 h-4 group-hover:translate-x-0.5 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -677,7 +459,7 @@
     </section>
 
     <!-- Components After Countries -->
-    <CorridorsGridDynamic />
+    <CorridorsGridDynamic dark />
 
     <WhyTrustUs />
 

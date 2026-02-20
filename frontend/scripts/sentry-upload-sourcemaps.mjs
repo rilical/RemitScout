@@ -11,12 +11,12 @@ if (missing.length > 0) {
   process.exit(0)
 }
 
-const release =
-  (process.env.SENTRY_RELEASE && process.env.SENTRY_RELEASE.trim())
-  || (process.env.APP_VERSION && process.env.APP_VERSION.trim())
-  || (process.env.GITHUB_SHA && process.env.GITHUB_SHA.trim())
-  || (process.env.npm_package_version && process.env.npm_package_version.trim())
-  || ''
+const release
+  = (process.env.SENTRY_RELEASE && process.env.SENTRY_RELEASE.trim())
+    || (process.env.APP_VERSION && process.env.APP_VERSION.trim())
+    || (process.env.GITHUB_SHA && process.env.GITHUB_SHA.trim())
+    || (process.env.npm_package_version && process.env.npm_package_version.trim())
+    || ''
 
 if (!release) {
   log('skipping (missing release: set SENTRY_RELEASE or APP_VERSION)')
@@ -87,7 +87,8 @@ const walk = (dir) => {
     if (entry.isFile() && entry.name.endsWith('.map')) {
       try {
         rmSync(full, { force: true })
-      } catch {
+      }
+ catch {
         // ignore
       }
     }
@@ -96,4 +97,3 @@ const walk = (dir) => {
 
 walk(nuxtDir)
 log('done')
-

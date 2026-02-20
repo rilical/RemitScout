@@ -25,6 +25,22 @@ const toSupabaseJwksUrl = (baseUrl?: string, explicit?: string) => {
   return ''
 }
 
+const toComplianceStatus = (
+  value: string | undefined,
+  fallback: 'compliant' | 'in_progress' | 'not_started' | 'not_applicable',
+) => {
+  const normalized = (value || '').trim().toLowerCase()
+  if (
+    normalized === 'compliant'
+    || normalized === 'in_progress'
+    || normalized === 'not_started'
+    || normalized === 'not_applicable'
+  ) {
+    return normalized
+  }
+  return fallback
+}
+
 const isAwsRuntime = Boolean(
   process.env.AWS_EXECUTION_ENV ||
   process.env.AWS_LAMBDA_FUNCTION_NAME ||
@@ -1002,6 +1018,26 @@ const rawConfig = {
   },
   geo: {
     countryHeader: process.env.GEO_COUNTRY_HEADER || 'cf-ipcountry',
+  },
+  privacy: {
+    hashSalt: process.env.PRIVACY_HASH_SALT || process.env.PLANE_A_PRIVACY_HASH_SALT || '',
+    sessionSalt: process.env.PRIVACY_SESSION_SALT || process.env.PLANE_A_PRIVACY_SESSION_SALT || '',
+    sessionRotationHours: toNumber(process.env.PRIVACY_SESSION_ROTATION_HOURS, 24),
+    kAnonymityMinimum: toNumber(process.env.PRIVACY_K_ANONYMITY_MIN, 5),
+    corridorMinDataPoints24h: toNumber(process.env.PRIVACY_CORRIDOR_MIN_DATA_POINTS_24H, 100),
+    providerMinQuotesPerCorridor: toNumber(process.env.PRIVACY_PROVIDER_MIN_QUOTES_PER_CORRIDOR, 50),
+    trendMinLookbackDays: toNumber(process.env.PRIVACY_TREND_MIN_LOOKBACK_DAYS, 7),
+  },
+  compliance: {
+    certifications: {
+      gdpr: toComplianceStatus(process.env.COMPLIANCE_GDPR_STATUS, 'compliant'),
+      ccpa: toComplianceStatus(process.env.COMPLIANCE_CCPA_STATUS, 'compliant'),
+      soc2_type_ii: {
+        status: toComplianceStatus(process.env.COMPLIANCE_SOC2_TYPE_II_STATUS, 'in_progress'),
+        report_date: process.env.COMPLIANCE_SOC2_TYPE_II_REPORT_DATE || '',
+        expires_on: process.env.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON || '',
+      },
+    },
   },
   auth: {
     supabase: {

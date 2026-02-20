@@ -18,7 +18,7 @@
               A market-screener-first view of what is moving across corridors, with honest timestamps.
             </p>
             <p class="mt-2 text-body-sm text-neutral-400">
-              Public preview shows corridor moves only. Plus unlocks Pulse Lite (market snapshot, trends, and basic deep dives). Enterprise unlocks Pulse Pro (screener, market depth, benchmarking, and alerts).
+              Public preview shows corridor moves only. Plus unlocks Pulse Lite (market snapshot, trends, and basic deep dives). Enterprise unlocks Pulse (screener, market depth, benchmarking, and alerts).
             </p>
           </div>
 
@@ -96,7 +96,7 @@
                 Unlock Pulse Plus
               </h2>
               <p class="mt-2 text-body-sm text-neutral-300">
-                Plus unlocks Pulse Lite: market snapshot, trends, and exports. Enterprise unlocks Pulse Pro: screener, market depth, benchmarking, and arbitrage alerts.
+                Plus unlocks Pulse Lite: market snapshot, trends, and exports. Enterprise unlocks Pulse: screener, market depth, benchmarking, and arbitrage alerts.
               </p>
               <NuxtLink
                 to="/plus"
@@ -209,7 +209,7 @@
       </div>
 
       <div class="py-8">
-        <!-- Screener-first (Pro) -->
+        <!-- Screener-first (Enterprise) -->
         <div class="mb-8 px-page-x">
           <div class="mx-auto max-w-page grid grid-cols-1 gap-6 lg:grid-cols-12">
             <div
@@ -219,7 +219,7 @@
               <PulsePlusGate
                 :is-gated="!isPro"
                 tier="enterprise"
-                title="Watchlist Screener (Pro)"
+                title="Watchlist Screener (Enterprise)"
                 description="Enterprise unlocks the corridor screener, best-provider ranking, spread risk, and freshness across your watchlist."
               >
                 <PulseScreener
@@ -740,7 +740,7 @@
                   <PulsePlusGate
                     :is-gated="!isPro"
                     tier="enterprise"
-                    title="Market Depth (Pro)"
+                    title="Market Depth (Enterprise)"
                     description="Enterprise unlocks market depth: best-to-worst dispersion and spread structure."
                   >
                     <PulseMarketDepth />
@@ -779,7 +779,7 @@
                 <PulsePlusGate
                   :is-gated="!isPro"
                   tier="enterprise"
-                  title="Provider Leaderboard (Pro)"
+                  title="Provider Leaderboard (Enterprise)"
                   description="Enterprise unlocks institutional provider ranking and benchmarking."
                 >
                   <PulseProviderLeaderboard />
@@ -804,7 +804,7 @@
                 <PulsePlusGate
                   :is-gated="!isPro"
                   tier="enterprise"
-                  title="Provider Heatmap (Pro)"
+                  title="Provider Heatmap (Enterprise)"
                   description="Enterprise unlocks winner timelines and provider dominance analytics."
                 >
                   <PulseProviderHeatmap />
@@ -871,10 +871,10 @@
               <PulsePlusGate
                 :is-gated="!isPro"
                 tier="enterprise"
-                title="Reliability & Coverage (Pro)"
+                title="Reliability & Coverage (Enterprise)"
                 description="Enterprise unlocks method coverage and operational diagnostics for this corridor."
               >
-                <PulseReliabilityCoverage />
+                <PulseReliabilityCoverage :is-pro="isPro" />
                 <template #preview>
                   <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
                     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -937,7 +937,7 @@
                     <PulsePlusGate
                       :is-gated="!isPro"
                       tier="enterprise"
-                      title="Market Events (Pro)"
+                      title="Market Events (Enterprise)"
                       description="Enterprise unlocks anomaly events and corridor risk signals."
                     >
                       <PulseEventFeed @view="navigateToChart" />
@@ -963,7 +963,7 @@
                     <PulsePlusGate
                       :is-gated="!isPro"
                       tier="enterprise"
-                      title="Arbitrage Alerts (Pro)"
+                      title="Arbitrage Alerts (Enterprise)"
                       description="Enterprise unlocks spread anomaly detection and arbitrage signals."
                     >
                       <PulseArbitrageAlert />
@@ -1182,18 +1182,7 @@
             </div>
           </section>
 
-          <!-- 9. Methodology & Data Notes -->
-          <section
-            id="methodology"
-            class="px-page-x mb-10"
-            :class="highlightedSection === 'methodology' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
-          >
-            <div class="mx-auto max-w-page">
-              <PulseDataNotes />
-            </div>
-          </section>
-
-          <!-- 10. Report Discrepancy -->
+          <!-- 9. Report Discrepancy -->
           <section class="py-12 sm:py-16 bg-neutral-900 w-full">
             <div class="container">
               <div class="text-center mb-8">
@@ -1317,7 +1306,7 @@ const router = useRouter()
 const route = useRoute()
 const store = usePulseStore()
 const { isPlus, pulseLevel, limits } = useEntitlements()
-const isPro = computed(() => pulseLevel.value === 'pro')
+const isPro = computed(() => pulseLevel.value === 'full')
 const watchlist = useWatchlist()
 const saveAlertModal = useSaveAlertModal()
 const exportsApi = useExports()

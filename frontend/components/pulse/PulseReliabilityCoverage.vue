@@ -66,7 +66,7 @@
           v-else
           :is-gated="true"
           tier="enterprise"
-          title="Method Matrix (Pro)"
+          title="Method Matrix (Enterprise)"
           description="Enterprise unlocks the method/provider matrix view for operational coverage."
         >
           <template #preview>

@@ -369,7 +369,7 @@
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -458,7 +458,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -691,8 +691,8 @@
                 </div>
               </div>
 
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Occasional friction points:</strong> Bank speed dependencies show up with funding methods like bill payment (and some EFT flows), which can shift delivery from "minutes" to "business days."
                 </p>
               </div>
@@ -829,8 +829,8 @@
                   </div>
                 </div>
               </div>
-              <div class="not-prose my-6 p-4 bg-warning-600 rounded-lg border border-warning-600">
-                <p class="text-body-sm text-warning-600 m-0">
+              <div class="not-prose my-6 p-4 bg-warning-50 rounded-lg border-l-4 border-warning-600 text-warning-800">
+                <p class="text-body-sm text-warning-800 m-0">
                   <strong>Important caveat:</strong> Licensing, permitted activities, and coverage can differ by country and product. You can usually verify the provider's regulatory presence in your sending country via official registries — but the exact legal entity and permissions vary by region.
                 </p>
               </div>
@@ -855,7 +855,7 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                <div class="rounded-xl border-2 border-success-500 bg-success-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -885,10 +885,10 @@
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                <div class="rounded-xl border-2 border-warning-500 bg-warning-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -902,15 +902,15 @@
                   </h3>
                   <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong class="text-rs-fg">Delivered Value:</strong> Total cost still depends on FX margin + funding method; debit-card-funded transfers can get meaningfully pricier (especially for $500+).</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong class="text-rs-fg">Friction & Speed:</strong> Bank speed dependencies show up with funding methods like bill payment (and some EFT flows), which can shift delivery from "minutes" to "business days."</span>
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       <span><strong class="text-rs-fg">Support & Refunds:</strong> Cancellation/refunds can be constrained once a transfer is processed; debit card transfers may process quickly, reducing cancellation window, and self-cancel is limited to three per year per RemitBee.</span>
                     </li>
                   </ul>
@@ -992,7 +992,7 @@
                 <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
                   <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1009,7 +1009,7 @@
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1025,7 +1025,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1041,7 +1041,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1392,7 +1392,7 @@
                       to="/learn/providers/wise"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-700">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>

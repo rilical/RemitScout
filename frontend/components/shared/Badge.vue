@@ -24,7 +24,7 @@ const badgeClasses = computed(() => {
     secondary: 'bg-neutral-100 text-neutral-800',
     success: 'bg-success-100 text-success-800',
     warning: 'bg-warning-100 text-warning-800',
-    danger: 'bg-danger-600 text-danger-600',
+    danger: 'bg-danger-100 text-danger-700',
     outline: 'border border-neutral-300 text-neutral-700',
   }
   return variants[props.variant]

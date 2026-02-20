@@ -71,7 +71,7 @@
         <div class="flex gap-3">
           <button
             type="button"
-            class="flex-1 rounded-lg border border-success-600 bg-success-600 px-3 py-2 text-body-sm font-semibold text-success-600 hover:bg-success-600"
+            class="flex-1 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-body-sm font-semibold text-success-700 hover:bg-success-100"
             @click="setCompleted(true)"
           >
             Yes, completed

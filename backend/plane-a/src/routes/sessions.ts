@@ -7,10 +7,12 @@ import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import {
   deriveSessionId,
+  deriveRotatingSessionId,
   detectDeviceType,
   getLocationFromHeaders,
   maskIpAddress,
 } from '../services/session-utils'
+import { anonymizeIpAddress, extractBrowserFamily } from '../services/privacy-utils'
 
 const logger = createLogger('plane-a.sessions')
 
@@ -138,9 +140,16 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
   app.post('/sessions/track', async (request) => {
     try {
       const body = trackSessionSchema.parse(request.body ?? {})
-      const sessionId = body.session_id
+      const sessionId = deriveRotatingSessionId(body.session_id)
+      if (!sessionId) {
+        throw new ValidationError('Invalid session id', {
+          details: [{ message: 'invalid_session_id' }],
+        })
+      }
       const anonId = body.anon_id
-      const userAgent = request.headers['user-agent']
+      const rawUserAgent = typeof request.headers['user-agent'] === 'string'
+        ? request.headers['user-agent']
+        : null
 
       if (!request.user && !anonId) {
         throw new ValidationError('Anonymous id is required for unauthenticated tracking', {
@@ -151,18 +160,24 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       const location = body.location || getLocationFromHeaders(request.headers)
       const deviceType =
         body.device_type ||
-        detectDeviceType(typeof userAgent === 'string' ? userAgent : null) ||
+        detectDeviceType(rawUserAgent) ||
         undefined
+      const anonymizedIp = anonymizeIpAddress(request.ip)
+      const browserFamily = extractBrowserFamily(rawUserAgent)
 
       await repository.createSession({
         sessionId,
         userId: request.user?.user_id,
         anonId,
-        ipAddress: request.ip,
-        userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+        ipAddress: anonymizedIp.truncatedIp ?? undefined,
+        ipHash: anonymizedIp.ipHash ?? undefined,
+        userAgent: browserFamily ?? undefined,
         deviceType,
         location: location ?? undefined,
-        metadata: body.metadata,
+        metadata: {
+          ...(body.metadata ?? {}),
+          ...(anonymizedIp.ipVersion ? { ip_version: anonymizedIp.ipVersion } : {}),
+        },
       })
 
       return { success: true }

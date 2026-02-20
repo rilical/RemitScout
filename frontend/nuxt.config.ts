@@ -1,4 +1,4 @@
-import { promises as fs, existsSync, readFileSync } from 'node:fs'
+import { promises as fs, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
@@ -172,18 +172,9 @@ const ensureClientPrecomputed = async () => {
   }
 }
 
-const ensureNuxtPaths = async () => {
+const ensureNuxtPaths = () => {
   const buildDir = join(process.cwd(), '.nuxt')
-  await fs.mkdir(buildDir, { recursive: true })
   const pathsPath = join(buildDir, 'paths.mjs')
-  try {
-    await fs.access(pathsPath)
-    return
-  }
-  catch {
-    // Continue and write fallback file if missing.
-  }
-
   const appConfig = {
     baseURL: '/',
     buildAssetsDir: '/_nuxt/',
@@ -191,29 +182,40 @@ const ensureNuxtPaths = async () => {
   }
   const contents = [
     'import { joinRelativeURL } from \'ufo\'',
+    'const encodeUrlPath = (url) => encodeURI(url)',
     `const getAppConfig = () => (${JSON.stringify(appConfig)})`,
     'export const baseURL = () => getAppConfig().baseURL',
     'export const buildAssetsDir = () => getAppConfig().buildAssetsDir',
-    'export const buildAssetsURL = (...path) => joinRelativeURL(publicAssetsURL(), buildAssetsDir(), ...path)',
+    'export const buildAssetsURL = (...path) => encodeUrlPath(joinRelativeURL(publicAssetsURL(), buildAssetsDir(), ...path))',
     'export const publicAssetsURL = (...path) => {',
     '  const appConfig = getAppConfig()',
     '  const publicBase = appConfig.cdnURL || appConfig.baseURL',
-    '  return path.length ? joinRelativeURL(publicBase, ...path) : publicBase',
+    '  const resolved = path.length ? joinRelativeURL(publicBase, ...path) : publicBase',
+    '  return encodeUrlPath(resolved)',
     '}',
     'if (import.meta.client) {',
     '  globalThis.__buildAssetsURL = buildAssetsURL',
     '  globalThis.__publicAssetsURL = publicAssetsURL',
     '}',
   ].join('\n')
-  await fs.writeFile(pathsPath, contents, 'utf8')
+
+  try {
+    mkdirSync(buildDir, { recursive: true })
+    const current = existsSync(pathsPath) ? readFileSync(pathsPath, 'utf8') : ''
+    if (current !== contents) {
+      writeFileSync(pathsPath, contents, 'utf8')
+    }
+  }
+  catch {
+    // Keep startup resilient; Nuxt can regenerate this file in normal flows.
+  }
 }
 
+// `frontend/package.json` maps `#internal/nuxt/paths` to `.nuxt/paths.mjs`.
+// Ensure this file exists before dev/build runtime starts importing server chunks.
+ensureNuxtPaths()
+
 export default defineNuxtConfig({
-  compatibilityDate: '2026-02-14',
-
-  // Development
-
-  sourcemap: isStagingOrProd ? { client: true, server: false } : false,
 
   // Modules
   modules: nuxtModules,
@@ -230,10 +232,6 @@ export default defineNuxtConfig({
     ],
   },
   devtools: { enabled: false },
-
-  devServer: {
-    port: 3000,
-  },
 
   // App Head
   app: {
@@ -396,6 +394,14 @@ export default defineNuxtConfig({
     '/about-old': { redirect: { to: '/about', statusCode: 301 } },
   },
 
+  // Development
+
+  sourcemap: isStagingOrProd ? { client: true, server: false } : false,
+
+  devServer: {
+    port: 3000,
+  },
+
   watchers: {
     chokidar: {
       ...watchOptions,
@@ -411,6 +417,7 @@ export default defineNuxtConfig({
     viewTransition: true,
     watcher: 'chokidar-granular',
   },
+  compatibilityDate: '2026-02-14',
 
   // Nitro Configuration
   nitro: {
@@ -544,7 +551,7 @@ export default defineNuxtConfig({
     },
     'build:done': async () => {
       await ensureClientPrecomputed()
-      await ensureNuxtPaths()
+      ensureNuxtPaths()
     },
   },
   googleFonts: {

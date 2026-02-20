@@ -163,9 +163,9 @@
             <div class="flex items-center justify-between pt-4 border-t border-white/5">
               <div class="flex gap-3">
                 <button
+                  :id="`pulse-feed-details-toggle-${card.id}`"
                   type="button"
                   class="text-body-sm font-medium text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
-                  :id="`pulse-feed-details-toggle-${card.id}`"
                   :aria-expanded="expandedCards.has(card.id)"
                   :aria-controls="`pulse-feed-details-panel-${card.id}`"
                   @click="toggleDetails(card.id)"

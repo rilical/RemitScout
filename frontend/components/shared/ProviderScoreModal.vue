@@ -277,7 +277,7 @@ const metrics = computed(() => {
 
   const getBadgeClass = (score: number, label: string) => {
     if (label === 'Elite') {
-      return 'bg-success-600 text-success-600'
+      return 'bg-success-100 text-success-700'
     }
     if (score >= 8.5) {
       return 'bg-primary-100 text-primary-800'

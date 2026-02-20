@@ -1,5 +1,5 @@
 <template>
-  <PageContainer>
+  <div>
     <!-- Hero: Converter (primary job to be done) -->
     <HeroDualTab
       id="hero-dual-tab"
@@ -23,7 +23,10 @@
 
     <!-- 6. Popular corridor chips -->
     <AsyncErrorBoundary skeleton-height="160">
-      <CorridorsGridDynamic dark @corridor-selected="handleCorridorSelected" />
+      <CorridorsGridDynamic
+dark
+@corridor-selected="handleCorridorSelected"
+/>
     </AsyncErrorBoundary>
 
     <!-- Educational comparison: Bank vs Specialist -->
@@ -54,16 +57,16 @@
       <PulseTeaserSection />
     </AsyncErrorBoundary>
 
+    <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
+    <AsyncErrorBoundary skeleton-height="180">
+      <PlusTeaser />
+    </AsyncErrorBoundary>
+
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
     <AsyncErrorBoundary
       skeleton-height="180"
     >
       <InstitutionalTeaser />
-    </AsyncErrorBoundary>
-
-    <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
-    <AsyncErrorBoundary skeleton-height="180">
-      <PlusTeaser />
     </AsyncErrorBoundary>
 
     <!-- 11. Testimonials (3 short, real quotes) -->
@@ -96,11 +99,6 @@
       <NewsletterSignup />
     </AsyncErrorBoundary>
 
-    <!-- EEAT: Help Footer (report issues, methodology, contact) -->
-    <AsyncErrorBoundary skeleton-height="160">
-      <HelpFooter />
-    </AsyncErrorBoundary>
-
     <!-- 16. Final CTA band -->
     <AsyncErrorBoundary skeleton-height="180">
       <CtaBanner />
@@ -113,7 +111,7 @@
       :is-open="modalOpen"
       @update:is-open="modalOpen = $event"
     />
-  </PageContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -122,7 +120,6 @@ import HeroDualTab from '~/components/home/HeroDualTab.vue'
 import RemitScoreBanner from '~/components/home/RemitScoreBanner.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import HowWeMakeMoneyModal from '~/components/shared/HowWeMakeMoneyModal.vue'
-import PageContainer from '~/components/shared/PageContainer.vue'
 import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import TransparencyStrip from '~/components/home/TransparencyStrip.vue'
 import IndependenceBadge from '~/components/home/IndependenceBadge.vue'
@@ -137,7 +134,6 @@ import FeaturedProvidersDynamic from '~/components/home/FeaturedProvidersDynamic
 const HowItWorks = defineAsyncComponent(() => import('~/components/home/HowItWorks.vue'))
 const FounderStory = defineAsyncComponent(() => import('~/components/home/FounderStory.vue'))
 const WhyPricesVary = defineAsyncComponent(() => import('~/components/home/WhyPricesVary.vue'))
-const HelpFooter = defineAsyncComponent(() => import('~/components/home/HelpFooter.vue'))
 const PulseTeaserSection = defineAsyncComponent(() => import('~/components/home/PulseTeaserSection.vue'))
 const InstitutionalTeaser = defineAsyncComponent(() => import('~/components/home/InstitutionalTeaser.vue'))
 const PlusTeaser = defineAsyncComponent(() => import('~/components/home/PlusTeaser.vue'))

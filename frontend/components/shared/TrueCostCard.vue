@@ -89,7 +89,7 @@
               v-if="hasPromo && promoInfo"
               :class="[
                 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
-                darkBackground ? 'bg-success-600/30 text-success-600 border border-white' : 'bg-success-600 text-success-600',
+                darkBackground ? 'bg-success-600/30 text-success-600 border border-white' : 'bg-success-100 text-success-700',
               ]"
             >
               <svg
@@ -251,10 +251,10 @@ const markupSeverityClass = computed(() => {
 
 const markupBadgeClass = computed(() => {
   const classes: Record<string, string> = {
-    excellent: 'bg-success-600 text-success-600',
-    good: 'bg-warning-600 text-warning-600',
+    excellent: 'bg-success-100 text-success-700',
+    good: 'bg-warning-100 text-warning-700',
     fair: 'bg-warning-100 text-warning-700',
-    poor: 'bg-danger-600 text-danger-600',
+    poor: 'bg-danger-100 text-danger-700',
   }
   return classes[markupSeverity.value]
 })

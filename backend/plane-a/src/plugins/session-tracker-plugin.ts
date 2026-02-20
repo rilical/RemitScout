@@ -4,6 +4,10 @@ import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { SessionRepository } from '../repositories'
 import {
+  anonymizeIpAddress,
+  extractBrowserFamily,
+} from '../services/privacy-utils'
+import {
   deriveSessionId,
   detectDeviceType,
   extractExpiresAt,
@@ -33,8 +37,12 @@ export const registerSessionTracker = (app: FastifyInstance) => {
     const sessionId = deriveSessionId(request)
     if (!sessionId) return
 
-    const userAgent = request.headers['user-agent']
-    const deviceType = detectDeviceType(typeof userAgent === 'string' ? userAgent : null)
+    const rawUserAgent = typeof request.headers['user-agent'] === 'string'
+      ? request.headers['user-agent']
+      : null
+    const anonymizedIp = anonymizeIpAddress(request.ip)
+    const userAgentFamily = extractBrowserFamily(rawUserAgent)
+    const deviceType = detectDeviceType(rawUserAgent)
     const location = getLocationFromHeaders(request.headers)
     const expiresAt = extractExpiresAt(request)
 
@@ -42,11 +50,15 @@ export const registerSessionTracker = (app: FastifyInstance) => {
       await repository.createSession({
         sessionId,
         userId: request.user.user_id,
-        ipAddress: request.ip,
-        userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+        ipAddress: anonymizedIp.truncatedIp ?? undefined,
+        ipHash: anonymizedIp.ipHash ?? undefined,
+        userAgent: userAgentFamily ?? undefined,
         deviceType: deviceType ?? undefined,
         location: location ?? undefined,
         expiresAt: expiresAt ?? undefined,
+        metadata: anonymizedIp.ipVersion
+          ? { ip_version: anonymizedIp.ipVersion }
+          : undefined,
       })
     } catch (error) {
       logger.warn('session_track_failed', {

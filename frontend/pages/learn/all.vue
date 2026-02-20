@@ -53,7 +53,10 @@
                 :to="`/learn/${guide.slug}`"
                 class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 transition-colors"
               >
-                <RichHtml tag="span" :content="guide.title" />
+                <RichHtml
+tag="span"
+:content="guide.title"
+/>
               </NuxtLink>
               <p class="text-body-sm text-neutral-600 leading-relaxed">
                 {{ guide.excerpt }}

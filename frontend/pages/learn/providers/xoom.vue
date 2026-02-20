@@ -374,7 +374,7 @@
                 <div class="mt-6 pt-6 border-t-2 border-brand-200 bg-surface/40 rounded-xl p-4">
                   <div class="flex items-start gap-3">
                     <svg
-                      class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                      class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -457,7 +457,7 @@
                     </li>
                     <li class="flex items-start gap-2">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -717,7 +717,7 @@
                       </li>
                       <li class="flex items-start gap-2.5">
                         <svg
-                          class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                          class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -877,7 +877,7 @@
               </h2>
 
               <div class="not-prose grid md:grid-cols-2 gap-6 my-8">
-                <div class="rounded-xl border-2 border-success-600 bg-success-600 p-6">
+                <div class="rounded-xl border-2 border-success-500 bg-success-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
                       class="w-6 h-6 text-success-600"
@@ -907,10 +907,10 @@
                     </li>
                   </ul>
                 </div>
-                <div class="rounded-xl border-2 border-warning-600 bg-warning-600 p-6">
+                <div class="rounded-xl border-2 border-warning-500 bg-warning-50 p-6">
                   <h3 class="flex items-center gap-2 text-h4 font-bold text-rs-fg mb-4 mt-0">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -924,15 +924,15 @@
                   </h3>
                   <ul class="space-y-2 text-neutral-700 text-body">
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Delivered Value: Xoom's own disclosures note transaction fees and that it makes money when converting currencies (spread/markup), which can weaken delivered value versus "rate-first" providers.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Delivered Value / Quote competitiveness: It's often not the cheapest once you compare "recipient gets" across providers—especially for cost-sensitive corridors.
                     </li>
                     <li class="flex items-start gap-2">
-                      <span class="text-warning-600 font-bold">−</span>
+                      <span class="text-warning-800 font-bold">−</span>
                       Support & Refunds: Refund/cancellation is time-sensitive (30-minute window for full refund; after that, refunds are limited), and it becomes hard once funds are picked up/deposited.
                     </li>
                   </ul>
@@ -1014,7 +1014,7 @@
                 <div class="p-6 rounded-xl bg-gradient-to-br from-warning-600 to-warning-50 border-2 border-warning-600">
                   <h2 class="text-h3 font-bold text-rs-fg mb-4 flex items-center gap-2">
                     <svg
-                      class="w-6 h-6 text-warning-600"
+                      class="w-6 h-6 text-warning-800"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1031,7 +1031,7 @@
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1047,7 +1047,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1063,7 +1063,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <svg
-                        class="w-5 h-5 text-warning-600 mt-0.5 flex-shrink-0"
+                        class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1405,7 +1405,7 @@
                       to="/learn/providers/wise"
                       class="flex items-center gap-3 text-body-sm text-neutral-700 hover:text-brand-600"
                     >
-                      <div class="w-8 h-8 rounded-lg bg-success-600 flex items-center justify-center text-body-sm font-bold text-success-600">W</div>
+                      <div class="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center text-body-sm font-bold text-success-700">W</div>
                       <span>Wise Review</span>
                     </NuxtLink>
                   </li>

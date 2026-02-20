@@ -80,19 +80,19 @@
         <li><strong class="text-brand-600">Screenshot (optional):</strong> Checkout screen showing final amount and fees</li>
       </ul>
 
-      <div class="my-8 rounded-lg border-l-4 border-warning-600 bg-warning-600 p-6">
-        <h3 class="mb-2 text-body-lg font-semibold text-warning-600">
+      <div class="my-8 rounded-lg border-l-4 border-warning-600 bg-warning-50 p-6">
+        <h3 class="mb-2 text-body-lg font-semibold text-warning-800">
           Why Quotes May Differ
         </h3>
-        <p class="mb-4 text-warning-600 leading-relaxed">
+        <p class="mb-4 text-warning-800 leading-relaxed">
           Several factors may cause our quote to differ from the provider's checkout amount:
         </p>
-        <ul class="list-inside list-disc space-y-2 text-warning-600 leading-relaxed">
-          <li><strong class="text-warning-600">Payment method:</strong> Bank vs card pricing can differ significantly</li>
-          <li><strong class="text-warning-600">Promotions:</strong> Targeted discounts or eligibility rules may apply</li>
-          <li><strong class="text-warning-600">KYC status:</strong> Verification steps can affect price or speed</li>
-          <li><strong class="text-warning-600">Local rules:</strong> Corridor-specific requirements or limits</li>
-          <li><strong class="text-warning-600">FX movement:</strong> Exchange rates can move between quote and checkout</li>
+        <ul class="list-inside list-disc space-y-2 text-warning-800 leading-relaxed">
+          <li><strong class="text-warning-900">Payment method:</strong> Bank vs card pricing can differ significantly</li>
+          <li><strong class="text-warning-900">Promotions:</strong> Targeted discounts or eligibility rules may apply</li>
+          <li><strong class="text-warning-900">KYC status:</strong> Verification steps can affect price or speed</li>
+          <li><strong class="text-warning-900">Local rules:</strong> Corridor-specific requirements or limits</li>
+          <li><strong class="text-warning-900">FX movement:</strong> Exchange rates can move between quote and checkout</li>
         </ul>
       </div>
 

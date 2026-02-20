@@ -16,7 +16,7 @@ import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 
-type EntitlementType = 'pulse' | 'pulse_pro' | 'exports' | 'alerts' | 'history' | 'api_access'
+type EntitlementType = 'pulse' | 'pulse_full' | 'exports' | 'alerts' | 'history' | 'api_access'
 
 type RateLimitEntry = {
   count: number
@@ -462,8 +462,8 @@ const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeo
   if (entitlement === 'pulse') {
     return entitlements.pulse_access !== 'none'
   }
-  if (entitlement === 'pulse_pro') {
-    return entitlements.pulse_access === 'pro'
+  if (entitlement === 'pulse_full') {
+    return entitlements.pulse_access === 'full'
   }
   if (entitlement === 'exports') {
     return entitlements.exports_enabled
@@ -497,7 +497,7 @@ const isPlanActive = (status?: string | null): boolean => {
 }
 
 const isPaidEntitlement = (entitlement: EntitlementType): boolean => {
-  return entitlement === 'pulse' || entitlement === 'pulse_pro' || entitlement === 'exports' || entitlement === 'api_access'
+  return entitlement === 'pulse' || entitlement === 'pulse_full' || entitlement === 'exports' || entitlement === 'api_access'
 }
 
 const applyApiKeyRateLimit = async (

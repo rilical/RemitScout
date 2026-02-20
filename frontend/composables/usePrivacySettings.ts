@@ -135,7 +135,7 @@ export const usePrivacySettings = () => {
         analytics: payload.analytics,
         marketing: payload.marketing,
         personalization: payload.personalization,
-        updated_at: null,
+        updated_at: new Date().toISOString(),
       }
       persistStored(settings.value)
       loaded.value = true

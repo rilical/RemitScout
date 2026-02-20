@@ -1,6 +1,6 @@
-import { createHash } from 'crypto'
 import type { FastifyRequest } from 'fastify'
 import { config } from '../../../shared/config'
+import { deriveRotatingToken } from './privacy-utils'
 
 const parseBearerToken = (header?: string) => {
   if (!header) return null
@@ -10,10 +10,7 @@ const parseBearerToken = (header?: string) => {
   return token || null
 }
 
-const hashToken = (token: string) =>
-  createHash('sha256').update(token).digest('hex')
-
-export const deriveSessionId = (request: FastifyRequest): string | null => {
+const getStableSessionSeed = (request: FastifyRequest): string | null => {
   const claims = request.user?.claims as Record<string, unknown> | undefined
   const candidates = [
     claims?.session_id,
@@ -28,10 +25,27 @@ export const deriveSessionId = (request: FastifyRequest): string | null => {
 
   const token = parseBearerToken(request.headers.authorization)
   if (token) {
-    return hashToken(token)
+    return token
   }
 
   return null
+}
+
+export const deriveRotatingSessionId = (
+  stableSeed: string,
+  now?: Date,
+): string | null => {
+  const rotated = deriveRotatingToken(stableSeed, {
+    now,
+    intervalHours: config.privacy.sessionRotationHours,
+  })
+  return rotated?.token ?? null
+}
+
+export const deriveSessionId = (request: FastifyRequest): string | null => {
+  const stableSeed = getStableSessionSeed(request)
+  if (!stableSeed) return null
+  return deriveRotatingSessionId(stableSeed)
 }
 
 export const extractExpiresAt = (request: FastifyRequest): Date | null => {

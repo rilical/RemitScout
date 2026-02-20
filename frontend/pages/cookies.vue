@@ -85,12 +85,19 @@
       >
         Manage your preferences
       </h2>
-      <p class="mb-6 leading-relaxed">
+      <p class="mb-4 leading-relaxed">
         You can control or delete cookies through your browser settings. Most browsers allow you to
         refuse or accept cookies, or to delete existing cookies. If a cookie banner is shown on our
         website, you can update your choices there at any time. Please note that disabling certain
         cookies may limit your ability to use some features of our platform.
       </p>
+      <button
+        type="button"
+        class="not-prose mb-6 inline-flex items-center gap-2 rounded-lg border border-brand-600 px-5 py-2.5 text-body font-semibold text-brand-600 hover:bg-brand-600 hover:text-white motion-safe:transition-colors"
+        @click="openCookiePreferences"
+      >
+        Manage cookie preferences
+      </button>
 
       <h2
         id="third-party-services"

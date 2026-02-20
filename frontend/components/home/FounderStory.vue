@@ -96,11 +96,11 @@
 
             <!-- Before/After comparison -->
             <div class="space-y-4">
-              <div class="bg-danger-600 border-2 border-danger-600 rounded-xl p-4">
+              <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-2">
                     <svg
-                      class="w-4 h-4 text-danger-600"
+                      class="w-4 h-4 text-red-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -112,7 +112,7 @@
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                    <span class="text-body-sm font-semibold text-danger-600">Traditional Banks</span>
+                    <span class="text-body-sm font-semibold text-red-900">Traditional Banks</span>
                   </div>
                 </div>
                 <div class="space-y-2 text-body-sm text-neutral-700">
@@ -120,26 +120,26 @@
                     <span>Amount sent:</span>
                     <span class="font-semibold">$300</span>
                   </div>
-                  <div class="flex justify-between text-danger-600">
+                  <div class="flex justify-between text-red-600">
                     <span>Sending fee:</span>
                     <span class="font-semibold">-$15</span>
                   </div>
-                  <div class="flex justify-between text-danger-600">
+                  <div class="flex justify-between text-red-600">
                     <span>Receiving fee:</span>
                     <span class="font-semibold">-$15</span>
                   </div>
-                  <div class="pt-2 border-t border-danger-600 flex justify-between">
+                  <div class="pt-2 border-t border-red-200 flex justify-between">
                     <span class="font-bold">Received:</span>
-                    <span class="font-bold text-danger-600">$270</span>
+                    <span class="font-bold text-red-600">$270</span>
                   </div>
                 </div>
               </div>
 
-              <div class="bg-success-600 border-2 border-success-600 rounded-xl p-4">
+              <div class="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-4">
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-2">
                     <svg
-                      class="w-4 h-4 text-success-600"
+                      class="w-4 h-4 text-emerald-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -151,7 +151,7 @@
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span class="text-body-sm font-semibold text-success-600">Using Remit-Scout</span>
+                    <span class="text-body-sm font-semibold text-emerald-900">Using Remit-Scout</span>
                   </div>
                 </div>
                 <div class="space-y-2 text-body-sm text-neutral-700">
@@ -159,7 +159,7 @@
                     <span>Amount sent:</span>
                     <span class="font-semibold">$300</span>
                   </div>
-                  <div class="flex justify-between text-success-600">
+                  <div class="flex justify-between text-emerald-600">
                     <span>Total fees:</span>
                     <span class="font-semibold">-$3</span>
                   </div>
@@ -167,9 +167,9 @@
                     <span>Hidden fees:</span>
                     <span class="font-semibold">$0</span>
                   </div>
-                  <div class="pt-2 border-t border-success-600 flex justify-between">
+                  <div class="pt-2 border-t border-emerald-200 flex justify-between">
                     <span class="font-bold">Received:</span>
-                    <span class="font-bold text-success-600">$297</span>
+                    <span class="font-bold text-emerald-600">$297</span>
                   </div>
                 </div>
               </div>

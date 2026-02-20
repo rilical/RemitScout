@@ -103,7 +103,7 @@ const joinUrl = (base: string, path: string) => {
 
 const isE2eMockEnabled = () => process.env.E2E_MOCK_API === '1'
 
-type MockResult = { status: number; body: any }
+type MockResult = { status: number, body: any }
 
 const toQueryString = (value: unknown): string | null => {
   if (value === null || value === undefined) return null
@@ -415,7 +415,8 @@ const CIRCUIT_OPEN_FOR_MS = 60_000
 const getCircuitKey = (base: string) => {
   try {
     return new URL(base).origin
-  } catch {
+  }
+ catch {
     return base
   }
 }
@@ -487,7 +488,7 @@ const recordFailure = (key: string, requestId: string, reason: string) => {
   }
 }
 
-const canAttemptRequest = (key: string, requestId: string): { ok: boolean; state: CircuitState; retryAfterMs?: number } => {
+const canAttemptRequest = (key: string, requestId: string): { ok: boolean, state: CircuitState, retryAfterMs?: number } => {
   const circuit = getCircuit(key)
   const now = Date.now()
 
@@ -500,7 +501,8 @@ const canAttemptRequest = (key: string, requestId: string): { ok: boolean; state
         key,
         action: 'half_open',
       })
-    } else {
+    }
+ else {
       return { ok: false, state: 'open', retryAfterMs: Math.max(0, circuit.openedUntilMs - now) }
     }
   }

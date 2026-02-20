@@ -1,5 +1,5 @@
 <template>
-  <section class="py-12 sm:py-16 bg-neutral-900">
+  <section class="py-12 sm:py-16 bg-surface">
     <div class="container">
       <div class="bg-brand-600 rounded-2xl border-2 border-brand-700 overflow-hidden">
         <div class="p-6 sm:p-8 bg-brand-600">

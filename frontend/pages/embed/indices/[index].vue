@@ -38,7 +38,7 @@
       <div class="p-4">
         <div
           v-if="apiKeyWarning"
-          class="mb-3 rounded-lg border border-warning-600 bg-warning-600 px-3 py-2 text-body-sm text-warning-600"
+          class="mb-3 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-body-sm text-warning-800"
         >
           {{ apiKeyWarning }}
         </div>

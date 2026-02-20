@@ -34,7 +34,9 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     },
   })
 
-  const redisAuthToken = redisAuthSecret.secretValueFromJson('password')
+  // `generateSecretString` without a template produces a plain secret string, not JSON.
+  // Use the full secret value directly to avoid JSON parse failures during stack updates.
+  const redisAuthToken = redisAuthSecret.secretValue
 
   const subnetGroup = new CfnSubnetGroup(scope, 'RedisSubnetGroup', {
     cacheSubnetGroupName: `remit-scout-${options.envName}-redis`,

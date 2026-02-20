@@ -113,13 +113,13 @@
                 <td class="py-2">
                   <span
                     v-if="row.smartAlertEligible"
-                    class="inline-flex items-center rounded-full bg-success-600 px-2 py-0.5 text-body-sm font-semibold text-success-600"
+                    class="inline-flex items-center rounded-full bg-success-100 px-2 py-0.5 text-body-sm font-semibold text-success-700"
                   >
                     Available
                   </span>
                   <span
                     v-else
-                    class="inline-flex items-center rounded-full bg-warning-600 px-2 py-0.5 text-body-sm font-semibold text-warning-600"
+                    class="inline-flex items-center rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-semibold text-warning-700"
                   >
                     Rolling out
                   </span>

@@ -48,6 +48,14 @@ vi.mock('../plane-a/src/utils/rate-limit', () => ({
 
 const makeApp = () => ({
   post: vi.fn(),
+  container: {
+    pool: {},
+    repositories: {
+      userAccount: {
+        getPrivacySettings: (...args: any[]) => mockGetPrivacySettings(...args),
+      },
+    },
+  },
 }) as unknown as FastifyInstance
 
 const getPostHandler = (app: FastifyInstance, url: string) => {
@@ -122,5 +130,30 @@ describe('marketing route', () => {
     )
 
     expect(response).toEqual({ success: true, skipped: 'opt_out' })
+  })
+
+  it('stores anonymized client context for marketing events', async () => {
+    const app = makeApp()
+    const { marketingRoutes } = await import('../plane-a/src/routes/marketing')
+    await marketingRoutes(app)
+
+    const handler = getPostHandler(app, '/marketing/meta')
+    const response = await handler(
+      {
+        body: { event_name: 'Lead' },
+        ip: '203.0.113.89',
+        headers: {
+          'user-agent': 'Mozilla/5.0 AppleWebKit Chrome/122.0.0.0 Safari/537.36',
+        },
+      },
+      makeReply(),
+    )
+
+    expect(response).toMatchObject({ success: true })
+    expect(mockInsertQuery).toHaveBeenCalled()
+    const params = mockInsertQuery.mock.calls[0]?.[1] as unknown[]
+    expect(params[20]).toBe('203.0.113.0')
+    expect(String(params[21])).toMatch(/^[a-f0-9]{64}$/)
+    expect(params[22]).toBe('chrome')
   })
 })

@@ -17,6 +17,7 @@ export class SessionRepository implements ISessionRepository {
         user_id,
         anon_id,
         ip_address,
+        ip_hash,
         user_agent,
         device_type,
         location,
@@ -25,12 +26,13 @@ export class SessionRepository implements ISessionRepository {
         last_activity,
         is_active
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, NOW(), TRUE)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, NOW(), TRUE)
       ON CONFLICT (session_id)
       DO UPDATE SET
         user_id = COALESCE(EXCLUDED.user_id, silver.user_session.user_id),
         anon_id = COALESCE(EXCLUDED.anon_id, silver.user_session.anon_id),
         ip_address = COALESCE(EXCLUDED.ip_address, silver.user_session.ip_address),
+        ip_hash = COALESCE(EXCLUDED.ip_hash, silver.user_session.ip_hash),
         user_agent = COALESCE(EXCLUDED.user_agent, silver.user_session.user_agent),
         device_type = COALESCE(EXCLUDED.device_type, silver.user_session.device_type),
         location = COALESCE(EXCLUDED.location, silver.user_session.location),
@@ -44,6 +46,7 @@ export class SessionRepository implements ISessionRepository {
         user_id,
         anon_id,
         ip_address,
+        ip_hash,
         user_agent,
         device_type,
         location,
@@ -58,6 +61,7 @@ export class SessionRepository implements ISessionRepository {
         input.userId ?? null,
         input.anonId ?? null,
         input.ipAddress ?? null,
+        input.ipHash ?? null,
         input.userAgent ?? null,
         input.deviceType ?? null,
         input.location ?? null,
@@ -79,6 +83,7 @@ export class SessionRepository implements ISessionRepository {
         user_id,
         anon_id,
         ip_address,
+        ip_hash,
         user_agent,
         device_type,
         location,
@@ -105,6 +110,7 @@ export class SessionRepository implements ISessionRepository {
         user_id,
         anon_id,
         ip_address,
+        ip_hash,
         user_agent,
         device_type,
         location,
@@ -132,6 +138,7 @@ export class SessionRepository implements ISessionRepository {
         user_id,
         anon_id,
         ip_address,
+        ip_hash,
         user_agent,
         device_type,
         location,

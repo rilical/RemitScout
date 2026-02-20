@@ -496,12 +496,15 @@ const loadAnalytics = async () => {
     if (failures.length === results.length) {
       const reason = (failures[0] as PromiseRejectedResult).reason
       error.value = reason?.message || 'All analytics endpoints failed to load.'
-    } else if (failures.length > 0) {
+    }
+ else if (failures.length > 0) {
       error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
     }
-  } catch (err: unknown) {
+  }
+ catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
-  } finally {
+  }
+ finally {
     isLoading.value = false
   }
 }

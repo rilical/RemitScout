@@ -69,7 +69,7 @@
 
       <div
         v-if="!targetUrl"
-        class="mt-6 rounded-xl border border-warning-600 bg-warning-600 p-4 text-body-sm text-warning-600"
+        class="mt-6 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-body-sm text-warning-800"
       >
         We could not determine a valid destination URL for this provider. Please go back and try another link.
       </div>

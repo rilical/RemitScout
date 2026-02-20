@@ -6,21 +6,25 @@
     <div
       v-for="(faq, index) in props.faqs"
       :key="index"
-      class="rounded-lg border border-neutral-200 overflow-hidden"
+      :class="dark ? 'rounded-lg border border-white/15 overflow-hidden' : 'rounded-lg border border-neutral-200 overflow-hidden'"
     >
       <button
+        :id="`faq-button-${index}`"
         :ref="el => setButtonEl(index, el)"
         type="button"
-        class="flex w-full items-start justify-between gap-4 px-6 py-4 text-left hover:bg-neutral-50 cursor-pointer motion-safe:transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-inset"
-        :id="`faq-button-${index}`"
+        :class="[
+          'flex w-full items-start justify-between gap-4 px-6 py-4 text-left cursor-pointer motion-safe:transition-colors focus:outline-none focus:ring-2 focus:ring-inset',
+          dark
+            ? 'hover:bg-white/10 focus:ring-white/30'
+            : 'hover:bg-neutral-50 focus:ring-brand-600',
+        ]"
         :aria-expanded="openFaqs.includes(index)"
         :aria-controls="`faq-panel-${index}`"
         @click="toggleFaq(index)"
       >
-        <span class="flex-1 text-left font-medium leading-relaxed text-neutral-900 [text-wrap:pretty]">{{ faq.question }}</span>
+        <span :class="['flex-1 text-left font-medium leading-relaxed [text-wrap:pretty]', dark ? 'text-white' : 'text-neutral-900']">{{ faq.question }}</span>
         <svg
-          class="mt-1 h-5 w-5 flex-shrink-0 transform text-neutral-500 motion-safe:transition-transform"
-          :class="{ 'rotate-180': openFaqs.includes(index) }"
+          :class="['mt-1 h-5 w-5 flex-shrink-0 transform motion-safe:transition-transform', dark ? 'text-white/50' : 'text-neutral-500', { 'rotate-180': openFaqs.includes(index) }]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -38,11 +42,11 @@
         :id="`faq-panel-${index}`"
         role="region"
         :aria-labelledby="`faq-button-${index}`"
-        class="px-6 pb-6 pt-2 border-t border-neutral-100"
+        :class="['px-6 pb-6 pt-2 border-t', dark ? 'border-white/10' : 'border-neutral-100']"
       >
         <RichHtml
           :ref="el => setAnswerEl(index, el)"
-          class="prose prose-sm max-w-none text-neutral-700 leading-relaxed"
+          :class="['prose prose-sm max-w-none leading-relaxed', dark ? 'prose-invert text-white/70' : 'text-neutral-700']"
           :content="faq.answer"
         />
       </div>
@@ -61,6 +65,7 @@ interface Faq {
 
 const props = defineProps<{
   faqs: Faq[]
+  dark?: boolean
 }>()
 
 const openFaqs = ref<number[]>([])

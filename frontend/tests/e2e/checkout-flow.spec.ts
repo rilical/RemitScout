@@ -10,4 +10,3 @@ test('checkout: logged out redirects to sign-in with redirect param', async ({ p
   await expect(page).toHaveURL(/\/sign-in\?.*redirect=.*plus%2Fcheckout|\/sign-in\?.*redirect=.*\/plus\/checkout/)
   await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible()
 })
-

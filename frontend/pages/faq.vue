@@ -1,6 +1,5 @@
 <template>
-  <PageContainer class="min-h-screen">
-    <CompareWidget />
+  <div class="min-h-screen">
 
     <!-- Hero Section -->
     <section class="relative bg-neutral-900 py-12 lg:py-16">
@@ -11,7 +10,7 @@
         />
 
         <div class="mx-auto max-w-4xl text-center mt-8">
-          <h1 class="text-hero font-bold text-brand-600 mb-4">
+          <h1 class="text-hero font-bold text-white mb-4">
             Frequently Asked Questions
           </h1>
           <p class="text-body-lg text-neutral-300 max-w-3xl mx-auto mb-8">
@@ -196,245 +195,9 @@
         </div>
       </div>
 
-      <!-- Trust & Independence Section -->
-      <section class="py-12 sm:py-16 bg-brand-600 mt-20 mb-16 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-        <div class="mx-auto max-w-page px-page-x">
-          <div class="text-center mb-12">
-            <h2 class="text-h2 font-bold text-white mb-4">
-              Trust & independence
-            </h2>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <div class="space-y-6">
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
-                    <ShieldCheckIcon class="w-7 h-7 text-brand-600" />
-                  </div>
-                  <div class="pt-2">
-                    <p class="font-semibold text-white mb-1">
-                      Independent rankings
-                    </p>
-                    <p class="text-white/90 leading-relaxed">
-                      Providers cannot buy placement. Rankings reflect delivered outcome, total cost, and other signals shown on the page.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
-                    <ClockIcon class="w-7 h-7 text-brand-600" />
-                  </div>
-                  <div class="pt-2">
-                    <p class="font-semibold text-white mb-1">
-                      Timestamped quotes
-                    </p>
-                    <p class="text-white/90 leading-relaxed">
-                      Quotes refresh regularly, with cadence that varies by corridor and data source. Every quote includes a timestamp so you can judge freshness.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
-                    <LockClosedIcon class="w-7 h-7 text-brand-600" />
-                  </div>
-                  <div class="pt-2">
-                    <p class="font-semibold text-white mb-1">
-                      Privacy-minded by design
-                    </p>
-                    <p class="text-white/90 leading-relaxed">
-                      You can compare without creating an account. Accounts are used for features like watchlists, alerts, newsletters, and Remit‑Scout Plus.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flex items-start gap-4">
-                  <div class="flex-shrink-0 w-14 h-14 bg-surface rounded-2xl flex items-center justify-center shadow-lg">
-                    <UserGroupIcon class="w-7 h-7 text-brand-600" />
-                  </div>
-                  <div class="pt-2">
-                    <p class="font-semibold text-white mb-1">
-                      Built for expats, by expats
-                    </p>
-                    <p class="text-white/90 leading-relaxed">
-                      We’ve lived the “send money home” problem. The goal is simple: help more of your money reach the recipient, with fewer surprises at checkout.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-8 pt-8 border-t border-white/20">
-                <NuxtLink
-                  to="/methodology"
-                  class="inline-flex items-center gap-2 text-white hover:text-white/80 transition-colors group"
-                >
-                  <span class="text-body-sm font-semibold">Find out more about how we pick our providers</span>
-                  <svg
-                    class="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </NuxtLink>
-              </div>
-            </div>
-
-            <div>
-              <div class="bg-neutral-50 rounded-2xl border border-neutral-200 p-6 sm:p-8">
-                <h3 class="text-h4 font-bold text-neutral-900 mb-6">
-                  Compliance & Security
-                </h3>
-
-                <div class="space-y-4">
-                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                    <div class="flex-1">
-                      <div class="font-semibold text-neutral-900">
-                        Privacy requests supported
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                    <div class="flex-1">
-                      <div class="font-semibold text-neutral-900">
-                        Security best practices
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                    <div class="flex-1">
-                      <div class="font-semibold text-neutral-900">
-                        No card storage
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-3 p-4 bg-surface rounded-xl">
-                    <div class="flex-shrink-0 w-8 h-8 bg-success-600 rounded-full flex items-center justify-center">
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                    <div class="flex-1">
-                      <div class="font-semibold text-neutral-900">
-                        Regulated providers (where applicable)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p class="mt-6 text-body-sm text-neutral-500">
-                  Regulation applies to providers. Remit‑Scout is a comparison and research product and does not handle funds.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Final CTA Section -->
-      <section class="mb-16">
-        <div class="text-center">
-          <h2 class="text-h2 font-bold text-white mb-4">
-            Still have questions?
-          </h2>
-          <p class="text-body-lg text-neutral-300 max-w-2xl mx-auto mb-8 leading-relaxed">
-            If you can't find what you need here, contact us or report an issue — we read every message and use them to improve accuracy and clarity.
-          </p>
-          <div class="flex flex-wrap items-center justify-center gap-4">
-            <NuxtLink
-              to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-brand-700"
-            >
-              Contact support
-            </NuxtLink>
-            <NuxtLink
-              to="/contact"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
-            >
-              Report a rate issue
-            </NuxtLink>
-            <NuxtLink
-              to="/methodology"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
-            >
-              Read Methodology
-            </NuxtLink>
-            <NuxtLink
-              to="/partnerships"
-              class="inline-flex items-center gap-2 rounded-xl border-2 border-neutral-700 bg-neutral-800 px-8 py-4 text-body font-semibold text-white transition-colors hover:bg-neutral-700"
-            >
-              How we make money
-            </NuxtLink>
-          </div>
-        </div>
-      </section>
     </div>
+
+    <WhyTrustUs />
 
     <!-- Final CTA Section -->
     <section class="py-16 sm:py-20 bg-neutral-900">
@@ -463,18 +226,16 @@
     </section>
 
     <TrustMetricsStrip />
-  </PageContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ClockIcon, LockClosedIcon, ShieldCheckIcon, UserGroupIcon } from '@heroicons/vue/24/outline'
 import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 import FaqAccordion from '~/components/shared/FaqAccordion.vue'
-import CompareWidget from '~/components/shared/CompareWidget.vue'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import TrustBadgesRow from '~/components/shared/TrustBadgesRow.vue'
-import PageContainer from '~/components/shared/PageContainer.vue'
+import WhyTrustUs from '~/components/home/WhyTrustUs.vue'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { setSeo } from '~/composables/useSeo'
 import { TRUST_BADGES } from '~/lib/marketing/trust'
@@ -552,7 +313,7 @@ const pricingFaqs = [
   },
   {
     question: 'What does "Total cost" include?',
-    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient should receive:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> the upfront charge you see</li><li><strong>FX markup:</strong> the difference between a provider’s rate and a reference mid-market rate at the same time</li></ul><div class="bg-warning-600 border border-warning-600 rounded-lg p-4 my-4"><p class="text-body-sm font-semibold text-warning-600 mb-2">⚠️ The hidden markup problem</p><p class="text-body-sm text-warning-600">Example: if the reference USD→MXN rate is 18.50 but a provider offers 18.00, that’s roughly a <strong>2.7% markup</strong>. On a $500 transfer, that’s meaningful — even before any stated fee.</p></div><p class="mt-2">Some providers advertise “$0 fees” but price through the exchange rate. Total cost helps you compare apples to apples.</p>',
+    answer: '<p><strong>Total cost</strong> includes everything that reduces what your recipient should receive:</p><ul class="list-disc pl-5 space-y-2 mt-3"><li><strong>Stated transfer fee:</strong> the upfront charge you see</li><li><strong>FX markup:</strong> the difference between a provider’s rate and a reference mid-market rate at the same time</li></ul><div class="bg-warning-50 border-l-4 border-warning-600 rounded-lg p-4 my-4"><p class="text-body-sm font-semibold text-warning-900 mb-2">⚠️ The hidden markup problem</p><p class="text-body-sm text-warning-800">Example: if the reference USD→MXN rate is 18.50 but a provider offers 18.00, that’s roughly a <strong>2.7% markup</strong>. On a $500 transfer, that’s meaningful — even before any stated fee.</p></div><p class="mt-2">Some providers advertise “$0 fees” but price through the exchange rate. Total cost helps you compare apples to apples.</p>',
   },
   {
     question: 'Why might the provider checkout show a different price than Remit‑Scout?',

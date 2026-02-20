@@ -38,7 +38,7 @@
           :insight="getChartInsight(chart.id)"
           :sparkline-data="getSparklineData(chart.id)"
           :is-gated="isChartGated(chart)"
-          :gate-label="isChartGated(chart) ? 'Pro' : undefined"
+          :gate-label="isChartGated(chart) ? 'Pulse' : undefined"
           :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
           :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
           :disable-actions="isChartGated(chart)"
@@ -91,7 +91,7 @@ function getSparklineData(chartId: string) {
 const PRO_TYPES = new Set<ChartMetadata['type']>(['stacked', 'scatter', 'matrix'])
 
 function isChartGated(chart: ChartMetadata): boolean {
-  return PRO_TYPES.has(chart.type) && props.pulseLevel !== 'pro'
+  return PRO_TYPES.has(chart.type) && props.pulseLevel !== 'full'
 }
 
 function handleView(chartId: string) {

@@ -105,13 +105,13 @@ defineEmits<{
 
 const resolvedTitle = computed(() => {
   if (props.title) return props.title
-  return props.tier === 'enterprise' ? 'Pulse Pro (Enterprise)' : 'Plus Feature'
+  return props.tier === 'enterprise' ? 'Pulse (Enterprise)' : 'Plus Feature'
 })
 
 const resolvedDescription = computed(() => {
   if (props.description) return props.description
   return props.tier === 'enterprise'
-    ? 'Enterprise feature. Contact sales for access to institutional Pulse Pro analytics.'
+    ? 'Enterprise feature. Contact sales for access to institutional Pulse analytics.'
     : 'Unlock this feature with Remit-Scout Plus for advanced insights and data access.'
 })
 

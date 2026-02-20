@@ -7,7 +7,7 @@
       <div class="flex flex-col items-center gap-2 rounded-2xl border border-neutral-200/80 bg-surface/50 px-4 py-3 shadow-sm backdrop-blur md:flex-row md:justify-between md:gap-4">
         <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-body-sm text-neutral-600">
           <span class="flex items-center gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-600 text-success-600">✔</span>
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success-100 text-success-700">✔</span>
             Third-party provider checks
           </span>
           <span
@@ -34,7 +34,7 @@
             to="/legal/disclosure"
             class="flex items-center gap-2 text-body-sm font-medium text-neutral-700 transition-colors hover:text-primary-600"
           >
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-warning-600 text-warning-600">💡</span>
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-warning-100 text-warning-700">💡</span>
             How we earn a fee
           </NuxtLink>
           <span

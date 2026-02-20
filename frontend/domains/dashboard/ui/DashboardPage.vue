@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import DashboardSignedIn from './DashboardSignedIn.vue'
-import DashboardSignedOut from './DashboardSignedOut.vue'
 
 const { ensureHydrated, isAuthenticated } = useAuth()
 await ensureHydrated()
+
+if (import.meta.client && !isAuthenticated.value) {
+  await navigateTo({
+    path: '/sign-in',
+    query: { redirect: '/dashboard' },
+  })
+}
 
 useHead({
   title: 'Dashboard | Remit-Scout',
@@ -12,6 +18,9 @@ useHead({
 </script>
 
 <template>
-  <DashboardSignedOut v-if="!isAuthenticated" />
-  <DashboardSignedIn v-else />
+  <DashboardSignedIn v-if="isAuthenticated" />
+  <div
+    v-else
+    class="min-h-screen bg-surface"
+  />
 </template>

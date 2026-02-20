@@ -3,13 +3,13 @@ import { defineEventHandler, getRequestURL, setResponseHeaders } from 'h3'
 export default defineEventHandler((event) => {
   const url = getRequestURL(event)
   const isEmbed = url.pathname.startsWith('/embed/')
-  const prodLike =
-    process.env.NODE_ENV === 'production'
-    || process.env.NODE_ENV === 'staging'
-    || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
-  const enforceCsp =
-    (process.env.CSP_ENFORCE === '1' || process.env.CSP_ENFORCE === 'true')
-    || prodLike
+  const prodLike
+    = process.env.NODE_ENV === 'production'
+      || process.env.NODE_ENV === 'staging'
+      || ['prod', 'production', 'staging'].includes((process.env.ENVIRONMENT ?? '').toLowerCase())
+  const enforceCsp
+    = (process.env.CSP_ENFORCE === '1' || process.env.CSP_ENFORCE === 'true')
+      || prodLike
 
   // NOTE: If `/embed/*` pages must be iframe-embeddable on third-party sites,
   // `X-Frame-Options: SAMEORIGIN` will block them. In that case, omit XFO for

@@ -335,7 +335,7 @@ export const useStructuredData = () => {
       '@context': 'https://schema.org',
       '@type': 'Service',
       'name': 'International Money Transfer Comparison',
-      'description': 'Compare live rates, fees and delivery speeds from 30+ licensed money transfer providers',
+      'description': 'Compare current provider quotes, fees and delivery speeds from 30+ licensed money transfer providers',
       'provider': {
         '@type': 'Organization',
         'name': siteName || 'Remit-Scout',

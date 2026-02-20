@@ -13,31 +13,16 @@
               loading="lazy"
               class="h-20 w-auto mb-4 object-contain"
             />
-            <p class="text-body text-white font-bold mb-4">
+            <p class="text-body font-bold text-white mb-3">
               Money, made global.
             </p>
-            <p class="text-body-sm text-white/80 leading-relaxed max-w-xs">
+            <p class="text-body-sm text-white/70 leading-relaxed max-w-xs">
               Compare rates and fees from 30+ licensed providers. Find the best deal for your international money transfer.
             </p>
           </div>
-          <div class="mt-6 flex flex-wrap items-center gap-3">
-            <a
-              href="mailto:support@remit-scout.com"
-              class="text-white/80 hover:text-white motion-safe:transition-colors text-body-sm font-medium"
-            >
-              support@remit-scout.com
-            </a>
-            <span class="text-white/30">•</span>
-            <a
-              href="mailto:partnership@remit-scout.com"
-              class="text-white/80 hover:text-white motion-safe:transition-colors text-body-sm font-medium"
-            >
-              partnership@remit-scout.com
-            </a>
-          </div>
         </div>
 
-        <!-- Product -->
+        <!-- Services -->
         <div>
           <h3 class="mb-5 text-body font-semibold text-white tracking-tight">
             Services
@@ -69,18 +54,10 @@
             </li>
             <li>
               <NuxtLink
-                to="/learn/providers"
+                to="/plus"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
-                Provider Review
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                to="/media-kit"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Media Kit
+                Plus
               </NuxtLink>
             </li>
           </ul>
@@ -102,14 +79,6 @@
             </li>
             <li>
               <NuxtLink
-                to="/contact"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Contact
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
                 to="/methodology"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
@@ -118,14 +87,6 @@
             </li>
             <li>
               <NuxtLink
-                to="/partnerships"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Partnerships
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
                 to="/contact"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
@@ -134,26 +95,10 @@
             </li>
             <li>
               <NuxtLink
-                to="/status"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Status
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
                 to="/faq"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 FAQ
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                to="/media-kit"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Media Kit
               </NuxtLink>
             </li>
           </ul>
@@ -183,31 +128,6 @@
             </li>
             <li>
               <NuxtLink
-                to="/cookies"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Cookie Policy
-              </NuxtLink>
-            </li>
-            <li>
-              <button
-                type="button"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-                @click="openCookiePreferences"
-              >
-                Cookie settings
-              </button>
-            </li>
-            <li>
-              <NuxtLink
-                to="/legal/do-not-sell"
-                class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
-              >
-                Do Not Sell
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
                 to="/legal/disclosure"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
@@ -216,7 +136,7 @@
             </li>
             <li>
               <NuxtLink
-                to="/corrections"
+                to="/legal/how-we-make-money"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 How We Make Money
@@ -224,7 +144,7 @@
             </li>
             <li>
               <NuxtLink
-                to="/legal/how-we-make-money"
+                to="/corrections"
                 class="text-neutral-400 hover:text-white motion-safe:transition-colors text-body-sm"
               >
                 Corrections
@@ -286,15 +206,17 @@
       </div>
 
       <div class="pt-8 border-t border-white/20">
-        <p class="text-body-sm text-white/60 leading-relaxed mb-6 max-w-3xl">
+        <p class="text-body-sm text-white/50 leading-relaxed mb-6 max-w-3xl">
           Remit-Scout is an independent comparison service. We may earn affiliate commissions when you click provider links and sign up.
-          <br>
           Our editorial content remains unbiased and focused on helping you find the best money transfer solution for your needs.
         </p>
 
         <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p class="text-body-sm text-white/70">
+          <p class="text-body-sm text-white/60">
             © {{ new Date().getFullYear() }} Remit-Scout LLC. All rights reserved.
+            <NuxtLink to="/legal/do-not-sell" class="text-white/30 hover:text-white/60 motion-safe:transition-colors ml-2">
+              Do Not Sell
+            </NuxtLink>
           </p>
         </div>
       </div>

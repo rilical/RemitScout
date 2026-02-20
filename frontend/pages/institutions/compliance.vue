@@ -2,6 +2,52 @@
 import { setSeo } from '~/composables/useSeo'
 
 const { public: { siteUrl } } = useRuntimeConfig()
+const { request } = useApi()
+
+type ComplianceStatusResponse = {
+  certifications?: {
+    soc2_type_ii?: {
+      status?: string
+      report_date?: string | null
+      expires_on?: string | null
+    }
+  }
+}
+
+const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
+  'institutions-compliance-status',
+  async () => {
+    try {
+      return await request<ComplianceStatusResponse>('/compliance/status', { method: 'GET' })
+    }
+    catch {
+      return {
+        certifications: {
+          soc2_type_ii: {
+            status: 'in_progress',
+          },
+        },
+      }
+    }
+  },
+  {
+    default: () => ({
+      certifications: {
+        soc2_type_ii: {
+          status: 'in_progress',
+        },
+      },
+    }),
+  },
+)
+
+const soc2StatusLabel = computed(() => {
+  const status = (complianceStatus.value?.certifications?.soc2_type_ii?.status || 'in_progress').toLowerCase()
+  if (status === 'compliant') return 'SOC 2 Type II status: compliant.'
+  if (status === 'not_started') return 'SOC 2 Type II status: not started.'
+  if (status === 'not_applicable') return 'SOC 2 Type II status: not applicable.'
+  return 'SOC 2 Type II status: in progress.'
+})
 
 const mailtoHref = 'mailto:support@remit-scout.com?subject=Institutional%20inquiry'
 
@@ -37,7 +83,7 @@ const breadcrumbItems = [
             Security and compliance documentation available upon request.
           </p>
           <p class="text-body text-neutral-700 leading-relaxed mb-8">
-            SOC 2 readiness is in progress.
+            {{ soc2StatusLabel }}
           </p>
 
           <div class="flex flex-wrap gap-3">

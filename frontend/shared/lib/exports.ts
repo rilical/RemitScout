@@ -4,4 +4,3 @@ export const clampExportDays = (days: number) => {
   if (!Number.isFinite(days)) return EXPORTS_MAX_WINDOW_DAYS_HARD_CAP
   return Math.min(Math.max(Math.floor(days), 1), EXPORTS_MAX_WINDOW_DAYS_HARD_CAP)
 }
-

@@ -36,7 +36,10 @@
           aria-label="Dismiss notification"
           @click="dismiss(toast.id)"
         >
-          <XMarkIcon class="h-4 w-4" aria-hidden="true" />
+          <XMarkIcon
+class="h-4 w-4"
+aria-hidden="true"
+/>
         </button>
       </div>
     </TransitionGroup>

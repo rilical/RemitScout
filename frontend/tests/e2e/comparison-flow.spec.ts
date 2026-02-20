@@ -9,4 +9,3 @@ test('comparison flow: corridor page renders mocked provider rows', async ({ pag
   // Mocked backend provides a couple providers; ensure at least one renders.
   await expect(page.getByText('Wise').first()).toBeVisible()
 })
-

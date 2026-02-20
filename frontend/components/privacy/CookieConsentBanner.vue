@@ -89,7 +89,13 @@ onMounted(async () => {
     })
     const raw = (data.countryCode || data.country_code || '').toUpperCase()
     region.value = raw && EEA_UK_COUNTRIES.has(raw) ? 'eea' : 'non_eea'
-  } catch {
+    // Non-EEA users (e.g. US/CCPA) don't require opt-in consent — auto-accept so
+    // analytics and ads can run. They can still opt out via the cookie policy page.
+    if (region.value === 'non_eea') {
+      await saveSettings({ personalization: true, analytics: true, marketing: true })
+    }
+  }
+  catch {
     region.value = 'error'
   }
 })

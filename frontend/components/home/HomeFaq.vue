@@ -1,5 +1,5 @@
 <template>
-  <section class="py-12 sm:py-16 bg-neutral-900">
+  <section class="py-12 sm:py-16 bg-brand-600">
     <div class="mx-auto max-w-4xl px-page-x">
       <div class="text-center mb-12">
         <h2 class="text-h2 font-bold text-white mb-4">
@@ -39,8 +39,8 @@
           </button>
           <div
             v-if="openFaqs.includes(index)"
-            class="px-6 pb-5 text-neutral-600 leading-relaxed border-t border-neutral-100 pt-4"
             :id="`home-faq-panel-${index}`"
+            class="px-6 pb-5 text-neutral-600 leading-relaxed border-t border-neutral-100 pt-4"
             role="region"
             :aria-labelledby="`home-faq-button-${index}`"
           >
@@ -52,7 +52,7 @@
       <div class="mt-8 text-center">
         <NuxtLink
           to="/faq"
-          class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-8 py-4 text-body-lg font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors shadow-lg"
+          class="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-4 text-body-lg font-semibold text-brand-600 hover:bg-brand-50 motion-safe:transition-colors shadow-lg"
         >
           View More Questions
           <svg

@@ -839,9 +839,11 @@ const runAlertEvaluation = async () => {
     else {
       if (result?.mode === 'batch') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): triggered ${result?.triggered ?? 0}/${result?.total ?? 0}.`
-      } else if (result?.mode === 'single') {
+      }
+ else if (result?.mode === 'single') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): alert ${result?.alertId} triggered=${Boolean(result?.triggered)}.`
-      } else {
+      }
+ else {
         actionMessage.value = `Alert evaluation (${mode}) completed.`
       }
       await loadObserver()

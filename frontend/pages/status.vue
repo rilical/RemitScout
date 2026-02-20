@@ -6,12 +6,12 @@ const isE2e = Boolean(e2eMockApi)
 useHead({
   title: 'Status | Remit-Scout',
   meta: [
-    ...(isE2e ? [] : [{ 'http-equiv': 'refresh', content: `0; url=${STATUS_URL}` }]),
+    ...(isE2e ? [] : [{ 'http-equiv': 'refresh', 'content': `0; url=${STATUS_URL}` }]),
     { name: 'robots', content: 'noindex, nofollow' },
   ],
 })
 
-if (process.client && !isE2e) {
+if (import.meta.client && !isE2e) {
   // Static hosting friendly: render a page that immediately redirects when JS is available.
   navigateTo(STATUS_URL, { external: true })
 }

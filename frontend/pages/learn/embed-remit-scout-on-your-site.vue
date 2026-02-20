@@ -207,7 +207,7 @@
           </div>
 
           <!-- What Partners Can't Influence -->
-          <div class="mb-12 rounded-3xl border-2 border-success-600 bg-success-600 p-8 lg:p-12">
+          <div class="mb-12 rounded-3xl border-2 border-success-500 bg-success-50 p-8 lg:p-12">
             <h2 class="text-h3 font-bold text-neutral-900 mb-4">
               What Partners Can and Can't Influence
             </h2>

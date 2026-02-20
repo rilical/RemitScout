@@ -1,5 +1,4 @@
-import { createHash } from 'crypto'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const loadModule = async () => {
   vi.resetModules()
@@ -8,32 +7,49 @@ const loadModule = async () => {
       geo: {
         countryHeader: 'x-country-code',
       },
+      privacy: {
+        hashSalt: 'privacy-hash-salt',
+        sessionSalt: 'privacy-session-salt',
+        sessionRotationHours: 24,
+      },
     },
   }))
   return await import('../plane-a/src/services/session-utils')
 }
 
 describe('session-utils', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-19T12:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('derives session id from claims', async () => {
-    const { deriveSessionId } = await loadModule()
+    const { deriveSessionId, deriveRotatingSessionId } = await loadModule()
     const request = {
       user: { claims: { session_id: ' sess-123 ' } },
       headers: {},
     } as any
 
-    expect(deriveSessionId(request)).toBe('sess-123')
+    expect(deriveSessionId(request)).toBe(
+      deriveRotatingSessionId('sess-123', new Date('2026-02-19T12:00:00.000Z')),
+    )
   })
 
   it('derives session id from bearer token when claims missing', async () => {
-    const { deriveSessionId } = await loadModule()
+    const { deriveSessionId, deriveRotatingSessionId } = await loadModule()
     const token = 'token-abc'
     const request = {
       user: { claims: {} },
       headers: { authorization: `Bearer ${token}` },
     } as any
 
-    const expected = createHash('sha256').update(token).digest('hex')
-    expect(deriveSessionId(request)).toBe(expected)
+    expect(deriveSessionId(request)).toBe(
+      deriveRotatingSessionId(token, new Date('2026-02-19T12:00:00.000Z')),
+    )
   })
 
   it('extracts expires at from exp claim', async () => {

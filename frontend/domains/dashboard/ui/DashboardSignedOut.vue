@@ -277,7 +277,12 @@ const features = [
 	      </div>
 	    </CenteredPage>
 
-	    <CenteredPage as="section" max-width="6xl" padding-y="lg" section-gap-class="space-y-10">
+	    <CenteredPage
+as="section"
+max-width="6xl"
+padding-y="lg"
+section-gap-class="space-y-10"
+>
 	      <header class="text-center">
 	        <h2 class="text-h3 font-bold text-rs-fg">
 	          Everything you need, without the noise

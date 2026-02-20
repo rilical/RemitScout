@@ -11,7 +11,7 @@ describe('useEntitlements helpers', () => {
     expect(planToPulseLevel('plus')).toBe('lite')
   })
 
-  it('planToPulseLevel maps enterprise -> pro', () => {
-    expect(planToPulseLevel('enterprise')).toBe('pro')
+  it('planToPulseLevel maps enterprise -> full', () => {
+    expect(planToPulseLevel('enterprise')).toBe('full')
   })
 })

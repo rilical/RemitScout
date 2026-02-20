@@ -1,28 +1,37 @@
 <template>
-  <section class="py-16 sm:py-20 bg-neutral-50 border-y border-rs-border">
+  <section class="py-16 sm:py-20 bg-neutral-900">
     <div class="container">
-      <div class="rounded-3xl border border-rs-border bg-surface p-8 sm:p-10 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-          <div class="lg:max-w-3xl">
-            <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
+        <div class="flex items-start gap-6 lg:max-w-2xl">
+          <div>
+            <p class="text-body-sm font-semibold text-brand-200 uppercase tracking-wide mb-3">
               For institutions
             </p>
-            <h2 class="text-h2 font-bold text-rs-fg mb-4 leading-tight">
-              Remittance intelligence for research and risk teams
+            <h2 class="text-h2 font-bold text-white mb-4 leading-tight">
+              Remittance data for<br class="hidden sm:block">
+              research and risk teams
             </h2>
-            <p class="text-body-lg text-neutral-700 leading-relaxed">
-              We offer real-time corridor data, proprietary cost and volatility indexes, and historical datasets. Materials and access details are shared with qualified clients under NDA.
+            <p class="text-body-lg text-white/60 leading-relaxed max-w-xl">
+              Real-time corridor pricing, proprietary cost and volatility indexes, and historical datasets — shared with qualified clients under NDA.
             </p>
           </div>
+        </div>
 
-          <div class="flex flex-col sm:flex-row gap-3">
-            <NuxtLink
-              to="/contact?type=enterprise&topic=pulse"
-              class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-body font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
+        <div class="flex-shrink-0 lg:pl-8">
+          <NuxtLink
+            to="/contact?type=enterprise&topic=pulse"
+            class="group inline-flex items-center gap-3 px-7 py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-body rounded-xl motion-safe:transition-colors shadow-lg"
+          >
+            Get in touch
+            <svg
+              class="w-4 h-4 motion-safe:transition-transform group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Contact us
-            </NuxtLink>
-          </div>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </NuxtLink>
         </div>
       </div>
     </div>

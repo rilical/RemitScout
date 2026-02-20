@@ -13,6 +13,11 @@ const { compareUrl } = useCompareForm()
 const { isAuthenticated } = useAuth()
 const { isPlus } = useEntitlements()
 const { pulseEnabled } = useFeatureFlags()
+const dashboardNavTo = computed(() => (
+  isAuthenticated.value
+    ? '/dashboard'
+    : '/sign-in?redirect=/dashboard'
+))
 
 const logoPlusSrc = computed(() => {
   // Route to SVG file in public/png/SVG directory
@@ -127,7 +132,7 @@ watch(() => route.path, () => {
         >
           <!-- Dashboard -->
           <NuxtLink
-            to="/dashboard"
+            :to="dashboardNavTo"
             class="px-3 py-2 text-body-sm font-medium text-neutral-700 hover:text-rs-fg rounded-md hover:bg-neutral-50 motion-safe:transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             :aria-current="ariaCurrent('/dashboard')"
           >
@@ -341,7 +346,7 @@ watch(() => route.path, () => {
 
           <div class="px-4 py-6 space-y-2">
             <NuxtLink
-              to="/dashboard"
+              :to="dashboardNavTo"
               class="flex items-center justify-between rounded-lg px-3 py-2.5 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 motion-safe:transition"
               :aria-current="ariaCurrent('/dashboard')"
             >

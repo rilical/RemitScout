@@ -48,7 +48,10 @@
                 />
               </svg>
             </li>
-            <li class="text-white font-medium" aria-current="page">
+            <li
+class="text-white font-medium"
+aria-current="page"
+>
               {{ content.from }} to {{ content.to }}
             </li>
           </ol>
@@ -59,7 +62,7 @@
           <div>
             <!-- SR-only H1 for SEO -->
             <h1 class="sr-only">Send money from {{ content.from }} to {{ content.to }}</h1>
-            
+
             <!-- Corridor Header -->
             <div class="flex items-center gap-6 mb-4">
               <div class="flex items-center gap-3">
@@ -606,14 +609,14 @@
 
           <div
             v-if="corridorUnsupported"
-            class="rounded-xl border-2 border-danger-600 bg-danger-600 p-4 text-body-sm text-danger-600"
+            class="rounded-xl border-2 border-danger-200 bg-danger-50 p-4 text-body-sm text-danger-800"
           >
             Unsupported corridor. Please try another combination.
           </div>
 
           <div
             v-else-if="corridorUnavailable"
-            class="rounded-xl border-2 border-danger-600 bg-danger-600 p-4 text-body-sm text-danger-600"
+            class="rounded-xl border-2 border-danger-200 bg-danger-50 p-4 text-body-sm text-danger-800"
           >
             This corridor is unavailable right now. Please try another combination.
           </div>
@@ -627,7 +630,7 @@
 
           <div
             v-else-if="hasApiError"
-            class="rounded-xl border-2 border-warning-600 bg-warning-600 p-4 text-body-sm text-warning-600"
+            class="rounded-xl border-2 border-warning-200 bg-warning-50 p-4 text-body-sm text-warning-800"
           >
             Live quotes are unavailable right now. Please try again shortly.
           </div>
@@ -2607,7 +2610,7 @@ const providerQuotes = computed(() => {
 // Update provider methods map when quotes change
 watch(() => quotesData.value?.data, (data) => {
   const allQuotes = (data || []) as ProviderQuote[]
-  
+
   // Update provider methods map with methods from current quotes
   // This ensures we capture all methods even if discovery hasn't completed
   allQuotes.forEach((quote) => {
@@ -3559,18 +3562,18 @@ const recommendations = computed<Recommendation[]>(() => {
 
 const scrollToProvider = (providerName: string) => {
   if (typeof window === 'undefined') return
-  
+
   // Try to scroll to the specific provider element
   const providerSlug = providerName.toLowerCase().replace(/\s+/g, '-')
   const providerElement = document.getElementById(`provider-${providerSlug}`)
-  
+
   if (providerElement) {
     const offset = 120
     const top = providerElement.getBoundingClientRect().top + window.scrollY - offset
     window.scrollTo({ top, behavior: 'smooth' })
     return
   }
-  
+
   // Fallback to compare section
   const compareSection = document.getElementById('compare')
   if (compareSection) {

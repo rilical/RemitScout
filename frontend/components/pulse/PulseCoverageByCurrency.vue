@@ -335,7 +335,10 @@
                       <span v-if="row.gap.freshestQuoteAgeSeconds !== null">
                         {{ formatAge(row.gap.freshestQuoteAgeSeconds) }}
                       </span>
-                      <span v-else class="text-neutral-500">—</span>
+                      <span
+v-else
+class="text-neutral-500"
+>—</span>
                     </td>
                   </tr>
                   <tr v-if="gapsRows.length === 0">

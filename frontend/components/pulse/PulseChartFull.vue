@@ -112,7 +112,7 @@
           :is-gated="true"
           tier="enterprise"
           :title="gatedTitle"
-          description="Enterprise feature. Contact sales for access to Pulse Pro charts (stacked, scatter, matrix views)."
+          description="Enterprise feature. Contact sales for access to Pulse charts (stacked, scatter, matrix views)."
         >
           <template #preview>
             <div class="h-80 rounded-lg border border-neutral-700 bg-neutral-900/30" />
@@ -339,7 +339,7 @@ const viewMode = ref<'chart' | 'table'>('chart')
 const chartMeta = computed(() => getChartById(props.chartId))
 
 const isPlus = computed(() => props.pulseLevel !== 'none')
-const isPro = computed(() => props.pulseLevel === 'pro')
+const isPro = computed(() => props.pulseLevel === 'full')
 const isProChart = computed(() => {
   const type = chartMeta.value?.type
   return type === 'stacked' || type === 'scatter' || type === 'matrix'
@@ -348,7 +348,7 @@ const isGated = computed(() => isProChart.value && !isPro.value)
 
 const gatedTitle = computed(() => {
   const title = chartMeta.value?.title
-  return title ? `${title} (Pro)` : 'Pulse Pro (Enterprise)'
+  return title ? `${title} (Enterprise)` : 'Pulse (Enterprise)'
 })
 
 const ranges = computed(() => {
@@ -384,7 +384,7 @@ const chartComponent = computed(() => {
 
 async function loadData() {
   if (isGated.value) {
-    // Pro charts are enterprise-only; don't mount or fetch anything when gated.
+    // Enterprise charts are enterprise-only; don't mount or fetch anything when gated.
     chartData.value = null
     matrixRows.value = []
     loading.value = false

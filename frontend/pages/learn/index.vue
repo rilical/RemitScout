@@ -89,7 +89,7 @@
             class="group flex flex-col rounded-2xl border-2 border-neutral-200 bg-surface p-6 shadow-sm motion-safe:transition-all hover:shadow-xl hover:border-brand-300 hover:-translate-y-1"
           >
             <div class="flex items-center gap-2 mb-4">
-              <span class="rounded-full bg-success-600 px-3 py-1.5 text-body-sm font-semibold text-success-600">
+              <span class="rounded-full bg-success-100 px-3 py-1.5 text-body-sm font-semibold text-success-700">
                 Beginner
               </span>
               <span class="text-body-sm text-neutral-500">
@@ -100,7 +100,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -225,7 +228,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -246,7 +249,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -312,7 +318,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -333,7 +339,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -390,7 +399,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
 	        <div class="rounded-2xl border-2 border-brand-200 bg-brand-50 p-6 mb-8">
@@ -503,8 +512,8 @@
               </div>
             </div>
             <!-- Decorative Background Elements -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-brand-200 rounded-full opacity-20 blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-primary-200 rounded-full opacity-20 blur-3xl transform -translate-x-1/2 translate-y-1/2" />
           </NuxtLink>
         </div>
 
@@ -526,7 +535,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -589,7 +601,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -610,7 +622,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -673,7 +688,7 @@
               </p>
             </div>
           </div>
-          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full"></div>
+          <div class="h-1 w-24 bg-gradient-to-r from-brand-600 to-brand-600 rounded-full" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -694,7 +709,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}
@@ -768,7 +786,10 @@
               :to="`/learn/${guide.slug}`"
               class="block text-h4 font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors mb-3"
             >
-              <RichHtml tag="span" :content="guide.title" />
+              <RichHtml
+tag="span"
+:content="guide.title"
+/>
             </NuxtLink>
             <p class="text-body-sm text-neutral-600 leading-relaxed mb-4 flex-1">
               {{ guide.excerpt }}

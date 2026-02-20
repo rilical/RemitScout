@@ -2575,7 +2575,7 @@ components:
           properties:
             pulse_access:
               type: string
-              enum: [none, lite, pro]
+              enum: [none, lite, full]
             exports_enabled:
               type: boolean
             alerts_max:
