@@ -57,6 +57,13 @@ describe('institutional daily export helpers', () => {
       exportDate,
       kind: 'rvi',
     })).toBe('indices/demo/daily/2026/02/15/rvi.csv')
+    expect(buildInstitutionalIndicesKey({
+      clientPrefix: 'demo',
+      exportDate,
+      kind: 'teer',
+      prefix: 'parquet',
+      extension: 'parquet',
+    })).toBe('parquet/demo/daily/2026/02/15/teer.parquet')
   })
 
   it('keeps CSV headers stable', () => {

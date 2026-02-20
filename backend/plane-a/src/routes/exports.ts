@@ -20,7 +20,7 @@ const s3Client = new S3Client({})
 
 const exportCreateSchema = z.object({
   dataType: z.enum(['history', 'watchlist', 'alerts', 'all', 'indices']),
-  format: z.enum(['csv', 'pdf']),
+  format: z.enum(['csv', 'pdf', 'parquet']),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   itemIds: z.array(z.string()).optional(),
@@ -64,11 +64,11 @@ const getInclusiveWindowDays = (dateFrom: Date, dateTo: Date): number => {
 }
 
 const exportJobTypeMap: Record<string, Record<string, ExportJobType>> = {
-  history: { csv: 'history_csv', pdf: 'history_pdf' },
-  watchlist: { csv: 'watchlist_csv', pdf: 'watchlist_pdf' },
-  alerts: { csv: 'alerts_csv', pdf: 'alerts_pdf' },
-  all: { csv: 'all_csv', pdf: 'all_pdf' },
-  indices: { csv: 'indices_csv', pdf: 'indices_pdf' },
+  history: { csv: 'history_csv', pdf: 'history_pdf', parquet: 'history_parquet' },
+  watchlist: { csv: 'watchlist_csv', pdf: 'watchlist_pdf', parquet: 'watchlist_parquet' },
+  alerts: { csv: 'alerts_csv', pdf: 'alerts_pdf', parquet: 'alerts_parquet' },
+  all: { csv: 'all_csv', pdf: 'all_pdf', parquet: 'all_parquet' },
+  indices: { csv: 'indices_csv', pdf: 'indices_pdf', parquet: 'indices_parquet' },
 }
 
 const resolveActor = (
@@ -175,6 +175,17 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
     const { dataType, format } = parsed.data
     const jobType = exportJobTypeMap[dataType][format]
+    if (format === 'parquet') {
+      const parquetEnabled = config.exports?.parquetEnabled ?? false
+      const entitlements = request.entitlementsContext?.entitlements
+      const bulkExportEnabled = Boolean(entitlements?.bulk_export)
+      if (!parquetEnabled) {
+        throw new ValidationError('Invalid request', { details: { error: 'parquet_not_enabled' } })
+      }
+      if (!bulkExportEnabled) {
+        throw new ValidationError('Invalid request', { details: { error: 'parquet_not_allowed' } })
+      }
+    }
 
     const exportMaxDays = request.entitlementsContext?.entitlements.exports_max_days ?? null
     const planMaxDays = typeof exportMaxDays === 'number' && exportMaxDays > 0
@@ -235,6 +246,9 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     const params: Record<string, unknown> = {
       dataType,
       format,
+    }
+    if (request.apiKey) {
+      params.exportAudience = 'institutional'
     }
     if (dateFrom) {
       params.dateFrom = dateFrom.toISOString()

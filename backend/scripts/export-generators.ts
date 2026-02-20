@@ -1,5 +1,7 @@
+import { PassThrough } from 'node:stream'
 import PDFDocument from 'pdfkit'
 import archiver from 'archiver'
+import { ParquetSchema, ParquetWriter } from 'parquetjs-lite'
 
 export type CsvSection = {
   title: string
@@ -84,4 +86,34 @@ export const buildZip = async (
       reject(error)
     }
   })
+}
+
+export type ParquetFieldType = 'UTF8' | 'DOUBLE' | 'INT32' | 'BOOLEAN'
+export type ParquetFieldDefinition = { type: ParquetFieldType; optional?: boolean }
+export type ParquetSchemaDefinition = Record<string, ParquetFieldDefinition>
+
+export const buildParquetBuffer = async (
+  schemaDefinition: ParquetSchemaDefinition,
+  rows: Array<Record<string, unknown>>,
+): Promise<Buffer> => {
+  const schema = new ParquetSchema(schemaDefinition)
+  const stream = new PassThrough()
+  const chunks: Buffer[] = []
+
+  stream.on('data', (chunk) => {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  })
+
+  const writer = await ParquetWriter.openStream(schema, stream)
+  for (const row of rows) {
+    await writer.appendRow(row)
+  }
+  await writer.close()
+
+  await new Promise<void>((resolve, reject) => {
+    stream.on('finish', () => resolve())
+    stream.on('error', (error) => reject(error))
+  })
+
+  return Buffer.concat(chunks)
 }

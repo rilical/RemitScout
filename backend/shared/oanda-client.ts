@@ -2,7 +2,7 @@ import type { Pool } from 'pg'
 import { createLogger } from './logger'
 import { query } from './db'
 import { config } from './config'
-import { fxRateHistoryCache } from './repository-cache'
+import { fxRateCache, fxRateHistoryCache } from './repository-cache'
 import { mapOandaCurrencyPair } from './oanda-code-map'
 import { computeBackoffMs, getOandaTokenBucket, parseRetryAfterMs, sleep } from './oanda-cache'
 import { toBoolean } from './oanda-transform'
@@ -11,6 +11,10 @@ const logger = createLogger('shared.oanda-rate-fetcher')
 
 const OANDA_API_URL = 'https://fxds-public-exchange-rates-api.oanda.com/cc-api/currencies'
 const RATE_LIMIT_STATUSES = new Set([429, 502, 503, 504])
+const SECONDARY_PROVIDER_STATE = {
+  failureCount: 0,
+  openUntil: 0,
+}
 const DEFAULT_HEADERS = {
   'Pragma': 'no-cache',
   'Accept': 'application/json, text/plain, */*',
@@ -131,9 +135,10 @@ export class OandaRateFetcher {
   private async getCachedRate(
     baseCurrency: string,
     quoteCurrency: string,
+    cacheTtlHours: number = 1,
   ): Promise<{ data: OandaRateData; historical_rates: OandaHistoricalRate[] } | null> {
     try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+      const oneHourAgo = new Date(Date.now() - cacheTtlHours * 60 * 60 * 1000)
       const result = await query<{
         base_currency: string
         quote_currency: string
@@ -179,6 +184,82 @@ export class OandaRateFetcher {
       })
       return null
     }
+  }
+
+  private async getCachedRateFallback(
+    baseCurrency: string,
+    quoteCurrency: string,
+  ): Promise<OandaFetchResult> {
+    try {
+      const cacheKey = `latest:${baseCurrency}:${quoteCurrency}`
+      const cached = await fxRateCache.get<{
+        data: OandaRateData
+      }>(cacheKey)
+
+      if (!cached?.data) {
+        return {
+          success: false,
+          data: null,
+          historical_rates: [],
+          cached: false,
+          error: 'no_fallback_cache',
+        }
+      }
+
+      const row = cached.data
+      const lastUpdated = new Date(row.last_updated)
+      if (Number.isNaN(lastUpdated.getTime())) {
+        return {
+          success: false,
+          data: null,
+          historical_rates: [],
+          cached: false,
+          error: 'fallback_cache_parse_failed',
+        }
+      }
+
+      const maxStalenessHours = config.fxRates?.fallbackMaxStalenessHours ?? 24
+      if (maxStalenessHours > 0) {
+        const ageMs = Date.now() - lastUpdated.getTime()
+        if (ageMs > maxStalenessHours * 60 * 60 * 1000) {
+          return {
+            success: false,
+            data: null,
+            historical_rates: [],
+            cached: false,
+            error: 'fallback_cache_stale',
+          }
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          ...row,
+          last_updated: lastUpdated,
+        },
+        historical_rates: [],
+        cached: true,
+      }
+    } catch (error) {
+      logger.warn('fallback_cache_lookup_failed', {
+        base_currency: baseCurrency,
+        quote_currency: quoteCurrency,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return {
+        success: false,
+        data: null,
+        historical_rates: [],
+        cached: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    }
+  }
+
+  private getCachedRateTtlSeconds(): number {
+    const maxStalenessHours = config.fxRates?.fallbackMaxStalenessHours ?? 24
+    return Math.max(60, Math.floor(maxStalenessHours * 60 * 60))
   }
 
   private async fetchFromPublicApi(
@@ -547,6 +628,234 @@ export class OandaRateFetcher {
       quote_currency: quoteCurrency,
     })
 
+    const secondary = await this.fetchFromSecondaryProvider(baseCurrency, quoteCurrency)
+    if (secondary.success) {
+      return secondary
+    }
+
+    const dbFallback = await this.getDbFallbackRate(baseCurrency, quoteCurrency)
+    if (dbFallback.success) {
+      return dbFallback
+    }
+
+    return this.getCachedRateFallback(baseCurrency, quoteCurrency)
+  }
+
+  private async fetchFromSecondaryProvider(
+    baseCurrency: string,
+    quoteCurrency: string,
+  ): Promise<OandaFetchResult> {
+    const provider = (config.fxRates?.secondaryProvider || '').trim().toLowerCase()
+    if (!provider || provider === 'none') {
+      return {
+        success: false,
+        data: null,
+        historical_rates: [],
+        cached: false,
+        error: 'secondary_provider_disabled',
+      }
+    }
+
+    const now = Date.now()
+    if (SECONDARY_PROVIDER_STATE.openUntil > now) {
+      return {
+        success: false,
+        data: null,
+        historical_rates: [],
+        cached: false,
+        error: 'secondary_provider_circuit_open',
+      }
+    }
+
+    const timeoutMs = Math.max(1000, config.fxRates?.secondaryProviderTimeoutMs ?? 5000)
+    const failureThreshold = Math.max(1, config.fxRates?.secondaryFailureThreshold ?? 3)
+    const cooldownMs = Math.max(1000, config.fxRates?.secondaryCooldownMs ?? 300000)
+
+    try {
+      if (
+        provider === 'exchangerate_host'
+        || provider === 'exchangerate.host'
+        || provider === 'exchangerate-host'
+      ) {
+        return this.fetchFromExchangeRateHost(baseCurrency, quoteCurrency, timeoutMs)
+      }
+
+      if (provider === 'xe' || provider === 'xe.com' || provider === 'x_e') {
+        return this.fetchFromXe(baseCurrency, quoteCurrency, timeoutMs)
+      }
+
+      return {
+        success: false,
+        data: null,
+        historical_rates: [],
+        cached: false,
+        error: `secondary_provider_unknown:${provider}`,
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn('secondary_rate_fetch_failed', {
+        base_currency: baseCurrency,
+        quote_currency: quoteCurrency,
+        provider,
+        error: message,
+      })
+
+      SECONDARY_PROVIDER_STATE.failureCount += 1
+      if (SECONDARY_PROVIDER_STATE.failureCount >= failureThreshold) {
+        SECONDARY_PROVIDER_STATE.openUntil = Date.now() + cooldownMs
+      }
+
+      return {
+        success: false,
+        data: null,
+        historical_rates: [],
+        cached: false,
+        error: message,
+      }
+    }
+  }
+
+  private async fetchFromExchangeRateHost(
+    baseCurrency: string,
+    quoteCurrency: string,
+    timeoutMs: number,
+  ): Promise<OandaFetchResult> {
+    const baseUrl = (config.fxRates?.secondaryProviderBaseUrl
+      || 'https://api.exchangerate.host/latest').replace(/\/$/, '')
+    const url = `${baseUrl}?base=${baseCurrency}&symbols=${quoteCurrency}`
+    const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+
+    if (response.status !== 200) {
+      throw new Error(`secondary_provider_http_${response.status}`)
+    }
+
+    const data = await response.json()
+    const rawRate = data?.rates?.[quoteCurrency]
+    const rate = typeof rawRate === 'number' ? rawRate : Number(rawRate)
+    if (!Number.isFinite(rate)) {
+      throw new Error('secondary_provider_invalid_rate')
+    }
+
+    return this.persistSecondaryRate(
+      baseCurrency,
+      quoteCurrency,
+      rate,
+      'EXCHANGERATE_HOST',
+    )
+  }
+
+  private async fetchFromXe(
+    baseCurrency: string,
+    quoteCurrency: string,
+    timeoutMs: number,
+  ): Promise<OandaFetchResult> {
+    const baseUrl = (config.fxRates?.secondaryProviderBaseUrl
+      || 'https://www.xe.com/api/protected/midmarket-converter/').replace(/\/$/, '')
+    const headers: Record<string, string> = {
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15',
+    }
+    const authHeader = config.fxRates?.secondaryProviderAuthHeader?.trim()
+    if (authHeader) {
+      headers.Authorization = authHeader
+    }
+
+    const response = await fetch(baseUrl, {
+      headers,
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(`secondary_provider_http_${response.status}`)
+    }
+
+    if (response.status !== 200) {
+      throw new Error(`secondary_provider_http_${response.status}`)
+    }
+
+    const data = await response.json()
+    const rates = data?.rates
+    if (!rates || typeof rates !== 'object') {
+      throw new Error('secondary_provider_invalid_rate_payload')
+    }
+    const rawTimestamp = Number(data?.timestamp)
+    const normalizedTimestamp = Number.isFinite(rawTimestamp)
+      ? rawTimestamp > 1e12 ? rawTimestamp : rawTimestamp * 1000
+      : Date.now()
+    const lastUpdated = new Date(normalizedTimestamp)
+
+    const rawBaseRate = Number(rates[baseCurrency])
+    const rawQuoteRate = Number(rates[quoteCurrency])
+    if (!Number.isFinite(rawBaseRate) || !Number.isFinite(rawQuoteRate)) {
+      throw new Error('secondary_provider_invalid_currency')
+    }
+
+    let rate: number
+    if (baseCurrency === quoteCurrency) {
+      rate = 1
+    } else if (baseCurrency === 'USD') {
+      rate = rawQuoteRate
+    } else if (quoteCurrency === 'USD') {
+      if (rawBaseRate === 0) throw new Error('secondary_provider_invalid_base_rate')
+      rate = 1 / rawBaseRate
+    } else {
+      if (rawBaseRate === 0) throw new Error('secondary_provider_invalid_base_rate')
+      rate = rawQuoteRate / rawBaseRate
+    }
+
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error('secondary_provider_invalid_rate')
+    }
+
+    return this.persistSecondaryRate(baseCurrency, quoteCurrency, rate, 'XE', lastUpdated)
+  }
+
+  private async persistSecondaryRate(
+    baseCurrency: string,
+    quoteCurrency: string,
+    rate: number,
+    source: string,
+    lastUpdated: Date = new Date(),
+  ): Promise<OandaFetchResult> {
+    const rateData: OandaRateData = {
+      base_currency: baseCurrency,
+      quote_currency: quoteCurrency,
+      rate,
+      bid: rate,
+      ask: rate,
+      source,
+      last_updated: lastUpdated,
+    }
+
+    await this.saveRate(rateData)
+    await this.storeHistory(baseCurrency, quoteCurrency, [
+      {
+        date: new Date().toISOString().split('T')[0],
+        rate,
+        bid: rate,
+        ask: rate,
+      },
+    ], rateData.source)
+
+    SECONDARY_PROVIDER_STATE.failureCount = 0
+    SECONDARY_PROVIDER_STATE.openUntil = 0
+
+    return {
+      success: true,
+      data: rateData,
+      historical_rates: [],
+      cached: false,
+    }
+  }
+
+  private async getDbFallbackRate(
+    baseCurrency: string,
+    quoteCurrency: string,
+  ): Promise<OandaFetchResult> {
     try {
       const result = await query<{
         base_currency: string
@@ -577,19 +886,43 @@ export class OandaRateFetcher {
       }
 
       const row = result.rows[0]
+      const maxStalenessHours = config.fxRates?.fallbackMaxStalenessHours ?? 24
+      if (row.last_updated) {
+        const ageMs = Date.now() - row.last_updated.getTime()
+        if (ageMs > maxStalenessHours * 60 * 60 * 1000) {
+          return {
+            success: false,
+            data: null,
+            historical_rates: [],
+            cached: false,
+            error: 'fallback_rate_stale',
+          }
+        }
+      }
       const historicalRates = await this.getHistoricalRates(baseCurrency, quoteCurrency)
+      const rateResult: OandaRateData = {
+        base_currency: row.base_currency,
+        quote_currency: row.quote_currency,
+        rate: Number(row.rate),
+        bid: row.bid ? Number(row.bid) : null,
+        ask: row.ask ? Number(row.ask) : null,
+        source: `${row.source} (fallback)`,
+        last_updated: row.last_updated,
+      }
+      await fxRateCache.set(
+        `latest:${rateResult.base_currency}:${rateResult.quote_currency}`,
+        {
+          data: {
+            ...rateResult,
+            last_updated: rateResult.last_updated.toISOString(),
+          },
+        },
+        this.getCachedRateTtlSeconds(),
+      )
 
       return {
         success: true,
-        data: {
-          base_currency: row.base_currency,
-          quote_currency: row.quote_currency,
-          rate: Number(row.rate),
-          bid: row.bid ? Number(row.bid) : null,
-          ask: row.ask ? Number(row.ask) : null,
-          source: `${row.source} (fallback)`,
-          last_updated: row.last_updated,
-        },
+        data: rateResult,
         historical_rates: historicalRates,
         cached: false,
       }
@@ -632,6 +965,16 @@ export class OandaRateFetcher {
           rateData.last_updated,
         ],
         this.pool,
+      )
+      await fxRateCache.set(
+        `latest:${rateData.base_currency}:${rateData.quote_currency}`,
+        {
+          data: {
+            ...rateData,
+            last_updated: rateData.last_updated.toISOString(),
+          },
+        },
+        this.getCachedRateTtlSeconds(),
       )
     } catch (error) {
       logger.warn('save_rate_failed', {

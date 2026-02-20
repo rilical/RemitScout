@@ -75,7 +75,44 @@ describe('OandaRateFetcher', () => {
     const result = await fetcher.fetchRate('USD', 'EUR', false, { source: 'test' })
 
     expect(result.success).toBe(false)
-    expect(result.error).toBe('No rate data available')
+    expect(result.error).toBe('no_fallback_cache')
     expect(fetchSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('falls back to cached FX rate when OANDA and DB are unavailable', async () => {
+    vi.mocked(dbModule.query).mockResolvedValue({ rows: [], rowCount: 0 } as any)
+
+    const cachePayload = {
+      data: {
+        base_currency: 'USD',
+        quote_currency: 'EUR',
+        rate: 0.8452,
+        bid: 0.8452,
+        ask: 0.8452,
+        source: 'XE',
+        last_updated: new Date().toISOString(),
+      },
+    }
+    const mockRedis = {
+      eval: vi.fn().mockResolvedValue([1, 0]),
+      get: vi.fn().mockResolvedValue(JSON.stringify(cachePayload)),
+      set: vi.fn(),
+    }
+    vi.mocked(redisModule.getRedisClient).mockResolvedValue(mockRedis as any)
+
+    const fetchSpy = vi.fn()
+      .mockResolvedValueOnce(new Response('', { status: 429 }))
+      .mockResolvedValueOnce(new Response('', { status: 429 }))
+
+    global.fetch = fetchSpy as any
+
+    const fetcher = new OandaRateFetcher({} as any, false)
+    const result = await fetcher.fetchRate('USD', 'EUR', false, { source: 'test' })
+
+    expect(result.success).toBe(true)
+    expect(result.cached).toBe(true)
+    expect(result.data?.rate).toBe(0.8452)
+    expect(result.error).toBeUndefined()
+    expect(mockRedis.get).toHaveBeenCalledWith('fx_rate:latest:USD:EUR')
   })
 })

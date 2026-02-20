@@ -821,6 +821,7 @@ const rawConfig = {
     cacheTtlSeconds: toNumber(process.env.FX_RATE_CACHE_TTL_SECONDS, 300),
     historyCacheTtlSeconds: toNumber(process.env.FX_RATE_HISTORY_CACHE_TTL_SECONDS, 3600),
     dbFreshnessHours: toNumber(process.env.FX_RATE_DB_FRESHNESS_HOURS, 1),
+    fallbackMaxStalenessHours: toNumber(process.env.FX_RATE_FALLBACK_MAX_STALENESS_HOURS, 24),
     historyDays: toNumber(process.env.FX_RATE_HISTORY_DAYS, 30),
     syncIntervalMinutes: toNumber(process.env.OANDA_SYNC_INTERVAL_MINUTES, 60),
     useAuthenticatedApi: toBoolean(process.env.OANDA_USE_AUTHENTICATED_API),
@@ -839,6 +840,12 @@ const rawConfig = {
     oandaRateLimitBackoffMaxMs: toNumber(process.env.OANDA_RATE_LIMIT_BACKOFF_MAX_MS, 10000),
     oandaRateLimitJitterMs: toNumber(process.env.OANDA_RATE_LIMIT_JITTER_MS, 250),
     oandaFallbackMaxWaitMs: toNumber(process.env.OANDA_FALLBACK_MAX_WAIT_MS, 1500),
+    secondaryProvider: (process.env.FX_RATE_SECONDARY_PROVIDER || '').trim().toLowerCase(),
+    secondaryProviderBaseUrl: process.env.FX_RATE_SECONDARY_BASE_URL || '',
+    secondaryProviderAuthHeader: process.env.FX_RATE_SECONDARY_AUTH_HEADER || '',
+    secondaryProviderTimeoutMs: toNumber(process.env.FX_RATE_SECONDARY_TIMEOUT_MS, 5000),
+    secondaryFailureThreshold: toNumber(process.env.FX_RATE_SECONDARY_FAILURE_THRESHOLD, 3),
+    secondaryCooldownMs: toNumber(process.env.FX_RATE_SECONDARY_COOLDOWN_MS, 300000),
   },
   redis: {
     url: process.env.REDIS_URL || '',
@@ -886,6 +893,7 @@ const rawConfig = {
   },
   exports: {
     maxActivePerUser: toNumber(process.env.EXPORT_JOB_MAX_ACTIVE_PER_USER, 2),
+    parquetEnabled: toBoolean(process.env.EXPORTS_PARQUET_ENABLED, isStaging),
   },
   marketing: {
     meta: {
@@ -1135,6 +1143,14 @@ const rawConfig = {
       queueLockTtlSeconds: toNumber(process.env.EXPORT_QUEUE_LOCK_TTL_SECONDS, 120),
       shutdownTimeoutMs: toNumber(process.env.EXPORT_QUEUE_SHUTDOWN_TIMEOUT_MS, 30000),
       jobExpiryDays: toNumber(process.env.EXPORT_JOB_EXPIRY_DAYS, 7),
+      jobExpiryDaysUser: toNumber(
+        process.env.EXPORT_JOB_EXPIRY_DAYS_USER,
+        toNumber(process.env.EXPORT_JOB_EXPIRY_DAYS, 7),
+      ),
+      jobExpiryDaysInstitutional: toNumber(
+        process.env.EXPORT_JOB_EXPIRY_DAYS_INSTITUTIONAL,
+        730,
+      ),
       fetchPageSize: clampInt(toNumber(process.env.EXPORT_FETCH_PAGE_SIZE, 1000), 100, 5000),
     },
     alertEvaluationWorker: {

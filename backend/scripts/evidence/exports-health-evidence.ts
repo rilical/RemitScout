@@ -1,4 +1,5 @@
 import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetRoleCommand, IAMClient } from '@aws-sdk/client-iam'
 import { GetQueueUrlCommand, SQSClient } from '@aws-sdk/client-sqs'
 
 import { createPool, query } from '../../shared/db'
@@ -53,6 +54,7 @@ const getExportsQueueName = (env: string): string => `remit-scout-${env}-export-
 
 const getSqsClient = (): SQSClient => new SQSClient({})
 const getS3Client = (): S3Client => new S3Client({})
+const getIamClient = (): IAMClient => new IAMClient({})
 
 const resolveExportsQueueUrl = async (
   env: string,
@@ -74,6 +76,15 @@ const isNotFoundError = (error: unknown): boolean => {
   const code = String((error as any).Code || (error as any).code || '')
   const http = Number((error as any).$metadata?.httpStatusCode)
   return name === 'NotFound' || code === 'NotFound' || http === 404
+}
+
+const resolveRoleNameFromArn = (arn: string): string | null => {
+  const parts = arn.split(':')
+  if (parts.length < 6) return null
+  const resource = parts.slice(5).join(':')
+  const resourceParts = resource.split('/')
+  if (resourceParts[0] !== 'role' || resourceParts.length < 2) return null
+  return resourceParts.slice(1).join('/')
 }
 
 const headObjectExists = async (bucket: string, key: string): Promise<{ ok: boolean; error?: string }> => {
@@ -168,8 +179,11 @@ const main = async () => {
         [sinceIso],
         pool,
       ),
-      query<{ id: string; s3_key: string | null; finished_at: string | null }>(
-        `SELECT id::text AS id, s3_key, finished_at::text AS finished_at
+      query<{ id: string; s3_key: string | null; finished_at: string | null; job_type: string | null }>(
+        `SELECT id::text AS id,
+                s3_key,
+                finished_at::text AS finished_at,
+                job_type::text AS job_type
          FROM silver.export_job
          WHERE status = 'done'
            AND created_at >= $1::timestamptz
@@ -204,6 +218,32 @@ const main = async () => {
         if (!exists.ok) {
           missingArtifacts.push({ id: job.id, s3_key: key, ...(exists.error ? { error: exists.error } : {}) })
           if (exists.error) s3CheckErrors.push(exists.error)
+        }
+      }
+    }
+
+    const parquetKeyMismatches = doneRes.rows.filter((job) => {
+      const jobType = String(job.job_type || '')
+      if (!jobType.endsWith('_parquet')) return false
+      const key = String(job.s3_key || '')
+      return !key.endsWith('.parquet')
+    })
+
+    const snowflakeRoleArn = String(process.env.SNOWFLAKE_PARTNER_ROLE_ARN || '').trim()
+    let snowflakeRoleStatus: 'ok' | 'missing' | 'unknown' = snowflakeRoleArn ? 'unknown' : 'unknown'
+    if (snowflakeRoleArn) {
+      const roleName = resolveRoleNameFromArn(snowflakeRoleArn)
+      if (!roleName) {
+        snowflakeRoleStatus = 'missing'
+        pointers.push({ kind: 'other', ref: snowflakeRoleArn, note: 'Invalid Snowflake partner role ARN format' })
+      } else {
+        try {
+          await getIamClient().send(new GetRoleCommand({ RoleName: roleName }))
+          snowflakeRoleStatus = 'ok'
+        } catch (error) {
+          snowflakeRoleStatus = 'missing'
+          const msg = error instanceof Error ? error.message : String(error)
+          pointers.push({ kind: 'other', ref: snowflakeRoleArn, note: `Snowflake partner role missing: ${msg}` })
         }
       }
     }
@@ -291,6 +331,24 @@ const main = async () => {
       })
     }
 
+    if (parquetKeyMismatches.length > 0) {
+      findings.push({
+        reason_code: 'exports.parquet_key_mismatch',
+        severity: env === 'prod' ? 'sev2' : 'sev3',
+        message: `${parquetKeyMismatches.length} parquet export jobs have non-parquet S3 keys.`,
+        details: { mismatched_sample: parquetKeyMismatches.slice(0, 10) },
+      })
+    }
+
+    if (snowflakeRoleArn && snowflakeRoleStatus === 'missing') {
+      findings.push({
+        reason_code: 'exports.snowflake_role_missing',
+        severity: env === 'prod' ? 'sev2' : 'sev3',
+        message: 'Snowflake partner role ARN is configured but role was not found.',
+        details: { snowflake_partner_role_arn: snowflakeRoleArn },
+      })
+    }
+
     const evidence: EvidenceResult = {
       success: findings.length === 0,
       generated_at: new Date().toISOString(),
@@ -306,6 +364,8 @@ const main = async () => {
         `failed_sample=${failedJobs.length}`,
         `done_s3_checked=${bucket ? doneRes.rows.length : 0}`,
         `done_s3_missing=${missingArtifacts.length}`,
+        `parquet_key_mismatch=${parquetKeyMismatches.length}`,
+        snowflakeRoleArn ? `snowflake_partner_role=${snowflakeRoleStatus}` : `snowflake_partner_role=unconfigured`,
         queueStats
           ? `queue_total=${queueStats.total} queue_oldest_age_seconds=${queueOldestAgeSeconds !== null ? Math.round(queueOldestAgeSeconds) : 'null'} dlq_depth=${dlqDepth} queue_url_source=${queueUrlSource}`
           : `queue_probe=unavailable`,
@@ -376,4 +436,3 @@ main().catch((error) => {
   console.error('exports_health_evidence_fatal', { error: error instanceof Error ? error.message : String(error) })
   process.exit(1)
 })
-

@@ -1,8 +1,9 @@
 /**
  * Institutional Daily Export Job
  *
- * Writes per-client daily CSV drops for TEER/RCI/RVI from `gold_export.cdp_daily` to:
- *   s3://remit-scout-exports-{env}/indices/{client_prefix}/daily/YYYY/MM/DD/{teer|rci|rvi}.csv
+ * Writes per-client daily exports for TEER/RCI/RVI from `gold_export.cdp_daily` to:
+ *   CSV:     s3://remit-scout-exports-{env}/indices/{client_prefix}/daily/YYYY/MM/DD/{teer|rci|rvi}.csv
+ *   Parquet: s3://remit-scout-exports-{env}/parquet/{client_prefix}/daily/YYYY/MM/DD/{teer|rci|rvi}.parquet
  *
  * Designed to run as a Plane C scheduled Lambda after gold-indices recomputes.
  */
@@ -20,13 +21,19 @@ import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { formatError } from '../shared/utils/error-handling'
 import { normalizeCorridorIds } from '../shared/corridor'
 import { DEFAULT_AMOUNT_BUCKET } from '../shared/constants'
-import { buildCsv } from './export-generators'
+import {
+  buildCsv,
+  buildParquetBuffer,
+  type ParquetSchemaDefinition,
+} from './export-generators'
 
 const logger = createLogger('script.institutional-daily-export-job')
 const s3Client = new S3Client({})
 
 export const INSTITUTIONAL_EXPORT_JOB_NAME = 'institutional-daily-export-job'
 export const INSTITUTIONAL_EXPORT_PREFIX = 'indices'
+export const INSTITUTIONAL_EXPORT_PARQUET_PREFIX = 'parquet'
+export const INSTITUTIONAL_PARQUET_CONTENT_TYPE = 'application/vnd.apache.parquet'
 
 export const INSTITUTIONAL_EXPORT_TEER_HEADERS = [
   'date',
@@ -82,7 +89,62 @@ export const INSTITUTIONAL_EXPORT_RVI_HEADERS = [
   'created_at',
 ] as const
 
+const INSTITUTIONAL_PARQUET_SCHEMAS: Record<InstitutionalExportKind, ParquetSchemaDefinition> = {
+  teer: {
+    date: { type: 'UTF8', optional: true },
+    corridor_id: { type: 'UTF8', optional: true },
+    amount_bucket: { type: 'INT32', optional: true },
+    method_profile: { type: 'UTF8', optional: true },
+    teer_rate: { type: 'DOUBLE', optional: true },
+    mid_market_rate: { type: 'DOUBLE', optional: true },
+    provider_count: { type: 'INT32', optional: true },
+    provider_count_binned: { type: 'INT32', optional: true },
+    suppression_flag: { type: 'BOOLEAN', optional: true },
+    suppression_reason: { type: 'UTF8', optional: true },
+    weight_confidence: { type: 'DOUBLE', optional: true },
+    weight_window_days: { type: 'INT32', optional: true },
+    weighting_model: { type: 'UTF8', optional: true },
+    methodology_version: { type: 'UTF8', optional: true },
+    created_at: { type: 'UTF8', optional: true },
+  },
+  rci: {
+    date: { type: 'UTF8', optional: true },
+    corridor_id: { type: 'UTF8', optional: true },
+    amount_bucket: { type: 'INT32', optional: true },
+    method_profile: { type: 'UTF8', optional: true },
+    rci_ratio: { type: 'DOUBLE', optional: true },
+    mid_market_rate: { type: 'DOUBLE', optional: true },
+    provider_count: { type: 'INT32', optional: true },
+    provider_count_binned: { type: 'INT32', optional: true },
+    suppression_flag: { type: 'BOOLEAN', optional: true },
+    suppression_reason: { type: 'UTF8', optional: true },
+    weight_confidence: { type: 'DOUBLE', optional: true },
+    weight_window_days: { type: 'INT32', optional: true },
+    weighting_model: { type: 'UTF8', optional: true },
+    methodology_version: { type: 'UTF8', optional: true },
+    created_at: { type: 'UTF8', optional: true },
+  },
+  rvi: {
+    date: { type: 'UTF8', optional: true },
+    corridor_id: { type: 'UTF8', optional: true },
+    amount_bucket: { type: 'INT32', optional: true },
+    method_profile: { type: 'UTF8', optional: true },
+    rvi_bps: { type: 'DOUBLE', optional: true },
+    mid_market_rate: { type: 'DOUBLE', optional: true },
+    provider_count: { type: 'INT32', optional: true },
+    provider_count_binned: { type: 'INT32', optional: true },
+    suppression_flag: { type: 'BOOLEAN', optional: true },
+    suppression_reason: { type: 'UTF8', optional: true },
+    weight_confidence: { type: 'DOUBLE', optional: true },
+    weight_window_days: { type: 'INT32', optional: true },
+    weighting_model: { type: 'UTF8', optional: true },
+    methodology_version: { type: 'UTF8', optional: true },
+    created_at: { type: 'UTF8', optional: true },
+  },
+}
+
 type InstitutionalExportKind = 'teer' | 'rci' | 'rvi'
+type InstitutionalExportFormat = 'csv' | 'parquet' | 'dual'
 
 type InstitutionalClientRow = {
   client_id: string
@@ -127,6 +189,42 @@ const parseIsoDateOnly = (value: string): Date | null => {
 }
 
 const toIsoDateOnly = (value: Date): string => value.toISOString().slice(0, 10)
+
+const toBoolean = (value: string | undefined, fallback = false): boolean => {
+  if (value === undefined) return fallback
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return fallback
+  return normalized === '1' || normalized === 'true' || normalized === 'yes'
+}
+
+const resolveInstitutionalExportFormat = (
+  value: string | undefined,
+): InstitutionalExportFormat => {
+  const normalized = (value ?? '').trim().toLowerCase()
+  if (!normalized) return 'csv'
+  if (normalized === 'csv' || normalized === 'parquet' || normalized === 'dual') {
+    return normalized
+  }
+  throw new Error(`INSTITUTIONAL_EXPORT_FORMAT must be csv, parquet, or dual (got: ${value})`)
+}
+
+const buildInstitutionalManifestKey = (params: {
+  clientPrefix: string
+  exportDate: Date
+  prefix?: string
+}): string => {
+  const dateOnly = toIsoDateOnly(params.exportDate)
+  const year = dateOnly.slice(0, 4)
+  const month = dateOnly.slice(5, 7)
+  const day = dateOnly.slice(8, 10)
+  const rawPrefix = String(params.clientPrefix || '').trim()
+  const safePrefix = rawPrefix.replace(/[^a-zA-Z0-9_-]/g, '-')
+  if (!safePrefix) {
+    throw new Error('client_prefix is required for institutional manifest key')
+  }
+  const basePrefix = (params.prefix ?? INSTITUTIONAL_EXPORT_PARQUET_PREFIX).replace(/^\/+|\/+$/g, '')
+  return `${basePrefix}/${safePrefix}/daily/${year}/${month}/${day}/manifest.json`
+}
 
 export const resolveExportDateUtc = (now: Date, override?: string): Date => {
   if (override && override.trim()) {
@@ -178,6 +276,8 @@ export const buildInstitutionalIndicesKey = (params: {
   clientPrefix: string
   exportDate: Date
   kind: InstitutionalExportKind
+  prefix?: string
+  extension?: string
 }): string => {
   const dateOnly = toIsoDateOnly(params.exportDate)
   const year = dateOnly.slice(0, 4)
@@ -188,7 +288,9 @@ export const buildInstitutionalIndicesKey = (params: {
   if (!safePrefix) {
     throw new Error('client_prefix is required for institutional export key')
   }
-  return `${INSTITUTIONAL_EXPORT_PREFIX}/${safePrefix}/daily/${year}/${month}/${day}/${params.kind}.csv`
+  const basePrefix = (params.prefix ?? INSTITUTIONAL_EXPORT_PREFIX).replace(/^\/+|\/+$/g, '')
+  const extension = (params.extension ?? 'csv').replace(/^\./, '')
+  return `${basePrefix}/${safePrefix}/daily/${year}/${month}/${day}/${params.kind}.${extension}`
 }
 
 const toTeerCsvRows = (rows: GoldExportRow[]) =>
@@ -402,6 +504,28 @@ const uploadCsv = async (bucket: string, key: string, csv: string): Promise<void
   )
 }
 
+const uploadParquet = async (bucket: string, key: string, buffer: Buffer): Promise<void> => {
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: INSTITUTIONAL_PARQUET_CONTENT_TYPE,
+    }),
+  )
+}
+
+const uploadManifest = async (bucket: string, key: string, payload: Record<string, unknown>): Promise<void> => {
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: Buffer.from(JSON.stringify(payload, null, 2), 'utf8'),
+      ContentType: 'application/json',
+    }),
+  )
+}
+
 export const runInstitutionalDailyExportJob = async (
   options: { exportDateOverride?: string } = {},
 ): Promise<void> => {
@@ -456,6 +580,10 @@ export const runInstitutionalDailyExportJob = async (
       options.exportDateOverride ?? process.env.INSTITUTIONAL_EXPORT_DATE,
     )
     const amountBucket = DEFAULT_AMOUNT_BUCKET
+    const exportFormat = resolveInstitutionalExportFormat(process.env.INSTITUTIONAL_EXPORT_FORMAT)
+    const writeManifest = toBoolean(process.env.INSTITUTIONAL_EXPORT_WRITE_MANIFEST)
+    const writeCsv = exportFormat !== 'parquet'
+    const writeParquet = exportFormat !== 'csv'
 
     pool = createPool(requirePlaneCDbUrl())
     const bucket = requireExportsBucket()
@@ -464,6 +592,8 @@ export const runInstitutionalDailyExportJob = async (
       export_date: toIsoDateOnly(exportDate),
       amount_bucket: amountBucket,
       s3_bucket: bucket,
+      export_format: exportFormat,
+      manifest_enabled: writeManifest,
     })
 
     await preflightIndicesReady(pool, exportDate, amountBucket)
@@ -503,51 +633,70 @@ export const runInstitutionalDailyExportJob = async (
       })
 
       const kinds: InstitutionalExportKind[] = ['teer', 'rci', 'rvi']
+      const rowsByKind: Record<InstitutionalExportKind, Array<Record<string, unknown>>> = {
+        teer: toTeerCsvRows(rows),
+        rci: toRciCsvRows(rows),
+        rvi: toRviCsvRows(rows),
+      }
+      const parquetManifestEntries: Array<{ kind: InstitutionalExportKind; key: string; row_count: number }> = []
       let clientOk = true
 
       for (const kind of kinds) {
-        const fileKey = buildInstitutionalIndicesKey({
+        const csvKey = buildInstitutionalIndicesKey({
           clientPrefix: client.client_prefix,
           exportDate,
           kind,
+          prefix: INSTITUTIONAL_EXPORT_PREFIX,
+          extension: 'csv',
         })
+        const parquetKey = buildInstitutionalIndicesKey({
+          clientPrefix: client.client_prefix,
+          exportDate,
+          kind,
+          prefix: INSTITUTIONAL_EXPORT_PARQUET_PREFIX,
+          extension: 'parquet',
+        })
+        const rowSet = rowsByKind[kind]
 
         try {
-          const csv = (() => {
-            if (kind === 'teer') {
-              return buildCsv(
-                [...INSTITUTIONAL_EXPORT_TEER_HEADERS],
-                toTeerCsvRows(rows),
-              )
-            }
-            if (kind === 'rci') {
-              return buildCsv(
-                [...INSTITUTIONAL_EXPORT_RCI_HEADERS],
-                toRciCsvRows(rows),
-              )
-            }
-            return buildCsv(
-              [...INSTITUTIONAL_EXPORT_RVI_HEADERS],
-              toRviCsvRows(rows),
-            )
-          })()
+          if (writeCsv) {
+            const headers = kind === 'teer'
+              ? [...INSTITUTIONAL_EXPORT_TEER_HEADERS]
+              : kind === 'rci'
+                ? [...INSTITUTIONAL_EXPORT_RCI_HEADERS]
+                : [...INSTITUTIONAL_EXPORT_RVI_HEADERS]
+            const csv = buildCsv(headers, rowSet)
+            await uploadCsv(bucket, csvKey, csv)
+            filesWritten += 1
+          }
 
-          await uploadCsv(bucket, fileKey, csv)
+          if (writeParquet) {
+            const parquetBuffer = await buildParquetBuffer(
+              INSTITUTIONAL_PARQUET_SCHEMAS[kind],
+              rowSet,
+            )
+            await uploadParquet(bucket, parquetKey, parquetBuffer)
+            parquetManifestEntries.push({ kind, key: parquetKey, row_count: rowCount })
+            filesWritten += 1
+          }
+
+          const primaryKey = writeCsv ? csvKey : parquetKey
           await upsertInstitutionalExportLog(pool, {
             clientId: client.client_id,
             exportDate,
             kind,
-            fileKey,
+            fileKey: primaryKey,
             rowCount,
             status: 'done',
             error: null,
           })
-
-          filesWritten += 1
           logger.info('client_file_written', {
             client_id: client.client_id,
             export_kind: kind,
-            file_key: fileKey,
+            file_key: writeCsv ? csvKey : parquetKey,
+            parquet_key: writeParquet ? parquetKey : null,
+            csv_written: writeCsv,
+            parquet_written: writeParquet,
             row_count: rowCount,
           })
         } catch (error) {
@@ -556,7 +705,7 @@ export const runInstitutionalDailyExportJob = async (
           logger.error('client_file_failed', {
             client_id: client.client_id,
             export_kind: kind,
-            file_key: fileKey,
+            file_key: writeCsv ? csvKey : parquetKey,
             error: message,
           })
 
@@ -565,7 +714,7 @@ export const runInstitutionalDailyExportJob = async (
               clientId: client.client_id,
               exportDate,
               kind,
-              fileKey,
+              fileKey: writeCsv ? csvKey : parquetKey,
               rowCount,
               status: 'failed',
               error: message,
@@ -578,6 +727,39 @@ export const runInstitutionalDailyExportJob = async (
               error: logMessage,
             })
           }
+        }
+      }
+
+      if (clientOk && writeManifest && writeParquet && parquetManifestEntries.length > 0) {
+        const manifestKey = buildInstitutionalManifestKey({
+          clientPrefix: client.client_prefix,
+          exportDate,
+          prefix: INSTITUTIONAL_EXPORT_PARQUET_PREFIX,
+        })
+
+        try {
+          await uploadManifest(bucket, manifestKey, {
+            export_date: toIsoDateOnly(exportDate),
+            client_id: client.client_id,
+            client_prefix: client.client_prefix,
+            format: 'parquet',
+            generated_at: new Date().toISOString(),
+            files: parquetManifestEntries,
+          })
+          filesWritten += 1
+          logger.info('client_manifest_written', {
+            client_id: client.client_id,
+            file_key: manifestKey,
+            files_count: parquetManifestEntries.length,
+          })
+        } catch (error) {
+          clientOk = false
+          const { message } = formatError(error)
+          logger.error('client_manifest_failed', {
+            client_id: client.client_id,
+            file_key: manifestKey,
+            error: message,
+          })
         }
       }
 

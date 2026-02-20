@@ -24,6 +24,7 @@ export const publisherRoutes = async (app: FastifyInstance) => {
       contributorCount = await loadContributorCount(corridorId)
     }
     const result = evaluatePublisherGates({
+      corridor_id: corridorId,
       contributor_count: contributorCount,
       top_provider_share: typeof body.top_provider_share === 'number' ? body.top_provider_share : undefined,
       top_two_share: typeof body.top_two_share === 'number' ? body.top_two_share : undefined,
@@ -32,7 +33,7 @@ export const publisherRoutes = async (app: FastifyInstance) => {
       logger.info('b2b_publish_gate_skipped', {
         corridor_id: corridorId,
         contributor_count: contributorCount ?? null,
-        min_provider_count: 3,
+        min_provider_count: result.minContributors,
       })
     }
 

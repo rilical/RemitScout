@@ -137,6 +137,8 @@ export type ScheduledJobsOptions = {
   planeCDbPort?: string
   planeCDbName?: string
   minimalMode?: boolean
+  institutionalExportFormat?: string
+  institutionalExportWriteManifest?: boolean
 }
 
 const tagManagedRule = (rule: Rule, envName: string): void => {
@@ -2193,8 +2195,16 @@ const createPlaneCLambdaJob = ({
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
-  if (jobName === 'institutional-daily-export' && options.exportsBucketName) {
-    environment.EXPORTS_S3_BUCKET = options.exportsBucketName
+  if (jobName === 'institutional-daily-export') {
+    if (options.exportsBucketName) {
+      environment.EXPORTS_S3_BUCKET = options.exportsBucketName
+    }
+    if (options.institutionalExportFormat) {
+      environment.INSTITUTIONAL_EXPORT_FORMAT = options.institutionalExportFormat
+    }
+    if (options.institutionalExportWriteManifest !== undefined) {
+      environment.INSTITUTIONAL_EXPORT_WRITE_MANIFEST = options.institutionalExportWriteManifest ? '1' : '0'
+    }
   }
   if (jobName === 'gold-indices') {
     const lookbackOverride =

@@ -46,3 +46,13 @@ Central location for automated operational reports. Every Codex skill and agent 
 - **Reads:** `ops/reports/daily-ops-report.md`
 - **Actions:** Diagnose → Fix → Test → Branch → PR → Push
 - **Guardrails:** Never pushes to main/develop directly; always creates feature branches with PR
+
+## B2B Export Contract (Snowflake)
+
+- Bucket: `remit-scout-exports-{env}`
+- CSV prefix: `indices/{client_prefix}/daily/YYYY/MM/DD/{teer|rci|rvi}.csv`
+- Parquet prefix: `parquet/{client_prefix}/daily/YYYY/MM/DD/{teer|rci|rvi}.parquet`
+- Manifest (optional): `parquet/{client_prefix}/daily/YYYY/MM/DD/manifest.json`
+- Retention: 730 days with Glacier at 90 days and Deep Archive at 365 days for `indices/` and `parquet/`
+- Content types: `text/csv` and `application/vnd.apache.parquet`
+- Access: Snowflake partner assumes `remit-scout-{env}-snowflake-partner` (external ID required)

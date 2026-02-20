@@ -209,6 +209,16 @@ reason_codes:
     description: "Export job is marked done but its S3 artifact is missing."
     domain: "exports"
 
+  - code: "exports.parquet_key_mismatch"
+    default_severity: "sev3"
+    description: "Parquet export job S3 key does not end with .parquet."
+    domain: "exports"
+
+  - code: "exports.snowflake_role_missing"
+    default_severity: "sev2"
+    description: "Snowflake partner role ARN configured but role not found."
+    domain: "exports"
+
   - code: "exports.config_missing_bucket"
     default_severity: "sev2"
     description: "EXPORTS_S3_BUCKET is not configured so evidence cannot verify artifacts."

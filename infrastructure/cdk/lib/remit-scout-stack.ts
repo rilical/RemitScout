@@ -1,12 +1,14 @@
-import { Stack, type StackProps, Tags, CfnOutput, Duration } from 'aws-cdk-lib'
-import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
+import { Stack, type StackProps, Tags, CfnOutput, Duration, Annotations } from 'aws-cdk-lib'
+import { Alarm, ComparisonOperator, Metric, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
-import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { AccountPrincipal, CompositePrincipal, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { Architecture } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { LambdaSubscription } from 'aws-cdk-lib/aws-sns-subscriptions'
 import { CpuArchitecture } from 'aws-cdk-lib/aws-ecs'
 import { CfnSchedule } from 'aws-cdk-lib/aws-scheduler'
+import { Rule } from 'aws-cdk-lib/aws-events'
+import { SnsTopic } from 'aws-cdk-lib/aws-events-targets'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { Construct } from 'constructs'
 
@@ -253,6 +255,64 @@ export class RemitScoutStack extends Stack {
     const storage = createStorage(this, { envName, exportsPrefix })
     const queues = createQueues(this, { envName })
 
+    const snowflakePartnerRole = (() => {
+      if (snowflakePartnerAccountIds.length === 0) {
+        return undefined
+      }
+      if (!snowflakePartnerExternalId) {
+        Annotations.of(this).addWarning('snowflakePartnerAccountIds configured without snowflakePartnerExternalId; skipping partner role.')
+        return undefined
+      }
+
+      const principals = snowflakePartnerAccountIds.map((accountId) => new AccountPrincipal(accountId))
+      const assumedBy = principals.length === 1
+        ? principals[0]
+        : new CompositePrincipal(...principals)
+      assumedBy.addConditions({
+        StringEquals: {
+          'sts:ExternalId': snowflakePartnerExternalId,
+        },
+      })
+
+      const role = new Role(this, 'SnowflakePartnerRole', {
+        roleName: snowflakePartnerRoleName || `remit-scout-${envName}-snowflake-partner`,
+        assumedBy,
+      })
+
+      const allowedPrefixes = ['indices/', 'parquet/']
+      role.addToPolicy(new PolicyStatement({
+        actions: ['s3:GetObject', 's3:GetObjectVersion'],
+        resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
+      }))
+      role.addToPolicy(new PolicyStatement({
+        actions: ['s3:GetBucketLocation', 's3:ListBucket'],
+        resources: [storage.exportsBucket.bucketArn],
+        conditions: {
+          StringLike: {
+            's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
+          },
+        },
+      }))
+
+      storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
+        principals: [role],
+        actions: ['s3:GetObject', 's3:GetObjectVersion'],
+        resources: allowedPrefixes.map((prefix) => storage.exportsBucket.arnForObjects(`${prefix}*`)),
+      }))
+      storage.exportsBucket.addToResourcePolicy(new PolicyStatement({
+        principals: [role],
+        actions: ['s3:GetBucketLocation', 's3:ListBucket'],
+        resources: [storage.exportsBucket.bucketArn],
+        conditions: {
+          StringLike: {
+            's3:prefix': allowedPrefixes.map((prefix) => `${prefix}*`),
+          },
+        },
+      }))
+
+      return role
+    })()
+
     const planeADbSecretArn =
       this.node.tryGetContext('planeADbSecretArn') ??
       process.env.PLANE_A_DB_SECRET_ARN ??
@@ -431,6 +491,23 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('providerWeightWindowDays') ??
       process.env.PROVIDER_WEIGHT_WINDOW_DAYS ??
       (envName === 'dev' ? '7' : undefined)
+    const institutionalExportFormat =
+      this.node.tryGetContext('institutionalExportFormat') ??
+      process.env.INSTITUTIONAL_EXPORT_FORMAT
+    const institutionalExportWriteManifest = toOptionalBool(
+      this.node.tryGetContext('institutionalExportWriteManifest') ??
+        process.env.INSTITUTIONAL_EXPORT_WRITE_MANIFEST,
+    )
+    const snowflakePartnerAccountIds = toList(
+      this.node.tryGetContext('snowflakePartnerAccountIds') ??
+        process.env.SNOWFLAKE_PARTNER_ACCOUNT_IDS,
+    )
+    const snowflakePartnerExternalId =
+      this.node.tryGetContext('snowflakePartnerExternalId') ??
+      process.env.SNOWFLAKE_PARTNER_EXTERNAL_ID
+    const snowflakePartnerRoleName =
+      this.node.tryGetContext('snowflakePartnerRoleName') ??
+      process.env.SNOWFLAKE_PARTNER_ROLE_NAME
     const planeBDisableTier1 = toOptionalBool(
       this.node.tryGetContext('planeBDisableTier1') ??
         process.env.PLANE_B_DISABLE_TIER1,
@@ -1273,6 +1350,53 @@ export class RemitScoutStack extends Stack {
         warningTopic: snsSubscriptions.warningTopic,
         opsTopic: snsSubscriptions.opsTopic,
       })
+
+      const exportsRequestMetrics = [
+        { id: 'ExportsIndicesMetrics', label: 'Indices' },
+        { id: 'ExportsParquetMetrics', label: 'Parquet' },
+      ]
+      for (const metricInfo of exportsRequestMetrics) {
+        const requestMetric = new Metric({
+          namespace: 'AWS/S3',
+          metricName: 'AllRequests',
+          statistic: 'Sum',
+          period: Duration.minutes(5),
+          dimensionsMap: {
+            BucketName: storage.exportsBucket.bucketName,
+            FilterId: metricInfo.id,
+          },
+        })
+
+        const requestSpikeAlarm = new Alarm(this, `ExportsRequestSpike${metricInfo.label}`, {
+          alarmName: `remit-scout-${envName}-exports-${metricInfo.label.toLowerCase()}-request-spike`,
+          metric: requestMetric,
+          threshold: envName === 'prod' ? 10000 : 20000,
+          evaluationPeriods: 1,
+          comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: TreatMissingData.NOT_BREACHING,
+        })
+        requestSpikeAlarm.addAlarmAction(new SnsAction(snsSubscriptions.opsTopic))
+      }
+
+      if (snowflakePartnerRole) {
+        const assumeRoleFailureRule = new Rule(this, 'SnowflakeAssumeRoleFailureRule', {
+          ruleName: `remit-scout-${envName}-snowflake-assume-role-failure`,
+          description: 'Alerts on failed STS AssumeRole for Snowflake partner role.',
+          eventPattern: {
+            source: ['aws.sts'],
+            detailType: ['AWS API Call via CloudTrail'],
+            detail: {
+              eventSource: ['sts.amazonaws.com'],
+              eventName: ['AssumeRole'],
+              errorCode: [{ exists: true }],
+              requestParameters: {
+                roleArn: [snowflakePartnerRole.roleArn],
+              },
+            },
+          },
+        })
+        assumeRoleFailureRule.addTarget(new SnsTopic(snsSubscriptions.opsTopic))
+      }
     }
 
     const pipeline = pipelineEnabled
@@ -1316,6 +1440,8 @@ export class RemitScoutStack extends Stack {
       fxRateRefreshDesiredCount,
       goldIndicesLookbackDays,
       providerWeightWindowDays,
+      institutionalExportFormat,
+      institutionalExportWriteManifest,
       paused: devPaused,
       vpc: networking.vpc,
       planeASecurityGroup: networking.planeASecurityGroup,
@@ -1493,6 +1619,7 @@ export class RemitScoutStack extends Stack {
     storage.bronzeBucket.grantReadWrite(iam.planeBEcsTaskRole)
     storage.exportsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.exportsBucket.grantWrite(iam.planeCLambdaRole, 'indices/*')
+    storage.exportsBucket.grantWrite(iam.planeCLambdaRole, 'parquet/*')
     storage.userAssetsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.auditLogsBucket.grantReadWrite(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantSendMessages(iam.planeALambdaRole)
@@ -1585,6 +1712,12 @@ export class RemitScoutStack extends Stack {
       value: storage.exportsBucket.bucketName,
       description: 'Exports S3 bucket name',
     })
+    if (snowflakePartnerRole) {
+      new CfnOutput(this, 'SnowflakePartnerRoleArn', {
+        value: snowflakePartnerRole.roleArn,
+        description: 'IAM role ARN for Snowflake partner access',
+      })
+    }
     new CfnOutput(this, 'UserAssetsBucketName', {
       value: storage.userAssetsBucket.bucketName,
       description: 'User assets S3 bucket name',

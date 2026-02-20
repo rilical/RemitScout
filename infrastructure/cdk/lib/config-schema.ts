@@ -130,6 +130,8 @@ const cdkContextShape = {
   planeBFxRateRefreshDesiredCount: optionalNumber,
   goldIndicesLookbackDays: optionalNumber,
   providerWeightWindowDays: optionalNumber,
+  institutionalExportFormat: z.string().optional(),
+  institutionalExportWriteManifest: optionalBool,
   planeBIngestFanoutTier1DesiredCount: optionalNumber,
   planeBIngestFanoutTier2DesiredCount: optionalNumber,
   goldLiveDesiredCount: optionalNumber,
@@ -168,6 +170,11 @@ const cdkContextShape = {
   exportsPrefix: z.string().optional(),
   userAssetsPrefix: z.string().optional(),
   auditLogsPrefix: z.string().optional(),
+
+  // Snowflake partner access
+  snowflakePartnerAccountIds: optionalStringList,
+  snowflakePartnerExternalId: z.string().optional(),
+  snowflakePartnerRoleName: z.string().optional(),
 
   // Frontend/public values
   frontendDomainName: z.string().optional(),

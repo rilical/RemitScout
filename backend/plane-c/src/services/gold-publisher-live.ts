@@ -128,6 +128,7 @@ export class GoldPublisherLive {
 
   applyPublisherGates(data: AggregatedData): GateResult {
     return evaluatePublisherGates({
+      corridor_id: data.corridorId,
       contributor_count: data.contributorCount,
       top_provider_share: data.topProviderShare,
       top_two_share: data.topTwoShare,

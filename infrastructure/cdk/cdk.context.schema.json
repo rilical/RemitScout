@@ -207,6 +207,14 @@
       "type": "string",
       "description": "Lookback window days for the provider-weighting job (PROVIDER_WEIGHT_WINDOW_DAYS override)"
     },
+    "institutionalExportFormat": {
+      "type": "string",
+      "description": "Institutional export format (csv, parquet, dual)"
+    },
+    "institutionalExportWriteManifest": {
+      "type": "boolean",
+      "description": "Write manifest.json alongside parquet exports"
+    },
     "costGuardrailsCreateCur": {
       "type": "boolean",
       "description": "Create CUR bucket/report (default: true in prod only)"
@@ -486,6 +494,21 @@
     "githubActionsOidcProviderArn": {
       "type": "string",
       "description": "Existing GitHub Actions OIDC provider ARN (if already created in the AWS account)"
+    },
+    "snowflakePartnerAccountIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "AWS account IDs allowed to assume the Snowflake partner role"
+    },
+    "snowflakePartnerExternalId": {
+      "type": "string",
+      "description": "External ID required for Snowflake partner role assumption"
+    },
+    "snowflakePartnerRoleName": {
+      "type": "string",
+      "description": "Explicit IAM role name for the Snowflake partner role"
     },
     "planeADomainName": {
       "type": "string",

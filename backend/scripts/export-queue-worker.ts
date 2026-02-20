@@ -34,9 +34,12 @@ import { ExportJobRepository, type ExportJobRow } from '../plane-a/src/repositor
 import {
   buildCsv,
   buildCsvSections,
+  buildParquetBuffer,
   buildZip,
   renderPdf,
   type CsvSection,
+  type ParquetFieldType,
+  type ParquetSchemaDefinition,
 } from './export-generators'
 
 type ExportQueueMessage = {
@@ -58,12 +61,134 @@ const batchSize = config.workers.exportWorker.queueBatchSize
 const idleSleepMs = config.workers.exportWorker.queueIdleSleepMs
 const lockTtlSeconds = config.workers.exportWorker.queueLockTtlSeconds
 const lockRefreshMs = Math.max(1000, Math.floor((lockTtlSeconds * 1000) / 2))
-const jobExpiryDays = config.workers.exportWorker.jobExpiryDays
+const jobExpiryDaysUser = config.workers.exportWorker.jobExpiryDaysUser
+  ?? config.workers.exportWorker.jobExpiryDays
+const jobExpiryDaysInstitutional = config.workers.exportWorker.jobExpiryDaysInstitutional
+  ?? Math.max(1, config.workers.exportWorker.jobExpiryDays)
 const exportFetchPageSize = config.workers.exportWorker.fetchPageSize
 const healthEnabled = config.workers.health.enabled
 const healthPort = config.workers.health.port
 const isLambdaRuntime = config.runtime.isLambda
 const shutdownTimeoutMs = config.workers.exportWorker.shutdownTimeoutMs
+
+const PARQUET_CONTENT_TYPE = 'application/vnd.apache.parquet'
+const PARQUET_FIELD_TYPES: Record<string, ParquetFieldType> = {
+  id: 'UTF8',
+  from_country: 'UTF8',
+  to_country: 'UTF8',
+  amount: 'DOUBLE',
+  method: 'UTF8',
+  path: 'UTF8',
+  created_at: 'UTF8',
+  updated_at: 'UTF8',
+  date: 'UTF8',
+  corridor_id: 'UTF8',
+  amount_bucket: 'INT32',
+  method_profile: 'UTF8',
+  teer_rate: 'DOUBLE',
+  rci_ratio: 'DOUBLE',
+  rvi_bps: 'DOUBLE',
+  rci_median_bps: 'DOUBLE',
+  rci_p10_bps: 'DOUBLE',
+  rci_p90_bps: 'DOUBLE',
+  dispersion_bps: 'DOUBLE',
+  volatility_7d: 'DOUBLE',
+  provider_count_binned: 'INT32',
+  suppression_flag: 'BOOLEAN',
+  suppression_reason: 'UTF8',
+  target_type: 'UTF8',
+  target_payload: 'UTF8',
+  label: 'UTF8',
+  alert_id: 'UTF8',
+  metric: 'UTF8',
+  comparator: 'UTF8',
+  threshold: 'DOUBLE',
+  currency: 'UTF8',
+  frequency: 'UTF8',
+  enabled: 'BOOLEAN',
+  last_triggered_at: 'UTF8',
+  last_value: 'DOUBLE',
+  in_alarm: 'BOOLEAN',
+  watchlist_id: 'UTF8',
+  triggered_at: 'UTF8',
+  value: 'DOUBLE',
+  message: 'UTF8',
+  context: 'UTF8',
+  notification_status: 'UTF8',
+  provider_safe: 'BOOLEAN',
+}
+
+const resolveParquetFieldType = (field: string): ParquetFieldType => {
+  return PARQUET_FIELD_TYPES[field] ?? 'UTF8'
+}
+
+const coerceParquetValue = (field: string, value: unknown): unknown => {
+  if (value === null || value === undefined) return null
+
+  const fieldType = resolveParquetFieldType(field)
+  if (fieldType === 'BOOLEAN') {
+    if (typeof value === 'boolean') return value
+    if (typeof value === 'string') return value.trim().toLowerCase() === 'true'
+    if (typeof value === 'number') return value !== 0
+    return Boolean(value)
+  }
+
+  if (fieldType === 'DOUBLE' || fieldType === 'INT32') {
+    const numeric = typeof value === 'number' ? value : Number(value)
+    if (!Number.isFinite(numeric)) return null
+    return fieldType === 'INT32' ? Math.trunc(numeric) : numeric
+  }
+
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+const buildParquetSchemaDefinition = (
+  sections: CsvSection[],
+  includeSection: boolean,
+): ParquetSchemaDefinition => {
+  const headers = new Set<string>()
+  for (const section of sections) {
+    for (const header of section.headers) {
+      headers.add(header)
+    }
+  }
+
+  const schema: ParquetSchemaDefinition = {}
+  if (includeSection) {
+    schema.section = { type: 'UTF8', optional: true }
+  }
+  for (const header of headers) {
+    schema[header] = { type: resolveParquetFieldType(header), optional: true }
+  }
+  return schema
+}
+
+const buildParquetRows = (
+  sections: CsvSection[],
+  includeSection: boolean,
+): Array<Record<string, unknown>> => {
+  const rows: Array<Record<string, unknown>> = []
+  for (const section of sections) {
+    for (const row of section.rows) {
+      const record: Record<string, unknown> = {}
+      if (includeSection) {
+        record.section = section.title
+      }
+      for (const header of section.headers) {
+        record[header] = coerceParquetValue(header, row[header])
+      }
+      rows.push(record)
+    }
+  }
+  return rows
+}
 
 let healthServer: { close: () => Promise<void> } | null = null
 const activeExtenders = new Set<VisibilityTimeoutExtender>()
@@ -854,14 +979,33 @@ const generateExportFile = async (
 
   const sections = await buildSectionsForJob(job.job_type, job.user_id, job.params ?? {})
   const isPdf = job.job_type.endsWith('_pdf')
+  const isParquet = job.job_type.endsWith('_parquet')
 
   if (isPdf) {
     const buffer = await renderPdf('Remit-Scout Export', sections)
     return { buffer, contentType: 'application/pdf', extension: 'pdf' }
   }
 
+  if (isParquet) {
+    const includeSection = sections.length > 1
+    const schema = buildParquetSchemaDefinition(sections, includeSection)
+    const rows = buildParquetRows(sections, includeSection)
+    const buffer = await buildParquetBuffer(schema, rows)
+    return { buffer, contentType: PARQUET_CONTENT_TYPE, extension: 'parquet' }
+  }
+
   const csv = buildCsvSections(sections)
   return { buffer: Buffer.from(csv, 'utf8'), contentType: 'text/csv', extension: 'csv' }
+}
+
+const resolveJobExpiryDays = (job: ExportJobRow): number => {
+  const audience = job.params && typeof job.params === 'object'
+    ? (job.params as Record<string, unknown>).exportAudience
+    : null
+  if (audience === 'institutional' || job.job_type.endsWith('_parquet')) {
+    return jobExpiryDaysInstitutional
+  }
+  return jobExpiryDaysUser
 }
 
 const uploadExport = async (
@@ -903,7 +1047,8 @@ const processJob = async (jobId: string) => {
   try {
     const file = await generateExportFile(job)
     const key = await uploadExport(job.user_id, job.id, file)
-    const expiresAt = new Date(Date.now() + jobExpiryDays * 24 * 60 * 60 * 1000)
+    const expiryDays = resolveJobExpiryDays(job)
+    const expiresAt = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000)
     await exportRepo.updateS3Key(job.id, key, expiresAt)
     await exportRepo.updateStatus(job.id, 'done', { finished_at: new Date(), error: null })
     recordBusinessMetric('export_jobs_completed', 1, {

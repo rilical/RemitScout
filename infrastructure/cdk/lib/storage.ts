@@ -106,6 +106,10 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('exports'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    metrics: [
+      { id: 'ExportsIndicesMetrics', prefix: 'indices/' },
+      { id: 'ExportsParquetMetrics', prefix: 'parquet/' },
+    ],
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
@@ -115,6 +119,31 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
       {
         // Institutional/B2B daily drops (2-year retention).
         prefix: 'indices/',
+        transitions: [
+          {
+            storageClass: StorageClass.GLACIER,
+            transitionAfter: Duration.days(90),
+          },
+          {
+            storageClass: StorageClass.DEEP_ARCHIVE,
+            transitionAfter: Duration.days(365),
+          },
+        ],
+        expiration: Duration.days(730),
+      },
+      {
+        // Institutional/B2B parquet drops (2-year retention).
+        prefix: 'parquet/',
+        transitions: [
+          {
+            storageClass: StorageClass.GLACIER,
+            transitionAfter: Duration.days(90),
+          },
+          {
+            storageClass: StorageClass.DEEP_ARCHIVE,
+            transitionAfter: Duration.days(365),
+          },
+        ],
         expiration: Duration.days(730),
       },
       {
