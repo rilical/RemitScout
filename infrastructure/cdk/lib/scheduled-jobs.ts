@@ -1370,7 +1370,8 @@ export const createScheduledJobs = (
       'aws',
       'gold-pulse-cache-lambda.ts',
     ),
-    schedule: Schedule.rate(Duration.hours(1)),
+    // Anchor pulse cache refresh to minute 30 so it predictably follows indices recompute windows.
+    schedule: Schedule.cron({ minute: '30' }),
     enabled: rulesEnabled,
     logRetention,
     otelLambdaLayer,

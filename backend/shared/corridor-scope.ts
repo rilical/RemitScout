@@ -3,7 +3,7 @@ import type { Pool } from 'pg'
 import { query } from './db'
 import { parseCorridorId } from './corridor'
 import { getMacroCorridors } from './macro-corridors'
-import { providerRegistry } from '../plane-b/src/providers'
+import { loadProviderCatalog } from './provider-catalog'
 
 export type RightsScopeMode = 'all' | 'macro' | 'ids'
 
@@ -73,8 +73,9 @@ const loadCapabilityCorridorIds = async (pool: Pool): Promise<string[]> => {
 
 const loadProviderCatalogCorridorIds = (): string[] => {
   const out = new Set<string>()
-  for (const provider of providerRegistry) {
-    for (const corridorId of provider.supportedCorridors || []) {
+  const catalog = loadProviderCatalog()
+  for (const provider of catalog.providers) {
+    for (const corridorId of provider.health_corridors || []) {
       const normalized = normalizeUpper(corridorId)
       if (!parseCorridorId(normalized)) continue
       out.add(normalized)

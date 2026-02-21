@@ -76,14 +76,24 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     actions: ['ssm:GetParameter', 'ssm:GetParameters', 'ssm:GetParametersByPath'],
     resources: [`arn:aws:ssm:*:*:parameter/remit-scout/${options.envName}/*`],
   })
+  // CloudWatch PutMetricData does not support resource-level permissions — '*' is required by AWS.
+  // We scope by condition key instead to limit to our namespace.
   const cloudWatchPolicy = new PolicyStatement({
     actions: ['cloudwatch:PutMetricData'],
     resources: ['*'],
+    conditions: {
+      StringEquals: { 'cloudwatch:namespace': 'RemitScout' },
+    },
   })
   const cloudWatchReadPolicy = new PolicyStatement({
     actions: ['cloudwatch:GetMetricStatistics', 'cloudwatch:GetMetricData'],
     resources: ['*'],
+    conditions: {
+      StringEquals: { 'cloudwatch:namespace': 'RemitScout' },
+    },
   })
+  // X-Ray PutTraceSegments/PutTelemetryRecords are data-plane APIs that require Resource: '*'.
+  // AWS does not support resource-level permissions for these actions.
   const xrayPolicy = new PolicyStatement({
     actions: ['xray:PutTraceSegments', 'xray:PutTelemetryRecords'],
     resources: ['*'],

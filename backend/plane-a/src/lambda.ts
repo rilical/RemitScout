@@ -2,6 +2,7 @@ import awsLambdaFastify from '@fastify/aws-lambda'
 
 let logger: {
   info: (event: string, context?: Record<string, unknown>) => void
+  warn: (event: string, context?: Record<string, unknown>) => void
   error: (event: string, context?: Record<string, unknown>) => void
 } | null = null
 

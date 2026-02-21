@@ -372,6 +372,12 @@
               </span>
             </div>
             <span class="text-body-sm text-neutral-400">Market analytics for remittance pricing</span>
+            <span
+              v-if="pulseEnvironmentBadge"
+              class="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300"
+            >
+              {{ pulseEnvironmentBadge }}
+            </span>
           </div>
 
           <!-- Main Header Content -->
@@ -474,6 +480,7 @@
 
               <PulseHeadlineTiles
                 :tiles="headlineTiles"
+                :loading="headlineLoading"
                 @tile-click="handleHeadlineTileClick"
               />
 
@@ -596,7 +603,7 @@
                 :loading="screenerLoading"
                 :error="screenerError"
                 :selected-corridor-id="store.corridor.corridorId || null"
-                :pinned-corridor-ids="pinnedCorridorIds"
+                :pinned-corridor-ids="effectivePinnedCorridorIds"
                 @select="handleScreenerSelect"
                 @pin="handlePinCorridor"
                 @unpin="handleUnpinCorridor"
@@ -1088,10 +1095,22 @@
                     {{ chart.description }}
                   </p>
                   <div
-                    v-if="chartData[chart.id]?.insight"
+                    v-if="chartData[chart.id]?.insight && !isIndicesChartPending(chart.id)"
                     class="mt-3 rounded-lg bg-neutral-900 px-3 py-2 text-body-sm text-neutral-300"
                   >
                     {{ chartData[chart.id]?.insight }}
+                  </div>
+                  <div
+                    v-else-if="isIndicesChartPending(chart.id)"
+                    class="mt-3 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-body-sm text-neutral-400"
+                  >
+                    Data pending for this corridor.
+                  </div>
+                  <div
+                    v-if="indicesCardUpdatedAtLabel(chart.id)"
+                    class="mt-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+                  >
+                    {{ indicesCardUpdatedAtLabel(chart.id) }}
                   </div>
                   <div class="mt-3 text-body-sm font-semibold text-brand-600 hover:text-brand-500">
                     View chart →
@@ -1150,6 +1169,7 @@
               </div>
               <PulseChartGrid
                 :chart-data="chartData"
+                :chart-availability="chartAvailability"
                 :filters="legacyFilters"
                 :pulse-level="pulseLevel"
                 @view="navigateToChart"
@@ -1414,7 +1434,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { PulseFilters, ChartData, PulseSnapshotSummary, PulseDeltaType, PulseCoverageSummary, CorridorOption, PulseScreenerRow, HeadlineTile } from '~/types/pulse'
-import { getChartData, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug, getPulseOverview, getPulseNarrative, getPulsePersonalHistory, getPulsePinnedCorridors, pinPulseCorridor, unpinPulseCorridor } from '~/domains/pulse/infrastructure/pulseApi'
+import { getChartsBatch, getPulseSnapshotSummary, getPulseCoverageSummary, getPulseScreener, getCorridors, getCorridorById, getCorridorBySlug, getPulseOverview, getPulseNarrative, getPulsePersonalHistory, getPulsePinnedCorridors, pinPulseCorridor, unpinPulseCorridor } from '~/domains/pulse/infrastructure/pulseApi'
 import type { PulseNarrativeData, PulsePersonalHistoryData } from '~/domains/pulse/infrastructure/pulseApi'
 import { pulseChartRegistry, getChartById } from '~/lib/pulseChartRegistry'
 import { usePulseStore, type PulseCorridor, type PulseTimeframe, type PulseViewMode } from '~/stores/pulse'
@@ -1428,6 +1448,7 @@ import { useExports } from '~/composables/useExports'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { createHeadlineFallbackController, mergePinnedCorridorIds } from '~/domains/pulse/application'
 import { getCorridorUrl } from '~/utils/country-slugs'
 
 const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
@@ -1450,15 +1471,16 @@ if (!pulseEnabled.value) {
 
 const router = useRouter()
 const route = useRoute()
+const runtimeConfig = useRuntimeConfig()
 const store = usePulseStore()
 const { isPlus, pulseLevel, limits } = useEntitlements()
 const isPro = computed(() => pulseLevel.value === 'full')
 
 const previewScreenerRows = [
-  { flag: '🇺🇸', corridor: 'USD → PHP', badge: 'Great', detail: 'Best: Provider • Gets: PHP 56,000' },
-  { flag: '🇬🇧', corridor: 'GBP → NGN', badge: 'Good', detail: 'Best: Provider • Gets: NGN 870,000' },
-  { flag: '🇪🇺', corridor: 'EUR → INR', badge: 'Great', detail: 'Best: Provider • Gets: INR 46,200' },
-  { flag: '🇺🇸', corridor: 'USD → MXN', badge: 'Fair', detail: 'Best: Provider • Gets: MXN 17,400' },
+  { flag: '🇺🇸', corridor: 'USD → PHP', badge: 'Great', detail: 'Best: Provider • Gets: ---' },
+  { flag: '🇬🇧', corridor: 'GBP → NGN', badge: 'Good', detail: 'Best: Provider • Gets: ---' },
+  { flag: '🇪🇺', corridor: 'EUR → INR', badge: 'Great', detail: 'Best: Provider • Gets: ---' },
+  { flag: '🇺🇸', corridor: 'USD → MXN', badge: 'Fair', detail: 'Best: Provider • Gets: ---' },
 ]
 
 const PREVIEW_CHART_IDS = ['all-in-cost', 'fx-markup', 'provider-winner', 'volatility-pulse', 'quote-success', 'indices-confidence'] as const
@@ -1528,13 +1550,21 @@ const overview = ref<{ tiles: HeadlineTile[], lastUpdated?: string } | null>(nul
 const narrative = ref<PulseNarrativeData | null>(null)
 const personalHistory = ref<PulsePersonalHistoryData | null>(null)
 const highlightsLoading = ref(false)
+const headlineLoading = ref(false)
 const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdated || null))
+const pulseEnvironmentBadge = computed(() => {
+  const raw = String(runtimeConfig.public?.remitScoutEnv || runtimeConfig.public?.environmentName || '').trim().toLowerCase()
+  if (!raw || raw === 'prod' || raw === 'production') return null
+  if (raw === 'staging') return 'Staging'
+  if (raw === 'dev' || raw === 'development') return 'Dev'
+  return raw.toUpperCase()
+})
 
 const defaultHeadlineTiles: HeadlineTile[] = [
   {
     id: 'best-rate',
     label: 'Best rate',
-    value: 'Loading...',
+    value: '—',
     delta: 'n/a',
     deltaType: 'neutral',
     deltaLabel: 'now',
@@ -1545,7 +1575,7 @@ const defaultHeadlineTiles: HeadlineTile[] = [
   {
     id: 'avg-fee',
     label: 'Avg fee',
-    value: 'Loading...',
+    value: '—',
     delta: 'n/a',
     deltaType: 'neutral',
     deltaLabel: 'now',
@@ -1556,7 +1586,7 @@ const defaultHeadlineTiles: HeadlineTile[] = [
   {
     id: 'provider-count',
     label: 'Provider count',
-    value: 'Loading...',
+    value: '—',
     delta: 'n/a',
     deltaType: 'neutral',
     deltaLabel: 'live',
@@ -1565,13 +1595,13 @@ const defaultHeadlineTiles: HeadlineTile[] = [
     icon: 'trophy',
   },
   {
-    id: 'send-benchmark',
-    label: 'Send benchmark',
-    value: 'Loading...',
+    id: 'indices-rci',
+    label: 'RCI',
+    value: '—',
     delta: 'n/a',
     deltaType: 'neutral',
-    deltaLabel: '30d',
-    tooltip: 'Percentile rank of today versus trailing 30-day cost trend.',
+    deltaLabel: 'bank',
+    tooltip: 'Remittance Cost Index from Gold indices (lower is better).',
     chartId: 'all-in-cost',
     icon: 'activity',
   },
@@ -1670,8 +1700,42 @@ const watchlistTrackedCorridors = computed<CorridorOption[]>(() => {
   return out
 })
 
+const pulsePinnedCorridorIds = ref<string[]>([])
+
+const pulsePinnedTrackedCorridors = computed<CorridorOption[]>(() => {
+  if (!isPro.value) return []
+  if (!trackedCorridors.value.length) return []
+
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
+
+  for (const corridorId of pulsePinnedCorridorIds.value) {
+    const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+    if (!option?.corridorId || seen.has(option.corridorId)) continue
+    seen.add(option.corridorId)
+    out.push(option)
+  }
+
+  return out
+})
+
+const prioritizedTrackedCorridors = computed<CorridorOption[]>(() => {
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
+  const add = (corridor: CorridorOption) => {
+    const id = corridor.corridorId
+    if (!id || seen.has(id)) return
+    seen.add(id)
+    out.push(corridor)
+  }
+
+  for (const corridor of watchlistTrackedCorridors.value) add(corridor)
+  for (const corridor of pulsePinnedTrackedCorridors.value) add(corridor)
+  return out
+})
+
 const screenerCorridorIds = computed<string[]>(() => {
-  const ids = watchlistTrackedCorridors.value
+  const ids = prioritizedTrackedCorridors.value
     .map(c => c.corridorId)
     .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
   return Array.from(new Set(ids)).slice(0, 16)
@@ -1690,22 +1754,24 @@ const screenerError = ref<string | null>(null)
 const screenerUpdatedAt = ref<string | null>(null)
 
 // Pinned corridors (Enterprise watchlist)
-const pinnedCorridorIds = ref<string[]>([])
+const effectivePinnedCorridorIds = computed<string[]>(() => {
+  return mergePinnedCorridorIds(pulsePinnedCorridorIds.value, watchlistTrackedCorridors.value)
+})
 
 const loadPinnedCorridors = async () => {
   if (!isPro.value) return
   try {
     const pinned = await getPulsePinnedCorridors()
-    pinnedCorridorIds.value = pinned.map((p) => p.corridorId)
+    pulsePinnedCorridorIds.value = pinned.map((p) => p.corridorId)
   } catch {
-    pinnedCorridorIds.value = []
+    pulsePinnedCorridorIds.value = []
   }
 }
 
 const handlePinCorridor = async (corridorId: string) => {
   try {
     await pinPulseCorridor(corridorId)
-    pinnedCorridorIds.value = [...pinnedCorridorIds.value, corridorId]
+    pulsePinnedCorridorIds.value = [...pulsePinnedCorridorIds.value, corridorId]
   } catch (error: any) {
     actionError.value = error?.message || 'Failed to pin corridor'
   }
@@ -1714,7 +1780,7 @@ const handlePinCorridor = async (corridorId: string) => {
 const handleUnpinCorridor = async (corridorId: string) => {
   try {
     await unpinPulseCorridor(corridorId)
-    pinnedCorridorIds.value = pinnedCorridorIds.value.filter((id) => id !== corridorId)
+    pulsePinnedCorridorIds.value = pulsePinnedCorridorIds.value.filter((id) => id !== corridorId)
   } catch (error: any) {
     actionError.value = error?.message || 'Failed to unpin corridor'
   }
@@ -1897,7 +1963,7 @@ const initializeCorridorSelection = () => {
     option = getCorridorById(store.corridor.corridorId) || trackedCorridors.value.find(c => c.corridorId === store.corridor.corridorId)
   }
   if (!option) {
-    option = watchlistTrackedCorridors.value[0] || trackedCorridors.value[0]
+    option = prioritizedTrackedCorridors.value[0] || trackedCorridors.value[0]
   }
 
   if (option) {
@@ -2125,7 +2191,14 @@ const legacyFilters = computed<PulseFilters>(() => ({
   payoutMethod: 'bank',
 }))
 
+type ChartAvailabilityEntry = {
+  dataAvailable: boolean
+  updatedAt: string | null
+  source: 'gold_export' | 'gold_cache' | 'none'
+}
+
 const chartData = ref<Record<string, ChartData | null>>({})
+const chartAvailability = ref<Record<string, ChartAvailabilityEntry>>({})
 
 const INDICES_CHART_IDS = ['indices-confidence', 'indices-provider-count', 'indices-suppression'] as const
 const indicesCharts = computed(() =>
@@ -2161,17 +2234,19 @@ async function loadChartData() {
     const chartIds = pulseChartRegistry
       .filter(c => isPro.value || !enterpriseOnlyChartIds.has(c.id))
       .map(c => c.id)
-    const promises = chartIds.map(async (id) => {
-      const data = await getChartData(id, legacyFilters.value)
-      return { id, data }
-    })
-
-    const results = await Promise.all(promises)
+    const response = await getChartsBatch(chartIds, legacyFilters.value)
     const newData: Record<string, ChartData | null> = {}
-    for (const { id, data } of results) {
-      newData[id] = data
+    const availability: Record<string, ChartAvailabilityEntry> = {}
+    for (const item of response.charts || []) {
+      newData[item.id] = item.chart
+      availability[item.id] = {
+        dataAvailable: item.dataAvailable,
+        updatedAt: item.updatedAt,
+        source: item.source,
+      }
     }
     chartData.value = newData
+    chartAvailability.value = availability
     chartLoadedKey.value = key
   }
   catch (e) {
@@ -2264,9 +2339,39 @@ function handleHeadlineTileClick(tile: HeadlineTile) {
   navigateToChart(tile.chartId)
 }
 
+const headlineFallback = createHeadlineFallbackController(() => {
+  if (!headlineLoading.value) return
+  headlineLoading.value = false
+}, 10_000)
+
+const startHeadlineFallbackTimer = () => {
+  headlineFallback.start()
+}
+
+const hasChartSeries = (chartId: string) => {
+  const data = chartData.value[chartId]
+  if (!data || !Array.isArray(data.series)) return false
+  return data.series.some(series => Array.isArray(series.points) && series.points.length > 0)
+}
+
+const isIndicesChartPending = (chartId: string) => {
+  const availability = chartAvailability.value[chartId]
+  if (!availability) return chartLoading.value || !hasChartSeries(chartId)
+  if (!availability.dataAvailable) return true
+  return !hasChartSeries(chartId)
+}
+
+const indicesCardUpdatedAtLabel = (chartId: string) => {
+  const updatedAt = chartAvailability.value[chartId]?.updatedAt
+  if (!updatedAt) return null
+  return formatUpdatedLabel(updatedAt)
+}
+
 async function loadSenderHighlights() {
   if (!isPlus.value) return
   highlightsLoading.value = true
+  headlineLoading.value = true
+  startHeadlineFallbackTimer()
   try {
     const [overviewResponse, narrativeResponse, personalHistoryResponse] = await Promise.all([
       getPulseOverview(legacyFilters.value),
@@ -2284,9 +2389,13 @@ async function loadSenderHighlights() {
     if (overviewResponse.lastUpdated) {
       store.setLastUpdated(overviewResponse.lastUpdated)
     }
+    headlineLoading.value = false
+    headlineFallback.clear()
   }
   catch (e) {
     useLogger('PulsePage').error('Failed to load sender highlights', e)
+    headlineFallback.clear()
+    headlineLoading.value = false
   }
   finally {
     highlightsLoading.value = false
@@ -2416,6 +2525,7 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)
   teardownDeepDivesObserver()
   clearSnapshotExportPoll()
+  headlineFallback.clear()
 })
 
 useHead({

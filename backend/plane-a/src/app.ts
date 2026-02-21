@@ -91,6 +91,11 @@ export const PLANE_A_AUTH_BYPASS_ROUTE_POLICIES = {
     owner: 'alerts',
     envScope: 'all',
   },
+  '/api/v1/account/deletion/cancel': {
+    reason: 'Account deletion cancel link must work without authentication',
+    owner: 'account',
+    envScope: 'all',
+  },
 } as const
 
 export const PLANE_A_AUTH_BYPASS_PATHS_BASE = Object.entries(PLANE_A_AUTH_BYPASS_ROUTE_POLICIES)

@@ -1,5 +1,5 @@
-import Fastify, { type FastifyInstance } from 'fastify'
-import { SpanStatusCode } from '@opentelemetry/api'
+import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify'
+import { SpanStatusCode, type Span } from '@opentelemetry/api'
 import { config } from '../../shared/config'
 import { getPool } from '../../shared/db'
 import { getTracer } from '../../shared/tracing'
@@ -75,13 +75,14 @@ export const buildApp = (): PlaneCApp => {
   })
 
   app.addHook('onRequest', async (request) => {
+    const requestWithTrace = request as FastifyRequest & { traceId?: string; span?: Span }
     const correlationHeader = request.headers['x-correlation-id']
     const correlationId = typeof correlationHeader === 'string' && correlationHeader.trim()
       ? correlationHeader.trim()
       : Array.isArray(correlationHeader) && correlationHeader[0]
         ? correlationHeader[0]
         : request.id
-    request.traceId = correlationId
+    requestWithTrace.traceId = correlationId
 
     const route = request.routeOptions?.url || request.url.split('?')[0]
     const span = tracer.startSpan(`HTTP ${request.method} ${route}`)
@@ -92,7 +93,7 @@ export const buildApp = (): PlaneCApp => {
       'http.request_id': request.id,
       'app.correlation_id': correlationId,
     })
-    request.span = span
+    requestWithTrace.span = span
   })
 
   app.addHook('onResponse', async (request, reply) => {
@@ -103,7 +104,7 @@ export const buildApp = (): PlaneCApp => {
       const durationSeconds = reply.elapsedTime / 1000
       recordRequest(method, route, statusCode, durationSeconds)
 
-      const span = request.span
+      const span = (request as FastifyRequest & { span?: Span }).span
       if (span) {
         span.setAttributes({
           'http.status_code': statusCode,

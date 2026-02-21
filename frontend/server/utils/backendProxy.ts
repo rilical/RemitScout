@@ -125,6 +125,12 @@ const forwardSetCookieHeaders = (event: any, headers: Headers | undefined) => {
 }
 
 const isE2eMockEnabled = () => process.env.E2E_MOCK_API === '1'
+let hasLoggedCriticalE2eMockWarning = false
+
+const isProdLikeEnvironment = () => {
+  const raw = `${process.env.ENVIRONMENT || ''} ${process.env.NODE_ENV || ''}`.toLowerCase()
+  return raw.includes('prod') || raw.includes('production') || raw.includes('staging')
+}
 
 type MockResult = { status: number, body: any }
 
@@ -584,6 +590,13 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   setResponseHeader(event, 'x-request-id', requestId)
 
   if (isE2eMockEnabled()) {
+    if (isProdLikeEnvironment() && !hasLoggedCriticalE2eMockWarning) {
+      hasLoggedCriticalE2eMockWarning = true
+      console.error('[CRITICAL] E2E_MOCK_API is enabled in staging/production-like runtime — API responses are mocked', {
+        nodeEnv: process.env.NODE_ENV || null,
+        environment: process.env.ENVIRONMENT || null,
+      })
+    }
     const mocked = maybeMockApi(path, method, query as any)
     if (mocked) {
       setResponseStatus(event, mocked.status)

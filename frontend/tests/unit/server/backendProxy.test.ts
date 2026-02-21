@@ -31,15 +31,30 @@ const startServer = async (handler: (event: any) => Promise<any>) => {
 }
 
 let active: TestServer | null = null
+const originalNodeEnv = process.env.NODE_ENV
+const originalEnvironment = process.env.ENVIRONMENT
+const originalE2eMockApi = process.env.E2E_MOCK_API
+
 afterEach(() => {
   active?.server.close()
   active = null
+  process.env.NODE_ENV = originalNodeEnv
+  process.env.ENVIRONMENT = originalEnvironment
+  if (originalE2eMockApi === undefined) {
+    delete process.env.E2E_MOCK_API
+  }
+  else {
+    process.env.E2E_MOCK_API = originalE2eMockApi
+  }
 })
 
 beforeEach(() => {
   vi.clearAllMocks()
   __resetBackendProxyCircuitForTests()
   process.env.API_BASE = 'https://backend.example.com'
+  process.env.NODE_ENV = 'test'
+  delete process.env.ENVIRONMENT
+  delete process.env.E2E_MOCK_API
 })
 
 describe('proxyToBackend', () => {
@@ -149,5 +164,53 @@ describe('proxyToBackend', () => {
     const body = await res.json()
     expect(body.error).toBe('service_unavailable')
     expect(body.requestId).toBe('req_5xx')
+  })
+
+  it('logs a one-time critical warning when E2E mocks run in prod-like env', async () => {
+    process.env.E2E_MOCK_API = '1'
+    process.env.NODE_ENV = 'production'
+    process.env.ENVIRONMENT = 'staging'
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    active = await startServer(async (event) => {
+      event.context.requestId = 'req_mock_warn'
+      return await proxyToBackend(event, '/pulse/teaser')
+    })
+
+    await fetch(`${active.baseUrl}/`)
+    await fetch(`${active.baseUrl}/`)
+
+    const criticalCalls = errorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes('[CRITICAL] E2E_MOCK_API is enabled'),
+    )
+
+    expect(criticalCalls).toHaveLength(1)
+    expect($fetch.raw).not.toHaveBeenCalled()
+
+    errorSpy.mockRestore()
+  })
+
+  it('does not log critical warning for E2E mocks in dev env', async () => {
+    process.env.E2E_MOCK_API = '1'
+    process.env.NODE_ENV = 'development'
+    process.env.ENVIRONMENT = 'dev'
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    active = await startServer(async (event) => {
+      event.context.requestId = 'req_mock_dev'
+      return await proxyToBackend(event, '/pulse/teaser')
+    })
+
+    await fetch(`${active.baseUrl}/`)
+
+    const criticalCalls = errorSpy.mock.calls.filter((call) =>
+      String(call[0]).includes('[CRITICAL] E2E_MOCK_API is enabled'),
+    )
+    expect(criticalCalls).toHaveLength(0)
+    expect($fetch.raw).not.toHaveBeenCalled()
+
+    errorSpy.mockRestore()
   })
 })

@@ -25,6 +25,7 @@ import { SubnetType, type SecurityGroup, type Vpc } from 'aws-cdk-lib/aws-ec2'
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { IBucket } from 'aws-cdk-lib/aws-s3'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
@@ -128,6 +129,8 @@ export type ApiResources = {
   planeCApi: HttpApi
   planeAFunction: NodejsFunction
   planeCFunction: NodejsFunction
+  planeALambdaDlq: Queue
+  planeCLambdaDlq: Queue
   planeACloudFront?: Distribution
   planeAWaf?: CfnWebACL
 }
@@ -410,6 +413,17 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeCEnvironment.REDIS_URL = resolvedRedisUrl
   }
 
+  // Lambda async-invoke DLQs — capture failed invocations that would otherwise be silently lost.
+  const planeCDlq = new Queue(scope, 'PlaneCLambdaDlq', {
+    queueName: `remit-scout-${options.envName}-plane-c-lambda-dlq`,
+    retentionPeriod: Duration.days(14),
+  })
+
+  const planeADlq = new Queue(scope, 'PlaneALambdaDlq', {
+    queueName: `remit-scout-${options.envName}-plane-a-lambda-dlq`,
+    retentionPeriod: Duration.days(14),
+  })
+
   const planeCFunction = new NodejsFunction(scope, 'PlaneCApiFunction', {
     entry: path.resolve(__dirname, '..', '..', '..', 'backend', 'plane-c', 'src', 'lambda.ts'),
     handler: 'handler',
@@ -426,6 +440,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     environment: planeCEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+    deadLetterQueue: planeCDlq,
   })
 
   if (sentrySecret) {
@@ -533,6 +548,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     environment: planeAEnvironment,
     logRetention,
     layers: otelLambdaLayer ? [otelLambdaLayer] : undefined,
+    deadLetterQueue: planeADlq,
   })
 
   if (sentrySecret) {
@@ -806,7 +822,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const wafBlockList = options.wafBlockListIps ?? []
   const wafStripeWebhookAllowList = options.wafStripeWebhookAllowListIps ?? []
   const wafAdminAllowList = options.wafAdminAllowListIps ?? []
-  const wafEnableBotControl = options.wafEnableBotControl ?? false
+  const wafEnableBotControl = options.wafEnableBotControl ?? isProd
 
   if (enableCloudFront) {
     const securityHeadersPolicy = new ResponseHeadersPolicy(scope, 'PlaneASecurityHeaders', {
@@ -1094,7 +1110,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
 
         const wafLogGroup = new LogGroup(scope, 'PlaneAWafLogGroup', {
           logGroupName: `aws-waf-logs-remit-scout-${options.envName}-edge`,
-          retention: options.envName === 'prod' ? RetentionDays.ONE_MONTH : RetentionDays.TWO_WEEKS,
+          retention: isProd ? RetentionDays.THREE_MONTHS : (isStaging ? RetentionDays.ONE_MONTH : RetentionDays.TWO_WEEKS),
         })
         if (options.envName !== 'prod') {
           wafLogGroup.applyRemovalPolicy(RemovalPolicy.DESTROY)
@@ -1159,6 +1175,8 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeCApi,
     planeAFunction,
     planeCFunction,
+    planeALambdaDlq: planeADlq,
+    planeCLambdaDlq: planeCDlq,
     planeACloudFront,
     planeAWaf,
   }

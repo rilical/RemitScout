@@ -274,7 +274,7 @@ export const cancelAccountDeletion = async (params: {
     pool,
   )
 
-  if (result.rowCount > 0) {
+  if (Number(result.rowCount ?? 0) > 0) {
     await logAuditEvent(pool, {
       actorId: params.userId,
       actorType: 'user',

@@ -1785,7 +1785,14 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         const amountScale = Number.isFinite(effectiveAmount) && effectiveAmount > 0
           ? (indicesAmountBasis / effectiveAmount)
           : 1
-        const searchEstimateQuotes = flattenedQuotes
+        type SearchEstimateQuote = {
+          id: string
+          providerId: string
+          fxRate: number
+          fee: number
+        }
+
+        const searchEstimateQuotes: SearchEstimateQuote[] = flattenedQuotes
           .map((quote) => {
             const fxRate = Number(quote.fxRate)
             const fee = Number(quote.fee)
@@ -1798,16 +1805,11 @@ export const providersListRoutes = async (app: FastifyInstance) => {
               fee: fee * amountScale,
             }
           })
-          .filter((quote): quote is {
-            id: string
-            providerId?: string
-            fxRate: number
-            fee: number
-          } => quote !== null)
+          .filter((quote): quote is SearchEstimateQuote => quote !== null)
 
         let indexAllowlist: Map<string, IndexPermissionFlags> | undefined
         if (searchEstimateQuotes.length > 0) {
-          const providerIds = searchEstimateQuotes.map(quote => quote.providerId || quote.id)
+          const providerIds = searchEstimateQuotes.map(quote => quote.providerId)
           try {
             indexAllowlist = await _loadIndexPermissions(providerIds)
           } catch (error) {

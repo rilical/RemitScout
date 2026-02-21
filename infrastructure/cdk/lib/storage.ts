@@ -6,6 +6,7 @@ import {
   ObjectOwnership,
   StorageClass,
 } from 'aws-cdk-lib/aws-s3'
+import { Key } from 'aws-cdk-lib/aws-kms'
 import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import type { Construct } from 'constructs'
 
@@ -74,10 +75,21 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     autoDeleteObjects: !isProd,
   })
 
+  // KMS CMK with automatic annual rotation for bronze and audit-logs buckets.
+  // Provides auditable key usage via CloudTrail (unlike S3-managed keys).
+  const dataEncryptionKey = new Key(scope, 'DataEncryptionKey', {
+    alias: `remit-scout-${options.envName}-data`,
+    description: `RemitScout ${options.envName} data encryption key (bronze + audit-logs)`,
+    enableKeyRotation: true,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
   const bronzeBucket = new Bucket(scope, 'BronzeBucket', {
     bucketName: `remit-scout-bronze-${options.envName}`,
     versioned: true,
-    encryption: BucketEncryption.S3_MANAGED,
+    encryption: BucketEncryption.KMS,
+    encryptionKey: dataEncryptionKey,
+    bucketKeyEnabled: true,
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('bronze'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
@@ -171,7 +183,9 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
   const auditLogsBucket = new Bucket(scope, 'AuditLogsBucket', {
     bucketName: `remit-scout-audit-logs-${options.envName}`,
     versioned: false,
-    encryption: BucketEncryption.S3_MANAGED,
+    encryption: BucketEncryption.KMS,
+    encryptionKey: dataEncryptionKey,
+    bucketKeyEnabled: true,
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('audit-logs'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,

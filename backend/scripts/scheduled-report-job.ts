@@ -216,12 +216,12 @@ export const runScheduledReportJob = async (
 
   try {
     logger.info('job_start', { schedule })
-    recordBatchJobMetric(JOB_NAME, 'start')
+    await recordBatchJobMetric(JOB_NAME, 'job_start')
 
     const clients = await loadEligibleClients(pool, schedule)
     if (clients.length === 0) {
       logger.info('job_no_clients', { schedule })
-      recordBatchJobMetric(JOB_NAME, 'complete')
+      await recordBatchJobMetric(JOB_NAME, 'job_complete')
       return
     }
 
@@ -265,7 +265,7 @@ export const runScheduledReportJob = async (
           suppression_flag: row.suppression_flag,
         }))
 
-        const csvContent = buildCsv(csvRows, [...SUMMARY_CSV_HEADERS])
+        const csvContent = buildCsv([...SUMMARY_CSV_HEADERS], csvRows)
         const s3Key = buildReportS3Key({
           clientPrefix: client.client_prefix,
           schedule,
@@ -309,14 +309,20 @@ export const runScheduledReportJob = async (
       reports_uploaded: reportsUploaded,
       duration_ms: durationMs,
     })
-    recordBatchJobMetric(JOB_NAME, 'complete')
+    await recordBatchJobMetric(JOB_NAME, 'job_complete', durationMs / 1000, {
+      schedule,
+      clients_processed: String(clients.length),
+      reports_uploaded: String(reportsUploaded),
+    })
   } catch (error) {
     const durationMs = Date.now() - startTime
     logger.error('job_failed', {
       error: formatError(error),
       duration_ms: durationMs,
     })
-    recordBatchJobMetric(JOB_NAME, 'failed')
+    await recordBatchJobMetric(JOB_NAME, 'job_failure', durationMs / 1000, {
+      schedule,
+    })
     throw error
   } finally {
     await lock.release().catch(() => {})

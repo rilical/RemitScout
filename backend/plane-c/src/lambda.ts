@@ -36,6 +36,7 @@ const init = async () => {
       ]),
     })
 
+    const { config } = await import('../../shared/config')
     const { runStartupChecks } = await import('../../shared/startup')
     const { initErrorTracking } = await import('../../shared/error-tracker')
     const { initTracing } = await import('../../shared/tracing')

@@ -57,15 +57,23 @@ const redactUnknown = (value: unknown, depth = 0): unknown => {
 
 const redactHeaders = (
   headers: Record<string, unknown>,
-): Record<string, unknown> => {
-  const redacted: Record<string, unknown> = {}
+): Record<string, string> => {
+  const redacted: Record<string, string> = {}
   for (const [rawKey, value] of Object.entries(headers)) {
     const key = rawKey.toLowerCase()
     if (SENSITIVE_HEADERS.includes(key) || shouldRedactKey(key)) {
       redacted[rawKey] = '[REDACTED]'
       continue
     }
-    redacted[rawKey] = redactUnknown(value, 1)
+    const sanitized = redactUnknown(value, 1)
+    redacted[rawKey] =
+      typeof sanitized === 'string'
+        ? sanitized
+        : Array.isArray(sanitized)
+          ? sanitized.map((entry) => String(entry)).join(',')
+          : sanitized === null || sanitized === undefined
+            ? ''
+            : String(sanitized)
   }
   return redacted
 }

@@ -17,7 +17,7 @@
  * @sprint Sprint 4: Add email, SMS, and push channel implementations
  */
 
-import { createHmac } from 'crypto'
+import { createHmac, randomUUID } from 'crypto'
 import { setTimeout as sleep } from 'timers/promises'
 import type { Pool } from 'pg'
 
@@ -100,9 +100,12 @@ const dispatchWebhookBatch = async (
 ): Promise<void> => {
   if (!subscriptions.length) return
 
+  // Stable event ID shared across all subscribers for this signal event.
+  const webhookId = randomUUID()
+
   if (NOTIFICATION_CONFIG.PARALLEL_DISPATCH) {
     const deliveryPromises = subscriptions.map(subscription =>
-      dispatchWebhook(subscription, payload)
+      dispatchWebhook(subscription, payload, webhookId)
         .catch(error => {
           logger.error('webhook_dispatch_failed', {
             subscription_id: subscription.subscription_id,
@@ -113,7 +116,7 @@ const dispatchWebhookBatch = async (
     await Promise.allSettled(deliveryPromises)
   } else {
     for (const subscription of subscriptions) {
-      await dispatchWebhook(subscription, payload)
+      await dispatchWebhook(subscription, payload, webhookId)
         .catch(error => {
           logger.error('webhook_dispatch_failed', {
             subscription_id: subscription.subscription_id,
@@ -310,6 +313,7 @@ export const dispatchQueuedSignal = async (
 const dispatchWebhook = async (
   subscription: WebhookSubscriptionRecord,
   payload: WebhookPayload,
+  webhookId: string,
 ): Promise<void> => {
   const rawSecret = subscription.webhook_secret?.trim() ?? ''
   const secrets = rawSecret
@@ -346,6 +350,10 @@ const dispatchWebhook = async (
           .digest('hex')
         : null
 
+      // X-Webhook-ID: stable per event (same across retries and subscribers).
+      // X-Idempotency-Key: unique per delivery attempt — recipients can deduplicate retries.
+      const idempotencyKey = randomUUID()
+
       const response = await fetch(subscription.webhook_url, {
         method: 'POST',
         headers: {
@@ -353,6 +361,8 @@ const dispatchWebhook = async (
           'X-RemitScout-Signature': signature,
           ...(previousSignature ? { 'X-RemitScout-Signature-Previous': previousSignature } : {}),
           'X-RemitScout-Timestamp': timestamp,
+          'X-Webhook-ID': webhookId,
+          'X-Idempotency-Key': idempotencyKey,
         },
         body: payloadString,
         signal: AbortSignal.timeout(WEBHOOK_CONFIG.TIMEOUT_MS),

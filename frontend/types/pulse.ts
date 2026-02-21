@@ -56,6 +56,9 @@ export interface ChartData {
   series: ChartSeries[]
   annotations?: ChartAnnotation[]
   insight: string
+  dataAvailable?: boolean
+  updatedAt?: string | null
+  source?: 'gold_export' | 'gold_cache' | 'none'
 }
 
 export interface ChartAnnotation {

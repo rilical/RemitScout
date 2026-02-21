@@ -1,5 +1,25 @@
 <template>
-  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div
+    v-if="loading"
+    class="grid grid-cols-2 gap-4 lg:grid-cols-4"
+    aria-busy="true"
+    aria-live="polite"
+  >
+    <div
+      v-for="index in 4"
+      :key="`headline-skeleton-${index}`"
+      class="rounded-xl border border-neutral-700 bg-neutral-800 p-4"
+    >
+      <div class="mb-3 h-10 w-10 animate-pulse rounded-lg bg-neutral-700/80" />
+      <div class="mb-2 h-4 w-24 animate-pulse rounded bg-neutral-700/70" />
+      <div class="h-6 w-20 animate-pulse rounded bg-neutral-700/80" />
+    </div>
+  </div>
+
+  <div
+    v-else
+    class="grid grid-cols-2 gap-4 lg:grid-cols-4"
+  >
     <div
       v-for="tile in tiles"
       :key="tile.id"
@@ -108,9 +128,12 @@ import type { HeadlineTile } from '~/types/pulse'
 
 interface Props {
   tiles: HeadlineTile[]
+  loading?: boolean
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  loading: false,
+})
 
 const emit = defineEmits<{
   'tile-click': [tile: HeadlineTile]

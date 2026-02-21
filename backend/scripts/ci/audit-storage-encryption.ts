@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation'
 import { RDSClient, DescribeDBClustersCommand } from '@aws-sdk/client-rds'
 import { GetBucketEncryptionCommand, S3Client } from '@aws-sdk/client-s3'
 
@@ -30,7 +29,25 @@ const parseClusterIdFromArn = (arn: string): string => {
   return resourceParts[1] || resource
 }
 
+const getCloudFormationModule = () => {
+  const moduleName = '@aws-sdk/client-cloudformation'
+  try {
+    return require(moduleName) as {
+      CloudFormationClient: new (args: Record<string, unknown>) => {
+        send: (command: unknown) => Promise<{ Stacks?: Array<{ Outputs?: Array<{ OutputKey?: string; OutputValue?: string }> }> }>
+      }
+      DescribeStacksCommand: new (args: { StackName: string }) => unknown
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(
+      `Missing optional dependency ${moduleName}. Install it for STACK_NAME mode or provide explicit env targets. (${message})`,
+    )
+  }
+}
+
 const resolveTargetsFromStack = async (stackName: string) => {
+  const { CloudFormationClient, DescribeStacksCommand } = getCloudFormationModule()
   const client = new CloudFormationClient({})
   const response = await client.send(new DescribeStacksCommand({ StackName: stackName }))
   const outputs = response.Stacks?.[0]?.Outputs ?? []

@@ -27,6 +27,8 @@ describe('pulse chart route', () => {
 
     app = {
       get: vi.fn(),
+      post: vi.fn(),
+      delete: vi.fn(),
       container: {
         pool: {},
         repositories: {
@@ -115,6 +117,62 @@ describe('pulse chart route', () => {
     expect(result.series).toHaveLength(1)
     expect(result.series[0].points).toHaveLength(1)
     expect(result.series[0].points[0].v).toBeCloseTo(2.5)
+  })
+
+  it('returns truthful no-data metadata for indices batch responses', async () => {
+    mockGetIndicesSeries.mockResolvedValue([])
+
+    const handler = vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/pulse/charts')?.[2] as any
+
+    const result = await handler(
+      {
+        query: {
+          chart_ids: 'indices-confidence',
+          corridor_id: 'US-PH-USD-PHP',
+          range: '30d',
+        },
+      } as Partial<FastifyRequest>,
+      mockReply,
+    )
+
+    expect(result.success).toBe(true)
+    expect(result.dataAvailable).toBe(false)
+    expect(result.updatedAt).toBeNull()
+    expect(result.charts).toHaveLength(1)
+    expect(result.charts[0]).toMatchObject({
+      id: 'indices-confidence',
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'gold_export',
+    })
+    expect(result.charts[0].chart.dataAvailable).toBe(false)
+    expect(result.charts[0].chart.updatedAt).toBeNull()
+    expect(result.charts[0].chart.source).toBe('gold_export')
+  })
+
+  it('returns truthful no-data metadata for indices single-chart responses', async () => {
+    mockGetIndicesSeries.mockResolvedValue([])
+
+    const handler = vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/pulse/charts/:chartId')?.[2] as any
+
+    const result = await handler(
+      {
+        params: { chartId: 'indices-provider-count' },
+        query: {
+          corridor_id: 'US-PH-USD-PHP',
+          range: '30d',
+        },
+      } as Partial<FastifyRequest>,
+      mockReply,
+    )
+
+    expect(result.dataAvailable).toBe(false)
+    expect(result.updatedAt).toBeNull()
+    expect(result.source).toBe('gold_export')
   })
 
   it('throws validation error when chartId param is missing', async () => {

@@ -398,6 +398,28 @@ export const createMonitoring = (
     alarm.addAlarmAction(criticalAction)
   }
 
+  // Lambda async-invoke DLQ alarms — failed invocations that would otherwise be silently lost.
+  const lambdaDlqs = [
+    { id: 'PlaneALambdaDlqAlarm', queue: options.api.planeALambdaDlq, label: 'Plane A' },
+    { id: 'PlaneCLambdaDlqAlarm', queue: options.api.planeCLambdaDlq, label: 'Plane C' },
+  ]
+  for (const { id, queue, label } of lambdaDlqs) {
+    const alarm = new Alarm(scope, id, {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-${queue.queueName}-depth`
+        : undefined,
+      metric: queue.metricApproximateNumberOfMessagesVisible({
+        period: Duration.minutes(5),
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `${label} Lambda DLQ has messages — failed async invocations detected`,
+    })
+    alarm.addAlarmAction(opsAction)
+  }
+
   const quoteRefreshOldestAgeThresholdSeconds = isProd ? 15 * 60 : (isStaging ? 30 * 60 : 60 * 60)
   const ingestFanoutTier2OldestAgeThresholdSeconds = isProd ? 60 * 60 : (isStaging ? 90 * 60 : 2 * 60 * 60)
   const priorityQueueAgeAlarms = [
@@ -807,6 +829,7 @@ export const createMonitoring = (
   const batchJobNames = [
     'gold-publisher-job',
     'gold-indices-job',
+    'gold-pulse-cache-job',
     'institutional-daily-export-job',
     'gold-reconciliation-job',
     'provider-weighting-job',

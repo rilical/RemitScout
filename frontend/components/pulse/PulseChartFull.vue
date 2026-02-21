@@ -154,8 +154,21 @@
         v-else-if="viewMode === 'chart'"
         class="min-h-[320px]"
       >
+        <div
+          v-if="chartData && !chartHasRenderableSeries"
+          class="flex h-80 items-center justify-center text-center text-neutral-300"
+        >
+          <div class="max-w-sm">
+            <p class="text-body font-semibold text-white">
+              {{ chartEmptyTitle }}
+            </p>
+            <p class="mt-2 text-body-sm text-neutral-400">
+              {{ chartEmptyMessage }}
+            </p>
+          </div>
+        </div>
         <AsyncErrorBoundary
-          v-if="chartComponent && chartData"
+          v-else-if="chartComponent && chartData"
           skeleton-height="320"
         >
           <component
@@ -382,6 +395,25 @@ const chartComponent = computed(() => {
     default:
       return markRaw(PulseLineChart)
   }
+})
+
+const chartHasRenderableSeries = computed(() => {
+  if (!chartData.value || !Array.isArray(chartData.value.series)) return false
+  return chartData.value.series.some(series => Array.isArray(series.points) && series.points.length > 0)
+})
+
+const chartEmptyTitle = computed(() => {
+  if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
+    return 'Data pending'
+  }
+  return 'No data available'
+})
+
+const chartEmptyMessage = computed(() => {
+  if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
+    return 'Data is being prepared for this corridor. Check back shortly.'
+  }
+  return 'No chart points are available for the selected filters.'
 })
 
 async function loadData() {

@@ -37,6 +37,7 @@
           :metadata="chart"
           :insight="getChartInsight(chart.id)"
           :sparkline-data="getSparklineData(chart.id)"
+          :updated-at="getChartUpdatedAt(chart.id)"
           :is-gated="isChartGated(chart)"
           :teaser-mode="isTeaserChart(chart)"
           :gate-label="isChartGated(chart) ? 'Full' : undefined"
@@ -60,14 +61,22 @@ import { Icon, type IconName } from '~/ui'
 import ChartPreviewCard from '~/domains/pulse/ui/ChartPreviewCard.vue'
 import type { PulseLevel } from '~/composables/useEntitlements'
 
+type ChartAvailabilityEntry = {
+  dataAvailable: boolean
+  updatedAt: string | null
+  source: 'gold_export' | 'gold_cache' | 'none'
+}
+
 interface Props {
   chartData: Record<string, ChartData | null>
+  chartAvailability?: Record<string, ChartAvailabilityEntry>
   filters: PulseFilters
   pulseLevel?: PulseLevel
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pulseLevel: 'none',
+  chartAvailability: () => ({}),
 })
 
 const emit = defineEmits<{
@@ -89,13 +98,27 @@ const categories = computed(() => {
 
 function getChartInsight(chartId: string): string {
   const data = props.chartData[chartId]
-  return data?.insight || ''
+  const insight = data?.insight?.trim() || ''
+  if (insight) return insight
+
+  const availability = props.chartAvailability?.[chartId]
+  if (availability && !availability.dataAvailable) {
+    return 'Data pending for this corridor.'
+  }
+
+  return ''
 }
 
 function getSparklineData(chartId: string) {
   const data = props.chartData[chartId]
   if (!data || data.series.length === 0) return []
   return data.series[0].points
+}
+
+function getChartUpdatedAt(chartId: string): string | null {
+  const availabilityUpdatedAt = props.chartAvailability?.[chartId]?.updatedAt
+  if (availabilityUpdatedAt) return availabilityUpdatedAt
+  return props.chartData[chartId]?.updatedAt ?? null
 }
 
 const TEASER_CHART_IDS = new Set([

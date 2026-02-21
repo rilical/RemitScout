@@ -37,6 +37,7 @@ import {
 } from './gold-pulse-cache-job-metrics'
 import { startHealthServer } from './gold-pulse-cache-job-health'
 import { retry } from '../shared/retry'
+import { recordBatchJobMetric } from '../shared/worker-metrics'
 
 const logger = createLogger('script.gold-pulse-cache')
 initTracing('gold-pulse-cache-job')
@@ -225,10 +226,14 @@ export const runGoldPulseCacheJob = async (
   if (!acquired) {
     logger.info('job_skipped', { reason: 'lock_already_held' })
     recordJobFailure('lock_failed')
+    await recordBatchJobMetric('gold-pulse-cache-job', 'job_failure', 0, {
+      reason: 'lock_failed',
+    })
     return
   }
 
   recordJobStart()
+  await recordBatchJobMetric('gold-pulse-cache-job', 'job_start')
 
   lockRefreshTimer = setInterval(() => {
     if (!lock) return
@@ -418,6 +423,12 @@ export const runGoldPulseCacheJob = async (
       duration_ms: durationMs,
     })
     recordJobComplete(durationSeconds, entries.size, upserted)
+    await recordBatchJobMetric('gold-pulse-cache-job', 'job_complete', durationSeconds, {
+      entries_processed: String(entries.size),
+      entries_upserted: String(upserted),
+      filters_processed: String(filtersProcessed),
+      corridors_processed: String(corridors.length),
+    })
   } catch (error) {
     const durationMs = Date.now() - startTime
     logger.error('job_failed', {
@@ -438,6 +449,9 @@ export const runGoldPulseCacheJob = async (
     }
 
     recordJobFailure(errorType)
+    await recordBatchJobMetric('gold-pulse-cache-job', 'job_failure', durationMs / 1000, {
+      reason: errorType,
+    })
     throw error
   } finally {
     if (healthServer) {

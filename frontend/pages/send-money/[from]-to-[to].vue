@@ -3357,7 +3357,7 @@ const indicesUnavailableMessage = computed(() => {
     case 'bucket_mismatch':
       return 'Indices are available for $500 bank transfers only.'
     case 'gold_indices_unavailable':
-      return 'Indices are not yet available for this corridor. The Gold indices job may not have run yet.'
+      return 'Market indices for this corridor are still being calculated. Check back soon.'
     case 'suppressed':
     case 'insufficient_coverage':
       return 'Indices are temporarily unavailable due to insufficient coverage.'

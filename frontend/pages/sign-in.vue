@@ -105,10 +105,28 @@
             <button
               type="button"
               class="w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-all"
-              @click="mfaRequired = false; mfaCode = ''; mfaFactorId = null; mfaChallengeId = null"
+              @click="resetMfaState"
             >
               Back to sign in
             </button>
+
+            <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-body-sm text-neutral-700">
+              Lost access to your authenticator device? Send a recovery email and continue from your verified inbox.
+            </div>
+            <button
+              type="button"
+              class="w-full rounded-lg border border-rs-border bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+              :disabled="loading || recoverySending"
+              @click="sendMfaRecoveryEmail"
+            >
+              {{ recoverySending ? 'Sending recovery email…' : 'Send recovery email' }}
+            </button>
+            <p
+              v-if="recoveryMessage"
+              class="text-body-sm text-success-700"
+            >
+              {{ recoveryMessage }}
+            </p>
           </form>
 
           <!-- Email/Password -->
@@ -272,6 +290,7 @@ const {
   signOut,
   signIn,
   signInWithOAuth,
+  requestPasswordReset,
   resolvePrimaryMfaFactor,
   startMfaChallenge,
   verifyMfaChallenge,
@@ -294,6 +313,8 @@ const mfaRequired = ref(false)
 const mfaCode = ref('')
 const mfaFactorId = ref<string | null>(null)
 const mfaChallengeId = ref<string | null>(null)
+const recoverySending = ref(false)
+const recoveryMessage = ref<string | null>(null)
 
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) {
@@ -304,6 +325,14 @@ watch(isLoggedIn, (loggedIn) => {
 
 async function handleSignOut() {
   await signOut()
+}
+
+function resetMfaState() {
+  mfaRequired.value = false
+  mfaCode.value = ''
+  mfaFactorId.value = null
+  mfaChallengeId.value = null
+  recoveryMessage.value = null
 }
 
 async function handleEmailSignIn() {
@@ -328,6 +357,7 @@ async function handleEmailSignIn() {
     mfaFactorId.value = factorId
     mfaChallengeId.value = challenge.challengeId
     mfaRequired.value = true
+    recoveryMessage.value = null
     return
   }
 
@@ -356,6 +386,28 @@ async function handleMfaVerify() {
 
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
   await navigateTo(redirect)
+}
+
+async function sendMfaRecoveryEmail() {
+  errorMessage.value = null
+  recoveryMessage.value = null
+
+  const targetEmail = email.value.trim().toLowerCase()
+  if (!targetEmail) {
+    errorMessage.value = 'Enter your email first to receive a recovery link.'
+    return
+  }
+
+  recoverySending.value = true
+  const result = await requestPasswordReset(targetEmail)
+  recoverySending.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Unable to start recovery flow.'
+    return
+  }
+
+  recoveryMessage.value = 'Recovery email sent. Reset your password, then contact support if MFA reset is still required.'
 }
 
 async function handleSocialSignIn(provider: 'google') {

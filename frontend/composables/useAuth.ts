@@ -265,6 +265,22 @@ export const useAuth = () => {
     return verifyMfaChallenge(factorId, challenge.challengeId, code)
   }
 
+  const unenrollMfaFactor = async (factorId: string): Promise<AuthResult> => {
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+
+    const { error } = await supabase.auth.mfa.unenroll({ factorId })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    return { ok: true }
+  }
+
   const signIn = async (email: string, password?: string): Promise<AuthResult> => {
     lastError.value = null
 
@@ -300,6 +316,17 @@ export const useAuth = () => {
       await supabase.auth.signOut()
       lastError.value = 'Please verify your email before signing in.'
       return { ok: false, error: lastError.value }
+    }
+
+    const factor = await resolvePrimaryMfaFactor()
+    if (factor && factor.status === 'verified') {
+      // Enforce app-layer MFA for accounts with verified factors.
+      // Keep Supabase session available for challenge/verify, but block app auth state
+      // until verifyMfaChallenge promotes the session.
+      session.value = null
+      user.value = null
+      hydrated.value = true
+      return { ok: false, mfaRequired: true, factorId: factor.id }
     }
 
     setSession(data.session ?? null)
@@ -594,6 +621,7 @@ export const useAuth = () => {
     verifyMfaChallenge,
     enrollMfaFactor,
     verifyMfaEnrollment,
+    unenrollMfaFactor,
     applyBackendProfile,
   }
 }

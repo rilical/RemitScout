@@ -43,6 +43,38 @@
           </div>
         </div>
 
+        <div class="mt-4">
+          <h3 class="text-body-sm font-semibold text-neutral-700">Enrolled factors</h3>
+          <ul
+            v-if="factorList.length > 0"
+            class="mt-2 space-y-2"
+          >
+            <li
+              v-for="factor in factorList"
+              :key="factor.id"
+              class="flex items-center justify-between rounded-lg border border-rs-border bg-rs-bg px-3 py-2"
+            >
+              <div>
+                <div class="text-body-sm font-semibold text-neutral-900">{{ factorLabel(factor) }}</div>
+                <div class="text-body-sm text-neutral-600">{{ factorStatus(factor.status) }}</div>
+              </div>
+              <button
+                class="rounded-lg border border-rs-border px-3 py-1.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+                :disabled="loading || removingFactorId === factor.id"
+                @click="removeFactor(factor.id)"
+              >
+                {{ removingFactorId === factor.id ? 'Disabling…' : 'Disable' }}
+              </button>
+            </li>
+          </ul>
+          <div
+            v-else
+            class="mt-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-body-sm text-neutral-700"
+          >
+            No MFA factors enrolled.
+          </div>
+        </div>
+
         <div class="mt-6 space-y-4">
           <button
             class="rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -94,6 +126,10 @@
               </button>
             </div>
           </div>
+
+          <div class="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-body-sm text-neutral-700">
+            Recovery path: if you lose your authenticator device, sign in from an active session and use <code>Disable</code> on the current factor, then enroll a new one.
+          </div>
         </div>
       </section>
     </div>
@@ -107,13 +143,23 @@ const {
   listMfaFactors,
   enrollMfaFactor,
   verifyMfaEnrollment,
+  unenrollMfaFactor,
 } = useAuth()
 
 const loading = ref(false)
 const enrolling = ref(false)
 const verifying = ref(false)
+const removingFactorId = ref<string | null>(null)
 const errorMessage = ref<string | null>(null)
-const factors = ref<{ totp?: Array<{ id: string; status?: string }>; all?: Array<{ id: string }> } | null>(null)
+type MfaFactor = {
+  id: string
+  status?: string | null
+  factor_type?: string | null
+  friendly_name?: string | null
+  created_at?: string | null
+}
+
+const factors = ref<{ totp?: MfaFactor[]; all?: MfaFactor[] } | null>(null)
 const enrollment = ref<any | null>(null)
 const verificationCode = ref('')
 
@@ -121,6 +167,30 @@ const mfaEnabled = computed(() => {
   const totp = factors.value?.totp || []
   return totp.some(factor => factor.status === 'verified')
 })
+
+const factorList = computed<MfaFactor[]>(() => {
+  const allFactors = factors.value?.all
+  if (Array.isArray(allFactors) && allFactors.length > 0) {
+    return allFactors
+  }
+  const totp = factors.value?.totp
+  if (Array.isArray(totp)) {
+    return totp
+  }
+  return []
+})
+
+const factorStatus = (status?: string | null) => {
+  if (status === 'verified') return 'Verified'
+  if (status) return status
+  return 'Unknown'
+}
+
+const factorLabel = (factor: MfaFactor) => {
+  if (factor.friendly_name) return factor.friendly_name
+  if (factor.factor_type) return factor.factor_type.toUpperCase()
+  return 'Authenticator factor'
+}
 
 const loadFactors = async () => {
   loading.value = true
@@ -160,6 +230,26 @@ const verifyEnrollment = async () => {
     return
   }
   resetEnrollment()
+  await loadFactors()
+}
+
+const removeFactor = async (factorId: string) => {
+  if (!factorId) return
+  if (!confirm('Disable this MFA factor? You can re-enroll after removal.')) return
+
+  removingFactorId.value = factorId
+  errorMessage.value = null
+  const result = await unenrollMfaFactor(factorId)
+  removingFactorId.value = null
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Unable to disable MFA factor.'
+    return
+  }
+
+  if (enrollment.value?.id === factorId) {
+    resetEnrollment()
+  }
   await loadFactors()
 }
 

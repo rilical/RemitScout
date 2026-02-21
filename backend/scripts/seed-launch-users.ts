@@ -1,7 +1,6 @@
 import { randomBytes } from 'crypto'
 import { mkdir, writeFile } from 'fs/promises'
 import { dirname, resolve } from 'path'
-import { pathToFileURL } from 'url'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
@@ -469,11 +468,7 @@ const main = async () => {
   console.log(JSON.stringify(outputs, null, 2))
 }
 
-const isDirectExecution = (() => {
-  const entrypoint = process.argv[1]
-  if (!entrypoint) return true
-  return import.meta.url === pathToFileURL(entrypoint).href
-})()
+const isDirectExecution = require.main === module
 
 if (isDirectExecution) {
   main().catch((error) => {

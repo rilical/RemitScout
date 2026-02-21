@@ -872,9 +872,16 @@ const mapOverview = (
   marketSnapshotPayload: unknown,
   providerBenchmarkingPayload: unknown,
   costTrendPayload: unknown,
+  indicesLatestPayload: {
+    rci_ratio: number | null
+    suppression_flag: boolean
+    provider_count: number | null
+    method_profile: string
+  } | null,
   updatedAt: string,
   corridorName?: string,
 ) => {
+  void costTrendPayload
   if (isObject(overviewPayload) && Array.isArray((overviewPayload as any).tiles)) {
     const typed = overviewPayload as Record<string, unknown>
     return {
@@ -911,19 +918,21 @@ const mapOverview = (
     ? avgFeeValues.reduce((sum, value) => sum + value, 0) / avgFeeValues.length
     : null
 
-  const costTrendRows = Array.isArray(costTrendPayload)
-    ? costTrendPayload
-      .filter((row): row is Record<string, unknown> => isObject(row))
-      .map((row) => toSafeNumber((row as any).bestProviderCost))
-      .filter((value): value is number => value !== null)
-    : []
-  const latestCost = costTrendRows.length > 0 ? costTrendRows[costTrendRows.length - 1] : null
-  let sendBenchmarkPct = 0
-  if (latestCost !== null && costTrendRows.length > 1) {
-    const historical = costTrendRows.slice(0, -1)
-    const beatCount = historical.filter((value) => value > latestCost).length
-    sendBenchmarkPct = Math.round((beatCount / historical.length) * 100)
-  }
+  const rciRatio = indicesLatestPayload?.suppression_flag ? null : indicesLatestPayload?.rci_ratio ?? null
+  const hasRci = Number.isFinite(rciRatio ?? Number.NaN)
+  const rciValue = hasRci ? `${((rciRatio ?? 0) * 100).toFixed(2)}%` : '—'
+  const rciDelta = indicesLatestPayload?.suppression_flag
+    ? 'Suppressed'
+    : indicesLatestPayload?.provider_count !== null && indicesLatestPayload?.provider_count !== undefined
+      ? `${indicesLatestPayload.provider_count} providers`
+      : 'Data pending'
+  const rciDeltaType: 'neutral' | 'negative' = indicesLatestPayload?.suppression_flag ? 'negative' : 'neutral'
+  const methodProfile = indicesLatestPayload?.method_profile ?? 'standard_bank'
+  const rciDeltaLabel = methodProfile === 'cash_pickup'
+    ? 'cash'
+    : methodProfile === 'standard_card'
+      ? 'card'
+      : 'bank'
 
   return {
     tiles: [
@@ -963,13 +972,13 @@ const mapOverview = (
         icon: 'trophy',
       },
       {
-        id: 'send-benchmark',
-        label: 'Send benchmark',
-        value: `Today's rate beats ${sendBenchmarkPct}% of last 30 days`,
-        delta: sendBenchmarkPct >= 70 ? 'Good timing' : sendBenchmarkPct >= 40 ? 'Average timing' : 'Consider waiting',
-        deltaType: sendBenchmarkPct >= 70 ? 'positive' : sendBenchmarkPct >= 40 ? 'neutral' : 'negative',
-        deltaLabel: '30d',
-        tooltip: 'Percentile rank of today versus trailing 30-day cost trend.',
+        id: 'indices-rci',
+        label: 'RCI',
+        value: rciValue,
+        delta: rciDelta,
+        deltaType: rciDeltaType,
+        deltaLabel: rciDeltaLabel,
+        tooltip: 'Remittance Cost Index from Gold indices (lower is better).',
         chartId: 'all-in-cost',
         icon: 'activity',
       },
@@ -1485,17 +1494,43 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/overview', guardLite, async (request) => {
-    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
+    const queryParams = (request.query ?? {}) as Record<string, unknown>
+    const filters = buildRequestFilters(request, queryParams)
     const corridorName = formatCorridorLabelFromSlug(
       typeof request.query === 'object' && request.query ? (request.query as any).corridor : undefined,
     )
-    const [overview, coverage, snapshot, marketSnapshot, providerBenchmarking, costTrend] = await Promise.all([
+    const indicesLatestPromise = (async () => {
+      const methodProfile = resolveIndicesMethodProfile(filters)
+      if (!methodProfile) return null
+
+      try {
+        const explicitCorridorId = typeof queryParams.corridor_id === 'string'
+          ? queryParams.corridor_id
+          : null
+        const corridorId = await resolveIndicesCorridorId(goldIndicesRepository, filters, explicitCorridorId)
+        if (!corridorId) return null
+
+        return await goldIndicesRepository.getIndicesLatest({
+          corridorId,
+          amountBucket: INDICES_AMOUNT_BUCKET,
+          methodProfile,
+        })
+      } catch (error) {
+        logger.warn('pulse_overview_indices_load_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        return null
+      }
+    })()
+
+    const [overview, coverage, snapshot, marketSnapshot, providerBenchmarking, costTrend, indicesLatest] = await Promise.all([
       loadPulse('overview', filters, null),
       loadPulse('coverage-summary', filters, null),
       loadPulse('snapshot-summary', filters, null),
       loadPulse('market-snapshot', filters, pulseDefaults.marketSnapshot),
       loadPulse('provider-benchmarking', filters, pulseDefaults.providerBenchmarking),
       loadPulse('cost-trend', filters, pulseDefaults.costTrend),
+      indicesLatestPromise,
     ])
     const updatedAt = [
       overview.updatedAt,
@@ -1512,6 +1547,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       marketSnapshot.payload,
       providerBenchmarking.payload,
       costTrend.payload,
+      indicesLatest,
       updatedAt,
       corridorName,
     )
