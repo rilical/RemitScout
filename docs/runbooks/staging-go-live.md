@@ -93,6 +93,13 @@ pnpm -C backend ci:staging-go-live-readiness
 # Backend schema validation for staging profile
 ENVIRONMENT=staging NODE_ENV=staging pnpm -C backend ci:config-validate
 
+# Validate worker-control IAM permissions (required before resume)
+make status-ops-permissions
+
+# Verify staging migration state before applying
+DATABASE_URL_PLANE_B="<staging-credential>" pnpm -C "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend" db:migrate --dry-run
+DATABASE_URL_PLANE_B="<staging-credential>" make db-migrate-staging-dry-run
+
 # Front desk runtime
 pnpm -C backend frontdesk:slack
 

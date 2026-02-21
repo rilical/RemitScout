@@ -117,6 +117,13 @@ export const useEntitlements = () => {
   })
 
   async function fetchPlan() {
+    if (import.meta.dev) {
+      const devOverride = useState<boolean>('dev:role-override', () => false)
+      if (devOverride.value) {
+        hydrated.value = true
+        return
+      }
+    }
     if (!isLoggedIn.value) {
       plan.value = 'free'
       limits.value = {

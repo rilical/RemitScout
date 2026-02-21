@@ -66,6 +66,13 @@ export const createApiClient = (deps: ApiClientDeps) => {
     return `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
   })
 
+  const getDefaultTimeoutMs = (path: string): number => {
+    if (path === '/providers') return 6000
+    if (path === '/rates/history') return 4000
+    if (path === '/bank-vs-specialist') return 5000
+    return 8000
+  }
+
   const retryWithBackoff = async <T>(
     fn: () => Promise<T>,
     maxRetries: number,
@@ -101,9 +108,8 @@ export const createApiClient = (deps: ApiClientDeps) => {
     const serverHeaders = deps.getServerHeaders?.() || {}
 
     const method = options.method || 'GET'
-    const defaultRetries = method === 'GET' || method === 'HEAD' ? 3 : 0
-    const maxRetries = options.retries ?? defaultRetries
-    const timeoutMs = options.timeoutMs ?? 10000
+    const maxRetries = options.retries ?? 0
+    const timeoutMs = options.timeoutMs ?? getDefaultTimeoutMs(path)
 
     const makeRequest = async () => {
       const headers: Record<string, string> = {

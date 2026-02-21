@@ -16,12 +16,15 @@ type ProviderIndices = {
   weights: string
   weightConfidence?: number | null
   weightWindowDays?: number | null
-  source?: 'gold'
+  source?: 'gold' | 'search_estimate'
   updatedAt?: string | null
   indicesBucket?: number
   methodProfile?: string
   suppressionFlag?: boolean
   suppressionReason?: string | null
+  basisAmount?: number
+  providerCountUsed?: number
+  reason?: string | null
 }
 
 type ProvidersResponse = {
@@ -48,16 +51,27 @@ type ProvidersResponse = {
   data: ProviderQuote[]
   providerQuotes?: ProviderQuote[]
   indices?: ProviderIndices
+  dataAvailable?: boolean
   error?: { code: string, message: string }
 }
 
-type RecentSearchesResponse = paths['/recent-searches']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
+type RecentSearchesApiResponse = paths['/recent-searches']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
   ? R
   : { data: RecentSearch[], updatedAt: string }
 
-type PopularCorridorsResponse = paths['/popular-corridors']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
+type RecentSearchesResponse = Omit<RecentSearchesApiResponse, 'updatedAt'> & {
+  updatedAt: string | null
+  dataAvailable?: boolean
+}
+
+type PopularCorridorsApiResponse = paths['/popular-corridors']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
   ? R
   : { data: CorridorPopularity[], updatedAt: string }
+
+type PopularCorridorsResponse = Omit<PopularCorridorsApiResponse, 'updatedAt'> & {
+  updatedAt: string | null
+  dataAvailable?: boolean
+}
 
 type BankVsSpecialistResponse = paths['/bank-vs-specialist']['get']['responses']['200'] extends { content: { 'application/json': infer R } }
   ? R
@@ -66,7 +80,6 @@ type BankVsSpecialistResponse = paths['/bank-vs-specialist']['get']['responses']
 // API composables for dynamic data fetching
 export const useRemittanceApi = () => {
   const { request } = useApi()
-  const fallbackUpdatedAt = () => new Date().toISOString()
   const providersSuccessCache = new Map<string, ProvidersResponse>()
 
   const getStatusCode = (error: unknown): number | undefined => {
@@ -94,7 +107,7 @@ export const useRemittanceApi = () => {
         catch (error: unknown) {
           const statusCode = getStatusCode(error)
           if (statusCode === 401 || statusCode === 403) {
-            return { data: [], updatedAt: new Date().toISOString() }
+            return { data: [], updatedAt: null, dataAvailable: false }
           }
           throw error
         }
@@ -115,7 +128,7 @@ export const useRemittanceApi = () => {
         catch (error: unknown) {
           const statusCode = getStatusCode(error)
           if (statusCode === 401 || statusCode === 403 || statusCode === 500) {
-            return { data: [], updatedAt: fallbackUpdatedAt() }
+            return { data: [], updatedAt: null, dataAvailable: false }
           }
           throw error
         }
@@ -194,15 +207,20 @@ export const useRemittanceApi = () => {
           const toValue = String(unref(to) || '').trim().toUpperCase()
           const resolvedFromCurrency = resolveOption(fromCurrency)
           const resolvedToCurrency = resolveOption(toCurrency)
+          const normalizedToCurrency = typeof resolvedToCurrency === 'string'
+            && resolvedToCurrency.trim().toUpperCase() === 'ALL'
+            ? undefined
+            : resolvedToCurrency
           const fromValid = fromValue.length === 2 && !!getCountryByCode(fromValue)
           const toValid = toValue.length === 2 && !!getCountryByCode(toValue)
           if (!fromValid || !toValid) {
             return {
               data: [],
-              updatedAt: fallbackUpdatedAt(),
+              updatedAt: null,
               corridor: `${fromValue}-${toValue}`,
               amount: unref(amount),
               method: unref(method),
+              dataAvailable: false,
               error: {
                 code: 'corridor_invalid',
                 message: 'Invalid corridor. Please try another combination.',
@@ -219,7 +237,7 @@ export const useRemittanceApi = () => {
                 amount: unref(amount),
                 method: unref(method),
                 fromCurrency: resolvedFromCurrency,
-                toCurrency: resolvedToCurrency,
+                toCurrency: normalizedToCurrency,
                 ...(isLive ? { live: true } : {}),
               },
             },
@@ -251,10 +269,11 @@ export const useRemittanceApi = () => {
           }
           return {
             data: [],
-            updatedAt: fallbackUpdatedAt(),
+            updatedAt: null,
             corridor: `${unref(from)}-${unref(to)}`,
             amount: unref(amount),
             method: unref(method),
+            dataAvailable: false,
             error: {
               code: errorCode,
               message: errorMessage,

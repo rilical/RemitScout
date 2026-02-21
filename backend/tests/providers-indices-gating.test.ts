@@ -141,7 +141,7 @@ describe('providers indices gating', () => {
     await providersRoutes(app as FastifyInstance)
   })
 
-  it('returns indicesReason bucket_mismatch when bucket != 500', async () => {
+  it('returns Gold indices using the canonical $500 basis even when request bucket != 500', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([
       buildQuote({ amount_bucket: 100 }),
     ])
@@ -161,8 +161,40 @@ describe('providers indices gating', () => {
 
     const result = await handler(mockRequest, mockReply)
 
-    expect(result.indicesReason).toBe('bucket_mismatch')
-    expect(result.indices).toBeUndefined()
+    expect(result.indicesReason).toBeNull()
+    expect(result.indices?.source).toBe('gold')
+    expect(result.indices?.indicesBucket).toBe(500)
+    expect(result.indices?.amount).toBe(500)
+  })
+
+  it('falls back to search-derived indices when Gold indices are unavailable', async () => {
+    mockGetIndicesLatest.mockResolvedValue(null)
+    mockListLatestByCorridorAllMethods.mockResolvedValue([
+      buildQuote({ amount_bucket: 100, send_amount: 100, fee_amount: 2, implied_fx_rate: 55 }),
+    ])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 100,
+        method: 'bank',
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.indicesReason).toBe('computed_from_quotes')
+    expect(result.indices?.source).toBe('search_estimate')
+    expect(result.indices?.indicesBucket).toBe(500)
+    expect(result.indices?.amount).toBe(500)
+    expect(result.indices?.teer).not.toBeNull()
+    expect(result.indices?.rci).not.toBeNull()
+    expect(result.indices?.reason).toContain('fallback:gold_indices_unavailable')
   })
 
   it('returns indicesReason unsupported_method for wallet payouts', async () => {

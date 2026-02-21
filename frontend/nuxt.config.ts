@@ -86,7 +86,6 @@ const resolveServerApiBase = () => {
 const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678
 const isrRouteRules = isStagingOrProd
   ? {
-      '/send-money/**': { isr: 600 }, // 10 minutes
       '/providers/**': { isr: 1800 }, // 30 minutes
       '/compare/**': { isr: 86400 }, // 24 hours
       '/learn/**': { isr: 604800 }, // 7 days

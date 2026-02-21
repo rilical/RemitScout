@@ -21,6 +21,7 @@ export type OpsPauseOptions = {
   ecsBaselineDesired: Record<string, number>
   eventRulePrefix: string
   eventRuleAllowlist?: string[]
+  eventRuleResumeAllowlist?: string[]
   purgeQueuesOnResume?: boolean
   purgeQueueUrls?: string[]
   purgeQueueArns?: string[]
@@ -84,6 +85,9 @@ export const createOpsPause = (
       ECS_BASELINE_JSON: JSON.stringify(options.ecsBaselineDesired),
       EVENT_RULE_PREFIX: options.eventRulePrefix,
       EVENT_RULE_ALLOWLIST: JSON.stringify(options.eventRuleAllowlist ?? []),
+      EVENT_RULE_RESUME_ALLOWLIST: JSON.stringify(
+        options.eventRuleResumeAllowlist ?? options.eventRuleAllowlist ?? [],
+      ),
       PURGE_QUEUES_ON_RESUME: options.purgeQueuesOnResume ? '1' : '0',
       PURGE_QUEUE_URLS_JSON: JSON.stringify(options.purgeQueueUrls ?? []),
       DB_CLUSTER_ID: options.dbClusterIdentifier ?? '',

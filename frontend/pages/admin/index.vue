@@ -8,7 +8,7 @@
             Admin Console
           </h1>
           <p class="text-body-sm text-rs-muted">
-            Manage operations, analytics, compliance, enterprise plans, and ads from one place.
+            Manage operations, analytics, compliance, enterprise plans, institutional clients, and ads from one place.
           </p>
         </div>
       </header>
@@ -71,5 +71,7 @@ const adminLinks = [
   { label: 'Audit Log Console', description: 'Track admin/security and compliance events.', to: '/admin/audit' },
   { label: 'Ad Inventory', description: 'Manage ad placements and placements analytics.', to: '/admin/ads' },
   { label: 'Gold Exports', description: 'Inspect TEER/RCI/RVI snapshot exports.', to: '/admin/gold-exports' },
+  { label: 'Institutional Clients', description: 'Manage B2B institutional clients, API keys, and contracts.', to: '/admin/institutional' },
+  { label: 'Ops Health', description: 'Consolidated indices, provider, and pipeline health.', to: '/admin/ops-health' },
 ]
 </script>

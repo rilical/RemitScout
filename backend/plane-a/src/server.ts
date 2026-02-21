@@ -30,14 +30,28 @@ const start = async () => {
   let smartAlertsTimer: ReturnType<typeof setInterval> | null = null
   let smartAlertsRunning = false
   const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
-  const requireQuoteRefreshQueue = config.queues.quoteRefreshMode !== 'off'
-  const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
-  const requireExportJobQueue = config.queues.exports.mode !== 'off'
-  const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
-  const requireNotificationsQueue = config.queues.notifications.mode !== 'off'
-  const requireOpsAlertsQueue = config.queues.opsAlerts.mode !== 'off'
-  const requireGoldLiveQueue = config.queues.goldLive.mode !== 'off'
-  const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
+  const requirePlaneC = Boolean(config.planeA.planeCBaseUrl)
+  if (!requirePlaneC) {
+    logger.warn('plane_c_base_url_not_set', {
+      reason: 'PLANE_C_BASE_URL is not configured; Plane C-specific features may be unavailable.',
+    })
+  }
+  const requireQuoteRefreshQueue =
+    config.queues.quoteRefreshMode !== 'off' && Boolean(config.queues.quoteRefreshUrl)
+  const requireFxRateRefreshQueue =
+    config.queues.fxRateRefreshMode !== 'off' && Boolean(config.queues.fxRateRefreshUrl)
+  const requireExportJobQueue =
+    config.queues.exports.mode !== 'off' && Boolean(config.queues.exports.url)
+  const requireIngestFanoutQueue =
+    config.queues.ingestFanout.mode !== 'off' && Boolean(config.queues.ingestFanout.url)
+  const requireNotificationsQueue =
+    config.queues.notifications.mode !== 'off' && Boolean(config.queues.notifications.url)
+  const requireOpsAlertsQueue =
+    config.queues.opsAlerts.mode !== 'off' && Boolean(config.queues.opsAlerts.url)
+  const requireGoldLiveQueue =
+    config.queues.goldLive.mode !== 'off' && Boolean(config.queues.goldLive.url)
+  const requireAlertEvaluationQueue =
+    config.alerts.evaluation.enabled && Boolean(config.alerts.evaluation.queueUrl)
   const requireStorage = requireExportJobQueue
 
   try {
@@ -45,7 +59,7 @@ const start = async () => {
     await runStartupChecks({
       requirements: {
         requirePlaneA: true,
-        requirePlaneC: true,
+        requirePlaneC,
         requireRedis: true,
         requireQueues:
           requireQuoteRefreshQueue ||

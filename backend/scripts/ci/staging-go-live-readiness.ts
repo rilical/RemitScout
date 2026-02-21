@@ -81,6 +81,10 @@ const run = () => {
     const value = getValue(requirement.key)
     if (isMissing(value)) {
       missingRecommended.push(`${requirement.key}: ${requirement.description}`)
+      continue
+    }
+    if (looksLikePlaceholder(value)) {
+      placeholderViolations.push(`${requirement.key}: looks like placeholder value`)
     }
   }
 

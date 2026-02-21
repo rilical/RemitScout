@@ -188,6 +188,10 @@
       "type": "array",
       "description": "List of EventBridge rule suffixes to pause when ops pause is enabled (prod only)"
     },
+    "opsResumeRuleAllowlist": {
+      "type": "array",
+      "description": "List of EventBridge rule suffixes to explicitly resume when ops resume runs"
+    },
     "purgeQueuesOnResume": {
       "type": "boolean",
       "description": "Toggle queue purge during ops-resume. Defaults to true for dev/staging and false for prod."

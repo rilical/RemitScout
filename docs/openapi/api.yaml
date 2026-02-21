@@ -328,10 +328,10 @@ paths:
 
   /api/v1/bank-vs-specialist:
     get:
-      summary: Bank vs specialist comparison (US to Mexico)
+      summary: Bank vs specialist comparison
       description: |
-        Returns a fixed US-MX comparison between the best specialist provider and Wells Fargo.
-        The corridor is fixed to US-MX-USD-MXN; any from/to params are ignored.
+        Returns a dynamic bank-vs-specialist comparison for the requested corridor.
+        If `from`/`to` are omitted, defaults to US-MX (USD-MXN).
       tags:
         - Discovery
       parameters:
@@ -345,16 +345,32 @@ paths:
             example: 500
         - name: from
           in: query
-          description: Ignored (corridor is fixed to US-MX)
+          description: Source country ISO 3166-1 alpha-2 code (defaults to US)
           required: false
           schema:
             type: string
         - name: to
           in: query
-          description: Ignored (corridor is fixed to US-MX)
+          description: Destination country ISO 3166-1 alpha-2 code (defaults to MX)
           required: false
           schema:
             type: string
+        - name: fromCurrency
+          in: query
+          description: Optional override for source currency (ISO 4217)
+          required: false
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+        - name: toCurrency
+          in: query
+          description: Optional override for destination currency (ISO 4217)
+          required: false
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
       responses:
         '200':
           description: Bank vs specialist comparison response

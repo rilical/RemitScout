@@ -22,11 +22,11 @@
           >
             <stop
               offset="0%"
-              :style="`stop-color: ${s.color}; stop-opacity: 0.2`"
+              :style="`stop-color: ${s.color}; stop-opacity: ${CHART_STYLE.gradient.topOpacity}`"
             />
             <stop
               offset="100%"
-              :style="`stop-color: ${s.color}; stop-opacity: 0`"
+              :style="`stop-color: ${s.color}; stop-opacity: ${CHART_STYLE.gradient.bottomOpacity}`"
             />
           </linearGradient>
         </defs>
@@ -41,15 +41,15 @@
             :x2="width - padding.right"
             :y2="y"
             stroke="currentColor"
-            stroke-opacity="0.1"
-            stroke-dasharray="4"
+            :stroke-opacity="CHART_STYLE.grid.opacity"
+            :stroke-dasharray="CHART_STYLE.grid.dashArray"
           />
         </g>
 
         <!-- Y-axis labels -->
         <g
           class="y-axis text-neutral-400"
-          font-size="11"
+          :font-size="CHART_STYLE.axis.fontSize"
         >
           <text
             v-for="(label, i) in yAxisLabels"
@@ -67,7 +67,7 @@
         <!-- X-axis labels -->
         <g
           class="x-axis text-neutral-400"
-          font-size="11"
+          :font-size="CHART_STYLE.axis.fontSize"
         >
           <text
             v-for="(label, i) in xAxisLabels"
@@ -103,7 +103,7 @@
             :points="getLinePath(s.normalizedPoints)"
             fill="none"
             :stroke="s.color"
-            stroke-width="2"
+            :stroke-width="CHART_STYLE.line.strokeWidth"
             stroke-linecap="round"
             stroke-linejoin="round"
           />
@@ -135,7 +135,7 @@
           :y2="height - padding.bottom"
           stroke="currentColor"
           stroke-opacity="0.3"
-          stroke-dasharray="4"
+          :stroke-dasharray="CHART_STYLE.grid.dashArray"
         />
 
         <!-- Invisible hover areas -->
@@ -155,7 +155,8 @@
       <!-- Tooltip -->
       <div
         v-if="hoveredIndex !== null && tooltipData"
-        class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
+        class="absolute z-20 pointer-events-none"
+        :class="CHART_STYLE.tooltip"
         :style="tooltipStyle"
       >
         <div class="mb-1 text-body-sm text-neutral-400">
@@ -199,6 +200,7 @@
 import { ref, computed, reactive, watch } from 'vue'
 import type { ChartSeries, ChartPoint } from '~/types/pulse'
 import { formatDate as formatFullDate, formatMonthDay, formatNumber } from '~/shared/lib/format'
+import { CHART_STYLE } from '~/lib/pulseChartStyle'
 
 interface Props {
   series: ChartSeries[]
@@ -213,8 +215,8 @@ const props = withDefaults(defineProps<Props>(), {
   showArea: true,
 })
 
-const width = 800
-const height = 320
+const width = CHART_STYLE.width
+const height = CHART_STYLE.height
 const padding = { top: 20, right: 20, bottom: 40, left: 60 }
 
 const hoveredIndex = ref<number | null>(null)

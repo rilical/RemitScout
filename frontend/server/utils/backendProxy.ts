@@ -78,7 +78,7 @@ const buildForwardHeaders = (
   return forwarded
 }
 
-const DEFAULT_TIMEOUT_MS = 30000
+const DEFAULT_TIMEOUT_MS = 8000
 const NON_BLOCKING_PATHS = new Set([
   '/sessions/track',
   '/telemetry/session',
@@ -611,11 +611,11 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   const resolvedEnvTimeoutMs = Number.isFinite(envTimeoutMs) && envTimeoutMs > 0 ? envTimeoutMs : undefined
 
   const timeoutMs = options.timeoutMs
-    ?? (nonBlocking ? 3000 : undefined)
+    ?? (nonBlocking ? 2500 : undefined)
     ?? resolvedEnvTimeoutMs
     ?? DEFAULT_TIMEOUT_MS
   const maxRetries = options.maxRetries
-    ?? (nonBlocking ? 0 : (method === 'GET' || method === 'HEAD' ? 3 : 0))
+    ?? (nonBlocking ? 0 : (method === 'GET' || method === 'HEAD' ? 1 : 0))
 
   const start = Date.now()
   try {

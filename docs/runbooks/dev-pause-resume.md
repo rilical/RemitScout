@@ -8,9 +8,9 @@ We use **two layers**:
 1) **CDK `devPaused`**: controls the *desired* steady state (what a redeploy converges to).
 2) **OpsPause Lambda**: fast runtime toggle that also **stops/starts Aurora**.
 
-OpsPause uses an optional **EventBridge allowlist**:
+OpsPause uses optional **EventBridge allowlists**:
 - **Pause**: always disables *all* rules by prefix (`remit-scout-<env>-*`) to avoid spend leaks.
-- **Resume**: if an allowlist is configured, it enables *only* those rules (low-noise dev observation).
+- **Resume**: if `opsResumeRuleAllowlist` is configured, it enables *only* those rules (low-noise dev observation).
   Everything else stays disabled unless you enable it intentionally.
 - **Resume purge**: if `purgeQueuesOnResume=true`, OpsPause purges only the
   explicit non-DLQ `purgeQueueAllowlist` before restoring worker desired counts.
@@ -50,6 +50,11 @@ Check status:
 make status-dev
 ```
 
+Check B2C-debug readiness snapshot (status + key queue backlog + quote freshness):
+```sh
+make status-dev-b2c
+```
+
 ## Expected state
 
 **Paused** (`devPaused=true`)
@@ -60,7 +65,7 @@ make status-dev
 
 **Resumed** (`devPaused=false`)
 - ECS services desired > 0 (per context defaults)
-- EventBridge rules enabled
+- EventBridge rules enabled per `opsResumeRuleAllowlist`
 - Aurora cluster available
 - Allowlisted volatile queues purged before workers restore (when `purgeQueuesOnResume=true`)
 - Pause-state validation logs emitted (`pause_state_validation_ok` or `pause_state_validation_drift`)

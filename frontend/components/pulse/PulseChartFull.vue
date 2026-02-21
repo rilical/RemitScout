@@ -1,5 +1,5 @@
 <template>
-  <div class="rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden">
+  <div :class="CHART_STYLE.card" class="overflow-hidden">
     <!-- Header -->
     <div class="p-6 border-b border-neutral-700">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -301,6 +301,7 @@ import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
 import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
 import { formatDate } from '~/shared/lib/format'
+import { CHART_STYLE } from '~/lib/pulseChartStyle'
 import type { PulseLevel } from '~/composables/useEntitlements'
 import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 

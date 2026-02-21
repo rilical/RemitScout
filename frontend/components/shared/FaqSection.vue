@@ -7,12 +7,16 @@
     <div class="container">
       <div class="mx-auto max-w-4xl">
         <div class="text-center mb-12">
-          <h2 class="text-h2 font-bold text-neutral-900 mb-4">
+          <h2
+            class="text-h2 font-bold mb-4"
+            :class="titleClass"
+          >
             {{ title }}
           </h2>
           <p
             v-if="subtitle"
-            class="text-body-lg text-neutral-600 max-w-2xl mx-auto"
+            class="text-body-lg max-w-2xl mx-auto"
+            :class="subtitleClass"
           >
             {{ subtitle }}
           </p>
@@ -28,7 +32,7 @@
         >
           <NuxtLink
             :to="ctaTo"
-            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700 underline"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body-sm font-semibold text-white shadow-md transition-colors hover:bg-brand-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           >
             {{ ctaLabel }}
           </NuxtLink>

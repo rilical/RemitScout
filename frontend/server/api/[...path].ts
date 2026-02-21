@@ -22,10 +22,6 @@ const ALLOWED_PATH_PREFIXES = [
   '/sessions',
   '/telemetry',
   '/marketing',
-  '/admin',
-  '/ops',
-  '/audit',
-  '/analytics',
   '/pulse',
   '/rates',
 ] as const

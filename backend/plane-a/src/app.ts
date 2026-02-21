@@ -58,6 +58,7 @@ import { providerVisitRoutes } from './routes/provider-visits'
 import { analyticsRoutes } from './routes/analytics'
 import { auditRoutes } from './routes/audit'
 import { adminRoutes } from './routes/admin'
+import { adminInstitutionalRoutes } from './routes/admin-institutional'
 import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
@@ -242,8 +243,26 @@ export const buildApp = async (options?: {
   setupPayloadSizeMonitor(app)
   setupLambdaOptimizations(app)
   setupRdsProxyMonitor(app)
-  const adminIpAllowlistRaw = (process.env.ADMIN_IP_ALLOWLIST || '').trim()
-  if (isProdLike && !adminIpAllowlistRaw) {
+  const resolvedAdminIpAllowlistRaw = (
+    process.env.ADMIN_IP_ALLOWLIST ||
+    process.env.WAF_ADMIN_ALLOWLIST_IPS ||
+    process.env.WAF_ALLOWLIST_IPS ||
+    ''
+  ).trim()
+  if (process.env.WAF_ADMIN_ALLOWLIST_IPS && !process.env.ADMIN_IP_ALLOWLIST) {
+    logger.warn('admin_ip_allowlist_source_fallback', {
+      message: 'Using WAF_ADMIN_ALLOWLIST_IPS as ADMIN_IP_ALLOWLIST fallback for startup checks.',
+      source: 'WAF_ADMIN_ALLOWLIST_IPS',
+    })
+    process.env.ADMIN_IP_ALLOWLIST = resolvedAdminIpAllowlistRaw
+  } else if (process.env.WAF_ALLOWLIST_IPS && !process.env.ADMIN_IP_ALLOWLIST) {
+    logger.warn('admin_ip_allowlist_source_fallback', {
+      message: 'Using WAF_ALLOWLIST_IPS as ADMIN_IP_ALLOWLIST fallback for startup checks.',
+      source: 'WAF_ALLOWLIST_IPS',
+    })
+    process.env.ADMIN_IP_ALLOWLIST = resolvedAdminIpAllowlistRaw
+  }
+  if (isProdLike && !resolvedAdminIpAllowlistRaw) {
     logger.error('admin_ip_allowlist_missing', {
       message: 'ADMIN_IP_ALLOWLIST must be configured for production/staging runtime.',
       env: config.env,
@@ -547,6 +566,7 @@ export const buildApp = async (options?: {
   app.register(analyticsRoutes, { prefix: '/api/v1' })
   app.register(auditRoutes, { prefix: '/api/v1' })
   app.register(adminRoutes, { prefix: '/api/v1' })
+  app.register(adminInstitutionalRoutes, { prefix: '/api/v1' })
   app.register(notificationsRoutes, { prefix: '/api/v1' })
   app.register(adsRoutes, { prefix: '/api/v1' })
   app.register(marketingRoutes, { prefix: '/api/v1' })

@@ -234,19 +234,20 @@ export const ratesRoutes = async (app: FastifyInstance) => {
           endDate,
           message: 'No rate history found in database. OANDA sync may not be running or data not yet populated.',
         })
-        throw new AppError('No rate history available. OANDA sync may be pending.', {
-          statusCode: 404,
-          code: 'rate_unavailable',
-          details: {
-            base,
-            quote,
-            days,
-            startDate,
-            endDate,
-            refreshQueued: Boolean(refreshRequestId),
-            refreshRequestId,
-          },
-        })
+        const refreshEnabled = config.fxRates?.refreshEnabled === true
+        const message = refreshEnabled
+          ? 'Rate history is warming up. OANDA sync has been queued.'
+          : 'Rate history is unavailable. FX refresh is currently disabled.'
+        return {
+          base,
+          quote,
+          history: [],
+          lastUpdated: toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at),
+          status: refreshEnabled ? 'warming' as const : 'unavailable' as const,
+          message,
+          refreshQueued: Boolean(refreshRequestId),
+          refreshRequestId,
+        }
       }
 
       const history = rows.map((row) => ({
@@ -273,6 +274,8 @@ export const ratesRoutes = async (app: FastifyInstance) => {
         quote,
         history,
         lastUpdated,
+        status: 'ready' as const,
+        message: null,
         refreshQueued: Boolean(refreshRequestId),
         refreshRequestId,
       }

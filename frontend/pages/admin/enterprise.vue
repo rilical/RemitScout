@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-neutral-100">
-    <div class="max-w-6xl mx-auto px-page-x py-8">
-      <div class="mb-8">
-        <h1 class="text-h3 font-bold text-rs-fg">
+  <div class="min-h-screen bg-neutral-50 px-6 py-10">
+    <div class="mx-auto flex max-w-6xl flex-col gap-6">
+      <header class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h1 class="text-h3 font-semibold text-rs-fg">
           Enterprise Account Management
         </h1>
-        <p class="text-neutral-600 mt-1">
+        <p class="text-body-sm text-rs-muted mt-1">
           Manually grant or revoke enterprise access for users.
         </p>
-      </div>
+      </header>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div class="bg-surface rounded-xl p-5 border border-rs-border">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
           <div class="text-h2 font-bold text-rs-fg">
             {{ summary.enterprise }}
           </div>
@@ -19,7 +19,7 @@
             Enterprise Accounts
           </div>
         </div>
-        <div class="bg-surface rounded-xl p-5 border border-rs-border">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
           <div class="text-h2 font-bold text-rs-fg">
             {{ summary.plus }}
           </div>
@@ -27,7 +27,7 @@
             Plus Accounts
           </div>
         </div>
-        <div class="bg-surface rounded-xl p-5 border border-rs-border">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
           <div class="text-h2 font-bold text-rs-fg">
             {{ summary.free }}
           </div>
@@ -37,13 +37,13 @@
         </div>
       </div>
 
-      <div class="bg-surface rounded-xl border border-rs-border overflow-hidden mb-8">
-        <div class="p-5 border-b border-rs-border">
+      <div class="rounded-2xl bg-surface shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-rs-border">
           <h2 class="text-body-lg font-semibold text-rs-fg">
             Grant Enterprise Access
           </h2>
         </div>
-        <div class="p-5">
+        <div class="p-6">
           <form
             class="flex flex-col sm:flex-row gap-4"
             @submit.prevent="grantAccess"
@@ -87,8 +87,8 @@
         </div>
       </div>
 
-      <div class="bg-surface rounded-xl border border-rs-border overflow-hidden">
-        <div class="p-5 border-b border-rs-border flex items-center justify-between">
+      <div class="rounded-2xl bg-surface shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-rs-border flex items-center justify-between">
           <h2 class="text-body-lg font-semibold text-rs-fg">
             Enterprise Accounts
           </h2>
@@ -190,6 +190,9 @@ definePageMeta({
   layout: 'default',
 })
 
+const LoadingState = defineAsyncComponent(() => import('~/ui/states/LoadingState.vue'))
+const LoadingSpinner = defineAsyncComponent(() => import('~/components/shared/LoadingSpinner.vue'))
+
 const route = useRoute()
 const { public: { siteUrl } } = useRuntimeConfig()
 
@@ -200,10 +203,6 @@ setSeo({
   noindex: true,
 })
 
-const LoadingState = defineAsyncComponent(() => import('~/ui/states/LoadingState.vue'))
-const LoadingSpinner = defineAsyncComponent(() => import('~/components/shared/LoadingSpinner.vue'))
-
-const supabase = useSupabaseClient()
 const { request } = useApi()
 const log = useLogger('admin/enterprise')
 
@@ -237,18 +236,6 @@ const enterpriseUsers = computed(() =>
   users.value.filter(u => u.plan_code === 'enterprise'),
 )
 
-const getAuthHeaders = async (): Promise<Record<string, string>> => {
-  if (!supabase) {
-    return {}
-  }
-  const session = (await supabase.auth.getSession()).data.session
-  const headers: Record<string, string> = {}
-  if (session?.access_token) {
-    headers.Authorization = `Bearer ${session.access_token}`
-  }
-  return headers
-}
-
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
@@ -262,7 +249,6 @@ const loadUsers = async () => {
   try {
     const data = await request<{ users?: UserWithPlan[], summary?: { free: number, plus: number, enterprise: number } }>(
       '/admin/plans',
-      { headers: await getAuthHeaders() },
     )
     if (data) {
       users.value = data.users || []
@@ -288,7 +274,6 @@ const grantAccess = async () => {
       '/admin/plans/grant',
       {
         method: 'POST',
-        headers: await getAuthHeaders(),
         body: {
           email: grantForm.value.email,
           plan_code: 'enterprise',
@@ -324,7 +309,6 @@ const revokeAccess = async (user: UserWithPlan) => {
   try {
     await request('/admin/plans/revoke', {
       method: 'POST',
-      headers: await getAuthHeaders(),
       body: {
         user_id: user.user_id,
         reason: 'Admin revocation',

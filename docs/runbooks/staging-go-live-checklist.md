@@ -4,6 +4,7 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 
 ## 0) Ownership + access
 - [ ] AWS staging account access confirmed (IAM, RDS/Aurora, SQS, S3, CloudWatch, Secrets Manager).
+- [ ] IAM principal for `make status-ops-permissions` passes with `ecs:ListClusters`, `ecs:ListServices`, `ecs:UpdateService`, `cloudformation:ListStacks`, and CloudWatch Logs read permissions.
 - [ ] GitHub admin access confirmed for repository Environment settings.
 - [ ] Supabase staging project access confirmed.
 - [ ] Stripe test-mode account access confirmed.
@@ -97,6 +98,7 @@ Source template:
 - [ ] Deploy role can assume and access required AWS resources.
 - [ ] Secrets Manager/SSM references resolve in staging deploy jobs.
 - [ ] CloudWatch alarms and dashboards exist for staging.
+- [ ] Run `make status-ops-permissions` (or `AWS_PROFILE=... OPS_ENV=staging make status-ops-permissions`) before worker resume operations.
 
 ## 9) Readiness and deployment gates
 - [ ] Run workflow: `.github/workflows/staging-go-live-readiness.yml` (PASS).

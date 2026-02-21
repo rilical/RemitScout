@@ -39,7 +39,12 @@ const isIpInCidr = (ip: string, cidr: string): boolean => {
 }
 
 export const registerAdminIpAllowlist = (app: FastifyInstance) => {
-  const allowlist = splitCsv(process.env.ADMIN_IP_ALLOWLIST)
+  const allowlist = splitCsv(
+    process.env.ADMIN_IP_ALLOWLIST ||
+      process.env.WAF_ADMIN_ALLOWLIST_IPS ||
+      process.env.WAF_ALLOWLIST_IPS ||
+      '',
+  )
   if (allowlist.length === 0) {
     return
   }

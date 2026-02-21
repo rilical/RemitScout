@@ -7,13 +7,14 @@ import { computeBucketSelection } from '../../../shared/amount-bucket'
 import { parseCorridorId } from '../../../shared/corridor'
 import { createTtlCache } from '../../../shared/cache'
 import { getMaxAmount, getMinAmount } from '../../../shared/currency-limits'
+import { getCountryByCode, isCurrencyAllowedForCountry } from '../../../shared/countries-currencies'
+import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { getProviderMetadata } from '../services/provider-metadata'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.bank-vs-specialist')
 
-const CORRIDOR_ID = 'US-MX-USD-MXN'
 const DEFAULT_AMOUNT = 500
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const WELLS_FARGO_PROVIDER_KEY = 'wellsfargo'
@@ -26,6 +27,8 @@ const querySchema = z.object({
   amount: z.coerce.number().positive().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
+  fromCurrency: z.string().optional(),
+  toCurrency: z.string().optional(),
 })
 
 type QuoteRow = {
@@ -118,6 +121,28 @@ const getBestFor = (method: 'bank' | 'cash' | 'wallet' | 'airtime') => {
 const parseNumeric = (value: number | string | null | undefined, fallback = 0) => {
   const num = Number(value)
   return Number.isFinite(num) ? num : fallback
+}
+
+const normalizeCurrencyCode = (value?: string | null) => {
+  if (!value) return null
+  const trimmed = value.trim().toUpperCase()
+  return /^[A-Z]{3}$/.test(trimmed) ? trimmed : null
+}
+
+const isAllCurrencyToken = (value?: string | null) => {
+  if (!value) return false
+  return value.trim().toUpperCase() === 'ALL'
+}
+
+const isCurrencyAllowedForRequest = (
+  countryCode: string,
+  currency: string,
+  direction: 'source' | 'destination',
+) => {
+  if (isCurrencyAllowedForCountry(countryCode, currency)) return true
+  return direction === 'source'
+    ? isWiseSourceCurrency(currency)
+    : isWiseDestinationCurrency(currency)
 }
 
 const normalizeProviderKey = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -239,21 +264,52 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
     }
 
     const amount = parsed.data.amount ?? DEFAULT_AMOUNT
+    const normalizedFromCurrency = normalizeCurrencyCode(parsed.data.fromCurrency)
+    const toCurrencyIsWildcard = isAllCurrencyToken(parsed.data.toCurrency)
+    const normalizedToCurrency = toCurrencyIsWildcard
+      ? null
+      : normalizeCurrencyCode(parsed.data.toCurrency)
+
+    if (parsed.data.fromCurrency && !normalizedFromCurrency) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] } })
+    }
+    if (parsed.data.toCurrency && !toCurrencyIsWildcard && !normalizedToCurrency) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] } })
+    }
+
+    const sourceCountry = getCountryByCode((parsed.data.from ?? 'US').toUpperCase())
+    const destCountry = getCountryByCode((parsed.data.to ?? 'MX').toUpperCase())
+    if (!sourceCountry || !destCountry) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid country codes' }] } })
+    }
+    if (normalizedFromCurrency && !isCurrencyAllowedForRequest(sourceCountry.code, normalizedFromCurrency, 'source')) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] } })
+    }
+    if (normalizedToCurrency && !isCurrencyAllowedForRequest(destCountry.code, normalizedToCurrency, 'destination')) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] } })
+    }
+
+    const corridorId = `${sourceCountry.code}-${destCountry.code}-${normalizedFromCurrency ?? sourceCountry.currency}-${normalizedToCurrency ?? destCountry.currency}`
+    const corridorParts = parseCorridorId(corridorId)
+    if (!corridorParts) {
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid corridor' }] } })
+    }
+
     if (!Number.isFinite(amount) || amount <= 0) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: 'amount must be positive' } })
     }
 
-    const minAmount = getMinAmount('USD')
-    const maxAmount = getMaxAmount('USD')
+    const minAmount = getMinAmount(corridorParts.sourceCurrency)
+    const maxAmount = getMaxAmount(corridorParts.sourceCurrency)
     if (amount < minAmount) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be >= ${minAmount} USD` } })
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be >= ${minAmount} ${corridorParts.sourceCurrency}` } })
     }
     if (amount > maxAmount) {
-            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be <= ${maxAmount} USD` } })
+            throw new ValidationError('Invalid request', { details: { error: 'bad_request', message: `amount must be <= ${maxAmount} ${corridorParts.sourceCurrency}` } })
     }
 
     const amountBucket = computeBucketSelection(amount).bucket_used
-    const cacheKey = `bank-vs-specialist:v2:${amountBucket}`
+    const cacheKey = `bank-vs-specialist:v2:${corridorId}:${amountBucket}`
     const cached = await bankVsSpecialistCache.get(cacheKey)
     if (cached) {
       logger.debug('bank_vs_specialist_cache_hit', { cache_key: cacheKey })
@@ -275,12 +331,12 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
                 lqp.payin,
                 lqp.payout,
                 lqp.collected_at
-           FROM silver.latest_quote_by_provider lqp
+          FROM silver.latest_quote_by_provider lqp
            JOIN silver.provider p ON p.provider_id = lqp.provider_id
           WHERE lqp.corridor_id = $1
             AND lqp.amount_bucket = $2
             AND lqp.status = 'ok'`,
-        [CORRIDOR_ID, amountBucket],
+        [corridorId, amountBucket],
         planeAPool,
       )
 
@@ -319,12 +375,6 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
         if (computeRecipientGets(row, amount) > computeRecipientGets(topRow, amount)) {
           topRow = row
         }
-      }
-
-      const corridorParts = parseCorridorId(CORRIDOR_ID)
-      if (!corridorParts) {
-        reply.code(500)
-        return { error: 'internal_error', message: 'Invalid corridor configuration' }
       }
 
       let midRate: number | null = null
@@ -402,7 +452,7 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
       await bankVsSpecialistCache.set(cacheKey, response, CACHE_TTL_MS)
 
       logger.info('bank_vs_specialist_success', {
-        corridor_id: CORRIDOR_ID,
+        corridor_id: corridorId,
         amount_bucket: amountBucket,
         bank_provider: bankRow.provider_id,
         top_provider: topRow.provider_id,

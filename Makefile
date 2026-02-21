@@ -1,5 +1,8 @@
 AWS_PROFILE ?= rs-dev
 AWS_REGION ?= us-east-1
+OPS_AWS_ENV ?= staging
+OPS_CLUSTER ?= remit-scout-$(OPS_AWS_ENV)
+OPS_CLUSTER_NAME ?= $(OPS_CLUSTER)
 AWS_ACCOUNT ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --query Account --output text)
 CDK_DEFAULT_ACCOUNT := $(AWS_ACCOUNT)
 CDK_DEFAULT_REGION := $(AWS_REGION)
@@ -10,6 +13,7 @@ COMMUNICATIONS_SECRET_ARN ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws secretsmanag
 # Single source of truth for dev pause/resume behavior (ops allowlist + nightly auto-pause).
 DEV_RUNTIME_CONFIG ?= ops/dev-runtime.json
 OPS_PAUSE_RULE_ALLOWLIST ?= $(shell jq -r '.opsPauseRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
+OPS_RESUME_RULE_ALLOWLIST ?= $(shell jq -r '.opsResumeRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
 PURGE_QUEUES_ON_RESUME ?= $(shell jq -r '.purgeQueuesOnResume // true' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "true")
 PURGE_QUEUE_ALLOWLIST ?= $(shell jq -r '.purgeQueueAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
 DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "false")
@@ -17,6 +21,7 @@ DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "Amer
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
 .PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
+.PHONY: status-ops-permissions db-migrate-staging-dry-run db-migrate-staging-local
 
 pause-dev:
 	@echo "Pausing dev (CDK deploy with devPaused=true)"
@@ -25,6 +30,7 @@ pause-dev:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=true \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c opsResumeRuleAllowlist="$(OPS_RESUME_RULE_ALLOWLIST)" \
 				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
 				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
@@ -40,6 +46,7 @@ resume-dev:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=false \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c opsResumeRuleAllowlist="$(OPS_RESUME_RULE_ALLOWLIST)" \
 				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
 				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
@@ -55,6 +62,7 @@ resume-dev-minimal:
 			eval "$$(aws configure export-credentials --profile $(AWS_PROFILE) --format env)"; \
 			npx cdk deploy -c env=dev -c devPaused=false -c devMinimalInfra=true \
 				-c opsPauseRuleAllowlist="$(OPS_PAUSE_RULE_ALLOWLIST)" \
+				-c opsResumeRuleAllowlist="$(OPS_RESUME_RULE_ALLOWLIST)" \
 				-c purgeQueuesOnResume="$(PURGE_QUEUES_ON_RESUME)" \
 				-c purgeQueueAllowlist="$(PURGE_QUEUE_ALLOWLIST)" \
 				-c devNightlyPauseEnabled="$(DEV_NIGHTLY_PAUSE_ENABLED)" \
@@ -177,6 +185,51 @@ status-dev:
 		--output table
 	@echo "Drift check (optional)"
 	@echo "aws cloudformation detect-stack-drift --stack-name remit-scout-dev --region $(AWS_REGION) --profile $(AWS_PROFILE)"
+
+status-ops-permissions:
+	@echo "Checking ECS/cloudwatch visibility for current AWS principal"
+	@OPS_ENV=$${OPS_ENV:-dev}; \
+	TARGET_CLUSTER=$${TARGET_CLUSTER:-remit-scout-$$OPS_ENV}; \
+	TARGET_LOG_PREFIX=$${TARGET_LOG_PREFIX:-/remit-scout-$$OPS_ENV}; \
+	AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) OPS_ENV=$$OPS_ENV TARGET_CLUSTER=$$TARGET_CLUSTER TARGET_LOG_PREFIX=$$TARGET_LOG_PREFIX bash ops/check-aws-ops-permissions.sh
+
+status-dev-b2c:
+	@$(MAKE) status-dev
+	@echo "SQS backlog snapshot (dev)"
+	@for suffix in quote-refresh fx-rate-refresh ingest-fanout ingest-fanout-tier2; do \
+		NAME="remit-scout-dev-$$suffix"; \
+		URL=$$(AWS_PROFILE=$(AWS_PROFILE) aws sqs get-queue-url --queue-name "$$NAME" --region $(AWS_REGION) --query 'QueueUrl' --output text 2>/dev/null); \
+		if [ -n "$$URL" ] && [ "$$URL" != "None" ]; then \
+			ATTR=$$(AWS_PROFILE=$(AWS_PROFILE) aws sqs get-queue-attributes --queue-url "$$URL" --region $(AWS_REGION) --attribute-names ApproximateNumberOfMessages ApproximateNumberOfMessagesNotVisible --query 'Attributes' --output json); \
+			echo "$$NAME: $$ATTR"; \
+		else \
+			echo "$$NAME: unavailable"; \
+		fi; \
+	done
+	@echo "Quote freshness snapshot (dev)"
+	@pnpm -C backend ops:dev-b2c-snapshot
+
+db-migrate-staging-dry-run:
+	@if [ -z "$(DATABASE_URL_PLANE_B)" ]; then \
+		echo "ERROR: DATABASE_URL_PLANE_B is required for direct DB migration checks."; \
+		exit 1; \
+	fi
+	@echo "Running staging-style migration dry-run using DATABASE_URL_PLANE_B"
+	@ALLOW_DB_MIGRATOR_URL=1 \
+		DATABASE_URL_PLANE_B_MIGRATOR="$(DATABASE_URL_PLANE_B)" \
+		DATABASE_URL_PLANE_B="$(DATABASE_URL_PLANE_B)" \
+		pnpm -C backend db:migrate --dry-run
+
+db-migrate-staging-local:
+	@if [ -z "$(DATABASE_URL_PLANE_B)" ]; then \
+		echo "ERROR: DATABASE_URL_PLANE_B is required for direct DB migration checks."; \
+		exit 1; \
+	fi
+	@echo "Applying staging-style migration flow using DATABASE_URL_PLANE_B"
+	@ALLOW_DB_MIGRATOR_URL=1 \
+		DATABASE_URL_PLANE_B_MIGRATOR="$(DATABASE_URL_PLANE_B)" \
+		DATABASE_URL_PLANE_B="$(DATABASE_URL_PLANE_B)" \
+		pnpm -C backend db:migrate
 
 db-migrate-dev:
 	@$(MAKE) db-migrate-env ENV=dev

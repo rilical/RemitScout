@@ -58,7 +58,9 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     cacheSubnetGroupName: subnetGroup.ref,
     securityGroupIds: [options.redisSecurityGroup.securityGroupId],
     autoMinorVersionUpgrade: true,
-    authToken: redisAuthToken.toString(),
+    // Do not set AuthToken in-place on existing replication groups.
+    // CloudFormation treats this path as immutable for our existing stacks and enters
+    // UPDATE_ROLLBACK_FAILED. Auth enablement must be handled as an explicit replacement migration.
   })
 
   return {

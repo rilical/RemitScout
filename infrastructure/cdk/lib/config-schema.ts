@@ -213,6 +213,7 @@ const cdkContextShape = {
   slackOpsChannelId: z.string().optional(),
   pagerDutyIntegrationKey: z.string().optional(),
   opsPauseRuleAllowlist: optionalStringList,
+  opsResumeRuleAllowlist: optionalStringList,
   purgeQueuesOnResume: optionalBool,
   purgeQueueAllowlist: optionalStringList,
 

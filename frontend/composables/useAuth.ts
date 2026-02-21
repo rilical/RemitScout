@@ -89,6 +89,13 @@ export const useAuth = () => {
   ))
 
   const setSession = (nextSession: Session | null) => {
+    if (import.meta.dev) {
+      const devOverride = useState<boolean>('dev:role-override', () => false)
+      if (devOverride.value) {
+        hydrated.value = true
+        return
+      }
+    }
     const effectiveSession = nextSession?.user && !isEmailConfirmed(nextSession.user)
       ? null
       : nextSession

@@ -20,15 +20,15 @@
             :x2="width - padding.right"
             :y2="y"
             stroke="currentColor"
-            stroke-opacity="0.1"
-            stroke-dasharray="4"
+            :stroke-opacity="CHART_STYLE.grid.opacity"
+            :stroke-dasharray="CHART_STYLE.grid.dashArray"
           />
         </g>
 
         <!-- Y-axis labels -->
         <g
           class="y-axis"
-          font-size="11"
+          :font-size="CHART_STYLE.axis.fontSize"
         >
           <text
             v-for="(label, i) in yAxisLabels"
@@ -46,7 +46,7 @@
         <!-- X-axis labels -->
         <g
           class="x-axis"
-          font-size="10"
+          :font-size="CHART_STYLE.axis.fontSize"
         >
           <text
             v-for="(label, i) in xAxisLabels"
@@ -71,7 +71,7 @@
             :width="bar.width"
             :height="bar.height"
             :fill="bar.color"
-            rx="2"
+            :rx="CHART_STYLE.bar.rx"
             class="transition-opacity duration-150"
             :opacity="hoveredIndex === null || hoveredIndex === i ? 1 : 0.4"
             @mouseenter="hoveredIndex = i"
@@ -86,8 +86,8 @@
           :y1="getYPosition(threshold)"
           :x2="width - padding.right"
           :y2="getYPosition(threshold)"
-          stroke="#f59e0b"
-          stroke-width="2"
+          :stroke="CHART_STYLE.bar.thresholdColor"
+          :stroke-width="CHART_STYLE.line.strokeWidth"
           stroke-dasharray="6 4"
           class="opacity-60"
         />
@@ -96,7 +96,8 @@
       <!-- Tooltip -->
       <div
         v-if="hoveredIndex !== null && hoveredBar"
-        class="absolute z-20 pointer-events-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 shadow-lg"
+        class="absolute z-20 pointer-events-none"
+        :class="CHART_STYLE.tooltip"
         :style="tooltipStyle"
       >
         <div class="mb-1 text-body-sm text-neutral-400">
@@ -136,6 +137,7 @@
 import { ref, computed } from 'vue'
 import type { ChartSeries } from '~/types/pulse'
 import { formatMonthDay } from '~/shared/lib/format'
+import { CHART_STYLE } from '~/lib/pulseChartStyle'
 
 interface Props {
   series: ChartSeries[]
@@ -150,8 +152,8 @@ const props = withDefaults(defineProps<Props>(), {
   threshold: null,
 })
 
-const width = 800
-const height = 320
+const width = CHART_STYLE.width
+const height = CHART_STYLE.height
 const padding = { top: 20, right: 20, bottom: 50, left: 60 }
 
 const hoveredIndex = ref<number | null>(null)
@@ -178,7 +180,7 @@ const bars = computed(() => {
 
   return points.value.map((p, i) => {
     const normalizedHeight = ((p.v - minVal.value) / (maxVal.value - minVal.value)) * chartHeight
-    const color = p.v > (props.threshold ?? Infinity) ? '#1D4ED8' : '#2563EB'
+    const color = p.v > (props.threshold ?? Infinity) ? CHART_STYLE.bar.highlightColor : CHART_STYLE.bar.normalColor
 
     return {
       x: padding.left + gap + i * (barWidth + gap),

@@ -162,21 +162,38 @@ paths:
 
   /api/v1/bank-vs-specialist:
     get:
-      summary: Bank vs specialist comparison (US to Mexico)
+      summary: Bank vs specialist comparison
       parameters:
         - in: query
           name: amount
           required: false
+          description: Send amount (defaults to 500)
           schema:
             type: number
         - in: query
           name: from
           required: false
+          description: Source country ISO 3166-1 alpha-2 code (defaults to US)
           schema:
             type: string
         - in: query
           name: to
           required: false
+          description: Destination country ISO 3166-1 alpha-2 code (defaults to MX)
+          schema:
+            type: string
+        - in: query
+          name: fromCurrency
+          required: false
+          description: Optional source currency override (ISO 4217)
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+        - in: query
+          name: toCurrency
+          required: false
+          description: Optional destination currency override (ISO 4217)
           schema:
             type: string
       responses:

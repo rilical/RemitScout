@@ -159,11 +159,11 @@
             >
               <stop
                 offset="0%"
-                :style="`stop-color: ${sparklineColor}; stop-opacity: 0.3`"
+                :style="`stop-color: ${sparklineColor}; stop-opacity: ${CHART_STYLE.gradient.topOpacity}`"
               />
               <stop
                 offset="100%"
-                :style="`stop-color: ${sparklineColor}; stop-opacity: 0`"
+                :style="`stop-color: ${sparklineColor}; stop-opacity: ${CHART_STYLE.gradient.bottomOpacity}`"
               />
             </linearGradient>
           </defs>
@@ -175,7 +175,7 @@
             :points="sparklinePath"
             fill="none"
             :stroke="sparklineColor"
-            stroke-width="2"
+            :stroke-width="CHART_STYLE.line.strokeWidth"
             stroke-linecap="round"
             stroke-linejoin="round"
           />
@@ -274,6 +274,7 @@ import type { ChartMetadata, ChartPoint } from '~/types/pulse'
 import { Icon, EmptyState } from '~/ui'
 import { formatUpdatedLabel } from '~/shared/lib/format'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import { getCategoryAccent, CHART_STYLE } from '~/lib/pulseChartStyle'
 
 interface Props {
   metadata: ChartMetadata
@@ -333,7 +334,7 @@ const updatedAtLabel = computed(() => {
 })
 
 const sparklineColor = computed(() => {
-  return '#2563EB'
+  return getCategoryAccent(props.metadata.category)
 })
 
 const sparklinePoints = computed(() => {

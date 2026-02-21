@@ -46,6 +46,7 @@
       <CookieConsentBanner />
       <CookiePreferencesModal />
       <UiToast />
+      <DevRoleSwitcher v-if="isDev" />
     </template>
   </div>
 </template>
@@ -60,6 +61,9 @@ import { useEntitlements } from '~/composables/useEntitlements'
 import { useSession } from '~/composables/useSession'
 import CookieConsentBanner from '~/components/privacy/CookieConsentBanner.vue'
 import CookiePreferencesModal from '~/components/privacy/CookiePreferencesModal.vue'
+import DevRoleSwitcher from '~/components/dev/DevRoleSwitcher.vue'
+
+const isDev = import.meta.dev
 
 // Global app setup
 useHead({

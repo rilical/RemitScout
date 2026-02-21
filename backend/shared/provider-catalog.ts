@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import catalogJson from '../../.remit-scout/providers/catalog.json'
 
 /**
  * Provider catalog is repo-native data under `.remit-scout/providers/catalog.json`.
@@ -64,6 +65,26 @@ const PROVIDER_ID_SET = new Set<string>([
   'xoom',
 ])
 
+const CATALOG_PATH_SEGMENTS = path.join('.remit-scout', 'providers', 'catalog.json')
+
+const locateCatalogRoot = (startDir: string): string | null => {
+  let dir = startDir
+  for (let i = 0; i < 12; i += 1) {
+    const candidate = path.join(dir, CATALOG_PATH_SEGMENTS)
+    if (fs.existsSync(candidate)) {
+      return dir
+    }
+
+    const parent = path.dirname(dir)
+    if (parent === dir) {
+      break
+    }
+    dir = parent
+  }
+
+  return null
+}
+
 export type ProviderProbeConfig = {
   aws_scheduled: boolean
   // Must match existing CDK construct IDs when set (to avoid resource replacement).
@@ -89,23 +110,18 @@ const getRepoRoot = (): string => {
   const override = String(process.env.REMIT_SCOUT_REPO_ROOT || '').trim()
   if (override) return override
 
-  // Be robust to different runtime layouts:
-  // - local source:        <repo>/backend/shared
-  // - compiled scripts:    <repo>/backend/dist/shared
-  // - docker runner copy:  /app/backend/shared OR /app/backend/dist/shared
-  // In all cases `.remit-scout/` lives at the repo root (or WORKDIR root in docker).
-  let dir = __dirname
-  for (let i = 0; i < 8; i += 1) {
-    const candidate = path.join(dir, '.remit-scout', 'providers', 'catalog.json')
-    if (fs.existsSync(candidate)) return dir
+  // Be robust to runtime layouts where working directory and source root differ:
+  // - source/dev: project root in cwd
+  // - compiled script: /var/task/backend/shared or /var/task
+  // - docker runtime: /app or /var/task
+  const cwdRoot = locateCatalogRoot(process.cwd())
+  if (cwdRoot) return cwdRoot
 
-    const parent = path.dirname(dir)
-    if (parent === dir) break
-    dir = parent
-  }
+  const sourceRoot = locateCatalogRoot(__dirname)
+  if (sourceRoot) return sourceRoot
 
-  // Fallback to the legacy assumption (kept for safety).
-  return path.resolve(__dirname, '..', '..')
+  // Last-resort fallback that keeps init from resolving `/.remit-scout`.
+  return process.cwd()
 }
 
 export const getProviderCatalogPath = (): string => {
@@ -116,15 +132,7 @@ const isProviderId = (value: string): value is ProviderId => PROVIDER_ID_SET.has
 
 let cached: ProviderCatalog | null = null
 
-export const loadProviderCatalog = (): ProviderCatalog => {
-  if (cached) return cached
-
-  const catalogPath = getProviderCatalogPath()
-  if (!fs.existsSync(catalogPath)) {
-    throw new Error(`Provider catalog missing: ${catalogPath}`)
-  }
-
-  const raw = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as unknown
+const parseCatalog = (raw: unknown, catalogPath: string): ProviderCatalog => {
   if (!raw || typeof raw !== 'object') {
     throw new Error(`Provider catalog invalid JSON object: ${catalogPath}`)
   }
@@ -169,7 +177,43 @@ export const loadProviderCatalog = (): ProviderCatalog => {
     }
   })
 
-  cached = { version, providers: parsed }
+  return { version, providers: parsed }
+}
+
+const unwrapBundledCatalog = (raw: unknown): unknown => {
+  if (raw && typeof raw === 'object' && 'default' in raw) {
+    const withDefault = (raw as { default?: unknown }).default
+    if (withDefault != null) {
+      return withDefault
+    }
+  }
+  return raw
+}
+
+const loadBundledCatalog = (): ProviderCatalog | null => {
+  try {
+    return parseCatalog(unwrapBundledCatalog(catalogJson), 'bundled provider catalog')
+  } catch {
+    return null
+  }
+}
+
+export const loadProviderCatalog = (): ProviderCatalog => {
+  if (cached) return cached
+
+  const catalogPath = getProviderCatalogPath()
+  if (!fs.existsSync(catalogPath)) {
+    const fallback = loadBundledCatalog()
+    if (fallback) {
+      cached = fallback
+      return cached
+    }
+    throw new Error(`Provider catalog missing: ${catalogPath}`)
+  }
+
+  const raw = JSON.parse(fs.readFileSync(catalogPath, 'utf8')) as unknown
+  const parsed = parseCatalog(raw, catalogPath)
+  cached = parsed
   return cached
 }
 

@@ -898,7 +898,8 @@ export class RemitScoutStack extends Stack {
     const wafAdminAllowListIps = (() => {
       const raw =
         this.node.tryGetContext('wafAdminAllowListIps') ??
-        process.env.WAF_ADMIN_ALLOWLIST_IPS
+        process.env.WAF_ADMIN_ALLOWLIST_IPS ??
+        process.env.WAF_ALLOWLIST_IPS
       if (Array.isArray(raw)) return raw
       if (typeof raw === 'string') {
         return raw.split(',').map((value) => value.trim()).filter(Boolean)
@@ -914,7 +915,7 @@ export class RemitScoutStack extends Stack {
     })()
     if ((envName === 'staging' || envName === 'prod') && planeAAdminIpAllowlist.length === 0) {
       throw new Error(
-        'ADMIN_IP_ALLOWLIST or WAF_ADMIN_ALLOWLIST_IPS is required for staging/prod deployments.',
+        'ADMIN_IP_ALLOWLIST, WAF_ADMIN_ALLOWLIST_IPS, or WAF_ALLOWLIST_IPS is required for staging/prod deployments.',
       )
     }
     const wafEnableBotControl = toOptionalBool(
@@ -1003,6 +1004,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('opsPauseRuleAllowlist') ??
         process.env.OPS_PAUSE_RULE_ALLOWLIST,
     )
+    const opsResumeAllowlist = toList(
+      this.node.tryGetContext('opsResumeRuleAllowlist') ??
+        process.env.OPS_RESUME_RULE_ALLOWLIST,
+    )
     const purgeQueuesOnResume =
       toOptionalBool(
         this.node.tryGetContext('purgeQueuesOnResume') ??
@@ -1038,8 +1043,10 @@ export class RemitScoutStack extends Stack {
     // - prod: keep a minimal allowlist by default
     // - dev: enable all rules by default (closer to prod behavior for readiness tests)
     // - dev minimal infra: keep resume low-noise/low-cost
-    const resolvedOpsPauseAllowlist = opsPauseAllowlist.length > 0
-      ? opsPauseAllowlist
+    const resolvedOpsResumeAllowlist = opsResumeAllowlist.length > 0
+      ? opsResumeAllowlist
+      : (opsPauseAllowlist.length > 0
+        ? opsPauseAllowlist
       : (envName === 'prod'
         ? ['telemetry-analytics', 'session-cleanup', 'audit-log-cleanup']
         : (envName === 'dev'
@@ -1049,7 +1056,7 @@ export class RemitScoutStack extends Stack {
                 'alert-evaluation-weekly',
               ]
             : [])
-          : []))
+          : [])))
     const defaultPurgeQueueAllowlist = [
       'ingest-fanout',
       'ingest-fanout-tier2',
@@ -1641,7 +1648,8 @@ export class RemitScoutStack extends Stack {
       ecsServiceNames: managedEcsServiceNames,
       ecsBaselineDesired: managedEcsBaselines,
       eventRulePrefix: `remit-scout-${envName}-`,
-      eventRuleAllowlist: resolvedOpsPauseAllowlist,
+      eventRuleAllowlist: opsPauseAllowlist,
+      eventRuleResumeAllowlist: resolvedOpsResumeAllowlist,
       hardStopEnabled,
       dbClusterIdentifier: database.cluster.clusterIdentifier,
       redisReplicationGroupId: cache.replicationGroup.ref,

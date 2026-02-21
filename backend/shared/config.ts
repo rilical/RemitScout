@@ -966,7 +966,10 @@ const rawConfig = {
     },
   },
   alerts: {
-    slackWebhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL || '',
+    slackWebhookUrl:
+      process.env.ALERT_SLACK_WEBHOOK_URL ||
+      process.env.SLACK_WEBHOOK_URL ||
+      '',
     smart: {
       minConfidence: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70), 1, 100),
       minSampleDays: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_SAMPLE_DAYS, 21), 1, 365),

@@ -15,6 +15,11 @@ type AuditItem = {
 const isEmptyString = (value: unknown): boolean =>
   typeof value === 'string' && value.trim().length === 0
 
+const placeholderAlertWebhookPatterns = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+
+const looksLikePlaceholder = (value: unknown) =>
+  typeof value === 'string' && placeholderAlertWebhookPatterns.some((pattern) => pattern.test(value))
+
 const shouldRequire = (
   overrideValue: boolean | undefined,
   defaultValue: boolean,
@@ -24,6 +29,8 @@ export const auditConfig = (
   requirements: RuntimeConfigRequirements = {},
 ): ConfigAuditResult => {
   const items: AuditItem[] = []
+  const missing: string[] = []
+  const warnings: string[] = []
 
   const add = (envVar: string, value: unknown, required: boolean, warnWhenEmpty = true) => {
     items.push({ envVar, value, required, warnWhenEmpty })
@@ -84,7 +91,12 @@ export const auditConfig = (
   }
 
   if (requirements.requireAlerts) {
+    const slackWebhookInvalid =
+      isEmptyString(config.alerts.slackWebhookUrl) || looksLikePlaceholder(config.alerts.slackWebhookUrl)
     add('ALERT_SLACK_WEBHOOK_URL', config.alerts.slackWebhookUrl, true)
+    if (slackWebhookInvalid && !missing.includes('ALERT_SLACK_WEBHOOK_URL')) {
+      missing.push('ALERT_SLACK_WEBHOOK_URL')
+    }
     if (config.alerts.email.enabled) {
       add('ALERT_SMTP_HOST', config.alerts.email.smtpHost, true)
       add('ALERT_EMAIL_FROM', config.alerts.email.from, true)
@@ -110,9 +122,6 @@ export const auditConfig = (
   if (requirements.requireJwtSecret) {
     add('PLANE_A_JWT_SECRET', config.planeA.jwtSecret, true)
   }
-
-  const missing: string[] = []
-  const warnings: string[] = []
 
   for (const item of items) {
     if (item.required && isEmptyString(item.value)) {

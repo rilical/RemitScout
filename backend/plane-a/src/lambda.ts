@@ -56,13 +56,13 @@ const init = async () => {
       usernameEnv: 'PLANE_A_DB_USERNAME',
       passwordEnv: 'PLANE_A_DB_PASSWORD',
       requireJson: true,
-      required: true,
       sslModeEnv: 'PGSSLMODE',
       jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
         'url',
         'DATABASE_URL_PLANE_B',
         'database_url',
       ]),
+      required: false,
     })
 
     await resolveDatabaseUrl({
@@ -75,13 +75,13 @@ const init = async () => {
       usernameEnv: 'PLANE_A_DB_USERNAME',
       passwordEnv: 'PLANE_A_DB_PASSWORD',
       requireJson: true,
-      required: true,
       sslModeEnv: 'PGSSLMODE',
       jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
         'url',
         'DATABASE_URL_PLANE_C',
         'database_url',
       ]),
+      required: false,
     })
 
     await resolveAwsEnv([
@@ -206,26 +206,41 @@ const init = async () => {
 	    const { config } = await import('../../shared/config')
 
 	    const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
+	    const requirePlaneC = Boolean(config.planeA.planeCBaseUrl)
+	    if (!requirePlaneC) {
+	      const loggerInstance = await getLogger()
+	      loggerInstance.warn('plane_c_base_url_not_set', {
+	        reason: 'PLANE_C_BASE_URL is not configured; Plane C-specific features may be unavailable.',
+	      })
+	    }
 	    const { runStartupChecks } = await import('../../shared/startup')
 	    const { initErrorTracking } = await import('../../shared/error-tracker')
 	    const { initTracing } = await import('../../shared/tracing')
 	    const { buildApp } = await import('./app')
 
-    const requireQuoteRefreshQueue = config.queues.quoteRefreshMode !== 'off'
-    const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
-    const requireExportJobQueue = config.queues.exports.mode !== 'off'
-    const requireIngestFanoutQueue = config.queues.ingestFanout.mode !== 'off'
-    const requireNotificationsQueue = config.queues.notifications.mode !== 'off'
-    const requireOpsAlertsQueue = config.queues.opsAlerts.mode !== 'off'
-    const requireGoldLiveQueue = config.queues.goldLive.mode !== 'off'
-    const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
+    const requireQuoteRefreshQueue =
+      config.queues.quoteRefreshMode !== 'off' && Boolean(config.queues.quoteRefreshUrl)
+    const requireFxRateRefreshQueue =
+      config.queues.fxRateRefreshMode !== 'off' && Boolean(config.queues.fxRateRefreshUrl)
+    const requireExportJobQueue =
+      config.queues.exports.mode !== 'off' && Boolean(config.queues.exports.url)
+    const requireIngestFanoutQueue =
+      config.queues.ingestFanout.mode !== 'off' && Boolean(config.queues.ingestFanout.url)
+    const requireNotificationsQueue =
+      config.queues.notifications.mode !== 'off' && Boolean(config.queues.notifications.url)
+    const requireOpsAlertsQueue =
+      config.queues.opsAlerts.mode !== 'off' && Boolean(config.queues.opsAlerts.url)
+    const requireGoldLiveQueue =
+      config.queues.goldLive.mode !== 'off' && Boolean(config.queues.goldLive.url)
+    const requireAlertEvaluationQueue =
+      config.alerts.evaluation.enabled && Boolean(config.alerts.evaluation.queueUrl)
     const requireStorage = requireExportJobQueue
 
-    await runStartupChecks({
-      requirements: {
-        requirePlaneA: true,
-        requirePlaneC: true,
-        requireRedis: true,
+	    await runStartupChecks({
+	      requirements: {
+	        requirePlaneA: true,
+	        requirePlaneC,
+	        requireRedis: true,
         requireQueues:
           requireQuoteRefreshQueue ||
           requireFxRateRefreshQueue ||

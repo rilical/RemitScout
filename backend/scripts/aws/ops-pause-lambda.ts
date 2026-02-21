@@ -541,8 +541,11 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const ecsServiceNames = parseJson<string[]>(process.env.ECS_SERVICES_JSON, [])
   const ecsBaseline = parseJson<Record<string, number>>(process.env.ECS_BASELINE_JSON, {})
   const rulePrefix = process.env.EVENT_RULE_PREFIX ?? `remit-scout-${envName}-`
-  const allowlistRaw = parseJson<string[]>(process.env.EVENT_RULE_ALLOWLIST, [])
-  const allowlist = allowlistRaw.map((name) => normalizeRuleName(rulePrefix, name))
+  const resumeAllowlistRaw = parseJson<string[]>(
+    process.env.EVENT_RULE_RESUME_ALLOWLIST ?? process.env.EVENT_RULE_ALLOWLIST,
+    [],
+  )
+  const resumeAllowlist = resumeAllowlistRaw.map((name) => normalizeRuleName(rulePrefix, name))
   const purgeQueuesOnResume = toBool(process.env.PURGE_QUEUES_ON_RESUME ?? '0')
   const purgeQueueUrls = parseJson<string[]>(process.env.PURGE_QUEUE_URLS_JSON, [])
     .map((queueUrl) => queueUrl.trim())
@@ -701,8 +704,8 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
       const rulesToEnable =
-        allowlist.length > 0
-          ? allowlist
+        resumeAllowlist.length > 0
+          ? resumeAllowlist
           : (envName === 'dev' ? [] : allRules)
       expectedEnabledRules = new Set(rulesToEnable)
       if (rulesToEnable.length === 0 && envName === 'dev') {
@@ -738,8 +741,8 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
       const allRules = await listRulesByPrefix(events, rulePrefix)
       await setRulesEnabled(events, allRules, false)
       const rulesToEnable =
-        allowlist.length > 0
-          ? allowlist
+        resumeAllowlist.length > 0
+          ? resumeAllowlist
           : (envName === 'dev' ? [] : allRules)
       expectedEnabledRules = new Set(rulesToEnable)
       if (rulesToEnable.length === 0 && envName === 'dev') {

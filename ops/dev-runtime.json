@@ -2,6 +2,16 @@
   "opsPauseRuleAllowlist": [
     "b2b-sweep-scheduler"
   ],
+  "opsResumeRuleAllowlist": [
+    "b2b-sweep-scheduler",
+    "b2c-refresh-worker",
+    "b2c-retry-failed",
+    "fx-rate-refresh-worker",
+    "gold-fx-rates",
+    "oanda-sync",
+    "rights-matrix-sync-countries",
+    "bank-vs-specialist-refresh"
+  ],
   "purgeQueuesOnResume": true,
   "purgeQueueAllowlist": [
     "ingest-fanout",

@@ -160,7 +160,21 @@ const _loadIndexPermissions = async (
   const normalized = Array.from(new Set(providerIds.map(normalizeProviderKey).filter(Boolean)))
   if (!normalized.length) return new Map()
 
-  const rows = await rightsMatrixRepository.listIndexPermissionsByProviders(normalized)
+  const listIndexPermissionsByProviders = (rightsMatrixRepository as unknown as {
+    listIndexPermissionsByProviders?: (providerKeys: string[]) => Promise<Array<{
+      provider_id: string
+      allowed_collect: boolean
+      allowed_b2c: boolean
+      stoplist_status: string
+      allowed_in_teer: boolean
+      allowed_in_rci: boolean
+      allowed_in_rvi: boolean
+    }>>
+  }).listIndexPermissionsByProviders
+
+  if (typeof listIndexPermissionsByProviders !== 'function') return new Map()
+
+  const rows = await listIndexPermissionsByProviders(normalized)
   const permissions = new Map<string, IndexPermissionFlags>()
   for (const row of rows) {
     const providerId = normalizeProviderKey(row.provider_id)
@@ -384,12 +398,15 @@ type CorridorIndices = {
   weights: string
   weightConfidence?: number | null
   weightWindowDays?: number | null
-  source?: 'gold'
+  source?: 'gold' | 'search_estimate'
   updatedAt?: string | null
   indicesBucket?: number
   methodProfile?: string
   suppressionFlag?: boolean
   suppressionReason?: string | null
+  basisAmount?: number
+  providerCountUsed?: number
+  reason?: string | null
 }
 
 const providersCache = createTtlCache<ProvidersResponseBase>({ namespace: 'plane_a:providers' })
@@ -455,6 +472,11 @@ const normalizeCurrencyCode = (value?: string | null) => {
   if (!value) return null
   const trimmed = value.trim().toUpperCase()
   return /^[A-Z]{3}$/.test(trimmed) ? trimmed : null
+}
+
+const isAllCurrencyToken = (value?: string | null) => {
+  if (!value) return false
+  return value.trim().toUpperCase() === 'ALL'
 }
 
 const isCurrencyAllowedForRequest = (
@@ -1051,13 +1073,16 @@ export const providersListRoutes = async (app: FastifyInstance) => {
     }
 
     const normalizedFromCurrency = normalizeCurrencyCode(fromCurrency)
-    const normalizedToCurrency = normalizeCurrencyCode(toCurrency)
+    const toCurrencyIsWildcard = isAllCurrencyToken(toCurrency)
+    const normalizedToCurrency = toCurrencyIsWildcard
+      ? null
+      : normalizeCurrencyCode(toCurrency)
 
     if (fromCurrency && !normalizedFromCurrency) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid fromCurrency' }] } })
     }
 
-    if (toCurrency && !normalizedToCurrency) {
+    if (toCurrency && !toCurrencyIsWildcard && !normalizedToCurrency) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: [{ message: 'invalid toCurrency' }] } })
     }
 
@@ -1700,43 +1725,49 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
       let indices: CorridorIndices | undefined
       let indicesReason: string | null = null
+      let fallbackTriggerReason: string | null = null
       const indicesMethodProfile = resolveIndicesMethodProfile(requestedMethod)
+      const indicesAmountBasis = INDICES_AMOUNT_BUCKET
 
       if (!indicesMethodProfile) {
         indicesReason = 'unsupported_method'
-      } else if (bucketUsed !== INDICES_AMOUNT_BUCKET) {
-        indicesReason = 'bucket_mismatch'
+        fallbackTriggerReason = 'unsupported_method'
       } else {
         try {
           const latest = await goldIndicesRepository.getIndicesLatest({
             corridorId,
-            amountBucket: INDICES_AMOUNT_BUCKET,
+            amountBucket: indicesAmountBasis,
             methodProfile: indicesMethodProfile,
           })
 
           if (!latest) {
             indicesReason = 'gold_indices_unavailable'
+            fallbackTriggerReason = 'gold_indices_unavailable'
           } else {
             const suppressed = latest.suppression_flag === true
             if (suppressed) {
               indicesReason = latest.suppression_reason || 'suppressed'
+              fallbackTriggerReason = indicesReason
             }
             indices = {
               teer: suppressed ? null : latest.teer_rate ?? null,
               rvi_bps: suppressed ? null : latest.rvi_bps ?? null,
               rci: suppressed ? null : latest.rci_ratio ?? null,
               providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-              amount: INDICES_AMOUNT_BUCKET,
+              amount: indicesAmountBasis,
               midMarketRate: suppressed ? null : latest.mid_market_rate ?? null,
               weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
               weightConfidence: latest.weight_confidence ?? null,
               weightWindowDays: latest.weight_window_days ?? null,
               source: 'gold',
               updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
-              indicesBucket: INDICES_AMOUNT_BUCKET,
+              indicesBucket: indicesAmountBasis,
               methodProfile: indicesMethodProfile,
               suppressionFlag: latest.suppression_flag,
               suppressionReason: latest.suppression_reason ?? null,
+              basisAmount: indicesAmountBasis,
+              providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+              reason: suppressed ? (latest.suppression_reason ?? 'suppressed') : null,
             }
           }
         } catch (error) {
@@ -1745,6 +1776,74 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             error: error instanceof Error ? error.message : String(error),
           })
           indicesReason = 'gold_indices_unavailable'
+          fallbackTriggerReason = 'gold_indices_unavailable'
+        }
+      }
+
+      if (!indices && indicesMethodProfile && midMarketRate && midMarketRate > 0) {
+        const effectiveAmount = Number(requestedAmount ?? bucketUsed ?? indicesAmountBasis)
+        const amountScale = Number.isFinite(effectiveAmount) && effectiveAmount > 0
+          ? (indicesAmountBasis / effectiveAmount)
+          : 1
+        const searchEstimateQuotes = flattenedQuotes
+          .map((quote) => {
+            const fxRate = Number(quote.fxRate)
+            const fee = Number(quote.fee)
+            if (!Number.isFinite(fxRate) || fxRate <= 0) return null
+            if (!Number.isFinite(fee) || fee < 0) return null
+            return {
+              id: quote.id,
+              providerId: normalizeProviderId(quote.providerId ?? quote.id),
+              fxRate,
+              fee: fee * amountScale,
+            }
+          })
+          .filter((quote): quote is {
+            id: string
+            providerId?: string
+            fxRate: number
+            fee: number
+          } => quote !== null)
+
+        let indexAllowlist: Map<string, IndexPermissionFlags> | undefined
+        if (searchEstimateQuotes.length > 0) {
+          const providerIds = searchEstimateQuotes.map(quote => quote.providerId || quote.id)
+          try {
+            indexAllowlist = await _loadIndexPermissions(providerIds)
+          } catch (error) {
+            logger.warn('search_indices_permissions_failed', {
+              corridor_id: corridorId,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+
+        if (searchEstimateQuotes.length > 0) {
+          const computed = _computeCorridorIndices(
+            searchEstimateQuotes,
+            indicesAmountBasis,
+            midMarketRate,
+            undefined,
+            indexAllowlist,
+          )
+          const hasComputedSignal =
+            computed.teer !== null
+            || computed.rci !== null
+            || computed.rvi_bps !== null
+
+          if (hasComputedSignal) {
+            indices = {
+              ...computed,
+              source: 'search_estimate',
+              updatedAt: latestCollectedAt ?? midMarketUpdatedAt ?? new Date().toISOString(),
+              indicesBucket: indicesAmountBasis,
+              methodProfile: indicesMethodProfile,
+              basisAmount: indicesAmountBasis,
+              providerCountUsed: computed.providerCount,
+              reason: fallbackTriggerReason ? `fallback:${fallbackTriggerReason}` : 'computed_from_quotes',
+            }
+            indicesReason = 'computed_from_quotes'
+          }
         }
       }
 
@@ -1812,6 +1911,53 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
       return response
     } catch (error: unknown) {
+      if (error instanceof NotFoundError) {
+        const details = error.details && typeof error.details === 'object'
+          ? (error.details as { error?: string; message?: string })
+          : {}
+        const errorCode = details.error === 'corridor_unsupported'
+          ? details.error
+          : 'corridor_unsupported'
+        const errorMessage = typeof details.message === 'string'
+          ? details.message
+          : 'No providers currently support this corridor.'
+
+        return {
+          comparisonId,
+          start,
+          error: { code: errorCode, message: errorMessage },
+          message: errorMessage,
+          updatedAt: null,
+          corridor: corridorId,
+          amount: requestedAmount || amountBucket,
+          method: requestedMethod,
+          bucketUsed: amountBucket,
+          approximate: false,
+          bucketDeltaPct: null,
+          midMarketRate: null,
+          midMarketSource: null,
+          midMarketUpdatedAt: null,
+          data: [],
+          cache: {
+            ttl_seconds: config.planeA.b2c.cacheTtlSeconds,
+            age_seconds: null,
+            fresh: false,
+          },
+          availableMethods: [],
+          availableMethodsByProvider: {},
+          excludedProviders: [],
+          excludedProvidersDetailed: [],
+          refresh: {
+            enabled: refreshEnabled,
+            attempted: false,
+            enqueued: false,
+            providers: [],
+            requestIds: [],
+          },
+          indicesReason: errorCode,
+        }
+      }
+
       const errorMessage = error instanceof Error ? error.message : String(error)
       const errorStack = error instanceof Error ? error.stack : undefined
       logger.error('providers_request_failed', {

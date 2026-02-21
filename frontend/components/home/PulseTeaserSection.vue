@@ -1,323 +1,246 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useApi } from '~/composables/useApi'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { Icon } from '~/ui'
-import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import { CATEGORY_ACCENT, CHART_STYLE } from '~/lib/pulseChartStyle'
+import type { ChartCategory } from '~/types/pulse'
 
-type PulseTeaserMover = {
-  corridorId: string
-  fromCountry: string
-  toCountry: string
-  sendCurrency: string
-  recvCurrency: string
-  currentAvgRate: number
-  prevAvgRate: number
-  deltaPct: number
-  providerCount: number
-  timestampBucket: string
-}
-
-type PulseTeaserResponse = {
-  success: true
-  updatedAt: string | null
-  windowHours: number
-  movers: PulseTeaserMover[]
-}
-
-const { request } = useApi()
 const { isPlus } = useEntitlements()
-
-const { data, pending } = await useAsyncData(
-  'pulse:teaser',
-  () => request<PulseTeaserResponse>('/pulse/teaser', { retries: 0 }),
-  { server: true },
-)
-
-const movers = computed(() => data.value?.movers ?? [])
-const updatedAt = computed(() => data.value?.updatedAt ?? null)
-const windowHours = computed(() => data.value?.windowHours ?? 24)
 const ctaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pulse'))
 
-// Relative time for data freshness
-const relativeTime = ref('')
-let timeInterval: ReturnType<typeof setInterval> | null = null
-
-const updateRelativeTime = () => {
-  if (!updatedAt.value) {
-    relativeTime.value = ''
-    return
-  }
-  const date = new Date(updatedAt.value)
-  if (Number.isNaN(date.getTime())) {
-    relativeTime.value = ''
-    return
-  }
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-
-  if (diffMins < 1) {
-    relativeTime.value = 'Updated just now'
-  }
- else if (diffMins < 60) {
-    relativeTime.value = `Updated ${diffMins} min${diffMins > 1 ? 's' : ''} ago`
-  }
- else {
-    const diffHours = Math.floor(diffMins / 60)
-    relativeTime.value = `Updated ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  }
+interface TeaserCategory {
+  key: ChartCategory
+  label: string
+  trend: string
+  trendLabel: string
+  subtitle: string
+  chartType: 'area-down' | 'bar' | 'jagged' | 'area-up'
 }
 
-onMounted(() => {
-  updateRelativeTime()
-  timeInterval = setInterval(updateRelativeTime, 30000) // Update every 30 seconds
-})
+const categories: TeaserCategory[] = [
+  {
+    key: 'cost-markup',
+    label: 'Pricing & Margin',
+    trend: '↓',
+    trendLabel: 'Declining',
+    subtitle: 'All-in cost index · FX markup · Fee decomposition',
+    chartType: 'area-down',
+  },
+  {
+    key: 'delivered-amount',
+    label: 'Competitive Dynamics',
+    trend: '↑',
+    trendLabel: 'Active',
+    subtitle: 'Winner board · Best-rate frequency · Rankings',
+    chartType: 'bar',
+  },
+  {
+    key: 'volatility',
+    label: 'Volatility & Risk',
+    trend: '→',
+    trendLabel: 'Stable',
+    subtitle: 'Rate volatility · Anomaly detection · Event alerts',
+    chartType: 'jagged',
+  },
+  {
+    key: 'availability',
+    label: 'Operational Coverage',
+    trend: '↑',
+    trendLabel: 'Growing',
+    subtitle: 'Quote success rate · Currency coverage · Availability',
+    chartType: 'area-up',
+  },
+]
 
-onUnmounted(() => {
-  if (timeInterval) clearInterval(timeInterval)
-})
-
-const formatPct = (value: number) => {
-  const pct = value * 100
-  const sign = pct > 0 ? '+' : ''
-  return `${sign}${pct.toFixed(2)}%`
-}
-
-const isSignificantMove = (deltaPct: number) => Math.abs(deltaPct * 100) > 2
-
-const toFlagEmoji = (code: string) => {
-  const normalized = (code || '').trim().toUpperCase()
-  if (normalized.length !== 2) return null
-  const base = 0x1f1e6
-  return String.fromCodePoint(
-    base + normalized.charCodeAt(0) - 65,
-    base + normalized.charCodeAt(1) - 65,
-  )
-}
-
-const formatCorridor = (m: PulseTeaserMover) => {
-  const fromFlag = toFlagEmoji(m.fromCountry)
-  const toFlag = toFlagEmoji(m.toCountry)
-  return {
-    fromFlag,
-    toFlag,
-    label: `${m.sendCurrency} → ${m.recvCurrency}`,
-    countries: `${m.fromCountry} → ${m.toCountry}`,
-  }
+function accentFor(key: ChartCategory): string {
+  return CATEGORY_ACCENT[key]
 }
 </script>
 
 <template>
-  <section class="py-14 sm:py-16 bg-gradient-to-b from-white via-white to-neutral-50">
+  <section class="py-16 sm:py-20 bg-neutral-900">
     <div class="container">
-      <div class="rounded-3xl border border-rs-border bg-surface shadow-lg overflow-hidden">
-        <!-- Header with dark gradient -->
-        <div class="p-6 sm:p-8 bg-gradient-to-br from-neutral-900 via-neutral-900 to-primary-900">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <!-- Live indicator with pulse glow -->
-              <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-surface/10 px-3 py-1 text-body-sm font-semibold text-white/90">
-                <span
-                  class="h-2.5 w-2.5 rounded-full bg-emerald-400 motion-safe:animate-pulse-glow"
-                  aria-hidden="true"
-                />
-                <span>Live data</span>
-              </div>
-
-              <!-- Gradient heading -->
-              <h2 class="mt-4 text-h2 font-extrabold leading-tight">
-                <span class="bg-gradient-to-r from-white via-emerald-200 to-white bg-clip-text text-transparent">
-                  What's Moving Right Now
-                </span>
-              </h2>
-              <p class="mt-2 text-body-sm text-white/80 max-w-2xl">
-                Latest corridor moves from Gold Export. No demos, no made-up numbers.
-              </p>
-
-              <!-- Data freshness with relative time -->
-              <div class="mt-3 flex items-center gap-2 text-body-sm text-white/60">
-                <Icon
-                  name="clock"
-                  :size="16"
-                  class="text-current"
-                />
-                <span v-if="relativeTime">{{ relativeTime }}</span>
-                <span v-else-if="updatedAt">Warming up...</span>
-                <span v-else>Warming up (no Gold Export data yet)</span>
-                <span class="mx-1.5 text-white/30">|</span>
-                <span>Last {{ windowHours }}h</span>
-              </div>
-            </div>
-
-            <NuxtLink
-              to="/pulse"
-              class="inline-flex items-center justify-center gap-2 rounded-2xl bg-surface px-5 py-3 text-body-sm font-bold text-rs-fg hover:bg-neutral-100 hover:shadow-lg motion-safe:transition-all group"
-            >
-              {{ ctaLabel }}
-              <Icon
-                name="arrow-right"
-                :size="16"
-                class="text-current motion-safe:transition-transform group-hover:translate-x-0.5"
-              />
-            </NuxtLink>
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
+        <div class="lg:max-w-2xl">
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-body-sm font-semibold text-white/90 mb-4">
+            <span
+              class="h-2 w-2 rounded-full bg-emerald-400 motion-safe:animate-pulse-glow"
+              aria-hidden="true"
+            />
+            Remit-Scout Pulse
           </div>
+          <h2 class="text-h2 font-bold text-white mb-4 leading-tight">
+            Market intelligence for<br class="hidden sm:block">
+            remittance pricing
+          </h2>
+          <p class="text-body-lg text-white/80 leading-relaxed max-w-xl">
+            18 live charts across 4 categories track pricing, competition, volatility, and coverage for 150+ corridors — all derived from real provider quotes, updated daily.
+          </p>
         </div>
 
-        <!-- Loading state -->
-        <div
-          v-if="pending"
-          class="p-6 sm:p-8"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-              v-for="n in 6"
-              :key="n"
-              class="rounded-2xl border border-rs-border bg-neutral-50 p-5"
-            >
-              <SkeletonBlock
-                width="7rem"
-                height="16"
-                class="mb-3"
-              />
-              <SkeletonBlock
-                width="10rem"
-                height="32"
-                class="mb-2"
-              />
-              <SkeletonBlock
-                width="6rem"
-                height="12"
-              />
-            </div>
-          </div>
+        <div class="flex-shrink-0">
+          <NuxtLink
+            to="/pulse"
+            class="group inline-flex items-center gap-3 rounded-xl bg-white px-7 py-3.5 text-body font-semibold text-neutral-900 shadow-lg hover:bg-neutral-100 motion-safe:transition-colors"
+          >
+            {{ ctaLabel }}
+            <Icon
+              name="arrow-right"
+              :size="16"
+              class="text-current motion-safe:transition-transform group-hover:translate-x-1"
+            />
+          </NuxtLink>
         </div>
+      </div>
 
-        <!-- Empty state -->
+      <!-- Chart preview cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
-          v-else-if="movers.length === 0"
-          class="p-6 sm:p-8"
+          v-for="cat in categories"
+          :key="cat.key"
+          :class="CHART_STYLE.card"
+          class="overflow-hidden flex flex-col"
         >
-          <div class="rounded-2xl border border-dashed border-rs-border bg-neutral-50 p-8 text-center">
-            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-900 text-white font-black">
-              P
+          <div class="p-5 flex flex-col flex-1">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-body-sm font-bold text-white">{{ cat.label }}</span>
+              <span class="text-xs font-medium" :style="{ color: accentFor(cat.key) }">
+                {{ cat.trend }} {{ cat.trendLabel }}
+              </span>
             </div>
-            <div class="text-body-lg font-bold text-rs-fg">
-              Pulse is warming up
+
+            <div class="flex-1 mb-4">
+              <!-- Area chart (declining) -->
+              <svg
+                v-if="cat.chartType === 'area-down'"
+                :viewBox="CHART_STYLE.sparkline.viewBox"
+                class="w-full"
+                :class="CHART_STYLE.sparkline.heightClass"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
+                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,42 L20,40 L40,36 L60,38 L80,32 L100,28 L120,25 L140,22 L160,20 L180,17 L200,14 L200,60 L0,60Z"
+                  :fill="`url(#tsr-grad-${cat.key})`"
+                />
+                <polyline
+                  points="0,42 20,40 40,36 60,38 80,32 100,28 120,25 140,22 160,20 180,17 200,14"
+                  fill="none"
+                  :stroke="accentFor(cat.key)"
+                  :stroke-width="CHART_STYLE.line.strokeWidth"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <!-- Bar chart -->
+              <svg
+                v-else-if="cat.chartType === 'bar'"
+                :viewBox="CHART_STYLE.sparkline.viewBox"
+                class="w-full"
+                :class="CHART_STYLE.sparkline.heightClass"
+                preserveAspectRatio="none"
+              >
+                <rect x="8" y="24" width="16" height="36" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.8" />
+                <rect x="32" y="14" width="16" height="46" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.9" />
+                <rect x="56" y="30" width="16" height="30" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.6" />
+                <rect x="80" y="10" width="16" height="50" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" />
+                <rect x="104" y="20" width="16" height="40" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.7" />
+                <rect x="128" y="6" width="16" height="54" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" />
+                <rect x="152" y="16" width="16" height="44" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.85" />
+                <rect x="176" y="12" width="16" height="48" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.95" />
+              </svg>
+
+              <!-- Jagged line chart -->
+              <svg
+                v-else-if="cat.chartType === 'jagged'"
+                :viewBox="CHART_STYLE.sparkline.viewBox"
+                class="w-full"
+                :class="CHART_STYLE.sparkline.heightClass"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
+                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,30 L12,26 L24,34 L36,22 L48,38 L60,18 L72,36 L84,24 L96,32 L108,20 L120,35 L132,27 L144,33 L156,25 L168,30 L180,28 L192,32 L200,29 L200,60 L0,60Z"
+                  :fill="`url(#tsr-grad-${cat.key})`"
+                />
+                <polyline
+                  points="0,30 12,26 24,34 36,22 48,38 60,18 72,36 84,24 96,32 108,20 120,35 132,27 144,33 156,25 168,30 180,28 192,32 200,29"
+                  fill="none"
+                  :stroke="accentFor(cat.key)"
+                  :stroke-width="CHART_STYLE.line.strokeWidth"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <!-- Area chart (growing) with threshold -->
+              <svg
+                v-else-if="cat.chartType === 'area-up'"
+                :viewBox="CHART_STYLE.sparkline.viewBox"
+                class="w-full"
+                :class="CHART_STYLE.sparkline.heightClass"
+                preserveAspectRatio="none"
+              >
+                <defs>
+                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
+                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,46 L20,42 L40,38 L60,36 L80,32 L100,28 L120,26 L140,22 L160,18 L180,15 L200,12 L200,60 L0,60Z"
+                  :fill="`url(#tsr-grad-${cat.key})`"
+                />
+                <polyline
+                  points="0,46 20,42 40,38 60,36 80,32 100,28 120,26 140,22 160,18 180,15 200,12"
+                  fill="none"
+                  :stroke="accentFor(cat.key)"
+                  :stroke-width="CHART_STYLE.line.strokeWidth"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <line
+                  x1="0" y1="28" x2="200" y2="28"
+                  stroke="white"
+                  :stroke-opacity="CHART_STYLE.grid.opacity"
+                  stroke-width="1"
+                  :stroke-dasharray="`${CHART_STYLE.grid.dashArray} ${CHART_STYLE.grid.dashArray}`"
+                />
+              </svg>
             </div>
-            <p class="mt-2 text-body-sm text-neutral-600 max-w-xl mx-auto">
-              We do not show placeholder numbers. Once Gold Export has recent corridor buckets, the movers list will appear here.
+
+            <p class="text-xs text-neutral-500">
+              {{ cat.subtitle }}
             </p>
           </div>
         </div>
+      </div>
 
-        <!-- Live data grid with staggered animations -->
-        <div
-          v-else
-          class="p-6 sm:p-8"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-              v-for="(m, index) in movers"
-              :key="m.corridorId"
-              class="relative rounded-2xl border border-rs-border bg-surface p-5 hover:shadow-xl hover:-translate-y-1 motion-safe:transition-all motion-safe:animate-fade-in-up-stagger overflow-hidden group"
-              :style="{ animationDelay: `${index * 80}ms` }"
-            >
-              <!-- Left border accent based on delta -->
-              <div
-                class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-                :class="m.deltaPct > 0 ? 'bg-gradient-to-b from-emerald-400 to-emerald-600' : (m.deltaPct < 0 ? 'bg-gradient-to-b from-red-400 to-red-600' : 'bg-neutral-300')"
-              />
-
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <div class="text-[11px] font-semibold text-rs-muted uppercase tracking-wider">
-                    Corridor
-                  </div>
-                  <div class="mt-1.5 flex items-center gap-2">
-                    <!-- Country flags -->
-                    <span
-                      v-if="formatCorridor(m).fromFlag"
-                      class="text-xl"
-                      :aria-label="m.fromCountry"
-                    >{{ formatCorridor(m).fromFlag }}</span>
-                    <span
-                      v-else
-                      class="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-600"
-                    >{{ m.fromCountry }}</span>
-
-                    <Icon
-                      name="arrow-right"
-                      :size="16"
-                      class="text-neutral-400"
-                    />
-
-                    <span
-                      v-if="formatCorridor(m).toFlag"
-                      class="text-xl"
-                      :aria-label="m.toCountry"
-                    >{{ formatCorridor(m).toFlag }}</span>
-                    <span
-                      v-else
-                      class="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-600"
-                    >{{ m.toCountry }}</span>
-
-                    <span class="text-body-sm font-bold text-rs-fg truncate">
-                      {{ formatCorridor(m).label }}
-                    </span>
-                  </div>
-                  <div class="mt-1 text-[11px] text-rs-muted">
-                    {{ formatCorridor(m).countries }}
-                  </div>
-                </div>
-
-                <!-- Delta badge with gradient and pulse for significant moves -->
-                <div
-                  class="flex items-center gap-1.5 rounded-xl px-3 py-2 text-body-sm font-bold shrink-0"
-                  :class="[
-                    m.deltaPct > 0
-                      ? 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200'
-                      : (m.deltaPct < 0
-                        ? 'bg-gradient-to-r from-red-50 to-red-100 text-red-700 border border-red-200'
-                        : 'bg-neutral-50 text-neutral-700 border border-rs-border'),
-                    isSignificantMove(m.deltaPct) ? 'motion-safe:animate-delta-pulse' : '',
-                  ]"
-                >
-                  <Icon
-                    :name="m.deltaPct >= 0 ? 'arrow-up' : 'arrow-down'"
-                    :size="16"
-                    class="text-current"
-                  />
-                  {{ formatPct(m.deltaPct) }}
-                </div>
-              </div>
-
-              <!-- Stats row -->
-              <div class="mt-4 grid grid-cols-2 gap-3">
-                <div class="rounded-xl border border-rs-border bg-neutral-50/80 p-3 group-hover:bg-neutral-50 motion-safe:transition-colors">
-                  <div class="text-[10px] font-semibold text-rs-muted uppercase tracking-wider">
-                    Current avg
-                  </div>
-                  <div class="mt-1 text-body-sm font-bold text-rs-fg tabular-nums">
-                    {{ m.currentAvgRate.toFixed(4) }}
-                  </div>
-                </div>
-                <div class="rounded-xl border border-rs-border bg-neutral-50/80 p-3 group-hover:bg-neutral-50 motion-safe:transition-colors">
-                  <div class="text-[10px] font-semibold text-rs-muted uppercase tracking-wider">
-                    Providers
-                  </div>
-                  <div class="mt-1 text-body-sm font-bold text-rs-fg">
-                    {{ m.providerCount }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-3 text-[10px] text-rs-muted/70 tabular-nums">
-                Bucket {{ new Date(m.timestampBucket).toISOString().replace('T', ' ').slice(0, 16) }} UTC
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Bottom stats row -->
+      <div class="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-body-sm text-neutral-500">
+        <span class="flex items-center gap-2">
+          <span class="font-bold text-white tabular-nums">18</span> live charts
+        </span>
+        <span class="text-neutral-700">·</span>
+        <span class="flex items-center gap-2">
+          <span class="font-bold text-white tabular-nums">4</span> categories
+        </span>
+        <span class="text-neutral-700">·</span>
+        <span class="flex items-center gap-2">
+          <span class="font-bold text-white tabular-nums">150+</span> corridors
+        </span>
+        <span class="text-neutral-700">·</span>
+        <span>Updated daily from real provider quotes</span>
       </div>
     </div>
   </section>

@@ -4,6 +4,10 @@ import { config, type RuntimeConfigRequirements } from './config'
 const nonEmptyString = z.string()
 const booleanSchema = z.boolean()
 const numberSchema = z.number()
+const placeholderAlertWebhookPatterns = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+
+const looksLikePlaceholder = (value: string) =>
+  placeholderAlertWebhookPatterns.some((pattern) => pattern.test(value))
 
 // This schema intentionally validates only the stable surface area we treat as "startup critical".
 // It is still a schema for the full config object: unknown keys are allowed via passthrough.
@@ -204,7 +208,15 @@ const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
       }
     }
     if (requirements.requireAlerts) {
-      if (!cfg.alerts.slackWebhookUrl) addMissing(ctx, 'ALERT_SLACK_WEBHOOK_URL', ['alerts', 'slackWebhookUrl'])
+      if (!cfg.alerts.slackWebhookUrl) {
+        addMissing(ctx, 'ALERT_SLACK_WEBHOOK_URL', ['alerts', 'slackWebhookUrl'])
+      } else if (looksLikePlaceholder(cfg.alerts.slackWebhookUrl)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['alerts', 'slackWebhookUrl'],
+          message: 'ALERT_SLACK_WEBHOOK_URL cannot be a placeholder value',
+        })
+      }
       if (cfg.alerts.email.enabled && !cfg.alerts.email.smtpHost) addMissing(ctx, 'ALERT_SMTP_HOST', ['alerts', 'email', 'smtpHost'])
       if (cfg.alerts.email.enabled && !cfg.alerts.email.from) addMissing(ctx, 'ALERT_EMAIL_FROM', ['alerts', 'email', 'from'])
     }

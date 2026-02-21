@@ -637,7 +637,6 @@ aria-current="page"
 
           <div
             v-else-if="refreshTimedOut && !hasApiQuotes"
-          >
             class="rounded-xl border border-rs-border bg-surface p-8"
           >
             <EmptyState
@@ -993,7 +992,7 @@ aria-current="page"
                 {{ indexRateUnit }}
               </p>
               <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
-                Real exchange rate after all fees and hidden costs. Higher is better.
+                {{ teerContextDescription }}
               </p>
               <details class="group mt-auto">
                 <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
@@ -1013,12 +1012,19 @@ aria-current="page"
                   </svg>
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
-                  <p>TEER shows the effective rate you'll receive after fees and FX markups. Closer to mid-market means lower hidden costs.</p>
+                  <p>{{ indicesSourceSummary }}</p>
+                  <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#teer"
                     class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
+                  </NuxtLink>
+                  <NuxtLink
+                    :to="buildIndexChartLink('fx-markup')"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    View TEER trend →
                   </NuxtLink>
                 </div>
               </details>
@@ -1041,7 +1047,7 @@ aria-current="page"
                 basis points
               </p>
               <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
-                How much provider rates vary. Lower means similar deals. Higher means comparing saves money.
+                {{ rviContextDescription }}
               </p>
               <details class="group mt-auto">
                 <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
@@ -1061,12 +1067,19 @@ aria-current="page"
                   </svg>
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
-                  <p>RVI (bps) measures rate dispersion across providers. Low RVI means similar value, so speed or convenience may matter more. High RVI means comparison shopping matters.</p>
+                  <p>{{ indicesSourceSummary }}</p>
+                  <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#rvi"
                     class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
+                  </NuxtLink>
+                  <NuxtLink
+                    :to="buildIndexChartLink('volatility-pulse')"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    View RVI trend →
                   </NuxtLink>
                 </div>
               </details>
@@ -1089,7 +1102,7 @@ aria-current="page"
                 of amount sent
               </p>
               <p class="text-body-sm text-neutral-300 mb-4 flex-grow">
-                Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.
+                {{ rciContextDescription }}
               </p>
               <details class="group mt-auto">
                 <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
@@ -1109,19 +1122,27 @@ aria-current="page"
                   </svg>
                 </summary>
                 <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
-                  <p>RCI includes upfront fees and hidden FX markups. Providers can advertise $0 fees but still charge 3% through exchange rate markups.</p>
+                  <p>{{ indicesSourceSummary }}</p>
+                  <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#rci"
                     class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
                   </NuxtLink>
+                  <NuxtLink
+                    :to="buildIndexChartLink('all-in-cost')"
+                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                  >
+                    View RCI trend →
+                  </NuxtLink>
                 </div>
               </details>
             </div>
           </div>
           <div class="mt-6 flex flex-wrap items-center gap-2 text-body-sm text-neutral-600">
-            <span>Gold indices · $500 bank bucket · updated daily.</span>
+            <span>{{ indicesSourceLabel }}.</span>
+            <span>{{ indicesBasisSummary }}</span>
             <span>These indices power enterprise reports and data partnerships.</span>
             <NuxtLink
               to="/partnerships"
@@ -1433,93 +1454,6 @@ aria-current="page"
                 </div>
               </div>
 
-              <!-- Related Guides Section -->
-              <div class="mt-10 pt-8 border-t border-rs-border">
-                <h3 class="text-h4 font-bold text-neutral-900 mb-4">
-                  Learn More About Money Transfers
-                </h3>
-                <p class="text-body-sm text-neutral-600 mb-5 leading-relaxed">
-                  Master the fundamentals of international money transfers to save more on every transaction.
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <NuxtLink
-                    to="/learn/why-compare-before-every-transfer"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
-                  >
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
-                        Why You Must Compare Before Every Transfer
-                      </h4>
-                      <p class="text-body-sm text-neutral-600 leading-relaxed">
-                        Even on the same transfer, the difference between providers can be hundreds of dollars.
-                      </p>
-                    </div>
-                  </NuxtLink>
-
-                  <NuxtLink
-                    to="/learn/hidden-exchange-rate-fees-explained"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
-                  >
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
-                        Hidden Fees Explained (FX Markup vs Fee)
-                      </h4>
-                      <p class="text-body-sm text-neutral-600 leading-relaxed">
-                        Learn the difference between FX markup and transfer fees, and why "no fee" doesn't mean no cost.
-                      </p>
-                    </div>
-                  </NuxtLink>
-
-                  <NuxtLink
-                    to="/learn/how-to-read-remittance-quote"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
-                  >
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
-                        How to Read a Quote ("Recipient Gets")
-                      </h4>
-                      <p class="text-body-sm text-neutral-600 leading-relaxed">
-                        Understand what "Recipient Gets" really means and how to compare quotes effectively.
-                      </p>
-                    </div>
-                  </NuxtLink>
-
-                  <NuxtLink
-                    to="/learn/best-time-to-send-money"
-                    class="group flex items-start gap-4 p-4 rounded-xl border border-rs-border bg-surface hover:border-brand-400 hover:shadow-md motion-safe:transition-all"
-                  >
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-semibold text-neutral-900 mb-1.5 group-hover:text-brand-600 motion-safe:transition-colors">
-                        Best Time to Send Money
-                      </h4>
-                      <p class="text-body-sm text-neutral-600 leading-relaxed">
-                        Practical guidance on when to send money, without over-optimizing for rate movements.
-                      </p>
-                    </div>
-                  </NuxtLink>
-                </div>
-                <div class="mt-6 text-center">
-                  <NuxtLink
-                    to="/learn/money-transfer"
-                    class="inline-flex items-center gap-2 text-brand-600 font-semibold hover:text-brand-700 motion-safe:transition-colors"
-                  >
-                    View all guides
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </div>
             </div>
 
             <div
@@ -1921,7 +1855,7 @@ aria-current="page"
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, watchEffect, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, watchEffect, defineAsyncComponent } from 'vue'
 import { jsonLdBreadcrumb, jsonLdFaq, setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
 import { useRemittanceApi } from '~/composables/useRemittanceApi'
@@ -2035,12 +1969,15 @@ type CorridorIndices = {
   weights: string
   weightConfidence?: number | null
   weightWindowDays?: number | null
-  source?: 'gold'
+  source?: 'gold' | 'search_estimate'
   updatedAt?: string | null
   indicesBucket?: number
   methodProfile?: string
   suppressionFlag?: boolean
   suppressionReason?: string | null
+  basisAmount?: number
+  providerCountUsed?: number
+  reason?: string | null
 }
 
 type Guide = {
@@ -2062,6 +1999,10 @@ type RateHistoryResponse = {
   quote: string
   history: RateHistoryPoint[]
   lastUpdated?: string | null
+  status?: 'ready' | 'warming' | 'unavailable'
+  message?: string | null
+  refreshQueued?: boolean
+  refreshRequestId?: string | null
 }
 
 type CorridorContent = {
@@ -2111,6 +2052,7 @@ const normalizeCurrencyParam = (value: string | string[] | null | undefined) => 
   const raw = Array.isArray(value) ? value[0] : value
   if (!raw) return ''
   const upper = String(raw).trim().toUpperCase()
+  if (upper === 'ALL') return ''
   return /^[A-Z]{3}$/.test(upper) ? upper : ''
 }
 
@@ -2248,9 +2190,9 @@ const refreshGateActive = computed(() => {
   if (refreshCompletion.value?.done) return false
   return true
 })
-	const shouldBlockResults = computed(() => {
-	  if (refreshTimedOut.value) return false
-	  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+const shouldBlockResults = computed(() => {
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
 
   const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
@@ -2264,14 +2206,14 @@ const refreshGateActive = computed(() => {
   if (quoteRefreshPending.value) return true
   if (providersLive.value) return true
   if (quotesPending.value && !hasApiQuotes.value) return true
-	  if (searchInitiated.value && !hasApiQuotes.value) return true
-	  return false
-	})
-	const showRefreshGate = computed(() => shouldBlockResults.value)
-	const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
-	const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
-	const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
-	const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
+  if (searchInitiated.value && !hasApiQuotes.value) return true
+  return false
+})
+const showRefreshGate = computed(() => shouldBlockResults.value)
+const fromCountryCode = computed(() => getCodeFromSlug(canonicalFrom.value) || canonicalFrom.value.toUpperCase())
+const toCountryCode = computed(() => getCodeFromSlug(canonicalTo.value) || canonicalTo.value.toUpperCase())
+const corridorKey = computed(() => `${canonicalFrom.value}-${canonicalTo.value}`)
+const canonicalPath = computed(() => `/send-money/${canonicalFrom.value}-to-${canonicalTo.value}`)
 const flagFrom = computed(() => resolveFlag(canonicalFrom.value))
 const flagTo = computed(() => resolveFlag(canonicalTo.value))
 
@@ -2289,6 +2231,20 @@ watch([fromCurrencyCode, displayAmount], () => {
 if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) {
   navigateTo(getCanonicalCorridorUrl(fromSlug.value, toSlug.value), { redirectCode: 301 })
 }
+
+onMounted(() => {
+  if (!import.meta.client) return
+  if (hasApiQuotes.value || quotesPending.value) return
+  if (hasApiError.value || corridorUnavailable.value || corridorUnsupported.value || quotesUnavailable.value) return
+  void refreshQuotes()
+})
+
+onUnmounted(() => {
+  clearRefreshPoll()
+  clearRefreshStatusPoll()
+  clearRefreshGateTimer()
+  providersRequestSignal.value = undefined
+})
 
 const providersRequestSignal = ref<AbortSignal | undefined>(undefined)
 
@@ -2314,9 +2270,15 @@ const toPositiveMs = (value: unknown, fallback: number) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 const REFRESH_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMs, 1500)
+const REFRESH_POLL_MAX_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshPollMaxMs, 8000)
 const REFRESH_STATUS_POLL_MS = toPositiveMs(runtimeConfig?.public?.b2cRefreshStatusPollMs, 750)
 const REFRESH_STATUS_TIMEOUT_MS = 60000
 const MAX_REFRESH_ATTEMPTS = Math.max(1, Math.ceil(REFRESH_STATUS_TIMEOUT_MS / REFRESH_POLL_MS))
+const getRefreshPollDelayMs = (attempt: number) => {
+  if (attempt < 3) return REFRESH_POLL_MS
+  const steppedBackoff = REFRESH_POLL_MS * Math.pow(2, Math.min(3, attempt - 2))
+  return Math.min(REFRESH_POLL_MAX_MS, steppedBackoff)
+}
 const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
 const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
 const refreshRingRadius = 28
@@ -2674,20 +2636,6 @@ const hasApiError = computed(() => {
 const corridorId = computed(() => `${fromCountryCode.value}-${toCountryCode.value}-${fromCurrencyCode.value}-${toCurrencyCode.value}`)
 const quoteRefreshKey = computed(() => `${corridorId.value}:${displayAmount.value}:${payoutMethod.value}`)
 
-onMounted(() => {
-  if (!import.meta.client) return
-  if (hasApiQuotes.value || quotesPending.value) return
-  if (hasApiError.value || corridorUnavailable.value || corridorUnsupported.value || quotesUnavailable.value) return
-  void refreshQuotes()
-})
-
-onUnmounted(() => {
-  clearRefreshPoll()
-  clearRefreshStatusPoll()
-  clearRefreshGateTimer()
-  providersRequestSignal.value = undefined
-})
-
 watch(availableMethods, (methods) => {
   if (quotesPending.value) return
   if (!methods.length) return
@@ -2736,17 +2684,31 @@ const shouldFetchHistory = computed(() => {
   )
 })
 
-const { data: rateHistoryData, pending: rateHistoryPending, error: rateHistoryError } = await useAsyncData(
+const { data: rateHistoryData, pending: rateHistoryPending, error: rateHistoryError, refresh: refreshRateHistory } = await useAsyncData(
   () => `rate-history-${fromCurrencyCode.value}-${toCurrencyCode.value}-${historyRangeDays}`,
   async () => {
     if (!shouldFetchHistory.value) {
-      return { base: fromCurrencyCode.value, quote: toCurrencyCode.value, history: [], lastUpdated: null }
+      return {
+        base: fromCurrencyCode.value,
+        quote: toCurrencyCode.value,
+        history: [],
+        lastUpdated: null,
+        status: 'ready' as const,
+        message: null,
+      }
     }
 
     try {
-      return await request<RateHistoryResponse>('/rates/history', {
+      const response = await request<RateHistoryResponse>('/rates/history', {
         query: { base: fromCurrencyCode.value, quote: toCurrencyCode.value, days: historyRangeDays },
       })
+      if (response?.status) return response
+      const hasHistory = Array.isArray(response?.history) && response.history.length > 0
+      return {
+        ...response,
+        status: hasHistory ? 'ready' as const : 'warming' as const,
+        message: response?.message ?? (hasHistory ? null : 'Rate history is warming up'),
+      }
     }
     catch (error: any) {
       useLogger('send-money').error('rate history unavailable', {
@@ -2756,11 +2718,118 @@ const { data: rateHistoryData, pending: rateHistoryPending, error: rateHistoryEr
         base: fromCurrencyCode.value,
         quote: toCurrencyCode.value,
       })
-      return { base: fromCurrencyCode.value, quote: toCurrencyCode.value, history: [], lastUpdated: null }
+      const statusCode = Number(error?.statusCode ?? 0)
+      const errorCode = typeof error?.data?.error === 'string' ? error.data.error : null
+      const isInternalFailure = statusCode >= 500 || errorCode === 'internal_error'
+      const isWarmup = statusCode === 404 || errorCode === 'rate_unavailable'
+      const isValidationOrCorridor = statusCode === 400
+        || errorCode === 'bad_request'
+        || errorCode === 'corridor_unsupported'
+        || errorCode === 'corridor_unavailable'
+      const message = typeof error?.data?.message === 'string'
+        ? error.data.message
+        : isInternalFailure
+          ? 'Rate history service error'
+          : isValidationOrCorridor
+            ? 'Rate history unavailable for this corridor'
+            : 'Rate history is warming up'
+      const status = isInternalFailure || isValidationOrCorridor
+        ? 'unavailable' as const
+        : isWarmup
+          ? 'warming' as const
+          : 'warming' as const
+      return {
+        base: fromCurrencyCode.value,
+        quote: toCurrencyCode.value,
+        history: [],
+        lastUpdated: null,
+        status,
+        message,
+        refreshQueued: Boolean(error?.data?.refreshQueued),
+        refreshRequestId: typeof error?.data?.refreshRequestId === 'string'
+          ? error.data.refreshRequestId
+          : null,
+      }
     }
   },
   { watch: [fromCurrencyCode, toCurrencyCode] },
 )
+
+const RATE_HISTORY_REFRESH_POLL_MS = 2500
+const RATE_HISTORY_REFRESH_MAX_ATTEMPTS = 8
+const rateHistoryRefreshAttempts = ref(0)
+const rateHistoryRefreshTimer = ref<number | null>(null)
+const lastRateHistoryRefreshRequestId = ref<string | null>(null)
+
+const stopRateHistoryRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (rateHistoryRefreshTimer.value !== null) {
+    window.clearTimeout(rateHistoryRefreshTimer.value)
+    rateHistoryRefreshTimer.value = null
+  }
+}
+
+const scheduleRateHistoryRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (rateHistoryRefreshTimer.value !== null) return
+  if (rateHistoryRefreshAttempts.value >= RATE_HISTORY_REFRESH_MAX_ATTEMPTS) return
+
+  const snapshot = rateHistoryData.value
+  const hasHistory = Array.isArray(snapshot?.history) && snapshot.history.length > 0
+  const hardUnavailable = snapshot?.status === 'unavailable'
+  const canPoll = Boolean(snapshot?.refreshQueued && snapshot?.refreshRequestId)
+  if (hasHistory || hardUnavailable || !canPoll) return
+
+  rateHistoryRefreshTimer.value = window.setTimeout(async () => {
+    rateHistoryRefreshTimer.value = null
+    rateHistoryRefreshAttempts.value += 1
+    try {
+      await refreshRateHistory()
+    }
+    catch (error: any) {
+      if (error?.name === 'AbortError') return
+    }
+
+    const current = rateHistoryData.value
+    const hasFreshHistory = Array.isArray(current?.history) && current.history.length > 0
+    const unavailable = current?.status === 'unavailable'
+    const pollable = Boolean(current?.refreshQueued && current?.refreshRequestId)
+    if (!hasFreshHistory && !unavailable && pollable && rateHistoryRefreshAttempts.value < RATE_HISTORY_REFRESH_MAX_ATTEMPTS) {
+      scheduleRateHistoryRefreshPoll()
+    }
+  }, RATE_HISTORY_REFRESH_POLL_MS)
+}
+
+watch(
+  () => ({
+    requestId: rateHistoryData.value?.refreshRequestId ?? null,
+    refreshQueued: Boolean(rateHistoryData.value?.refreshQueued),
+    status: rateHistoryData.value?.status ?? null,
+    historyLength: Array.isArray(rateHistoryData.value?.history) ? rateHistoryData.value?.history.length : 0,
+  }),
+  (state) => {
+    if (!import.meta.client) return
+    if (state.requestId !== lastRateHistoryRefreshRequestId.value) {
+      lastRateHistoryRefreshRequestId.value = state.requestId
+      rateHistoryRefreshAttempts.value = 0
+    }
+
+    const canPoll = Boolean(state.refreshQueued && state.requestId)
+    const hasHistory = state.historyLength > 0
+    const hardUnavailable = state.status === 'unavailable'
+    if (!canPoll || hasHistory || hardUnavailable) {
+      stopRateHistoryRefreshPoll()
+      return
+    }
+
+    scheduleRateHistoryRefreshPoll()
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  stopRateHistoryRefreshPoll()
+})
 
 const rateHistory = computed(() => {
   const history = rateHistoryData.value?.history || []
@@ -2770,6 +2839,14 @@ const rateHistory = computed(() => {
 })
 const rateHistoryLastUpdated = computed(() => rateHistoryData.value?.lastUpdated || null)
 const rateHistorySource = computed(() => rateHistory.value[rateHistory.value.length - 1]?.source || null)
+const rateHistoryStatus = computed(() => {
+  if (rateHistoryData.value?.status) return rateHistoryData.value.status
+  if (rateHistory.value.length > 0) return 'ready' as const
+  return null
+})
+const rateHistoryStatusMessage = computed(() => (
+  typeof rateHistoryData.value?.message === 'string' ? rateHistoryData.value.message : ''
+))
 const latestHistoryRate = computed(() => {
   const last = rateHistory.value[rateHistory.value.length - 1]
   return typeof last?.rate === 'number' && Number.isFinite(last.rate) ? last.rate : null
@@ -3047,6 +3124,12 @@ const chartStatusLabel = computed(() => {
     return `Loading ${historyRangeDays}D history...`
   }
   if (!rateHistoryPending.value && !chartPoints.value.length) {
+    if (rateHistoryStatus.value === 'warming') {
+      return rateHistoryStatusMessage.value || 'Rate history is warming up'
+    }
+    if (rateHistoryStatus.value === 'unavailable') {
+      return rateHistoryStatusMessage.value || 'Rate history is unavailable right now'
+    }
     const error = rateHistoryError.value as any
     if (error?.statusCode === 404 || error?.data?.error === 'rate_unavailable') {
       return 'Rate history not available (OANDA sync may be pending)'
@@ -3280,8 +3363,8 @@ const indicesUnavailableMessage = computed(() => {
       return 'Indices are temporarily unavailable due to insufficient coverage.'
     case 'insufficient_providers':
       return goldCount !== null
-        ? `Gold indices found ${goldCount} eligible B2B provider(s) for this corridor — at least 3 are required. The page may show more providers because indices use B2B quotes at the $500 bank bucket only.`
-        : 'Indices require at least 3 eligible B2B providers for this corridor at the $500 bank bucket.'
+        ? `Rankings aren't available for this corridor yet — only ${goldCount} of the 3+ providers needed to generate a reliable comparison are currently active here.`
+        : 'Rankings aren\'t available for this corridor yet — not enough providers currently support it to generate a reliable comparison.'
     case 'quotes_unavailable':
       return 'Indices are not yet available for this corridor.'
     default:
@@ -3312,6 +3395,76 @@ const formatIndexBps = (value: number | null) => {
 
 const rviDisplay = computed(() => formatIndexBps(corridorIndices.value?.rvi_bps ?? null))
 const rciDisplay = computed(() => formatIndexPercent(corridorIndices.value?.rci ?? null))
+const indicesBasisAmount = computed(() => {
+  const basis = corridorIndices.value?.basisAmount ?? corridorIndices.value?.indicesBucket ?? 500
+  const numericBasis = Number(basis)
+  if (!Number.isFinite(numericBasis) || numericBasis <= 0) return 500
+  return Math.round(numericBasis)
+})
+const indicesSourceLabel = computed(() => (
+  corridorIndices.value?.source === 'search_estimate'
+    ? 'Search-derived estimate'
+    : 'Gold index snapshot'
+))
+const indicesSourceSummary = computed(() => (
+  corridorIndices.value?.source === 'search_estimate'
+    ? 'Estimated from quotes returned in this search.'
+    : 'Gold indices snapshot refreshed by scheduled jobs.'
+))
+const indicesBasisSummary = computed(() => (
+  indicesBasisAmount.value === 500
+    ? 'Normalized to $500 equivalent send amount'
+    : `Normalized to $${indicesBasisAmount.value.toLocaleString()} equivalent send amount`
+))
+const teerContextDescription = computed(() => {
+  if (!corridorIndices.value) {
+    return `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`
+  }
+  const teer = Number(corridorIndices.value.teer)
+  const mid = Number(corridorIndices.value.midMarketRate)
+  if (Number.isFinite(teer) && Number.isFinite(mid) && mid > 0) {
+    const deltaPct = ((teer - mid) / mid) * 100
+    const direction = deltaPct >= 0 ? 'above' : 'below'
+    return `${indicesBasisSummary.value}. TEER is ${Math.abs(deltaPct).toFixed(2)}% ${direction} mid-market after fees and FX markup.`
+  }
+  return corridorIndices.value.source === 'search_estimate'
+    ? `${indicesBasisSummary.value}. Estimated from returned quotes after fees and FX markups.`
+    : `${indicesBasisSummary.value}. Real exchange rate after all fees and hidden costs. Higher is better.`
+})
+const rviContextDescription = computed(() => {
+  const rviBps = Number(corridorIndices.value?.rvi_bps)
+  if (!Number.isFinite(rviBps)) {
+    return `${indicesBasisSummary.value}. How much provider rates vary. Lower means similar deals. Higher means comparing saves money.`
+  }
+  if (rviBps < 50) {
+    return `${indicesBasisSummary.value}. Rates are tightly clustered right now, so speed and reliability may matter more than price.`
+  }
+  if (rviBps < 120) {
+    return `${indicesBasisSummary.value}. Rates show moderate dispersion right now. Comparing top providers can improve value.`
+  }
+  return `${indicesBasisSummary.value}. Rates are widely dispersed right now. Comparison shopping can materially improve recipient value.`
+})
+const rciContextDescription = computed(() => {
+  const rci = Number(corridorIndices.value?.rci)
+  if (!Number.isFinite(rci)) {
+    return `${indicesBasisSummary.value}. Average total cost including fees and hidden markups. Lower is better. Industry average is 2 to 5%.`
+  }
+  return `${indicesBasisSummary.value}. Implied total transfer cost is ${(rci * 100).toFixed(2)}% of send amount. Lower is better.`
+})
+const pulseCorridorSlug = computed(() => `${fromSlug.value}-to-${toSlug.value}`)
+const buildIndexChartLink = (chartId: string) => {
+  const params = new URLSearchParams()
+  params.set('corridor', pulseCorridorSlug.value)
+  params.set('corridor_id', corridorId.value)
+  params.set('amount', String(indicesBasisAmount.value))
+  const pulsePayoutMethod = payoutMethod.value === 'cash'
+    ? 'cash'
+    : payoutMethod.value === 'wallet'
+      ? 'wallet'
+      : 'bank'
+  params.set('pay', pulsePayoutMethod)
+  return `/pulse/charts/${chartId}?${params.toString()}`
+}
 
 const content = computed(() => {
   const base = baseContent.value
@@ -3935,7 +4088,7 @@ function getProviderTrueCost(row: TableRow, _index: number): TrueCostBreakdown {
   )
 }
 
-const getQuoteRefreshMethods = (method: Method) => {
+function getQuoteRefreshMethods(method: Method) {
   if (method === 'cash') {
     return { payin: 'bank_transfer', payout: 'cash_pickup' }
   }
@@ -3948,11 +4101,11 @@ const getQuoteRefreshMethods = (method: Method) => {
   return { payin: 'bank_transfer', payout: 'bank_deposit' }
 }
 
-const getBackgroundRefreshKey = (method: Method) => (
-  `${corridorId.value}:${displayAmount.value}:${method}`
-)
+function getBackgroundRefreshKey(method: Method) {
+  return `${corridorId.value}:${displayAmount.value}:${method}`
+}
 
-const enqueueBackgroundRefresh = async (method: Method, signal?: AbortSignal) => {
+async function enqueueBackgroundRefresh(method: Method, signal?: AbortSignal) {
   if (!import.meta.client || displayAmount.value <= 0) return
   if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return
   const refreshKey = getBackgroundRefreshKey(method)
@@ -3994,6 +4147,7 @@ const scheduleRefreshPoll = () => {
   if (refreshAttempts.value >= MAX_REFRESH_ATTEMPTS) return
 
   clearRefreshPoll()
+  const delayMs = getRefreshPollDelayMs(refreshAttempts.value)
   refreshPollController = new AbortController()
   const { signal } = refreshPollController
   providersRequestSignal.value = signal
@@ -4029,7 +4183,7 @@ const scheduleRefreshPoll = () => {
       return
     }
     clearRefreshPoll()
-  }, REFRESH_POLL_MS)
+  }, delayMs)
 }
 
 const clearRefreshStatusPoll = () => {

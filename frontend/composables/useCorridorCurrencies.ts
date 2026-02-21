@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue'
+import { computed, isReadonly, ref, watch, type Ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode, BASE_CURRENCIES } from '~/utils/countries-currencies'
 
@@ -18,6 +18,10 @@ type CorridorCurrencyResponse = {
 const normalize = (value?: string) => (value || '').trim().toUpperCase()
 
 const unique = (values: string[]) => Array.from(new Set(values))
+const setCurrencyValue = (target: Ref<string> | undefined, value: string) => {
+  if (!target || isReadonly(target)) return
+  target.value = value
+}
 
 export const useCorridorCurrencies = (
   fromCountry: Ref<string>,
@@ -171,7 +175,7 @@ export const useCorridorCurrencies = (
       if (!list.length) return
       const current = normalize(fromCurrency.value)
       if (!current || !list.includes(current)) {
-        fromCurrency.value = list[0]
+        setCurrencyValue(fromCurrency, list[0])
       }
     }, { immediate: true })
   }
@@ -181,7 +185,7 @@ export const useCorridorCurrencies = (
       if (!list.length) return
       const current = normalize(toCurrency.value)
       if (!current || !list.includes(current)) {
-        toCurrency.value = list[0]
+        setCurrencyValue(toCurrency, list[0])
       }
     }, { immediate: true })
   }
