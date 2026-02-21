@@ -273,13 +273,8 @@ export const runCorridorProviderForensics = async () => {
         Boolean(rights?.allowed_collect)
         && Boolean(rights?.allowed_b2c)
         && active
-        && (
-          (
-            includesCountry(rights?.source_countries ?? null, sourceCountry)
-            && includesCountry(rights?.destination_countries ?? null, destCountry)
-          )
-          || providerId === 'wise'
-        )
+        && includesCountry(rights?.source_countries ?? null, sourceCountry)
+        && includesCountry(rights?.destination_countries ?? null, destCountry)
 
       const rightsB2b =
         Boolean(rights?.allowed_collect)

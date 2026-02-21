@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 px-6 py-10">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -9,34 +8,44 @@
               AWS-first launch observation for Silver, Gold, alerts, and exports.
             </p>
           </div>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <button
-              class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
-              :disabled="ensuring || !isSuperAdmin"
-              :title="isSuperAdmin
-                ? 'Super-admin only. Status by default; type APPLY to run DDL ensure in dev.'
-                : 'Super-admin required.'"
-              @click="ensureAuditTable"
-            >
-              {{ ensuring ? 'Ensuring…' : 'Ensure email audit table' }}
-            </button>
-            <button
-              class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
-              :disabled="evaluating || !isSuperAdmin"
-              :title="isSuperAdmin
-                ? 'Super-admin only. Defaults to dry-run; type RUN to execute.'
-                : 'Super-admin required.'"
-              @click="runAlertEvaluation"
-            >
-              {{ evaluating ? 'Evaluating…' : 'Run alert evaluation' }}
-            </button>
-            <button
-              class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-primary-300"
-              :disabled="loading"
-              @click="loadObserver"
-            >
-              {{ loading ? 'Refreshing…' : 'Refresh status' }}
-            </button>
+          <div class="flex flex-col gap-2">
+            <label class="inline-flex items-center gap-2 text-body-sm text-rs-muted">
+              <input
+                v-model="autoRefresh"
+                type="checkbox"
+                class="h-4 w-4 rounded border-rs-border text-brand-600"
+              >
+              Auto-refresh every 60s
+            </label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <button
+                class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
+                :disabled="ensuring || !isSuperAdmin"
+                :title="isSuperAdmin
+                  ? 'Super-admin only. Status by default; type APPLY to run DDL ensure in dev.'
+                  : 'Super-admin required.'"
+                @click="ensureAuditTable"
+              >
+                {{ ensuring ? 'Ensuring…' : 'Ensure email audit table' }}
+              </button>
+              <button
+                class="h-10 rounded-lg border border-rs-border bg-surface px-4 text-body-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:bg-neutral-100"
+                :disabled="evaluating || !isSuperAdmin"
+                :title="isSuperAdmin
+                  ? 'Super-admin only. Defaults to dry-run; type RUN to execute.'
+                  : 'Super-admin required.'"
+                @click="runAlertEvaluation"
+              >
+                {{ evaluating ? 'Evaluating…' : 'Run alert evaluation' }}
+              </button>
+              <button
+                class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-primary-300"
+                :disabled="loading"
+                @click="loadObserver"
+              >
+                {{ loading ? 'Refreshing…' : 'Refresh status' }}
+              </button>
+            </div>
           </div>
         </div>
         <div class="mt-3 text-body-sm text-rs-muted">
@@ -56,6 +65,131 @@
           :on-retry="refresh"
         />
       </header>
+
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Operations Center</h2>
+            <p class="text-body-sm text-rs-muted">
+              Merged observer + ops-health view with full provider drill-down.
+            </p>
+          </div>
+          <div class="text-body-sm text-rs-muted">
+            {{ providerHealthSummary?.healthy_providers ?? 0 }}/{{ providerHealthSummary?.total_providers ?? 24 }} healthy
+          </div>
+        </div>
+
+        <details class="rounded-xl border border-rs-border p-4" open>
+          <summary class="cursor-pointer text-body-sm font-semibold text-rs-fg">Indices + sweep status</summary>
+          <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">Indices status</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ indicesHealth?.status || 'n/a' }}</div>
+              <div class="mt-2 text-body-sm text-rs-muted">
+                Available {{ formatPercent(indicesHealth?.summary?.available_ratio) }} · Suppressed {{ formatPercent(indicesHealth?.summary?.suppressed_ratio) }}
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-neutral-100 p-3">
+              <div class="text-body-sm uppercase text-neutral-400">B2B cadence tiers</div>
+              <div class="mt-2 space-y-1 text-body-sm text-rs-muted">
+                <div
+                  v-for="tier in b2bSweepStatus?.schedule || []"
+                  :key="tier.priorityTier"
+                  class="flex items-center justify-between"
+                >
+                  <span>{{ tier.priorityTier }}</span>
+                  <span>{{ tier.providers }} providers · drift {{ tier.driftMinutes ?? 'n/a' }}m</span>
+                </div>
+                <div
+                  v-if="(b2bSweepStatus?.schedule || []).length === 0"
+                  class="text-body-sm text-rs-muted"
+                >
+                  No sweep status data yet.
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="mt-4 rounded-xl border border-rs-border p-4" open>
+          <summary class="cursor-pointer text-body-sm font-semibold text-rs-fg">24-provider health grid</summary>
+          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <button
+              v-for="provider in providerHealth"
+              :key="provider.provider_id"
+              type="button"
+              class="rounded-lg border p-3 text-left transition-colors"
+              :class="providerCardClass(provider)"
+              @click="toggleProviderDetails(provider.provider_id)"
+            >
+              <div class="text-body-sm font-semibold text-neutral-800">{{ provider.display_name }}</div>
+              <div class="mt-1 text-xs text-neutral-600">
+                {{ provider.summary?.corridor_count ?? 0 }} corridors · {{ provider.summary?.stale_count ?? 0 }} stale
+              </div>
+              <div class="mt-1 text-xs text-neutral-500">
+                {{ provider.status }} · {{ formatTimestamp(provider.timestamp || null) }}
+              </div>
+              <div
+                v-if="provider.error"
+                class="mt-1 text-xs text-danger-600"
+              >
+                {{ provider.error }}
+              </div>
+            </button>
+          </div>
+
+          <div
+            v-if="selectedProvider"
+            class="mt-4 rounded-lg border border-rs-border bg-rs-bg p-4"
+          >
+            <div class="mb-2 flex items-center justify-between">
+              <h3 class="text-body-lg font-semibold text-rs-fg">
+                {{ selectedProvider.display_name }} corridor detail
+              </h3>
+              <button
+                type="button"
+                class="rounded-md border border-rs-border px-3 py-1 text-body-sm text-rs-muted hover:bg-neutral-50"
+                @click="selectedProviderId = null"
+              >
+                Close
+              </button>
+            </div>
+            <div class="overflow-auto">
+              <table class="min-w-full text-body-sm">
+                <thead class="text-body-sm uppercase text-neutral-400">
+                  <tr>
+                    <th class="py-2 text-left">Corridor</th>
+                    <th class="py-2 text-right">Quote age (min)</th>
+                    <th class="py-2 text-right">Attempt age (min)</th>
+                    <th class="py-2 text-left">Last quote</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="corridor in selectedProvider.corridors || []"
+                    :key="corridor.corridor_id"
+                    class="border-t border-neutral-100"
+                  >
+                    <td class="py-2 text-rs-fg">{{ corridor.corridor_id }}</td>
+                    <td class="py-2 text-right text-rs-muted">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
+                    <td class="py-2 text-right text-rs-muted">{{ corridor.last_attempt_age_minutes ?? 'n/a' }}</td>
+                    <td class="py-2 text-rs-muted">{{ formatTimestamp(corridor.last_quote_at ?? null) }}</td>
+                  </tr>
+                  <tr v-if="(selectedProvider.corridors || []).length === 0">
+                    <td
+                      colspan="4"
+                      class="py-3 text-center text-body-sm text-neutral-400"
+                    >
+                      No corridor detail available.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+      </section>
 
       <section class="rounded-2xl bg-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">AWS click-paths</h2>
@@ -106,13 +240,13 @@
             <div class="rounded-lg border border-neutral-100 p-3">
               <div class="text-body-sm uppercase text-neutral-400">Min provider count</div>
               <div class="mt-1 text-body-lg font-semibold text-rs-fg">
-                {{ formatNumber(indicesHealth.summary?.min_provider_count, 0) }}
+                {{ formatAdminNumber(indicesHealth.summary?.min_provider_count, 0) }}
               </div>
             </div>
             <div class="rounded-lg border border-neutral-100 p-3">
               <div class="text-body-sm uppercase text-neutral-400">Weight confidence p10</div>
               <div class="mt-1 text-body-lg font-semibold text-rs-fg">
-                {{ formatNumber(indicesHealth.summary?.weight_confidence_p10, 3) }}
+                {{ formatAdminNumber(indicesHealth.summary?.weight_confidence_p10, 3) }}
               </div>
             </div>
             <div class="rounded-lg border border-neutral-100 p-3">
@@ -504,19 +638,16 @@ n/a
           <li>S3 export artifacts: open the Exports bucket (AWS click-paths above) and download generated files under the <code>exports/</code> prefix.</li>
         </ul>
       </section>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
-import { setSeo } from '~/composables/useSeo'
 
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
-const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
-const siteUrl = runtimeConfig.public.siteUrl
+const { formatPercent, formatNumber: formatAdminNumber, formatTimestamp } = useAdminFormat()
 
 const normalizeEnv = (value?: string) => {
   const raw = (value || '').toLowerCase().trim()
@@ -533,11 +664,9 @@ const stackName = `remit-scout-${envName}`
 const bronzeBucket = `remit-scout-bronze-${envName}`
 const exportsBucket = `remit-scout-exports-${envName}`
 
-setSeo({
+useAdminPage({
   title: 'Admin: Observer | Remit-Scout',
-  description: 'Admin observer dashboard.',
-  canonical: `${siteUrl}${route.path}`,
-  noindex: true,
+  description: 'Admin operations center and observer dashboard.',
 })
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
@@ -564,15 +693,6 @@ type B2bSweepStatusResponse = {
   schedule: SweepTier[]
 }
 
-type ProviderHealthResponse = {
-  summary?: {
-    corridor_count?: number | null
-    stale_count?: number | null
-    fresh_window_minutes?: number | null
-  }
-  timestamp?: string | null
-}
-
 type ProviderCheckRow = {
   providerId: string
   providerLabel: string
@@ -580,6 +700,41 @@ type ProviderCheckRow = {
   staleCount: number | null
   freshWindowMinutes: number | null
   timestamp: string | null
+}
+
+type ProviderHealthCorridor = {
+  corridor_id: string
+  last_quote_at?: string | null
+  last_quote_age_minutes?: number | null
+  last_attempt_at?: string | null
+  last_attempt_age_minutes?: number | null
+  status?: string | null
+}
+
+type ProviderHealthAggregateItem = {
+  provider_id: string
+  display_name: string
+  status: 'healthy' | 'degraded' | 'error'
+  timestamp?: string | null
+  error?: string
+  summary?: {
+    corridor_count?: number | null
+    stale_count?: number | null
+    fresh_window_minutes?: number | null
+  }
+  corridors?: ProviderHealthCorridor[]
+}
+
+type ProvidersHealthAggregateResponse = {
+  summary?: {
+    total_providers?: number
+    healthy_providers?: number
+    degraded_providers?: number
+    providers_with_errors?: number
+    total_corridors?: number
+    generated_at?: string
+  }
+  providers?: ProviderHealthAggregateItem[]
 }
 
 type ObserverSummaryResponse = {
@@ -668,15 +823,20 @@ type MeResponse = {
 const loading = ref(false)
 const ensuring = ref(false)
 const evaluating = ref(false)
+const autoRefresh = ref(false)
 const error = ref<string | null>(null)
 const actionMessage = ref<string | null>(null)
 const lastRefresh = ref<string | null>(null)
 const indicesHealth = ref<IndicesHealthResponse | null>(null)
 const b2bSweepStatus = ref<B2bSweepStatusResponse | null>(null)
 const providerChecks = ref<ProviderCheckRow[]>([])
+const providerHealth = ref<ProviderHealthAggregateItem[]>([])
+const providerHealthSummary = ref<ProvidersHealthAggregateResponse['summary'] | null>(null)
+const selectedProviderId = ref<string | null>(null)
 const observerSummary = ref<ObserverSummaryResponse | null>(null)
 const includePii = ref(false)
 const me = ref<MeResponse | null>(null)
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
 
 const isSuperAdmin = computed(() => {
   const role = me.value?.user?.role ?? null
@@ -736,21 +896,20 @@ const watchedProviders = [
   { id: 'worldremit', label: 'WorldRemit' },
 ] as const
 
-const formatPercent = (value?: number | null) => {
-  if (!Number.isFinite(value)) return 'n/a'
-  return `${(Number(value) * 100).toFixed(1)}%`
+const selectedProvider = computed(() =>
+  providerHealth.value.find((provider) => provider.provider_id === selectedProviderId.value) ?? null,
+)
+
+const providerCardClass = (provider: ProviderHealthAggregateItem) => {
+  if (provider.status === 'error') return 'border-red-300 bg-red-50'
+  const staleCount = Number(provider.summary?.stale_count ?? 0)
+  if (staleCount >= 3) return 'border-red-300 bg-red-50'
+  if (staleCount >= 1 || provider.status === 'degraded') return 'border-amber-300 bg-amber-50'
+  return 'border-green-300 bg-green-50'
 }
 
-const formatNumber = (value?: number | null, fractionDigits = 2) => {
-  if (!Number.isFinite(value)) return 'n/a'
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: fractionDigits }).format(Number(value))
-}
-
-const formatTimestamp = (value?: string | null) => {
-  if (!value) return 'n/a'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'n/a'
-  return date.toLocaleString()
+const toggleProviderDetails = (providerId: string) => {
+  selectedProviderId.value = selectedProviderId.value === providerId ? null : providerId
 }
 
 const loadMe = async () => {
@@ -840,10 +999,10 @@ const runAlertEvaluation = async () => {
       if (result?.mode === 'batch') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): triggered ${result?.triggered ?? 0}/${result?.total ?? 0}.`
       }
- else if (result?.mode === 'single') {
+      else if (result?.mode === 'single') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): alert ${result?.alertId} triggered=${Boolean(result?.triggered)}.`
       }
- else {
+      else {
         actionMessage.value = `Alert evaluation (${mode}) completed.`
       }
       await loadObserver()
@@ -862,7 +1021,7 @@ const loadObserver = async () => {
   loading.value = true
   error.value = null
   try {
-    const [indicesResult, sweepResult, summaryResult, providerResults] = await Promise.allSettled([
+    const [indicesResult, sweepResult, summaryResult, providersAggregateResult] = await Promise.allSettled([
       request<IndicesHealthResponse>('/ops/indices/health'),
       request<B2bSweepStatusResponse>('/ops/b2b-sweep-status'),
       request<ObserverSummaryResponse>('/ops/observer/summary', {
@@ -871,19 +1030,9 @@ const loadObserver = async () => {
           include_pii: includePii.value ? '1' : '0',
         },
       }),
-      Promise.allSettled(
-        watchedProviders.map(async (provider) => {
-          const response = await request<ProviderHealthResponse>(`/ops/${provider.id}/health`)
-          return {
-            providerId: provider.id,
-            providerLabel: provider.label,
-            corridorCount: response.summary?.corridor_count ?? null,
-            staleCount: response.summary?.stale_count ?? null,
-            freshWindowMinutes: response.summary?.fresh_window_minutes ?? null,
-            timestamp: response.timestamp ?? null,
-          } satisfies ProviderCheckRow
-        }),
-      ),
+      request<ProvidersHealthAggregateResponse>('/ops/providers/health', {
+        query: { include_corridors: '1' },
+      }),
     ])
 
     if (indicesResult.status === 'fulfilled') {
@@ -895,11 +1044,26 @@ const loadObserver = async () => {
     if (summaryResult.status === 'fulfilled') {
       observerSummary.value = summaryResult.value
     }
-    if (providerResults.status === 'fulfilled') {
-      providerChecks.value = providerResults.value.flatMap((result) => {
-        if (result.status !== 'fulfilled') return []
-        return [result.value]
+    if (providersAggregateResult.status === 'fulfilled') {
+      providerHealthSummary.value = providersAggregateResult.value.summary ?? null
+      providerHealth.value = providersAggregateResult.value.providers ?? []
+
+      providerChecks.value = watchedProviders.flatMap((provider) => {
+        const row = providerHealth.value.find((item) => item.provider_id === provider.id)
+        if (!row) return []
+        return [{
+          providerId: row.provider_id,
+          providerLabel: row.display_name || provider.label,
+          corridorCount: row.summary?.corridor_count ?? null,
+          staleCount: row.summary?.stale_count ?? null,
+          freshWindowMinutes: row.summary?.fresh_window_minutes ?? null,
+          timestamp: row.timestamp ?? null,
+        }]
       })
+
+      if (selectedProviderId.value && !providerHealth.value.some((item) => item.provider_id === selectedProviderId.value)) {
+        selectedProviderId.value = null
+      }
     }
 
     const extractReason = (result: PromiseSettledResult<unknown>) => {
@@ -912,7 +1076,7 @@ const loadObserver = async () => {
       indicesResult.status === 'rejected' ? `indices health (${extractReason(indicesResult)})` : null,
       sweepResult.status === 'rejected' ? `B2B sweep status (${extractReason(sweepResult)})` : null,
       summaryResult.status === 'rejected' ? `observer summary (${extractReason(summaryResult)})` : null,
-      providerResults.status === 'rejected' ? `provider checks (${extractReason(providerResults)})` : null,
+      providersAggregateResult.status === 'rejected' ? `provider health (${extractReason(providersAggregateResult)})` : null,
     ].filter(Boolean)
     if (failures.length > 0) {
       error.value = `Some observer panels failed to load: ${failures.join(', ')}`
@@ -932,8 +1096,25 @@ const refresh = () => {
   void loadObserver()
 }
 
+watch(autoRefresh, (enabled) => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
+  if (enabled) {
+    autoRefreshTimer = setInterval(refresh, 60_000)
+  }
+})
+
 onMounted(() => {
   void loadMe()
   void loadObserver()
+})
+
+onUnmounted(() => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
 })
 </script>

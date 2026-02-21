@@ -1,6 +1,8 @@
 AWS_PROFILE ?= rs-dev
 AWS_REGION ?= us-east-1
 OPS_AWS_ENV ?= staging
+SEND_CURRENCIES_MACRO ?= USD,AED,GBP,EUR
+RIGHTS_RECOVERY_HOT_LANES ?= US-AL-USD-ALL,US-AR-USD-ARS
 OPS_CLUSTER ?= remit-scout-$(OPS_AWS_ENV)
 OPS_CLUSTER_NAME ?= $(OPS_CLUSTER)
 AWS_ACCOUNT ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --query Account --output text)
@@ -20,7 +22,7 @@ DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' 
 DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
-.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-%
+.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
 .PHONY: status-ops-permissions db-migrate-staging-dry-run db-migrate-staging-local
 
 pause-dev:
@@ -208,6 +210,56 @@ status-dev-b2c:
 	done
 	@echo "Quote freshness snapshot (dev)"
 	@pnpm -C backend ops:dev-b2c-snapshot
+
+rights-recovery-global:
+	@echo "Rights recovery (global, data-only strict, dry-run)"
+	@pnpm -C backend capability:seed-global
+	@STRICT_COUNTRY_SYNC=1 pnpm -C backend rights:sync-countries
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=all pnpm -C backend rights:differential
+	@RIGHTS_SCOPE=all pnpm -C backend rights:delta-capability
+
+rights-recovery-global-apply:
+	@echo "Rights recovery (global, data-only strict, full apply)"
+	@pnpm -C backend capability:seed-global
+	@STRICT_COUNTRY_SYNC=1 pnpm -C backend rights:sync-countries
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=all pnpm -C backend rights:differential
+	@RIGHTS_SCOPE=all pnpm -C backend rights:delta-capability
+	@RIGHTS_SCOPE=all APPLY=1 pnpm -C backend rights:delta-capability
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=all pnpm -C backend rights:differential
+	@$(MAKE) rights-validate-activation
+
+rights-validate-activation:
+	@echo "Validating rights activation baseline and hot-lane forensics"
+	@pnpm -C backend rights:validate-activation
+	@for corridor in $$(echo "$(RIGHTS_RECOVERY_HOT_LANES)" | tr ',' ' '); do \
+		CORRIDOR_ID="$$corridor" pnpm -C backend corridor:forensics; \
+	done
+
+rights-recovery-macro:
+	@echo "Rights recovery (macro diagnostic subset, data-only strict, dry-run)"
+	@SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend capability:seed-macro
+	@STRICT_COUNTRY_SYNC=1 pnpm -C backend rights:sync-countries
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend rights:differential
+	@RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend rights:delta-capability
+	@for corridor in $$(echo "$(RIGHTS_RECOVERY_HOT_LANES)" | tr ',' ' '); do \
+		CORRIDOR_ID="$$corridor" pnpm -C backend corridor:forensics; \
+	done
+
+rights-recovery-macro-apply:
+	@if [ -z "$(APPLY_PROVIDERS)" ]; then \
+		echo "ERROR: APPLY_PROVIDERS is required for controlled apply batches (example: APPLY_PROVIDERS=wise,remitly)"; \
+		exit 1; \
+	fi
+	@echo "Rights recovery (macro diagnostic subset, apply batch providers: $(APPLY_PROVIDERS))"
+	@SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend capability:seed-macro
+	@STRICT_COUNTRY_SYNC=1 pnpm -C backend rights:sync-countries
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend rights:differential
+	@RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend rights:delta-capability
+	@RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) APPLY=1 APPLY_PROVIDERS="$(APPLY_PROVIDERS)" pnpm -C backend rights:delta-capability
+	@STRICT_DATA_HEALTH=1 RIGHTS_SCOPE=macro SEND_CURRENCIES=$(SEND_CURRENCIES_MACRO) pnpm -C backend rights:differential
+	@for corridor in $$(echo "$(RIGHTS_RECOVERY_HOT_LANES)" | tr ',' ' '); do \
+		CORRIDOR_ID="$$corridor" pnpm -C backend corridor:forensics; \
+	done
 
 db-migrate-staging-dry-run:
 	@if [ -z "$(DATABASE_URL_PLANE_B)" ]; then \

@@ -202,7 +202,7 @@
 import { defineAsyncComponent } from 'vue'
 import { setSeo } from '~/composables/useSeo'
 
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
 const route = useRoute()
 const { public: { siteUrl } } = useRuntimeConfig()

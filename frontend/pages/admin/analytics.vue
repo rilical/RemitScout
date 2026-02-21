@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 px-6 py-10">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -45,6 +44,75 @@
           :on-retry="refresh"
         />
       </header>
+
+      <section class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-2xl bg-surface p-6 shadow-sm lg:col-span-2">
+          <h2 class="text-body-lg font-semibold text-rs-fg">Corridor search trends</h2>
+          <p class="text-body-sm text-rs-muted">Top corridor sparklines from `/analytics/corridors/trends`.</p>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div
+              v-for="trend in corridorTrendCharts"
+              :key="trend.corridorId"
+              class="rounded-xl border border-rs-border bg-rs-bg p-3"
+            >
+              <div class="mb-2 text-body-sm font-semibold text-rs-fg">{{ trend.corridorId }}</div>
+              <PulseLineChart :series="trend.series" unit="number" />
+            </div>
+            <div
+              v-if="corridorTrendCharts.length === 0"
+              class="rounded-xl border border-dashed border-rs-border p-3 text-body-sm text-rs-muted"
+            >
+              No trend data available for the selected range.
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <h2 class="text-body-lg font-semibold text-rs-fg">Provider CTR bars</h2>
+          <p class="text-body-sm text-rs-muted">Average CTR by provider from `/analytics/providers/ctr`.</p>
+          <div class="mt-4 space-y-2">
+            <div
+              v-for="bar in providerCtrBars"
+              :key="bar.providerId"
+            >
+              <div class="mb-1 flex items-center justify-between text-body-sm text-rs-muted">
+                <span>{{ bar.providerLabel }}</span>
+                <span>{{ bar.ctr.toFixed(2) }}%</span>
+              </div>
+              <div class="h-2 rounded bg-neutral-200">
+                <div
+                  class="h-2 rounded bg-brand-500"
+                  :style="{ width: `${bar.widthPct}%` }"
+                />
+              </div>
+            </div>
+            <div
+              v-if="providerCtrBars.length === 0"
+              class="text-body-sm text-rs-muted"
+            >
+              No CTR data available.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <h2 class="text-body-lg font-semibold text-rs-fg">Engagement trend</h2>
+        <p class="text-body-sm text-rs-muted">Active and returning users over time.</p>
+        <div class="mt-4">
+          <PulseLineChart
+            v-if="engagementSeries.length"
+            :series="engagementSeries"
+            unit="number"
+          />
+          <div
+            v-else
+            class="rounded-xl border border-dashed border-rs-border p-3 text-body-sm text-rs-muted"
+          >
+            No engagement trend data available.
+          </div>
+        </div>
+      </section>
 
       <section class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-2xl bg-surface p-6 shadow-sm">
@@ -383,33 +451,40 @@
           </div>
         </div>
       </section>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
-import { setSeo } from '~/composables/useSeo'
+import type { ChartSeries } from '~/types/pulse'
 
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
-const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
-
-setSeo({
+useAdminPage({
   title: 'Admin: Analytics | Remit-Scout',
   description: 'Admin analytics dashboard for Remit-Scout.',
-  canonical: `${siteUrl}${route.path}`,
-  noindex: true,
 })
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
+const PulseLineChart = defineAsyncComponent(() => import('~/components/pulse/PulseLineChart.vue'))
 
-	const { getPopularCorridors, getFavoriteProviders, getSessionMetrics, getHeatmapData, getSavingsMetrics, getUserBehaviorPatterns, getProviderImpact } = useAnalytics()
-	const { formatMoney } = useRemittanceApi()
+const {
+  getPopularCorridors,
+  getFavoriteProviders,
+  getSessionMetrics,
+  getHeatmapData,
+  getSavingsMetrics,
+  getUserBehaviorPatterns,
+  getProviderImpact,
+  getCorridorTrends,
+  getProviderCTR,
+  getEngagementMetrics,
+} = useAnalytics()
+const { formatMoney } = useRemittanceApi()
+const { formatNumber: formatAdminNumber } = useAdminFormat()
 
-	const isLoading = ref(false)
-	const error = ref<string | null>(null)
+const isLoading = ref(false)
+const error = ref<string | null>(null)
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -439,11 +514,21 @@ const savingsSummary = ref({
 const userPatterns = ref<any[]>([])
 const providerImpact = ref<any[]>([])
 const providerCorridors = ref<any[]>([])
+const corridorTrendCharts = ref<Array<{ corridorId: string, series: ChartSeries[] }>>([])
+const providerCtrBars = ref<Array<{ providerId: string, providerLabel: string, ctr: number, widthPct: number }>>([])
+const engagementSeries = ref<ChartSeries[]>([])
+
+const chartColors = {
+  corridorSearch: 'rgb(var(--rs-color-brand) / 1)',
+  corridorClicks: 'rgb(var(--rs-color-brand) / 0.6)',
+  activeUsers: 'rgb(var(--rs-color-brand) / 1)',
+  returningUsers: 'rgb(var(--rs-color-brand) / 0.6)',
+}
 
 const formatCount = (value: number | string | null | undefined) => {
   const parsed = Number(value)
   if (!Number.isFinite(parsed)) return '0'
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(parsed)
+  return formatAdminNumber(parsed, 0)
 }
 
 const formatRate = (value: number | string | null | undefined) => {
@@ -460,6 +545,100 @@ const formatConversionValues = (values?: Record<string, number> | null) => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([currency, amount]) => formatMoney(Number(amount), currency))
     .join(', ')
+}
+
+const mapCorridorTrendCharts = (rows: any[]) => {
+  const grouped = new Map<string, any[]>()
+  for (const row of rows) {
+    const corridorId = String(row?.corridor_id || 'unknown')
+    const bucket = grouped.get(corridorId) || []
+    bucket.push(row)
+    grouped.set(corridorId, bucket)
+  }
+
+  const sorted = Array.from(grouped.entries())
+    .map(([corridorId, values]) => ({
+      corridorId,
+      values,
+      totalSearches: values.reduce((sum, item) => sum + Number(item?.search_count || 0), 0),
+    }))
+    .sort((a, b) => b.totalSearches - a.totalSearches)
+    .slice(0, 4)
+
+  corridorTrendCharts.value = sorted.map((item) => ({
+    corridorId: item.corridorId,
+    series: [
+      {
+        id: `${item.corridorId}-searches`,
+        label: 'Searches',
+        color: chartColors.corridorSearch,
+        points: item.values.map((row) => ({
+          t: new Date(row.time_bucket).getTime(),
+          v: Number(row.search_count || 0),
+        })),
+      },
+      {
+        id: `${item.corridorId}-clicks`,
+        label: 'Clicks',
+        color: chartColors.corridorClicks,
+        points: item.values.map((row) => ({
+          t: new Date(row.time_bucket).getTime(),
+          v: Number(row.click_count || 0),
+        })),
+      },
+    ],
+  }))
+}
+
+const mapProviderCtrBars = (rows: any[]) => {
+  const aggregate = new Map<string, { providerLabel: string, totalCtr: number, samples: number }>()
+  for (const row of rows) {
+    const providerId = String(row?.provider_id || 'unknown')
+    const providerLabel = String(row?.provider_name || providerId)
+    const ctr = Number(row?.ctr || 0)
+    const current = aggregate.get(providerId) || { providerLabel, totalCtr: 0, samples: 0 }
+    current.totalCtr += Number.isFinite(ctr) ? ctr : 0
+    current.samples += 1
+    aggregate.set(providerId, current)
+  }
+
+  const averaged = Array.from(aggregate.entries())
+    .map(([providerId, value]) => ({
+      providerId,
+      providerLabel: value.providerLabel,
+      ctr: value.samples > 0 ? value.totalCtr / value.samples : 0,
+    }))
+    .sort((a, b) => b.ctr - a.ctr)
+    .slice(0, 10)
+
+  const maxCtr = Math.max(1, ...averaged.map((row) => row.ctr))
+  providerCtrBars.value = averaged.map((row) => ({
+    ...row,
+    widthPct: Math.max(4, Math.min(100, (row.ctr / maxCtr) * 100)),
+  }))
+}
+
+const mapEngagementSeries = (rows: any[]) => {
+  engagementSeries.value = [
+    {
+      id: 'active-users',
+      label: 'Active users',
+      color: chartColors.activeUsers,
+      points: rows.map((row) => ({
+        t: new Date(row.time_bucket).getTime(),
+        v: Number(row.active_users || 0),
+      })),
+    },
+    {
+      id: 'returning-users',
+      label: 'Returning users',
+      color: chartColors.returningUsers,
+      points: rows.map((row) => ({
+        t: new Date(row.time_bucket).getTime(),
+        v: Number(row.returning_users || 0),
+      })),
+    },
+  ].filter((series) => series.points.length > 0)
 }
 
 const loadAnalytics = async () => {
@@ -480,9 +659,12 @@ const loadAnalytics = async () => {
       getSavingsMetrics(range),
       getUserBehaviorPatterns({ ...range, pattern_type: 'search_frequency' }),
       getProviderImpact({ ...range, limit: 50, corridor_limit: 50 }),
+      getCorridorTrends({ ...range, bucket: 'day' }),
+      getProviderCTR({ ...range, bucket: 'day' }),
+      getEngagementMetrics({ ...range, bucket: 'day' }),
     ])
 
-    const [corridors, providers, sessions, heatmapRes, savings, patterns, impact] = results
+    const [corridors, providers, sessions, heatmapRes, savings, patterns, impact, trends, ctr, engagement] = results
     popularCorridors.value = corridors.status === 'fulfilled' ? (corridors.value?.corridors || []) : []
     favoriteProviders.value = providers.status === 'fulfilled' ? (providers.value?.providers || []) : []
     sessionMetrics.value = sessions.status === 'fulfilled' && sessions.value ? sessions.value : sessionMetrics.value
@@ -492,19 +674,40 @@ const loadAnalytics = async () => {
     providerImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers || []) : []
     providerCorridors.value = impact.status === 'fulfilled' ? (impact.value?.corridors || []) : []
 
+    if (trends.status === 'fulfilled') {
+      mapCorridorTrendCharts(trends.value?.trends || [])
+    }
+    else {
+      corridorTrendCharts.value = []
+    }
+
+    if (ctr.status === 'fulfilled') {
+      mapProviderCtrBars(ctr.value?.ctr_data || [])
+    }
+    else {
+      providerCtrBars.value = []
+    }
+
+    if (engagement.status === 'fulfilled') {
+      mapEngagementSeries(engagement.value?.engagement || [])
+    }
+    else {
+      engagementSeries.value = []
+    }
+
     const failures = results.filter(r => r.status === 'rejected')
     if (failures.length === results.length) {
       const reason = (failures[0] as PromiseRejectedResult).reason
       error.value = reason?.message || 'All analytics endpoints failed to load.'
     }
- else if (failures.length > 0) {
+    else if (failures.length > 0) {
       error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
     }
   }
- catch (err: unknown) {
+  catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
   }
- finally {
+  finally {
     isLoading.value = false
   }
 }

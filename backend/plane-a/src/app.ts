@@ -58,6 +58,7 @@ import { providerVisitRoutes } from './routes/provider-visits'
 import { analyticsRoutes } from './routes/analytics'
 import { auditRoutes } from './routes/audit'
 import { adminRoutes } from './routes/admin'
+import { adminFeatureFlagsRoutes } from './routes/admin-feature-flags'
 import { adminInstitutionalRoutes } from './routes/admin-institutional'
 import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
@@ -184,19 +185,14 @@ export const buildApp = async (options?: {
   authPlugin(app)
   registerSessionTracker(app)
   const corsOrigins = config.planeA.cors.origins
-  const corsOriginSetting =
-    corsOrigins.length > 0 ? corsOrigins : config.env === 'production' ? false : true
-  if (config.env === 'production' && corsOrigins.length === 0) {
-    const logger = createLogger('plane-a.app')
-    logger.warn('cors_disabled', {
-      message: 'PLANE_A_CORS_ORIGINS is empty; CORS is disabled in production.',
-    })
+  if (corsOrigins.length === 0) {
+    throw new Error('PLANE_A_CORS_ORIGINS must be configured with at least one explicit origin.')
   }
   
   // CORS configuration for API Gateway compatibility
   // API Gateway requires explicit CORS headers
   app.register(cors as any, {
-    origin: corsOriginSetting,
+    origin: corsOrigins,
     credentials: config.planeA.cors.allowCredentials,
     methods: config.planeA.cors.allowedMethods.length > 0
       ? config.planeA.cors.allowedMethods
@@ -566,6 +562,7 @@ export const buildApp = async (options?: {
   app.register(analyticsRoutes, { prefix: '/api/v1' })
   app.register(auditRoutes, { prefix: '/api/v1' })
   app.register(adminRoutes, { prefix: '/api/v1' })
+  app.register(adminFeatureFlagsRoutes, { prefix: '/api/v1' })
   app.register(adminInstitutionalRoutes, { prefix: '/api/v1' })
   app.register(notificationsRoutes, { prefix: '/api/v1' })
   app.register(adsRoutes, { prefix: '/api/v1' })

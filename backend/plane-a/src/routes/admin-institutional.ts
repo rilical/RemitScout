@@ -6,6 +6,7 @@ import { requireAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { generateApiKeyToken, hashApiKey } from '../services/api-keys'
 import { getInstitutionalClientScopes } from '../services/institutional-clients'
+import { sendAdminWebhook } from '../services/admin-webhooks'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.admin-institutional')
@@ -305,6 +306,16 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         client_id: client.id,
         client_prefix: data.client_prefix,
       })
+      void sendAdminWebhook({
+        title: 'Institutional client created',
+        event: 'institutional_client_created',
+        actorId: adminId,
+        metadata: {
+          client_id: client.id,
+          client_prefix: data.client_prefix,
+          tier: data.tier,
+        },
+      })
 
       return {
         success: true,
@@ -489,6 +500,16 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         client_id: id,
         new_status: status,
       })
+      void sendAdminWebhook({
+        title: 'Institutional client status changed',
+        event: 'institutional_client_status_changed',
+        actorId: adminId,
+        metadata: {
+          client_id: id,
+          new_status: status,
+          reason: reason ?? null,
+        },
+      })
 
       return { success: true, client: result.rows[0] }
     } catch (error) {
@@ -548,6 +569,15 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
       logger.info('admin_institutional_key_rotated', {
         admin_id: adminId,
         client_id: id,
+      })
+      void sendAdminWebhook({
+        title: 'Institutional API key rotated',
+        event: 'institutional_api_key_rotated',
+        actorId: adminId,
+        metadata: {
+          client_id: id,
+          client_prefix: result.rows[0].client_prefix,
+        },
       })
 
       return {

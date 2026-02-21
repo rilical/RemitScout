@@ -4,6 +4,7 @@ import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { sendAdminWebhook } from '../services/admin-webhooks'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.admin')
@@ -245,6 +246,18 @@ export const adminRoutes = async (app: FastifyInstance) => {
         target_email: targetEmail,
         plan_code: planCode,
       })
+      if (planCode === 'enterprise') {
+        void sendAdminWebhook({
+          title: 'Enterprise access granted',
+          event: 'enterprise_access_granted',
+          actorId: adminId,
+          metadata: {
+            user_id: targetUserId,
+            email: targetEmail,
+            plan_code: planCode,
+          },
+        })
+      }
 
       return {
         success: true,
@@ -343,6 +356,16 @@ export const adminRoutes = async (app: FastifyInstance) => {
         target_user_id: targetUserId,
         target_email: targetEmail,
         reason,
+      })
+      void sendAdminWebhook({
+        title: 'Enterprise access revoked',
+        event: 'enterprise_access_revoked',
+        actorId: adminId,
+        metadata: {
+          user_id: targetUserId,
+          email: targetEmail,
+          reason: reason ?? null,
+        },
       })
 
       return {

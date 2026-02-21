@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 px-6 py-10">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <header class="rounded-2xl bg-surface p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -133,11 +132,11 @@
                   class="border-t border-neutral-100"
                 >
                   <td class="py-2 text-neutral-700">{{ row.corridor_id }}</td>
-                  <td class="py-2 text-right text-neutral-600">{{ formatNumber(row.teer_rate, 6) }}</td>
+                  <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.teer_rate, 6) }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ formatPercentRatio(row.rci_ratio) }}</td>
-                  <td class="py-2 text-right text-neutral-600">{{ formatNumber(row.rvi_bps, 1) }}</td>
+                  <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.rvi_bps, 1) }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ row.provider_count ?? 'n/a' }}</td>
-                  <td class="py-2 text-right text-neutral-600">{{ formatNumber(row.weight_confidence, 3) }}</td>
+                  <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.weight_confidence, 3) }}</td>
                   <td class="py-2 text-body-sm text-rs-muted">
                     <div class="font-medium text-neutral-700">{{ row.suppression_flag ? 'suppressed' : 'ok' }}</div>
                     <div class="text-[11px] text-neutral-400">{{ row.suppression_reason || '—' }}</div>
@@ -199,7 +198,7 @@
             </div>
             <div class="rounded-lg border border-neutral-100 p-3">
               <div class="text-body-sm uppercase text-neutral-400">Weight conf p10</div>
-              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ formatNumber(summary.weight_confidence_p10, 3) }}</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ formatAdminNumber(summary.weight_confidence_p10, 3) }}</div>
             </div>
           </div>
         </div>
@@ -257,26 +256,22 @@
           </p>
         </div>
       </section>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { getIndexSeries } from '~/lib/indicesApi'
-import { setSeo } from '~/composables/useSeo'
 import type { ChartSeries } from '~/types/pulse'
 
-definePageMeta({ middleware: ['auth', 'admin'] })
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
-const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
+const { formatTimestamp, formatPercent, formatNumber: formatAdminNumber } = useAdminFormat()
 
-setSeo({
+useAdminPage({
   title: 'Admin: Gold Exports | Remit-Scout',
   description: 'Admin Gold exports viewer.',
-  canonical: `${runtimeConfig.public.siteUrl}${route.path}`,
-  noindex: true,
 })
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
@@ -639,26 +634,8 @@ const downloadPdf = async () => {
   }
 }
 
-const formatTimestamp = (value?: string | null) => {
-  if (!value) return 'n/a'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'n/a'
-  return date.toLocaleString()
-}
-
-const formatPercent = (value?: number | null) => {
-  if (!Number.isFinite(value)) return 'n/a'
-  return `${(Number(value) * 100).toFixed(1)}%`
-}
-
 const formatPercentRatio = (value?: number | null) => {
-  if (!Number.isFinite(value)) return 'n/a'
-  return `${(Number(value) * 100).toFixed(2)}%`
-}
-
-const formatNumber = (value?: number | null, fractionDigits = 2) => {
-  if (!Number.isFinite(value)) return 'n/a'
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: fractionDigits }).format(Number(value))
+  return formatPercent(value, 2)
 }
 
 onMounted(load)

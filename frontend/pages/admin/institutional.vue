@@ -1,25 +1,19 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 px-6 py-10">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="rounded-2xl bg-surface p-6 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-h3 font-semibold text-rs-fg">
-              Institutional Client Management
-            </h1>
-            <p class="text-body-sm text-rs-muted mt-1">
-              Manage B2B institutional clients, API keys, and contracts.
-            </p>
-          </div>
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <AdminPageShell
+        title="Institutional Client Management"
+        subtitle="Manage B2B institutional clients, API keys, and contracts."
+      >
+        <template #actions>
           <button
             :disabled="loading"
-            class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
+            class="h-10 rounded-lg border border-rs-border px-4 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100 disabled:opacity-60"
             @click="loadClients"
           >
             {{ loading ? 'Refreshing...' : 'Refresh' }}
           </button>
-        </div>
-      </header>
+        </template>
+      </AdminPageShell>
 
       <ErrorState v-if="error" mode="card" :message="error" :on-retry="loadClients" />
 
@@ -192,154 +186,144 @@
           </select>
         </div>
 
-        <div v-if="loading" class="p-8">
-          <LoadingState mode="inline" message="Loading institutional clients..." />
-        </div>
+        <div class="p-6">
+          <DataTable
+            :columns="clientColumns"
+            :rows="clientRows"
+            row-key="id"
+            :loading="loading"
+            :error="error || undefined"
+            :on-retry="loadClients"
+            empty-text="No institutional clients found."
+          >
+            <template #cell-name="{ row }">
+              <button
+                class="text-left text-body-sm font-semibold text-rs-fg hover:underline"
+                @click="toggleDetail(asString(row.id))"
+              >
+                {{ row.name }}
+              </button>
+            </template>
 
-        <div v-else-if="clients.length === 0" class="p-8 text-center text-rs-muted">
-          No institutional clients found.
-        </div>
+            <template #cell-tier="{ row }">
+              <span
+                class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                :class="tierBadgeClass(clientFromRow(row.raw).tier)"
+              >
+                {{ clientFromRow(row.raw).tier }}
+              </span>
+            </template>
 
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-neutral-50">
-              <tr>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Name</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Prefix</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Tier</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Status</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Contract End</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Rate Limits</th>
-                <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">Report</th>
-                <th class="px-5 py-3 text-right text-body-sm font-semibold text-neutral-600 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-neutral-200">
-              <template v-for="client in clients" :key="client.id">
-                <tr
-                  class="hover:bg-neutral-50 cursor-pointer"
-                  @click="toggleDetail(client.id)"
+            <template #cell-status="{ row }">
+              <span
+                class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                :class="statusBadgeClass(clientFromRow(row.raw).status)"
+              >
+                {{ clientFromRow(row.raw).status }}
+              </span>
+            </template>
+
+            <template #cell-actions="{ row }">
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  class="text-xs font-medium text-brand-600 hover:text-brand-700"
+                  @click="startEdit(clientFromRow(row.raw))"
                 >
-                  <td class="px-5 py-4 text-body-sm text-rs-fg font-medium">{{ client.name }}</td>
-                  <td class="px-5 py-4 text-body-sm text-neutral-600 font-mono">{{ client.client_prefix }}</td>
-                  <td class="px-5 py-4">
-                    <span
-                      class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      :class="tierBadgeClass(client.tier)"
-                    >
-                      {{ client.tier }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-4">
-                    <span
-                      class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                      :class="statusBadgeClass(client.status)"
-                    >
-                      {{ client.status }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-4 text-body-sm text-neutral-600">
-                    {{ client.contract_end || '-' }}
-                  </td>
-                  <td class="px-5 py-4 text-body-sm text-neutral-600">
-                    {{ client.rate_limit_rpm }}/min, {{ client.rate_limit_daily }}/day
-                  </td>
-                  <td class="px-5 py-4 text-body-sm text-neutral-600">
-                    {{ client.report_schedule }}
-                  </td>
-                  <td class="px-5 py-4 text-right" @click.stop>
-                    <div class="flex items-center justify-end gap-2">
-                      <button
-                        class="text-xs font-medium text-brand-600 hover:text-brand-700"
-                        @click="startEdit(client)"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        v-if="client.status === 'active'"
-                        class="text-xs font-medium text-amber-600 hover:text-amber-700"
-                        @click="changeStatus(client, 'suspended')"
-                      >
-                        Suspend
-                      </button>
-                      <button
-                        v-if="client.status === 'suspended'"
-                        class="text-xs font-medium text-success-600 hover:text-success-700"
-                        @click="changeStatus(client, 'active')"
-                      >
-                        Reactivate
-                      </button>
-                      <button
-                        v-if="client.status !== 'revoked'"
-                        class="text-xs font-medium text-danger-600 hover:text-danger-700"
-                        @click="changeStatus(client, 'revoked')"
-                      >
-                        Revoke
-                      </button>
-                      <button
-                        class="text-xs font-medium text-neutral-600 hover:text-neutral-800"
-                        @click="rotateKey(client)"
-                      >
-                        Rotate Key
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  Edit
+                </button>
+                <button
+                  v-if="clientFromRow(row.raw).status === 'active'"
+                  class="text-xs font-medium text-amber-600 hover:text-amber-700"
+                  @click="changeStatus(clientFromRow(row.raw), 'suspended')"
+                >
+                  Suspend
+                </button>
+                <button
+                  v-if="clientFromRow(row.raw).status === 'suspended'"
+                  class="text-xs font-medium text-success-600 hover:text-success-700"
+                  @click="changeStatus(clientFromRow(row.raw), 'active')"
+                >
+                  Reactivate
+                </button>
+                <button
+                  v-if="clientFromRow(row.raw).status !== 'revoked'"
+                  class="text-xs font-medium text-danger-600 hover:text-danger-700"
+                  @click="changeStatus(clientFromRow(row.raw), 'revoked')"
+                >
+                  Revoke
+                </button>
+                <button
+                  class="text-xs font-medium text-neutral-600 hover:text-neutral-800"
+                  @click="rotateKey(clientFromRow(row.raw))"
+                >
+                  Rotate Key
+                </button>
+              </div>
+            </template>
+          </DataTable>
 
-                <!-- Expandable Detail Row -->
-                <tr v-if="expandedId === client.id" class="bg-neutral-50">
-                  <td colspan="8" class="px-5 py-4">
-                    <div v-if="detailLoading" class="text-body-sm text-rs-muted">Loading details...</div>
-                    <div v-else-if="clientDetail" class="grid gap-4 md:grid-cols-3">
-                      <div>
-                        <h4 class="text-body-sm font-semibold text-neutral-700 mb-2">Usage (Last 30 days)</h4>
-                        <div class="text-body-sm text-neutral-600">
-                          Total requests: <strong>{{ clientDetail.usage.total_requests_30d }}</strong>
-                        </div>
-                        <div v-if="clientDetail.usage.by_endpoint.length" class="mt-2 space-y-1">
-                          <div
-                            v-for="ep in clientDetail.usage.by_endpoint"
-                            :key="ep.endpoint"
-                            class="text-xs text-neutral-500 flex justify-between"
-                          >
-                            <span class="font-mono">{{ ep.endpoint }}</span>
-                            <span>{{ ep.count }}</span>
-                          </div>
-                        </div>
-                        <div v-else class="text-xs text-neutral-400 mt-1">No usage data</div>
-                      </div>
-                      <div>
-                        <h4 class="text-body-sm font-semibold text-neutral-700 mb-2">Export History</h4>
-                        <div v-if="clientDetail.exports.length" class="space-y-1">
-                          <div
-                            v-for="exp in clientDetail.exports"
-                            :key="exp.id"
-                            class="text-xs text-neutral-500 flex justify-between"
-                          >
-                            <span>{{ exp.export_date }} ({{ exp.export_kind }})</span>
-                            <span>{{ exp.row_count }} rows</span>
-                          </div>
-                        </div>
-                        <div v-else class="text-xs text-neutral-400">No exports yet</div>
-                      </div>
-                      <div>
-                        <h4 class="text-body-sm font-semibold text-neutral-700 mb-2">Scopes</h4>
-                        <div class="flex flex-wrap gap-1">
-                          <span
-                            v-for="scope in clientDetail.scopes"
-                            :key="scope"
-                            class="inline-block px-2 py-0.5 bg-neutral-200 rounded text-xs text-neutral-700"
-                          >
-                            {{ scope }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+          <div
+            v-if="expandedClient"
+            class="mt-4 rounded-xl border border-rs-border bg-rs-bg p-4"
+          >
+            <div class="mb-3 flex items-center justify-between">
+              <h3 class="text-body-lg font-semibold text-rs-fg">{{ expandedClient.name }} details</h3>
+              <button
+                type="button"
+                class="rounded-md border border-rs-border px-3 py-1 text-body-sm text-rs-muted hover:bg-neutral-50"
+                @click="expandedId = null"
+              >
+                Close
+              </button>
+            </div>
+
+            <div v-if="detailLoading" class="text-body-sm text-rs-muted">Loading details...</div>
+            <div v-else-if="clientDetail" class="grid gap-4 md:grid-cols-3">
+              <div>
+                <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Usage (Last 30 days)</h4>
+                <div class="text-body-sm text-neutral-600">
+                  Total requests: <strong>{{ clientDetail.usage.total_requests_30d }}</strong>
+                </div>
+                <div v-if="clientDetail.usage.by_endpoint.length" class="mt-2 space-y-1">
+                  <div
+                    v-for="ep in clientDetail.usage.by_endpoint"
+                    :key="ep.endpoint"
+                    class="flex justify-between text-xs text-neutral-500"
+                  >
+                    <span class="font-mono">{{ ep.endpoint }}</span>
+                    <span>{{ ep.count }}</span>
+                  </div>
+                </div>
+                <div v-else class="mt-1 text-xs text-neutral-400">No usage data</div>
+              </div>
+              <div>
+                <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Export History</h4>
+                <div v-if="clientDetail.exports.length" class="space-y-1">
+                  <div
+                    v-for="exp in clientDetail.exports"
+                    :key="exp.id"
+                    class="flex justify-between text-xs text-neutral-500"
+                  >
+                    <span>{{ exp.export_date }} ({{ exp.export_kind }})</span>
+                    <span>{{ exp.row_count }} rows</span>
+                  </div>
+                </div>
+                <div v-else class="text-xs text-neutral-400">No exports yet</div>
+              </div>
+              <div>
+                <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Scopes</h4>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="scope in clientDetail.scopes"
+                    :key="scope"
+                    class="inline-block rounded bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700"
+                  >
+                    {{ scope }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -457,31 +441,23 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, defineAsyncComponent } from 'vue'
+import { ref, reactive, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { setSeo } from '~/composables/useSeo'
+import type { DataTableColumn } from '~/components/shared/DataTable.vue'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
-  layout: 'default',
+  layout: 'admin',
 })
 
 const ErrorState = defineAsyncComponent(() => import('~/ui/states/ErrorState.vue'))
-const LoadingState = defineAsyncComponent(() => import('~/ui/states/LoadingState.vue'))
-
-const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
-
-setSeo({
+useAdminPage({
   title: 'Admin: Institutional Clients | Remit-Scout',
   description: 'Manage B2B institutional clients, API keys, and contracts.',
-  canonical: `${siteUrl}${route.path}`,
-  noindex: true,
 })
 
 const { request } = useApi()
@@ -542,6 +518,7 @@ const createForm = reactive({
 const expandedId = ref<string | null>(null)
 const detailLoading = ref(false)
 const clientDetail = ref<ClientDetail | null>(null)
+const expandedClient = computed(() => clients.value.find((client) => client.id === expandedId.value) ?? null)
 
 const editingClient = ref<InstitutionalClient | null>(null)
 const editForm = reactive({
@@ -570,6 +547,39 @@ const statusBadgeClass = (status: string) => {
   if (status === 'suspended') return 'bg-amber-100 text-amber-700'
   return 'bg-red-100 text-red-700'
 }
+
+const clientColumns: DataTableColumn[] = [
+  { key: 'name', header: 'Name' },
+  { key: 'client_prefix', header: 'Prefix' },
+  { key: 'tier', header: 'Tier' },
+  { key: 'status', header: 'Status' },
+  { key: 'contract_end', header: 'Contract End' },
+  { key: 'rate_limits', header: 'Rate Limits' },
+  { key: 'report_schedule', header: 'Report' },
+  { key: 'actions', header: 'Actions', align: 'right' },
+]
+
+const clientRows = computed(() =>
+  clients.value.map((client) => ({
+    id: client.id,
+    name: client.name,
+    client_prefix: client.client_prefix,
+    tier: client.tier,
+    status: client.status,
+    contract_end: client.contract_end || '-',
+    rate_limits: `${client.rate_limit_rpm}/min, ${client.rate_limit_daily}/day`,
+    report_schedule: client.report_schedule,
+    actions: 'actions',
+    raw: client,
+  })),
+)
+
+const asString = (value: unknown): string => {
+  if (typeof value === 'string') return value
+  return String(value ?? '')
+}
+
+const clientFromRow = (value: unknown): InstitutionalClient => value as InstitutionalClient
 
 const parseCsvCorridors = (raw: string): string[] | null => {
   if (!raw.trim()) return null
@@ -762,10 +772,6 @@ const copyRotatedKey = async () => {
 }
 
 onMounted(() => {
-  loadClients()
-})
-
-useHead({
-  title: 'Institutional Client Management | Admin',
+  void loadClients()
 })
 </script>

@@ -11,6 +11,7 @@ import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { createShutdownHandler } from '../shared/shutdown'
 import { SessionRepository } from '../plane-a/src/repositories'
+import { processPendingAccountDeletions } from '../plane-a/src/services/account-deletion-requests'
 
 const logger = createLogger('script.session-cleanup')
 initTracing('session-cleanup-worker')
@@ -27,9 +28,11 @@ export const runSessionCleanup = async (): Promise<void> => {
       return
     }
     const revoked = await repo.revokeExpiredSessions()
+    const deletionsProcessed = await processPendingAccountDeletions({ limit: 50 })
     const durationMs = Date.now() - start
     logger.info('session_cleanup_complete', {
       revoked_count: revoked,
+      account_deletions_processed: deletionsProcessed,
       duration_ms: durationMs,
     })
   } catch (error) {

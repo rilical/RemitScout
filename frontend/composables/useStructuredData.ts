@@ -30,6 +30,7 @@ interface CorridorProvider {
 
 export const useStructuredData = () => {
   const { public: { siteUrl, siteName } } = useRuntimeConfig()
+  const cspNonce = useCspNonce()
 
   // Organization schema
   const addOrganizationSchema = () => {
@@ -61,6 +62,7 @@ export const useStructuredData = () => {
         key: 'jsonld:organization',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -87,6 +89,7 @@ export const useStructuredData = () => {
         key: 'jsonld:website-search',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -109,6 +112,7 @@ export const useStructuredData = () => {
         key: 'jsonld:breadcrumb',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -133,6 +137,7 @@ export const useStructuredData = () => {
         key: 'jsonld:faq',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -171,6 +176,7 @@ export const useStructuredData = () => {
         key: 'jsonld:provider-list',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -218,6 +224,7 @@ export const useStructuredData = () => {
         key: 'jsonld:article',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -251,6 +258,7 @@ export const useStructuredData = () => {
         key: 'jsonld:esim-product',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -290,6 +298,7 @@ export const useStructuredData = () => {
         key: 'jsonld:esim-aggregate-offer',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -325,6 +334,7 @@ export const useStructuredData = () => {
         key: 'jsonld:exchange-rate',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -361,6 +371,7 @@ export const useStructuredData = () => {
         key: 'jsonld:remittance-service',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -401,6 +412,7 @@ export const useStructuredData = () => {
         key: 'jsonld:financial-product',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -449,6 +461,7 @@ export const useStructuredData = () => {
         key: 'jsonld:review',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -483,6 +496,7 @@ export const useStructuredData = () => {
         key: 'jsonld:howto',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -515,6 +529,7 @@ export const useStructuredData = () => {
         key: 'jsonld:aggregate-rating',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -544,6 +559,7 @@ export const useStructuredData = () => {
         key: 'jsonld:video',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -585,6 +601,7 @@ export const useStructuredData = () => {
         key: 'jsonld:remittance-corridor',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }
@@ -623,6 +640,7 @@ export const useStructuredData = () => {
         key: 'jsonld:local-business',
         type: 'application/ld+json',
         innerHTML: JSON.stringify(schema),
+        nonce: cspNonce.value || undefined,
       }],
     })
   }

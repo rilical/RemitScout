@@ -1,0 +1,10 @@
+export declare const normalizeMethodToken: (value?: string | null) => string;
+export declare const mapPayinMethod: (value?: string | number | null) => string;
+export declare const mapPayoutMethod: (value?: string | number | null) => string;
+export declare const resolvePayinMethodId: (method?: string | null) => number;
+export declare const resolveTranTypeId: (method?: string | null) => number;
+export declare const resolveIntermexDestinationCode: (country: string, currency: string) => string | null;
+export declare const DEFAULT_INTERMEX_STYLE_ID = 3;
+export declare const DEFAULT_INTERMEX_DELIVERY_TYPE = "W";
+export declare const DEFAULT_INTERMEX_ORIGIN_COUNTRY = "USA";
+export declare const DEFAULT_INTERMEX_ORIGIN_STATE = "PA";

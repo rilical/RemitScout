@@ -46,6 +46,7 @@ type RightsRow = {
   provider_id: string
   allowed_collect: boolean | null
   allowed_b2b: boolean | null
+  allowed_b2c: boolean | null
   stoplist_status: string | null
   status: string | null
   source_countries: string[] | null
@@ -59,6 +60,11 @@ type CapabilityRow = {
   is_supported: boolean | null
   source: string | null
   last_verified_at: string | null
+}
+
+type CapabilityLoadResult = {
+  byCorridor: Map<string, Map<string, CapabilityRow>>
+  capabilityTableRowCount: number
 }
 
 type CorridorCoverage = {
@@ -114,6 +120,7 @@ const loadRights = async (pool: ReturnType<typeof createPool>): Promise<Map<stri
     `SELECT provider_id,
             allowed_collect,
             allowed_b2b,
+            allowed_b2c,
             stoplist_status,
             status,
             source_countries,
@@ -140,9 +147,12 @@ const chunk = <T>(items: T[], size: number): T[][] => {
 const loadCapabilitiesForCorridors = async (
   pool: ReturnType<typeof createPool>,
   corridorIds: string[],
-): Promise<Map<string, Map<string, CapabilityRow>>> => {
+): Promise<CapabilityLoadResult> => {
   const byCorridor = new Map<string, Map<string, CapabilityRow>>()
-  if (!corridorIds.length) return byCorridor
+  let capabilityTableRowCount = 0
+  if (!corridorIds.length) {
+    return { byCorridor, capabilityTableRowCount }
+  }
 
   const chunks = chunk(corridorIds, 1000)
   for (const ids of chunks) {
@@ -158,13 +168,14 @@ const loadCapabilitiesForCorridors = async (
       [ids],
       pool,
     )
+    capabilityTableRowCount += result.rows.length
     for (const row of result.rows) {
       if (!row.corridor_id || !row.provider_id) continue
       if (!byCorridor.has(row.corridor_id)) byCorridor.set(row.corridor_id, new Map())
       byCorridor.get(row.corridor_id)!.set(row.provider_id, row)
     }
   }
-  return byCorridor
+  return { byCorridor, capabilityTableRowCount }
 }
 
 const isActiveRightsRow = (row: RightsRow, requireProduction: boolean): boolean => {
@@ -173,6 +184,13 @@ const isActiveRightsRow = (row: RightsRow, requireProduction: boolean): boolean 
   if (requireProduction && (row.status || '').toLowerCase() !== 'production') return false
   if (!row.source_countries || row.source_countries.length === 0) return false
   if (!row.destination_countries || row.destination_countries.length === 0) return false
+  return true
+}
+
+const isActiveB2cRightsRow = (row: RightsRow, requireProduction: boolean): boolean => {
+  if (!row.allowed_collect || !row.allowed_b2c) return false
+  if ((row.stoplist_status || '').toLowerCase() !== 'active') return false
+  if (requireProduction && (row.status || '').toLowerCase() !== 'production') return false
   return true
 }
 
@@ -191,6 +209,7 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
   const payoutMethod = normalizeLower(process.env.LANE_PAYOUT_METHOD || 'bank_deposit')
   const requireProduction = process.env.REQUIRE_STATUS_PRODUCTION === '1'
   const includeDetails = process.env.INCLUDE_DETAILS === '1'
+  const strictDataHealth = process.env.STRICT_DATA_HEALTH === '1'
 
   const outputDir = process.env.OUTPUT_DIR
     ? path.resolve(process.env.OUTPUT_DIR)
@@ -203,14 +222,36 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
     const corridors: MacroCorridor[] = allMacro.filter(c => sendCurrencies.has(normalizeUpper(c.sourceCurrency)))
     const corridorIds = corridors.map(c => c.corridorId)
 
-    const [rightsByProvider, capsByCorridor] = await Promise.all([
+    const [rightsByProvider, capabilityLoad] = await Promise.all([
       loadRights(pool),
       loadCapabilitiesForCorridors(pool, corridorIds),
     ])
+    const capsByCorridor = capabilityLoad.byCorridor
+    const capabilityTableRowCount = capabilityLoad.capabilityTableRowCount
 
     const activeRightsProviders = Array.from(rightsByProvider.entries())
       .filter(([, row]) => isActiveRightsRow(row, requireProduction))
       .map(([providerId]) => providerId)
+    const activeB2cRightsRows = Array.from(rightsByProvider.values())
+      .filter((row) => isActiveB2cRightsRow(row, requireProduction))
+    const activeB2cRightsCount = activeB2cRightsRows.length
+    const activeB2cRightsWithCountrySetsCount = activeB2cRightsRows.filter((row) => (
+      Array.isArray(row.source_countries)
+      && row.source_countries.length > 0
+      && Array.isArray(row.destination_countries)
+      && row.destination_countries.length > 0
+    )).length
+    const dataHealthStatus = (
+      capabilityTableRowCount > 0
+      && activeB2cRightsWithCountrySetsCount > 0
+    ) ? 'ok' : 'degraded'
+    const strictDataHealthFailures: string[] = []
+    if (capabilityTableRowCount === 0) {
+      strictDataHealthFailures.push('capability_table_empty_for_scope')
+    }
+    if (activeB2cRightsWithCountrySetsCount === 0) {
+      strictDataHealthFailures.push('active_b2c_rights_country_sets_empty')
+    }
 
     const nowIso = new Date().toISOString()
     const details: CorridorCoverage[] = []
@@ -317,6 +358,10 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
       payoutMethod,
       requireStatusProduction: requireProduction,
       macroCorridors: corridors.length,
+      capabilityTableRowCount,
+      activeB2cRightsCount,
+      activeB2cRightsWithCountrySetsCount,
+      dataHealthStatus,
       summary: summaries,
       ...(includeDetails ? { corridors: details } : {}),
     }
@@ -336,6 +381,10 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
     mdLines.push(`- Lane payout method: \`${payoutMethod}\``)
     mdLines.push(`- Require status=production: \`${requireProduction ? 'yes' : 'no'}\``)
     mdLines.push(`- Macro corridors evaluated: \`${corridors.length}\``)
+    mdLines.push(`- Capability table rows (scope): \`${capabilityTableRowCount}\``)
+    mdLines.push(`- Active B2C rights rows: \`${activeB2cRightsCount}\``)
+    mdLines.push(`- Active B2C rights rows with country sets: \`${activeB2cRightsWithCountrySetsCount}\``)
+    mdLines.push(`- Data health: \`${dataHealthStatus}\``)
     mdLines.push('')
 
     mdLines.push(`## Summary`)
@@ -368,10 +417,24 @@ export const runCorridorCoverageAudit = async (): Promise<void> => {
       send_currencies: Array.from(sendCurrencies.values()),
       payout_method: payoutMethod,
       macro_corridors: corridors.length,
+      capability_table_row_count: capabilityTableRowCount,
+      active_b2c_rights_count: activeB2cRightsCount,
+      active_b2c_rights_with_country_sets_count: activeB2cRightsWithCountrySetsCount,
+      data_health_status: dataHealthStatus,
       include_details: includeDetails,
       require_production: requireProduction,
       summary: summaries,
     })
+    if (dataHealthStatus === 'degraded') {
+      logger.warn('coverage_audit_data_health_degraded', {
+        capability_table_row_count: capabilityTableRowCount,
+        active_b2c_rights_count: activeB2cRightsCount,
+        active_b2c_rights_with_country_sets_count: activeB2cRightsWithCountrySetsCount,
+      })
+    }
+    if (strictDataHealth && strictDataHealthFailures.length > 0) {
+      throw new Error(`strict_data_health_failed: ${strictDataHealthFailures.join(',')}`)
+    }
   } finally {
     await pool.end()
   }

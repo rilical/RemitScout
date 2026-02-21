@@ -55,6 +55,28 @@ Check B2C-debug readiness snapshot (status + key queue backlog + quote freshness
 make status-dev-b2c
 ```
 
+Rights matrix recovery (global scope, data-only strict dry-run):
+```sh
+make rights-recovery-global
+```
+
+Rights matrix recovery apply (global scope, single full apply):
+```sh
+make rights-recovery-global-apply
+```
+
+Post-migration rights activation validation (SQL checks + hot-lane forensics):
+```sh
+make rights-validate-activation
+```
+
+Notes for rights recovery:
+- Keep strict policy: null/empty `source_countries` or `destination_countries` never implies allow-all.
+- `rights-recovery-global` is the primary recovery path and runs capability seed, country sync, strict differential health, and capability delta dry-run on all provider-supported corridors.
+- `rights-recovery-global-apply` runs the same global checks, applies full rights country widening from capability evidence, re-runs strict differential, and then executes `rights-validate-activation`.
+- `rights-recovery-macro` and `rights-recovery-macro-apply` are diagnostic subset flows only.
+- Promote in order: `dev` -> `staging` -> `prod` using the same command sequence.
+
 ## Expected state
 
 **Paused** (`devPaused=true`)

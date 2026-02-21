@@ -24,6 +24,8 @@ type BackendProfile = {
 type AuthResult = {
   ok: boolean
   error?: string
+  mfaRequired?: boolean
+  factorId?: string | null
 }
 
 type SignUpInput = {
@@ -188,6 +190,81 @@ export const useAuth = () => {
     }
   }
 
+  const listMfaFactors = async () => {
+    const supabase = getSupabase()
+    if (!supabase) {
+      return { totp: [], all: [] as Array<{ id: string; status?: string }> }
+    }
+    const { data, error } = await supabase.auth.mfa.listFactors()
+    if (error) {
+      lastError.value = error.message
+      return { totp: [], all: [] as Array<{ id: string; status?: string }> }
+    }
+    return data
+  }
+
+  const resolvePrimaryMfaFactor = async () => {
+    const factors = await listMfaFactors()
+    const verified = factors.totp?.find(factor => factor.status === 'verified')
+    return verified ?? factors.totp?.[0] ?? null
+  }
+
+  const startMfaChallenge = async (factorId: string) => {
+    const supabase = getSupabase()
+    if (!supabase) {
+      return { ok: false, error: 'Supabase client is not available.' }
+    }
+    const { data, error } = await supabase.auth.mfa.challenge({ factorId })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+    return { ok: true, challengeId: data.id }
+  }
+
+  const verifyMfaChallenge = async (factorId: string, challengeId: string, code: string): Promise<AuthResult> => {
+    const supabase = getSupabase()
+    if (!supabase) {
+      lastError.value = 'Supabase client is not available.'
+      return { ok: false, error: lastError.value }
+    }
+    const { data, error } = await supabase.auth.mfa.verify({ factorId, challengeId, code })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+
+    // Supabase MFA verify does not guarantee a typed `session` payload across SDK versions.
+    // Read the current auth session explicitly after successful verification.
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (sessionData?.session) {
+      setSession(sessionData.session)
+    }
+
+    return { ok: true }
+  }
+
+  const enrollMfaFactor = async () => {
+    const supabase = getSupabase()
+    if (!supabase) {
+      return { ok: false, error: 'Supabase client is not available.' }
+    }
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    if (error) {
+      lastError.value = error.message
+      return { ok: false, error: error.message }
+    }
+    return { ok: true, factor: data }
+  }
+
+  const verifyMfaEnrollment = async (factorId: string, code: string) => {
+    const challenge = await startMfaChallenge(factorId)
+    if (!challenge.ok || !challenge.challengeId) {
+      return { ok: false, error: challenge.error }
+    }
+    return verifyMfaChallenge(factorId, challenge.challengeId, code)
+  }
+
   const signIn = async (email: string, password?: string): Promise<AuthResult> => {
     lastError.value = null
 
@@ -209,6 +286,11 @@ export const useAuth = () => {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      const message = error.message || ''
+      if (message.toLowerCase().includes('mfa')) {
+        const factor = await resolvePrimaryMfaFactor()
+        return { ok: false, mfaRequired: true, factorId: factor?.id ?? null, error: message }
+      }
       lastError.value = error.message
       return { ok: false, error: error.message }
     }
@@ -506,6 +588,12 @@ export const useAuth = () => {
     updatePassword,
     updatePasswordWithCurrent,
     updateProfile,
+    listMfaFactors,
+    resolvePrimaryMfaFactor,
+    startMfaChallenge,
+    verifyMfaChallenge,
+    enrollMfaFactor,
+    verifyMfaEnrollment,
     applyBackendProfile,
   }
 }

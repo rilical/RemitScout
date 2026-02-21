@@ -67,8 +67,53 @@
           >
             {{ errorMessage }}
           </div>
+          <!-- MFA Challenge -->
+          <form
+            v-if="mfaRequired"
+            class="space-y-4"
+            @submit.prevent="handleMfaVerify"
+          >
+            <div class="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-body-sm text-brand-700">
+              Multi-factor authentication required. Enter your 6-digit code to continue.
+            </div>
+            <div>
+              <label
+                for="mfa-code"
+                class="block text-body-sm font-semibold text-neutral-700 mb-2"
+              >
+                Authenticator code
+              </label>
+              <input
+                id="mfa-code"
+                v-model.trim="mfaCode"
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                required
+                class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
+                placeholder="123456"
+              >
+            </div>
+
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
+              :disabled="loading"
+            >
+              {{ loading ? 'Verifying…' : 'Verify' }}
+            </button>
+            <button
+              type="button"
+              class="w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-all"
+              @click="mfaRequired = false; mfaCode = ''; mfaFactorId = null; mfaChallengeId = null"
+            >
+              Back to sign in
+            </button>
+          </form>
+
           <!-- Email/Password -->
           <form
+            v-else
             class="space-y-4"
             @submit.prevent="handleEmailSignIn"
           >
@@ -126,7 +171,10 @@
           </form>
 
           <!-- Divider -->
-          <div class="my-6 flex items-center gap-4">
+          <div
+            v-if="!mfaRequired"
+            class="my-6 flex items-center gap-4"
+          >
             <div class="h-px flex-1 bg-neutral-200" />
             <div class="text-body-sm font-semibold text-rs-muted">
               OR
@@ -135,7 +183,10 @@
           </div>
 
           <!-- Social Login Buttons -->
-          <div class="space-y-3">
+          <div
+            v-if="!mfaRequired"
+            class="space-y-3"
+          >
             <button
               type="button"
               class="w-full flex items-center justify-center gap-3 rounded-lg border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-all"
@@ -215,7 +266,16 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 
-const { user, isLoggedIn, signOut, signIn, signInWithOAuth } = useAuth()
+const {
+  user,
+  isLoggedIn,
+  signOut,
+  signIn,
+  signInWithOAuth,
+  resolvePrimaryMfaFactor,
+  startMfaChallenge,
+  verifyMfaChallenge,
+} = useAuth()
 const route = useRoute()
 const { public: { siteUrl } } = useRuntimeConfig()
 
@@ -230,6 +290,10 @@ const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 const email = ref('')
 const password = ref('')
+const mfaRequired = ref(false)
+const mfaCode = ref('')
+const mfaFactorId = ref<string | null>(null)
+const mfaChallengeId = ref<string | null>(null)
 
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) {
@@ -250,11 +314,47 @@ async function handleEmailSignIn() {
   const result = await signIn(email.value, password.value)
   loading.value = false
 
+  if (!result.ok && result.mfaRequired) {
+    const factorId = result.factorId || (await resolvePrimaryMfaFactor())?.id || null
+    if (!factorId) {
+      errorMessage.value = 'Multi-factor authentication is required, but no MFA factor was found.'
+      return
+    }
+    const challenge = await startMfaChallenge(factorId)
+    if (!challenge.ok || !challenge.challengeId) {
+      errorMessage.value = challenge.error || 'Unable to start MFA challenge.'
+      return
+    }
+    mfaFactorId.value = factorId
+    mfaChallengeId.value = challenge.challengeId
+    mfaRequired.value = true
+    return
+  }
+
   if (!result.ok) {
     errorMessage.value = result.error || 'Unable to sign in.'
     return
   }
 
+  await navigateTo(redirect)
+}
+
+async function handleMfaVerify() {
+  errorMessage.value = null
+  if (!mfaFactorId.value || !mfaChallengeId.value) {
+    errorMessage.value = 'MFA challenge is not ready. Please try signing in again.'
+    return
+  }
+  loading.value = true
+  const result = await verifyMfaChallenge(mfaFactorId.value, mfaChallengeId.value, mfaCode.value)
+  loading.value = false
+
+  if (!result.ok) {
+    errorMessage.value = result.error || 'Unable to verify MFA code.'
+    return
+  }
+
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
   await navigateTo(redirect)
 }
 

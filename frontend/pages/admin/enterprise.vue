@@ -1,14 +1,9 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 px-6 py-10">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="rounded-2xl bg-surface p-6 shadow-sm">
-        <h1 class="text-h3 font-semibold text-rs-fg">
-          Enterprise Account Management
-        </h1>
-        <p class="text-body-sm text-rs-muted mt-1">
-          Manually grant or revoke enterprise access for users.
-        </p>
-      </header>
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+      <AdminPageShell
+        title="Enterprise Account Management"
+        subtitle="Manually grant or revoke enterprise access for users."
+      />
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="rounded-2xl bg-surface p-6 shadow-sm">
@@ -97,114 +92,53 @@
             class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
             @click="loadUsers"
           >
-            <span
-              v-if="loading"
-              class="inline-flex items-center gap-2"
-            >
-              <LoadingSpinner
-                size="sm"
-                label="Loading enterprise data"
-              />
-              Refreshing
-            </span>
-            <span v-else>Refresh</span>
+            {{ loading ? 'Refreshing…' : 'Refresh' }}
           </button>
         </div>
-
-        <div
-          v-if="loading"
-          class="p-8"
-        >
-          <LoadingState
-            mode="inline"
-            message="Loading enterprise data..."
-          />
+        <div class="p-6">
+          <DataTable
+            :columns="tableColumns"
+            :rows="tableRows"
+            row-key="user_id"
+            :loading="loading"
+            :error="tableError || undefined"
+            :on-retry="loadUsers"
+            empty-text="No enterprise accounts yet."
+          >
+            <template #cell-actions="{ row }">
+              <button
+                :disabled="revoking === row.user_id"
+                class="text-body-sm font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
+                @click="revokeAccess(toUserWithPlan(row.raw))"
+              >
+                {{ revoking === row.user_id ? 'Revoking...' : 'Revoke' }}
+              </button>
+            </template>
+          </DataTable>
         </div>
-
-        <div
-          v-else-if="enterpriseUsers.length === 0"
-          class="p-8 text-center text-rs-muted"
-        >
-          No enterprise accounts yet.
-        </div>
-
-        <table
-          v-else
-          class="w-full"
-        >
-          <thead class="bg-neutral-50">
-            <tr>
-              <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">
-                Email
-              </th>
-              <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">
-                Granted
-              </th>
-              <th class="px-5 py-3 text-left text-body-sm font-semibold text-neutral-600 uppercase">
-                Notes
-              </th>
-              <th class="px-5 py-3 text-right text-body-sm font-semibold text-neutral-600 uppercase">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-neutral-200">
-            <tr
-              v-for="user in enterpriseUsers"
-              :key="user.user_id"
-              class="hover:bg-neutral-50"
-            >
-              <td class="px-5 py-4 text-body-sm text-rs-fg">
-                {{ user.email || user.user_id }}
-              </td>
-              <td class="px-5 py-4 text-body-sm text-neutral-600">
-                {{ user.enterprise_granted_at ? formatDate(user.enterprise_granted_at) : 'N/A' }}
-              </td>
-              <td class="px-5 py-4 text-body-sm text-neutral-600">
-                {{ user.enterprise_notes || '-' }}
-              </td>
-              <td class="px-5 py-4 text-right">
-                <button
-                  :disabled="revoking === user.user_id"
-                  class="text-body-sm font-medium text-danger-600 hover:text-danger-600 disabled:opacity-50"
-                  @click="revokeAccess(user)"
-                >
-                  {{ revoking === user.user_id ? 'Revoking...' : 'Revoke' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { setSeo } from '~/composables/useSeo'
+import type { DataTableColumn } from '~/components/shared/DataTable.vue'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
-  layout: 'default',
+  layout: 'admin',
 })
 
-const LoadingState = defineAsyncComponent(() => import('~/ui/states/LoadingState.vue'))
-const LoadingSpinner = defineAsyncComponent(() => import('~/components/shared/LoadingSpinner.vue'))
-
-const route = useRoute()
-const { public: { siteUrl } } = useRuntimeConfig()
-
-setSeo({
+useAdminPage({
   title: 'Admin: Enterprise | Remit-Scout',
   description: 'Admin tools for managing enterprise accounts.',
-  canonical: `${siteUrl}${route.path}`,
-  noindex: true,
 })
 
 const { request } = useApi()
 const log = useLogger('admin/enterprise')
+const route = useRoute()
+const { formatTimestamp } = useAdminFormat()
 
 type UserWithPlan = {
   user_id: string
@@ -220,6 +154,7 @@ type UserWithPlan = {
 }
 
 const loading = ref(true)
+const tableError = ref<string | null>(null)
 const users = ref<UserWithPlan[]>([])
 const summary = ref({ free: 0, plus: 0, enterprise: 0 })
 const granting = ref(false)
@@ -236,16 +171,29 @@ const enterpriseUsers = computed(() =>
   users.value.filter(u => u.plan_code === 'enterprise'),
 )
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
+const tableColumns: DataTableColumn[] = [
+  { key: 'email', header: 'Email' },
+  { key: 'enterprise_granted_at', header: 'Granted' },
+  { key: 'enterprise_notes', header: 'Notes' },
+  { key: 'actions', header: 'Actions', align: 'right' },
+]
+
+const tableRows = computed(() =>
+  enterpriseUsers.value.map((user) => ({
+    user_id: user.user_id,
+    email: user.email || user.user_id,
+    enterprise_granted_at: user.enterprise_granted_at ? formatTimestamp(user.enterprise_granted_at) : 'n/a',
+    enterprise_notes: user.enterprise_notes || '-',
+    actions: 'revoke',
+    raw: user,
+  })),
+)
+
+const toUserWithPlan = (value: unknown): UserWithPlan => value as UserWithPlan
 
 const loadUsers = async () => {
   loading.value = true
+  tableError.value = null
   try {
     const data = await request<{ users?: UserWithPlan[], summary?: { free: number, plus: number, enterprise: number } }>(
       '/admin/plans',
@@ -256,6 +204,7 @@ const loadUsers = async () => {
     }
   }
   catch (error) {
+    tableError.value = error instanceof Error ? error.message : 'Failed to load enterprise users.'
     log.error('Failed to load users', error)
   }
   finally {
@@ -325,10 +274,9 @@ const revokeAccess = async (user: UserWithPlan) => {
 }
 
 onMounted(() => {
-  loadUsers()
-})
-
-useHead({
-  title: 'Enterprise Management | Admin',
+  if (typeof route.query.email === 'string') {
+    grantForm.value.email = route.query.email.trim().toLowerCase()
+  }
+  void loadUsers()
 })
 </script>

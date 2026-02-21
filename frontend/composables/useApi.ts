@@ -52,6 +52,7 @@ type ApiClientDeps = {
   base: string
   fetcher: (input: string, init?: FetchOptions) => Promise<unknown>
   getAccessToken?: () => string | null
+  getAdminAccessToken?: () => string | null
   makeRequestId?: () => string
   getServerHeaders?: () => Record<string, string>
   getCloudFrontRequestId?: () => string | undefined
@@ -59,6 +60,27 @@ type ApiClientDeps = {
 }
 
 export const createApiClient = (deps: ApiClientDeps) => {
+  const isAdminSurfacePath = (path: string): boolean => {
+    const normalized = (() => {
+      if (/^https?:\/\//.test(path)) {
+        try {
+          return new URL(path).pathname
+        }
+        catch {
+          return path
+        }
+      }
+      return path.startsWith('/') ? path : `/${path}`
+    })()
+
+    return (
+      normalized.startsWith('/admin')
+      || normalized.startsWith('/ops')
+      || normalized.startsWith('/analytics')
+      || normalized.startsWith('/audit')
+    )
+  }
+
   const makeRequestId = deps.makeRequestId || (() => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID()
@@ -121,8 +143,12 @@ export const createApiClient = (deps: ApiClientDeps) => {
 
       const hasAuthHeader = 'authorization' in headers || 'Authorization' in headers
       const accessToken = deps.getAccessToken?.()
+      const adminAccessToken = deps.getAdminAccessToken?.()
 
-      if (accessToken && !hasAuthHeader) {
+      if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
+        headers.authorization = `Bearer ${adminAccessToken}`
+      }
+      else if (accessToken && !hasAuthHeader) {
         headers.authorization = `Bearer ${accessToken}`
       }
 
@@ -198,6 +224,7 @@ export const useApi = () => {
   const config = useRuntimeConfig()
   // Avoid calling `useAuth()` here to prevent composable recursion (useAuth uses this API client for some calls).
   const session = useState<{ access_token?: string } | null>('auth:session', () => null)
+  const adminSession = useState<{ accessToken?: string | null }>('auth:admin-session', () => ({ accessToken: null }))
 
   const base = import.meta.server
     ? (config.apiBase || config.public.apiBase || '/api')
@@ -225,6 +252,7 @@ export const useApi = () => {
     base,
     fetcher: $fetch as unknown as ApiClientDeps['fetcher'],
     getAccessToken: () => session.value?.access_token ?? null,
+    getAdminAccessToken: () => adminSession.value?.accessToken ?? null,
     getServerHeaders,
     getCloudFrontRequestId,
     logger: {

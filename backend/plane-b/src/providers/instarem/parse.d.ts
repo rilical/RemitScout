@@ -1,0 +1,60 @@
+import type { CollectorRequest } from '../../collectors/types';
+import { QualityFlag } from '../../normalize/quality-flags';
+import type { InstaremPaymentMethod } from './fetch';
+type InstaremQuoteData = {
+    source_currency?: string | null;
+    destination_currency?: string | null;
+    gross_source_amount?: number | string | null;
+    net_source_amount?: number | string | null;
+    net_of_fee_amount?: number | string | null;
+    destination_amount?: number | string | null;
+    instarem_fx_rate?: number | string | null;
+    fx_rate?: number | string | null;
+    regular_instarem_fx_rate?: number | string | null;
+    transaction_fee_amount?: number | string | null;
+    payment_method_fee_amount?: number | string | null;
+    payout_method_fee_amount?: number | string | null;
+    regular_transaction_fee_amount?: number | string | null;
+    regular_payment_method_fee_amount?: number | string | null;
+    regular_payout_method_fee_amount?: number | string | null;
+    net_tax_amount?: number | string | null;
+    tax_amount_1?: number | string | null;
+    tax_amount_2?: number | string | null;
+    tax_amount_3?: number | string | null;
+    transaction_config?: {
+        total_fee_amount?: number | string | null;
+        regular_total_fee_amount?: number | string | null;
+        source_currency?: string | null;
+    };
+};
+export type InstaremParsedQuote = {
+    send_amount: number;
+    receive_amount: number;
+    fee_amount: number;
+    total_debit_amount: number;
+    payin_method: string;
+    payout_method: string;
+    fee_currency: string | null;
+    exchange_rate: number | null;
+    promotional_fee_amount: number | null;
+    promotional_rate: number | null;
+    base_rate: number | null;
+    promotional_cap_amount: number | null;
+    delivery_time_min_minutes: number | null;
+    delivery_time_max_minutes: number | null;
+    collected_at: string;
+    parser_version: string;
+    parse_flags: QualityFlag[];
+};
+type InstaremPayload = {
+    payment_methods?: InstaremPaymentMethod[];
+    selected_payment_method?: InstaremPaymentMethod | null;
+    quote?: InstaremQuoteData | null;
+    data?: InstaremQuoteData | null;
+};
+export declare const extractInstaremMethodPairs: (payload: InstaremPayload) => {
+    payin_method: string;
+    payout_method: string;
+}[];
+export declare const parseInstaremPayload: (payload: InstaremPayload, request: CollectorRequest) => InstaremParsedQuote | null;
+export {};

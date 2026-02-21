@@ -28,6 +28,16 @@ afterEach(() => {
 })
 
 describe('security-headers middleware', () => {
+  const getCsp = (response: Response) =>
+    response.headers.get('content-security-policy')
+    || response.headers.get('content-security-policy-report-only')
+    || ''
+
+  const getDirective = (csp: string, name: string) => {
+    const parts = csp.split(';').map(part => part.trim()).filter(Boolean)
+    return parts.find(part => part.startsWith(`${name} `)) || ''
+  }
+
   it('sets X-Frame-Options: DENY for normal pages', async () => {
     active = await startServer()
     const res = await fetch(`${active.baseUrl}/`)
@@ -61,8 +71,22 @@ describe('security-headers middleware', () => {
   it('sets CSP (Report-Only)', async () => {
     active = await startServer()
     const res = await fetch(`${active.baseUrl}/`)
-    const csp = res.headers.get('content-security-policy-report-only')
+    const csp = getCsp(res)
+    const scriptSrc = getDirective(csp, 'script-src')
     expect(csp).toBeTruthy()
     expect(csp).toContain('default-src \'self\'')
+    expect(csp).toContain('script-src')
+    expect(csp).toContain('nonce-')
+    expect(scriptSrc).not.toContain('unsafe-inline')
+    expect(scriptSrc).not.toContain('unsafe-eval')
+    expect(csp).toContain('frame-ancestors \'none\'')
+  })
+
+  it('keeps embed frame rules for /embed/*', async () => {
+    active = await startServer()
+    const res = await fetch(`${active.baseUrl}/embed/pulse/chart`)
+    const csp = getCsp(res)
+    expect(csp).toContain('frame-ancestors *')
+    expect(res.headers.get('x-frame-options')).toBe('SAMEORIGIN')
   })
 })

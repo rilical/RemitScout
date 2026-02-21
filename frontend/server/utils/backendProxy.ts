@@ -101,6 +101,29 @@ const joinUrl = (base: string, path: string) => {
   return `${cleanBase}${cleanPath}`
 }
 
+const rewriteSetCookiePath = (cookie: string): string => {
+  return cookie.replace(/(;\s*Path=)\/api\/v1(?=\/|;|$)/i, '$1/api')
+}
+
+const getSetCookieHeaders = (headers: Headers | undefined): string[] => {
+  if (!headers) return []
+  const headerBag = headers as Headers & { getSetCookie?: () => string[] }
+  const fromMethod = typeof headerBag.getSetCookie === 'function'
+    ? headerBag.getSetCookie()
+    : []
+  if (fromMethod.length > 0) return fromMethod
+
+  const single = headers.get('set-cookie')
+  return single ? [single] : []
+}
+
+const forwardSetCookieHeaders = (event: any, headers: Headers | undefined) => {
+  const setCookies = getSetCookieHeaders(headers)
+  if (!setCookies.length) return
+  const rewritten = setCookies.map(rewriteSetCookiePath)
+  setResponseHeader(event, 'set-cookie', rewritten)
+}
+
 const isE2eMockEnabled = () => process.env.E2E_MOCK_API === '1'
 
 type MockResult = { status: number, body: any }
@@ -633,6 +656,7 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
         setResponseHeader(event, 'Server-Timing', `backend;dur=${duration}`)
 
         const statusCode: number = res?.status ?? 0
+        forwardSetCookieHeaders(event, res?.headers)
 
         // For GET/HEAD, forward backend caching validators to the client.
         // This allows the backend (Plane A) to be the single source of truth for cache policy.

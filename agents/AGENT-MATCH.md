@@ -24,3 +24,8 @@ RAG file(s): <file list>
 Environment: <dev|staging|prod>
 Mode: <review only|edit allowed>
 Instructions: <1-3 bullets>
+
+## Admin UI notes
+- Canonical admin layout: `frontend/layouts/admin.vue`.
+- Ops health UI is consolidated under `/admin/observer` (legacy `/admin/ops-health` redirects).
+- Admin dashboards should use `/api/v1/ops/observer/summary` and `/api/v1/audit/logs` contracts.

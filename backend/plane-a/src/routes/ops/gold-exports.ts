@@ -5,6 +5,7 @@ import { getPool, query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
 import { requireAdmin } from '../../plugins/auth-plugin'
+import { sendAdminWebhook } from '../../services/admin-webhooks'
 import { ValidationError } from '../../../../shared/errors'
 import { getErrorMessage } from '../../types/errors'
 
@@ -437,6 +438,15 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
       logger.error('gold_exports_list_failed', {
         error: getErrorMessage(error),
       })
+      void sendAdminWebhook({
+        title: 'Gold export list failure',
+        event: 'export_job_failure',
+        actorId: request.user?.user_id ?? 'unknown',
+        metadata: {
+          operation: 'list',
+          error: getErrorMessage(error),
+        },
+      })
       reply.code(500)
       return { success: false, error: 'internal_error' }
     }
@@ -566,6 +576,16 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     } catch (error) {
       logger.error('gold_exports_export_failed', {
         error: getErrorMessage(error),
+      })
+      void sendAdminWebhook({
+        title: 'Gold export generation failure',
+        event: 'export_job_failure',
+        actorId: request.user?.user_id ?? 'unknown',
+        metadata: {
+          operation: 'export',
+          format: parsed.data.format,
+          error: getErrorMessage(error),
+        },
       })
       reply.code(500)
       return { error: 'internal_error' }

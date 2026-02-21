@@ -6,11 +6,13 @@
  *
  * Defaults:
  * - CHANNEL=b2c
- * - CORRIDOR_PREFIXES=US-
+ * - RIGHTS_SCOPE=all
  * - TOP_N=100
  * - APPLY=0 (dry-run; no DB writes)
  *
  * Optional:
+ * - RIGHTS_SCOPE=macro + SEND_CURRENCIES=USD,AED,GBP,EUR
+ * - RIGHTS_SCOPE=ids + CORRIDOR_IDS=US-AR-USD-ARS,US-AL-USD-ALL
  * - CORRIDOR_IDS=US-AR-USD-ARS,US-AL-USD-ALL
  * - APPLY=1 APPLY_PROVIDERS=wise,remitly
  */
@@ -25,6 +27,7 @@ import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { initErrorTracking } from '../shared/error-tracker'
 import { parseCorridorId } from '../shared/corridor'
+import { resolveCorridorScope } from '../shared/corridor-scope'
 
 initTracing('rights-matrix-capability-delta')
 initErrorTracking('rights-matrix-capability-delta')
@@ -75,6 +78,13 @@ const ensureDir = (dir: string): void => {
   fs.mkdirSync(dir, { recursive: true })
 }
 
+const chunk = <T>(items: T[], size: number): T[][] => {
+  if (!Number.isFinite(size) || size <= 0) return [items]
+  const out: T[][] = []
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
+  return out
+}
+
 const includesCountry = (list: string[] | null, country: string): boolean => {
   if (!list || !list.length) return false
   const needle = normalizeUpper(country)
@@ -93,10 +103,7 @@ const isRightsActive = (row: RightsRow, channel: RightsChannel): boolean => {
 
 export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
   const channel: RightsChannel = normalizeLower(process.env.CHANNEL || 'b2c') === 'b2b' ? 'b2b' : 'b2c'
-  const corridorPrefixes = splitCsv(process.env.CORRIDOR_PREFIXES)
-  const normalizedPrefixes = (corridorPrefixes.length ? corridorPrefixes : ['US-'])
-    .map((value) => `${normalizeUpper(value).replace(/%+$/g, '')}%`)
-  const corridorIds = splitCsv(process.env.CORRIDOR_IDS).map(normalizeUpper)
+  const rightsScope = (process.env.RIGHTS_SCOPE || 'all').trim().toLowerCase()
   const topN = Math.max(1, Number(process.env.TOP_N || '100'))
   const apply = process.env.APPLY === '1'
   const applyProviders = new Set(splitCsv(process.env.APPLY_PROVIDERS).map(normalizeLower))
@@ -126,23 +133,27 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
         .map((row) => [normalizeLower(row.provider_id), row]),
     )
 
-    const capabilityResult = corridorIds.length > 0
-      ? await query<CapabilityRow>(
-          `SELECT provider_id, corridor_id, is_supported
-           FROM silver.provider_corridor_capability
-           WHERE is_supported = true
-             AND corridor_id = ANY($1::text[])`,
-          [corridorIds],
-          pool,
-        )
-      : await query<CapabilityRow>(
-          `SELECT provider_id, corridor_id, is_supported
-           FROM silver.provider_corridor_capability
-           WHERE is_supported = true
-             AND corridor_id LIKE ANY($1::text[])`,
-          [normalizedPrefixes],
-          pool,
-        )
+    const scopeResult = await resolveCorridorScope(pool, {
+      scopeEnv: rightsScope,
+      corridorIdsEnv: process.env.CORRIDOR_IDS,
+      sendCurrenciesEnv: process.env.SEND_CURRENCIES,
+      defaultSendCurrencies: ['USD', 'AED', 'GBP', 'EUR'],
+      includeCapabilityTableCorridors: true,
+    })
+
+    const capabilityRows: CapabilityRow[] = []
+    for (const corridorChunk of chunk(scopeResult.corridorIds, 1000)) {
+      if (corridorChunk.length === 0) continue
+      const result = await query<CapabilityRow>(
+        `SELECT provider_id, corridor_id, is_supported
+         FROM silver.provider_corridor_capability
+         WHERE is_supported = true
+           AND corridor_id = ANY($1::text[])`,
+        [corridorChunk],
+        pool,
+      )
+      capabilityRows.push(...result.rows)
+    }
 
     const deltaByProvider = new Map<string, {
       missingSources: Set<string>
@@ -150,7 +161,7 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
       impactedCorridors: Set<string>
     }>()
 
-    for (const row of capabilityResult.rows) {
+    for (const row of capabilityRows) {
       const providerId = normalizeLower(row.provider_id)
       const rights = rightsByProvider.get(providerId)
       if (!rights) continue
@@ -205,6 +216,19 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
     const selectedForApply = deltas.filter((delta) => (
       applyProviders.size === 0 || applyProviders.has(normalizeLower(delta.providerId))
     ))
+    const appliedSnapshots = selectedForApply.map((delta) => ({
+      providerId: delta.providerId,
+      before: {
+        sourceCountries: delta.existingSourceCountries,
+        destinationCountries: delta.existingDestinationCountries,
+      },
+      after: {
+        sourceCountries: delta.proposedSourceCountries,
+        destinationCountries: delta.proposedDestinationCountries,
+      },
+      impactedCorridors: delta.impactedCorridors,
+      impactedCorridorCount: delta.impactedCorridorCount,
+    }))
 
     let applied = 0
     if (apply) {
@@ -232,15 +256,21 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
       generatedAt,
       environment: config.env,
       channel,
+      scope: scopeResult.scope,
       filters: {
-        corridorIds: corridorIds.length ? corridorIds : null,
-        corridorPrefixes: corridorIds.length ? null : normalizedPrefixes,
+        corridorIds: scopeResult.corridorIdsFilter,
+        sendCurrencies: scopeResult.sendCurrencies,
+        corridorCount: scopeResult.corridorCount,
+        providerCatalogCorridorCount: scopeResult.providerCatalogCorridorCount,
+        capabilityCorridorCount: scopeResult.capabilityCorridorCount,
       },
+      capabilityRowsEvaluated: capabilityRows.length,
       totalProvidersWithDelta: deltas.length,
       topN,
       applyRequested: apply,
       applyProviders: applyProviders.size ? Array.from(applyProviders.values()) : null,
       appliedProviders: applied,
+      appliedSnapshots: apply ? appliedSnapshots : null,
       top: deltas.slice(0, topN),
     }
     fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2), 'utf8')
@@ -250,8 +280,13 @@ export const runRightsMatrixCapabilityDelta = async (): Promise<void> => {
     lines.push('')
     lines.push(`- Environment: ${config.env}`)
     lines.push(`- Channel: ${channel}`)
-    lines.push(`- Corridor filter ids: ${corridorIds.length ? corridorIds.join(', ') : '(none)'}`)
-    lines.push(`- Corridor filter prefixes: ${corridorIds.length ? '(ids mode)' : normalizedPrefixes.join(', ')}`)
+    lines.push(`- Scope: ${scopeResult.scope}`)
+    lines.push(`- Scope corridor count: ${scopeResult.corridorCount}`)
+    lines.push(`- Scope corridor ids filter: ${scopeResult.corridorIdsFilter ? scopeResult.corridorIdsFilter.join(', ') : '(none)'}`)
+    lines.push(`- Scope send currencies: ${scopeResult.sendCurrencies ? scopeResult.sendCurrencies.join(', ') : '(none)'}`)
+    lines.push(`- Provider catalog corridors: ${scopeResult.providerCatalogCorridorCount}`)
+    lines.push(`- Capability table corridors: ${scopeResult.capabilityCorridorCount}`)
+    lines.push(`- Capability rows evaluated: ${capabilityRows.length}`)
     lines.push(`- Providers with proposed deltas: ${deltas.length}`)
     lines.push(`- Apply requested: ${apply ? 'yes' : 'no'}`)
     lines.push(`- Applied providers: ${applied}`)
@@ -289,4 +324,3 @@ if (require.main === module) {
     process.exit(1)
   })
 }
-

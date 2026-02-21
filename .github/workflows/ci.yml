@@ -338,6 +338,16 @@ jobs:
           pnpm_version: ${{ inputs.pnpm_version }}
       - run: pnpm -C backend db:migrate
       - run: pnpm -C backend db:seed
+      - name: Rights differential gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODE="${{ inputs.mode || github.event.inputs.mode }}"
+          if [ "$MODE" = "main" ] || [ "$MODE" = "nightly" ]; then
+            RIGHTS_SCOPE=all STRICT_DATA_HEALTH=1 pnpm -C backend ci:rights-differential-gate
+          else
+            RIGHTS_SCOPE=priority pnpm -C backend ci:rights-differential-gate
+          fi
       - run: pnpm -C backend exec tsx scripts/generate-fixtures.ts
       - run: pnpm -C backend test:coverage
       - uses: actions/upload-artifact@v4

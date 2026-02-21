@@ -10,6 +10,7 @@ const DANGER = colors.red
 const ACCENT = colors.violet
 
 export default {
+  darkMode: 'class',
   content: [
     './components/**/*.{js,vue,ts}',
     './composables/**/*.{js,ts}',

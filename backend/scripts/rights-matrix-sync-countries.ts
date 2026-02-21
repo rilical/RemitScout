@@ -144,6 +144,7 @@ const corridorSupportEntries: CorridorSupport[] = [
 ]
 
 export const runRightsMatrixSyncCountries = async (): Promise<void> => {
+  const strictCountrySync = process.env.STRICT_COUNTRY_SYNC === '1'
   const pool = createPool(config.db.planeBUrl)
 
   try {
@@ -194,6 +195,34 @@ export const runRightsMatrixSyncCountries = async (): Promise<void> => {
         source_count: entry.sourceCountries.length,
         destination_count: entry.destinationCountries.length,
       })
+    }
+
+    const activeB2cEmptyCountrySet = await query<{ provider_id: string }>(
+      `SELECT provider_id
+         FROM silver.rights_matrix
+        WHERE allowed_collect = true
+          AND allowed_b2c = true
+          AND stoplist_status = 'active'
+          AND (
+            COALESCE(array_length(source_countries, 1), 0) = 0
+            OR COALESCE(array_length(destination_countries, 1), 0) = 0
+          )
+        ORDER BY provider_id`,
+      [],
+      pool,
+    )
+
+    if (activeB2cEmptyCountrySet.rows.length > 0) {
+      console.warn('[rights-matrix] active b2c providers with empty country sets', {
+        count: activeB2cEmptyCountrySet.rows.length,
+        providers: activeB2cEmptyCountrySet.rows.map((row) => row.provider_id),
+      })
+    }
+
+    if (strictCountrySync && activeB2cEmptyCountrySet.rows.length > 0) {
+      throw new Error(
+        `strict_country_sync_failed: ${activeB2cEmptyCountrySet.rows.map((row) => row.provider_id).join(',')}`,
+      )
     }
   } finally {
     await pool.end().catch(() => {

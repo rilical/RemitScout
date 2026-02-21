@@ -38,12 +38,9 @@ export class RightsMatrixRepository implements IRightsMatrixRepository {
             AND $1 = ANY(source_countries)
           )
           AND (
-            (
-              destination_countries IS NOT NULL
-              AND array_length(destination_countries, 1) > 0
-              AND $2 = ANY(destination_countries)
-            )
-            OR provider_id = 'wise'
+            destination_countries IS NOT NULL
+            AND array_length(destination_countries, 1) > 0
+            AND $2 = ANY(destination_countries)
           )`,
       [sourceCountry, destCountry],
       this.pool,

@@ -240,6 +240,16 @@ const rawConfig = {
     requireJwt: toBoolean(process.env.PLANE_A_REQUIRE_JWT),
     apiKeys: (process.env.PLANE_A_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
     jwtSecret: process.env.PLANE_A_JWT_SECRET || '',
+    adminTokenIssuer: process.env.PLANE_A_ADMIN_TOKEN_ISSUER || 'remit-scout-plane-a',
+    adminAccessTokenTtlSeconds: toPositiveInt(
+      process.env.PLANE_A_ADMIN_ACCESS_TOKEN_TTL_SECONDS,
+      4 * 60 * 60,
+    ),
+    adminRefreshTokenTtlSeconds: toPositiveInt(
+      process.env.PLANE_A_ADMIN_REFRESH_TOKEN_TTL_SECONDS,
+      30 * 24 * 60 * 60,
+    ),
+    adminRefreshCookieName: process.env.PLANE_A_ADMIN_REFRESH_COOKIE_NAME || 'plane_a_admin_refresh',
     planeCBaseUrl: process.env.PLANE_C_BASE_URL || (isStrictConfig ? '' : 'http://localhost:4100'),
     adminEmails: (process.env.PLANE_A_ADMIN_EMAILS || '')
       .split(',')
@@ -291,6 +301,10 @@ const rawConfig = {
       allowedMethods: toList(process.env.PLANE_A_CORS_ALLOWED_METHODS),
       allowCredentials: toBoolean(process.env.PLANE_A_CORS_ALLOW_CREDENTIALS),
     },
+    featureFlagsCacheTtlSeconds: toPositiveInt(
+      process.env.PLANE_A_FEATURE_FLAGS_CACHE_TTL_SECONDS,
+      60,
+    ),
     smartAlerts: {
       enabled: toBoolean(
         process.env.PLANE_A_SMART_ALERTS_ENABLED,

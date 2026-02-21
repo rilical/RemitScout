@@ -1,9 +1,14 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createLogger } from '../../../shared/logger'
-import { AppError, NotFoundError, ValidationError } from '../../../shared/errors'
+import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { requireAuth } from '../plugins/auth-plugin'
-import { deleteUserAccount } from '../services/account-deletion'
+import {
+  cancelAccountDeletion,
+  cancelAccountDeletionByToken,
+  requestAccountDeletion,
+} from '../services/account-deletion-requests'
+import { getRequestContext } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 
 const logger = createLogger('plane-a.account')
@@ -20,7 +25,6 @@ const privacySchema = z.object({
 })
 
 export const accountRoutes = async (app: FastifyInstance) => {
-  const planeAPool = app.container.pool
   const userAccountRepository = app.container.repositories.userAccount
 
   app.get('/account/privacy', { preHandler: requireAuth() }, async (request, _reply) => {
@@ -101,7 +105,7 @@ export const accountRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.delete('/account', { preHandler: requireAuth() }, async (request, _reply) => {
+  app.delete('/account', { preHandler: requireAuth() }, async (request, reply) => {
     const parsed = deleteAccountSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
       throw new ValidationError('Account deletion requires confirmation.')
@@ -110,29 +114,21 @@ export const accountRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
-      const result = await deleteUserAccount(planeAPool, user.user_id, {
-        request,
-        actorRole: user.role ?? undefined,
-        reason: 'User requested account deletion',
+      const result = await requestAccountDeletion({
+        userId: user.user_id,
+        requestedBy: user.user_id,
+        requestContext: getRequestContext(request),
+        metadata: {
+          reason: 'User requested account deletion',
+          actorRole: user.role ?? null,
+        },
       })
-      if (!result.deleted) {
-        if (result.errors.includes('user_not_found')) {
-          throw new NotFoundError('User not found.')
-        }
-        throw new AppError('Account deletion failed', {
-          statusCode: 500,
-          code: 'account_deletion_failed',
-          details: { errors: result.errors, warnings: result.warnings },
-        })
-      }
-
-      return {
+      return reply.code(202).send({
         success: true,
-        deleted: result.deleted,
-        anonymized: result.anonymized,
-        errors: result.errors,
-        warnings: result.warnings,
-      }
+        status: 'pending',
+        scheduled_for: result.scheduledFor,
+        token_expires_at: result.tokenExpiresAt,
+      })
     } catch (error) {
       logger.error('account_deletion_failed', {
         user_id: user.user_id,
@@ -141,5 +137,47 @@ export const accountRoutes = async (app: FastifyInstance) => {
       })
       throw error
     }
+  })
+
+  app.post('/account/deletion/cancel', { preHandler: requireAuth() }, async (request, _reply) => {
+    const user = request.user!
+    const cancelled = await cancelAccountDeletion({
+      userId: user.user_id,
+      requestContext: getRequestContext(request),
+    })
+
+    if (!cancelled) {
+      throw new NotFoundError('Account deletion request not found.')
+    }
+
+    return {
+      success: true,
+      cancelled,
+    }
+  })
+
+  app.get('/account/deletion/cancel', async (request, reply) => {
+    const token = typeof (request.query as { token?: string })?.token === 'string'
+      ? (request.query as { token?: string }).token
+      : ''
+
+    if (!token) {
+      throw new ValidationError('Missing cancel token.')
+    }
+
+    const result = await cancelAccountDeletionByToken({
+      token,
+      requestContext: getRequestContext(request),
+    })
+
+    if (!result.cancelled) {
+      return reply.status(404).type('text/html').send(
+        '<html><body><h1>Account deletion link invalid or expired.</h1></body></html>',
+      )
+    }
+
+    return reply.status(200).type('text/html').send(
+      '<html><body><h1>Account deletion cancelled.</h1><p>You can safely close this page.</p></body></html>',
+    )
   })
 }

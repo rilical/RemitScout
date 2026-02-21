@@ -127,6 +127,27 @@
                   Use at least 8 characters.
                 </p>
               </div>
+              <label class="flex items-start gap-2 text-body-sm text-neutral-700">
+                <input
+                  id="terms"
+                  v-model="termsAccepted"
+                  type="checkbox"
+                  required
+                  class="mt-1 h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-600"
+                >
+                <span>
+                  I agree to the
+                  <NuxtLink
+                    to="/terms"
+                    class="font-semibold text-brand-600 hover:text-brand-700"
+                  >Terms of Service</NuxtLink>
+                  and
+                  <NuxtLink
+                    to="/privacy"
+                    class="font-semibold text-brand-600 hover:text-brand-700"
+                  >Privacy Policy</NuxtLink>.
+                </span>
+              </label>
 
               <button
                 type="submit"
@@ -180,18 +201,6 @@
             </div>
           </div>
 
-          <p class="mt-4 text-body-sm text-rs-muted">
-            By continuing, you agree to the
-            <NuxtLink
-              to="/terms"
-              class="font-semibold text-brand-600 hover:text-brand-700"
-            >Terms of Service</NuxtLink>
-            and
-            <NuxtLink
-              to="/privacy"
-              class="font-semibold text-brand-600 hover:text-brand-700"
-            >Privacy Policy</NuxtLink>.
-          </p>
         </div>
       </div>
 
@@ -255,11 +264,18 @@ const sent = ref(false)
 const name = ref('')
 const email = ref('')
 const password = ref('')
+const termsAccepted = ref(false)
 
 async function handleEmailSignUp() {
   errorMessage.value = null
   loading.value = true
   sent.value = false
+
+  if (!termsAccepted.value) {
+    loading.value = false
+    errorMessage.value = 'Please accept the Terms of Service and Privacy Policy.'
+    return
+  }
 
   const result = await signUp({ name: name.value, email: email.value, password: password.value })
   loading.value = false
@@ -281,6 +297,11 @@ async function handleEmailSignUp() {
 async function handleSocialSignUp(provider: 'google') {
   errorMessage.value = null
   loading.value = true
+  if (!termsAccepted.value) {
+    loading.value = false
+    errorMessage.value = 'Please accept the Terms of Service and Privacy Policy.'
+    return
+  }
   const result = await signInWithOAuth(provider)
   loading.value = false
 

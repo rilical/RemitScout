@@ -30,8 +30,8 @@ import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { initErrorTracking } from '../shared/error-tracker'
 import { computeBucketSelection } from '../shared/amount-bucket'
-import { getMacroCorridors, type MacroCorridor } from '../shared/macro-corridors'
 import { parseCorridorId } from '../shared/corridor'
+import { resolveCorridorScope } from '../shared/corridor-scope'
 
 initTracing('rights-matrix-differential')
 initErrorTracking('rights-matrix-differential')
@@ -59,6 +59,11 @@ type CapabilityRow = {
   payout_methods: string[] | null
   is_supported: boolean | null
   source: string | null
+}
+
+type CapabilityLoadResult = {
+  byCorridor: Map<string, Map<string, CapabilityRow>>
+  capabilityTableRowCount: number
 }
 
 type LatestQuoteRow = {
@@ -232,9 +237,12 @@ const loadRights = async (pool: ReturnType<typeof createPool>): Promise<Map<stri
 const loadCapabilities = async (
   pool: ReturnType<typeof createPool>,
   corridorIds: string[],
-): Promise<Map<string, Map<string, CapabilityRow>>> => {
+): Promise<CapabilityLoadResult> => {
   const byCorridor = new Map<string, Map<string, CapabilityRow>>()
-  if (!corridorIds.length) return byCorridor
+  let capabilityTableRowCount = 0
+  if (!corridorIds.length) {
+    return { byCorridor, capabilityTableRowCount }
+  }
 
   for (const ids of chunk(corridorIds, 1000)) {
     const result = await query<CapabilityRow>(
@@ -249,6 +257,7 @@ const loadCapabilities = async (
       [ids],
       pool,
     )
+    capabilityTableRowCount += result.rows.length
     for (const row of result.rows) {
       if (!row.corridor_id || !row.provider_id) continue
       if (!byCorridor.has(row.corridor_id)) byCorridor.set(row.corridor_id, new Map())
@@ -256,7 +265,7 @@ const loadCapabilities = async (
     }
   }
 
-  return byCorridor
+  return { byCorridor, capabilityTableRowCount }
 }
 
 const loadLatestQuotes = async (
@@ -298,10 +307,9 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
   const runId = process.env.RUN_ID || null
   const methods = parseMethods(process.env.METHODS)
   const channel: RightsChannel = normalizeLower(process.env.RIGHTS_CHANNEL || 'b2c') === 'b2b' ? 'b2b' : 'b2c'
+  const rightsScope = (process.env.RIGHTS_SCOPE || 'all').trim().toLowerCase()
   const requireProduction = process.env.REQUIRE_STATUS_PRODUCTION === '1'
-  const sendCurrencyFilter = splitCsv(process.env.SEND_CURRENCIES).map(normalizeUpper)
-  const sendCurrencySet = sendCurrencyFilter.length ? new Set(sendCurrencyFilter) : null
-  const corridorIdsFilter = splitCsv(process.env.CORRIDOR_IDS).map(normalizeUpper)
+  const strictDataHealth = process.env.STRICT_DATA_HEALTH === '1'
   const amount = Number(process.env.AMOUNT ?? '500')
   const amountBucket = computeBucketSelection(Number.isFinite(amount) && amount > 0 ? amount : 500).bucket_used
   const topN = Math.max(1, Number(process.env.TOP_N || '200'))
@@ -311,41 +319,61 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
     : path.join(os.tmpdir(), 'remit-scout-artifacts', 'rights-differential')
   ensureDir(outputDir)
 
-  const corridors = (() => {
-    if (corridorIdsFilter.length > 0) {
-      const fromIds: MacroCorridor[] = []
-      for (const corridorId of corridorIdsFilter) {
-        const parsed = parseCorridorId(corridorId)
-        if (!parsed) {
-          throw new Error(`Invalid corridor id in CORRIDOR_IDS: ${corridorId}`)
-        }
-        fromIds.push({
-          corridorId,
-          sourceCountry: parsed.sourceCountry,
-          destCountry: parsed.destCountry,
-          sourceCurrency: parsed.sourceCurrency,
-          destCurrency: parsed.destCurrency,
-          isHardCurrencyLane: false,
-          tier: 'tier_3',
-        })
-      }
-      return fromIds
-    }
-
-    const allMacro = getMacroCorridors()
-    return sendCurrencySet
-      ? allMacro.filter((c) => sendCurrencySet.has(normalizeUpper(c.sourceCurrency)))
-      : allMacro
-  })()
-  const corridorIds = corridors.map((c) => c.corridorId)
-
   const pool = createPool(config.db.planeBUrl)
   try {
-    const [rightsByProvider, capsByCorridor, quotesByCorridor] = await Promise.all([
+    const [rightsByProvider, scopeResult] = await Promise.all([
       loadRights(pool),
+      resolveCorridorScope(pool, {
+        scopeEnv: rightsScope,
+        corridorIdsEnv: process.env.CORRIDOR_IDS,
+        sendCurrenciesEnv: process.env.SEND_CURRENCIES,
+        defaultSendCurrencies: ['USD', 'AED', 'GBP', 'EUR'],
+        includeCapabilityTableCorridors: true,
+      }),
+    ])
+    const corridors = scopeResult.corridorIds.map((corridorId) => {
+      const parsed = parseCorridorId(corridorId)
+      if (!parsed) {
+        throw new Error(`Invalid corridor id in scope: ${corridorId}`)
+      }
+      return {
+        corridorId,
+        sourceCountry: parsed.sourceCountry,
+        destCountry: parsed.destCountry,
+        sourceCurrency: parsed.sourceCurrency,
+        destCurrency: parsed.destCurrency,
+      }
+    })
+    const corridorIds = corridors.map((corridor) => corridor.corridorId)
+    const [capabilityLoad, quotesByCorridor] = await Promise.all([
       loadCapabilities(pool, corridorIds),
       loadLatestQuotes(pool, corridorIds, amountBucket),
     ])
+    const capsByCorridor = capabilityLoad.byCorridor
+    const capabilityTableRowCount = capabilityLoad.capabilityTableRowCount
+    const activeRightsProviderIds = Array.from(rightsByProvider.entries())
+      .filter(([, rights]) => isRightsActive(rights, channel, requireProduction))
+      .map(([providerId]) => providerId)
+    const activeB2cRightsRows = Array.from(rightsByProvider.values())
+      .filter((rights) => isRightsActive(rights, 'b2c', requireProduction))
+    const activeB2cRightsCount = activeB2cRightsRows.length
+    const activeB2cRightsWithCountrySetsCount = activeB2cRightsRows.filter((rights) => (
+      Array.isArray(rights.source_countries)
+      && rights.source_countries.length > 0
+      && Array.isArray(rights.destination_countries)
+      && rights.destination_countries.length > 0
+    )).length
+    const dataHealthStatus = (
+      capabilityTableRowCount > 0
+      && activeB2cRightsWithCountrySetsCount > 0
+    ) ? 'ok' : 'degraded'
+    const strictDataHealthFailures: string[] = []
+    if (capabilityTableRowCount === 0) {
+      strictDataHealthFailures.push('capability_table_empty_for_scope')
+    }
+    if (activeB2cRightsWithCountrySetsCount === 0) {
+      strictDataHealthFailures.push('active_b2c_rights_country_sets_empty')
+    }
 
     const rows: DifferentialRow[] = []
 
@@ -360,8 +388,18 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
         const capabilityUnsupportedProviders = new Set<string>()
         const methodMismatchProviders = new Set<string>()
 
-        for (const [providerId, rights] of rightsByProvider.entries()) {
-          if (!isRightsActive(rights, channel, requireProduction)) continue
+        const providerUniverse = new Set<string>([
+          ...activeRightsProviderIds,
+          ...capMap.keys(),
+        ])
+
+        const enforceCandidates = new Set<string>()
+        const ignoreCountryCandidates = new Set<string>()
+        const ignoreAllCandidates = new Set<string>()
+
+        for (const providerId of activeRightsProviderIds) {
+          const rights = rightsByProvider.get(providerId)
+          if (!rights) continue
           rightsIgnoreCountryEligible.add(providerId)
           const inCountry =
             includesCountry(rights.source_countries, corridor.sourceCountry)
@@ -369,11 +407,13 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
           if (inCountry) rightsCountryEligible.add(providerId)
         }
 
-        const enforceCandidates = new Set<string>()
-        const ignoreCountryCandidates = new Set<string>()
-        const ignoreAllCandidates = new Set<string>()
+        for (const providerId of providerUniverse) {
+          const cap = capMap.get(providerId) ?? null
+          if (!cap) {
+            if (rightsCountryEligible.has(providerId)) capabilityMissingProviders.add(providerId)
+            continue
+          }
 
-        for (const [providerId, cap] of capMap.entries()) {
           if (!cap.is_supported) {
             if (rightsCountryEligible.has(providerId)) capabilityUnsupportedProviders.add(providerId)
             continue
@@ -390,13 +430,6 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
           }
           if (rightsCountryEligible.has(providerId)) {
             enforceCandidates.add(providerId)
-          }
-        }
-
-        for (const providerId of rightsCountryEligible) {
-          const cap = capMap.get(providerId)
-          if (!cap) {
-            capabilityMissingProviders.add(providerId)
           }
         }
 
@@ -455,14 +488,22 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
       env: config.env,
       generatedAt: new Date().toISOString(),
       rightsChannel: channel,
+      scope: scopeResult.scope,
       requireStatusProduction: requireProduction,
       amount,
       amountBucket,
-      corridorIdsFilter: corridorIdsFilter.length ? corridorIdsFilter : null,
-      sendCurrencies: sendCurrencySet ? Array.from(sendCurrencySet.values()) : 'ALL',
+      corridorIdsFilter: scopeResult.corridorIdsFilter,
+      sendCurrencies: scopeResult.sendCurrencies,
+      corridorCount: scopeResult.corridorCount,
+      providerCatalogCorridorCount: scopeResult.providerCatalogCorridorCount,
+      capabilityCorridorCount: scopeResult.capabilityCorridorCount,
       methods,
-      macroCorridors: corridors.length,
+      scopedCorridors: corridors.length,
       rows: rows.length,
+      capabilityTableRowCount,
+      activeB2cRightsCount,
+      activeB2cRightsWithCountrySetsCount,
+      dataHealthStatus,
       topN,
       top: rows.slice(0, topN),
       totals: {
@@ -480,12 +521,21 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
     lines.push('')
     lines.push(`- Environment: ${config.env}`)
     lines.push(`- Rights channel: ${channel}`)
+    lines.push(`- Scope: ${scopeResult.scope}`)
     lines.push(`- Require production status: ${requireProduction ? 'yes' : 'no'}`)
     lines.push(`- Amount: ${amount}`)
     lines.push(`- Amount bucket used: ${amountBucket}`)
-    lines.push(`- Macro corridors scanned: ${corridors.length}`)
+    lines.push(`- Corridors scanned: ${corridors.length}`)
+    lines.push(`- Scope corridor count: ${scopeResult.corridorCount}`)
+    lines.push(`- Scope send currencies: ${scopeResult.sendCurrencies ? scopeResult.sendCurrencies.join(', ') : '(none)'}`)
+    lines.push(`- Provider catalog corridors: ${scopeResult.providerCatalogCorridorCount}`)
+    lines.push(`- Capability table corridors: ${scopeResult.capabilityCorridorCount}`)
     lines.push(`- Methods: ${methods.join(', ')}`)
     lines.push(`- Rows scanned: ${rows.length}`)
+    lines.push(`- Capability table rows (scope): ${capabilityTableRowCount}`)
+    lines.push(`- Active B2C rights rows: ${activeB2cRightsCount}`)
+    lines.push(`- Active B2C rights rows with country sets: ${activeB2cRightsWithCountrySetsCount}`)
+    lines.push(`- Data health: ${dataHealthStatus}`)
     lines.push('')
     lines.push('## Totals')
     lines.push('')
@@ -512,14 +562,32 @@ export const runRightsMatrixDifferential = async (): Promise<void> => {
       json: jsonPath,
       markdown: mdPath,
       rights_channel: channel,
+      scope: scopeResult.scope,
       require_production: requireProduction,
       amount,
       amount_bucket: amountBucket,
+      corridor_count: scopeResult.corridorCount,
+      provider_catalog_corridor_count: scopeResult.providerCatalogCorridorCount,
+      capability_corridor_count: scopeResult.capabilityCorridorCount,
+      capability_table_row_count: capabilityTableRowCount,
+      active_b2c_rights_count: activeB2cRightsCount,
+      active_b2c_rights_with_country_sets_count: activeB2cRightsWithCountrySetsCount,
+      data_health_status: dataHealthStatus,
       methods,
-      macro_corridors: corridors.length,
+      scoped_corridors: corridors.length,
       rows: rows.length,
       totals: report.totals,
     })
+    if (dataHealthStatus === 'degraded') {
+      logger.warn('rights_matrix_differential_data_health_degraded', {
+        capability_table_row_count: capabilityTableRowCount,
+        active_b2c_rights_count: activeB2cRightsCount,
+        active_b2c_rights_with_country_sets_count: activeB2cRightsWithCountrySetsCount,
+      })
+    }
+    if (strictDataHealth && strictDataHealthFailures.length > 0) {
+      throw new Error(`strict_data_health_failed: ${strictDataHealthFailures.join(',')}`)
+    }
   } finally {
     await pool.end().catch(() => {})
   }

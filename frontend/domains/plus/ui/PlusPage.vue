@@ -254,23 +254,23 @@
 
             <ul class="space-y-3 mb-8 flex-grow">
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
                 <span class="text-body-sm text-neutral-300 font-medium">Everything in Plus</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
                 <span class="text-body-sm text-neutral-300">Extended rate history</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
                 <span class="text-body-sm text-neutral-300">Custom data exports</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
                 <span class="text-body-sm text-neutral-300">Data integrations & API access</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="18" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
                 <span class="text-body-sm text-neutral-300">Dedicated account manager</span>
               </li>
             </ul>
@@ -314,7 +314,7 @@
           >
             <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
               <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <Icon name="signal" :size="22" class="text-white" />
+                <Icon name="signal" :size="24" class="text-white" />
               </div>
             </div>
             <div class="flex-1">

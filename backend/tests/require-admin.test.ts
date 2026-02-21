@@ -19,6 +19,8 @@ const mockConfig = vi.hoisted(() => ({
 const mockQuery = vi.hoisted(() => vi.fn())
 const mockWarn = vi.hoisted(() => vi.fn())
 const mockError = vi.hoisted(() => vi.fn())
+const mockIsAdminJtiRevoked = vi.hoisted(() => vi.fn().mockResolvedValue(false))
+const mockIsPlaneAAdminAccessClaims = vi.hoisted(() => vi.fn().mockReturnValue(false))
 
 vi.mock('../shared/config', () => ({
   config: mockConfig,
@@ -40,6 +42,15 @@ vi.mock('../shared/logger', () => ({
 
 vi.mock('../shared/redis', () => ({
   getRedisClient: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('../plane-a/src/auth/admin-jwt', () => ({
+  isPlaneAAdminAccessClaims: (...args: unknown[]) => mockIsPlaneAAdminAccessClaims(...args),
+  verifyPlaneAAdminJwt: vi.fn(),
+}))
+
+vi.mock('../plane-a/src/services/admin-sessions', () => ({
+  isAdminJtiRevoked: (...args: unknown[]) => mockIsAdminJtiRevoked(...args),
 }))
 
 vi.mock('../plane-a/src/auth/verify-supabase-jwt', () => ({
@@ -89,6 +100,8 @@ describe('requireAdmin', () => {
     mockConfig.planeA.adminEmailDomains = []
     mockConfig.planeA.adminRequireAllowlist = true
     mockConfig.planeA.adminAllowlistStrict = true
+    mockIsAdminJtiRevoked.mockResolvedValue(false)
+    mockIsPlaneAAdminAccessClaims.mockReturnValue(false)
     mockQuery.mockResolvedValue({ rows: [] })
   })
 
@@ -157,5 +170,32 @@ describe('requireAdmin', () => {
 
     expect(reply.code).toHaveBeenCalledWith(403)
     expect(reply.send).toHaveBeenCalledWith({ error: 'forbidden' })
+  })
+
+  it('denies revoked Plane A admin token', async () => {
+    mockIsPlaneAAdminAccessClaims.mockReturnValue(true)
+    mockIsAdminJtiRevoked.mockResolvedValue(true)
+
+    const handler = requireAdmin()
+    const reply = makeReply()
+
+    await handler(
+      {
+        user: {
+          user_id: 'u-1',
+          email: 'ops@remit-scout.com',
+          role: 'admin',
+          claims: { jti: 'jti-revoked' },
+        },
+      } as any,
+      reply as any,
+    )
+
+    expect(reply.code).toHaveBeenCalledWith(401)
+    expect(reply.send).toHaveBeenCalledWith({
+      error: 'unauthorized',
+      code: 'revoked_token',
+      message: 'Session has been revoked. Please sign in again.',
+    })
   })
 })

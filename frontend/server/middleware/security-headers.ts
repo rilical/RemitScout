@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { defineEventHandler, getRequestURL, setResponseHeaders } from 'h3'
 
 export default defineEventHandler((event) => {
@@ -15,31 +16,19 @@ export default defineEventHandler((event) => {
   // `X-Frame-Options: SAMEORIGIN` will block them. In that case, omit XFO for
   // embed pages and rely on CSP `frame-ancestors` allowlisting instead.
   const xFrameOptions = isEmbed ? 'SAMEORIGIN' : 'DENY'
-
-  // CSP: Start in Report-Only mode so we can observe violations before enforcing.
-  // To enforce, switch to `Content-Security-Policy` instead of `...-Report-Only`.
-  //
-  // NOTE: This CSP currently includes `unsafe-inline` for scripts because Nuxt
-  // runtime bootstrapping and JSON-LD structured data still rely on inline script
-  // blocks. Analytics tags in `frontend/app.vue` are now loaded via programmatic
-  // script element injection rather than inline script bodies. Nonce-based CSP is
-  // a follow-up. Doing it correctly requires:
-  // 1) Generating a per-response nonce (must not be cached across responses).
-  // 2) Passing that nonce to inline script tags (e.g. via `useRequestEvent().context`).
-  // 3) Removing `unsafe-inline` from `script-src` only after the nonce is wired.
-  //
-  // Nuxt modules like `nuxt-security` can help with CSP/nonces, but we already
-  // have bespoke header behavior here (embed exceptions, report-only rollout).
-  // If/when we adopt a module, ensure it doesn't fight this middleware.
+  const nonce = randomBytes(16).toString('base64')
+  ;(event.context as any).cspNonce = nonce
   const frameAncestors = isEmbed ? '*' : '\'none\''
   const csp = [
     'default-src \'self\'',
-    'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://snap.licdn.com https://analytics.tiktok.com https://www.ezojs.com https://*.ezoic.net',
-    'style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com',
+    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://snap.licdn.com https://analytics.tiktok.com https://www.ezojs.com https://*.ezoic.net`,
+    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
     'img-src \'self\' data: https: blob:',
     'font-src \'self\' https://fonts.gstatic.com',
     'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://www.clarity.ms https://www.facebook.com https://px.ads.linkedin.com https://analytics.tiktok.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co',
     'frame-src \'self\' https://js.stripe.com https://*.ezoic.net',
+    'object-src \'none\'',
+    'base-uri \'self\'',
     `frame-ancestors ${frameAncestors}`,
   ].join('; ')
 

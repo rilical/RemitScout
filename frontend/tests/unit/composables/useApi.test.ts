@@ -22,6 +22,38 @@ describe('createApiClient', () => {
     expect(init.headers.authorization).toBe('Bearer token_123')
   })
 
+  it('uses Plane A admin token for admin surface paths', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin',
+    })
+
+    await client.request('/admin/plans')
+
+    const [, init] = fetcher.mock.calls[0] as any[]
+    expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+  })
+
+  it('uses default user token for non-admin paths', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_non_admin',
+    })
+
+    await client.request('/providers')
+
+    const [, init] = fetcher.mock.calls[0] as any[]
+    expect(init.headers.authorization).toBe('Bearer supabase_token')
+  })
+
   it('request() retries on 5xx and succeeds', async () => {
     vi.useFakeTimers()
     try {

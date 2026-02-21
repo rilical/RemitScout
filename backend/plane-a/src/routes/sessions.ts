@@ -1,9 +1,21 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply } from 'fastify'
 import { z } from 'zod'
 import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
+import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { resolveAdminAccess } from '../services/admin-access'
+import {
+  AdminSessionError,
+  getAdminRefreshCookieName,
+  getClearRefreshCookieHeader,
+  getCookieValue,
+  getRefreshCookieHeader,
+  issueAdminSession,
+  refreshAdminSession,
+  revokeCurrentAdminSession,
+} from '../services/admin-sessions'
 import { getErrorMessage } from '../types/errors'
 import {
   deriveSessionId,
@@ -28,9 +40,214 @@ const revokeAllSchema = z.object({
   except_session_id: z.string().optional(),
 })
 
+const exchangeSessionSchema = z.object({
+  supabase_token: z.string().min(16).optional(),
+})
+
+const refreshSessionSchema = z.object({
+  refresh_token: z.string().min(16).optional(),
+})
+
+const setCookie = (reply: FastifyReply, value: string) => {
+  reply.header('set-cookie', value)
+}
+
 export const sessionsRoutes = async (app: FastifyInstance) => {
   const pool = app.container.pool
   const repository = app.container.repositories.session
+
+  app.post('/sessions/admin/exchange', async (request, reply) => {
+    const parsed = exchangeSessionSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
+    }
+
+    const bodyToken = parsed.data.supabase_token
+    const authorizationHeader = bodyToken
+      ? `Bearer ${bodyToken}`
+      : request.headers.authorization
+
+    const authResult = await verifySupabaseJwt(authorizationHeader)
+    if ('code' in authResult) {
+      reply.code(401)
+      return {
+        error: 'unauthorized',
+        code: authResult.code,
+        message: authResult.message,
+      }
+    }
+
+    const access = await resolveAdminAccess({
+      pool,
+      userId: authResult.user_id,
+      email: authResult.email ?? null,
+      supabaseRole: authResult.role ?? null,
+    })
+
+    if (!access.allowed) {
+      reply.code(403)
+      return {
+        error: 'forbidden',
+        code: access.denyReason ?? 'admin_access_denied',
+      }
+    }
+
+    const anonymizedIp = anonymizeIpAddress(request.ip)
+    const userAgentHeader = typeof request.headers['user-agent'] === 'string'
+      ? request.headers['user-agent']
+      : null
+    const userAgent = extractBrowserFamily(userAgentHeader)
+
+    const issued = await issueAdminSession({
+      pool,
+      userId: authResult.user_id,
+      email: authResult.email ?? null,
+      role: authResult.role ?? null,
+      appRole: access.appRole,
+      ipHash: anonymizedIp.ipHash ?? null,
+      userAgent,
+      metadata: {
+        auth_source: 'supabase_exchange',
+      },
+    })
+
+    setCookie(reply, getRefreshCookieHeader(issued.refreshToken))
+
+    try {
+      await logAuditEvent(pool, {
+        actorId: authResult.user_id,
+        actorType: 'admin',
+        actorRole: authResult.role ?? undefined,
+        action: 'session.admin.exchange',
+        entityType: 'admin_session',
+        entityId: issued.jti,
+        metadata: {
+          refresh_family_id: issued.refreshFamilyId,
+        },
+        category: 'security',
+        severity: 'info',
+        ...getRequestContext(request),
+      })
+    }
+    catch (error) {
+      logger.warn('audit_log_failed', {
+        user_id: authResult.user_id,
+        error: getErrorMessage(error),
+      })
+    }
+
+    return {
+      access_token: issued.accessToken,
+      expires_in: issued.expiresIn,
+      token_type: issued.tokenType,
+    }
+  })
+
+  app.post('/sessions/admin/refresh', async (request, reply) => {
+    const parsed = refreshSessionSchema.safeParse(request.body ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', {
+        details: { error: 'bad_request', details: parsed.error.issues },
+      })
+    }
+
+    const refreshToken = parsed.data.refresh_token
+      || getCookieValue(request.headers.cookie, getAdminRefreshCookieName())
+
+    if (!refreshToken) {
+      reply.code(401)
+      return {
+        error: 'unauthorized',
+        code: 'missing_refresh_token',
+        message: 'Refresh token is required.',
+      }
+    }
+
+    const anonymizedIp = anonymizeIpAddress(request.ip)
+    const userAgentHeader = typeof request.headers['user-agent'] === 'string'
+      ? request.headers['user-agent']
+      : null
+    const userAgent = extractBrowserFamily(userAgentHeader)
+
+    try {
+      const issued = await refreshAdminSession({
+        pool,
+        refreshToken,
+        ipHash: anonymizedIp.ipHash ?? null,
+        userAgent,
+        metadata: {
+          auth_source: 'refresh',
+        },
+      })
+
+      setCookie(reply, getRefreshCookieHeader(issued.refreshToken))
+
+      return {
+        access_token: issued.accessToken,
+        expires_in: issued.expiresIn,
+        token_type: issued.tokenType,
+      }
+    }
+    catch (error) {
+      if (error instanceof AdminSessionError) {
+        reply.code(error.statusCode)
+        return {
+          error: 'unauthorized',
+          code: error.code,
+          message: error.message,
+        }
+      }
+
+      logger.error('admin_refresh_failed', {
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return {
+        error: 'internal_error',
+      }
+    }
+  })
+
+  app.delete('/sessions/current', { preHandler: requireAuth() }, async (request, reply) => {
+    const refreshToken = getCookieValue(request.headers.cookie, getAdminRefreshCookieName())
+    const claims = request.user?.claims as Record<string, unknown> | undefined
+
+    const revoked = await revokeCurrentAdminSession({
+      pool,
+      claims,
+      refreshToken,
+    })
+
+    setCookie(reply, getClearRefreshCookieHeader())
+
+    try {
+      await logAuditEvent(pool, {
+        actorId: request.user?.user_id ?? 'unknown',
+        actorType: 'admin',
+        actorRole: request.user?.role ?? undefined,
+        action: 'session.current.revoked',
+        entityType: 'admin_session',
+        entityId: typeof claims?.jti === 'string' ? claims.jti : request.user?.user_id ?? 'unknown',
+        metadata: {
+          revoked_refresh_rows: revoked.revokedRefreshRows,
+          revoked_jti: revoked.revokedJti,
+        },
+        category: 'security',
+        severity: 'info',
+        ...getRequestContext(request),
+      })
+    }
+    catch (error) {
+      logger.warn('audit_log_failed', {
+        user_id: request.user?.user_id,
+        error: getErrorMessage(error),
+      })
+    }
+
+    return { success: true }
+  })
 
   app.get('/sessions', { preHandler: requireAuth() }, async (request) => {
     const user = request.user!
@@ -93,7 +310,8 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
         severity: 'info',
         ...getRequestContext(request),
       })
-    } catch (error) {
+    }
+    catch (error) {
       logger.warn('audit_log_failed', {
         user_id: user.user_id,
         error: getErrorMessage(error),
@@ -127,7 +345,8 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
         severity: 'info',
         ...getRequestContext(request),
       })
-    } catch (error) {
+    }
+    catch (error) {
       logger.warn('audit_log_failed', {
         user_id: user.user_id,
         error: getErrorMessage(error),
@@ -159,9 +378,9 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
 
       const location = body.location || getLocationFromHeaders(request.headers)
       const deviceType =
-        body.device_type ||
-        detectDeviceType(rawUserAgent) ||
-        undefined
+        body.device_type
+        || detectDeviceType(rawUserAgent)
+        || undefined
       const anonymizedIp = anonymizeIpAddress(request.ip)
       const browserFamily = extractBrowserFamily(rawUserAgent)
 
@@ -181,7 +400,8 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       })
 
       return { success: true }
-    } catch (error) {
+    }
+    catch (error) {
       logger.warn('session_track_failed', {
         error: error instanceof Error ? error.message : String(error),
       })

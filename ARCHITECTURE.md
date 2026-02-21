@@ -91,3 +91,13 @@ Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/archi
 - Plane A production/staging runtime requires `ADMIN_IP_ALLOWLIST`; deploy-time wiring must supply it.
 - Plane A rate-limit fallback in production/staging is fail-closed (`reject`); skip/memory fallbacks are non-prod only.
 - Marketing helper routes under `/api/v1/alerts/*` are dev-only public surfaces; staging/prod requires auth.
+
+## Admin security invariants (2026-02)
+- Admin access tokens are validated and revoked via Redis blocklist; revocation checks default to fail-open with alerting, and can be configured to fail-closed via `PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED`.
+- Admin MFA (Supabase TOTP) must be available and enforceable for admin sessions when configured.
+- Account deletion is a two-step workflow: `DELETE /api/v1/account` creates a pending deletion row in `public.system_account_deletion_request`, users have a 7-day cancel window, and background cleanup performs physical deletion after the grace period.
+
+## Admin UI surface changes
+- Canonical admin shell is `frontend/layouts/admin.vue` with command palette and sidebar navigation.
+- `/admin/ops-health` is a compatibility redirect to `/admin/observer`.
+- Admin observer and dashboard summaries use `/api/v1/ops/observer/summary` for queue + activity visibility.

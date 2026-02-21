@@ -36,7 +36,7 @@
         <div class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg">
           <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
             <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Icon name="signal" :size="22" class="text-white" />
+              <Icon name="signal" :size="24" class="text-white" />
             </div>
           </div>
           <div class="flex-1">
@@ -191,7 +191,7 @@
           />
         </NuxtLink>
         <p class="text-body-sm text-white/30 mx-auto flex items-center justify-center gap-2 whitespace-nowrap">
-          <Icon name="shield-check" :size="14" class="text-white/30 flex-shrink-0" />
+          <Icon name="shield-check" :size="16" class="text-white/30 flex-shrink-0" />
           Rankings are identical for free and Plus users — no pay-to-rank, ever.
         </p>
       </div>

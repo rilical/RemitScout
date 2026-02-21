@@ -4,8 +4,11 @@ import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
 import { formatCorridorId, parseCorridorId } from '../../../shared/corridor'
+import { verifyPlaneAAdminJwt, isPlaneAAdminAccessClaims } from '../auth/admin-jwt'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
 import { validateApiKey } from '../services/api-keys'
+import { resolveAdminAccess } from '../services/admin-access'
+import { isAdminJtiRevoked } from '../services/admin-sessions'
 import {
   getInstitutionalClientScopes,
   isInstitutionalClientActive,
@@ -195,6 +198,21 @@ export const authPlugin = (app: FastifyInstance) => {
     if (!header) {
       return
     }
+    const adminResult = await verifyPlaneAAdminJwt(header)
+    if (!('code' in adminResult)) {
+      const claims = adminResult.claims as Record<string, unknown> | undefined
+      const jti = typeof claims?.jti === 'string' ? claims.jti : ''
+      if (jti && await isAdminJtiRevoked(jti)) {
+        request.authError = {
+          code: 'revoked_token',
+          message: 'Session has been revoked. Please sign in again.',
+        }
+        return
+      }
+      request.user = adminResult
+      return
+    }
+
     const result = await verifySupabaseJwt(header)
     if ('code' in result) {
       request.authError = result
@@ -355,66 +373,45 @@ export const requireAdmin = () => {
       return reply.send({ error: 'unauthorized' })
     }
 
-    const email = request.user.email?.toLowerCase()
-    const allowlist = config.planeA.adminEmails
-    const domainAllowlist = config.planeA.adminEmailDomains
-    const hasAllowlist = allowlist.length > 0 || domainAllowlist.length > 0
-    const supabaseRole = request.user.role
-
-    let appRole: string | null = null
-    try {
-      const result = await query<{ app_role: string | null }>(
-        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
-        [request.user.user_id],
-        planeAPool,
-      )
-      appRole = result.rows[0]?.app_role ?? null
-    } catch (error) {
-      logger.warn('admin_role_lookup_failed', {
-        user_id: request.user.user_id,
-        error: getErrorMessage(error),
-      })
+    const claims = request.user.claims as Record<string, unknown> | undefined
+    if (isPlaneAAdminAccessClaims(claims)) {
+      const jti = typeof claims?.jti === 'string' ? claims.jti : ''
+      if (jti && await isAdminJtiRevoked(jti)) {
+        reply.code(401)
+        return reply.send({
+          error: 'unauthorized',
+          code: 'revoked_token',
+          message: 'Session has been revoked. Please sign in again.',
+        })
+      }
     }
 
-    const hasAdminRole =
-      supabaseRole === 'admin'
-      || supabaseRole === 'super_admin'
-      || appRole === 'admin'
-      || appRole === 'super_admin'
-    if (!hasAdminRole) {
-      logger.warn('admin_role_required', {
-        user_id: request.user.user_id,
-        supabase_role: supabaseRole,
-        app_role: appRole,
-      })
-      reply.code(403)
-      return reply.send({ error: 'forbidden' })
-    }
+    const access = await resolveAdminAccess({
+      pool: planeAPool,
+      userId: request.user.user_id,
+      email: request.user.email ?? null,
+      supabaseRole: request.user.role ?? null,
+    })
 
-    const domainAllowed = (() => {
-      if (!email) return false
-      const [, domain] = email.split('@')
-      if (!domain) return false
-      return domainAllowlist.includes(domain)
-    })()
-    const allowlisted = email ? allowlist.includes(email) : false
-    const privilegedByEmail = allowlisted || domainAllowed
-    const requireAllowlist = config.planeA.adminRequireAllowlist || config.planeA.adminAllowlistStrict
+    if (!access.allowed) {
+      if (access.denyReason === 'admin_allowlist_required_but_unconfigured') {
+        logger.error('admin_allowlist_required_but_unconfigured', {
+          env: config.env,
+          user_id: request.user.user_id,
+        })
+      } else if (access.denyReason === 'admin_allowlist_denied') {
+        logger.warn('admin_allowlist_denied', {
+          user_id: request.user.user_id,
+          has_email: Boolean(request.user.email),
+        })
+      } else {
+        logger.warn('admin_role_required', {
+          user_id: request.user.user_id,
+          supabase_role: request.user.role ?? null,
+          app_role: access.appRole,
+        })
+      }
 
-    if (requireAllowlist && !hasAllowlist) {
-      logger.error('admin_allowlist_required_but_unconfigured', {
-        env: config.env,
-        user_id: request.user.user_id,
-      })
-      reply.code(403)
-      return reply.send({ error: 'forbidden' })
-    }
-
-    if ((hasAllowlist || requireAllowlist) && !privilegedByEmail) {
-      logger.warn('admin_allowlist_denied', {
-        user_id: request.user.user_id,
-        has_email: Boolean(email),
-      })
       reply.code(403)
       return reply.send({ error: 'forbidden' })
     }

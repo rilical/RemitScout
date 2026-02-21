@@ -70,6 +70,28 @@ describe('proxyToBackend', () => {
     expect(init.headers['x-request-id']).toBe('req_test_1')
   })
 
+  it('forwards set-cookie and rewrites proxied api path', async () => {
+    const headers = new Headers()
+    Object.defineProperty(headers, 'getSetCookie', {
+      value: () => ['plane_a_admin_refresh=abc123; Path=/api/v1/sessions; HttpOnly; SameSite=Strict'],
+      configurable: true,
+    })
+
+    $fetch.raw.mockResolvedValueOnce({ status: 200, headers, _data: { ok: true } })
+
+    active = await startServer(async (event) => {
+      event.context.requestId = 'req_cookie'
+      return await proxyToBackend(event, '/sessions/admin/refresh', { maxRetries: 0 })
+    })
+
+    const res = await fetch(`${active.baseUrl}/`, { method: 'POST' })
+    expect(res.status).toBe(200)
+    const setCookie = res.headers.get('set-cookie')
+    expect(setCookie).toContain('plane_a_admin_refresh=abc123')
+    expect(setCookie).toContain('Path=/api/sessions')
+    expect(setCookie).not.toContain('Path=/api/v1/sessions')
+  })
+
   it('retries on 5xx and succeeds', async () => {
     $fetch.raw
       .mockResolvedValueOnce({ status: 503, headers: new Headers(), _data: { message: 'nope' } })

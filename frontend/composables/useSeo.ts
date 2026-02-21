@@ -116,10 +116,12 @@ export const setSeo = ({
 }
 
 export const jsonLdWebSiteSearch = (siteUrl: string) => {
+  const cspNonce = useCspNonce()
   useHead({
     script: [
       {
         type: 'application/ld+json',
+        nonce: cspNonce.value || undefined,
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
@@ -138,10 +140,12 @@ export const jsonLdWebSiteSearch = (siteUrl: string) => {
 }
 
 export const jsonLdOrganization = (siteUrl: string) => {
+  const cspNonce = useCspNonce()
   useHead({
     script: [
       {
         type: 'application/ld+json',
+        nonce: cspNonce.value || undefined,
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
@@ -162,10 +166,12 @@ export const jsonLdOrganization = (siteUrl: string) => {
 }
 
 export const jsonLdSiteNavigation = (items: Array<{ name: string, url: string }>) => {
+  const cspNonce = useCspNonce()
   useHead({
     script: [
       {
         type: 'application/ld+json',
+        nonce: cspNonce.value || undefined,
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'SiteNavigationElement',
@@ -182,10 +188,12 @@ export const jsonLdSiteNavigation = (items: Array<{ name: string, url: string }>
 }
 
 export const jsonLdBreadcrumb = (items: Array<{ name: string, url: string }>) => {
+  const cspNonce = useCspNonce()
   useHead({
     script: [
       {
         type: 'application/ld+json',
+        nonce: cspNonce.value || undefined,
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
@@ -202,10 +210,12 @@ export const jsonLdBreadcrumb = (items: Array<{ name: string, url: string }>) =>
 }
 
 export const jsonLdFaq = (items: Array<{ q: string, a: string }>) => {
+  const cspNonce = useCspNonce()
   useHead({
     script: [
       {
         type: 'application/ld+json',
+        nonce: cspNonce.value || undefined,
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'FAQPage',

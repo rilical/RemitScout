@@ -161,6 +161,44 @@ type SessionMetricsResponse = {
   bounce_rate: number
 }
 
+type CorridorTrendRow = PrivacyAnnotated & {
+  corridor_id: string
+  time_bucket: string
+  search_count: number
+  click_count: number
+}
+
+type CorridorTrendsResponse = {
+  trends: CorridorTrendRow[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
+
+type ProviderCtrRow = PrivacyAnnotated & {
+  provider_id: string
+  provider_name?: string | null
+  ctr: number
+  time_bucket?: string
+}
+
+type ProviderCtrResponse = {
+  ctr_data: ProviderCtrRow[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
+
+type EngagementRow = PrivacyAnnotated & {
+  time_bucket: string
+  active_users: number
+  returning_users: number
+}
+
+type EngagementResponse = {
+  engagement: EngagementRow[]
+  privacy?: PrivacyEnvelope
+  aggregationWindow?: AggregationWindow
+}
+
 export const useAnalytics = () => {
   const { request } = useApi()
   const loading = ref(false)
@@ -185,19 +223,19 @@ export const useAnalytics = () => {
     withLoading(() => request<PopularCorridorsResponse>('/analytics/corridors', { method: 'GET', query: params }))
 
   const getCorridorTrends = (params: CorridorTrendParams) =>
-    withLoading(() => request('/analytics/corridors/trends', { method: 'GET', query: params }))
+    withLoading(() => request<CorridorTrendsResponse>('/analytics/corridors/trends', { method: 'GET', query: params }))
 
   const getFavoriteProviders = (params: AnalyticsDateRange & { limit?: number }) =>
     withLoading(() => request<FavoriteProvidersResponse>('/analytics/providers', { method: 'GET', query: params }))
 
   const getProviderCTR = (params: ProviderCtrParams) =>
-    withLoading(() => request('/analytics/providers/ctr', { method: 'GET', query: params }))
+    withLoading(() => request<ProviderCtrResponse>('/analytics/providers/ctr', { method: 'GET', query: params }))
 
   const getProviderImpact = (params: ProviderImpactParams) =>
     withLoading(() => request<ProviderImpactResponse>('/analytics/providers/impact', { method: 'GET', query: params }))
 
   const getEngagementMetrics = (params: EngagementParams) =>
-    withLoading(() => request('/analytics/engagement', { method: 'GET', query: params }))
+    withLoading(() => request<EngagementResponse>('/analytics/engagement', { method: 'GET', query: params }))
 
   const getSessionMetrics = (params: AnalyticsDateRange) =>
     withLoading(() => request<SessionMetricsResponse>('/analytics/engagement/sessions', { method: 'GET', query: params }))

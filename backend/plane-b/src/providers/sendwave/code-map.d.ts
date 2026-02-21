@@ -1,0 +1,6 @@
+export declare const countryCodeMap: Record<string, string>;
+export declare const currencyCodeMap: Record<string, string>;
+export declare const payinMethodMap: Record<string, string>;
+export declare const payoutMethodMap: Record<string, string>;
+export declare const mapSendwavePayinMethod: (value?: string | null) => string;
+export declare const mapSendwavePayoutMethod: (value?: string | null) => string;
