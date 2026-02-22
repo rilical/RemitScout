@@ -391,7 +391,7 @@ export class RemitScoutStack extends Stack {
     const redisPort = cache.replicationGroup.attrPrimaryEndPointPort
     let redisUrl = `rediss://${redisHost}:${redisPort}`
     if (!redisSecretArn && !redisSsmName) {
-      redisUrl = `rediss://:${redisAuthToken}@${redisHost}:${redisPort}`
+      redisUrl = `rediss://default:${redisAuthToken}@${redisHost}:${redisPort}`
     }
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
