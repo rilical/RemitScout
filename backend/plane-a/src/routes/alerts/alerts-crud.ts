@@ -445,7 +445,6 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
 
       // Verify alert belongs to user and get current alert
       const existing = await alertRepository.findById(id, user.user_id)
-      const watchlistItem = await watchlistRepository.findById(existing?.watchlist_item_id, user.user_id)
 
       if (!existing) {
         const durationSeconds = (Date.now() - startTime) / 1000
@@ -457,6 +456,8 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
           message: 'Alert not found',
         } })
       }
+
+      const watchlistItem = await watchlistRepository.findById(existing.watchlist_item_id, user.user_id)
 
       if (!watchlistItem) {
         const durationSeconds = (Date.now() - startTime) / 1000
