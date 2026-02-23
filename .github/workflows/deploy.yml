@@ -799,24 +799,9 @@ jobs:
 
       - name: Staging Go-live Readiness Gate
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh workflow run staging-go-live-readiness.yml --ref "${GITHUB_SHA}" -f run_runtime_config_validation=true
-          run_id=""
-          for i in $(seq 1 30); do
-            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,event -q ".[] | select(.headSha==\"${GITHUB_SHA}\" and .event==\"workflow_dispatch\") | .databaseId" | head -n1)"
-            if [ -n "$run_id" ]; then
-              break
-            fi
-            sleep 5
-          done
-          if [ -z "$run_id" ]; then
-            echo "Unable to resolve staging-go-live-readiness run ID for ${GITHUB_SHA}."
-            exit 1
-          fi
-          gh run watch "$run_id" --exit-status
+          ENVIRONMENT=staging NODE_ENV=staging pnpm -C backend ci:staging-go-live-readiness
 
       - name: Alarm rollback gate (staging)
         shell: bash
