@@ -2,7 +2,16 @@ import { buildApp } from '../../plane-a/src/app'
 
 const normalizeBaseUrl = (value: string) => value.replace(/\/$/, '')
 
+const allowProtectedMetrics =
+  process.env.SMOKE_ALLOW_PROTECTED_METRICS === '1'
+  || process.env.SMOKE_ALLOW_PROTECTED_METRICS === 'true'
+
+const isMetricsPath = (name: string) => name === '/metrics' || name === 'metrics'
+
 const assertStatusOk = (statusCode: number, name: string) => {
+  if (allowProtectedMetrics && isMetricsPath(name) && (statusCode === 401 || statusCode === 403)) {
+    return
+  }
   if (statusCode >= 400) {
     throw new Error(`${name} failed with status ${statusCode}`)
   }
