@@ -537,14 +537,14 @@ export default defineNuxtConfig({
     prerender: isAwsEnvironment
       ? {
           crawlLinks: false,
-          routes: ['/'],
+          routes: ['/', '/maintenance'],
           failOnError: false,
         }
       : {
           // Local/CI builds should be deterministic and not depend on backend availability.
           // Crawling all links during build is slow/brittle (remote images, transient network failures).
           crawlLinks: false,
-          routes: ['/'],
+          routes: ['/', '/maintenance'],
           failOnError: false,
         },
   },
