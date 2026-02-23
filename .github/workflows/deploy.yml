@@ -641,6 +641,8 @@ jobs:
             -c minimalInfra=true \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
+            -c pinpointEnabled=false \
+            -c enableWaf=false \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -658,6 +660,8 @@ jobs:
             -c minimalInfra=true \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
+            -c pinpointEnabled=false \
+            -c enableWaf=false \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
