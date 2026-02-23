@@ -15,12 +15,12 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
-        cache: pnpm
     - uses: pnpm/action-setup@v4
       with:
         version: ${{ inputs.pnpm_version }}
     - shell: bash
       run: corepack enable
     - shell: bash
+      run: pnpm --version
+    - shell: bash
       run: pnpm install --frozen-lockfile --prefer-offline
-
