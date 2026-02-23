@@ -4,6 +4,21 @@ import type { FastifyInstance } from 'fastify'
 const mockCheckRateLimit = vi.fn()
 const mockInsertQuery = vi.fn()
 const mockGetPrivacySettings = vi.fn()
+const mockFetch = vi.fn()
+const mockConfig = {
+  marketing: {
+    meta: {
+      pixelId: '',
+      accessToken: '',
+      testEventCode: '',
+    },
+    tiktok: {
+      pixelId: '',
+      accessToken: '',
+      testEventCode: '',
+    },
+  },
+}
 
 vi.mock('../shared/logger', () => ({
   createLogger: () => ({
@@ -15,15 +30,7 @@ vi.mock('../shared/logger', () => ({
 }))
 
 vi.mock('../shared/config', () => ({
-  config: {
-    marketing: {
-      meta: {
-        pixelId: '',
-        accessToken: '',
-        testEventCode: '',
-      },
-    },
-  },
+  config: mockConfig,
 }))
 
 vi.mock('../shared/db', () => ({
@@ -76,6 +83,18 @@ describe('marketing route', () => {
       marketing_enabled: true,
       updated_at: new Date('2026-01-01T00:00:00.000Z'),
     })
+    mockConfig.marketing.meta.pixelId = ''
+    mockConfig.marketing.meta.accessToken = ''
+    mockConfig.marketing.meta.testEventCode = ''
+    mockConfig.marketing.tiktok.pixelId = ''
+    mockConfig.marketing.tiktok.accessToken = ''
+    mockConfig.marketing.tiktok.testEventCode = ''
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ code: 0, message: 'OK' }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
   })
 
   it('returns 400 on invalid payload', async () => {
@@ -155,5 +174,73 @@ describe('marketing route', () => {
     expect(params[20]).toBe('203.0.113.0')
     expect(String(params[21])).toMatch(/^[a-f0-9]{64}$/)
     expect(params[22]).toBe('chrome')
+  })
+
+  it('returns disabled when TikTok events API credentials are missing', async () => {
+    const app = makeApp()
+    const { marketingRoutes } = await import('../plane-a/src/routes/marketing')
+    await marketingRoutes(app)
+
+    const handler = getPostHandler(app, '/marketing/tiktok')
+    const response = await handler(
+      {
+        body: { event_name: 'Search', corridor_id: 'US-IN-USD-INR' },
+        ip: '203.0.113.89',
+        headers: { 'user-agent': 'Mozilla/5.0 Chrome/122.0.0.0' },
+      },
+      makeReply(),
+    )
+
+    expect(response).toMatchObject({
+      success: true,
+      delivered: false,
+    })
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('forwards TikTok event when API credentials are configured', async () => {
+    mockConfig.marketing.tiktok.pixelId = 'D6E03RJC77UEP1KMQJN0'
+    mockConfig.marketing.tiktok.accessToken = 'tok_test'
+
+    const app = makeApp()
+    const { marketingRoutes } = await import('../plane-a/src/routes/marketing')
+    await marketingRoutes(app)
+
+    const handler = getPostHandler(app, '/marketing/tiktok')
+    const response = await handler(
+      {
+        body: {
+          event_name: 'Search',
+          event_id: 'event_12345678',
+          event_source_url: 'https://staging.remit-scout.com/send-money',
+          corridor_id: 'US-IN-USD-INR',
+          value: 42.5,
+          currency: 'usd',
+          ttclid: 'ttclid123',
+          ttp: 'ttp_cookie_1',
+          custom_data: { search_string: 'US-IN-USD-INR' },
+        },
+        ip: '198.51.100.10',
+        headers: { 'user-agent': 'Mozilla/5.0 Chrome/122.0.0.0' },
+        user: { user_id: 'user_1', email: 'buyer@example.com' },
+      },
+      makeReply(),
+    )
+
+    expect(response).toMatchObject({
+      success: true,
+      delivered: true,
+      event_id: 'event_12345678',
+    })
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://business-api.tiktok.com/open_api/v1.3/event/track/')
+    expect(init.headers).toMatchObject({
+      'Access-Token': 'tok_test',
+      'Content-Type': 'application/json',
+    })
+    const payload = JSON.parse(String(init.body))
+    expect(payload.event_source_id).toBe('D6E03RJC77UEP1KMQJN0')
+    expect(payload.data?.[0]?.event).toBe('Search')
   })
 })

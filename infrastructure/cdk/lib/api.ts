@@ -726,6 +726,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/telemetry/conversion',
     '/api/v1/telemetry/session',
     '/api/v1/marketing/meta',
+    '/api/v1/marketing/tiktok',
     '/api/v1/ads/placement',
     '/api/v1/ads/click',
     '/api/v1/indices/latest',

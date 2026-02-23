@@ -20,7 +20,7 @@ These are safe to be empty; when empty, the server will still record events but 
 
 - `META_CAPI_ACCESS_TOKEN` (Meta CAPI)
 - `META_CAPI_TEST_EVENT_CODE` (optional)
-- `TIKTOK_EVENTS_ACCESS_TOKEN` (future: TikTok Events API)
+- `TIKTOK_EVENTS_ACCESS_TOKEN` (TikTok Events API)
 - `TIKTOK_EVENTS_TEST_CODE` (optional)
 - `LINKEDIN_CONVERSIONS_ACCESS_TOKEN` (future: LinkedIn CAPI)
 - `LINKEDIN_CONVERSIONS_TEST_CODE` (optional)
@@ -63,4 +63,3 @@ Migration:
 2. Verify backend is recording marketing events:
    - `POST /api/v1/marketing/meta` (and `/tiktok`, `/linkedin`, `/google`)
 3. If pixels “don’t fire”, check consent first, then check IDs are non-empty.
-

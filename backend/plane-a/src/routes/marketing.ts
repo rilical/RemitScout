@@ -26,9 +26,13 @@ const eventSchema = z.object({
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
   ttclid: z.string().optional(),
+  ttp: z.string().optional(),
   li_fat_id: z.string().optional(),
   fbc: z.string().optional(),
   fbp: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  external_id: z.string().optional(),
   custom_data: z.record(z.unknown()).optional(),
 })
 
@@ -45,6 +49,19 @@ const toTimestamp = (value?: number) => {
   }
   const normalized = value > 1e12 ? value / 1000 : value
   return Math.floor(normalized)
+}
+
+const compactObject = <T extends Record<string, unknown>>(input: T) => {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+  ) as Partial<T>
+}
+
+const hashPhone = (value?: string | null) => {
+  if (!value) return undefined
+  const normalized = value.replace(/[^\d+]/g, '')
+  if (!normalized) return undefined
+  return createHash('sha256').update(normalized).digest('hex')
 }
 
 const insertEvent = async (
@@ -191,6 +208,113 @@ const sendToMeta = async (payload: {
   }
 }
 
+const sendToTikTok = async (payload: {
+  event_name: string
+  event_id: string
+  event_time: number
+  event_source_url?: string | null
+  value?: number
+  currency?: string
+  provider_id?: string | null
+  corridor_id?: string | null
+  page_path?: string | null
+  ttclid?: string | null
+  ttp?: string | null
+  email?: string | null
+  phone?: string | null
+  external_id?: string | null
+  client_ip?: string | null
+  user_agent?: string | null
+  custom_data?: Record<string, unknown>
+}) => {
+  const pixelId = config.marketing.tiktok.pixelId
+  const accessToken = config.marketing.tiktok.accessToken
+  if (!pixelId || !accessToken) {
+    return { delivered: false, reason: 'tiktok_events_disabled' }
+  }
+
+  const eventName = payload.event_name
+  const currency = payload.currency?.toUpperCase()
+  const inferredContentId = payload.provider_id || payload.corridor_id
+  const inferredContentType = payload.provider_id
+    ? 'provider'
+    : payload.corridor_id
+      ? 'corridor'
+      : 'page'
+  const inferredContentName = payload.page_path || eventName
+
+  const user = compactObject({
+    email: hashValue(payload.email),
+    phone_number: hashPhone(payload.phone),
+    external_id: hashValue(payload.external_id),
+    ip: payload.client_ip ?? undefined,
+    user_agent: payload.user_agent ?? undefined,
+    ttclid: payload.ttclid ?? undefined,
+    ttp: payload.ttp ?? undefined,
+  })
+
+  const properties = compactObject({
+    value: payload.value,
+    currency,
+    content_id: inferredContentId,
+    content_type: inferredContentType,
+    content_name: inferredContentName,
+    event_id: payload.event_id,
+    event_time: payload.event_time,
+    url: payload.event_source_url ?? undefined,
+    ...payload.custom_data,
+  })
+
+  const body: Record<string, unknown> = {
+    event_source: 'web',
+    event_source_id: pixelId,
+    data: [
+      {
+        event: eventName,
+        event_id: payload.event_id,
+        event_time: payload.event_time,
+        context: compactObject({
+          page: payload.event_source_url ? { url: payload.event_source_url } : undefined,
+          user: Object.keys(user).length > 0 ? user : undefined,
+        }),
+        properties,
+      },
+    ],
+  }
+
+  if (config.marketing.tiktok.testEventCode) {
+    body.test_event_code = config.marketing.tiktok.testEventCode
+  }
+
+  try {
+    const response = await fetch('https://business-api.tiktok.com/open_api/v1.3/event/track/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Token': accessToken,
+      },
+      body: JSON.stringify(body),
+    })
+    const parsed = await response.json().catch(() => null) as { code?: number; message?: string } | null
+    const accepted = response.ok && (parsed?.code === undefined || parsed.code === 0)
+    if (!accepted) {
+      logger.warn('tiktok_events_api_failed', {
+        status: response.status,
+        code: parsed?.code,
+        message: parsed?.message,
+      })
+      return { delivered: false, reason: 'tiktok_events_api_failed' }
+    }
+    return { delivered: true }
+  }
+  catch (error) {
+    logger.warn('tiktok_events_api_error', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return { delivered: false, reason: 'tiktok_events_api_error' }
+  }
+}
+
 const shouldSkipMarketing = async (
   userAccountRepository: FastifyInstance['container']['repositories']['userAccount'],
   userId?: string | null,
@@ -324,9 +448,6 @@ export const marketingRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  // NOTE: We intentionally do not attempt to send events to other networks until you provide the real secrets/IDs.
-  // These endpoints exist so clients can send reason-coded payloads and we can persist attribution in Silver today.
-
   app.post('/marketing/tiktok', async (request, _reply) => {
     const parsed = eventSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
@@ -339,38 +460,89 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       ip: request.ip,
       headers: request.headers as Record<string, unknown>,
     })
+    const rawUserAgent = typeof request.headers['user-agent'] === 'string'
+      ? request.headers['user-agent']
+      : null
+    const rawClientIp = typeof request.ip === 'string' ? request.ip : null
+    const seed = `${privacyContext.clientIpHash || privacyContext.clientIp || 'unknown'}:${input.event_name}`
+    const rateKey = buildRateLimitKey('marketing:tiktok', seed)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
+      throw new RateLimitError()
+    }
 
-    const inserted = await insertEvent(pool, {
-      event_name: input.event_name,
-      event_id: eventId,
-      event_time: eventTime,
-      event_source_url: input.event_source_url ?? null,
-      anon_session_id: null,
-      user_id: request.user?.user_id ?? null,
-      provider_id: input.provider_id ?? null,
-      corridor_id: input.corridor_id ?? null,
-      conversion_value: input.value ?? null,
-      conversion_currency: input.currency?.toUpperCase() ?? null,
-      source: input.source ?? null,
-      page_path: input.page_path ?? null,
-      utm: input.utm ?? null,
-      gclid: input.gclid ?? null,
-      fbclid: input.fbclid ?? null,
-      msclkid: input.msclkid ?? null,
-      ttclid: input.ttclid ?? null,
-      li_fat_id: input.li_fat_id ?? null,
-      fbc: input.fbc ?? null,
-      fbp: input.fbp ?? null,
-      client_ip: privacyContext.clientIp ?? null,
-      client_ip_hash: privacyContext.clientIpHash ?? null,
-      user_agent: privacyContext.userAgentFamily ?? null,
-    })
+    try {
+      if (await shouldSkipMarketing(userAccountRepository, request.user?.user_id)) {
+        return { success: true, skipped: 'opt_out' }
+      }
 
-    return {
-      success: true,
-      deduped: !inserted,
-      delivered: false,
-      reason: 'tiktok_events_disabled',
+      const inserted = await insertEvent(pool, {
+        event_name: input.event_name,
+        event_id: eventId,
+        event_time: eventTime,
+        event_source_url: input.event_source_url ?? null,
+        anon_session_id: null,
+        user_id: request.user?.user_id ?? null,
+        provider_id: input.provider_id ?? null,
+        corridor_id: input.corridor_id ?? null,
+        conversion_value: input.value ?? null,
+        conversion_currency: input.currency?.toUpperCase() ?? null,
+        source: input.source ?? null,
+        page_path: input.page_path ?? null,
+        utm: input.utm ?? null,
+        gclid: input.gclid ?? null,
+        fbclid: input.fbclid ?? null,
+        msclkid: input.msclkid ?? null,
+        ttclid: input.ttclid ?? null,
+        li_fat_id: input.li_fat_id ?? null,
+        fbc: input.fbc ?? null,
+        fbp: input.fbp ?? null,
+        client_ip: privacyContext.clientIp ?? null,
+        client_ip_hash: privacyContext.clientIpHash ?? null,
+        user_agent: privacyContext.userAgentFamily ?? null,
+      })
+
+      if (!inserted) {
+        return { success: true, deduped: true }
+      }
+
+      const tiktok = await sendToTikTok({
+        event_name: input.event_name,
+        event_id: eventId,
+        event_time: eventTime,
+        event_source_url: input.event_source_url ?? null,
+        value: input.value,
+        currency: input.currency,
+        provider_id: input.provider_id ?? null,
+        corridor_id: input.corridor_id ?? null,
+        page_path: input.page_path ?? null,
+        ttclid: input.ttclid ?? null,
+        ttp: input.ttp ?? null,
+        email: request.user?.email ?? input.email ?? null,
+        phone: input.phone ?? null,
+        external_id: request.user?.user_id ?? input.external_id ?? null,
+        client_ip: rawClientIp,
+        user_agent: rawUserAgent,
+        custom_data: input.custom_data,
+      })
+
+      return {
+        success: true,
+        delivered: tiktok.delivered,
+        event_id: eventId,
+      }
+    }
+    catch (error) {
+      if (error instanceof AppError) {
+        throw error
+      }
+      logger.warn('tiktok_marketing_event_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw new AppError('TikTok marketing event failed', {
+        statusCode: 500,
+        code: 'internal_error',
+        cause: error,
+      })
     }
   })
 

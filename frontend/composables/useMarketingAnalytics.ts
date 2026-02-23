@@ -156,6 +156,7 @@ export const useMarketingAnalytics = () => {
   const runtimeConfig = useRuntimeConfig()
   const ga4Id = runtimeConfig.public.ga4MeasurementId
   const metaPixelId = runtimeConfig.public.metaPixelId
+  const tiktokPixelId = runtimeConfig.public.tiktokPixelId
 
   const updateAttribution = () => {
     if (!import.meta.client) return {}
@@ -244,6 +245,44 @@ export const useMarketingAnalytics = () => {
     }
   }
 
+  const sendTikTokEventsApiEvent = async (
+    input: MarketingEventInput & { eventName: string },
+    attribution: Attribution,
+    eventId: string,
+  ) => {
+    if (!marketingConsent.value) return
+    if (!tiktokPixelId) return
+    try {
+      await request('/marketing/tiktok', {
+        method: 'POST',
+        body: {
+          event_name: input.eventName,
+          event_id: eventId,
+          event_time: Math.floor(Date.now() / 1000),
+          event_source_url: input.eventSourceUrl || (import.meta.client ? window.location.href : undefined),
+          value: input.value,
+          currency: input.currency,
+          provider_id: input.providerId,
+          corridor_id: input.corridorId,
+          source: input.source,
+          page_path: input.pagePath,
+          utm: attribution.utm,
+          gclid: attribution.gclid,
+          fbclid: attribution.fbclid,
+          msclkid: attribution.msclkid,
+          ttclid: attribution.ttclid,
+          li_fat_id: attribution.li_fat_id,
+          ttp: readCookie('_ttp'),
+          custom_data: input.customData,
+        },
+        retries: 0,
+      })
+    }
+    catch {
+      // ignore marketing errors
+    }
+  }
+
   const trackEvent = async (
     names: MarketingEventNames,
     input: MarketingEventInput,
@@ -257,7 +296,10 @@ export const useMarketingAnalytics = () => {
     sendGa4Event(names.ga4, ga4Params)
     if (marketingConsent.value) {
       sendMetaPixelEvent(names.meta, metaParams || ga4Params || {}, eventId)
-      await sendMetaCapiEvent({ ...input, eventName: names.meta }, attribution, eventId)
+      await Promise.allSettled([
+        sendMetaCapiEvent({ ...input, eventName: names.meta }, attribution, eventId),
+        sendTikTokEventsApiEvent({ ...input, eventName: names.meta }, attribution, eventId),
+      ])
     }
   }
 
