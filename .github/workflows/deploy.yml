@@ -638,6 +638,9 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c minimalInfra=true \
+            -c enableComplianceServices=false \
+            -c enableCostGuardrails=false \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -652,6 +655,9 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c minimalInfra=true \
+            -c enableComplianceServices=false \
+            -c enableCostGuardrails=false \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
