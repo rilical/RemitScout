@@ -1,4 +1,5 @@
 const MFA_EXEMPT_PATHS = [
+  '/maintenance',
   '/sign-in',
   '/sign-up',
   '/reset-password',
@@ -17,7 +18,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!isAuthenticated.value) return
   if (MFA_EXEMPT_PATHS.some(p => to.path.startsWith(p))) return
 
-  const requiresMfa = isAdmin.value || entHydrated.value && isEnterprise.value
+  const requiresMfa = isAdmin.value || (entHydrated.value && isEnterprise.value)
   if (!requiresMfa) return
 
   const factors = await listMfaFactors()

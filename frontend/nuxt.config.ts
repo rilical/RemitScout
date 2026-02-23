@@ -450,6 +450,9 @@ export default defineNuxtConfig({
         process.env.PUBLIC_CONTENTSQUARE_TAG_SRC
         || process.env.CONTENTSQUARE_TAG_SRC
         || 'https://t.contentsquare.net/uxa/3010a70945ff4.js',
+      siteMaintenanceMode: parseEnvFlag(
+        resolveEnvValue('PUBLIC_SITE_MAINTENANCE_MODE', 'SITE_MAINTENANCE_MODE') || '',
+      ),
       analyticsEnabled,
       adsEnabled,
       ezoicPlacementIds,
