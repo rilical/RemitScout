@@ -26,12 +26,6 @@ jobs:
           node_version: 20.19.6
           pnpm_version: 10.19.0
 
-      - uses: aws-actions/configure-aws-credentials@v4
-        if: vars.AWS_ROLE_TO_ASSUME != '' && vars.AWS_REGION != ''
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ vars.AWS_REGION }}
-
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging
