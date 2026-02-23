@@ -56,8 +56,6 @@ type SignalEvent = {
 
 const nowIso = () => new Date().toISOString()
 
-const readUtf8 = (p: string) => fs.readFileSync(p, 'utf8')
-
 const findRepoRoot = (): string => {
   const override = String(process.env.REMIT_SCOUT_REPO_ROOT || '').trim()
   if (override) return path.resolve(override)

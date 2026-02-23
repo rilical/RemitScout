@@ -4,8 +4,6 @@ import path from 'node:path'
 import Ajv from 'ajv'
 import { parse as parseYaml } from 'yaml'
 
-type JsonObject = Record<string, unknown>
-
 const repoRoot = path.resolve(__dirname, '..', '..', '..')
 const remitScoutDir = path.join(repoRoot, '.remit-scout')
 
@@ -42,7 +40,7 @@ const validateProviderCatalog = () => {
   let parsed: any
   try {
     parsed = readJson(p)
-  } catch (e) {
+  } catch (_e) {
     fail(`invalid JSON: ${p}`)
     return
   }

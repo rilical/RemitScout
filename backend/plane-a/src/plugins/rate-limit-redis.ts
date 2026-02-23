@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getRedisClient } from '../../../shared/redis'
 import { createLogger } from '../../../shared/logger'
+import { config } from '../../../shared/config'
 import { withTimeout } from '../../../shared/utils/timeout'
 import { LRUCache } from 'lru-cache'
 
@@ -14,8 +15,8 @@ const shouldSkipRateLimit = (request: FastifyRequest): boolean => {
 }
 
 const isProdLikeRuntime = (): boolean => {
-  const nodeEnv = (process.env.NODE_ENV || '').trim().toLowerCase()
-  const envName = (process.env.ENVIRONMENT || '').trim().toLowerCase()
+  const nodeEnv = String(config.env || '').trim().toLowerCase()
+  const envName = String(config.envName || '').trim().toLowerCase()
   if (envName) {
     return envName === 'production' || envName === 'prod' || envName === 'staging'
   }

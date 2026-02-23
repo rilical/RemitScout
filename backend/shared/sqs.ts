@@ -9,7 +9,7 @@ import {
   type Message,
 } from '@aws-sdk/client-sqs'
 import { CloudWatchClient, GetMetricStatisticsCommand } from '@aws-sdk/client-cloudwatch'
-import { context as otelContext, propagation, trace, type Context } from '@opentelemetry/api'
+import { context as otelContext, propagation, type Context } from '@opentelemetry/api'
 
 import { createLogger } from './logger'
 import { isRetryableError, isThrottlingError } from './aws-errors'
