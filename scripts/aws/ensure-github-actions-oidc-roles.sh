@@ -8,9 +8,18 @@ REGION="${AWS_REGION:-us-east-1}"
 
 REPO_URL="$(git -C "${ROOT_DIR}" remote get-url origin)"
 REPO_PATH="$(echo "${REPO_URL}" | sed -E 's#^https://github.com/##; s#^git@github.com:##; s#\\.git$##')"
+CANONICAL_REPO_PATH="$(
+  gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null || true
+)"
+if [ -n "${CANONICAL_REPO_PATH}" ]; then
+  REPO_PATH="${CANONICAL_REPO_PATH}"
+fi
+
 GITHUB_ORG="$(echo "${REPO_PATH}" | cut -d/ -f1)"
 GITHUB_REPO="$(echo "${REPO_PATH}" | cut -d/ -f2)"
 GITHUB_REPO="${GITHUB_REPO%.git}"
+GITHUB_ORG_LOWER="$(echo "${GITHUB_ORG}" | tr '[:upper:]' '[:lower:]')"
+GITHUB_REPO_LOWER="$(echo "${GITHUB_REPO}" | tr '[:upper:]' '[:lower:]')"
 
 ACCOUNT_ID="$(AWS_PROFILE="${PROFILE}" aws sts get-caller-identity --query Account --output text)"
 
@@ -186,9 +195,24 @@ ensure_role() {
   AWS_PROFILE="${PROFILE}" aws iam get-role --role-name "${role_name}" --query 'Role.Arn' --output text
 }
 
-DEV_SUBS="$(jq -cn --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" '[ "\($repo):environment:dev", "\($repo):ref:refs/heads/develop" ]')"
-STAGING_SUBS="$(jq -cn --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" '[ "\($repo):environment:staging", "\($repo):ref:refs/heads/main" ]')"
-PROD_SUBS="$(jq -cn --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" '[ "\($repo):environment:prod", "\($repo):ref:refs/tags/v*" ]')"
+DEV_SUBS="$(
+  jq -cn \
+    --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" \
+    --arg repoLower "repo:${GITHUB_ORG_LOWER}/${GITHUB_REPO_LOWER}" \
+    '[ "\($repo):environment:dev", "\($repo):ref:refs/heads/develop", "\($repoLower):environment:dev", "\($repoLower):ref:refs/heads/develop" ] | unique'
+)"
+STAGING_SUBS="$(
+  jq -cn \
+    --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" \
+    --arg repoLower "repo:${GITHUB_ORG_LOWER}/${GITHUB_REPO_LOWER}" \
+    '[ "\($repo):environment:staging", "\($repo):ref:refs/heads/develop", "\($repo):ref:refs/heads/main", "\($repoLower):environment:staging", "\($repoLower):ref:refs/heads/develop", "\($repoLower):ref:refs/heads/main" ] | unique'
+)"
+PROD_SUBS="$(
+  jq -cn \
+    --arg repo "repo:${GITHUB_ORG}/${GITHUB_REPO}" \
+    --arg repoLower "repo:${GITHUB_ORG_LOWER}/${GITHUB_REPO_LOWER}" \
+    '[ "\($repo):environment:prod", "\($repo):ref:refs/tags/v*", "\($repoLower):environment:prod", "\($repoLower):ref:refs/tags/v*" ] | unique'
+)"
 
 DEV_ARN="$(ensure_role remit-scout-gha-deploy-dev "${DEV_SUBS}")"
 STAGING_ARN="$(ensure_role remit-scout-gha-deploy-staging "${STAGING_SUBS}")"
