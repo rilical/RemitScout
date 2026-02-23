@@ -339,6 +339,7 @@ jobs:
           set -euo pipefail
           aws ssm put-parameter \
             --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --type "String" \
             --value "${IMAGE_TAG}" \
             --overwrite
 
@@ -858,6 +859,7 @@ jobs:
           set -euo pipefail
           aws ssm put-parameter \
             --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --type "String" \
             --value "${IMAGE_TAG}" \
             --overwrite
 
@@ -1342,6 +1344,7 @@ jobs:
           set -euo pipefail
           aws ssm put-parameter \
             --name "/remit-scout/${ENV_NAME}/last-good-image" \
+            --type "String" \
             --value "${IMAGE_TAG}" \
             --overwrite
 
