@@ -116,7 +116,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
           vpc: options.vpc,
           vpcSubnets: { subnetType: dbSubnetType },
           securityGroups: [options.dbSecurityGroup],
-          instanceType: new InstanceType(isProd ? 'r6g.xlarge' : 'r6g.large'),
+          instanceType: new InstanceType(isProd ? 't4g.medium' : 't4g.medium'),
           enablePerformanceInsights: true,
           performanceInsightRetention: PerformanceInsightRetention.DEFAULT,
         },

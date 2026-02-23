@@ -14,8 +14,10 @@ import {
   computeQuoteCoverage,
   createAlertSchema,
   getAlertCount,
+  getSupportedAlertMetricsForTargetType,
   isPlanActiveStatus,
   isPlusEntitled,
+  isMetricSupportedForTarget,
   isValidSendScore,
   logger,
   normalizeFrequency,
@@ -108,6 +110,20 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         } })
       }
 
+      const supportedMetricsForTarget = getSupportedAlertMetricsForTargetType(watchlistItem.target_type)
+      if (!isMetricSupportedForTarget(watchlistItem.target_type, body.rule.metric)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('POST', '/alerts', 400, durationSeconds)
+
+                throw new ValidationError('Invalid request', { details: {
+          success: false,
+          error: 'unsupported_metric',
+          message: `${body.rule.metric} alerts are not supported for ${watchlistItem.target_type} targets.`,
+          targetType: watchlistItem.target_type,
+          supportedMetrics: supportedMetricsForTarget,
+        } })
+      }
+
       // Check if alert already exists
       const existing = await alertRepository.findByWatchlistItemAndRule(
         body.watchlistItemId,
@@ -131,7 +147,7 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
             watchlistItemId: body.watchlistItemId,
             rule: body.rule,
             frequency: existing.frequency,
-            enabled: body.enabled,
+            enabled: existing.enabled,
             createdAt: existing.created_at.toISOString(),
             updatedAt: existing.updated_at.toISOString(),
           },
@@ -388,17 +404,22 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         },
       }
     } catch (error: unknown) {
-      const durationSeconds = (Date.now() - startTime) / 1000
-      recordRequest('POST', '/alerts', error instanceof z.ZodError ? 400 : 500, durationSeconds)
-
       if (error instanceof z.ZodError) {
-                throw new ValidationError('Invalid request', { details: {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('POST', '/alerts', 400, durationSeconds)
+        throw new ValidationError('Invalid request', { details: {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
           details: error.errors,
         } })
       }
+      if (error instanceof ValidationError || error instanceof NotFoundError) {
+        throw error
+      }
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('POST', '/alerts', 500, durationSeconds)
 
       logger.error('alert_create_failed', {
         user_id: user.user_id,
@@ -424,6 +445,7 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
 
       // Verify alert belongs to user and get current alert
       const existing = await alertRepository.findById(id, user.user_id)
+      const watchlistItem = await watchlistRepository.findById(existing?.watchlist_item_id, user.user_id)
 
       if (!existing) {
         const durationSeconds = (Date.now() - startTime) / 1000
@@ -433,6 +455,17 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
           success: false,
           error: 'not_found',
           message: 'Alert not found',
+        } })
+      }
+
+      if (!watchlistItem) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('PATCH', '/alerts/:id', 404, durationSeconds)
+
+                throw new NotFoundError('Not found', { details: {
+          success: false,
+          error: 'not_found',
+          message: 'Watchlist item not found',
         } })
       }
 
@@ -468,6 +501,20 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       const normalizedFrequency = normalizeFrequency(nextFrequency)
       const resolvedFrequency = nextMetric === 'sendScore' ? 'weekly' : normalizedFrequency
       const requiresPlus = nextMetric === 'sendScore' || resolvedFrequency === 'daily'
+      const supportedMetricsForTarget = getSupportedAlertMetricsForTargetType(watchlistItem.target_type)
+
+      if (!isMetricSupportedForTarget(watchlistItem.target_type, nextMetric)) {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+
+        throw new ValidationError('Invalid request', { details: {
+          success: false,
+          error: 'unsupported_metric',
+          message: `${nextMetric} alerts are not supported for ${watchlistItem.target_type} targets.`,
+          targetType: watchlistItem.target_type,
+          supportedMetrics: supportedMetricsForTarget,
+        } })
+      }
 
       const plan = requiresPlus ? await getUserPlan(pool, user.user_id) : null
       const planForMetric = plan ?? await getUserPlan(pool, user.user_id)
@@ -524,69 +571,65 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
           } })
         }
 
-        const watchlistItem = await watchlistRepository.findById(existing.watchlist_item_id, user.user_id)
-        if (watchlistItem) {
-          const corridorId = resolveCorridorIdFromWatchlist(
-            watchlistItem.target_type,
-            watchlistItem.target_payload as Record<string, unknown>,
-          )
+        const corridorId = resolveCorridorIdFromWatchlist(
+          watchlistItem.target_type,
+          watchlistItem.target_payload as Record<string, unknown>,
+        )
 
-          if (!corridorId) {
-            const durationSeconds = (Date.now() - startTime) / 1000
-            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+        if (!corridorId) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
 
-                        throw new ValidationError('Invalid request', { details: {
-              success: false,
-              error: 'invalid_corridor',
-              message: 'Smart alerts require a valid corridor.',
-            } })
-          }
+                      throw new ValidationError('Invalid request', { details: {
+            success: false,
+            error: 'invalid_corridor',
+            message: 'Smart alerts require a valid corridor.',
+          } })
+        }
 
-          if (!isMacroCorridor(corridorId)) {
-            const durationSeconds = (Date.now() - startTime) / 1000
-            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+        if (!isMacroCorridor(corridorId)) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
 
-                        throw new ValidationError('Invalid request', { details: {
-              success: false,
-              error: 'smart_not_offered',
-              message: SMART_ALERT_NOT_OFFERED_MESSAGE,
-              corridorId,
-            } })
-          }
+                      throw new ValidationError('Invalid request', { details: {
+            success: false,
+            error: 'smart_not_offered',
+            message: SMART_ALERT_NOT_OFFERED_MESSAGE,
+            corridorId,
+          } })
+        }
 
-          const signalData = await checkCorridorSignalData(corridorId, pool)
-          const hasData = signalData
-            && signalData.confidence !== null
-            && signalData.confidence >= SMART_ALERT_MIN_CONFIDENCE
-            && signalData.sample_days !== null
-            && signalData.sample_days >= SMART_ALERT_MIN_SAMPLE_DAYS
+        const signalData = await checkCorridorSignalData(corridorId, pool)
+        const hasData = signalData
+          && signalData.confidence !== null
+          && signalData.confidence >= SMART_ALERT_MIN_CONFIDENCE
+          && signalData.sample_days !== null
+          && signalData.sample_days >= SMART_ALERT_MIN_SAMPLE_DAYS
 
-          if (!hasData) {
-            const durationSeconds = (Date.now() - startTime) / 1000
-            recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+        if (!hasData) {
+          const durationSeconds = (Date.now() - startTime) / 1000
+          recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
 
-                        throw new ValidationError('Invalid request', { details: {
-              success: false,
-              error: 'insufficient_data',
-              message: 'Smart alerts need at least 3 weeks of historical data. This corridor doesn\'t have enough data yet.',
-              suggestion: 'Try a rate alert instead, or choose a popular corridor.',
-              corridorId,
-              currentData: signalData
-                ? {
-                    confidence: signalData.confidence,
-                    sampleDays: signalData.sample_days,
-                    requiredConfidence: SMART_ALERT_MIN_CONFIDENCE,
-                    requiredSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
-                  }
-                : null,
-            } })
-          }
+                      throw new ValidationError('Invalid request', { details: {
+            success: false,
+            error: 'insufficient_data',
+            message: 'Smart alerts need at least 3 weeks of historical data. This corridor does not have enough data yet.',
+            suggestion: 'Try a rate alert instead, or choose a popular corridor.',
+            corridorId,
+            currentData: signalData
+              ? {
+                  confidence: signalData.confidence,
+                  sampleDays: signalData.sample_days,
+                  requiredConfidence: SMART_ALERT_MIN_CONFIDENCE,
+                  requiredSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+                }
+              : null,
+          } })
         }
       }
 
       if (nextMetric !== 'sendScore' && REGULAR_ALERT_SUPPORTED_METRICS.includes(nextMetric as any)) {
-        const watchlistItem = await watchlistRepository.findById(existing.watchlist_item_id, user.user_id)
-        if (!watchlistItem || watchlistItem.target_type !== 'corridor') {
+        if (watchlistItem.target_type !== 'corridor') {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
                     throw new ValidationError('Invalid request', { details: {
@@ -725,17 +768,22 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         },
       }
     } catch (error: unknown) {
-      const durationSeconds = (Date.now() - startTime) / 1000
-      recordRequest('PATCH', '/alerts/:id', error instanceof z.ZodError ? 400 : 500, durationSeconds)
-
       if (error instanceof z.ZodError) {
-                throw new ValidationError('Invalid request', { details: {
+        const durationSeconds = (Date.now() - startTime) / 1000
+        recordRequest('PATCH', '/alerts/:id', 400, durationSeconds)
+        throw new ValidationError('Invalid request', { details: {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
           details: error.errors,
         } })
       }
+      if (error instanceof ValidationError || error instanceof NotFoundError) {
+        throw error
+      }
+
+      const durationSeconds = (Date.now() - startTime) / 1000
+      recordRequest('PATCH', '/alerts/:id', 500, durationSeconds)
 
       logger.error('alert_update_failed', {
         user_id: user.user_id,
@@ -824,6 +872,10 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
 
       return { success: true }
     } catch (error: unknown) {
+      if (error instanceof ValidationError || error instanceof NotFoundError) {
+        throw error
+      }
+
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('DELETE', '/alerts/:id', 500, durationSeconds)
 

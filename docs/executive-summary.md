@@ -39,7 +39,7 @@ We project that capturing a small share of key corridors (e.g., US–Jordan) plu
 
 ## Milestones & Challenges
 
-**Current state:** Core backend is in place: Bronze/Silver/Gold pipeline, tiered sweep mechanics (EventBridge + SQS + ECS/Lambda), Redis caching, and Plane A/C APIs. Synthetic weighting is computed in Gold (`provider_weight_snapshot`) and applied consistently across live and batch indices. Operations hardening includes probe heartbeats, data-health SLOs (freshness, coverage, indices readiness), and synthetics canaries for API and indices. Dev is typically paused via CDK (`devPaused`) to control cost, and staging defaults disable Tier-1 collection (3-hour cadence for all corridors). The product compares 30+ providers across 150+ corridors, supports rate alerts and watchlists, and exposes Gold indices for enterprise.
+**Current state:** Core backend is in place: Bronze/Silver/Gold pipeline, tiered sweep mechanics (EventBridge + SQS + ECS/Lambda), Redis caching, and Plane A/C APIs. Synthetic weighting is computed in Gold (`provider_weight_snapshot`) and applied consistently across live and batch indices. Operations hardening includes probe heartbeats, data-health SLOs (freshness, coverage, indices readiness), and synthetics canaries for API and indices. Dev is typically paused via CDK (`devPaused`) to control cost, and staging defaults disable Tier-1 collection (3-hour cadence for all corridors). The product compares 30+ providers across 49,000+ corridors, supports rate alerts and watchlists, and exposes Gold indices for enterprise.
 
 **Q2 2026 milestones:**
 

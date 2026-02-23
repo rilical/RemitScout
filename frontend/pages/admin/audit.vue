@@ -24,41 +24,49 @@
 
     <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
       <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <label class="text-body-sm text-rs-muted">
-          Start date
+        <div>
+          <label for="audit-start-date" class="text-body-sm text-rs-muted">Start date</label>
           <input
+            id="audit-start-date"
+            ref="firstFilterRef"
             v-model="startDate"
             type="date"
+            aria-label="Filter start date"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
-        </label>
-        <label class="text-body-sm text-rs-muted">
-          End date
+        </div>
+        <div>
+          <label for="audit-end-date" class="text-body-sm text-rs-muted">End date</label>
           <input
+            id="audit-end-date"
             v-model="endDate"
             type="date"
+            aria-label="Filter end date"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
-        </label>
-        <label class="text-body-sm text-rs-muted">
-          Actor ID
+        </div>
+        <div>
+          <label for="audit-actor-id" class="text-body-sm text-rs-muted">Actor ID</label>
           <input
+            id="audit-actor-id"
             v-model="filters.actor_id"
             type="text"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
-        </label>
-        <label class="text-body-sm text-rs-muted">
-          Action
+        </div>
+        <div>
+          <label for="audit-action" class="text-body-sm text-rs-muted">Action</label>
           <input
+            id="audit-action"
             v-model="filters.action"
             type="text"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
-        </label>
-        <label class="text-body-sm text-rs-muted">
-          Category
+        </div>
+        <div>
+          <label for="audit-category" class="text-body-sm text-rs-muted">Category</label>
           <select
+            id="audit-category"
             v-model="filters.category"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
@@ -71,10 +79,11 @@
             <option value="billing">Billing</option>
             <option value="data_access">Data access</option>
           </select>
-        </label>
-        <label class="text-body-sm text-rs-muted">
-          Severity
+        </div>
+        <div>
+          <label for="audit-severity" class="text-body-sm text-rs-muted">Severity</label>
           <select
+            id="audit-severity"
             v-model="filters.severity"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
           >
@@ -84,7 +93,17 @@
             <option value="error">Error</option>
             <option value="critical">Critical</option>
           </select>
-        </label>
+        </div>
+      </div>
+      <div class="mt-3 flex items-center gap-2">
+        <button
+          v-if="hasActiveFilters"
+          class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+          @click="clearAllFilters"
+        >
+          Clear all filters
+        </button>
+        <span class="text-body-sm text-rs-muted">Press <kbd class="rounded border border-rs-border px-1.5 py-0.5 text-xs font-mono">/</kbd> to focus filters</span>
       </div>
     </section>
 
@@ -144,6 +163,7 @@ useAdminPage({
 const { getLogs, exportLogs, loading, error } = useAudit()
 const { formatTimestamp } = useAdminFormat()
 const route = useRoute()
+const firstFilterRef = ref<HTMLInputElement | null>(null)
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -201,6 +221,19 @@ const refresh = () => {
   void loadLogs()
 }
 
+const hasActiveFilters = computed(() =>
+  filters.actor_id !== '' || filters.action !== '' || filters.category !== '' || filters.severity !== '',
+)
+
+const clearAllFilters = () => {
+  filters.actor_id = ''
+  filters.action = ''
+  filters.category = ''
+  filters.severity = ''
+  pagination.value.offset = 0
+  void loadLogs()
+}
+
 const applyFilters = () => {
   pagination.value.offset = 0
   void loadLogs()
@@ -228,7 +261,18 @@ const downloadCsv = async () => {
   URL.revokeObjectURL(url)
 }
 
+const onAuditKeydown = (event: KeyboardEvent) => {
+  if (event.key === '/' && !event.metaKey && !event.ctrlKey) {
+    const tag = (event.target as HTMLElement)?.tagName
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return
+    event.preventDefault()
+    firstFilterRef.value?.focus()
+  }
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', onAuditKeydown)
+
   if (typeof route.query.actor_id === 'string') {
     filters.actor_id = route.query.actor_id
   }
@@ -243,5 +287,9 @@ onMounted(() => {
   }
 
   void loadLogs()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onAuditKeydown)
 })
 </script>

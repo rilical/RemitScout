@@ -452,6 +452,8 @@ import { usePulseStore } from '~/stores/pulse'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { useExports } from '~/composables/useExports'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 
 const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
 const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
@@ -688,13 +690,34 @@ onBeforeUnmount(() => {
   clearExportPolling()
 })
 
-useHead({
-  title: computed(() => chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse'),
-  meta: [
-    {
-      name: 'description',
-      content: computed(() => chartMeta.value?.description || 'Market data chart from Remit-Pulse'),
-    },
-  ],
+const chartSeoTitle = computed(() => chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse')
+const chartSeoDescription = computed(() => chartMeta.value?.description || 'Market data chart from Remit-Pulse')
+
+useServerSeoMeta({
+  title: chartSeoTitle,
+  description: chartSeoDescription,
 })
+
+setSeo({
+  title: chartSeoTitle.value,
+  description: chartSeoDescription.value,
+  ogImage: false,
+})
+
+defineOgImage({
+  component: 'OgImageDefault',
+  props: {
+    title: chartSeoTitle,
+    description: chartSeoDescription,
+  },
+})
+
+const { public: { siteUrl } } = useRuntimeConfig()
+const { addBreadcrumbSchema } = useStructuredData()
+
+addBreadcrumbSchema([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: 'Pulse', url: `${siteUrl}/pulse` },
+  { name: chartSeoTitle.value, url: `${siteUrl}/pulse/charts/${chartId.value}` },
+])
 </script>

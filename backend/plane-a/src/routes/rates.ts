@@ -232,11 +232,11 @@ export const ratesRoutes = async (app: FastifyInstance) => {
           days,
           startDate,
           endDate,
-          message: 'No rate history found in database. OANDA sync may not be running or data not yet populated.',
+          message: 'No rate history found in database. Rate sync may not be running or data not yet populated.',
         })
         const refreshEnabled = config.fxRates?.refreshEnabled === true
         const message = refreshEnabled
-          ? 'Rate history is warming up. OANDA sync has been queued.'
+          ? 'Rate history is warming up. Rate sync has been queued.'
           : 'Rate history is unavailable. FX refresh is currently disabled.'
         return {
           base,

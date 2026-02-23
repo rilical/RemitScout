@@ -1,6 +1,14 @@
 <template>
   <div class="min-h-screen bg-neutral-50 px-page-x py-12">
     <div class="mx-auto w-full max-w-3xl space-y-6">
+      <div
+        v-if="mfaRequiredByPolicy"
+        class="rounded-xl border-2 border-warning-400 bg-warning-50 px-5 py-4"
+      >
+        <p class="text-body font-semibold text-warning-800">Multi-factor authentication is required</p>
+        <p class="mt-1 text-body-sm text-warning-700">Your account requires MFA to be enabled before you can continue. Please set up an authenticator app below.</p>
+      </div>
+
       <div>
         <h1 class="text-h2 font-bold text-rs-fg">Account security</h1>
         <p class="mt-2 text-body-sm text-rs-muted">Manage multi-factor authentication for your account.</p>
@@ -139,12 +147,25 @@
 <script setup lang="ts">
 definePageMeta({ middleware: ['auth'] })
 
+const route = useRoute()
+const router = useRouter()
+
 const {
   listMfaFactors,
   enrollMfaFactor,
   verifyMfaEnrollment,
   unenrollMfaFactor,
 } = useAuth()
+
+const mfaRequiredByPolicy = computed(() => route.query.mfa === 'required')
+
+onBeforeRouteLeave((_to, _from, next) => {
+  if (mfaRequiredByPolicy.value && !mfaEnabled.value) {
+    next(false)
+    return
+  }
+  next()
+})
 
 const loading = ref(false)
 const enrolling = ref(false)
@@ -231,6 +252,11 @@ const verifyEnrollment = async () => {
   }
   resetEnrollment()
   await loadFactors()
+
+  if (mfaRequiredByPolicy.value) {
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    await router.replace(redirect)
+  }
 }
 
 const removeFactor = async (factorId: string) => {

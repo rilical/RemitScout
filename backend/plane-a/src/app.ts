@@ -60,6 +60,7 @@ import { auditRoutes } from './routes/audit'
 import { adminRoutes } from './routes/admin'
 import { adminFeatureFlagsRoutes } from './routes/admin-feature-flags'
 import { adminInstitutionalRoutes } from './routes/admin-institutional'
+import { adminNewsletterRoutes } from './routes/admin-newsletter'
 import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
@@ -569,6 +570,7 @@ export const buildApp = async (options?: {
   app.register(adminRoutes, { prefix: '/api/v1' })
   app.register(adminFeatureFlagsRoutes, { prefix: '/api/v1' })
   app.register(adminInstitutionalRoutes, { prefix: '/api/v1' })
+  app.register(adminNewsletterRoutes, { prefix: '/api/v1' })
   app.register(notificationsRoutes, { prefix: '/api/v1' })
   app.register(adsRoutes, { prefix: '/api/v1' })
   app.register(marketingRoutes, { prefix: '/api/v1' })

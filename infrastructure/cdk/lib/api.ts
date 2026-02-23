@@ -731,6 +731,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/indices/latest',
     '/api/v1/indices/series',
     '/api/v1/indices/corridors',
+    '/api/v1/indices/health',
   ]
 
   for (const path of publicRoutes) {

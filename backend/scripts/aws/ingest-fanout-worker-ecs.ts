@@ -65,7 +65,9 @@ export const handler = async (): Promise<number> => {
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
-      requireRedis: true,
+      // Redis dependency is advisory for ingest fanout worker startup.
+      // If Redis is degraded, continue processing with reduced capabilities.
+      requireRedis: false,
       requireQueues: requireIngestFanoutQueue,
       requireQuoteRefreshQueue: false,
       requireFxRateRefreshQueue: false,

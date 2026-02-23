@@ -372,7 +372,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span>Based on real transfer data across 150+ corridors</span>
+                <span>Based on real transfer data across 49,000+ corridors</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg

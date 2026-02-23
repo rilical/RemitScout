@@ -15,7 +15,7 @@
           </h2>
           <p
             v-if="subtitle"
-            class="text-body-lg max-w-2xl mx-auto"
+            class="text-body-lg max-w-2xl mx-auto [text-wrap:balance]"
             :class="subtitleClass"
           >
             {{ subtitle }}

@@ -128,9 +128,12 @@
 
 <script setup lang="ts">
 import { getCountryFromSlug } from '~/utils/country-slugs'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
 
 // Data
 const route = useRoute()
+const { public: { siteUrl } } = useRuntimeConfig()
 const countrySlug = computed(() => String(route.params.country || '').toLowerCase())
 const countryData = computed(() => getCountryFromSlug(countrySlug.value))
 const toCountry = computed(() => countryData.value?.code || '')
@@ -141,15 +144,27 @@ const amount = ref(1000)
 const { data: countryInfo } = await useCountry(toCountry.value || (route.params.country as string))
 const countryName = computed(() => countryInfo.value?.name || countryData.value?.name || String(route.params.country || ''))
 
-// Meta
-useHead({
-  title: `Send Money to ${countryName.value} | Remit-Scout`,
-  meta: [
-    {
-      name: 'description',
-      content: `Compare money transfer providers for sending money to ${countryName.value}. Get the best rates and fastest transfers.`,
-    },
-  ],
+// SSR-first meta (rendered before JS hydration for crawlers)
+const seoTitle = computed(() => `Send Money to ${countryName.value} | Remit-Scout`)
+const seoDescription = computed(() => `Compare money transfer providers for sending money to ${countryName.value}. Get the best rates and fastest transfers.`)
+
+useServerSeoMeta({
+  title: seoTitle,
+  description: seoDescription,
+})
+
+setSeo({
+  title: seoTitle.value,
+  description: seoDescription.value,
+  ogImage: false,
+})
+
+defineOgImage({
+  component: 'OgImageCorridor',
+  props: {
+    from: 'United States',
+    to: countryName,
+  },
 })
 
 // Breadcrumbs
@@ -172,5 +187,23 @@ const topProviderCards = computed(() => {
     affiliateUrl: quote.affiliateUrl ?? undefined,
     url: quote.outboundUrl ?? undefined,
   }))
+})
+
+// Structured data
+const { addBreadcrumbSchema, addRemittanceCorridorSchema } = useStructuredData()
+
+addBreadcrumbSchema([
+  { name: 'Home', url: `${siteUrl}/` },
+  { name: countryName.value, url: `${siteUrl}${route.path}` },
+])
+
+watchEffect(() => {
+  if (!topProviderCards.value.length) return
+  addRemittanceCorridorSchema({
+    from: 'United States',
+    to: countryName.value,
+    providers: topProviderCards.value.map(p => ({ name: p.name, slug: p.slug })),
+    bestRate: '',
+  })
 })
 </script>

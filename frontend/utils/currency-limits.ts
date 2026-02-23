@@ -174,7 +174,7 @@ export const MIN_AMOUNT_USD = 50
 /**
  * Base maximum amount in USD
  */
-export const MAX_AMOUNT_USD = 15000
+export const MAX_AMOUNT_USD = 10000
 
 export type AmountLimitOverrides = {
   minAmount?: number | null

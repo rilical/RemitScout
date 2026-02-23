@@ -1155,7 +1155,7 @@ const rawConfig = {
         ? toBoolean(process.env.NEWSLETTER_EMAIL_ENABLED)
         : true,
     from: process.env.NEWSLETTER_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
-    fromName: process.env.NEWSLETTER_EMAIL_FROM_NAME || 'RemitScout Newsletter',
+    fromName: process.env.NEWSLETTER_EMAIL_FROM_NAME || 'Remit-Scout Newsletter',
     baseUrl:
       process.env.NEWSLETTER_BASE_URL ||
       process.env.FRONTEND_BASE_URL ||
@@ -1163,6 +1163,11 @@ const rawConfig = {
       frontendFallbackUrl,
     tokenExpiryHours: toNumber(process.env.NEWSLETTER_TOKEN_EXPIRY_HOURS, 168),
     welcomeEnabled: toBoolean(process.env.NEWSLETTER_WELCOME_ENABLED),
+    pinpoint: {
+      appId: process.env.PINPOINT_APP_ID || '',
+      region: process.env.PINPOINT_REGION || process.env.AWS_REGION || 'us-east-1',
+      enabled: toBoolean(process.env.PINPOINT_ENABLED),
+    },
   },
   communications: {
     email: {

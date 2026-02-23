@@ -416,6 +416,21 @@ export const requireAdmin = () => {
       return reply.send({ error: 'forbidden' })
     }
 
+    if (adminMfaRequired) {
+      const amr = Array.isArray(claims?.amr) ? claims.amr as Array<{ method?: string }> : []
+      const hasTotpAmr = amr.some(entry => entry && entry.method === 'totp')
+      if (!hasTotpAmr) {
+        logger.warn('admin_mfa_required', {
+          user_id: request.user.user_id,
+        })
+        reply.code(403)
+        return reply.send({
+          error: 'mfa_required',
+          message: 'Multi-factor authentication is required for admin access.',
+        })
+      }
+    }
+
     return
   }
   ;(handler as { __guardTag?: string }).__guardTag = 'requireAdmin'
@@ -465,6 +480,12 @@ export const requireSuperAdmin = () => {
 
 const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.auth-plugin')
+
+const adminMfaRequired = (() => {
+  const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+  return true
+})()
 
 const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeof getEntitlementsForPlan>) => {
   if (entitlement === 'pulse') {

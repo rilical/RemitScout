@@ -95,10 +95,9 @@
 
             <div class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 items-center justify-center rounded-lg text-body-lg font-bold text-white"
-                :style="{ backgroundColor: quote.color + '30' }"
+                class="flex h-10 w-10 items-center justify-center rounded-lg bg-white overflow-hidden p-1"
               >
-                {{ quote.provider.charAt(0) }}
+                <ProviderLogo :slug="quote.slug" :alt="quote.provider" size="small" fit />
               </div>
               <div>
                 <div class="font-semibold text-white">
@@ -146,6 +145,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatMoney } from '~/shared/lib/format'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
 
 const sendScore = 86
 const amount = 1000
@@ -157,9 +157,9 @@ const midMarket = 56.1234
 const amountLabel = computed(() => formatMoney(amount, { currency: fromCurrency, maximumFractionDigits: 0 }))
 
 const quotes = [
-  { provider: 'Wise', recipientGets: 55600, fee: 3.99, markupBps: 42, speed: 'Minutes', color: '#10B981' },
-  { provider: 'Remitly', recipientGets: 55320, fee: 2.99, markupBps: 78, speed: 'Minutes', color: '#2563EB' },
-  { provider: 'WorldRemit', recipientGets: 54980, fee: 1.99, markupBps: 110, speed: 'Same day', color: '#F59E0B' },
+  { provider: 'Wise', slug: 'wise', recipientGets: 55600, fee: 3.99, markupBps: 42, speed: 'Minutes', color: '#10B981' },
+  { provider: 'Remitly', slug: 'remitly', recipientGets: 55320, fee: 2.99, markupBps: 78, speed: 'Minutes', color: '#2563EB' },
+  { provider: 'WorldRemit', slug: 'worldremit', recipientGets: 54980, fee: 1.99, markupBps: 110, speed: 'Same day', color: '#F59E0B' },
 ]
 
 const circumference = 2 * Math.PI * 50

@@ -3081,7 +3081,7 @@ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
 	              </div>
               <div
 v-else-if="opsErrors[provider.id]"
-class="px-6 py-6 text-body-sm text-warning-600 bg-warning-600"
+class="px-6 py-6 text-body-sm text-warning-700 bg-warning-50"
 >
                 {{ opsErrors[provider.id] }}
               </div>
@@ -3356,7 +3356,7 @@ class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
                 </div>
                 <p
 v-if="telemetryError"
-class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
+class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
 >
                   {{ telemetryError }}
                 </p>
@@ -3534,7 +3534,7 @@ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 </div>
                 <p
 v-if="opsAnalyticsError"
-class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
+class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
 >
                   {{ opsAnalyticsError }}
                 </p>
@@ -3644,7 +3644,7 @@ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 </div>
                 <p
 v-if="opsAuditError"
-class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
+class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
 >
                   {{ opsAuditError }}
                 </p>
@@ -3731,7 +3731,7 @@ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             </div>
             <p
 v-if="opsAnalyticsError"
-class="mt-3 text-body-sm text-warning-600 bg-warning-600 rounded-lg px-3 py-2"
+class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
 >
               {{ opsAnalyticsError }}
             </p>

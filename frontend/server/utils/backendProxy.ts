@@ -333,7 +333,7 @@ const mockProviders = (query: Record<string, unknown>): MockResult => {
       amount,
       method,
       midMarketRate,
-      midMarketSource: 'OANDA',
+      midMarketSource: 'Mid-market',
       midMarketUpdatedAt: updatedAt,
       data: [
         makeQuote('mock_wise', 'Wise', 2.5, midMarketRate * 0.995, 'Same day'),
@@ -372,7 +372,7 @@ const mockRatesHistory = (query: Record<string, unknown>): MockResult => {
     return {
       date: d.toISOString().slice(0, 10),
       rate: 1.0 + idx * 0.0005,
-      source: 'OANDA',
+      source: 'Mid-market',
     }
   })
 

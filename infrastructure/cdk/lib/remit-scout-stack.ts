@@ -32,6 +32,7 @@ import { createMonitoring } from './monitoring'
 import { createSynthetics } from './synthetics'
 import { createSnsSubscriptions } from './sns-subscriptions'
 import { createComplianceServices } from './compliance'
+import { createPinpoint } from './pinpoint'
 import { createOpsPause } from './ops-pause'
 import { createGithubActionsOidcRoles } from './github-actions-oidc'
 import { loadCdkContextConfig } from './config-schema'
@@ -134,8 +135,8 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('devSharedSecretArn') ??
       process.env.DEV_SHARED_SECRET_ARN
     const sharedSecretArn =
-      this.node.tryGetContext('sharedSecretArn') ??
       process.env.SHARED_SECRET_ARN ??
+      this.node.tryGetContext('sharedSecretArn') ??
       (envName === 'dev' ? devSharedSecretArn : undefined)
     if (!sharedSecretArn) {
       throw new Error('sharedSecretArn context or SHARED_SECRET_ARN env var required')
@@ -178,10 +179,25 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('enableCostGuardrails') ??
           process.env.ENABLE_COST_GUARDRAILS,
       ) ?? true
+    const enableComplianceServices =
+      toOptionalBool(
+        this.node.tryGetContext('enableComplianceServices') ??
+          process.env.ENABLE_COMPLIANCE_SERVICES,
+      ) ?? envName !== 'dev'
+    const pinpointEnabled =
+      toOptionalBool(
+        cdkContext.pinpointEnabled ??
+          process.env.PINPOINT_ENABLED,
+      ) ?? envName !== 'dev'
     const devMinimalInfra =
       toOptionalBool(
         this.node.tryGetContext('devMinimalInfra') ??
           process.env.DEV_MINIMAL_INFRA,
+      ) ?? false
+    const minimalInfra =
+      toOptionalBool(
+        this.node.tryGetContext('minimalInfra') ??
+          process.env.MINIMAL_INFRA,
       ) ?? false
     const costAlertEmailsRaw =
       this.node.tryGetContext('costAlertEmails') ??
@@ -296,11 +312,20 @@ export class RemitScoutStack extends Stack {
       natGateways,
       interfaceEndpointMode,
     })
+    const pinpoint = pinpointEnabled
+      ? createPinpoint(this, {
+          envName,
+          enabled: true,
+          sesIdentityArn: sesIdentityArns[0],
+          fromAddress: process.env.NEWSLETTER_EMAIL_FROM || process.env.SES_FROM_ADDRESS || `no-reply@remit-scout.com`,
+        })
+      : null
     const iam = createIam(this, {
       envName,
       sharedSecretArns: [sharedSecretArn],
       sesIdentityArns,
       snsTopicArns,
+      pinpointAppId: pinpoint?.pinpointAppId,
     })
     const registry = createRegistry(this, { envName })
 
@@ -386,13 +411,9 @@ export class RemitScoutStack extends Stack {
     const redisSsmName =
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
-    const redisAuthToken = cache.redisAuthToken.toString()
     const redisHost = cache.replicationGroup.attrPrimaryEndPointAddress
     const redisPort = cache.replicationGroup.attrPrimaryEndPointPort
     let redisUrl = `rediss://${redisHost}:${redisPort}`
-    if (!redisSecretArn && !redisSsmName) {
-      redisUrl = `rediss://default:${redisAuthToken}@${redisHost}:${redisPort}`
-    }
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
       process.env.SUPABASE_SECRET_ARN ??
@@ -1018,7 +1039,7 @@ export class RemitScoutStack extends Stack {
         process.env.PURGE_QUEUE_ALLOWLIST,
     )
     const hardStopEnabled = envName !== 'prod'
-    const minimalMode = envName === 'dev' && devMinimalInfra
+    const minimalMode = minimalInfra || (envName === 'dev' && devMinimalInfra)
 
     const devNightlyPauseEnabled = envName === 'dev'
       ? (toOptionalBool(
@@ -1320,6 +1341,10 @@ export class RemitScoutStack extends Stack {
     if (!frontendBaseUrl && frontendUrlFromStack) {
       api.planeAFunction.addEnvironment('FRONTEND_BASE_URL', frontendUrlFromStack)
     }
+    if (pinpoint) {
+      api.planeAFunction.addEnvironment('PINPOINT_APP_ID', pinpoint.pinpointAppId)
+      api.planeAFunction.addEnvironment('PINPOINT_ENABLED', '1')
+    }
 
     const backup = createBackup(this, {
       envName,
@@ -1431,7 +1456,7 @@ export class RemitScoutStack extends Stack {
       betterUptimeWebhookSsmParamName,
     })
 
-    if (envName !== 'dev') {
+    if (enableComplianceServices) {
       createComplianceServices(this, {
         envName,
         criticalTopic: snsSubscriptions.criticalTopic,
@@ -1655,7 +1680,7 @@ export class RemitScoutStack extends Stack {
       redisReplicationGroupId: cache.replicationGroup.ref,
       redisSubnetGroupName: cache.subnetGroup.cacheSubnetGroupName ?? cache.subnetGroup.ref,
       redisSecurityGroupIds: [networking.redisSecurityGroup.securityGroupId],
-      redisNodeType: envName === 'prod' ? 'cache.r6g.large' : 'cache.t4g.micro',
+      redisNodeType: envName === 'prod' ? 'cache.t4g.small' : 'cache.t4g.micro',
       redisEngineVersion: '7.1',
       redisNumNodeGroups: 1,
       redisReplicasPerNodeGroup: envName === 'prod' ? 1 : 0,

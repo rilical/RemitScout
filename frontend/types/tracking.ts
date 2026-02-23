@@ -29,7 +29,7 @@ export type WatchlistItem = {
   updatedAt: string
 }
 
-export type AlertComparator = 'gt' | 'gte' | 'lt' | 'lte'
+export type AlertComparator = 'gt' | 'gte' | 'lt' | 'lte' | 'crosses_above' | 'crosses_below'
 export type AlertFrequency = 'weekly' | 'daily'
 
 export type AlertRule = {

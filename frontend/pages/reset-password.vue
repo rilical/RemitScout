@@ -83,9 +83,12 @@
                 placeholder="••••••••"
                 required
               >
-              <p class="mt-1.5 text-body-sm text-rs-muted">
-                Must be at least 8 characters
-              </p>
+              <div class="mt-2">
+                <PasswordStrength
+                  :model-value="password"
+                  @update:valid="passwordValid = $event"
+                />
+              </div>
             </div>
 
             <div>
@@ -115,7 +118,7 @@
 
             <button
               type="submit"
-              :disabled="loading || !isAuthenticated || password !== confirmPassword"
+              :disabled="loading || !isAuthenticated || !passwordValid || password !== confirmPassword"
               class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
             >
               {{ loading ? 'Updating…' : 'Update password' }}
@@ -150,6 +153,7 @@ setSeo({
 })
 
 const password = ref('')
+const passwordValid = ref(false)
 const confirmPassword = ref('')
 const loading = ref(false)
 const success = ref(false)

@@ -330,7 +330,7 @@
                   Standard (2-3 lines)
                 </p>
                 <p class="text-neutral-700">
-                  Remit-Scout is a quantitative comparison engine for cross-border transfers. We aggregate real-time quotes from 30+ providers across 150+ corridors and rank by <strong>Net Delivered Value</strong>—what the recipient actually receives after fees and FX markup. We maintain a strict no pay-to-rank policy, publish our methodology openly, and were built at Carnegie Mellon's Swartz Center for Entrepreneurship.
+                  Remit-Scout is a quantitative comparison engine for cross-border transfers. We aggregate real-time quotes from 30+ providers across 49,000+ corridors and rank by <strong>Net Delivered Value</strong>—what the recipient actually receives after fees and FX markup. We maintain a strict no pay-to-rank policy, publish our methodology openly, and were built at Carnegie Mellon's Swartz Center for Entrepreneurship.
                 </p>
               </div>
             </div>

@@ -46,7 +46,6 @@
       <CookieConsentBanner />
       <CookiePreferencesModal />
       <UiToast />
-      <DevRoleSwitcher v-if="isDev" />
     </template>
   </div>
 </template>
@@ -61,9 +60,6 @@ import { useEntitlements } from '~/composables/useEntitlements'
 import { useSession } from '~/composables/useSession'
 import CookieConsentBanner from '~/components/privacy/CookieConsentBanner.vue'
 import CookiePreferencesModal from '~/components/privacy/CookiePreferencesModal.vue'
-import DevRoleSwitcher from '~/components/dev/DevRoleSwitcher.vue'
-
-const isDev = import.meta.dev
 
 // Global app setup
 useHead({
@@ -81,6 +77,7 @@ const { isPlus, hydrated } = useEntitlements()
 const { clearSession } = useSession()
 const runtimeConfig = useRuntimeConfig()
 const ga4Id = runtimeConfig.public.ga4MeasurementId
+const gtmContainerId = runtimeConfig.public.gtmContainerId
 const metaPixelId = runtimeConfig.public.metaPixelId
 const googleAdsConversionId = runtimeConfig.public.googleAdsConversionId
 const linkedinPartnerId = runtimeConfig.public.linkedinPartnerId
@@ -176,11 +173,31 @@ const ensureTrackingPixel = (id: string, src: string) => {
 }
 
 let googleTagsReady = false
+let gtmReady = false
 let metaPixelReady = false
 let clarityReady = false
 let linkedInReady = false
 let tikTokReady = false
 let ezoicReady = false
+
+const ensureGoogleTagManager = () => {
+  if (!import.meta.client) return
+  if (!allowAnalytics.value || !gtmContainerId || gtmReady) return
+
+  const win = window as DynamicWindow
+  win.dataLayer = Array.isArray(win.dataLayer) ? win.dataLayer : []
+  win.dataLayer.push({
+    'gtm.start': Date.now(),
+    event: 'gtm.js',
+  })
+
+  ensureExternalScript(
+    'rs-gtm-src',
+    `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(gtmContainerId)}`,
+  )
+
+  gtmReady = true
+}
 
 const ensureGoogleTags = () => {
   if (!import.meta.client) return
@@ -367,13 +384,13 @@ const ensureEzoic = () => {
   const win = window as DynamicWindow
   win.ezstandalone = win.ezstandalone || {}
   win.ezstandalone.cmd = Array.isArray(win.ezstandalone.cmd) ? win.ezstandalone.cmd : []
-  ensureExternalScript('rs-ezoic-header', 'https://www.ezojs.com/ezoic/sa.min.js')
   ezoicReady = true
 }
 
 const ensureMarketingTags = () => {
   if (!import.meta.client) return
   if (allowAnalytics.value) {
+    ensureGoogleTagManager()
     ensureGoogleTags()
     ensureClarity()
   }

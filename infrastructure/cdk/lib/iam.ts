@@ -16,6 +16,7 @@ export type IamOptions = {
   sharedSecretArns?: string[]
   sesIdentityArns?: string[]
   snsTopicArns?: string[]
+  pinpointAppId?: string
 }
 
 export const createIam = (scope: Construct, options: IamOptions): IamResources => {
@@ -138,6 +139,18 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     actions: ['sns:Publish'],
     resources: snsPolicyResources,
   })
+
+  if (options.pinpointAppId) {
+    const pinpointPolicy = new PolicyStatement({
+      actions: [
+        'mobiletargeting:SendMessages',
+        'mobiletargeting:GetEmailChannel',
+        'mobiletargeting:SendUsersMessages',
+      ],
+      resources: [`arn:aws:mobiletargeting:*:*:apps/${options.pinpointAppId}/*`],
+    })
+    planeALambdaRole.addToPolicy(pinpointPolicy)
+  }
 
   for (const role of [
     planeALambdaRole,

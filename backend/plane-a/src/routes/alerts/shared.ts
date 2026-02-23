@@ -51,22 +51,41 @@ export const updateAlertUsage = async (
   }
 }
 
+export const ALERT_METRICS = [
+  'rate',
+  'recipientGets',
+  'totalCost',
+  'fee',
+  'index',
+  'midMarketRate',
+  'sendScore',
+  'rci_threshold',
+  'rvi_threshold',
+] as const
+
+export type AlertMetric = (typeof ALERT_METRICS)[number]
+
+export const TARGET_SUPPORTED_ALERT_METRICS: Record<'corridor' | 'fxPair' | 'pulseChart' | 'guide', AlertMetric[]> = {
+  corridor: ['rate', 'recipientGets', 'totalCost', 'fee', 'index', 'midMarketRate', 'sendScore', 'rci_threshold', 'rvi_threshold'],
+  fxPair: ['rate', 'midMarketRate'],
+  pulseChart: ['index'],
+  guide: [],
+}
+
 export const alertRuleSchema = z.object({
-  metric: z.enum([
-    'rate',
-    'recipientGets',
-    'totalCost',
-    'fee',
-    'index',
-    'midMarketRate',
-    'sendScore',
-    'rci_threshold',
-    'rvi_threshold',
-  ]),
+  metric: z.enum(ALERT_METRICS),
   comparator: z.enum(['gt', 'gte', 'lt', 'lte', 'crosses_above', 'crosses_below']),
   value: z.number(),
   currency: z.string().optional(),
 })
+
+export const getSupportedAlertMetricsForTargetType = (targetType: string): AlertMetric[] => {
+  return TARGET_SUPPORTED_ALERT_METRICS[targetType as keyof typeof TARGET_SUPPORTED_ALERT_METRICS] ?? []
+}
+
+export const isMetricSupportedForTarget = (targetType: string, metric: string): metric is AlertMetric => {
+  return getSupportedAlertMetricsForTargetType(targetType).includes(metric as AlertMetric)
+}
 
 export const createAlertSchema = z.object({
   watchlistItemId: z.string().uuid(),
@@ -159,7 +178,7 @@ export const resolveBucketForEligibility = (corridorId: string): number => {
 
 export const resolveMethodForEligibility = (raw: unknown): string => {
   if (typeof raw !== 'string') return 'bank'
-  const trimmed = raw.trim()
+  const trimmed = raw.trim().toLowerCase()
   return trimmed.length > 0 ? trimmed : 'bank'
 }
 
@@ -201,8 +220,10 @@ export const computeQuoteCoverage = async (input: {
        FROM silver.latest_quote_by_provider
       WHERE corridor_id = $1
         AND amount_bucket = $2
+        AND LOWER(payin) = LOWER($3)
+        AND LOWER(payout) = LOWER($4)
         AND status = 'ok'`,
-    [input.corridorId, input.amountBucket],
+    [input.corridorId, input.amountBucket, input.payinMethod, input.payoutMethod],
     input.pool,
   )
 

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { query } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { recordRequest } from '../../../../shared/api-metrics'
@@ -25,10 +25,11 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
   const { pool, repositories } = app.container
   const rightsMatrixRepository = repositories.rightsMatrix
   const environmentName = (process.env.ENVIRONMENT || '').toLowerCase()
-  const exposePublicInRuntime = environmentName === 'dev' || config.env === 'development'
+  const exposePublicInRuntime = environmentName === 'dev'
+    || config.env === 'development'
+    || config.env === 'test'
   const nonProdGuard = exposePublicInRuntime ? undefined : requireAuth()
-
-  app.get('/alerts/corridor-eligibility', nonProdGuard ? { preHandler: nonProdGuard } : {}, async (request, _reply) => {
+  const corridorEligibilityHandler = async (request: FastifyRequest, _reply: FastifyReply) => {
     const startTime = Date.now()
 
     const queryParams = request.query as {
@@ -182,9 +183,15 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
         quoteCoverage,
       },
     }
-  })
+  }
 
-  app.get('/alerts/macro-corridors', nonProdGuard ? { preHandler: nonProdGuard } : {}, async (_request, _reply) => {
+  if (nonProdGuard) {
+    app.get('/alerts/corridor-eligibility', { preHandler: nonProdGuard }, corridorEligibilityHandler)
+  } else {
+    app.get('/alerts/corridor-eligibility', corridorEligibilityHandler)
+  }
+
+  const macroCorridorsHandler = async (_request: FastifyRequest, _reply: FastifyReply) => {
     const startTime = Date.now()
 
     const macroCorridors = getMacroCorridors()
@@ -229,5 +236,11 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
         smartAlertEligible: smartAlertEligible.has(c.corridorId),
       })),
     }
-  })
+  }
+
+  if (nonProdGuard) {
+    app.get('/alerts/macro-corridors', { preHandler: nonProdGuard }, macroCorridorsHandler)
+  } else {
+    app.get('/alerts/macro-corridors', macroCorridorsHandler)
+  }
 }

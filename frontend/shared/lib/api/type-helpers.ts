@@ -1,4 +1,4 @@
-import type { paths } from './types'
+import type { paths } from './types.ts'
 
 export type SuccessResponse<P extends keyof paths, M extends keyof paths[P]> =
   paths[P][M] extends { responses: { 200: { content: { 'application/json': infer R } } } }

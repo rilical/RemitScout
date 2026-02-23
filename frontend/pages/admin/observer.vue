@@ -79,116 +79,178 @@
           </div>
         </div>
 
-        <details class="rounded-xl border border-rs-border p-4" open>
-          <summary class="cursor-pointer text-body-sm font-semibold text-rs-fg">Indices + sweep status</summary>
-          <div class="mt-4 grid gap-4 lg:grid-cols-2">
-            <div class="rounded-lg border border-neutral-100 p-3">
-              <div class="text-body-sm uppercase text-neutral-400">Indices status</div>
-              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ indicesHealth?.status || 'n/a' }}</div>
-              <div class="mt-2 text-body-sm text-rs-muted">
-                Available {{ formatPercent(indicesHealth?.summary?.available_ratio) }} · Suppressed {{ formatPercent(indicesHealth?.summary?.suppressed_ratio) }}
-              </div>
-            </div>
-
-            <div class="rounded-lg border border-neutral-100 p-3">
-              <div class="text-body-sm uppercase text-neutral-400">B2B cadence tiers</div>
-              <div class="mt-2 space-y-1 text-body-sm text-rs-muted">
-                <div
-                  v-for="tier in b2bSweepStatus?.schedule || []"
-                  :key="tier.priorityTier"
-                  class="flex items-center justify-between"
-                >
-                  <span>{{ tier.priorityTier }}</span>
-                  <span>{{ tier.providers }} providers · drift {{ tier.driftMinutes ?? 'n/a' }}m</span>
-                </div>
-                <div
-                  v-if="(b2bSweepStatus?.schedule || []).length === 0"
-                  class="text-body-sm text-rs-muted"
-                >
-                  No sweep status data yet.
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-
-        <details class="mt-4 rounded-xl border border-rs-border p-4" open>
-          <summary class="cursor-pointer text-body-sm font-semibold text-rs-fg">24-provider health grid</summary>
-          <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <button
-              v-for="provider in providerHealth"
-              :key="provider.provider_id"
-              type="button"
-              class="rounded-lg border p-3 text-left transition-colors"
-              :class="providerCardClass(provider)"
-              @click="toggleProviderDetails(provider.provider_id)"
-            >
-              <div class="text-body-sm font-semibold text-neutral-800">{{ provider.display_name }}</div>
-              <div class="mt-1 text-xs text-neutral-600">
-                {{ provider.summary?.corridor_count ?? 0 }} corridors · {{ provider.summary?.stale_count ?? 0 }} stale
-              </div>
-              <div class="mt-1 text-xs text-neutral-500">
-                {{ provider.status }} · {{ formatTimestamp(provider.timestamp || null) }}
-              </div>
-              <div
-                v-if="provider.error"
-                class="mt-1 text-xs text-danger-600"
-              >
-                {{ provider.error }}
-              </div>
-            </button>
-          </div>
-
-          <div
-            v-if="selectedProvider"
-            class="mt-4 rounded-lg border border-rs-border bg-rs-bg p-4"
+        <!-- Indices + sweep status (animated accordion) -->
+        <div class="rounded-xl border border-rs-border p-4">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between text-body-sm font-semibold text-rs-fg"
+            :aria-expanded="indicesAccordionOpen"
+            @click="indicesAccordionOpen = !indicesAccordionOpen"
           >
-            <div class="mb-2 flex items-center justify-between">
-              <h3 class="text-body-lg font-semibold text-rs-fg">
-                {{ selectedProvider.display_name }} corridor detail
-              </h3>
-              <button
-                type="button"
-                class="rounded-md border border-rs-border px-3 py-1 text-body-sm text-rs-muted hover:bg-neutral-50"
-                @click="selectedProviderId = null"
-              >
-                Close
-              </button>
-            </div>
-            <div class="overflow-auto">
-              <table class="min-w-full text-body-sm">
-                <thead class="text-body-sm uppercase text-neutral-400">
-                  <tr>
-                    <th class="py-2 text-left">Corridor</th>
-                    <th class="py-2 text-right">Quote age (min)</th>
-                    <th class="py-2 text-right">Attempt age (min)</th>
-                    <th class="py-2 text-left">Last quote</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="corridor in selectedProvider.corridors || []"
-                    :key="corridor.corridor_id"
-                    class="border-t border-neutral-100"
+            Indices + sweep status
+            <svg
+              class="h-4 w-4 text-rs-muted transition-transform duration-200"
+              :class="indicesAccordionOpen ? 'rotate-180' : ''"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="max-h-0 opacity-0"
+            enter-to-class="max-h-[500px] opacity-100"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="max-h-[500px] opacity-100"
+            leave-to-class="max-h-0 opacity-0"
+          >
+            <div
+              v-if="indicesAccordionOpen"
+              class="mt-4 grid gap-4 overflow-hidden lg:grid-cols-2"
+            >
+              <div class="rounded-lg border border-neutral-100 p-3">
+                <div class="text-body-sm uppercase text-neutral-400">Indices status</div>
+                <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ indicesHealth?.status || 'n/a' }}</div>
+                <div class="mt-2 text-body-sm text-rs-muted">
+                  Available {{ formatPercent(indicesHealth?.summary?.available_ratio) }} · Suppressed {{ formatPercent(indicesHealth?.summary?.suppressed_ratio) }}
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-neutral-100 p-3">
+                <div class="text-body-sm uppercase text-neutral-400">B2B cadence tiers</div>
+                <div class="mt-2 space-y-1 text-body-sm text-rs-muted">
+                  <div
+                    v-for="tier in b2bSweepStatus?.schedule || []"
+                    :key="tier.priorityTier"
+                    class="flex items-center justify-between"
                   >
-                    <td class="py-2 text-rs-fg">{{ corridor.corridor_id }}</td>
-                    <td class="py-2 text-right text-rs-muted">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
-                    <td class="py-2 text-right text-rs-muted">{{ corridor.last_attempt_age_minutes ?? 'n/a' }}</td>
-                    <td class="py-2 text-rs-muted">{{ formatTimestamp(corridor.last_quote_at ?? null) }}</td>
-                  </tr>
-                  <tr v-if="(selectedProvider.corridors || []).length === 0">
-                    <td
-                      colspan="4"
-                      class="py-3 text-center text-body-sm text-neutral-400"
-                    >
-                      No corridor detail available.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    <span>{{ tier.priorityTier }}</span>
+                    <span>{{ tier.providers }} providers · drift {{ tier.driftMinutes ?? 'n/a' }}m</span>
+                  </div>
+                  <div
+                    v-if="(b2bSweepStatus?.schedule || []).length === 0"
+                    class="text-body-sm text-rs-muted"
+                  >
+                    No sweep status data yet.
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </details>
+          </Transition>
+        </div>
+
+        <!-- 24-provider health grid (animated accordion) -->
+        <div class="mt-4 rounded-xl border border-rs-border p-4">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between text-body-sm font-semibold text-rs-fg"
+            :aria-expanded="providerGridAccordionOpen"
+            @click="providerGridAccordionOpen = !providerGridAccordionOpen"
+          >
+            24-provider health grid
+            <svg
+              class="h-4 w-4 text-rs-muted transition-transform duration-200"
+              :class="providerGridAccordionOpen ? 'rotate-180' : ''"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="max-h-0 opacity-0"
+            enter-to-class="max-h-[2000px] opacity-100"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="max-h-[2000px] opacity-100"
+            leave-to-class="max-h-0 opacity-0"
+          >
+            <div
+              v-if="providerGridAccordionOpen"
+              class="overflow-hidden"
+            >
+              <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <button
+                  v-for="provider in providerHealth"
+                  :key="provider.provider_id"
+                  type="button"
+                  class="rounded-lg border border-l-4 p-3 text-left transition-colors"
+                  :class="providerCardClass(provider)"
+                  @click="toggleProviderDetails(provider.provider_id)"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                      :class="providerStatusDot(provider)"
+                    />
+                    <span class="text-body-sm font-semibold text-neutral-800 dark:text-rs-fg">{{ provider.display_name }}</span>
+                  </div>
+                  <div class="mt-1 text-xs text-neutral-600 dark:text-rs-muted">
+                    {{ provider.summary?.corridor_count ?? 0 }} corridors · {{ provider.summary?.stale_count ?? 0 }} stale
+                  </div>
+                  <div class="mt-1 text-xs text-neutral-500 dark:text-rs-muted">
+                    {{ provider.status }} · {{ formatTimestamp(provider.timestamp || null) }}
+                  </div>
+                  <div
+                    v-if="provider.error"
+                    class="mt-2 rounded-md bg-red-50 px-2 py-1 text-xs text-danger-600 dark:bg-red-900/20"
+                  >
+                    {{ provider.error }}
+                  </div>
+                </button>
+              </div>
+
+              <div
+                v-if="selectedProvider"
+                class="mt-4 rounded-lg border border-rs-border bg-rs-bg p-4"
+              >
+                <div class="mb-2 flex items-center justify-between">
+                  <h3 class="text-body-lg font-semibold text-rs-fg">
+                    {{ selectedProvider.display_name }} corridor detail
+                  </h3>
+                  <button
+                    type="button"
+                    class="rounded-md border border-rs-border px-3 py-1 text-body-sm text-rs-muted hover:bg-neutral-50"
+                    @click="selectedProviderId = null"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div class="overflow-auto">
+                  <table class="min-w-full text-body-sm">
+                    <thead class="text-body-sm uppercase text-neutral-400">
+                      <tr>
+                        <th class="py-2 text-left">Corridor</th>
+                        <th class="py-2 text-right">Quote age (min)</th>
+                        <th class="py-2 text-right">Attempt age (min)</th>
+                        <th class="py-2 text-left">Last quote</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="corridor in selectedProvider.corridors || []"
+                        :key="corridor.corridor_id"
+                        class="border-t border-neutral-100"
+                      >
+                        <td class="py-2 text-rs-fg">{{ corridor.corridor_id }}</td>
+                        <td class="py-2 text-right text-rs-muted">{{ corridor.last_quote_age_minutes ?? 'n/a' }}</td>
+                        <td class="py-2 text-right text-rs-muted">{{ corridor.last_attempt_age_minutes ?? 'n/a' }}</td>
+                        <td class="py-2 text-rs-muted">{{ formatTimestamp(corridor.last_quote_at ?? null) }}</td>
+                      </tr>
+                      <tr v-if="(selectedProvider.corridors || []).length === 0">
+                        <td
+                          colspan="4"
+                          class="py-3 text-center text-body-sm text-neutral-400"
+                        >
+                          No corridor detail available.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
       </section>
 
       <section class="rounded-2xl bg-surface p-6 shadow-sm">
@@ -825,6 +887,8 @@ const ensuring = ref(false)
 const evaluating = ref(false)
 const autoRefresh = ref(false)
 const error = ref<string | null>(null)
+const indicesAccordionOpen = ref(true)
+const providerGridAccordionOpen = ref(true)
 const actionMessage = ref<string | null>(null)
 const lastRefresh = ref<string | null>(null)
 const indicesHealth = ref<IndicesHealthResponse | null>(null)
@@ -901,11 +965,19 @@ const selectedProvider = computed(() =>
 )
 
 const providerCardClass = (provider: ProviderHealthAggregateItem) => {
-  if (provider.status === 'error') return 'border-red-300 bg-red-50'
+  if (provider.status === 'error') return 'border-l-red-500 border-red-300 bg-red-50 dark:bg-red-900/10 dark:border-red-800'
   const staleCount = Number(provider.summary?.stale_count ?? 0)
-  if (staleCount >= 3) return 'border-red-300 bg-red-50'
-  if (staleCount >= 1 || provider.status === 'degraded') return 'border-amber-300 bg-amber-50'
-  return 'border-green-300 bg-green-50'
+  if (staleCount >= 3) return 'border-l-red-500 border-red-300 bg-red-50 dark:bg-red-900/10 dark:border-red-800'
+  if (staleCount >= 1 || provider.status === 'degraded') return 'border-l-amber-500 border-amber-300 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800'
+  return 'border-l-emerald-500 border-green-300 bg-green-50 dark:bg-green-900/10 dark:border-green-800'
+}
+
+const providerStatusDot = (provider: ProviderHealthAggregateItem) => {
+  if (provider.status === 'error') return 'bg-red-500'
+  const staleCount = Number(provider.summary?.stale_count ?? 0)
+  if (staleCount >= 3) return 'bg-red-500'
+  if (staleCount >= 1 || provider.status === 'degraded') return 'bg-amber-500'
+  return 'bg-emerald-500'
 }
 
 const toggleProviderDetails = (providerId: string) => {

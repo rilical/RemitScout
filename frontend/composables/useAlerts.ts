@@ -46,7 +46,7 @@ function defaultRuleForTarget(target: WatchTarget): AlertRule {
     case 'pulseChart':
       return { metric: 'index', comparator: 'gte', value: 0 }
     case 'guide':
-      return { metric: 'index', comparator: 'gte', value: 0 }
+      throw new Error('Guide alerts are not supported yet.')
   }
 }
 
@@ -361,7 +361,17 @@ export const useAlerts = () => {
       }
     }
 
-    const baseRule = defaultRuleForTarget(target)
+    let baseRule: AlertRule
+    try {
+      baseRule = defaultRuleForTarget(target)
+    }
+    catch (error) {
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'This target type does not support alerts.',
+      }
+    }
+
     const mergedDraft = {
       ...draft,
       rule: { ...baseRule, ...(draft?.rule ?? {}) },

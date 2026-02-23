@@ -26,6 +26,22 @@ vi.mock('../shared/config', () => ({
         concurrency: 5,
       },
     },
+    workers: {
+      alertEvaluationWorker: {
+        idleSleepMs: 1,
+        loopJitterMs: 0,
+        messageJitterMs: 0,
+        shutdownTimeoutMs: 1000,
+      },
+      health: {
+        enabled: false,
+        port: 0,
+      },
+    },
+    runtime: {
+      isLambda: true,
+      isEcs: false,
+    },
     db: {
       planeAUrl: 'postgres://localhost/test',
     },
@@ -55,6 +71,19 @@ vi.mock('../plane-b/src/lib/worker-lock', () => ({
 vi.mock('../shared/worker-metrics', () => ({
   recordQueueDepthMetric: mockRecordQueueDepthMetric,
   recordWorkerMetric: mockRecordWorkerMetric,
+}))
+
+vi.mock('../shared/error-tracker', () => ({
+  initErrorTracking: vi.fn(),
+}))
+
+vi.mock('../shared/tracing', () => ({
+  initTracing: vi.fn(),
+  startSpan: (_name: string, fn: (span: { setAttributes: (...args: any[]) => void; setAttribute: (...args: any[]) => void }) => Promise<void>) =>
+    fn({
+      setAttributes: vi.fn(),
+      setAttribute: vi.fn(),
+    }),
 }))
 
 vi.mock('../plane-a/src/services/alert-evaluator', () => ({

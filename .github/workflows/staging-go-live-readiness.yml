@@ -64,6 +64,8 @@ jobs:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CASES_CHANNEL_ID: ${{ vars.SLACK_CASES_CHANNEL_ID }}
+          WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
+          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
           ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           BRAIN_DISPATCH_GITHUB_ACTIONS: ${{ vars.BRAIN_DISPATCH_GITHUB_ACTIONS }}
@@ -77,10 +79,14 @@ jobs:
           ENVIRONMENT: staging
           NODE_ENV: staging
           AWS_REGION: ${{ vars.AWS_REGION }}
+          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          DATABASE_URL_PLANE_C: ${{ secrets.DATABASE_URL_PLANE_C }}
+          PLANE_C_BASE_URL: ${{ vars.PLANE_C_BASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
           EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
+          ALERT_EVALUATION_QUEUE_URL: ${{ vars.ALERT_EVALUATION_QUEUE_URL }}
           ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}

@@ -2,7 +2,7 @@
   <div class="bg-gradient-to-b from-neutral-50 to-white border border-rs-border rounded-2xl shadow-sm overflow-hidden">
     <!-- Main Query Builder -->
     <div class="p-5">
-      <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-center gap-4">
         <!-- Country Selectors -->
         <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- From Country -->
@@ -36,7 +36,7 @@
         </div>
 
         <!-- Amount & Currency -->
-        <div class="flex items-end gap-3">
+        <div class="flex items-center gap-6">
           <div class="w-32">
             <label class="block text-body-sm font-semibold text-rs-muted uppercase tracking-wider mb-2">You send</label>
             <div class="relative">

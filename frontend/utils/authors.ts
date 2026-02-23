@@ -30,7 +30,7 @@ export const authors: Record<string, Author> = {
     name: 'Tom Okafor',
     role: 'Data Editor',
     photo: '/images/authors/tom-okafor.jpg',
-    bio: 'Tom leads our data analysis team, ensuring accuracy in provider comparisons and fee structures across 150+ countries.',
+    bio: 'Tom leads our data analysis team, ensuring accuracy in provider comparisons and fee structures across 222 countries.',
     credentials: [
       'MSc Data Science, London School of Economics',
       'BSc Computer Science, University of Lagos',

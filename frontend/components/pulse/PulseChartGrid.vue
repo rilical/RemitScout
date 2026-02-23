@@ -31,34 +31,39 @@
 
       <!-- Charts Grid -->
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <ChartPreviewCard
+        <LazyChartSlot
           v-for="chart in category.charts"
           :key="chart.id"
-          :metadata="chart"
-          :insight="getChartInsight(chart.id)"
-          :sparkline-data="getSparklineData(chart.id)"
-          :updated-at="getChartUpdatedAt(chart.id)"
-          :is-gated="isChartGated(chart)"
-          :teaser-mode="isTeaserChart(chart)"
-          :gate-label="isChartGated(chart) ? 'Full' : undefined"
-          :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
-          :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
-          :disable-actions="isChartGated(chart)"
-          @view="handleView"
-          @share="handleShare"
-          @embed="handleEmbed"
-        />
+          :chart-id="chart.id"
+        >
+          <ChartPreviewCard
+            :metadata="chart"
+            :insight="getChartInsight(chart.id)"
+            :sparkline-data="getSparklineData(chart.id)"
+            :updated-at="getChartUpdatedAt(chart.id)"
+            :is-gated="isChartGated(chart)"
+            :teaser-mode="isTeaserChart(chart)"
+            :gate-label="isChartGated(chart) ? 'Full' : undefined"
+            :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
+            :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
+            :disable-actions="isChartGated(chart)"
+            @view="handleView"
+            @share="handleShare"
+            @embed="handleEmbed"
+          />
+        </LazyChartSlot>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, defineComponent, h, ref, onMounted, onUnmounted } from 'vue'
 import type { ChartCategory, ChartData, ChartMetadata, PulseFilters } from '~/types/pulse'
 import { getAllCategories } from '~/lib/pulseChartRegistry'
 import { Icon, type IconName } from '~/ui'
 import ChartPreviewCard from '~/domains/pulse/ui/ChartPreviewCard.vue'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import type { PulseLevel } from '~/composables/useEntitlements'
 
 type ChartAvailabilityEntry = {
@@ -84,6 +89,50 @@ const emit = defineEmits<{
   share: [chartId: string]
   embed: [chartId: string]
 }>()
+
+// Lazy loading wrapper component using IntersectionObserver
+const LazyChartSlot = defineComponent({
+  name: 'LazyChartSlot',
+  props: {
+    chartId: { type: String, required: true },
+  },
+  setup(lazyProps, { slots }) {
+    const containerRef = ref<HTMLElement | null>(null)
+    const isVisible = ref(false)
+    let observer: IntersectionObserver | null = null
+
+    onMounted(() => {
+      if (!containerRef.value) return
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            isVisible.value = true
+            observer?.disconnect()
+          }
+        },
+        { rootMargin: '200px' },
+      )
+      observer.observe(containerRef.value)
+    })
+
+    onUnmounted(() => {
+      observer?.disconnect()
+    })
+
+    return () =>
+      h('div', { ref: containerRef, 'data-chart-id': lazyProps.chartId }, [
+        isVisible.value
+          ? slots.default?.()
+          : h('div', {
+              class: 'rounded-xl border border-neutral-700 bg-neutral-800 p-5',
+            }, [
+              h(SkeletonBlock, { width: '40%', height: '14', rounded: 'md', tone: 'dark' }),
+              h(SkeletonBlock, { width: '70%', height: '20', rounded: 'md', tone: 'dark', class: 'mt-3' }),
+              h(SkeletonBlock, { width: 'full', height: '80', rounded: 'lg', tone: 'dark', class: 'mt-4' }),
+            ]),
+      ])
+  },
+})
 
 const categories = computed(() => {
   const all = getAllCategories()

@@ -21,11 +21,11 @@ export default defineEventHandler((event) => {
   const frameAncestors = isEmbed ? '*' : '\'none\''
   const csp = [
     'default-src \'self\'',
-    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://snap.licdn.com https://analytics.tiktok.com https://www.ezojs.com https://*.ezoic.net`,
+    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://snap.licdn.com https://analytics.tiktok.com https://www.ezojs.com https://*.ezoic.net https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com`,
     `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
     'img-src \'self\' data: https: blob:',
     'font-src \'self\' https://fonts.gstatic.com',
-    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://www.clarity.ms https://www.facebook.com https://px.ads.linkedin.com https://analytics.tiktok.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co',
+    'connect-src \'self\' https://*.supabase.co https://www.google-analytics.com https://www.clarity.ms https://www.facebook.com https://px.ads.linkedin.com https://analytics.tiktok.com https://*.ezoic.net https://*.ingest.sentry.io wss://*.supabase.co https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com',
     'frame-src \'self\' https://js.stripe.com https://*.ezoic.net',
     'object-src \'none\'',
     'base-uri \'self\'',

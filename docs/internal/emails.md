@@ -23,12 +23,16 @@ SMTP provider:
 
 ### Plane A / Plane B (product + ops emails)
 Sent by: **backend code via AWS SES API**.
+Layout: All emails use a shared branded HTML wrapper via `backend/plane-a/src/services/email-layout.ts`.
 
 Main code paths:
 - Billing emails: `backend/plane-a/src/services/billing-email.ts`
 - Newsletter emails: `backend/plane-a/src/services/newsletter-email.ts`
 - Contact form emails: `backend/plane-a/src/routes/contact.ts`
-- Alert emails (ops/user alerts): `backend/plane-a/src/services/alert-notifications.ts` and `backend/shared/config.ts` (SMTP settings)
+- Alert emails (ops/user alerts): `backend/plane-a/src/services/alert-notifications.ts`
+- Welcome onboarding email: `backend/plane-a/src/services/welcome-email.ts`
+- Security emails (new sign-in): `backend/plane-a/src/services/security-email.ts`
+- Account deletion: `backend/plane-a/src/services/account-deletion-requests.ts`
 - Worker notifications: `backend/plane-b/src/notifications/aws-services.ts`
 
 IAM for SES:
@@ -74,11 +78,32 @@ Templates:
 - Welcome: `sendWelcomeEmail(...)` in `backend/plane-a/src/services/newsletter-email.ts`
 
 ### “Welcome to Remit-Scout” (product onboarding)
-Status: Not a dedicated backend email template today.
+Sender: Plane A -> SES API
 
-Recommended approach:
-- If you want it tied to signup: implement it as a **Supabase Auth** template (post-confirm redirect) OR add a Plane A endpoint invoked after first login.
-- If you want it tied to Plus purchase: billing confirmation already exists.
+Config keys:
+- `WELCOME_EMAIL_ENABLED` (default true)
+- `WELCOME_EMAIL_FROM` (preferred), else `SES_FROM_ADDRESS`
+- `WELCOME_EMAIL_FROM_NAME` (default `Remit-Scout`)
+
+Templates:
+- `backend/plane-a/src/services/welcome-email.ts`
+
+Events:
+- Post-signup welcome / onboarding
+
+### Security & Account
+
+Sender: Plane A -> SES API
+
+Config keys:
+- `SECURITY_EMAIL_ENABLED`
+- `SECURITY_EMAIL_FROM`
+- `SECURITY_EMAIL_FROM_NAME`
+- `ACCOUNT_DELETION_EMAIL_ENABLED`
+
+Templates:
+- New sign-in: `sendNewSignInEmail(...)` in `backend/plane-a/src/services/security-email.ts`
+- Account deletion: `sendAccountDeletionEmail(...)` in `backend/plane-a/src/services/account-deletion-requests.ts`
 
 ## 3) Standard “From” Policy (Recommended)
 
@@ -133,7 +158,8 @@ Configure Supabase to use your SMTP so Auth emails originate from your domain:
 3. Set “From” in Supabase:
    - `no-reply@remit-scout.com` (plus a display name if supported)
 4. Customize templates:
-   - Confirmation, Reset password, Magic link as needed.
+   - Copy the branded HTML templates from `docs/internal/supabase-email-templates/` and paste them into the Supabase Dashboard.
+   - Available templates: `confirm-email.html`, `reset-password.html`.
 
 ## 6) Runtime Configuration Quick Reference
 

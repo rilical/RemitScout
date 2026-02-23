@@ -158,8 +158,15 @@
 
 <script setup lang="ts">
 import { EmptyState, ErrorState, LoadingState } from '~/ui/states'
+import { setSeo } from '~/composables/useSeo'
 
 definePageMeta({ middleware: 'auth' })
+
+setSeo({
+  title: 'Smart Corridors | Remit-Scout',
+  description: 'View all smart alert-eligible remittance corridors tracked by Remit-Scout.',
+  noindex: true,
+})
 
 type MacroCorridor = {
   corridorId: string

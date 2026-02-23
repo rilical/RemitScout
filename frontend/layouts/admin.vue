@@ -15,15 +15,16 @@ const isSigningOut = ref(false)
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
 
 const adminLinks = [
-  { to: '/admin', label: 'Overview', description: 'KPI summary + admin feed' },
-  { to: '/admin/observer', label: 'Operations Center', description: 'Indices, sweeps, providers, queues' },
-  { to: '/admin/analytics', label: 'Analytics', description: 'Traffic, provider CTR, engagement' },
-  { to: '/admin/enterprise', label: 'Enterprise', description: 'User plan grants and revocations' },
-  { to: '/admin/audit', label: 'Audit', description: 'Admin/security/compliance log stream' },
-  { to: '/admin/gold-exports', label: 'Gold Exports', description: 'TEER/RCI/RVI snapshots' },
-  { to: '/admin/institutional', label: 'Institutional', description: 'B2B client lifecycle + keys' },
-  { to: '/admin/ads', label: 'Ads', description: 'Inventory and placement controls' },
-  { to: '/admin/feature-flags', label: 'Feature Flags', description: 'Runtime flags with audience rules' },
+  { to: '/admin', label: 'Overview', description: 'KPI summary + admin feed', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+  { to: '/admin/observer', label: 'Operations Center', description: 'Indices, sweeps, providers, queues', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
+  { to: '/admin/analytics', label: 'Analytics', description: 'Traffic, provider CTR, engagement', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+  { to: '/admin/enterprise', label: 'Enterprise', description: 'User plan grants and revocations', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+  { to: '/admin/audit', label: 'Audit', description: 'Admin/security/compliance log stream', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+  { to: '/admin/gold-exports', label: 'Gold Exports', description: 'TEER/RCI/RVI snapshots', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' },
+  { to: '/admin/institutional', label: 'Institutional', description: 'B2B client lifecycle + keys', icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z' },
+  { to: '/admin/ads', label: 'Ads', description: 'Inventory and placement controls', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z' },
+  { to: '/admin/feature-flags', label: 'Feature Flags', description: 'Runtime flags with audience rules', icon: 'M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9' },
+  { to: '/admin/newsletter', label: 'Newsletter', description: 'Compose and send campaigns', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
 ]
 
 const userEmail = computed(() => user.value?.email || 'admin@remit-scout.com')
@@ -127,6 +128,8 @@ watch(
     if (isBrowser()) {
       void ensureAdminSessionSafe()
     }
+    // Close mobile nav on route change
+    mobileNavOpen.value = false
   },
 )
 
@@ -163,8 +166,9 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen bg-rs-bg text-rs-fg">
     <div class="flex min-h-screen">
+      <!-- Desktop Sidebar -->
       <aside
-        class="hidden border-r border-rs-border bg-rs-surface lg:flex lg:flex-col"
+        class="hidden border-r border-rs-border bg-rs-surface transition-all duration-200 lg:flex lg:flex-col"
         :class="sidebarCollapsed ? 'w-20' : 'w-72'"
       >
         <div class="flex items-center justify-between border-b border-rs-border p-4">
@@ -177,6 +181,7 @@ onUnmounted(() => {
           <button
             type="button"
             class="rounded-md border border-rs-border px-2 py-1 text-body-sm text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800"
+            :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
             @click="sidebarCollapsed = !sidebarCollapsed"
           >
             {{ sidebarCollapsed ? '→' : '←' }}
@@ -188,29 +193,56 @@ onUnmounted(() => {
             v-for="link in adminLinks"
             :key="link.to"
             :to="link.to"
-            class="mb-2 block rounded-lg border px-3 py-2 transition-colors"
-            :class="route.path === link.to
-              ? 'border-brand-300 bg-brand-50 text-rs-fg dark:border-sky-700 dark:bg-sky-900/30'
-              : 'border-transparent text-rs-muted hover:border-rs-border hover:bg-neutral-50 dark:hover:bg-slate-800'"
+            class="mb-2 block rounded-lg border px-3 py-2 transition-all duration-200"
+            :class="[
+              route.path === link.to
+                ? 'border-brand-300 bg-brand-50 text-rs-fg border-l-2 border-l-brand-600 dark:border-sky-700 dark:bg-sky-900/30 dark:border-l-brand-500'
+                : 'border-transparent text-rs-muted hover:border-rs-border hover:bg-neutral-50 dark:hover:bg-slate-800',
+              sidebarCollapsed ? 'flex items-center justify-center' : '',
+            ]"
+            :title="sidebarCollapsed ? link.label : undefined"
           >
-            <div
-              v-if="!sidebarCollapsed"
-              class="text-body-sm font-semibold"
-            >
-              {{ link.label }}
-            </div>
-            <div
-              v-if="!sidebarCollapsed"
-              class="text-body-sm text-rs-muted"
-            >
-              {{ link.description }}
-            </div>
-            <div
+            <!-- Icon (always shown) -->
+            <svg
               v-if="sidebarCollapsed"
-              class="text-body-sm font-semibold"
+              class="h-5 w-5 shrink-0"
+              :class="route.path === link.to ? 'text-brand-600' : 'text-rs-muted'"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {{ link.label.slice(0, 2) }}
-            </div>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                :d="link.icon"
+              />
+            </svg>
+            <!-- Expanded: Icon + text -->
+            <template v-else>
+              <div class="flex items-center gap-2.5">
+                <svg
+                  class="h-4 w-4 shrink-0"
+                  :class="route.path === link.to ? 'text-brand-600' : 'text-rs-muted'"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    :d="link.icon"
+                  />
+                </svg>
+                <div class="text-body-sm font-semibold">
+                  {{ link.label }}
+                </div>
+              </div>
+              <div class="mt-0.5 pl-6.5 text-body-sm text-rs-muted">
+                {{ link.description }}
+              </div>
+            </template>
           </NuxtLink>
         </nav>
       </aside>
@@ -218,12 +250,16 @@ onUnmounted(() => {
       <div class="flex min-h-screen min-w-0 flex-1 flex-col">
         <header class="sticky top-0 z-20 border-b border-rs-border bg-rs-surface/95 px-4 py-3 backdrop-blur md:px-6">
           <div class="flex items-center gap-3">
+            <!-- Mobile hamburger -->
             <button
               type="button"
-              class="rounded-lg border border-rs-border px-3 py-2 text-body-sm text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800 lg:hidden"
+              class="rounded-lg border border-rs-border p-2 text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800 lg:hidden"
+              aria-label="Open navigation menu"
               @click="mobileNavOpen = !mobileNavOpen"
             >
-              Menu
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
 
             <div class="min-w-0 flex-1">
@@ -252,22 +288,61 @@ onUnmounted(() => {
               {{ isSigningOut ? 'Signing out…' : 'Sign Out' }}
             </button>
           </div>
-
-          <nav
-            v-if="mobileNavOpen"
-            class="mt-3 grid gap-2 border-t border-rs-border pt-3 lg:hidden"
-          >
-            <NuxtLink
-              v-for="link in adminLinks"
-              :key="`mobile-${link.to}`"
-              :to="link.to"
-              class="rounded-lg border border-rs-border px-3 py-2 text-body-sm text-rs-fg hover:bg-neutral-50 dark:hover:bg-slate-800"
-              @click="mobileNavOpen = false"
-            >
-              {{ link.label }}
-            </NuxtLink>
-          </nav>
         </header>
+
+        <!-- Mobile slide-over nav -->
+        <Teleport to="body">
+          <Transition name="mobile-nav-backdrop">
+            <div
+              v-if="mobileNavOpen"
+              class="fixed inset-0 z-40 bg-black/40 lg:hidden"
+              @click="mobileNavOpen = false"
+            />
+          </Transition>
+          <Transition name="mobile-nav-panel">
+            <nav
+              v-if="mobileNavOpen"
+              class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-rs-border bg-rs-surface shadow-xl lg:hidden"
+            >
+              <div class="flex items-center justify-between border-b border-rs-border p-4">
+                <span class="text-body-sm font-semibold uppercase tracking-wide text-rs-muted">Admin Console</span>
+                <button
+                  type="button"
+                  class="rounded-md border border-rs-border p-1.5 text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800"
+                  aria-label="Close navigation menu"
+                  @click="mobileNavOpen = false"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="flex-1 overflow-y-auto p-3">
+                <NuxtLink
+                  v-for="link in adminLinks"
+                  :key="`mobile-${link.to}`"
+                  :to="link.to"
+                  class="mb-2 flex items-center gap-2.5 rounded-lg border px-3 py-2 text-body-sm transition-colors"
+                  :class="route.path === link.to
+                    ? 'border-brand-300 bg-brand-50 font-semibold text-rs-fg border-l-2 border-l-brand-600 dark:border-sky-700 dark:bg-sky-900/30'
+                    : 'border-transparent text-rs-muted hover:border-rs-border hover:bg-neutral-50 dark:hover:bg-slate-800'"
+                  @click="mobileNavOpen = false"
+                >
+                  <svg
+                    class="h-4 w-4 shrink-0"
+                    :class="route.path === link.to ? 'text-brand-600' : 'text-rs-muted'"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="link.icon" />
+                  </svg>
+                  {{ link.label }}
+                </NuxtLink>
+              </div>
+            </nav>
+          </Transition>
+        </Teleport>
 
         <main class="min-w-0 flex-1 px-4 py-6 md:px-6">
           <slot />
@@ -283,3 +358,23 @@ onUnmounted(() => {
     @execute="executeCommand"
   />
 </template>
+
+<style scoped>
+.mobile-nav-backdrop-enter-active,
+.mobile-nav-backdrop-leave-active {
+  transition: opacity 200ms ease;
+}
+.mobile-nav-backdrop-enter-from,
+.mobile-nav-backdrop-leave-to {
+  opacity: 0;
+}
+
+.mobile-nav-panel-enter-active,
+.mobile-nav-panel-leave-active {
+  transition: transform 200ms ease;
+}
+.mobile-nav-panel-enter-from,
+.mobile-nav-panel-leave-to {
+  transform: translateX(-100%);
+}
+</style>

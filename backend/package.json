@@ -139,6 +139,7 @@
     "@aws-sdk/client-elasticache": "^3.981.0",
     "@aws-sdk/client-eventbridge": "^3.981.0",
     "@aws-sdk/client-iam": "3.994.0",
+    "@aws-sdk/client-pinpoint": "3.995.0",
     "@aws-sdk/client-rds": "^3.981.0",
     "@aws-sdk/client-s3": "^3.981.0",
     "@aws-sdk/client-secrets-manager": "^3.981.0",

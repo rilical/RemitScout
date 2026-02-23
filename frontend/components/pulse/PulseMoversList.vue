@@ -54,7 +54,21 @@ const { data, pending } = await useAsyncData(
 
 const updatedAt = computed(() => data.value?.updatedAt ?? null)
 const windowHours = computed(() => data.value?.windowHours ?? 24)
-const movers = computed(() => (data.value?.movers ?? []).slice(0, props.limit))
+const sampleMovers: PulseTeaserMover[] = [
+  { corridorId: 'US-PH', fromCountry: 'US', toCountry: 'PH', sendCurrency: 'USD', recvCurrency: 'PHP', currentAvgRate: 56.04, prevAvgRate: 54.72, deltaPct: 0.024, providerCount: 7, timestampBucket: new Date().toISOString() },
+  { corridorId: 'GB-NG', fromCountry: 'GB', toCountry: 'NG', sendCurrency: 'GBP', recvCurrency: 'NGN', currentAvgRate: 1892.5, prevAvgRate: 1927.0, deltaPct: -0.018, providerCount: 5, timestampBucket: new Date().toISOString() },
+  { corridorId: 'US-IN', fromCountry: 'US', toCountry: 'IN', sendCurrency: 'USD', recvCurrency: 'INR', currentAvgRate: 83.42, prevAvgRate: 82.51, deltaPct: 0.011, providerCount: 8, timestampBucket: new Date().toISOString() },
+  { corridorId: 'EU-PK', fromCountry: 'EU', toCountry: 'PK', sendCurrency: 'EUR', recvCurrency: 'PKR', currentAvgRate: 305.8, prevAvgRate: 315.7, deltaPct: -0.032, providerCount: 4, timestampBucket: new Date().toISOString() },
+  { corridorId: 'US-MX', fromCountry: 'US', toCountry: 'MX', sendCurrency: 'USD', recvCurrency: 'MXN', currentAvgRate: 17.38, prevAvgRate: 17.12, deltaPct: 0.015, providerCount: 6, timestampBucket: new Date().toISOString() },
+  { corridorId: 'GB-GH', fromCountry: 'GB', toCountry: 'GH', sendCurrency: 'GBP', recvCurrency: 'GHS', currentAvgRate: 16.25, prevAvgRate: 16.62, deltaPct: -0.022, providerCount: 3, timestampBucket: new Date().toISOString() },
+]
+
+const apiMovers = computed(() => (data.value?.movers ?? []).slice(0, props.limit))
+const movers = computed(() => {
+  if (apiMovers.value.length > 0) return apiMovers.value
+  if (props.variant === 'public') return sampleMovers.slice(0, props.limit)
+  return []
+})
 
 const formatPct = (value: number) => {
   const pct = value * 100
@@ -121,7 +135,8 @@ const handleAdd = async (m: PulseTeaserMover) => {
           </h2>
           <p class="text-body-sm text-neutral-400">
             <span v-if="updatedAt">Updated {{ formatTimestamp(updatedAt) }} UTC</span>
-            <span v-else>Warming up (no Gold Export data yet)</span>
+            <span v-else-if="variant === 'public'">Sample data</span>
+            <span v-else>Warming up</span>
             <span class="mx-2 text-neutral-600">|</span>
             Last {{ windowHours }}h window
           </p>
@@ -151,7 +166,7 @@ const handleAdd = async (m: PulseTeaserMover) => {
         v-else-if="movers.length === 0"
         class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-6 text-body-sm text-neutral-300"
       >
-        No movers yet. Once Gold Export publishes corridor buckets, this list will populate automatically.
+        No movers data available yet.
       </div>
 
       <div

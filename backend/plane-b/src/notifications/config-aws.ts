@@ -16,8 +16,8 @@ export const EMAIL_CONFIG_SCHEMA = z.object({
   PROVIDER: emailProviderSchema,
   // AWS SES Configuration
   SES_REGION: z.string().optional(),
-  SES_FROM_ADDRESS: z.string().email().default('alerts@remitscout.com'),
-  SES_FROM_NAME: z.string().default('RemitScout Alerts'),
+  SES_FROM_ADDRESS: z.string().email().default('no-reply@remit-scout.com'),
+  SES_FROM_NAME: z.string().default('Remit-Scout Alerts'),
   SES_REPLY_TO: z.string().email().optional(),
   // Legacy SendGrid (for backward compatibility)
   SENDGRID_API_KEY: z.string().optional(),

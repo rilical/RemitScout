@@ -112,14 +112,14 @@
 	                Definition (overview)
 	              </h3>
 	              <p class="text-body-sm text-neutral-300 leading-relaxed">
-	                TEER is an effective exchange rate that reflects the all-in outcome after fees and FX costs, benchmarked against an OANDA mid-market reference rate.
+	                TEER is an effective exchange rate that reflects the all-in outcome after fees and FX costs, benchmarked against a mid-market reference rate.
 	                We aggregate eligible provider quotes using proprietary synthetic volume weights to publish a corridor-level rate.
 	              </p>
 	              <div class="mt-5 grid gap-4 sm:grid-cols-2">
 	                <div class="rounded-xl bg-white/5 p-4">
 	                  <p class="text-body-sm font-semibold text-white">Inputs</p>
 	                  <p class="mt-1 text-body-sm text-neutral-300">
-	                    Eligible provider quotes (fees and quoted FX rate), rights-matrix eligibility filters, and the OANDA mid-market reference.
+	                    Eligible provider quotes (fees and quoted FX rate), rights-matrix eligibility filters, and the mid-market reference.
 	                  </p>
 	                </div>
 	                <div class="rounded-xl bg-white/5 p-4">
@@ -358,7 +358,7 @@ d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4
               Mid-Market Reference
             </h3>
             <p class="text-body-sm text-neutral-600 leading-relaxed">
-              Sourced from OANDA. We use daily mid-market rates as the benchmark, with automatic fallback to the most recent available rate when daily data is unavailable.
+              We use daily mid-market rates as the benchmark, with automatic fallback to the most recent available rate when daily data is unavailable.
             </p>
           </div>
 

@@ -46,7 +46,7 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
 
   const replicationGroup = new CfnReplicationGroup(scope, 'RedisReplicationGroup', {
     replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
-    cacheNodeType: isProd ? 'cache.r6g.large' : 'cache.t4g.micro',
+    cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
     engine: 'redis',
     engineVersion: '7.1',
     numNodeGroups: 1,

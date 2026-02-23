@@ -381,7 +381,7 @@
             Provider vs Benchmark
           </h4>
           <p class="text-neutral-700 leading-relaxed mb-6 [text-wrap:pretty]">
-            We fetch live quotes from every provider and benchmark them against the OANDA mid-market rate. The gap between what a provider quotes and the true rate is the total cost passed to your recipient.
+            We fetch live quotes from every provider and benchmark them against the mid-market rate. The gap between what a provider quotes and the true rate is the total cost passed to your recipient.
           </p>
           <div
             v-if="comparison"
@@ -489,7 +489,7 @@
               When you send money without comparing, you're paying the spread — and never seeing it. Remit-Scout surfaces the true cost of every quote so your decision is based on what your recipient actually receives.
             </p>
             <p class="text-neutral-500 text-body leading-relaxed [text-wrap:pretty]">
-              Every quote is benchmarked against the OANDA mid-market rate in real time.
+              Every quote is benchmarked against the mid-market rate in real time.
             </p>
           </div>
         </div>

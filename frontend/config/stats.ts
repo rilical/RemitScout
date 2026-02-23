@@ -35,8 +35,8 @@ export const SITE_STATS = {
 
   // Number of corridors covered (origin -> destination pairs) with recent comparison data.
   corridors: {
-    value: 150,
-    display: '150+',
+    value: 49000,
+    display: '49,000+',
     label: 'Global Corridors',
   },
 } as const

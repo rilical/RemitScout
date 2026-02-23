@@ -1000,71 +1000,81 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
 })
 
 	const metricOptions = computed(() => {
-	  const options = []
+	  const options: MetricOption[] = []
 	  switch (target.value.type) {
 	    case 'corridor':
-      options.push({ value: 'rate' as const, label: 'FX rate' })
-      options.push(
-        {
-          value: 'recipientGets' as const,
-          label: 'Recipient gets',
-          disabled: !quoteCoverageSupported.value && metric.value !== 'recipientGets',
-        },
-        {
-          value: 'totalCost' as const,
-          label: 'Total cost',
-          disabled: !quoteCoverageSupported.value && metric.value !== 'totalCost',
-        },
-        {
-          value: 'fee' as const,
-          label: 'Fee',
-          disabled: !quoteCoverageSupported.value && metric.value !== 'fee',
-        },
-      )
-      {
-        const shouldIncludeSmart = metric.value === 'sendScore' || smartProgramEligible.value
-        if (!shouldIncludeSmart) break
+	      options.push({ value: 'rate' as const, label: 'FX rate' })
+	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
+	      options.push(
+	        {
+	          value: 'recipientGets' as const,
+	          label: 'Recipient gets',
+	          disabled: !quoteCoverageSupported.value && metric.value !== 'recipientGets',
+	        },
+	        {
+	          value: 'totalCost' as const,
+	          label: 'Total cost',
+	          disabled: !quoteCoverageSupported.value && metric.value !== 'totalCost',
+	        },
+	        {
+	          value: 'fee' as const,
+	          label: 'Fee',
+	          disabled: !quoteCoverageSupported.value && metric.value !== 'fee',
+	        },
+	      )
+	      {
+	        const shouldIncludeSmart = metric.value === 'sendScore' || smartProgramEligible.value
+	        if (!shouldIncludeSmart) break
 
-        const reason = smartAlertDisabledReason.value
-        const smartDisabled = reason !== null
-        const isDataIssue = reason && !['plus_required', 'loading'].includes(reason)
-        const isLoading = reason === 'loading'
-        const unavailableLabel = !isDataIssue
-          ? undefined
-          : reason === 'rolling_out'
-            ? 'Collecting'
-            : reason === 'not_offered'
-              ? 'Not offered'
-              : reason === 'unknown'
-                ? 'Unknown'
-                : 'No data'
-        options.push({
-          value: 'sendScore' as const,
-          label: 'Intelligent Alert',
-          disabled: smartDisabled,
-          locked: !isPlus.value,
-          unavailable: isDataIssue,
-          unavailableLabel,
-          loading: isLoading,
-          unavailableReason: smartAlertDisabledMessage.value,
-        })
-      }
-      options.push(
-        { value: 'rci_threshold' as const, label: 'RCI Threshold', locked: !isEnterprise.value },
-        { value: 'rvi_threshold' as const, label: 'RVI Threshold', locked: !isEnterprise.value },
-      )
-      break
-    case 'fxPair':
-      options.push({ value: 'rate' as const, label: 'FX rate' })
-      break
-    case 'pulseChart':
-      options.push({ value: 'index' as const, label: 'Index' })
-      break
-    case 'guide':
-      options.push({ value: 'index' as const, label: 'Index' })
-      break
-    default:
-      options.push({ value: 'rate' as const, label: 'Rate' })
+	        const reason = smartAlertDisabledReason.value
+	        const smartDisabled = reason !== null
+	        const isDataIssue = reason && !['plus_required', 'loading'].includes(reason)
+	        const isLoading = reason === 'loading'
+	        const unavailableLabel = !isDataIssue
+	          ? undefined
+	          : reason === 'rolling_out'
+	            ? 'Collecting'
+	            : reason === 'not_offered'
+	              ? 'Not offered'
+	              : reason === 'unknown'
+	                ? 'Unknown'
+	                : 'No data'
+	        options.push({
+	          value: 'sendScore' as const,
+	          label: 'Intelligent Alert',
+	          disabled: smartDisabled,
+	          locked: !isPlus.value,
+	          unavailable: isDataIssue,
+	          unavailableLabel,
+	          loading: isLoading,
+	          unavailableReason: smartAlertDisabledMessage.value,
+	        })
+	      }
+	      options.push(
+	        { value: 'rci_threshold' as const, label: 'RCI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
+	        { value: 'rvi_threshold' as const, label: 'RVI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
+	        { value: 'index' as const, label: 'Index' },
+	      )
+	      break
+	    case 'fxPair':
+	      options.push({ value: 'rate' as const, label: 'FX rate' })
+	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
+	      break
+	    case 'pulseChart':
+	      options.push({ value: 'index' as const, label: 'Index' })
+	      break
+	    case 'guide':
+	      options.push({
+	        value: 'index' as const,
+	        label: 'Index',
+	        disabled: true,
+	        unavailable: true,
+	        unavailableLabel: 'Not supported',
+	        unavailableReason: 'Alerts are not supported for guides yet.',
+	      })
+	      break
+	    default:
+	      options.push({ value: 'rate' as const, label: 'Rate' })
 	  }
 	  return options
 	})
@@ -1092,17 +1102,20 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
 	const firstEnabledMetric = computed<AlertRule['metric']>(() => {
 	  for (const option of metricOptions.value) {
 	    if (typeof option === 'string') return option as AlertRule['metric']
-	    if (!option.disabled) return option.value as AlertRule['metric']
-  }
-  return 'rate'
+	    if (!option.disabled && !option.unavailable) return option.value as AlertRule['metric']
+	  }
+	  const firstOption = metricOptions.value[0]
+	  if (firstOption && typeof firstOption !== 'string') {
+	    return firstOption.value
+	  }
+	  return 'rate'
 })
 
 const metricReady = computed(() => {
   if (!metric.value) return false
-  return metricOptions.value.some((option) => {
-    const optionValue = typeof option === 'string' ? option : option.value
-    return optionValue === metric.value
-  })
+  const selected = selectedMetricOption.value
+  if (!selected) return false
+  return !selected.disabled && !selected.unavailable && !selected.locked
 })
 
 const comparatorOptions = computed(() => [
@@ -1110,6 +1123,8 @@ const comparatorOptions = computed(() => [
   { value: 'lte' as const, label: '≤' },
   { value: 'gt' as const, label: '>' },
   { value: 'lt' as const, label: '<' },
+  { value: 'crosses_above' as const, label: 'crosses above' },
+  { value: 'crosses_below' as const, label: 'crosses below' },
 ])
 
 const currencyOptions = computed(() => {

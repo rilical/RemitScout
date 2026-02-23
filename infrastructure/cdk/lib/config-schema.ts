@@ -83,10 +83,12 @@ const cdkContextShape = {
   enableBackup: optionalBool,
   enableFrontend: optionalBool,
   enableCostGuardrails: optionalBool,
+  enableComplianceServices: optionalBool,
   costGuardrailsCreateCur: optionalBool,
   enableGithubActionsOidc: optionalBool,
   enableCloudFront: optionalBool,
   devMinimalInfra: optionalBool,
+  minimalInfra: optionalBool,
   devNightlyPauseEnabled: optionalBool,
   devNightlyPauseTimezone: z.string().optional(),
   devNightlyPauseCron: z.string().optional(),
@@ -201,6 +203,9 @@ const cdkContextShape = {
   wafBlockListIps: optionalStringList,
   wafStripeWebhookAllowListIps: optionalStringList,
   wafAdminAllowListIps: optionalStringList,
+
+  // Pinpoint (newsletter campaigns)
+  pinpointEnabled: optionalBool,
 
   // Notifications/ops integration
   costAlertEmails: optionalStringList,

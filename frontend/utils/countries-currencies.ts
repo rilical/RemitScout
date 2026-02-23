@@ -37,6 +37,22 @@ export const COUNTRIES: Country[] = BASE_COUNTRIES.map(country => ({
   flag: flagFromCode(country.code),
 }))
 
+/**
+ * Countries with active remittance corridor support.
+ * Derived from POPULAR_CORRIDOR_CODES — all send and receive countries.
+ */
+export const SUPPORTED_COUNTRY_CODES = new Set([
+  // Send countries
+  'US', 'GB', 'CA', 'AU', 'AE', 'DE',
+  // Receive countries
+  'IN', 'MX', 'PH', 'CN', 'VN', 'NG', 'PK', 'BD', 'GT', 'DO',
+  'JO', 'EG', 'CO', 'BR', 'JP', 'PL', 'GH', 'TR', 'RO',
+])
+
+export const SUPPORTED_COUNTRIES: Country[] = COUNTRIES.filter(c =>
+  SUPPORTED_COUNTRY_CODES.has(c.code),
+)
+
 export const CURRENCIES: Record<string, Currency> = {
   USD: { code: 'USD', name: 'US Dollar', symbol: '$', countries: ['US'] },
   EUR: { code: 'EUR', name: 'Euro', symbol: '€', countries: ['DE', 'FR', 'IT', 'ES'] },

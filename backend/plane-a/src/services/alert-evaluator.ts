@@ -4,8 +4,10 @@ import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 import { parseCorridorId } from '../../../shared/corridor'
+import { isMacroCorridor } from '../../../shared/macro-corridors'
 import { FIXED_EXCHANGE_RATES } from '../../../shared/currency-limits'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { isMetricSupportedForTarget } from '../routes/alerts/shared'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { recordBusinessMetric } from '../../../shared/business-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
@@ -44,6 +46,93 @@ const isPlusEntitled = (plan: Awaited<ReturnType<typeof getUserPlan>> | null) =>
   return !!plan
     && ['plus', 'enterprise'].includes(plan.plan_code)
     && ['active', 'trialing'].includes(plan.status)
+}
+
+const toTimeMs = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+const toPointValue = (value: unknown): number | null => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+const resolveIndexFromPulseChart = async (
+  pool: Pool,
+  chartId: string,
+): Promise<number | null> => {
+  const result = await query<{ payload: unknown }>(
+    `SELECT payload
+       FROM gold.pulse_cache
+      WHERE key = $1`,
+    [`chart:${chartId}`],
+    pool,
+  )
+
+  const payload = result.rows[0]?.payload
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return null
+  }
+
+  const unknownPayload = payload as { series?: unknown }
+  if (!Array.isArray(unknownPayload.series)) {
+    return null
+  }
+
+  let bestValue: number | null = null
+  let bestTime = Number.NEGATIVE_INFINITY
+
+  for (const rawSeries of unknownPayload.series) {
+    if (!rawSeries || typeof rawSeries !== 'object' || Array.isArray(rawSeries)) {
+      continue
+    }
+
+    const series = rawSeries as { points?: unknown }
+    if (!Array.isArray(series.points)) {
+      continue
+    }
+
+    for (const rawPoint of series.points) {
+      if (!rawPoint || typeof rawPoint !== 'object' || Array.isArray(rawPoint)) {
+        continue
+      }
+
+      const point = rawPoint as { t?: unknown, timestamp?: unknown, v?: unknown, value?: unknown }
+      const value = toPointValue(point.v ?? point.value)
+      if (value === null) {
+        continue
+      }
+
+      if (bestValue === null) {
+        bestValue = value
+      }
+
+      const pointTime = toTimeMs(point.t ?? point.timestamp)
+      if (pointTime === null) {
+        continue
+      }
+
+      if (pointTime >= bestTime) {
+        bestTime = pointTime
+        bestValue = value
+      }
+    }
+  }
+
+  return bestValue
 }
 
 const formatMetricValue = (metric: string, rawValue: number) => {
@@ -116,6 +205,12 @@ const toNumberOrNull = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+const normalizeMethod = (value: unknown, fallback: string): string => {
+  if (typeof value !== 'string') return fallback
+  const normalized = value.trim().toLowerCase()
+  return normalized.length > 0 ? normalized : fallback
+}
+
 const resolveUsdEquivalentBucket = (payload: Record<string, unknown>): number => {
   const explicit = toNumberOrNull(payload.amountBucket)
   if (explicit !== null && explicit > 0) return Math.round(explicit)
@@ -157,6 +252,15 @@ export async function evaluateAlert(
 
     const { alert, watchlist_item, state } = alertData
     const targetPayload = watchlist_item.target_payload
+
+    if (!isMetricSupportedForTarget(watchlist_item.target_type, alert.metric)) {
+      logger.warn('alert_metric_not_supported_for_target', {
+        alert_id: alertId,
+        target_type: watchlist_item.target_type,
+        metric: alert.metric,
+      })
+      return false
+    }
 
     if (alert.metric === 'sendScore') {
       const plan = await getUserPlan(pool, watchlist_item.user_id)
@@ -221,7 +325,7 @@ export async function evaluateAlert(
         return false
       }
       const amountBucket = resolveUsdEquivalentBucket(targetPayload)
-      const payin = (targetPayload.method as string) || 'bank'
+      const payin = normalizeMethod(targetPayload.method, 'bank')
       const payout = 'bank'
 
       const quotes = await latestQuoteRepository.listLatestByCorridor(
@@ -249,6 +353,49 @@ export async function evaluateAlert(
           ?? toNumberOrNull((bestQuote as { recipient_gets?: unknown }).recipient_gets)
           ?? 0
       }
+    } else if (alert.metric === 'index' && watchlist_item.target_type === 'corridor') {
+      const corridorId = resolveCorridorId(targetPayload)
+      if (!corridorId) {
+        logger.warn('alert_corridor_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
+
+      const result = await query<{
+        teer_rate: number | null
+        suppression_flag: boolean
+      }>(
+        `SELECT teer_rate::double precision AS teer_rate,
+                suppression_flag
+           FROM gold_export.cdp_daily
+          WHERE corridor_id = $1
+            AND amount_bucket = $2
+            AND method_profile = 'standard_bank'
+          ORDER BY date DESC, created_at DESC
+          LIMIT 1`,
+        [corridorId, GOLD_ALERT_AMOUNT_BUCKET],
+        pool,
+      )
+
+      const row = result.rows[0]
+      if (row && !row.suppression_flag && row.teer_rate !== null) {
+        currentValue = Number(row.teer_rate)
+      }
+    } else if (alert.metric === 'index' && watchlist_item.target_type === 'pulseChart') {
+      const chartId = typeof targetPayload.chartId === 'string' ? targetPayload.chartId.trim() : ''
+      if (!chartId) {
+        logger.warn('alert_index_chart_unresolved', {
+          alert_id: alertId,
+          metric: alert.metric,
+          target_payload: targetPayload,
+        })
+        return false
+      }
+
+      currentValue = await resolveIndexFromPulseChart(pool, chartId)
     } else if ((alert.metric === 'totalCost' || alert.metric === 'fee') && watchlist_item.target_type === 'corridor') {
       const corridorId = resolveCorridorId(targetPayload)
       if (!corridorId) {
@@ -260,7 +407,7 @@ export async function evaluateAlert(
         return false
       }
       const amountBucket = resolveUsdEquivalentBucket(targetPayload)
-      const payin = (targetPayload.method as string) || 'bank'
+      const payin = normalizeMethod(targetPayload.method, 'bank')
       const payout = 'bank'
 
       const quotes = await latestQuoteRepository.listLatestByCorridor(
@@ -366,6 +513,15 @@ export async function evaluateAlert(
           alert_id: alertId,
           metric: alert.metric,
           target_payload: targetPayload,
+        })
+        return false
+      }
+
+      if (!isMacroCorridor(corridorId)) {
+        logger.warn('smart_alert_non_macro_corridor', {
+          alert_id: alertId,
+          corridor_id: corridorId,
+          metric: alert.metric,
         })
         return false
       }
@@ -640,9 +796,17 @@ export async function evaluateAlertsForFrequency(
     }
 
     if (frequency === 'daily' || frequency === 'weekly') {
+      joins += ` LEFT JOIN silver.notification_settings ns
+        ON ns.user_id = wi.user_id`
       joins += ` LEFT JOIN silver.notification_pref np
         ON np.user_id = wi.user_id AND np.owner_type = 'user' AND np.channel = 'email'`
-      conditions.push('COALESCE(np.unsubscribed, FALSE) = FALSE')
+      conditions.push('COALESCE(ns.rate_alerts_enabled, TRUE) = TRUE')
+      conditions.push(
+        `(
+          (COALESCE(ns.email_enabled, TRUE) = TRUE AND COALESCE(np.unsubscribed, FALSE) = FALSE)
+          OR COALESCE(ns.push_enabled, FALSE) = TRUE
+        )`,
+      )
 
       if (!ignoreSchedule) {
         conditions.push(

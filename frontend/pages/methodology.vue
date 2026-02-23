@@ -33,28 +33,6 @@
               :show-heading="false"
               :show-cta="false"
             />
-
-            <div class="flex flex-wrap items-center gap-2 pt-2">
-              <a href="#providers" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-body-sm font-semibold text-white hover:bg-white/20 motion-safe:transition-colors">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
-                Collect
-              </a>
-              <svg class="h-3 w-3 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-              <a href="#how-we-rate" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-body-sm font-semibold text-white hover:bg-white/20 motion-safe:transition-colors">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">2</span>
-                Score
-              </a>
-              <svg class="h-3 w-3 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-              <a href="#testing-methodology" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-body-sm font-semibold text-white hover:bg-white/20 motion-safe:transition-colors">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">3</span>
-                Verify
-              </a>
-              <svg class="h-3 w-3 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-              <a href="#proprietary-indices" class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-body-sm font-semibold text-white hover:bg-white/20 motion-safe:transition-colors">
-                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">4</span>
-                Publish
-              </a>
-            </div>
           </div>
         </div>
       </div>
@@ -213,7 +191,7 @@
         </div>
 
         <p class="mt-10 text-body-sm text-neutral-500 text-center max-w-2xl mx-auto">
-          Exchange rates are benchmarked against OANDA mid-market rates at quote capture time. See our <NuxtLink to="/indices-methodology" class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30">indices methodology</NuxtLink> for how this reference rate feeds TEER, RCI, and RVI.
+          Exchange rates are benchmarked against mid-market rates at quote capture time. See our <NuxtLink to="/indices-methodology" class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30">indices methodology</NuxtLink> for how this reference rate feeds TEER, RCI, and RVI.
         </p>
 
         <p class="mt-8 text-body text-neutral-500 text-center max-w-2xl mx-auto italic">

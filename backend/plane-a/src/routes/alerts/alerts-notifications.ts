@@ -158,7 +158,7 @@ export const registerAlertsNotificationRoutes = async (app: FastifyInstance) => 
       const result = await pool.query(
         `UPDATE silver.notification_pref
          SET unsubscribed = TRUE, updated_at = NOW()
-         WHERE owner_type = 'user' AND user_id = $1`,
+         WHERE owner_type = 'user' AND user_id = $1 AND channel = 'email'`,
         [userId],
       )
 

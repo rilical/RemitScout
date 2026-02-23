@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Pool } from 'pg'
 import { createHash } from 'crypto'
-import { sendAlertEmail, sendAlertPush, sendAlertSms, suppressEmail } from '../plane-a/src/services/alert-notifications'
 import { sendPushNotification } from '../plane-a/src/services/push-delivery'
 
 const mockSesSend = vi.fn()
@@ -22,6 +21,7 @@ vi.mock('../plane-a/src/services/push-delivery', () => ({
 }))
 
 const originalEnv = { ...process.env }
+const loadAlertNotifications = () => import('../plane-a/src/services/alert-notifications')
 
 const createPool = (overrides?: {
   settings?: Record<string, unknown> | null
@@ -90,6 +90,7 @@ describe('alert-notifications', () => {
 
   it('sends alert email when configured and allowed', async () => {
     const pool = createPool() as Pool
+    const { sendAlertEmail } = await loadAlertNotifications()
 
     const result = await sendAlertEmail(
       pool,
@@ -113,6 +114,7 @@ describe('alert-notifications', () => {
         daily_send_hour: 9,
       },
     })
+    const { sendAlertEmail } = await loadAlertNotifications()
 
     const result = await sendAlertEmail(
       pool,
@@ -139,6 +141,7 @@ describe('alert-notifications', () => {
         promotional_enabled: false,
       },
     })
+    const { sendAlertSms } = await loadAlertNotifications()
 
     const result = await sendAlertSms(pool, 'user-1', 'alert-1', 'SMS message')
 
@@ -158,6 +161,7 @@ describe('alert-notifications', () => {
         promotional_enabled: false,
       },
     })
+    const { sendAlertPush } = await loadAlertNotifications()
 
     vi.mocked(sendPushNotification).mockResolvedValue({ delivered: 1, failed: 0, skipped: 0 })
 
@@ -175,6 +179,7 @@ describe('alert-notifications', () => {
 
   it('stores hashed email when suppressing', async () => {
     const pool = createPool() as Pool
+    const { suppressEmail } = await loadAlertNotifications()
 
     await suppressEmail(pool, 'User@Example.com ', 'manual')
 

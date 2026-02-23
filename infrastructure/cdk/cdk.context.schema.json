@@ -41,6 +41,10 @@
       "type": "boolean",
       "description": "Dev-only: deploy a reduced-cost minimal infra footprint focused on Tier-2 B2B observation"
     },
+    "minimalInfra": {
+      "type": "boolean",
+      "description": "Deploy reduced infrastructure footprint (disables monitoring/synthetics block) for bootstrap scenarios."
+    },
     "planeADbSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for Plane A database credentials"
@@ -240,6 +244,10 @@
       "type": "boolean",
       "description": "Create CUR bucket/report (default: true in prod only)"
     },
+    "enableComplianceServices": {
+      "type": "boolean",
+      "description": "Enable compliance baseline resources (CloudTrail/GuardDuty/SecurityHub/Config) inside this stack."
+    },
     "costBudgetAmountUsd": {
       "type": "number",
       "description": "Monthly USD budget threshold used for the CloudWatch cost budget"
@@ -367,6 +375,10 @@
         "type": "string"
       },
       "description": "Admin email allowlist for Plane A"
+    },
+    "pinpointEnabled": {
+      "type": "boolean",
+      "description": "Enable Amazon Pinpoint for newsletter campaign sending (default: true for staging/prod)"
     },
     "sesIdentityArns": {
       "type": "array",

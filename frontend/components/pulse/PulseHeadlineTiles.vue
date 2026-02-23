@@ -67,9 +67,9 @@
         {{ tile.label }}
       </div>
 
-      <!-- Value -->
-      <div class="mb-2 text-h4 font-bold text-white">
-        {{ tile.value }}
+      <!-- Value (with number tween) -->
+      <div class="mb-2 text-h4 font-bold text-white tabular-nums">
+        {{ tweenedValues[tile.id] ?? tile.value }}
       </div>
 
       <!-- Delta -->
@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { h } from 'vue'
+import { h, ref, reactive, watch } from 'vue'
 import type { HeadlineTile } from '~/types/pulse'
 
 interface Props {
@@ -131,9 +131,68 @@ interface Props {
   loading?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   loading: false,
 })
+
+// Number tween animation
+const tweenedValues = reactive<Record<string, string>>({})
+const prevNumericValues = ref<Record<string, number>>({})
+
+function parseNumeric(value: string): { prefix: string; num: number; suffix: string; decimals: number } | null {
+  const match = value.match(/^([^0-9]*?)([\d,]+\.?\d*)(.*)$/)
+  if (!match) return null
+  const numStr = match[2].replace(/,/g, '')
+  const num = parseFloat(numStr)
+  if (!Number.isFinite(num)) return null
+  const decimals = numStr.includes('.') ? numStr.split('.')[1].length : 0
+  return { prefix: match[1], num, suffix: match[3], decimals }
+}
+
+function formatTweened(num: number, decimals: number): string {
+  const fixed = num.toFixed(decimals)
+  const [intPart, decPart] = fixed.split('.')
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return decPart ? `${withCommas}.${decPart}` : withCommas
+}
+
+function tweenValue(tileId: string, from: number, to: number, prefix: string, suffix: string, decimals: number) {
+  const duration = 400
+  const start = performance.now()
+  const ease = (t: number) => 1 - Math.pow(1 - t, 3) // ease-out cubic
+
+  function step(now: number) {
+    const elapsed = now - start
+    const progress = Math.min(elapsed / duration, 1)
+    const current = from + (to - from) * ease(progress)
+    tweenedValues[tileId] = `${prefix}${formatTweened(current, decimals)}${suffix}`
+    if (progress < 1) {
+      requestAnimationFrame(step)
+    }
+  }
+  requestAnimationFrame(step)
+}
+
+watch(
+  () => props.tiles,
+  (newTiles) => {
+    for (const tile of newTiles) {
+      const parsed = parseNumeric(tile.value)
+      if (!parsed) {
+        tweenedValues[tile.id] = tile.value
+        continue
+      }
+      const prev = prevNumericValues.value[tile.id]
+      if (prev !== undefined && prev !== parsed.num) {
+        tweenValue(tile.id, prev, parsed.num, parsed.prefix, parsed.suffix, parsed.decimals)
+      } else {
+        tweenedValues[tile.id] = tile.value
+      }
+      prevNumericValues.value[tile.id] = parsed.num
+    }
+  },
+  { deep: true },
+)
 
 const emit = defineEmits<{
   'tile-click': [tile: HeadlineTile]

@@ -1,0 +1,96 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d": {
+      "displayName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Code",
+      "source": {
+        "path": "asset.2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "010630709504-us-east-1-2059ca99": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    },
+    "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6": {
+      "displayName": "remit-scout-staging/Custom::S3AutoDeleteObjectsCustomResourceProvider Code",
+      "source": {
+        "path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "010630709504-us-east-1-2d68f138": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    },
+    "65cce71574b2255f7cd5c67b42f2300e44fd5c56256413b0255ae2a704807526": {
+      "displayName": "PlaneCApiFunction/Code",
+      "source": {
+        "path": "asset.65cce71574b2255f7cd5c67b42f2300e44fd5c56256413b0255ae2a704807526",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "010630709504-us-east-1-82d0808d": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "65cce71574b2255f7cd5c67b42f2300e44fd5c56256413b0255ae2a704807526.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    },
+    "6bf21bdd5ae81ad6bf9f98fa482883c245ccce4c2c0fc55b18c7df0cb9f7a5aa": {
+      "displayName": "PlaneAApiFunction/Code",
+      "source": {
+        "path": "asset.6bf21bdd5ae81ad6bf9f98fa482883c245ccce4c2c0fc55b18c7df0cb9f7a5aa",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "010630709504-us-east-1-eb447f5e": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "6bf21bdd5ae81ad6bf9f98fa482883c245ccce4c2c0fc55b18c7df0cb9f7a5aa.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    },
+    "0ea71a3a59d5bae88ab1ed62740a463be32aac26640f81cfee7af7b9dc50f8a4": {
+      "displayName": "OpsPauseControllerFunction/Code",
+      "source": {
+        "path": "asset.0ea71a3a59d5bae88ab1ed62740a463be32aac26640f81cfee7af7b9dc50f8a4",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "010630709504-us-east-1-1fdb2ce7": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "0ea71a3a59d5bae88ab1ed62740a463be32aac26640f81cfee7af7b9dc50f8a4.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    },
+    "f4bc9bb37fc3356ec28e287242293f46d122fc87bf06b217e710157eb60c244e": {
+      "displayName": "remit-scout-staging Template",
+      "source": {
+        "path": "remit-scout-staging.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "010630709504-us-east-1-c7ce3f89": {
+          "bucketName": "cdk-hnb659fds-assets-010630709504-us-east-1",
+          "objectKey": "f4bc9bb37fc3356ec28e287242293f46d122fc87bf06b217e710157eb60c244e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::010630709504:role/cdk-hnb659fds-file-publishing-role-010630709504-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

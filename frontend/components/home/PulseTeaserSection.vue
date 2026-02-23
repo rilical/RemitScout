@@ -73,7 +73,7 @@ function accentFor(key: ChartCategory): string {
             remittance pricing
           </h2>
           <p class="text-body-lg text-white/80 leading-relaxed max-w-xl">
-            18 live charts across 4 categories track pricing, competition, volatility, and coverage for 150+ corridors — all derived from real provider quotes, updated daily.
+            18 live charts across 4 categories track pricing, competition, volatility, and coverage for 49,000+ corridors — all derived from real provider quotes, updated daily.
           </p>
         </div>
 
@@ -237,7 +237,7 @@ function accentFor(key: ChartCategory): string {
         </span>
         <span class="text-neutral-700">·</span>
         <span class="flex items-center gap-2">
-          <span class="font-bold text-white tabular-nums">150+</span> corridors
+          <span class="font-bold text-white tabular-nums">49,000+</span> corridors
         </span>
         <span class="text-neutral-700">·</span>
         <span>Updated daily from real provider quotes</span>

@@ -13,15 +13,26 @@ const EZOIC_PLACEHOLDERS: Record<AdPlacement, number[]> = {
   blog_banner: [101],
 }
 
+type EzoicPlacementMap = Partial<Record<AdPlacement, number[]>>
+
 const usedPlaceholderIds = new Set<number>()
+
+const sanitizePlaceholderIds = (ids?: number[]): number[] => {
+  if (!Array.isArray(ids)) return []
+  return ids
+    .map(id => Number(id))
+    .filter(id => Number.isInteger(id) && id > 0)
+}
 
 export const getEzoicPlaceholderId = (
   placement: AdPlacement,
   slotIndex?: number,
   overrideId?: number,
+  runtimePlacementIds?: EzoicPlacementMap,
 ): number | null => {
   if (overrideId !== undefined) return overrideId
-  const ids = EZOIC_PLACEHOLDERS[placement] ?? []
+  const runtimeIds = sanitizePlaceholderIds(runtimePlacementIds?.[placement])
+  const ids = runtimeIds.length > 0 ? runtimeIds : EZOIC_PLACEHOLDERS[placement] ?? []
   if (slotIndex !== undefined) {
     return ids[slotIndex] ?? null
   }

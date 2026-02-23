@@ -56,7 +56,7 @@ export const NAV = {
     {
       icon: 'map',
       title: 'Country playbooks',
-      subtitle: 'Guides for 150+ destinations.',
+      subtitle: 'Guides for 222 destinations.',
       href: '/send-money',
     },
   ],

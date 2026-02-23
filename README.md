@@ -133,7 +133,7 @@ import CompareWidget from '~/components/shared/CompareWidget.vue'
 - 80k+ Users trust us
 - $2.5M+ Saved in fees
 - 30+ Providers compared
-- 150+ Corridors covered
+- 49,000+ Corridors covered
 
 **Features:**
 - Blue gradient background (`bg-brand-600`)
@@ -179,7 +179,7 @@ export const SITE_STATS = {
   totalSaved: { display: '$2.5M+', label: 'Saved in fees' },
   users: { display: '80k+', label: 'Users trust us' },
   providers: { display: '30+', label: 'Providers compared' },
-  corridors: { display: '150+', label: 'Corridors covered' },
+  corridors: { display: '49,000+', label: 'Corridors covered' },
 }
 ```
 

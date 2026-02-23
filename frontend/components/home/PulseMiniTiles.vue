@@ -23,7 +23,7 @@
           Real-Time Market Intelligence
         </h2>
         <p class="text-body-lg text-white/90 max-w-3xl mx-auto leading-relaxed break-words">
-          Live exchange rates across 150+ corridors. Track when rates move up or down. Set alerts to catch the perfect moment to transfer.
+          Live exchange rates across 49,000+ corridors. Track when rates move up or down. Set alerts to catch the perfect moment to transfer.
         </p>
       </div>
 
@@ -49,7 +49,7 @@
             Live Exchange Rates
           </h3>
           <p class="text-body-sm text-neutral-700 leading-relaxed">
-            Get instant access to real-time exchange rates across 150+ popular corridors. Our system pulls live data from multiple providers and updates every few minutes, so you always see the current market rate before you send money.
+            Get instant access to real-time exchange rates across 49,000+ corridors. Our system pulls live data from multiple providers and updates every few minutes, so you always see the current market rate before you send money.
           </p>
         </div>
 

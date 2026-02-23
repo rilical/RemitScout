@@ -36,6 +36,18 @@ const resolveEnvValue = (...keys: string[]) => {
   return undefined
 }
 const parseEnvFlag = (value?: string) => value === 'true' || value === '1'
+const parseOptionalEnvFlag = (...keys: string[]) => {
+  const raw = resolveEnvValue(...keys)
+  if (raw === undefined || raw === '') return undefined
+  return parseEnvFlag(raw)
+}
+const parseAnchorAdPosition = (...keys: string[]) => {
+  const raw = resolveEnvValue(...keys)
+  if (!raw) return undefined
+  const normalized = raw.toLowerCase()
+  if (normalized === 'top' || normalized === 'bottom') return normalized
+  return undefined
+}
 const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value))
 const normalizeApiBase = (base?: string) => {
   if (!base || !isAbsoluteUrl(base)) return base
@@ -126,8 +138,65 @@ const watchOptions = {
   ...(usePolling ? { usePolling: true, interval: 1000 } : {}),
 }
 const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt', 'nuxt-og-image', '@nuxtjs/google-fonts']
-const enableEzoic = (process.env.PUBLIC_ENABLE_EZOIC === 'true' || process.env.ENABLE_EZOIC === 'true') && isStagingOrProd
+const enableEzoic = parseEnvFlag(resolveEnvValue('PUBLIC_ENABLE_EZOIC', 'ENABLE_EZOIC') || '') && isStagingOrProd
 const adsEnabled = enableEzoic
+const parseEzoicIds = (value: string | undefined, fallback: number[]) => {
+  if (!value) return fallback
+  const parsed = value
+    .split(',')
+    .map(part => Number(part.trim()))
+    .filter(id => Number.isInteger(id) && id > 0)
+  return parsed.length > 0 ? parsed : fallback
+}
+const ezoicPlacementIds = {
+  compare_inline: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_COMPARE_INLINE_IDS', 'PUBLIC_EZOIC_ID_COMPARE_INLINE'), [101]),
+  compare_sidebar: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS', 'PUBLIC_EZOIC_ID_COMPARE_SIDEBAR'), [101]),
+  home_inline: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_HOME_INLINE_IDS', 'PUBLIC_EZOIC_ID_HOME_INLINE'), [101]),
+  dashboard_inline: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_DASHBOARD_INLINE_IDS', 'PUBLIC_EZOIC_ID_DASHBOARD_INLINE'), [101]),
+  corridor_interstitial: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS', 'PUBLIC_EZOIC_ID_CORRIDOR_INTERSTITIAL'), [101]),
+  corridor_below_faq: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS', 'PUBLIC_EZOIC_ID_CORRIDOR_BELOW_FAQ'), [101]),
+  corridor_footer: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS', 'PUBLIC_EZOIC_ID_CORRIDOR_FOOTER'), [101]),
+  blog_sidebar: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_BLOG_SIDEBAR_IDS', 'PUBLIC_EZOIC_ID_BLOG_SIDEBAR'), [101]),
+  blog_inline: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_BLOG_INLINE_IDS', 'PUBLIC_EZOIC_ID_BLOG_INLINE'), [101]),
+  blog_banner: parseEzoicIds(resolveEnvValue('PUBLIC_EZOIC_BLOG_BANNER_IDS', 'PUBLIC_EZOIC_ID_BLOG_BANNER'), [101]),
+}
+const ezoicAdvancedConfig: Record<string, boolean | string> = {}
+const ezoicLimitCookies = parseOptionalEnvFlag('PUBLIC_EZOIC_LIMIT_COOKIES')
+const ezoicAnchorAdPosition = parseAnchorAdPosition('PUBLIC_EZOIC_ANCHOR_AD_POSITION')
+const ezoicAnchorAdExpansion = parseOptionalEnvFlag('PUBLIC_EZOIC_ANCHOR_AD_EXPANSION')
+const ezoicDisableInterstitial = parseOptionalEnvFlag('PUBLIC_EZOIC_DISABLE_INTERSTITIAL')
+const ezoicVignetteDesktop = parseOptionalEnvFlag('PUBLIC_EZOIC_VIGNETTE_DESKTOP')
+const ezoicVignetteMobile = parseOptionalEnvFlag('PUBLIC_EZOIC_VIGNETTE_MOBILE')
+const ezoicVignetteTablet = parseOptionalEnvFlag('PUBLIC_EZOIC_VIGNETTE_TABLET')
+const ezoicAnchorAdEnabled = parseOptionalEnvFlag('PUBLIC_EZOIC_ANCHOR_AD_ENABLED')
+if (typeof ezoicLimitCookies === 'boolean') ezoicAdvancedConfig.limitCookies = ezoicLimitCookies
+if (ezoicAnchorAdPosition) ezoicAdvancedConfig.anchorAdPosition = ezoicAnchorAdPosition
+if (typeof ezoicAnchorAdExpansion === 'boolean') {
+  ezoicAdvancedConfig.anchorAdExpansion = ezoicAnchorAdExpansion
+}
+if (typeof ezoicDisableInterstitial === 'boolean') {
+  ezoicAdvancedConfig.disableInterstitial = ezoicDisableInterstitial
+}
+if (typeof ezoicVignetteDesktop === 'boolean') ezoicAdvancedConfig.vignetteDesktop = ezoicVignetteDesktop
+if (typeof ezoicVignetteMobile === 'boolean') ezoicAdvancedConfig.vignetteMobile = ezoicVignetteMobile
+if (typeof ezoicVignetteTablet === 'boolean') ezoicAdvancedConfig.vignetteTablet = ezoicVignetteTablet
+const ezoicInitScript = (() => {
+  const statements = [
+    'window.ezstandalone = window.ezstandalone || {};',
+    'ezstandalone.cmd = ezstandalone.cmd || [];',
+  ]
+  if (Object.keys(ezoicAdvancedConfig).length > 0) {
+    statements.push(
+      `ezstandalone.cmd.push(function () { if (typeof ezstandalone.config === 'function') { ezstandalone.config(${JSON.stringify(ezoicAdvancedConfig)}); } });`,
+    )
+  }
+  if (typeof ezoicAnchorAdEnabled === 'boolean') {
+    statements.push(
+      `ezstandalone.cmd.push(function () { if (typeof ezstandalone.setEzoicAnchorAd === 'function') { ezstandalone.setEzoicAnchorAd(${ezoicAnchorAdEnabled ? 'true' : 'false'}); } });`,
+    )
+  }
+  return statements.join(' ')
+})()
 const cloudfrontPublicOrigin = process.env.CLOUDFRONT_DISTRIBUTION_ID
   ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
   : undefined
@@ -238,7 +307,30 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
-      script: [],
+      script: enableEzoic
+        ? [
+            // Ezoic requires privacy scripts to load before the header script.
+            {
+              key: 'ezoic-privacy-min',
+              'data-cfasync': 'false',
+              src: 'https://cmp.gatekeeperconsent.com/min.js',
+            },
+            {
+              key: 'ezoic-privacy-cmp',
+              'data-cfasync': 'false',
+              src: 'https://the.gatekeeperconsent.com/cmp.min.js',
+            },
+            {
+              key: 'ezoic-header',
+              async: true,
+              src: '//www.ezojs.com/ezoic/sa.min.js',
+            },
+            {
+              key: 'ezoic-init',
+              innerHTML: ezoicInitScript,
+            },
+          ]
+        : [],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -266,6 +358,11 @@ export default defineNuxtConfig({
         // Twitter Card defaults
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@RemitScout' },
+        // Global OG image fallback — pages using defineOgImage() or setSeo({ ogImage }) override this
+        { property: 'og:image', content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png` },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { name: 'twitter:image', content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png` },
         // Verification tags (can be overridden by env vars)
         ...(process.env.GOOGLE_SITE_VERIFICATION
           ? [{ name: 'google-site-verification', content: process.env.GOOGLE_SITE_VERIFICATION }]
@@ -340,6 +437,7 @@ export default defineNuxtConfig({
       supabaseSuppressConfigError: process.env.NUXT_PUBLIC_SUPABASE_SUPPRESS_CONFIG_ERROR === '1',
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
+      gtmContainerId: process.env.PUBLIC_GTM_CONTAINER_ID || process.env.GTM_CONTAINER_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
       googleAdsConversionId: process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || process.env.GOOGLE_ADS_CONVERSION_ID || '',
       linkedinPartnerId: process.env.PUBLIC_LINKEDIN_PARTNER_ID || process.env.LINKEDIN_PARTNER_ID || '',
@@ -347,6 +445,9 @@ export default defineNuxtConfig({
       clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
       analyticsEnabled,
       adsEnabled,
+      ezoicPlacementIds,
+      ezoicAdvancedConfig,
+      ezoicAnchorAdEnabled: typeof ezoicAnchorAdEnabled === 'boolean' ? ezoicAnchorAdEnabled : null,
       sentryDsn: resolveEnvValue('NUXT_PUBLIC_SENTRY_DSN', 'PUBLIC_SENTRY_DSN', 'SENTRY_DSN') || '',
       sentryEnabled,
       appVersion,

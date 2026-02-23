@@ -1,4 +1,5 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { createHash } from 'crypto'
 import type { Pool } from 'pg'
 import { config } from '../../../shared/config'
 import { createPool, query } from '../../../shared/db'
@@ -6,6 +7,7 @@ import { createLogger } from '../../../shared/logger'
 import { generateToken, hashToken } from '../utils/token-generator'
 import { getRequestContext, logAuditEvent } from './audit-log'
 import { deleteUserAccount } from './account-deletion'
+import { buildEmailHtml } from './email-layout'
 
 const logger = createLogger('plane-a.account-deletion-requests')
 
@@ -47,11 +49,25 @@ const resolveEmailFrom = () => {
       ? `${ACCOUNT_DELETION_EMAIL_FROM_NAME} <${ACCOUNT_DELETION_EMAIL_FROM}>`
       : ACCOUNT_DELETION_EMAIL_FROM
   }
-  const alertsFrom = config.alerts.notifications.email.from || ''
+  const alertsFrom = config.alerts.notifications.email.from
+    || (process.env.SES_FROM_ADDRESS || '').trim()
+    || ''
   if (!alertsFrom) return ''
   return ACCOUNT_DELETION_EMAIL_FROM_NAME
     ? `${ACCOUNT_DELETION_EMAIL_FROM_NAME} <${alertsFrom}>`
     : alertsFrom
+}
+
+const hashEmail = (email: string): string =>
+  createHash('sha256').update(email.toLowerCase().trim()).digest('hex')
+
+const isEmailSuppressed = async (pool: Pool, email: string): Promise<boolean> => {
+  const result = await query(
+    `SELECT 1 FROM silver.email_suppression WHERE email_hash = $1 LIMIT 1`,
+    [hashEmail(email)],
+    pool,
+  )
+  return (result.rowCount ?? 0) > 0
 }
 
 let planeAPool: Pool | null = null
@@ -110,13 +126,21 @@ const sendAccountDeletionEmail = async (params: {
     'If you take no action, your account will be permanently deleted after the grace period.',
   ].join('\n')
 
-  const htmlBody = [
-    '<p>We received a request to delete your Remit-Scout account.</p>',
-    `<p>Your account is scheduled for deletion on <strong>${scheduledLabel}</strong>.</p>`,
-    '<p>If you did not request this or you changed your mind, cancel within the grace window:</p>',
-    `<p><a href="${params.cancelUrl}">Cancel account deletion</a></p>`,
-    '<p>If you take no action, your account will be permanently deleted after the grace period.</p>',
-  ].join('')
+  const htmlBody = buildEmailHtml({
+    title: 'Account Deletion Scheduled',
+    subtitle: 'Security Alert',
+    bodyHtml: `
+      <p style="margin: 0 0 16px 0;">We received a request to delete your Remit-Scout account.</p>
+      <p style="margin: 0 0 16px 0;">Your account is scheduled for permanent deletion on <strong>${scheduledLabel}</strong>.</p>
+      <p style="margin: 0 0 16px 0;">If you did not request this or you changed your mind, you must cancel within the grace window using the button below. If you take no action, your account and all data will be permanently deleted after the grace period.</p>
+    `,
+    cta: {
+      text: 'Cancel account deletion',
+      url: params.cancelUrl
+    },
+    footerHtml: 'This is an automated security notification from Remit-Scout. Do not reply to this email.',
+    theme: 'danger'
+  })
 
   const client = new SESClient({ region: sesRegion })
   await client.send(new SendEmailCommand({
@@ -227,13 +251,21 @@ export const requestAccountDeletion = async (params: {
   )
   const email = emailResult.rows[0]?.email || null
   if (email) {
-    try {
-      await sendAccountDeletionEmail({ to: email, cancelUrl, scheduledFor })
-    } catch (error) {
-      logger.error('account_deletion_email_failed', {
-        error: error instanceof Error ? error.message : String(error),
+    const suppressed = await isEmailSuppressed(pool, email)
+    if (suppressed) {
+      logger.warn('account_deletion_email_suppressed', {
         userId: params.userId,
+        emailHash: hashEmail(email),
       })
+    } else {
+      try {
+        await sendAccountDeletionEmail({ to: email, cancelUrl, scheduledFor })
+      } catch (error) {
+        logger.error('account_deletion_email_failed', {
+          error: error instanceof Error ? error.message : String(error),
+          userId: params.userId,
+        })
+      }
     }
   }
 

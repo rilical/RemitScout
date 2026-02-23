@@ -123,9 +123,12 @@
                   class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                   placeholder="At least 8 characters"
                 >
-                <p class="mt-2 text-body-sm text-rs-muted">
-                  Use at least 8 characters.
-                </p>
+                <div class="mt-2">
+                  <PasswordStrength
+                    :model-value="password"
+                    @update:valid="passwordValid = $event"
+                  />
+                </div>
               </div>
               <label class="flex items-start gap-2 text-body-sm text-neutral-700">
                 <input
@@ -151,7 +154,7 @@
 
               <button
                 type="submit"
-                :disabled="loading"
+                :disabled="loading || !passwordValid"
                 class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
               >
                 {{ loading ? 'Creating account…' : 'Create account' }}
@@ -264,6 +267,7 @@ const sent = ref(false)
 const name = ref('')
 const email = ref('')
 const password = ref('')
+const passwordValid = ref(false)
 const termsAccepted = ref(false)
 
 async function handleEmailSignUp() {

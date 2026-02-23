@@ -24,6 +24,10 @@ const ALLOWED_PATH_PREFIXES = [
   '/marketing',
   '/pulse',
   '/rates',
+  '/ops',
+  '/analytics',
+  '/audit',
+  '/admin',
 ] as const
 
 export default defineEventHandler(async (event) => {

@@ -60,7 +60,7 @@ const getWebPushConfig = () => {
     process.env.PUSH_VAPID_PRIVATE_KEY ||
     ''
   const enabled = toBoolean(process.env.PUSH_WEB_ENABLED) || Boolean(publicKey && privateKey)
-  const subject = process.env.PUSH_WEB_VAPID_SUBJECT || process.env.PUSH_VAPID_SUBJECT || 'mailto:alerts@remitscout.com'
+  const subject = process.env.PUSH_WEB_VAPID_SUBJECT || process.env.PUSH_VAPID_SUBJECT || 'mailto:no-reply@remit-scout.com'
   return { enabled, publicKey, privateKey, subject }
 }
 

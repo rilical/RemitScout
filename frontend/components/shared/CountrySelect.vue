@@ -98,7 +98,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from 'vue'
-import { COUNTRIES } from '~/utils/countries-currencies'
+import { COUNTRIES, SUPPORTED_COUNTRY_CODES } from '~/utils/countries-currencies'
 
 interface Props {
   modelValue: string
@@ -111,6 +111,7 @@ interface Props {
   selectClass?: string
   theme?: 'light' | 'dark'
   excludeCountry?: string
+  supportedOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -122,6 +123,7 @@ const props = withDefaults(defineProps<Props>(), {
   selectClass: '',
   theme: 'light',
   excludeCountry: undefined,
+  supportedOnly: false,
 })
 
 const fallbackId = useId()
@@ -133,7 +135,11 @@ const emit = defineEmits<{
   'country-selected': [countryCode: string, currency: string]
 }>()
 
-const allCountries = COUNTRIES.map(country => ({
+const sourceCountries = props.supportedOnly
+  ? COUNTRIES.filter(c => SUPPORTED_COUNTRY_CODES.has(c.code))
+  : COUNTRIES
+
+const allCountries = sourceCountries.map(country => ({
   value: country.code,
   label: `${country.flag} ${country.name}`, // Full label with emoji for dropdown display
   name: country.name, // Country name only (no emoji) for input field
@@ -200,11 +206,12 @@ const handleSearch = (event: Event) => {
 const handleFocus = async () => {
   isOpen.value = true
 
-  // Clear search query when focusing to show all countries
   searchQuery.value = ''
 
   await nextTick()
-  filteredCountries.value = [...allCountries]
+  filteredCountries.value = props.excludeCountry
+    ? allCountries.filter(c => c.value !== props.excludeCountry)
+    : [...allCountries]
 
   updateDropdownPosition()
 }

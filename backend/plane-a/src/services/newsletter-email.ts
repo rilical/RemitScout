@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { getPool, query } from '../../../shared/db'
+import { buildEmailHtml } from './email-layout'
 
 const logger = createLogger('plane-a.newsletter-email')
 const planeAPool = getPool(config.db.planeAUrl)
@@ -73,14 +74,23 @@ export const sendConfirmationEmail = async (
   const unsubscribeUrl = buildLink('/api/v1/newsletter/unsubscribe', unsubscribeToken)
 
   const subject = 'Confirm your Remit-Scout newsletter subscription'
-  const htmlBody = `
-    <p>Thanks for signing up for the Remit-Scout newsletter.</p>
-    <p><a href="${confirmUrl}">Confirm your subscription</a></p>
-    <p>If you did not request this, you can ignore this email.</p>
-    <p style="margin-top:24px;font-size:12px;color:#6b7280;">
-      <a href="${unsubscribeUrl}">Unsubscribe</a>
-    </p>
-  `
+  const htmlBody = buildEmailHtml({
+    title: 'Confirm your subscription',
+    subtitle: 'Remit-Scout Newsletter',
+    bodyHtml: `
+      <p style="margin: 0 0 16px 0;">Thanks for signing up for the Remit-Scout newsletter.</p>
+      <p style="margin: 0 0 16px 0;">Please click the button below to confirm your subscription. You'll start receiving our updates and insights right away.</p>
+    `,
+    cta: {
+      text: 'Confirm subscription',
+      url: confirmUrl
+    },
+    footerHtml: `
+      If you did not request this, you can safely ignore this email.<br>
+      <a href="${unsubscribeUrl}" style="color:#6b7785; text-decoration:underline; display:inline-block; margin-top:8px;">Unsubscribe</a>
+    `,
+    theme: 'default'
+  })
   const textBody = [
     'Thanks for signing up for the Remit-Scout newsletter.',
     `Confirm your subscription: ${confirmUrl}`,
@@ -123,13 +133,27 @@ export const sendWelcomeEmail = async (email: string): Promise<void> => {
     new SendEmailCommand({
       Destination: { ToAddresses: [email] },
       Message: {
-        Subject: { Data: 'Welcome to the Remit-Scout Newsletter' },
+        Subject: { Data: 'Welcome to the Remit-Scout Newsletter \u{1f44b}' },
         Body: {
           Html: {
-            Data: '<p>Welcome to the Remit-Scout newsletter.</p><p>We will send updates and insights regularly.</p>',
+            Data: buildEmailHtml({
+              title: 'Welcome to the Newsletter',
+              bodyHtml: `
+                <p style="margin: 0 0 16px 0;">Hey there \u{1f44b}</p>
+                <p style="margin: 0 0 16px 0;">Welcome to the Remit-Scout newsletter! We will send updates, exclusive data, and insights on the remittance market regularly. We're glad to have you with us.</p>
+                
+                <p style="margin: 32px 0 0 0; font-size: 15px;">
+                  Best,<br>
+                  <strong>Omar Ghabayen</strong><br>
+                  <span style="color:#64748b; font-size:13px;">Founder, Remit-Scout</span>
+                </p>
+              `,
+              footerHtml: 'This email is from the Remit-Scout newsletter. You can unsubscribe at any time from your account settings.',
+              theme: 'default'
+            })
           },
           Text: {
-            Data: 'Welcome to the Remit-Scout newsletter.\nWe will send updates and insights regularly.',
+            Data: 'Welcome to the Remit-Scout newsletter!\nWe will send updates and insights regularly.\n\nBest,\nOmar Ghabayen\nFounder, Remit-Scout',
           },
         },
       },

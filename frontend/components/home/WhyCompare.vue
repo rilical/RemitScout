@@ -47,7 +47,7 @@
               Enterprise-Grade Analysis
             </h3>
             <p class="mt-3 text-body leading-relaxed text-neutral-600">
-              Institutional-level benchmarking across 150+ countries. We track every basis point in fees and FX spreads to deliver complete transparency.
+              Institutional-level benchmarking across 222 countries. We track every basis point in fees and FX spreads to deliver complete transparency.
             </p>
             <div class="mt-6 flex items-center gap-2 text-body-sm font-medium text-primary-600">
               <DocumentCheckIcon class="h-5 w-5" />
@@ -316,7 +316,7 @@ interface CorridorSavings {
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Maximize Every International Transfer',
-  content: 'Our institutional-grade analysis monitors 33 premier money transfer providers across 150+ global corridors. For professionals sending $1,000 USD to INR, traditional banks extract $42.60 in hidden FX margins. Our optimized recommendations deliver $35.70 more to your beneficiaries, capital that belongs in your family\'s hands, not corporate coffers.',
+  content: 'Our institutional-grade analysis monitors 33 premier money transfer providers across 49,000+ global corridors. For professionals sending $1,000 USD to INR, traditional banks extract $42.60 in hidden FX margins. Our optimized recommendations deliver $35.70 more to your beneficiaries, capital that belongs in your family\'s hands, not corporate coffers.',
   chartCaption: 'Source: Remit-Scout Enterprise Analytics Platform (May 15 – Jun 13, 2024). Total cost methodology encompasses all transfer fees, foreign exchange spreads above interbank mid-market rates, and recipient-side charges. Data independently verified and continuously audited.',
 })
 

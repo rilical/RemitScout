@@ -285,6 +285,32 @@ describe('alert-evaluator', () => {
     expect(mockAlertRepository.createAlertEvent).not.toHaveBeenCalled()
   })
 
+  it('blocks sendScore for non-macro corridors even for entitled users', async () => {
+    mockAlertRepository.getAlertWithWatchlist.mockResolvedValue({
+      alert: { ...baseAlert, metric: 'sendScore', comparator: 'gte', threshold: 80 },
+      watchlist_item: {
+        user_id: 'user-1',
+        target_type: 'corridor',
+        target_payload: {
+          corridorId: 'BO-AR-BOB-ARS',
+        },
+      },
+      state: null,
+    })
+
+    vi.mocked(getUserPlan).mockResolvedValue({
+      plan_code: 'plus',
+      status: 'active',
+    } as any)
+
+    const result = await evaluateAlert(mockPool, 'alert-1')
+
+    expect(result).toBe(false)
+    expect(query).not.toHaveBeenCalled()
+    expect(mockAlertRepository.updateAlertState).not.toHaveBeenCalled()
+    expect(mockAlertRepository.createAlertEvent).not.toHaveBeenCalled()
+  })
+
   it('suppresses notifications during cooldown', async () => {
     const lastNotified = new Date()
     mockAlertRepository.getAlertWithWatchlist.mockResolvedValue({
@@ -333,6 +359,16 @@ describe('alert-evaluator', () => {
     expect(result).toEqual({ total: 2, triggered: 0 })
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('FROM silver.alert_rule'),
+      ['daily', 12, 5000],
+      mockPool,
+    )
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('LEFT JOIN silver.notification_settings ns'),
+      ['daily', 12, 5000],
+      mockPool,
+    )
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining('COALESCE(ns.push_enabled, FALSE) = TRUE'),
       ['daily', 12, 5000],
       mockPool,
     )

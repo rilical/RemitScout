@@ -54,12 +54,17 @@
         class="flex flex-col items-center"
       >
         <!-- ECharts Gauge -->
-        <div class="h-48 w-64">
+        <div class="h-48 w-full max-w-xs mx-auto">
           <v-chart
             class="h-full w-full"
             :option="gaugeOption"
             autoresize
           />
+        </div>
+        <!-- Screen reader announcement -->
+        <div class="sr-only" role="status" aria-live="polite">
+          {{ store.viewMode === 'sender' ? levelLabel : analystLevelLabel }}: score {{ data?.percentile ?? 0 }} out of 100.
+          {{ store.viewMode === 'sender' ? data?.recommendation : analystRecommendation }}
         </div>
 
         <!-- Consumer Mode: Level Label -->
@@ -101,6 +106,11 @@
           class="mt-4 text-center text-body-sm text-neutral-300 max-w-xs"
         >
           {{ analystRecommendation }}
+        </p>
+
+        <!-- Scoring explainer -->
+        <p class="mt-2 text-center text-[11px] text-neutral-500 max-w-xs" title="Score is a 0-100 percentile based on the current effective rate relative to 30-day history for this corridor.">
+          Score reflects where the current rate sits within 30-day price history (0 = worst, 100 = best).
         </p>
 
         <!-- Analyst Mode: Full Stats Panel -->

@@ -2370,7 +2370,7 @@ const corridorContent: Record<string, CorridorContent> = {
     rateWidget: {
       midMarket: '1 USD = 0.7100 JOD',
       asOf: 'Updated 3 minutes ago',
-      source: 'OANDA',
+      source: 'Mid-market',
       changes: [{ label: '7D', value: '+0.05%' }, { label: '30D', value: '+0.10%' }, { label: '60D', value: '-0.12%' }],
     },
     table: {
@@ -2400,7 +2400,7 @@ const corridorContent: Record<string, CorridorContent> = {
     ],
     faqs: [
       { q: 'What is the best way to send USD to Jordan?', a: 'Online money transfer services are typically cheaper than banks. Remitly and Wise lead for bank deposits; Xoom and Western Union are fastest for cash pickup.' },
-      { q: 'How are fees calculated?', a: 'Total cost = transfer fee + FX markup versus mid-market rate. We benchmark every quote against the OANDA mid-market rate.' },
+      { q: 'How are fees calculated?', a: 'Total cost = transfer fee + FX markup versus mid-market rate. We benchmark every quote against the mid-market rate.' },
       { q: 'How long does a USD → JOD transfer take?', a: 'Cash pickup: minutes. Bank deposits: same-day to 1 business day. SWIFT: 2-5 days.' },
       { q: 'Are these providers licensed?', a: 'Yes. All providers listed are licensed in their operating regions. We exclude unlicensed services.' },
     ],
@@ -2440,7 +2440,7 @@ const corridorContent: Record<string, CorridorContent> = {
     rateWidget: {
       midMarket: '1 USD = 1.3600 BND',
       asOf: 'Updated 2 minutes ago',
-      source: 'OANDA',
+      source: 'Mid-market',
       changes: [{ label: '7D', value: '+0.12%' }, { label: '30D', value: '+0.35%' }, { label: '60D', value: '-0.28%' }],
     },
     table: {
@@ -2471,7 +2471,7 @@ const corridorContent: Record<string, CorridorContent> = {
     ],
     faqs: [
       { q: 'What is the best way to send USD to Brunei?', a: 'Online transfer services are cheaper than banks. Remitly and Wise lead for bank deposits; WorldRemit is fastest for cash.' },
-      { q: 'How are fees calculated?', a: 'Total cost = transfer fee + FX markup vs mid-market. We benchmark against OANDA.' },
+      { q: 'How are fees calculated?', a: 'Total cost = transfer fee + FX markup vs mid-market. We benchmark against the mid-market rate.' },
       { q: 'How long does a USD → BND transfer take?', a: 'Cash pickup: minutes. Bank deposits: same-day to 1 day. SWIFT: 2-5 days.' },
       { q: 'Are these providers licensed?', a: 'Yes. All listed providers are licensed. We exclude unlicensed services.' },
     ],
@@ -2865,7 +2865,7 @@ const midMarketSource = computed(() => {
   if (isSameCurrency.value) {
     return 'Same currency'
   }
-  return quotesData.value?.midMarketSource || rateHistorySource.value || 'OANDA'
+  return quotesData.value?.midMarketSource || rateHistorySource.value || 'Mid-market'
 })
 const midMarketUpdatedAt = computed(() => (
   quotesData.value?.midMarketUpdatedAt
@@ -3132,7 +3132,7 @@ const chartStatusLabel = computed(() => {
     }
     const error = rateHistoryError.value as any
     if (error?.statusCode === 404 || error?.data?.error === 'rate_unavailable') {
-      return 'Rate history not available (OANDA sync may be pending)'
+      return 'Rate history not available (rate sync may be pending)'
     }
     if (error?.statusCode === 500 || error?.data?.error === 'internal_error') {
       return 'Rate history service error'
@@ -3477,7 +3477,7 @@ const content = computed(() => {
     ...merged.rateWidget,
     midMarket: midMarketLabel.value || merged.rateWidget.midMarket,
     asOf: mostRecentUpdate.value ? `Updated ${mostRecentUpdateLabel.value}` : (midMarketAsOf.value || apiUpdatedLabel.value || merged.rateWidget.asOf),
-    source: midMarketSource.value || merged.rateWidget.source || 'OANDA',
+    source: midMarketSource.value || merged.rateWidget.source || 'Mid-market',
     changes: rateChanges.value.length ? rateChanges.value : merged.rateWidget.changes,
   }
   const tableRows = hasApiQuotes.value ? apiRows.value : []

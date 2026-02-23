@@ -49,7 +49,7 @@
             Choose your plan
           </h2>
           <p class="text-body-lg text-neutral-600">
-            All plans include access to compare 30+ providers across 150+ corridors.
+            All plans include access to compare 30+ providers across 49,000+ corridors.
           </p>
         </div>
 

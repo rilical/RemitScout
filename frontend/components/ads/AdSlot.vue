@@ -60,8 +60,20 @@ const props = withDefaults(defineProps<Props>(), {
 const { isPlus, hydrated } = useEntitlements()
 const { marketingConsent } = usePrivacySettings()
 const runtimeConfig = useRuntimeConfig()
+type EzoicPlacementMap = Partial<Record<AdPlacement, number[]>>
 const activeId = ref<number | null>(null)
-const placeholderId = computed(() => getEzoicPlaceholderId(props.placement, props.slotIndex, props.placeholderId))
+const runtimeEzoicPlacementIds = computed<EzoicPlacementMap>(() => {
+  const raw = runtimeConfig.public?.ezoicPlacementIds as EzoicPlacementMap | undefined
+  return raw || {}
+})
+const placeholderId = computed(() =>
+  getEzoicPlaceholderId(
+    props.placement,
+    props.slotIndex,
+    props.placeholderId,
+    runtimeEzoicPlacementIds.value,
+  ),
+)
 const placeholderDomId = computed(() => (activeId.value ? `ezoic-pub-ad-placeholder-${activeId.value}` : ''))
 const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
 const allowEzoic = computed(() => adsEnabled.value && marketingConsent.value)

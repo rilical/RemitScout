@@ -7,6 +7,7 @@ import { createLogger } from '../../../shared/logger'
 import { formatError } from '../../../shared/utils/error-handling'
 import { generateAlertUnsubscribeToken } from './alert-unsubscribe'
 import { sendPushNotification } from './push-delivery'
+import { buildEmailHtml, countryCodeToFlagEmoji } from './email-layout'
 
 const logger = createLogger('plane-a.alert-notifications')
 
@@ -410,7 +411,7 @@ export async function sendAlertEmail(
       return false
     }
 
-    const alertsEmailFrom = config.alerts.notifications.email.from || 'alerts@remitscout.com'
+    const alertsEmailFrom = config.alerts.notifications.email.from || 'no-reply@remit-scout.com'
     const alertsEmailFromName = config.alerts.notifications.email.fromName || 'Remit-Scout Alerts'
     const siteUrl = resolveAlertBaseUrl()
     if (!siteUrl) {
@@ -482,13 +483,14 @@ export async function sendAlertEmail(
     const targetPayload = (context?.target_payload ?? {}) as Record<string, unknown>
     const targetFrom = typeof targetPayload.from === 'string' ? targetPayload.from.toUpperCase() : null
     const targetTo = typeof targetPayload.to === 'string' ? targetPayload.to.toUpperCase() : null
-    const targetMethod = typeof targetPayload.method === 'string' ? targetPayload.method : null
     const metric = typeof context?.metric === 'string' ? context.metric : undefined
     const comparator = typeof context?.comparator === 'string' ? context.comparator : undefined
     const threshold = context?.threshold
     const currentValue = context?.current_value
+    const fromFlag = countryCodeToFlagEmoji(targetFrom)
+    const toFlag = countryCodeToFlagEmoji(targetTo)
     const summaryTarget = targetFrom && targetTo
-      ? `${targetFrom} → ${targetTo}${targetMethod ? ` (${targetMethod})` : ''}`
+      ? `${fromFlag} ${targetFrom} → ${targetTo} ${toFlag}`
       : 'Your tracked corridor'
 
     const metaLines = [
@@ -505,10 +507,10 @@ export async function sendAlertEmail(
     ].filter(Boolean) as Array<{ label: string; value: string }>
 
     const detailRowsHtml = detailRows.length > 0
-      ? detailRows.map((row) => (
+      ? detailRows.map((row, i) => (
         `<tr>
-          <td style="padding:6px 0; color:#52616b; width:32%; font-weight:600; vertical-align:top;">${row.label}</td>
-          <td style="padding:6px 0; color:#1f2933; vertical-align:top;">${row.value}</td>
+          <td style="padding:8px 12px; color:#64748B; width:35%; font-weight:600; vertical-align:top; font-size:13px; font-family:'Inter',system-ui,sans-serif;${i === 0 ? ' border-top-left-radius:8px;' : ''}${i === detailRows.length - 1 ? ' border-bottom-left-radius:8px;' : ''} background:${i % 2 === 0 ? '#F8FAFC' : '#FFFFFF'};">${row.label}</td>
+          <td style="padding:8px 12px; color:#0F172A; vertical-align:top; font-size:13px; font-family:'Inter',system-ui,sans-serif;${i === 0 ? ' border-top-right-radius:8px;' : ''}${i === detailRows.length - 1 ? ' border-bottom-right-radius:8px;' : ''} background:${i % 2 === 0 ? '#F8FAFC' : '#FFFFFF'};">${row.value}</td>
         </tr>`
       )).join('')
       : ''
@@ -525,60 +527,97 @@ export async function sendAlertEmail(
       unsubscribeLink ? `Unsubscribe: ${unsubscribeLink}` : null,
     ].filter(Boolean).join('\n')
 
-    const htmlBody = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Remit-Scout Rate Alert</title>
-</head>
-<body style="margin:0; padding:0; background-color:#f4f6fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color:#1f2933;">
-  <span style="display:none; visibility:hidden; opacity:0; height:0; width:0;">${preheader}</span>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb; padding:24px 0;">
-    <tr>
-      <td align="center" style="padding:0 16px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; border:1px solid #e6edf5; box-shadow:0 12px 32px rgba(15, 23, 42, 0.08);">
-          <tr>
-            <td style="background:#1d4ed8; color:#ffffff; padding:28px 32px;">
-              <div style="font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:0.85;">Remit-Scout</div>
-              <div style="font-size:24px; font-weight:700; margin-top:6px;">Rate Alert</div>
-              <div style="font-size:13px; margin-top:8px; opacity:0.85;">${summaryTarget}</div>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:24px 32px 28px;">
-              <div style="background:#f7f9fc; border:1px solid #e6edf5; border-radius:12px; padding:16px 18px; font-size:15px; line-height:1.6;">
-                ${message.replace(/\n/g, '<br>')}
-              </div>
-              ${detailRowsHtml ? `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px; font-size:13px; border-collapse:collapse;">
-                ${detailRowsHtml}
-              </table>
-              ` : ''}
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:20px;">
-                <tr>
-                  <td bgcolor="#1d4ed8" style="border-radius:10px;">
-                    <a href="${siteUrl}/dashboard?tab=alerts" style="display:inline-block; padding:12px 20px; color:#ffffff; text-decoration:none; font-weight:600; font-size:14px;">View Alert</a>
-                  </td>
-                </tr>
-              </table>
-              <div style="margin-top:20px; padding-top:16px; border-top:1px solid #e6edf5; font-size:12px; color:#6b7785; line-height:1.6;">
-                <div>${metaLines.length > 0 ? metaLines.join(' · ') : 'Automated alert from Remit-Scout.'}</div>
-                <div style="margin-top:10px;">
-                  <a href="${managePrefsUrl}" style="color:#6b7785; text-decoration:underline;">Manage notification preferences</a>
-                  ${unsubscribeLink ? ` | <a href="${unsubscribeLink}" style="color:#6b7785; text-decoration:underline;">Unsubscribe</a>` : ''}
-                </div>
-              </div>
-            </td>
-          </tr>
+    let corridorBannerHtml = ''
+    if (targetFrom && targetTo) {
+      corridorBannerHtml = `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 24px;">
+        <tr>
+          <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:0 16px;">
+                  <div style="font-size:40px; line-height:1;">${fromFlag}</div>
+                  <div style="font-size:14px; font-weight:700; color:#0F172A; margin-top:6px; font-family:'Inter',system-ui,sans-serif;">${targetFrom}</div>
+                </td>
+                <td align="center" style="padding:0 12px;">
+                  <div style="font-size:22px; color:#94A3B8; font-family:'Inter',system-ui,sans-serif;">→</div>
+                </td>
+                <td align="center" style="padding:0 16px;">
+                  <div style="font-size:40px; line-height:1;">${toFlag}</div>
+                  <div style="font-size:14px; font-weight:700; color:#0F172A; margin-top:6px; font-family:'Inter',system-ui,sans-serif;">${targetTo}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      `
+    }
+
+    let sendScoreHtml = ''
+    if (metric === 'sendScore' && currentValue !== undefined) {
+      const score = Number(currentValue)
+      let color = '#DC2626'
+      let bgTint = '#FEF2F2'
+      let label = 'Poor'
+      if (score >= 8) {
+        color = '#16A34A'
+        bgTint = '#F0FDF4'
+        label = 'Excellent'
+      } else if (score >= 5) {
+        color = '#D97706'
+        bgTint = '#FFFBEB'
+        label = 'Good'
+      }
+
+      sendScoreHtml = `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr>
+          <td style="background:${bgTint}; border-radius:12px; border:1px solid ${color}20; padding:24px; text-align:center;">
+            <div style="font-size:11px; color:#64748B; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; font-family:'Inter',system-ui,sans-serif;">Smart Score</div>
+            <div style="font-size:40px; font-weight:700; color:${color}; line-height:1; font-family:'Inter',system-ui,sans-serif;">${score}<span style="font-size:18px; color:#94A3B8; font-weight:500;"> / 10</span></div>
+            <div style="font-size:13px; font-weight:600; color:${color}; margin-top:6px; font-family:'Inter',system-ui,sans-serif;">${label}</div>
+            <div style="margin-top:16px; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${Math.min(100, Math.max(0, score * 10))}%; background:${color}; border-radius:3px;"></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      `
+    }
+
+    const footerHtml = [
+      `<div>${metaLines.length > 0 ? metaLines.join(' · ') : 'Automated alert from Remit-Scout.'}</div>`,
+      `<div style="margin-top:10px;">`,
+      `  <a href="${managePrefsUrl}" style="color:#6b7785; text-decoration:underline;">Manage notification preferences</a>`,
+      unsubscribeLink ? `  | <a href="${unsubscribeLink}" style="color:#6b7785; text-decoration:underline;">Unsubscribe</a>` : '',
+      `</div>`,
+    ].join('\n')
+
+    const htmlBody = buildEmailHtml({
+      title: 'Rate Alert',
+      subtitle: summaryTarget,
+      preheader,
+      bodyHtml: `
+        ${sendScoreHtml}
+        ${corridorBannerHtml}
+        <div style="background:#f7f9fc; border:1px solid #e6edf5; border-radius:12px; padding:16px 18px; font-size:15px; line-height:1.6;">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        ${detailRowsHtml ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px; font-size:13px; border-collapse:collapse;">
+          ${detailRowsHtml}
         </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-    `.trim()
+        ` : ''}
+      `,
+      cta: {
+        text: 'View Alert',
+        url: `${siteUrl}/dashboard?tab=alerts`
+      },
+      footerHtml,
+      theme: 'default',
+      siteUrl,
+    })
 
     const fromHeader = `${alertsEmailFromName} <${alertsEmailFrom}>`
     const rawEmail = buildRawEmail({

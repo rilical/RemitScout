@@ -68,7 +68,7 @@ const sendContactEmail = async (
   }
 
   const contactEmailTo = process.env.CONTACT_EMAIL_TO!
-  const contactEmailFrom = process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS || 'noreply@remitscout.com'
+  const contactEmailFrom = process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS || 'no-reply@remit-scout.com'
   const contactEmailFromName = process.env.CONTACT_EMAIL_FROM_NAME || 'Remit-Scout Contact Form'
 
   // Escape HTML for XSS prevention
