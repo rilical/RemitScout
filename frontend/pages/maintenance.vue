@@ -3,19 +3,15 @@
     <div class="max-w-2xl w-full text-center">
       <!-- Logo -->
       <div class="mb-8">
-        <NuxtLink
-          to="/"
-          class="inline-block"
-        >
-          <NuxtImg
-            src="/logos/remit-scout.svg"
-            alt="Remit-Scout"
-            width="200"
-            height="48"
-            loading="lazy"
-            class="h-12 w-auto mx-auto object-contain"
-          />
-        </NuxtLink>
+        <NuxtImg
+          src="/png/SVG/FULL_LOGO.svg"
+          alt="Remit-Scout"
+          width="260"
+          height="72"
+          loading="eager"
+          preload
+          class="h-14 w-auto mx-auto object-contain"
+        />
       </div>
 
       <!-- Maintenance Icon -->
@@ -173,6 +169,10 @@
 
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
+
+definePageMeta({
+  layout: false,
+})
 
 const route = useRoute()
 const { public: { siteUrl } } = useRuntimeConfig()

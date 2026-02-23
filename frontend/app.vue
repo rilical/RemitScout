@@ -43,9 +43,9 @@
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
-      <CookieConsentBanner />
-      <CookiePreferencesModal />
-      <UiToast />
+      <CookieConsentBanner v-if="!isMaintenanceRoute" />
+      <CookiePreferencesModal v-if="!isMaintenanceRoute" />
+      <UiToast v-if="!isMaintenanceRoute" />
     </template>
   </div>
 </template>
@@ -89,6 +89,9 @@ const xPixelId = runtimeConfig.public.xPixelId
 const route = useRoute()
 const allowAnalytics = computed(() => runtimeConfig.public.analyticsEnabled === true && analyticsConsent.value)
 const allowMarketing = computed(() => marketingConsent.value)
+const isMaintenanceRoute = computed(() =>
+  route.path === '/maintenance' || route.path.startsWith('/maintenance/'),
+)
 const allowEzoic = computed(() =>
   runtimeConfig.public?.adsEnabled === true
   && allowMarketing.value
