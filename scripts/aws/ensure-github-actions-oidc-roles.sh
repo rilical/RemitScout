@@ -75,6 +75,24 @@ inline_policy_json() {
       "Resource": "*"
     },
     {
+      "Sid": "CloudWatchDeploySignals",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SsmDeployState",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:PutParameter"
+      ],
+      "Resource": "arn:aws:ssm:*:*:parameter/remit-scout/*"
+    },
+    {
       "Sid": "BootstrapAssume",
       "Effect": "Allow",
       "Action": "sts:AssumeRole",
