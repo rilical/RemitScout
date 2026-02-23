@@ -386,6 +386,7 @@ export default defineNuxtConfig({
         ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin ? [{ rel: 'dns-prefetch', href: cloudfrontPublicOrigin }] : []),
         { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' }, // GA4
         { rel: 'dns-prefetch', href: 'https://connect.facebook.net' }, // Meta Pixel
+        { rel: 'dns-prefetch', href: 'https://t.contentsquare.net' }, // Hotjar/Contentsquare
         { rel: 'dns-prefetch', href: 'https://www.ezojs.com' }, // Ezoic ads
         { rel: 'dns-prefetch', href: 'https://www.google-analytics.com' }, // GA
       ],
@@ -445,6 +446,10 @@ export default defineNuxtConfig({
       xPixelId: process.env.PUBLIC_X_PIXEL_ID || process.env.X_PIXEL_ID || '',
       tiktokPixelId: process.env.PUBLIC_TIKTOK_PIXEL_ID || process.env.TIKTOK_PIXEL_ID || '',
       clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
+      contentsquareTagSrc:
+        process.env.PUBLIC_CONTENTSQUARE_TAG_SRC
+        || process.env.CONTENTSQUARE_TAG_SRC
+        || 'https://t.contentsquare.net/uxa/3010a70945ff4.js',
       analyticsEnabled,
       adsEnabled,
       ezoicPlacementIds,

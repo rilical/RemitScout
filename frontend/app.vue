@@ -83,6 +83,7 @@ const googleAdsConversionId = runtimeConfig.public.googleAdsConversionId
 const linkedinPartnerId = runtimeConfig.public.linkedinPartnerId
 const tiktokPixelId = runtimeConfig.public.tiktokPixelId
 const clarityProjectId = runtimeConfig.public.clarityProjectId
+const contentsquareTagSrc = runtimeConfig.public.contentsquareTagSrc
 const redditPixelId = runtimeConfig.public.redditPixelId
 const xPixelId = runtimeConfig.public.xPixelId
 const route = useRoute()
@@ -178,6 +179,7 @@ let googleTagsReady = false
 let gtmReady = false
 let metaPixelReady = false
 let clarityReady = false
+let contentsquareReady = false
 let linkedInReady = false
 let redditPixelReady = false
 let xPixelReady = false
@@ -290,6 +292,13 @@ const ensureClarity = () => {
     `https://www.clarity.ms/tag/${encodeURIComponent(clarityProjectId)}`,
   )
   clarityReady = true
+}
+
+const ensureContentsquareTag = () => {
+  if (!import.meta.client) return
+  if (!allowAnalytics.value || !contentsquareTagSrc || contentsquareReady) return
+  ensureExternalScript('rs-contentsquare-tag-src', contentsquareTagSrc)
+  contentsquareReady = true
 }
 
 const ensureLinkedInInsight = () => {
@@ -474,6 +483,7 @@ const ensureMarketingTags = () => {
     ensureGoogleTagManager()
     ensureGoogleTags()
     ensureClarity()
+    ensureContentsquareTag()
   }
   if (allowMarketing.value) {
     ensureMetaPixel()
