@@ -441,6 +441,8 @@ export default defineNuxtConfig({
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
       googleAdsConversionId: process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || process.env.GOOGLE_ADS_CONVERSION_ID || '',
       linkedinPartnerId: process.env.PUBLIC_LINKEDIN_PARTNER_ID || process.env.LINKEDIN_PARTNER_ID || '',
+      redditPixelId: process.env.PUBLIC_REDDIT_PIXEL_ID || process.env.REDDIT_PIXEL_ID || '',
+      xPixelId: process.env.PUBLIC_X_PIXEL_ID || process.env.X_PIXEL_ID || '',
       tiktokPixelId: process.env.PUBLIC_TIKTOK_PIXEL_ID || process.env.TIKTOK_PIXEL_ID || '',
       clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
       analyticsEnabled,

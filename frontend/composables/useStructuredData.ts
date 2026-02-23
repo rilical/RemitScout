@@ -31,12 +31,12 @@ interface CorridorProvider {
 export const useStructuredData = () => {
   const { public: { siteUrl, siteName } } = useRuntimeConfig()
   const cspNonce = useCspNonce()
+  const socialLinks = Object.values(BRAND.social)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0)
+    .map(value => value as string)
 
   // Organization schema
   const addOrganizationSchema = () => {
-    const sameAs = Object.values(BRAND.social)
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Organization',
@@ -44,7 +44,7 @@ export const useStructuredData = () => {
       'url': siteUrl,
       'logo': `${siteUrl}/logo.png`,
       'description': 'Independent comparison service for international money transfers and travel connectivity',
-      ...(sameAs.length ? { sameAs } : {}),
+      ...(socialLinks.length ? { sameAs: socialLinks } : {}),
       'contactPoint': {
         '@type': 'ContactPoint',
         'contactType': 'customer service',

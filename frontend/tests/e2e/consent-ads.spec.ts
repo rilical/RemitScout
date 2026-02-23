@@ -30,6 +30,10 @@ test('cookie banner shows; accept enables marketing gating', async ({ page }) =>
       ezoicScript: Boolean(document.querySelector('script[src*="ezojs.com/ezoic/sa.min.js"]')),
       ezstandalone: typeof (window as any).ezstandalone !== 'undefined',
       attribution: window.localStorage.getItem('rs:attribution'),
+      redditPixelScript: Boolean(document.querySelector('script[src*="redditstatic.com/ads/v2.0/rdtag.js"]')),
+      hasRdt: typeof (window as any).rdt === 'function',
+      xPixelScript: Boolean(document.querySelector('script[src*="static.ads-twitter.com/uwt.js"]')),
+      hasTwq: typeof (window as any).twq === 'function',
     }
   })
 
@@ -37,6 +41,10 @@ test('cookie banner shows; accept enables marketing gating', async ({ page }) =>
   expect(before.ezoicScript).toBe(false)
   expect(before.ezstandalone).toBe(false)
   expect(before.attribution).toBeNull()
+  expect(before.redditPixelScript).toBe(false)
+  expect(before.hasRdt).toBe(false)
+  expect(before.xPixelScript).toBe(false)
+  expect(before.hasTwq).toBe(false)
 
   await page.getByRole('button', { name: 'Accept & support Remit-Scout' }).click()
   await expect(page.getByText('Ads keep the free plan free')).toHaveCount(0)
@@ -56,6 +64,14 @@ test('cookie banner shows; accept enables marketing gating', async ({ page }) =>
     await expect(page.locator('script[src*="ezojs.com/ezoic/sa.min.js"]')).toHaveCount(1)
     await expect.poll(async () => {
       return await page.evaluate(() => typeof (window as any).ezstandalone !== 'undefined')
+    }).toBe(true)
+    await expect(page.locator('script[src*="redditstatic.com/ads/v2.0/rdtag.js"]')).toHaveCount(1)
+    await expect.poll(async () => {
+      return await page.evaluate(() => typeof (window as any).rdt === 'function')
+    }).toBe(true)
+    await expect(page.locator('script[src*="static.ads-twitter.com/uwt.js"]')).toHaveCount(1)
+    await expect.poll(async () => {
+      return await page.evaluate(() => typeof (window as any).twq === 'function')
     }).toBe(true)
   }
 })
@@ -84,12 +100,20 @@ test('reject non-essential keeps marketing disabled', async ({ page }) => {
       ezoicScript: Boolean(document.querySelector('script[src*="ezojs.com/ezoic/sa.min.js"]')),
       ezstandalone: typeof (window as any).ezstandalone !== 'undefined',
       attribution: window.localStorage.getItem('rs:attribution'),
+      redditPixelScript: Boolean(document.querySelector('script[src*="redditstatic.com/ads/v2.0/rdtag.js"]')),
+      hasRdt: typeof (window as any).rdt === 'function',
+      xPixelScript: Boolean(document.querySelector('script[src*="static.ads-twitter.com/uwt.js"]')),
+      hasTwq: typeof (window as any).twq === 'function',
     }
   })
 
   expect(after.ezoicScript).toBe(false)
   expect(after.ezstandalone).toBe(false)
   expect(after.attribution).toBeNull()
+  expect(after.redditPixelScript).toBe(false)
+  expect(after.hasRdt).toBe(false)
+  expect(after.xPixelScript).toBe(false)
+  expect(after.hasTwq).toBe(false)
 })
 
 test('outside EEA/UK: banner does not auto-show; cookie settings entry is still available', async ({ page }) => {

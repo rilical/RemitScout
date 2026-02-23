@@ -6,9 +6,9 @@ export const BRAND = {
   },
   // Only set these when you have real, owned social URLs. Do not guess.
   social: {
-    x: null as string | null,
-    facebook: null as string | null,
-    linkedin: null as string | null,
+    x: 'https://x.com/remitscout',
+    facebook: 'https://www.facebook.com/remit.scout.global/',
+    linkedin: 'https://www.linkedin.com/company/remit-scout/',
   },
 } as const
 

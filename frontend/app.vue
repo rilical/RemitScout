@@ -83,6 +83,8 @@ const googleAdsConversionId = runtimeConfig.public.googleAdsConversionId
 const linkedinPartnerId = runtimeConfig.public.linkedinPartnerId
 const tiktokPixelId = runtimeConfig.public.tiktokPixelId
 const clarityProjectId = runtimeConfig.public.clarityProjectId
+const redditPixelId = runtimeConfig.public.redditPixelId
+const xPixelId = runtimeConfig.public.xPixelId
 const route = useRoute()
 const allowAnalytics = computed(() => runtimeConfig.public.analyticsEnabled === true && analyticsConsent.value)
 const allowMarketing = computed(() => marketingConsent.value)
@@ -177,6 +179,8 @@ let gtmReady = false
 let metaPixelReady = false
 let clarityReady = false
 let linkedInReady = false
+let redditPixelReady = false
+let xPixelReady = false
 let tikTokReady = false
 let ezoicReady = false
 
@@ -188,7 +192,7 @@ const ensureGoogleTagManager = () => {
   win.dataLayer = Array.isArray(win.dataLayer) ? win.dataLayer : []
   win.dataLayer.push({
     'gtm.start': Date.now(),
-    event: 'gtm.js',
+    'event': 'gtm.js',
   })
 
   ensureExternalScript(
@@ -317,6 +321,83 @@ const ensureLinkedInInsight = () => {
   linkedInReady = true
 }
 
+const ensureRedditPixel = () => {
+  if (!import.meta.client) return
+  if (!allowMarketing.value || !redditPixelId || redditPixelReady) return
+
+  const win = window as DynamicWindow
+  if (typeof win.rdt !== 'function') {
+    const rdt = (...args: unknown[]) => {
+      const scoped = rdt as typeof rdt & {
+        sendEvent?: (...args: unknown[]) => void
+        callQueue?: unknown[][]
+      }
+      if (typeof scoped.sendEvent === 'function') {
+        scoped.sendEvent.apply(rdt, args)
+      }
+      else {
+        scoped.callQueue = scoped.callQueue || []
+        scoped.callQueue.push(args)
+      }
+    }
+    const scoped = rdt as typeof rdt & {
+      sendEvent?: (...args: unknown[]) => void
+      callQueue?: unknown[][]
+    }
+    scoped.callQueue = []
+    win.rdt = rdt
+  }
+
+  if (!win.__rdt_uuid) {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      win.__rdt_uuid = crypto.randomUUID()
+    }
+    else {
+      win.__rdt_uuid = `rdt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
+    }
+  }
+
+  ensureExternalScript('rs-reddit-pixel-src', 'https://www.redditstatic.com/ads/v2.0/rdtag.js')
+  win.rdt('init', redditPixelId)
+  win.rdt('track', 'PageVisit')
+  redditPixelReady = true
+}
+
+const ensureXPixel = () => {
+  if (!import.meta.client) return
+  if (!allowMarketing.value || !xPixelId || xPixelReady) return
+
+  const win = window as DynamicWindow
+  if (typeof win.twq !== 'function') {
+    const twq = (...args: unknown[]) => {
+      const scoped = twq as typeof twq & {
+        exe?: (...args: unknown[]) => void
+        queue?: unknown[][]
+        version?: string
+      }
+      if (typeof scoped.exe === 'function') {
+        scoped.exe.apply(twq, args)
+      }
+      else {
+        scoped.queue = scoped.queue || []
+        scoped.queue.push(args)
+      }
+    }
+    const scoped = twq as typeof twq & {
+      exe?: (...args: unknown[]) => void
+      queue?: unknown[][]
+      version?: string
+    }
+    scoped.version = '1.1'
+    scoped.queue = []
+    win.twq = twq
+  }
+
+  ensureExternalScript('rs-x-pixel-src', 'https://static.ads-twitter.com/uwt.js')
+  win.twq('config', xPixelId)
+  xPixelReady = true
+}
+
 const ensureTikTokPixel = () => {
   if (!import.meta.client) return
   if (!allowMarketing.value || !tiktokPixelId || tikTokReady) return
@@ -397,6 +478,8 @@ const ensureMarketingTags = () => {
   if (allowMarketing.value) {
     ensureMetaPixel()
     ensureLinkedInInsight()
+    ensureRedditPixel()
+    ensureXPixel()
     ensureTikTokPixel()
   }
   ensureEzoic()
