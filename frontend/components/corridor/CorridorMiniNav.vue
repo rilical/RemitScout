@@ -21,8 +21,8 @@
         <div class="hidden sm:flex items-center gap-2 text-body-sm text-rs-muted">
           <span class="inline-flex items-center gap-1.5">
             <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-600 opacity-75" />
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-success-600" />
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-600 opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
             </span>
             <span>Updated {{ lastUpdated }}</span>
           </span>

@@ -433,7 +433,7 @@ aria-current="page"
               <!-- Stable rate indicator -->
               <div
                 v-if="chartStats?.isFlat && !isSameCurrency"
-                class="mt-3 flex items-center justify-center gap-2 text-body-sm text-success-600 bg-success-600 rounded-lg py-2 px-3"
+                class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-body-sm text-brand-700"
               >
                 <svg
                   class="w-4 h-4"
@@ -488,8 +488,8 @@ aria-current="page"
               <div class="flex items-center justify-between text-body-sm">
                 <div class="flex items-center gap-2">
                   <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-600 opacity-75" />
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-success-600" />
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-600 opacity-75" />
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
                   </span>
                   <span class="text-neutral-600 font-medium">{{ content.rateWidget.asOf }}</span>
                 </div>
