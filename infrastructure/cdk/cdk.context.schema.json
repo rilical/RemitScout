@@ -228,6 +228,10 @@
       "type": "string",
       "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"
     },
+    "goldIndicesMinProviders": {
+      "type": "string",
+      "description": "Minimum provider count before gold indices are suppressed (GOLD_INDICES_MIN_PROVIDERS override)"
+    },
     "providerWeightWindowDays": {
       "type": "string",
       "description": "Lookback window days for the provider-weighting job (PROVIDER_WEIGHT_WINDOW_DAYS override)"
@@ -375,6 +379,10 @@
         "type": "string"
       },
       "description": "Admin email allowlist for Plane A"
+    },
+    "planeAAdminRevocationFailClosed": {
+      "type": "boolean",
+      "description": "Force admin session revocation checks to fail closed when Redis is unavailable (defaults to true in staging/prod behavior)"
     },
     "pinpointEnabled": {
       "type": "boolean",

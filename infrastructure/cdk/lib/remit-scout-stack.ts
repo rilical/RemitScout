@@ -539,6 +539,10 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('goldIndicesLookbackDays') ??
       process.env.GOLD_INDICES_LOOKBACK_DAYS ??
       (envName === 'dev' ? '3' : undefined)
+    const goldIndicesMinProviders =
+      this.node.tryGetContext('goldIndicesMinProviders') ??
+      process.env.GOLD_INDICES_MIN_PROVIDERS ??
+      (envName === 'staging' ? '2' : undefined)
     const providerWeightWindowDays =
       this.node.tryGetContext('providerWeightWindowDays') ??
       process.env.PROVIDER_WEIGHT_WINDOW_DAYS ??
@@ -1223,6 +1227,7 @@ export class RemitScoutStack extends Stack {
       planeBB2bObservationMode,
       planeBB2bMaxQueueDepth,
       planeBIngestFanoutMessageMode,
+      goldIndicesMinProviders,
       planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
       ingestFanoutMode,
       notificationsMode,
@@ -1585,6 +1590,7 @@ export class RemitScoutStack extends Stack {
       fxRateRefreshServiceEnabled,
       fxRateRefreshDesiredCount,
       goldIndicesLookbackDays,
+      goldIndicesMinProviders,
       providerWeightWindowDays,
       institutionalExportFormat,
       institutionalExportWriteManifest,

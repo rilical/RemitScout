@@ -99,6 +99,7 @@ export type ScheduledJobsOptions = {
   fxRateRefreshDesiredCount?: number
   paused?: boolean
   goldIndicesLookbackDays?: string
+  goldIndicesMinProviders?: string
   providerWeightWindowDays?: string
   planeASecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
@@ -2298,6 +2299,9 @@ const createPlaneCLambdaJob = ({
       options.goldIndicesLookbackDays ?? (options.envName === 'dev' ? '3' : undefined)
     if (lookbackOverride) {
       environment.GOLD_INDICES_LOOKBACK_DAYS = lookbackOverride
+    }
+    if (options.goldIndicesMinProviders) {
+      environment.GOLD_INDICES_MIN_PROVIDERS = options.goldIndicesMinProviders
     }
   }
   if (jobName === 'provider-weighting') {
