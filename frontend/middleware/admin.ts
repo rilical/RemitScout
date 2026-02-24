@@ -1,4 +1,6 @@
 export default defineNuxtRouteMiddleware(async () => {
+  if (import.meta.server) return
+
   const { ensureHydrated, isAuthenticated, user, isAdmin } = useAuth()
   const { request } = useApi()
 

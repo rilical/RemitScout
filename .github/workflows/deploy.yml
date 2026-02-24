@@ -643,13 +643,15 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c minimalInfra=true \
+            -c minimalInfra=false \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
@@ -669,13 +671,15 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c minimalInfra=true \
+            -c minimalInfra=false \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
@@ -747,6 +751,7 @@ jobs:
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
           dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
+          dist_domain="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionDomain") | .OutputValue')"
           plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
           plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
           api_base="https://${plane_a_cf}"
@@ -756,6 +761,7 @@ jobs:
 
           export NODE_ENV=staging
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
+          export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
           export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
           export PUBLIC_API_BASE="${api_base}/api/v1"
@@ -1277,6 +1283,7 @@ jobs:
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
           dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
+          dist_domain="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionDomain") | .OutputValue')"
           plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
           plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
           api_base="https://${plane_a_cf}"
@@ -1286,6 +1293,7 @@ jobs:
 
           export NODE_ENV=production
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
+          export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
           export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
           export PUBLIC_API_BASE="${api_base}/api/v1"

@@ -115,7 +115,6 @@ export const useAuth = () => {
   const ensureHydrated = async () => {
     if (hydrated.value) return
     if (!import.meta.client) {
-      hydrated.value = true
       return
     }
     if (!isConfigured.value) {
@@ -186,12 +185,12 @@ export const useAuth = () => {
   const listMfaFactors = async () => {
     const supabase = getSupabase()
     if (!supabase) {
-      return { totp: [], all: [] as Array<{ id: string; status?: string }> }
+      return { totp: [], all: [] as Array<{ id: string, status?: string }> }
     }
     const { data, error } = await supabase.auth.mfa.listFactors()
     if (error) {
       lastError.value = error.message
-      return { totp: [], all: [] as Array<{ id: string; status?: string }> }
+      return { totp: [], all: [] as Array<{ id: string, status?: string }> }
     }
     return data
   }

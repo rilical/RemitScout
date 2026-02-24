@@ -105,6 +105,7 @@ export type EcsTaskOptions = {
   opsAlertsMode?: string
   planeBDbPoolMax?: string
   planeBDbPoolMin?: string
+  goldIndicesMinProviders?: string
 }
 
 export const createEcsTasks = (
@@ -233,6 +234,7 @@ export const createEcsTasks = (
   const planeBB2bObservationMode =
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
+  const goldIndicesMinProviders = options.goldIndicesMinProviders
   const b2cRefreshLimit = isConservativeWorkerDefaults ? '25' : '50'
   const b2cRefreshConcurrency = isConservativeWorkerDefaults ? '1' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
@@ -599,6 +601,9 @@ export const createEcsTasks = (
   }
   if (planeBB2bMaxQueueDepth) {
     sharedEnv.PLANE_B_B2B_MAX_QUEUE_DEPTH = String(planeBB2bMaxQueueDepth)
+  }
+  if (goldIndicesMinProviders) {
+    sharedEnv.GOLD_INDICES_MIN_PROVIDERS = String(goldIndicesMinProviders)
   }
   if (process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY) {
     sharedEnv.PLANE_B_B2B_NATIVE_CURRENCY_ONLY = process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY

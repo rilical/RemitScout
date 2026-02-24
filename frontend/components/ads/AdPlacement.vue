@@ -18,11 +18,10 @@
       />
 
       <div
-        v-else
+        v-else-if="creative"
         :style="wrapperStyle"
       >
         <SponsoredAd
-          v-if="creative"
           :ad="creative"
           :layout="creativeLayout"
           :label="resolvedLabel"

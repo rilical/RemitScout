@@ -96,7 +96,7 @@
           Unable to load comparison data. Please try again later.
         </p>
         <p class="text-body-sm text-neutral-500">
-          Error: {{ error }}
+          {{ errorMessage }}
         </p>
       </div>
 
@@ -119,7 +119,7 @@
         class="text-center py-12"
       >
         <p class="text-neutral-600 mb-4">
-          Bank comparison data is incomplete. Wells Fargo quote data is not available for this corridor.
+          Bank comparison data is incomplete. Benchmark data is not available for this corridor.
         </p>
         <p class="text-body-sm text-neutral-500">
           Please try again later or check a different corridor.
@@ -525,6 +525,14 @@ const { data, pending, error } = await useRemittanceApi().useBankVsSpecialist(
 )
 
 const comparison = computed(() => data.value?.data)
+const errorMessage = computed(() => {
+  const raw = error.value as { message?: string, data?: { message?: string }, statusMessage?: string } | null
+  if (!raw) return 'Comparison service is temporarily unavailable.'
+  const message = raw.data?.message || raw.message || raw.statusMessage
+  return message && message.trim()
+    ? message
+    : 'Comparison service is temporarily unavailable.'
+})
 
 const lastUpdated = computed(() => {
   if (!comparison.value) return ''

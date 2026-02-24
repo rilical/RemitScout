@@ -433,7 +433,7 @@ aria-current="page"
               <!-- Stable rate indicator -->
               <div
                 v-if="chartStats?.isFlat && !isSameCurrency"
-                class="mt-3 flex items-center justify-center gap-2 text-body-sm text-success-600 bg-success-600 rounded-lg py-2 px-3"
+                class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-body-sm text-brand-700"
               >
                 <svg
                   class="w-4 h-4"
@@ -488,8 +488,8 @@ aria-current="page"
               <div class="flex items-center justify-between text-body-sm">
                 <div class="flex items-center gap-2">
                   <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-600 opacity-75" />
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-success-600" />
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-600 opacity-75" />
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-600" />
                   </span>
                   <span class="text-neutral-600 font-medium">{{ content.rateWidget.asOf }}</span>
                 </div>
@@ -909,7 +909,7 @@ aria-current="page"
               </div>
 
               <AdPlacement
-                v-if="!isPlus && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
+                v-if="showMonetizedAds && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
                 placement="compare_inline"
                 :corridor-id="corridorId"
                 :slot-index="Math.floor(index / 2)"
@@ -976,7 +976,7 @@ aria-current="page"
         >
           <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <!-- TEER Card -->
-            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex h-full flex-col">
               <div class="mb-4">
                 <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   TEER
@@ -995,8 +995,8 @@ aria-current="page"
                 {{ teerContextDescription }}
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more about TEER</span>
+                <summary class="insight-summary cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex w-full items-center justify-between gap-2">
+                  <span class="text-left">Learn more about TEER</span>
                   <svg
                     class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
@@ -1011,27 +1011,21 @@ aria-current="page"
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
+                <div class="insight-details mt-3 border-t border-neutral-800 pt-3 text-body-sm text-neutral-400">
                   <p>{{ indicesSourceSummary }}</p>
                   <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#teer"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                    class="insight-methodology-link inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
-                  </NuxtLink>
-                  <NuxtLink
-                    :to="buildIndexChartLink('fx-markup')"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
-                  >
-                    View TEER trend →
                   </NuxtLink>
                 </div>
               </details>
             </div>
 
             <!-- RVI Card -->
-            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex h-full flex-col">
               <div class="mb-4">
                 <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   RVI (bps)
@@ -1050,8 +1044,8 @@ aria-current="page"
                 {{ rviContextDescription }}
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more about RVI</span>
+                <summary class="insight-summary cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex w-full items-center justify-between gap-2">
+                  <span class="text-left">Learn more about RVI</span>
                   <svg
                     class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
@@ -1066,27 +1060,21 @@ aria-current="page"
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
+                <div class="insight-details mt-3 border-t border-neutral-800 pt-3 text-body-sm text-neutral-400">
                   <p>{{ indicesSourceSummary }}</p>
                   <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#rvi"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                    class="insight-methodology-link inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
-                  </NuxtLink>
-                  <NuxtLink
-                    :to="buildIndexChartLink('volatility-pulse')"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
-                  >
-                    View RVI trend →
                   </NuxtLink>
                 </div>
               </details>
             </div>
 
             <!-- RCI Card -->
-            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex flex-col">
+            <div class="rounded-2xl border-2 border-neutral-800 bg-neutral-900 p-6 shadow-sm flex h-full flex-col">
               <div class="mb-4">
                 <p class="text-body-sm font-bold uppercase tracking-wider text-brand-600 mb-1">
                   RCI
@@ -1105,8 +1093,8 @@ aria-current="page"
                 {{ rciContextDescription }}
               </p>
               <details class="group mt-auto">
-                <summary class="cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex items-center gap-1">
-                  <span>Learn more about RCI</span>
+                <summary class="insight-summary cursor-pointer text-body-sm font-semibold text-brand-600 hover:text-brand-500 flex w-full items-center justify-between gap-2">
+                  <span class="text-left">Learn more about RCI</span>
                   <svg
                     class="h-3 w-3 motion-safe:transition-transform group-open:rotate-180"
                     fill="none"
@@ -1121,20 +1109,14 @@ aria-current="page"
                     />
                   </svg>
                 </summary>
-                <div class="mt-3 pt-3 border-t border-neutral-800 text-body-sm text-neutral-400 space-y-2 min-h-[77px]">
+                <div class="insight-details mt-3 border-t border-neutral-800 pt-3 text-body-sm text-neutral-400">
                   <p>{{ indicesSourceSummary }}</p>
                   <p>{{ indicesBasisSummary }}</p>
                   <NuxtLink
                     to="/indices-methodology#rci"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
+                    class="insight-methodology-link inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
                   >
                     Read full methodology →
-                  </NuxtLink>
-                  <NuxtLink
-                    :to="buildIndexChartLink('all-in-cost')"
-                    class="inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-500"
-                  >
-                    View RCI trend →
                   </NuxtLink>
                 </div>
               </details>
@@ -1453,7 +1435,6 @@ aria-current="page"
                   </p>
                 </div>
               </div>
-
             </div>
 
             <div
@@ -1539,7 +1520,7 @@ aria-current="page"
             </div>
 
             <AdPlacement
-              v-if="!isPlus"
+              v-if="showMonetizedAds"
               placement="compare_sidebar"
               :corridor-id="corridorId"
               wrapper-class="rounded-xl"
@@ -1566,7 +1547,7 @@ aria-current="page"
 
     <!-- Ad: Interstitial -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1686,7 +1667,7 @@ aria-current="page"
 
     <!-- Ad: Below FAQ -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1707,7 +1688,7 @@ aria-current="page"
 
     <!-- Ad: Footer -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1890,6 +1871,7 @@ import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-lim
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useAlerts } from '~/composables/useAlerts'
 import { useAuth } from '~/composables/useAuth'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { EmptyState } from '~/ui/states'
@@ -2044,8 +2026,14 @@ type CorridorContent = {
 }
 
 const runtimeConfig = useRuntimeConfig()
+const { marketingConsent } = usePrivacySettings()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 const normalizedSiteUrl = siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : (siteUrl || 'https://Remit-Scout.com')
+const showMonetizedAds = computed(() => (
+  !isPlus.value
+  && runtimeConfig?.public?.adsEnabled === true
+  && marketingConsent.value
+))
 
 const normalizeSlug = (value: string | string[] | undefined) => String(value || '').toLowerCase()
 const normalizeCurrencyParam = (value: string | string[] | null | undefined) => {
@@ -2865,7 +2853,23 @@ const midMarketSource = computed(() => {
   if (isSameCurrency.value) {
     return 'Same currency'
   }
-  return quotesData.value?.midMarketSource || rateHistorySource.value || 'Mid-market'
+  const rawSource = quotesData.value?.midMarketSource || rateHistorySource.value || 'Mid-market'
+  const normalized = String(rawSource).trim()
+  const sourceKey = normalized.toLowerCase()
+
+  if (sourceKey === 'oanda' || sourceKey === 'oanda_auth') {
+    return 'OANDA'
+  }
+
+  if (sourceKey === 'xe' || sourceKey.startsWith('xe ')) {
+    return 'XE'
+  }
+
+  if (sourceKey === 'provider_weighted') {
+    return 'Provider-weighted fallback'
+  }
+
+  return normalized
 })
 const midMarketUpdatedAt = computed(() => (
   quotesData.value?.midMarketUpdatedAt
@@ -3451,21 +3455,6 @@ const rciContextDescription = computed(() => {
   }
   return `${indicesBasisSummary.value}. Implied total transfer cost is ${(rci * 100).toFixed(2)}% of send amount. Lower is better.`
 })
-const pulseCorridorSlug = computed(() => `${fromSlug.value}-to-${toSlug.value}`)
-const buildIndexChartLink = (chartId: string) => {
-  const params = new URLSearchParams()
-  params.set('corridor', pulseCorridorSlug.value)
-  params.set('corridor_id', corridorId.value)
-  params.set('amount', String(indicesBasisAmount.value))
-  const pulsePayoutMethod = payoutMethod.value === 'cash'
-    ? 'cash'
-    : payoutMethod.value === 'wallet'
-      ? 'wallet'
-      : 'bank'
-  params.set('pay', pulsePayoutMethod)
-  return `/pulse/charts/${chartId}?${params.toString()}`
-}
-
 const content = computed(() => {
   const base = baseContent.value
   const merged = {
@@ -4697,5 +4686,24 @@ function openScoreModal(row: TableRow | EnrichedTableRow) {
 .loading-bar-animate {
   width: 30%;
   animation: loading-bar 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+.insight-summary {
+  list-style: none;
+}
+
+.insight-summary::-webkit-details-marker {
+  display: none;
+}
+
+.insight-details {
+  display: flex;
+  min-height: 7rem;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.insight-methodology-link {
+  margin-top: auto;
 }
 </style>

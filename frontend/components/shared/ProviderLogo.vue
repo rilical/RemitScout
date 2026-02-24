@@ -2,14 +2,14 @@
   <div
     :class="fit ? 'flex items-center justify-center w-full h-full' : 'inline-block max-w-full max-h-full'"
   >
-    <NuxtImg
+    <img
       :src="logoSrc"
       :alt="alt || slug"
       :class="fit ? 'max-w-full max-h-full object-contain' : [logoSize, 'object-contain max-w-full max-h-full']"
       :width="logoDimensions.width"
       :height="logoDimensions.height"
-      :format="logoFormat"
       loading="lazy"
+      decoding="async"
       @error="handleImageError"
     />
   </div>
@@ -48,12 +48,6 @@ const logoDimensions = computed(() => {
       return { width: Math.round(dims.width * 1.5), height: Math.round(dims.height * 1.5) }
   }
 })
-const logoFormat = computed(() => {
-  // Don't attempt raster format conversion for SVGs.
-  return logoSrc.value.toLowerCase().endsWith('.svg') ? undefined : 'webp'
-})
-
-
 const handleImageError = (event: Event | string) => {
   if (typeof event === 'string') return
   // Fallback to text-based logo if image fails to load

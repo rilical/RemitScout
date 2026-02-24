@@ -34,6 +34,7 @@ const querySchema = z.object({
 type QuoteRow = {
   provider_id: string
   display_name: string
+  amount_bucket: number | null
   send_amount: number | null
   fee_amount: number | null
   promotional_fee_amount: number | null
@@ -69,7 +70,10 @@ type BankVsSpecialistPayload = {
     recvCurrency: string
   }
   midRate: number
-  bank: Omit<ProviderQuote, 'id'>
+  bank: Omit<ProviderQuote, 'id'> & {
+    source?: 'bank_quote' | 'benchmark'
+    sourceProviderId?: string | null
+  }
   top: ProviderQuote
   updatedAt: string
   savings?: {
@@ -320,6 +324,7 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
       const rows = await query<QuoteRow>(
         `SELECT lqp.provider_id,
                 COALESCE(p.display_name, lqp.provider_id) AS display_name,
+                lqp.amount_bucket,
                 lqp.send_amount,
                 lqp.fee_amount,
                 lqp.promotional_fee_amount,
@@ -358,12 +363,6 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
       }
 
       const candidates = Array.from(bestByProvider.values())
-      const bankRow = candidates.find(isWellsFargo)
-      if (!bankRow) {
-        reply.code(503)
-        return { error: 'bank_quote_unavailable', message: 'Wells Fargo quote unavailable' }
-      }
-
       const specialistRows = candidates.filter(row => !isBankProvider(row))
       if (specialistRows.length === 0) {
         reply.code(503)
@@ -376,6 +375,42 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
           topRow = row
         }
       }
+
+      let usedFallbackBankQuote = false
+      let bankRow = candidates.find(isWellsFargo)
+      if (!bankRow) {
+        const fallbackBankResult = await query<QuoteRow>(
+          `SELECT lqp.provider_id,
+                  COALESCE(p.display_name, lqp.provider_id) AS display_name,
+                  lqp.amount_bucket,
+                  lqp.send_amount,
+                  lqp.fee_amount,
+                  lqp.promotional_fee_amount,
+                  lqp.receive_amount,
+                  lqp.implied_fx_rate,
+                  lqp.promotional_rate,
+                  lqp.delivery_time_min_minutes,
+                  lqp.delivery_time_max_minutes,
+                  lqp.payin,
+                  lqp.payout,
+                  lqp.collected_at
+             FROM silver.latest_quote_by_provider lqp
+             JOIN silver.provider p ON p.provider_id = lqp.provider_id
+            WHERE lqp.corridor_id = $1
+              AND lqp.status = 'ok'
+              AND (LOWER(lqp.provider_id) = $3 OR LOWER(lqp.provider_id) LIKE $4)
+            ORDER BY CASE WHEN lqp.amount_bucket IS NULL THEN 1 ELSE 0 END,
+                     ABS(COALESCE(lqp.amount_bucket, $2) - $2),
+                     lqp.collected_at DESC
+            LIMIT 1`,
+          [corridorId, amountBucket, WELLS_FARGO_PROVIDER_KEY, `${WELLS_FARGO_PROVIDER_KEY}%`],
+          planeAPool,
+        )
+        bankRow = fallbackBankResult.rows[0]
+        usedFallbackBankQuote = Boolean(bankRow)
+      }
+      let usedBankBenchmark = false
+      let bankBenchmarkSourceRow: QuoteRow | null = null
 
       let midRate: number | null = null
       try {
@@ -390,21 +425,51 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
       }
 
       if (!midRate || midRate <= 0) {
-        midRate = parseNumeric(bankRow.implied_fx_rate, parseNumeric(topRow.implied_fx_rate, 0))
+        const midRateSourceRow = bankRow ?? topRow
+        midRate = parseNumeric(midRateSourceRow.implied_fx_rate, parseNumeric(topRow.implied_fx_rate, 0))
       }
 
-      const bankQuote = buildProviderQuote(bankRow, amount, midRate)
+      let bankQuote: ProviderQuote
+      let bankName = 'Traditional bank benchmark'
+      let bankSourceProviderId: string | null = null
+
+      if (bankRow) {
+        bankQuote = buildProviderQuote(bankRow, amount, midRate)
+        bankName = isWellsFargo(bankRow)
+          ? 'Wells Fargo'
+          : getProviderMetadata(bankRow.provider_id)?.displayName
+            ?? bankRow.display_name
+            ?? 'Your bank'
+        bankSourceProviderId = bankRow.provider_id
+      } else {
+        // Keep the educational module available even when bank quotes are temporarily missing.
+        // We use the lowest-recipient specialist quote as a conservative benchmark floor.
+        usedBankBenchmark = true
+        let benchmarkRow = specialistRows[0]
+        for (const row of specialistRows.slice(1)) {
+          if (computeRecipientGets(row, amount) < computeRecipientGets(benchmarkRow, amount)) {
+            benchmarkRow = row
+          }
+        }
+        bankBenchmarkSourceRow = benchmarkRow
+        const benchmarkQuote = buildProviderQuote(benchmarkRow, amount, midRate)
+        bankQuote = {
+          ...benchmarkQuote,
+          id: 'bank-benchmark',
+          name: bankName,
+          logoUrl: undefined,
+          reliability: Math.min(benchmarkQuote.reliability, 0.75),
+          bestFor: 'Legacy branch network',
+        }
+        bankSourceProviderId = benchmarkRow.provider_id
+      }
+
       const topQuote = buildProviderQuote(topRow, amount, midRate)
-      const bankName = isWellsFargo(bankRow)
-        ? 'Wells Fargo'
-        : getProviderMetadata(bankRow.provider_id)?.displayName
-          ?? bankRow.display_name
-          ?? 'Your bank'
 
       const { id, name, ...bankPayload } = bankQuote
       void id
       void name
-      const updatedAtValue = [bankRow.collected_at, topRow.collected_at]
+      const updatedAtValue = [bankRow?.collected_at ?? bankBenchmarkSourceRow?.collected_at ?? null, topRow.collected_at]
         .map((value) => (value ? new Date(value).getTime() : 0))
         .filter((value) => Number.isFinite(value))
         .sort((a, b) => b - a)[0]
@@ -434,6 +499,8 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
         bank: {
           ...bankPayload,
           name: bankName,
+          source: usedBankBenchmark ? 'benchmark' : 'bank_quote',
+          sourceProviderId: bankSourceProviderId,
         },
         top: topQuote,
         updatedAt,
@@ -454,7 +521,10 @@ export const bankVsSpecialistRoutes = async (app: FastifyInstance) => {
       logger.info('bank_vs_specialist_success', {
         corridor_id: corridorId,
         amount_bucket: amountBucket,
-        bank_provider: bankRow.provider_id,
+        bank_provider: bankRow?.provider_id ?? 'bank-benchmark',
+        bank_amount_bucket: bankRow?.amount_bucket ?? bankBenchmarkSourceRow?.amount_bucket ?? null,
+        bank_quote_fallback_used: usedFallbackBankQuote,
+        bank_benchmark_used: usedBankBenchmark,
         top_provider: topRow.provider_id,
       })
 
