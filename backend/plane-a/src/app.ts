@@ -87,6 +87,11 @@ export const PLANE_A_AUTH_BYPASS_ROUTE_POLICIES = {
     owner: 'billing',
     envScope: 'all',
   },
+  '/api/v1/sessions/track': {
+    reason: 'Anonymous session telemetry must work before authentication.',
+    owner: 'sessions',
+    envScope: 'all',
+  },
   '/api/v1/alerts/unsubscribe': {
     reason: 'Email unsubscribe link must work without authentication',
     owner: 'alerts',

@@ -648,9 +648,9 @@ jobs:
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
-            -c planeBIngestDesiredCount=1 \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
@@ -676,9 +676,9 @@ jobs:
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
-            -c planeBIngestDesiredCount=1 \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
