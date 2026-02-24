@@ -821,6 +821,9 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('planeACorsAllowCredentials') ??
         process.env.PLANE_A_CORS_ALLOW_CREDENTIALS,
     )
+    const planeAAdminRevocationFailClosed = cdkContext.planeAAdminRevocationFailClosed
+      ?? toOptionalBool(process.env.PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED)
+      ?? envName !== 'dev'
     const frontendDomainName =
       this.node.tryGetContext('frontendDomainName') ??
       process.env.FRONTEND_DOMAIN_NAME
@@ -1277,6 +1280,7 @@ export class RemitScoutStack extends Stack {
       planeACorsAllowedHeaders,
       planeACorsAllowedMethods,
       planeACorsAllowCredentials,
+      planeAAdminRevocationFailClosed,
       frontendBaseUrl,
       planeCDbSecretArn,
       planeCDbSecretJsonKey,
@@ -1768,8 +1772,10 @@ export class RemitScoutStack extends Stack {
     storage.auditLogsBucket.grantReadWrite(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantSendMessages(iam.planeALambdaRole)
     queues.quoteRefreshQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.quoteRefreshDlq.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.fxRateRefreshQueue.grantSendMessages(iam.planeALambdaRole)
     queues.fxRateRefreshQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.fxRateRefreshDlq.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.exportJobQueue.grantSendMessages(iam.planeALambdaRole)
     queues.exportJobQueue.grantConsumeMessages(iam.planeALambdaRole)
     queues.exportJobDlq.grantSendMessages(iam.planeALambdaRole)

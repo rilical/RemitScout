@@ -89,6 +89,7 @@ export const createPipeline = (
   }
   if (options.frontendDistribution) {
     buildEnvVars.FRONTEND_DISTRIBUTION_ID = { value: options.frontendDistribution.distributionId }
+    buildEnvVars.FRONTEND_DISTRIBUTION_DOMAIN = { value: options.frontendDistribution.distributionDomainName }
   }
   if (options.planeACloudFrontDomain) {
     buildEnvVars.PLANE_A_CLOUDFRONT_DOMAIN = { value: options.planeACloudFrontDomain }
@@ -171,8 +172,13 @@ export const createPipeline = (
               '      export PUBLIC_API_BASE=${PLANE_A_API_ENDPOINT%/}/api/v1',
               '    fi',
               '  fi',
-              '  export PUBLIC_SITE_URL=${FRONTEND_DISTRIBUTION_ID:+https://d$FRONTEND_DISTRIBUTION_ID.cloudfront.net}',
-              '  export PUBLIC_IMAGE_BASE=${FRONTEND_DISTRIBUTION_ID:+https://d$FRONTEND_DISTRIBUTION_ID.cloudfront.net/images}',
+              '  if [ -n "$FRONTEND_DISTRIBUTION_DOMAIN" ]; then',
+              '    export PUBLIC_SITE_URL=https://$FRONTEND_DISTRIBUTION_DOMAIN',
+              '    export PUBLIC_IMAGE_BASE=https://$FRONTEND_DISTRIBUTION_DOMAIN/images',
+              '  elif [ -n "${PUBLIC_SITE_URL:-}" ]; then',
+              '    export PUBLIC_SITE_URL=${PUBLIC_SITE_URL%/}',
+              '    export PUBLIC_IMAGE_BASE=${PUBLIC_IMAGE_BASE:-${PUBLIC_SITE_URL%/}/images}',
+              '  fi',
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',
               '  export PUBLIC_PULSE_ENABLED=${PUBLIC_PULSE_ENABLED:-}',

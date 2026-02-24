@@ -3,9 +3,6 @@ import { join } from 'node:path'
 
 const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
 const isDev = !isStagingOrProd
-const isAwsEnvironment = !isDev && Boolean(
-  process.env.AWS_REGION || process.env.CLOUDFRONT_DISTRIBUTION_ID,
-)
 const envFileCandidates = [
   join(process.cwd(), '.env.local'),
   join(process.cwd(), '.env'),
@@ -35,6 +32,26 @@ const resolveEnvValue = (...keys: string[]) => {
   }
   return undefined
 }
+const normalizeCloudFrontDomain = (value?: string) => {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  const noProtocol = trimmed.replace(/^https?:\/\//i, '')
+  return noProtocol.replace(/\/.*$/, '')
+}
+const cloudfrontDistributionDomain = normalizeCloudFrontDomain(
+  resolveEnvValue(
+    'FRONTEND_DISTRIBUTION_DOMAIN',
+    'CLOUDFRONT_DISTRIBUTION_DOMAIN',
+    'CLOUDFRONT_DOMAIN',
+  ),
+)
+const cloudfrontPublicOrigin = cloudfrontDistributionDomain
+  ? `https://${cloudfrontDistributionDomain}`
+  : undefined
+const isAwsEnvironment = !isDev && Boolean(
+  process.env.AWS_REGION || cloudfrontDistributionDomain || process.env.CLOUDFRONT_DISTRIBUTION_ID,
+)
 const parseEnvFlag = (value?: string) => value === 'true' || value === '1'
 const parseOptionalEnvFlag = (...keys: string[]) => {
   const raw = resolveEnvValue(...keys)
@@ -197,9 +214,6 @@ const ezoicInitScript = (() => {
   }
   return statements.join(' ')
 })()
-const cloudfrontPublicOrigin = process.env.CLOUDFRONT_DISTRIBUTION_ID
-  ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
-  : undefined
 const publicImageBase = process.env.PUBLIC_IMAGE_BASE
 const needsCloudfrontPreconnect = Boolean(
   cloudfrontPublicOrigin
@@ -410,8 +424,8 @@ export default defineNuxtConfig({
       awsRegion: resolveEnvValue('PUBLIC_AWS_REGION', 'AWS_REGION') || 'us-east-1',
       siteUrl:
         process.env.PUBLIC_SITE_URL
-        || (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
-          ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`
+        || (isAwsEnvironment && cloudfrontPublicOrigin
+          ? cloudfrontPublicOrigin
           : 'https://Remit-Scout.com'),
       apiBase: resolvePublicApiBase(),
       mediaKitPressKitUrl: process.env.PUBLIC_MEDIA_KIT_PRESS_KIT_URL || '',
@@ -422,8 +436,8 @@ export default defineNuxtConfig({
       b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
       imageBase:
         process.env.PUBLIC_IMAGE_BASE
-        || (isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
-          ? `https://d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net/images`
+        || (isAwsEnvironment && cloudfrontPublicOrigin
+          ? `${cloudfrontPublicOrigin}/images`
           : 'https://images.Remit-Scout.com'),
       supabaseUrl: resolveEnvValue(
         'PUBLIC_SUPABASE_URL',
@@ -698,15 +712,15 @@ export default defineNuxtConfig({
 
   // Image Configuration
   image: {
-    provider: isAwsEnvironment ? 'ipx' : 'ipx',
+    provider: isAwsEnvironment ? 'none' : 'ipx',
     sizes: [320, 640, 768, 1024, 1280, 1536],
     format: ['webp', 'avif', 'png', 'jpg'],
     quality: 80,
     densities: [1, 2],
     domains: [
       'images.remit-scout.com',
-      ...(isAwsEnvironment && process.env.CLOUDFRONT_DISTRIBUTION_ID
-        ? [`d${process.env.CLOUDFRONT_DISTRIBUTION_ID}.cloudfront.net`]
+      ...(cloudfrontDistributionDomain
+        ? [cloudfrontDistributionDomain]
         : []),
     ],
     cloudflare: false,

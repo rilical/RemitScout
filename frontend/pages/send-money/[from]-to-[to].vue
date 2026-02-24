@@ -909,7 +909,7 @@ aria-current="page"
               </div>
 
               <AdPlacement
-                v-if="!isPlus && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
+                v-if="showMonetizedAds && (index + 1) % 2 === 0 && index < sortedProviders.length - 1"
                 placement="compare_inline"
                 :corridor-id="corridorId"
                 :slot-index="Math.floor(index / 2)"
@@ -1539,7 +1539,7 @@ aria-current="page"
             </div>
 
             <AdPlacement
-              v-if="!isPlus"
+              v-if="showMonetizedAds"
               placement="compare_sidebar"
               :corridor-id="corridorId"
               wrapper-class="rounded-xl"
@@ -1566,7 +1566,7 @@ aria-current="page"
 
     <!-- Ad: Interstitial -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1686,7 +1686,7 @@ aria-current="page"
 
     <!-- Ad: Below FAQ -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1707,7 +1707,7 @@ aria-current="page"
 
     <!-- Ad: Footer -->
     <div
-      v-if="!isPlus"
+      v-if="showMonetizedAds"
       class="container py-6"
     >
       <AdPlacement
@@ -1890,6 +1890,7 @@ import { getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-lim
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useAlerts } from '~/composables/useAlerts'
 import { useAuth } from '~/composables/useAuth'
+import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { EmptyState } from '~/ui/states'
@@ -2044,8 +2045,14 @@ type CorridorContent = {
 }
 
 const runtimeConfig = useRuntimeConfig()
+const { marketingConsent } = usePrivacySettings()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 const normalizedSiteUrl = siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : (siteUrl || 'https://Remit-Scout.com')
+const showMonetizedAds = computed(() => (
+  !isPlus.value
+  && runtimeConfig?.public?.adsEnabled === true
+  && marketingConsent.value
+))
 
 const normalizeSlug = (value: string | string[] | undefined) => String(value || '').toLowerCase()
 const normalizeCurrencyParam = (value: string | string[] | null | undefined) => {

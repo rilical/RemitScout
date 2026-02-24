@@ -250,6 +250,10 @@ const rawConfig = {
       30 * 24 * 60 * 60,
     ),
     adminRefreshCookieName: process.env.PLANE_A_ADMIN_REFRESH_COOKIE_NAME || 'plane_a_admin_refresh',
+    adminRevocationFailClosed: toBoolean(
+      process.env.PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED,
+      isProdLikeEnvironment,
+    ),
     planeCBaseUrl: process.env.PLANE_C_BASE_URL || (isStrictConfig ? '' : 'http://localhost:4100'),
     adminEmails: (process.env.PLANE_A_ADMIN_EMAILS || '')
       .split(',')
@@ -293,6 +297,7 @@ const rawConfig = {
       maxBucketDeltaPct: toNumber(process.env.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT, 0),
       providerWeightedMidMarketEnabled: toBoolean(
         process.env.PLANE_A_B2C_PROVIDER_WEIGHTED_MID_MARKET,
+        envName === 'staging' || env === 'staging',
       ),
     },
     cors: {

@@ -60,6 +60,7 @@ export type ApiOptions = {
   planeCInternalApiTokenSecretJsonKey?: string
   planeAAdminEmails?: string[]
   planeAAdminIpAllowlist?: string[]
+  planeAAdminRevocationFailClosed?: boolean
   planeACorsOrigins?: string[]
   planeACorsAllowedHeaders?: string[]
   planeACorsAllowedMethods?: string[]
@@ -223,7 +224,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const fxRateRefreshEnabled = process.env.FX_RATE_REFRESH_ENABLED
   if (fxRateRefreshEnabled !== undefined) {
     planeAEnvironment.FX_RATE_REFRESH_ENABLED = fxRateRefreshEnabled
-  } else if (isDev) {
+  } else if (isDev || isStaging) {
     planeAEnvironment.FX_RATE_REFRESH_ENABLED = '1'
   }
   // Keep dev conservative to avoid exhausting Aurora connections during crashloops/scaling.
@@ -320,6 +321,11 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.planeACorsAllowCredentials !== undefined) {
     planeAEnvironment.PLANE_A_CORS_ALLOW_CREDENTIALS = options.planeACorsAllowCredentials
+      ? '1'
+      : '0'
+  }
+  if (options.planeAAdminRevocationFailClosed !== undefined) {
+    planeAEnvironment.PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED = options.planeAAdminRevocationFailClosed
       ? '1'
       : '0'
   }
@@ -699,7 +705,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     '/api/v1/providers',
     '/api/v1/providers/metadata',
     '/api/v1/providers/metadata/{id}',
+    '/api/v1/quotes/refresh-status',
+    '/api/v1/sessions/track',
     '/api/v1/billing/webhook',
+    '/api/v1/billing/pricing',
     '/api/v1/corridor-currencies',
     '/api/v1/corridor-limits',
     '/api/v1/rates/spot',
