@@ -10,6 +10,8 @@ const MFA_EXEMPT_PATHS = [
 ]
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  if (import.meta.server) return
+
   const { ensureHydrated, isAuthenticated, isAdmin, listMfaFactors } = useAuth()
   const { isEnterprise, hydrated: entHydrated } = useEntitlements()
 
