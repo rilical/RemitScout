@@ -908,7 +908,10 @@ const rawConfig = {
     oandaRateLimitBackoffMaxMs: toNumber(process.env.OANDA_RATE_LIMIT_BACKOFF_MAX_MS, 10000),
     oandaRateLimitJitterMs: toNumber(process.env.OANDA_RATE_LIMIT_JITTER_MS, 250),
     oandaFallbackMaxWaitMs: toNumber(process.env.OANDA_FALLBACK_MAX_WAIT_MS, 1500),
-    secondaryProvider: (process.env.FX_RATE_SECONDARY_PROVIDER || '').trim().toLowerCase(),
+    secondaryProvider: (
+      process.env.FX_RATE_SECONDARY_PROVIDER
+      || (isProdLikeEnvironment ? 'xe' : '')
+    ).trim().toLowerCase(),
     secondaryProviderBaseUrl: process.env.FX_RATE_SECONDARY_BASE_URL || '',
     secondaryProviderAuthHeader: process.env.FX_RATE_SECONDARY_AUTH_HEADER || '',
     secondaryProviderTimeoutMs: toNumber(process.env.FX_RATE_SECONDARY_TIMEOUT_MS, 5000),

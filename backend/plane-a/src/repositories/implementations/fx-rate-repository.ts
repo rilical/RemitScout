@@ -147,7 +147,10 @@ export class FxRateRepository implements IFxRateRepository {
         ? Date.now() - lastUpdated > freshnessHours * 60 * 60 * 1000
         : true
 
-      if ((row === null || isStale) && this.shouldUseOandaFallback()) {
+      if ((row === null || isStale) && this.shouldUseOandaFallback({
+        rowMissing: row === null,
+        isStale,
+      })) {
         logger.info('rate_missing_or_stale_fetching_oanda', {
           base_currency: baseCurrency,
           quote_currency: quoteCurrency,
@@ -219,11 +222,22 @@ export class FxRateRepository implements IFxRateRepository {
     return { current, history, cached }
   }
 
-  private shouldUseOandaFallback(): boolean {
-    if (config.fxRates?.refreshEnabled) {
-      return false
+  private shouldUseOandaFallback(input: { rowMissing: boolean; isStale: boolean }): boolean {
+    if (config.fxRates?.oandaFallbackEnabled) {
+      return true
     }
-    return config.fxRates?.oandaFallbackEnabled ?? false
+
+    // Keep stale records async-refreshed, but avoid null mid-market on request paths.
+    // When no DB row exists, do a bounded on-demand fetch so UI does not degrade to provider-weighted fallback.
+    if (input.rowMissing && config.fxRates?.refreshEnabled) {
+      return true
+    }
+
+    if (input.isStale && !config.fxRates?.refreshEnabled) {
+      return true
+    }
+
+    return false
   }
 
   private normalizeRate(rate: unknown): number | null {
