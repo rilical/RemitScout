@@ -9,6 +9,8 @@ type ComplianceStatusResponse = {
     soc2_type_ii?: {
       status?: string
       report_date?: string | null
+      report_state?: string
+      report_url?: string | null
       expires_on?: string | null
     }
   }
@@ -43,6 +45,10 @@ const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
 
 const soc2StatusLabel = computed(() => {
   const status = (complianceStatus.value?.certifications?.soc2_type_ii?.status || 'in_progress').toLowerCase()
+  const reportState = (complianceStatus.value?.certifications?.soc2_type_ii?.report_state || '').toLowerCase()
+  if (reportState === 'audited') {
+    return 'SOC 2 Type II status: audited.'
+  }
   if (status === 'compliant') return 'SOC 2 Type II status: compliant.'
   if (status === 'not_started') return 'SOC 2 Type II status: not started.'
   if (status === 'not_applicable') return 'SOC 2 Type II status: not applicable.'

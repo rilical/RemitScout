@@ -84,6 +84,8 @@ const cdkContextShape = {
   enableFrontend: optionalBool,
   enableCostGuardrails: optionalBool,
   enableComplianceServices: optionalBool,
+  enableMonitoring: optionalBool,
+  enableSynthetics: optionalBool,
   costGuardrailsCreateCur: optionalBool,
   enableGithubActionsOidc: optionalBool,
   enableCloudFront: optionalBool,

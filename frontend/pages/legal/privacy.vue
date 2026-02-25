@@ -633,6 +633,8 @@ type ComplianceStatusResponse = {
     soc2_type_ii?: {
       status?: string
       report_date?: string | null
+      report_state?: string
+      report_url?: string | null
       expires_on?: string | null
     }
   }
@@ -687,6 +689,8 @@ const formatStatusLabel = (status?: string) => {
   switch ((status || '').toLowerCase()) {
     case 'compliant':
       return 'Compliant'
+    case 'audited':
+      return 'Audited'
     case 'in_progress':
       return 'In progress'
     case 'not_started':
@@ -712,7 +716,7 @@ const ccpaStatusLabel = computed(() =>
 )
 const soc2StatusLabel = computed(() => {
   const soc2 = complianceStatus.value?.certifications?.soc2_type_ii
-  const status = formatStatusLabel(soc2?.status)
+  const status = formatStatusLabel(soc2?.report_state || soc2?.status)
   return `SOC 2 Type II: ${status.toLowerCase()}`
 })
 

@@ -151,7 +151,7 @@ export const createEcsTasks = (
   const workerHealthCheck: HealthCheck = {
     command: [
       'CMD-SHELL',
-      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/health\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      'node -e "require(\'http\').get(\'http://127.0.0.1:8080/healthz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
     ],
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),

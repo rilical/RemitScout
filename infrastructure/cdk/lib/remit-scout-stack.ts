@@ -184,6 +184,16 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('enableComplianceServices') ??
           process.env.ENABLE_COMPLIANCE_SERVICES,
       ) ?? envName !== 'dev'
+    const enableMonitoring =
+      toOptionalBool(
+        this.node.tryGetContext('enableMonitoring') ??
+          process.env.ENABLE_MONITORING,
+      ) ?? (envName !== 'dev')
+    const enableSynthetics =
+      toOptionalBool(
+        this.node.tryGetContext('enableSynthetics') ??
+          process.env.ENABLE_SYNTHETICS,
+      ) ?? (envName !== 'dev')
     const pinpointEnabled =
       toOptionalBool(
         cdkContext.pinpointEnabled ??
@@ -1481,14 +1491,16 @@ export class RemitScoutStack extends Stack {
     let monitoring: Awaited<ReturnType<typeof createMonitoring>> | undefined
     let synthetics: Awaited<ReturnType<typeof createSynthetics>> | undefined
 
-    if (!minimalMode && envName !== 'dev') {
+    if (!minimalMode && envName !== 'dev' && enableSynthetics) {
       // Create CloudWatch Synthetics canaries
       synthetics = createSynthetics(this, {
         envName,
         planeABaseUrl,
         alertsTopic: snsSubscriptions.criticalTopic,
       })
+    }
 
+    if (!minimalMode && envName !== 'dev' && enableMonitoring) {
       // Create monitoring with SNS topics from subscriptions
       monitoring = createMonitoring(this, {
         envName,

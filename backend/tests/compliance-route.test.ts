@@ -20,7 +20,13 @@ describe('compliance route', () => {
       certifications: {
         gdpr: expect.any(String),
         ccpa: expect.any(String),
-        soc2_type_ii: expect.any(String),
+        soc2_type_ii: {
+          status: expect.any(String),
+          report_state: expect.any(String),
+          report_date: expect.any(String),
+          report_url: expect.any(String),
+          expires_on: expect.any(String),
+        },
       },
       privacy_controls: {
         data_minimization: 'enforced',

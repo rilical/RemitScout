@@ -27,6 +27,11 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 - [ ] `PUBLIC_API_BASE`
 - [ ] `PUBLIC_SUPABASE_URL`
 - [ ] `PUBLIC_SUPABASE_ANON_KEY`
+- [ ] `COMPLIANCE_SOC2_TYPE_II_STATUS`
+- [ ] `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE`
+- [ ] `COMPLIANCE_SOC2_TYPE_II_REPORT_DATE`
+- [ ] `COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON`
+- [ ] `COMPLIANCE_SOC2_TYPE_II_REPORT_URL`
 - [ ] `PUBLIC_GA4_MEASUREMENT_ID`
 - [ ] `PUBLIC_GOOGLE_ADS_CONVERSION_ID`
 - [ ] `PUBLIC_ENABLE_EZOIC=1`
@@ -107,6 +112,7 @@ Source template:
 - [ ] Run workflow: `.github/workflows/deploy.yml` with `env=staging` (PASS).
 - [ ] Runtime config validation passes (`ci:config-validate` in staging profile).
 - [ ] Authenticated watchlist/alerts smoke passes (`pnpm -C backend ci:alerts-watchlists-smoke` in deploy pipeline).
+- [ ] For enterprise-mode staging (`PLANE_A_REQUIRE_API_KEY=1`), SOC 2 report state is allowed (`in_progress`/`audited`) and not expired/revoked in readiness checks.
 
 ## 10) Functional checks after deploy
 - [ ] Plane A health and key API routes respond.

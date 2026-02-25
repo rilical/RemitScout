@@ -1021,6 +1021,12 @@ jobs:
       WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
+      PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+      COMPLIANCE_SOC2_TYPE_II_STATUS: ${{ vars.COMPLIANCE_SOC2_TYPE_II_STATUS }}
+      COMPLIANCE_SOC2_TYPE_II_REPORT_STATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_STATE }}
+      COMPLIANCE_SOC2_TYPE_II_REPORT_DATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_DATE }}
+      COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
+      COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
       PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
@@ -1071,6 +1077,64 @@ jobs:
             exit 1
           fi
           echo "Found successful staging readiness run: ${run_id}"
+
+      - name: SOC 2 Type II enterprise launch gate
+        shell: bash
+        env:
+          PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+          COMPLIANCE_SOC2_TYPE_II_STATUS: ${{ vars.COMPLIANCE_SOC2_TYPE_II_STATUS }}
+          COMPLIANCE_SOC2_TYPE_II_REPORT_STATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_STATE }}
+          COMPLIANCE_SOC2_TYPE_II_REPORT_DATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_DATE }}
+          COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
+          COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ "${PLANE_A_REQUIRE_API_KEY:-0}" != "1" ]; then
+            echo "SOC 2 launch gate skipped: PLANE_A_REQUIRE_API_KEY is not set to 1."
+            exit 0
+          fi
+
+          report_state="${COMPLIANCE_SOC2_TYPE_II_REPORT_STATE:-${COMPLIANCE_SOC2_TYPE_II_STATUS:-}}"
+          if [ -z "$report_state" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be set for enterprise mode."
+            exit 1
+          fi
+
+          if [ "$report_state" != "audited" ]; then
+            echo "SOC 2 launch gate failed: report_state must be audited for enterprise production promotion (received \"$report_state\")."
+            echo "Set COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=audited and provide a valid report date/window."
+            exit 1
+          fi
+
+          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE:-}" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is required when report_state is audited."
+            exit 1
+          fi
+          if ! date -d "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE}" +%s >/dev/null 2>&1; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date."
+            exit 1
+          fi
+
+          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_URL:-}" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_URL is required when report_state is audited."
+            exit 1
+          fi
+
+          if [ -n "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON:-}" ]; then
+            if ! date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s >/dev/null 2>&1; then
+              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date."
+              exit 1
+            fi
+            if [ "$(date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s)" -le "$(date +%s)" ]; then
+              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future."
+              exit 1
+            fi
+          else
+            echo "SOC 2 launch gate warning: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is empty."
+          fi
+
+          echo "SOC 2 Type II production launch gate passed (report_state=audited)."
 
       - uses: ./.github/actions/setup-node-pnpm
         with:

@@ -45,6 +45,7 @@ const RECOMMENDED_KEYS: Requirement[] = [
 ]
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+const VALID_SOC2_REPORT_STATES = new Set(['in_progress', 'audited', 'expired', 'revoked'])
 
 const getValue = (key: string) => String(process.env[key] || '').trim()
 
@@ -53,6 +54,12 @@ const isMissing = (value: string) => value.length === 0
 const looksLikePlaceholder = (value: string) => PLACEHOLDER_PATTERNS.some(pattern => pattern.test(value))
 
 const hasStagingMarker = (value: string) => /staging/i.test(value)
+
+const isValidDateValue = (value: string) => {
+  if (!value) return false
+  const parsed = Date.parse(value)
+  return !Number.isNaN(parsed)
+}
 
 const splitCsv = (value: string) =>
   value
@@ -104,6 +111,11 @@ const run = () => {
 
   const environment = getValue('ENVIRONMENT').toLowerCase()
   const nodeEnv = getValue('NODE_ENV').toLowerCase()
+  const enterpriseApiMode = getValue('PLANE_A_REQUIRE_API_KEY')
+  const soc2ReportState = (getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_STATE') || getValue('COMPLIANCE_SOC2_TYPE_II_STATUS')).toLowerCase()
+  const soc2ReportDate = getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE')
+  const soc2ReportExpiresOn = getValue('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON')
+
   if (environment !== 'staging') {
     policyViolations.push(`ENVIRONMENT must be "staging" (received "${environment || '<empty>'}")`)
   }
@@ -193,6 +205,41 @@ const run = () => {
   const ezoic = getValue('PUBLIC_ENABLE_EZOIC').toLowerCase()
   if (ezoic !== 'true' && ezoic !== '1') {
     policyViolations.push('PUBLIC_ENABLE_EZOIC must be true/1 for this go-live profile')
+  }
+
+  if (soc2ReportState) {
+    if (!VALID_SOC2_REPORT_STATES.has(soc2ReportState)) {
+      policyViolations.push(
+        `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be in_progress|audited|expired|revoked (received "${soc2ReportState}")`,
+      )
+    }
+  }
+
+  if (enterpriseApiMode === '1') {
+    if (!soc2ReportState) {
+      policyViolations.push(
+        'COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is required when enterprise API mode is enabled',
+      )
+    }
+    if (soc2ReportState === 'expired' || soc2ReportState === 'revoked') {
+      policyViolations.push(
+        `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is "${soc2ReportState}" while enterprise API mode is enabled; enterprise onboarding requires an active audited SOC 2 state`,
+      )
+    }
+    if (soc2ReportState === 'audited' && !soc2ReportDate) {
+      policyViolations.push('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE must be set when SOC 2 report_state is audited')
+    }
+    if (soc2ReportDate && !isValidDateValue(soc2ReportDate)) {
+      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date (${soc2ReportDate})`)
+    }
+    if (soc2ReportExpiresOn && !isValidDateValue(soc2ReportExpiresOn)) {
+      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date (${soc2ReportExpiresOn})`)
+    }
+    if (soc2ReportExpiresOn && isValidDateValue(soc2ReportExpiresOn)) {
+      if (new Date(soc2ReportExpiresOn).getTime() <= Date.now()) {
+        policyViolations.push('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future for active enterprise mode')
+      }
+    }
   }
 
   const publicSupabaseUrl = getValue('PUBLIC_SUPABASE_URL')

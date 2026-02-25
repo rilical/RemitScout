@@ -41,6 +41,22 @@ const toComplianceStatus = (
   return fallback
 }
 
+const toSoc2ReportState = (
+  value: string | undefined,
+  fallback: 'in_progress' | 'audited' | 'expired' | 'revoked',
+) => {
+  const normalized = (value || '').trim().toLowerCase()
+  if (
+    normalized === 'in_progress'
+    || normalized === 'audited'
+    || normalized === 'expired'
+    || normalized === 'revoked'
+  ) {
+    return normalized
+  }
+  return fallback
+}
+
 const toRateLimitFallbackMode = (value: string | undefined): 'memory' | 'reject' | 'skip' => {
   const normalized = (value || '').trim().toLowerCase()
   const nodeEnv = (process.env.NODE_ENV || '').trim().toLowerCase()
@@ -1126,7 +1142,9 @@ const rawConfig = {
       ccpa: toComplianceStatus(process.env.COMPLIANCE_CCPA_STATUS, 'compliant'),
       soc2_type_ii: {
         status: toComplianceStatus(process.env.COMPLIANCE_SOC2_TYPE_II_STATUS, 'in_progress'),
+        report_state: toSoc2ReportState(process.env.COMPLIANCE_SOC2_TYPE_II_REPORT_STATE, 'in_progress'),
         report_date: process.env.COMPLIANCE_SOC2_TYPE_II_REPORT_DATE || '',
+        report_url: process.env.COMPLIANCE_SOC2_TYPE_II_REPORT_URL || '',
         expires_on: process.env.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON || '',
       },
     },

@@ -30,6 +30,16 @@ Scope: staging and planned production launch
 - Incident response contacts/runbook required for production launch packet.
 - Status: **Pending security + ops approval**.
 
+## 4a) SOC 2 Commercial Readiness
+
+- Enterprise API/key surface is present in product and legal docs, so SOC 2 posture is now explicitly treated as a launch prerequisite before paid institutional onboarding.
+- Current interface policy:
+  - `COMPLIANCE_SOC2_TYPE_II_STATUS` is tracked (`in_progress` by default).
+  - `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` governs external statement transitions (`in_progress|audited|expired|revoked`).
+  - `COMPLIANCE_SOC2_TYPE_II_REPORT_DATE`, `COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON`, and `COMPLIANCE_SOC2_TYPE_II_REPORT_URL` are available for procurement evidence handling.
+- Deployment gates now block production promotion when enterprise mode is enabled and `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` is not `audited`.
+- Status: **Blocked for enterprise production sale without audited report state.**
+
 ## 5) Security Validation Summary
 
 - WAF managed rules + rate limits configured.

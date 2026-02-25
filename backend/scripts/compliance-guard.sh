@@ -44,6 +44,16 @@ require_contains \
   "admin allowlist strict config must exist"
 
 require_contains \
+  "backend/shared/config.ts" \
+  "COMPLIANCE_SOC2_TYPE_II_REPORT_STATE" \
+  "SOC 2 report state config must exist"
+
+require_contains \
+  "backend/shared/config.ts" \
+  "COMPLIANCE_SOC2_TYPE_II_REPORT_URL" \
+  "SOC 2 report URL support must exist in compliance config"
+
+require_contains \
   "backend/scripts/seed-launch-users.ts" \
   "SEED_PRINT_PASSWORDS_ENABLED" \
   "seed script must enforce explicit env opt-in before exporting passwords"

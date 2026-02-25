@@ -45,6 +45,14 @@
       "type": "boolean",
       "description": "Deploy reduced infrastructure footprint (disables monitoring/synthetics block) for bootstrap scenarios."
     },
+    "enableMonitoring": {
+      "type": "boolean",
+      "description": "Enable monitoring stack creation (CloudWatch alarms, dashboards, alerts)."
+    },
+    "enableSynthetics": {
+      "type": "boolean",
+      "description": "Enable CloudWatch Synthetics canary creation."
+    },
     "planeADbSecretArn": {
       "type": "string",
       "description": "ARN of Secrets Manager secret for Plane A database credentials"

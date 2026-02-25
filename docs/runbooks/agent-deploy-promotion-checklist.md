@@ -96,6 +96,12 @@ Exit criteria:
 Execution:
 - [ ] Ensure staging full passed on exact commit SHA to be promoted.
 - [ ] Verify successful `staging-go-live-readiness` run exists for that same SHA.
+- [ ] Confirm enterprise mode controls are production-ready when applicable:
+  - `PLANE_A_REQUIRE_API_KEY=1`
+  - `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=audited`
+  - `COMPLIANCE_SOC2_TYPE_II_REPORT_DATE` is set
+  - `COMPLIANCE_SOC2_TYPE_II_REPORT_URL` is set
+  - `COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON` is set and future-dated
 - [ ] Create/push release tag from that SHA:
   - `git tag vX.Y.Z <sha>`
   - `git push origin vX.Y.Z`
@@ -122,6 +128,7 @@ Exit criteria:
 - Critical alarm active in target env.
 - Auth/JWT validation broken on staging full.
 - Environment contract drift (missing required vars/secrets).
+- Enterprise path is active (`PLANE_A_REQUIRE_API_KEY=1`) but `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` is not `audited`.
 
 ## Evidence bundle to attach in every promotion handoff
 - Target SHA and tag (if prod).

@@ -7,7 +7,13 @@ export const complianceRoutes = async (app: FastifyInstance) => {
     certifications: {
       gdpr: config.compliance.certifications.gdpr,
       ccpa: config.compliance.certifications.ccpa,
-      soc2_type_ii: config.compliance.certifications.soc2_type_ii.status,
+      soc2_type_ii: {
+        status: config.compliance.certifications.soc2_type_ii.status,
+        report_state: config.compliance.certifications.soc2_type_ii.report_state,
+        report_date: config.compliance.certifications.soc2_type_ii.report_date,
+        report_url: config.compliance.certifications.soc2_type_ii.report_url,
+        expires_on: config.compliance.certifications.soc2_type_ii.expires_on,
+      },
     },
     privacy_controls: {
       data_minimization: 'enforced',
