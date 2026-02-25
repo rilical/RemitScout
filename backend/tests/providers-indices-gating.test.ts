@@ -6,7 +6,8 @@ const mockListByCorridor = vi.fn()
 const mockListLatestByCorridorAllMethods = vi.fn()
 const mockGetRateRecord = vi.fn()
 const mockGetIndicesLatest = vi.fn()
-const mockGetFreshnessSloMinutes = vi.fn()
+const mockGetPriorityInfo = vi.fn()
+const mockEnqueueRefreshRequest = vi.fn()
 
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
@@ -59,7 +60,7 @@ vi.mock('../plane-a/src/repositories', () => ({
     listActiveB2cProvidersByCountry: mockListActiveB2cProvidersByCountry,
   })),
   CorridorPriorityRepository: vi.fn().mockImplementation(() => ({
-    getFreshnessSloMinutes: mockGetFreshnessSloMinutes,
+    getPriorityInfo: mockGetPriorityInfo,
   })),
   CorridorCapabilityRepository: vi.fn().mockImplementation(() => ({
     listByCorridor: mockListByCorridor,
@@ -94,6 +95,27 @@ const buildQuote = (overrides: Partial<Record<string, any>> = {}) => ({
   ...overrides,
 })
 
+const buildGoldIndicesRow = (overrides: Partial<Record<string, any>> = {}) => ({
+  date: new Date(),
+  corridor_id: 'US-PH-USD-PHP',
+  amount_bucket: 500,
+  method_profile: 'standard_bank',
+  teer_rate: 1.2,
+  rci_ratio: 0.02,
+  rvi_bps: 12,
+  provider_count_binned: 5,
+  provider_count: 5,
+  suppression_flag: false,
+  suppression_reason: null,
+  weighting_model: 'synthetic_volume_v1',
+  methodology_version: 'indices_v2',
+  mid_market_rate: 1.25,
+  weight_confidence: 0.8,
+  weight_window_days: 30,
+  created_at: new Date(),
+  ...overrides,
+})
+
 describe('providers indices gating', () => {
   let app: FastifyInstance
   let mockReply: Partial<FastifyReply>
@@ -108,29 +130,52 @@ describe('providers indices gating', () => {
       source: 'oanda',
       last_updated: new Date().toISOString(),
     })
-    mockGetIndicesLatest.mockResolvedValue({
-      date: new Date(),
-      corridor_id: 'US-PH-USD-PHP',
-      amount_bucket: 500,
-      method_profile: 'standard_bank',
-      teer_rate: 1.2,
-      rci_ratio: 0.02,
-      rvi_bps: 12,
-      provider_count_binned: 5,
-      provider_count: 5,
-      suppression_flag: false,
-      suppression_reason: null,
-      weighting_model: 'synthetic_volume_v1',
-      methodology_version: 'indices_v2',
-      mid_market_rate: 1.25,
-      weight_confidence: 0.8,
-      weight_window_days: 30,
-      created_at: new Date(),
+    mockGetIndicesLatest.mockResolvedValue(buildGoldIndicesRow())
+    mockGetPriorityInfo.mockResolvedValue({
+      priorityTier: null,
+      freshnessSloMinutes: null,
     })
-    mockGetFreshnessSloMinutes.mockResolvedValue(null)
+    mockEnqueueRefreshRequest.mockResolvedValue(null)
 
     app = {
       get: vi.fn(),
+      container: {
+        pool: {},
+        repositories: {
+          fxRate: {
+            getRateRecord: mockGetRateRecord,
+          },
+          latestQuote: {
+            listLatestByCorridorAllMethods: mockListLatestByCorridorAllMethods,
+          },
+          quoteRefresh: {
+            enqueueRequest: mockEnqueueRefreshRequest,
+          },
+          rightsMatrix: {
+            listActiveB2cProvidersByCountry: mockListActiveB2cProvidersByCountry,
+            listIndexPermissionsByProviders: vi.fn(async (providerIds: string[]) => (
+              providerIds.map((providerId) => ({
+                provider_id: providerId,
+                allowed_collect: true,
+                allowed_b2c: true,
+                stoplist_status: 'active',
+                allowed_in_teer: true,
+                allowed_in_rci: true,
+                allowed_in_rvi: true,
+              }))
+            )),
+          },
+          corridorPriority: {
+            getPriorityInfo: mockGetPriorityInfo,
+          },
+          corridorCapability: {
+            listByCorridor: mockListByCorridor,
+          },
+          goldIndices: {
+            getIndicesLatest: mockGetIndicesLatest,
+          },
+        },
+      },
     } as any
 
     mockReply = {
@@ -156,6 +201,7 @@ describe('providers indices gating', () => {
         corridor_id: 'US-PH-USD-PHP',
         amount_bucket: 100,
         method: 'bank',
+        live: true,
       },
     }
 
@@ -183,6 +229,7 @@ describe('providers indices gating', () => {
         corridor_id: 'US-PH-USD-PHP',
         amount_bucket: 100,
         method: 'bank',
+        live: true,
       },
     }
 
@@ -215,6 +262,7 @@ describe('providers indices gating', () => {
         corridor_id: 'US-PH-USD-PHP',
         amount_bucket: 500,
         method: 'wallet',
+        live: true,
       },
     }
 
@@ -222,6 +270,77 @@ describe('providers indices gating', () => {
 
     expect(result.indicesReason).toBe('unsupported_method')
     expect(result.indices).toBeUndefined()
+  })
+
+  it('falls back to search-derived indices when Gold indices are suppressed for insufficient providers', async () => {
+    mockGetIndicesLatest.mockResolvedValue(buildGoldIndicesRow({
+      provider_count: 2,
+      provider_count_binned: 2,
+      suppression_flag: true,
+      suppression_reason: 'insufficient_providers',
+      teer_rate: null,
+      rci_ratio: null,
+      rvi_bps: null,
+    }))
+    mockListLatestByCorridorAllMethods.mockResolvedValue([
+      buildQuote({ amount_bucket: 100, send_amount: 100, fee_amount: 2, implied_fx_rate: 55 }),
+    ])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 100,
+        method: 'bank',
+        live: true,
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.indicesReason).toBe('computed_from_quotes')
+    expect(result.indices?.source).toBe('search_estimate')
+    expect(result.indices?.teer).not.toBeNull()
+    expect(result.indices?.rci).not.toBeNull()
+    expect(result.indices?.reason).toContain('fallback:insufficient_providers')
+  })
+
+  it('keeps Gold suppression when reason is outlier', async () => {
+    mockGetIndicesLatest.mockResolvedValue(buildGoldIndicesRow({
+      provider_count: 4,
+      provider_count_binned: 3,
+      suppression_flag: true,
+      suppression_reason: 'rate_inversion_or_outlier',
+      teer_rate: 1.1,
+      rci_ratio: 0.03,
+      rvi_bps: 21,
+    }))
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 500,
+        method: 'bank',
+        live: true,
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.indicesReason).toBe('rate_inversion_or_outlier')
+    expect(result.indices?.source).toBe('gold')
+    expect(result.indices?.suppressionFlag).toBe(true)
+    expect(result.indices?.teer).toBeNull()
+    expect(result.indices?.rci).toBeNull()
   })
 
   it('returns schema-complete quotes_unavailable payload when no quotes exist', async () => {
@@ -237,6 +356,7 @@ describe('providers indices gating', () => {
         corridor_id: 'US-PH-USD-PHP',
         amount_bucket: 500,
         method: 'bank',
+        live: true,
       },
     }
 

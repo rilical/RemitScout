@@ -1724,6 +1724,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         : false
 
       let indices: CorridorIndices | undefined
+      let suppressedGoldIndices: CorridorIndices | undefined
       let indicesReason: string | null = null
       let fallbackTriggerReason: string | null = null
       const indicesMethodProfile = resolveIndicesMethodProfile(requestedMethod)
@@ -1748,26 +1749,48 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             if (suppressed) {
               indicesReason = latest.suppression_reason || 'suppressed'
               fallbackTriggerReason = indicesReason
+              suppressedGoldIndices = {
+                teer: null,
+                rvi_bps: null,
+                rci: null,
+                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                amount: indicesAmountBasis,
+                midMarketRate: null,
+                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
+                weightConfidence: latest.weight_confidence ?? null,
+                weightWindowDays: latest.weight_window_days ?? null,
+                source: 'gold',
+                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
+                indicesBucket: indicesAmountBasis,
+                methodProfile: indicesMethodProfile,
+                suppressionFlag: latest.suppression_flag,
+                suppressionReason: latest.suppression_reason ?? null,
+                basisAmount: indicesAmountBasis,
+                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                reason: latest.suppression_reason ?? 'suppressed',
+              }
             }
-            indices = {
-              teer: suppressed ? null : latest.teer_rate ?? null,
-              rvi_bps: suppressed ? null : latest.rvi_bps ?? null,
-              rci: suppressed ? null : latest.rci_ratio ?? null,
-              providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-              amount: indicesAmountBasis,
-              midMarketRate: suppressed ? null : latest.mid_market_rate ?? null,
-              weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
-              weightConfidence: latest.weight_confidence ?? null,
-              weightWindowDays: latest.weight_window_days ?? null,
-              source: 'gold',
-              updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
-              indicesBucket: indicesAmountBasis,
-              methodProfile: indicesMethodProfile,
-              suppressionFlag: latest.suppression_flag,
-              suppressionReason: latest.suppression_reason ?? null,
-              basisAmount: indicesAmountBasis,
-              providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-              reason: suppressed ? (latest.suppression_reason ?? 'suppressed') : null,
+            if (!suppressed) {
+              indices = {
+                teer: latest.teer_rate ?? null,
+                rvi_bps: latest.rvi_bps ?? null,
+                rci: latest.rci_ratio ?? null,
+                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                amount: indicesAmountBasis,
+                midMarketRate: latest.mid_market_rate ?? null,
+                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
+                weightConfidence: latest.weight_confidence ?? null,
+                weightWindowDays: latest.weight_window_days ?? null,
+                source: 'gold',
+                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
+                indicesBucket: indicesAmountBasis,
+                methodProfile: indicesMethodProfile,
+                suppressionFlag: latest.suppression_flag,
+                suppressionReason: latest.suppression_reason ?? null,
+                basisAmount: indicesAmountBasis,
+                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                reason: null,
+              }
             }
           }
         } catch (error) {
@@ -1780,7 +1803,13 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         }
       }
 
-      if (!indices && indicesMethodProfile && midMarketRate && midMarketRate > 0) {
+      const canUseQuoteFallback =
+        fallbackTriggerReason === null
+        || fallbackTriggerReason === 'gold_indices_unavailable'
+        || fallbackTriggerReason === 'insufficient_providers'
+        || fallbackTriggerReason === 'insufficient_coverage'
+
+      if (!indices && canUseQuoteFallback && indicesMethodProfile && midMarketRate && midMarketRate > 0) {
         const effectiveAmount = Number(requestedAmount ?? bucketUsed ?? indicesAmountBasis)
         const amountScale = Number.isFinite(effectiveAmount) && effectiveAmount > 0
           ? (indicesAmountBasis / effectiveAmount)
@@ -1847,6 +1876,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             indicesReason = 'computed_from_quotes'
           }
         }
+      }
+
+      if (!indices && suppressedGoldIndices) {
+        indices = suppressedGoldIndices
       }
 
       const responseBase: ProvidersResponseBase = {
