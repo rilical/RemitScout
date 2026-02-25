@@ -31,6 +31,35 @@ const resolveOtlpEndpoint = (): string =>
   configValue(process.env.OTEL_EXPORTER_OTLP_ENDPOINT) ||
   configValue(config.observability.tracing.otlpEndpoint)
 
+const parseOtlpHeaders = (): Record<string, string> => {
+  const raw =
+    configValue(process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS) ||
+    configValue(process.env.OTEL_EXPORTER_OTLP_HEADERS)
+  if (!raw) {
+    const newRelicIngestKey = configValue(process.env.NEW_RELIC_INGEST_KEY)
+    return newRelicIngestKey ? { 'api-key': newRelicIngestKey } : {}
+  }
+
+  const headers: Record<string, string> = {}
+  for (const token of raw.split(',')) {
+    const pair = token.trim()
+    if (!pair) continue
+    const separatorIndex = pair.indexOf('=')
+    if (separatorIndex <= 0) {
+      logger.warn('tracing_otlp_header_invalid', { header: pair })
+      continue
+    }
+    const key = pair.slice(0, separatorIndex).trim()
+    const value = pair.slice(separatorIndex + 1).trim()
+    if (!key || !value) {
+      logger.warn('tracing_otlp_header_invalid', { header: pair })
+      continue
+    }
+    headers[key] = value
+  }
+  return headers
+}
+
 const resolveTraceSampleRate = (): number => {
   const raw = configValue(process.env.TRACE_SAMPLE_RATE)
   if (raw) {
@@ -84,6 +113,7 @@ export const initTracing = (serviceName: string): void => {
   const requestedXray = exporterModes.includes('xray')
   const requestedOtlp = exporterModes.includes('otlp')
   const otlpEndpoint = resolveOtlpEndpoint()
+  const otlpHeaders = parseOtlpHeaders()
   const useOtlp = Boolean(otlpEndpoint) && (requestedXray || requestedOtlp)
 
   try {
@@ -116,7 +146,10 @@ export const initTracing = (serviceName: string): void => {
     }
 
     if (useOtlp && otlpEndpoint) {
-      const exporter = new OTLPTraceExporter({ url: otlpEndpoint })
+      const exporter = new OTLPTraceExporter({
+        url: otlpEndpoint,
+        ...(Object.keys(otlpHeaders).length > 0 ? { headers: otlpHeaders } : {}),
+      })
       provider.addSpanProcessor(new Processor(exporter))
     }
 
@@ -136,6 +169,7 @@ export const initTracing = (serviceName: string): void => {
       version,
       exporters: exporterModes,
       otlp_endpoint: useOtlp ? otlpEndpoint : undefined,
+      otlp_header_keys: useOtlp ? Object.keys(otlpHeaders) : undefined,
     })
   } catch (error) {
     // Don't crash if Jaeger is unavailable

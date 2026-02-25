@@ -20,6 +20,13 @@
     "verifier:smoke": "node scripts/verifier/smoke.mjs",
     "dev:all": "bash scripts/dev/start-local.sh",
     "dev:backend": "RUN_FRONTEND=0 bash scripts/dev/start-local.sh",
+    "ops:newrelic:dashboards": "node ops/newrelic/bootstrap-dashboards.mjs",
+    "ops:newrelic:alerts": "node ops/newrelic/sync-alerts.mjs",
+    "ops:newrelic:cloud-links": "node ops/newrelic/sync-cloud-links.mjs",
+    "ops:newrelic:workloads": "node ops/newrelic/sync-workloads.mjs",
+    "ops:newrelic:notifications": "node ops/newrelic/sync-notifications-workflows.mjs",
+    "ops:newrelic:full": "node ops/newrelic/bootstrap-all.mjs",
+    "ops:newrelic:verify": "node ops/newrelic/verify-signals.mjs",
     "verifier:contract": "node scripts/verifier/check-quality-contract.mjs",
     "verifier:workflow-consumer-contract": "node scripts/verifier/check-workflow-consumer.mjs"
   },

@@ -21,6 +21,7 @@ Detailed docs live under:
 8. Deploy strategy: `docs/architecture/deploy-strategy.md`
 9. Runbooks (human-facing): `docs/runbooks/`
 10. DR runbook: `docs/runbooks/disaster-recovery.md`
+11. New Relic observability runbook: `docs/runbooks/newrelic-observability.md`
 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.

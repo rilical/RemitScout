@@ -148,9 +148,20 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otelEndpoint = options.otelLambdaLayerArn
-    ? 'http://127.0.0.1:4318/v1/traces'
-    : undefined
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+    (options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined)
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
+  const tracingEnv: Record<string, string> = {
+    TRACING_EXPORTER: tracingExporter,
+    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
+    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
+    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
+  }
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
   const lambdaArchitecture = options.lambdaArchitecture
 
@@ -159,8 +170,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -344,8 +354,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     PLANE_C_ENABLE_IAM_AUTH: enablePlaneCIamAuth ? '1' : '0',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',

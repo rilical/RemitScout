@@ -122,6 +122,14 @@ export const createEcsTasks = (
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+    'http://127.0.0.1:4318/v1/traces'
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
   const enableTelemetry = process.env.ENABLE_TELEMETRY
     ? process.env.ENABLE_TELEMETRY !== '0'
     : true
@@ -392,7 +400,9 @@ export const createEcsTasks = (
     DB_STATEMENT_TIMEOUT_POLICY:
       planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: 'http://127.0.0.1:4318/v1/traces',
+    OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint,
+    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
+    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',

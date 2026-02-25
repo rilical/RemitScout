@@ -4,6 +4,15 @@ import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { getMetrics, metricsContentType, metricsRegistry } from './metrics-registry'
 
 const BUSINESS_NAMESPACE = 'RemitScout/Business'
+const normalizeEnv = (value?: string): string => {
+  const raw = (value || '').toLowerCase().trim()
+  if (!raw) return 'dev'
+  if (raw === 'production') return 'prod'
+  if (raw === 'development') return 'dev'
+  return raw
+}
+const environmentDimension = normalizeEnv(process.env.ENVIRONMENT || process.env.NODE_ENV)
+const serviceDimension = (process.env.SERVICE_NAME || process.env.OTEL_SERVICE_NAME || '').trim()
 
 export const recordBusinessMetric = (
   name: string,
@@ -11,12 +20,17 @@ export const recordBusinessMetric = (
   dimensions?: Record<string, string>,
   options?: { unit?: Parameters<typeof recordCloudWatchMetric>[0]['unit']; highCardinality?: boolean },
 ): void => {
+  const mergedDimensions: Record<string, string> = {
+    ...(dimensions || {}),
+    environment: dimensions?.environment || environmentDimension,
+    ...(serviceDimension ? { service: dimensions?.service || serviceDimension } : {}),
+  }
   recordCloudWatchMetric({
     namespace: BUSINESS_NAMESPACE,
     name,
     value,
     unit: options?.unit,
-    dimensions,
+    dimensions: mergedDimensions,
     highCardinality: options?.highCardinality,
   })
 }

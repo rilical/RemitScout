@@ -325,14 +325,14 @@ export default defineNuxtConfig({
         ? [
             // Ezoic requires privacy scripts to load before the header script.
             {
-              key: 'ezoic-privacy-min',
+              'key': 'ezoic-privacy-min',
               'data-cfasync': 'false',
-              src: 'https://cmp.gatekeeperconsent.com/min.js',
+              'src': 'https://cmp.gatekeeperconsent.com/min.js',
             },
             {
-              key: 'ezoic-privacy-cmp',
+              'key': 'ezoic-privacy-cmp',
               'data-cfasync': 'false',
-              src: 'https://the.gatekeeperconsent.com/cmp.min.js',
+              'src': 'https://the.gatekeeperconsent.com/cmp.min.js',
             },
             {
               key: 'ezoic-header',
@@ -403,6 +403,8 @@ export default defineNuxtConfig({
         { rel: 'dns-prefetch', href: 'https://t.contentsquare.net' }, // Hotjar/Contentsquare
         { rel: 'dns-prefetch', href: 'https://www.ezojs.com' }, // Ezoic ads
         { rel: 'dns-prefetch', href: 'https://www.google-analytics.com' }, // GA
+        { rel: 'dns-prefetch', href: 'https://js-agent.newrelic.com' }, // New Relic browser agent
+        { rel: 'dns-prefetch', href: 'https://bam.nr-data.net' }, // New Relic beacon
       ],
     },
   },
@@ -460,6 +462,16 @@ export default defineNuxtConfig({
       xPixelId: process.env.PUBLIC_X_PIXEL_ID || process.env.X_PIXEL_ID || '',
       tiktokPixelId: process.env.PUBLIC_TIKTOK_PIXEL_ID || process.env.TIKTOK_PIXEL_ID || '',
       clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
+      newRelicBrowserEnabled: parseEnvFlag(
+        resolveEnvValue('PUBLIC_NEW_RELIC_BROWSER_ENABLED', 'NEW_RELIC_BROWSER_ENABLED') || '',
+      ),
+      newRelicAccountId: process.env.PUBLIC_NEW_RELIC_ACCOUNT_ID || '',
+      newRelicTrustKey: process.env.PUBLIC_NEW_RELIC_TRUST_KEY || '',
+      newRelicAgentId: process.env.PUBLIC_NEW_RELIC_AGENT_ID || '',
+      newRelicApplicationId: process.env.PUBLIC_NEW_RELIC_APPLICATION_ID || '',
+      newRelicLicenseKey: process.env.PUBLIC_NEW_RELIC_LICENSE_KEY || '',
+      newRelicBeacon: process.env.PUBLIC_NEW_RELIC_BEACON || 'bam.nr-data.net',
+      newRelicErrorBeacon: process.env.PUBLIC_NEW_RELIC_ERROR_BEACON || 'bam.nr-data.net',
       contentsquareTagSrc:
         process.env.PUBLIC_CONTENTSQUARE_TAG_SRC
         || process.env.CONTENTSQUARE_TAG_SRC

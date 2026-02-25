@@ -11,11 +11,23 @@ if (isStrictEnv) {
   }
 
   const exporter = (process.env.TRACING_EXPORTER || '').toLowerCase()
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+    ''
   const hasTracing =
-    Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT) ||
+    Boolean(otlpEndpoint) ||
     (exporter !== '' && exporter !== 'none')
   if (!hasTracing) {
     missing.push('TRACING_EXPORTER or OTEL_EXPORTER_OTLP_ENDPOINT')
+  }
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS ||
+    ''
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY || ''
+  if (otlpEndpoint.includes('nr-data.net') && !otlpHeaders && !newRelicIngestKey) {
+    missing.push('OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY (required for New Relic OTLP)')
   }
 
   if (process.env.CLOUDWATCH_METRICS_ENABLED === '0') {

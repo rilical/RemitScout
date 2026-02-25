@@ -104,6 +104,30 @@ describe('tracing', () => {
       })
     })
 
+    it('passes OTLP headers to exporter when provided', () => {
+      process.env.OTEL_EXPORTER_OTLP_HEADERS = 'api-key=test-ingest-key'
+      initTracing('test-service')
+
+      expect(vi.mocked(OTLPTraceExporter)).toHaveBeenCalledWith({
+        url: 'http://otel.local/v1/traces',
+        headers: {
+          'api-key': 'test-ingest-key',
+        },
+      })
+    })
+
+    it('uses NEW_RELIC_INGEST_KEY when OTLP headers are not explicitly set', () => {
+      process.env.NEW_RELIC_INGEST_KEY = 'nr-ingest-key'
+      initTracing('test-service')
+
+      expect(vi.mocked(OTLPTraceExporter)).toHaveBeenCalledWith({
+        url: 'http://otel.local/v1/traces',
+        headers: {
+          'api-key': 'nr-ingest-key',
+        },
+      })
+    })
+
     it('uses BatchSpanProcessor in production', () => {
       process.env.NODE_ENV = 'production'
       initTracing('test-service')

@@ -390,6 +390,10 @@ jobs:
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
       NUXT_PUBLIC_SENTRY_DSN: ${{ secrets.NUXT_PUBLIC_SENTRY_DSN }}
+      TRACING_EXPORTER: ${{ vars.TRACING_EXPORTER || 'xray' }}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
       SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -410,6 +414,7 @@ jobs:
       PUBLIC_REDDIT_PIXEL_ID: ${{ vars.PUBLIC_REDDIT_PIXEL_ID }}
       PUBLIC_X_PIXEL_ID: ${{ vars.PUBLIC_X_PIXEL_ID }}
       PUBLIC_TIKTOK_PIXEL_ID: ${{ vars.PUBLIC_TIKTOK_PIXEL_ID }}
+      PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
       PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
@@ -504,6 +509,12 @@ jobs:
           fi
           if [ -z "${SENTRY_SECRET_ARN:-}" ] || [ -z "${SENTRY_SECRET_JSON_KEY:-}" ]; then
             echo "Missing SENTRY_SECRET_ARN / SENTRY_SECRET_JSON_KEY (configure in GitHub environment vars: staging)."
+            exit 1
+          fi
+          if [[ "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" == *"nr-data.net"* ]] && \
+            [ -z "${OTEL_EXPORTER_OTLP_HEADERS:-}" ] && \
+            [ -z "${NEW_RELIC_INGEST_KEY:-}" ]; then
+            echo "Missing OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY for New Relic OTLP endpoint."
             exit 1
           fi
 
@@ -1015,6 +1026,10 @@ jobs:
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
       NUXT_PUBLIC_SENTRY_DSN: ${{ secrets.NUXT_PUBLIC_SENTRY_DSN }}
+      TRACING_EXPORTER: ${{ vars.TRACING_EXPORTER || 'xray' }}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+      OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+      NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
       SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1035,6 +1050,8 @@ jobs:
       PUBLIC_LINKEDIN_PARTNER_ID: ${{ vars.PUBLIC_LINKEDIN_PARTNER_ID }}
       PUBLIC_REDDIT_PIXEL_ID: ${{ vars.PUBLIC_REDDIT_PIXEL_ID }}
       PUBLIC_X_PIXEL_ID: ${{ vars.PUBLIC_X_PIXEL_ID }}
+      PUBLIC_TIKTOK_PIXEL_ID: ${{ vars.PUBLIC_TIKTOK_PIXEL_ID }}
+      PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
       PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
@@ -1204,6 +1221,12 @@ jobs:
           fi
           if [ -z "${SENTRY_SECRET_ARN:-}" ] || [ -z "${SENTRY_SECRET_JSON_KEY:-}" ]; then
             echo "Missing SENTRY_SECRET_ARN / SENTRY_SECRET_JSON_KEY (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
+          if [[ "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" == *"nr-data.net"* ]] && \
+            [ -z "${OTEL_EXPORTER_OTLP_HEADERS:-}" ] && \
+            [ -z "${NEW_RELIC_INGEST_KEY:-}" ]; then
+            echo "Missing OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY for New Relic OTLP endpoint."
             exit 1
           fi
 

@@ -86,6 +86,14 @@ const clarityProjectId = runtimeConfig.public.clarityProjectId
 const contentsquareTagSrc = runtimeConfig.public.contentsquareTagSrc
 const redditPixelId = runtimeConfig.public.redditPixelId
 const xPixelId = runtimeConfig.public.xPixelId
+const newRelicBrowserEnabled = runtimeConfig.public.newRelicBrowserEnabled === true
+const newRelicAccountId = runtimeConfig.public.newRelicAccountId
+const newRelicTrustKey = runtimeConfig.public.newRelicTrustKey || newRelicAccountId
+const newRelicAgentId = runtimeConfig.public.newRelicAgentId
+const newRelicApplicationId = runtimeConfig.public.newRelicApplicationId || newRelicAgentId
+const newRelicLicenseKey = runtimeConfig.public.newRelicLicenseKey
+const newRelicBeacon = runtimeConfig.public.newRelicBeacon || 'bam.nr-data.net'
+const newRelicErrorBeacon = runtimeConfig.public.newRelicErrorBeacon || newRelicBeacon
 const route = useRoute()
 const allowAnalytics = computed(() => runtimeConfig.public.analyticsEnabled === true && analyticsConsent.value)
 const allowMarketing = computed(() => marketingConsent.value)
@@ -187,6 +195,7 @@ let linkedInReady = false
 let redditPixelReady = false
 let xPixelReady = false
 let tikTokReady = false
+let newRelicReady = false
 let ezoicReady = false
 
 const ensureGoogleTagManager = () => {
@@ -302,6 +311,55 @@ const ensureContentsquareTag = () => {
   if (!allowAnalytics.value || !contentsquareTagSrc || contentsquareReady) return
   ensureExternalScript('rs-contentsquare-tag-src', contentsquareTagSrc)
   contentsquareReady = true
+}
+
+const ensureNewRelicBrowserAgent = () => {
+  if (!import.meta.client) return
+  if (!allowAnalytics.value || !newRelicBrowserEnabled || newRelicReady) return
+  if (!newRelicAccountId || !newRelicAgentId || !newRelicApplicationId || !newRelicLicenseKey) return
+
+  const win = window as DynamicWindow
+  win.NREUM = win.NREUM || {}
+  win.NREUM.init = {
+    session_replay: {
+      enabled: true,
+      block_selector: '',
+      mask_text_selector: '*',
+      sampling_rate: 10.0,
+      error_sampling_rate: 100.0,
+      mask_all_inputs: true,
+      collect_fonts: true,
+      inline_images: false,
+      inline_stylesheet: true,
+      fix_stylesheets: true,
+      preload: false,
+      mask_input_options: {},
+    },
+    distributed_tracing: { enabled: true },
+    performance: { capture_measures: true },
+    browser_consent_mode: { enabled: false },
+    privacy: { cookies_enabled: true },
+    ajax: { deny_list: [newRelicBeacon], capture_payloads: 'off' },
+  }
+  win.NREUM.loader_config = {
+    accountID: newRelicAccountId,
+    trustKey: newRelicTrustKey,
+    agentID: newRelicAgentId,
+    licenseKey: newRelicLicenseKey,
+    applicationID: newRelicApplicationId,
+  }
+  win.NREUM.info = {
+    beacon: newRelicBeacon,
+    errorBeacon: newRelicErrorBeacon,
+    licenseKey: newRelicLicenseKey,
+    applicationID: newRelicApplicationId,
+    sa: 1,
+  }
+  ensureExternalScript(
+    'rs-newrelic-browser-agent-src',
+    'https://js-agent.newrelic.com/nr-loader-spa-current.min.js',
+  )
+  newRelicReady = true
 }
 
 const ensureLinkedInInsight = () => {
@@ -483,6 +541,7 @@ const ensureEzoic = () => {
 const ensureMarketingTags = () => {
   if (!import.meta.client) return
   if (allowAnalytics.value) {
+    ensureNewRelicBrowserAgent()
     ensureGoogleTagManager()
     ensureGoogleTags()
     ensureClarity()

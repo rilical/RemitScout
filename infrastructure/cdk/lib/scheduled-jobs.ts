@@ -253,9 +253,20 @@ export const createScheduledJobs = (
   const oandaThrottleEnv = collectOandaThrottleEnv()
   const providerThrottleEnv = collectPlaneBProviderThrottleEnv()
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otelEndpoint = options.otelLambdaLayerArn
-    ? 'http://127.0.0.1:4318/v1/traces'
-    : undefined
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+    (options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined)
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
+  const tracingEnv: Record<string, string> = {
+    TRACING_EXPORTER: tracingExporter,
+    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
+    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
+    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
+  }
   const minimalMode = options.minimalMode === true
 
   if (minimalMode) {
@@ -343,8 +354,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -428,8 +438,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -523,8 +532,7 @@ export const createScheduledJobs = (
   const alertEvaluationSchedulerEnvironment: Record<string, string> = {
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -604,8 +612,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -704,8 +711,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -800,8 +806,7 @@ export const createScheduledJobs = (
     DB_QUERY_TIMEOUT_MS: '300000',
     SMART_ALERTS_LOOKBACK_DAYS: isDev ? '7' : '42',
     SMART_ALERTS_MIN_SAMPLE_DAYS: isDev ? '3' : '21',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -890,8 +895,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -975,8 +979,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1052,8 +1055,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1149,8 +1151,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1232,8 +1233,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1511,8 +1511,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1619,8 +1618,7 @@ export const createScheduledJobs = (
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -1938,8 +1936,7 @@ export const createScheduledJobs = (
         NODE_ENV: 'production',
         PGSSLMODE: 'require',
         DB_DISABLE_STATEMENT_TIMEOUT: '1',
-        TRACING_EXPORTER: tracingExporter,
-        ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+        ...tracingEnv,
         CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
         CLOUDWATCH_NAMESPACE: 'RemitScout',
         CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -2019,8 +2016,7 @@ export const createScheduledJobs = (
           NODE_ENV: 'production',
           PGSSLMODE: 'require',
           DB_DISABLE_STATEMENT_TIMEOUT: '1',
-          TRACING_EXPORTER: tracingExporter,
-          ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+          ...tracingEnv,
           CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
           CLOUDWATCH_NAMESPACE: 'RemitScout',
           CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -2164,17 +2160,29 @@ const createPlaneBLambdaJob = ({
 }: LambdaJobOptions): Rule => {
   const isDev = options.envName === 'dev'
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = isDev ? 'none' : 'xray'
-  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
-  const otelEndpoint = otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined
+  const tracingExporter = process.env.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+    (otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined)
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
+  const tracingEnv: Record<string, string> = {
+    TRACING_EXPORTER: tracingExporter,
+    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
+    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
+    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
+  }
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -2267,17 +2275,29 @@ const createPlaneCLambdaJob = ({
 }: LambdaJobOptions): Rule => {
   const isDev = options.envName === 'dev'
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = isDev ? 'none' : 'xray'
-  const tracingMode = isDev ? Tracing.DISABLED : Tracing.ACTIVE
-  const otelEndpoint = otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined
+  const tracingExporter = process.env.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
+    (otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined)
+  const otlpHeaders =
+    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
+    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
+  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
+  const tracingEnv: Record<string, string> = {
+    TRACING_EXPORTER: tracingExporter,
+    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
+    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
+    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
+  }
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
     NODE_ENV: 'production',
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
-    TRACING_EXPORTER: tracingExporter,
-    ...(otelEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otelEndpoint } : {}),
+    ...tracingEnv,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',

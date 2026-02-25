@@ -106,6 +106,10 @@ const allowDbFallback = (() => {
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
 const b2bLegacyMaxQueueAgeSeconds = toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS, 0)
+const resolvedOtlpEndpoint =
+  process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+  ''
 
 const getDatabaseUrl = (primary?: string, fallback?: string) => {
   if (primary && primary.trim()) {
@@ -1069,9 +1073,9 @@ const rawConfig = {
     tracing: {
       exporter: (
         process.env.TRACING_EXPORTER ||
-        (process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? 'xray' : '')
+        (resolvedOtlpEndpoint ? 'xray' : '')
       ).toLowerCase(),
-      otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || '',
+      otlpEndpoint: resolvedOtlpEndpoint,
       filterHealthChecks: toBoolean(process.env.TRACE_FILTER_HEALTH_CHECKS),
       sampleRate: toNumber(process.env.TRACE_SAMPLE_RATE, NaN),
     },

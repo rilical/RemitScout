@@ -81,6 +81,10 @@ Execution:
   - corridor/provider data returns non-empty for known supported lanes
   - no sustained queue backlog or DLQ growth
 - [ ] Verify frontend staging host + TLS + API base are correct.
+- [ ] Verify New Relic staging observability:
+  - `node ops/newrelic/bootstrap-dashboards.mjs`
+  - `node ops/newrelic/sync-alerts.mjs`
+  - `NEW_RELIC_TARGET_ENV=staging node ops/newrelic/verify-signals.mjs`
 - [ ] Re-run staging smoke after migration/user seeding.
 - [ ] Re-check critical alarms are still clear.
 
@@ -114,6 +118,10 @@ Execution:
   - post-deploy smoke success
   - alarm rollback gate clear
   - `/remit-scout/prod/last-good-image` updated
+- [ ] Verify New Relic prod observability:
+  - `node ops/newrelic/bootstrap-dashboards.mjs`
+  - `node ops/newrelic/sync-alerts.mjs`
+  - `NEW_RELIC_TARGET_ENV=prod node ops/newrelic/verify-signals.mjs`
 
 Exit criteria:
 - [ ] Prod deployment successful for tagged SHA.

@@ -4,12 +4,29 @@ import { randomUUID } from 'crypto'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { computeBucketSelection } from '../../../shared/amount-bucket'
+import { recordBusinessMetric } from '../../../shared/business-metrics'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 import { ValidationError } from '../../../shared/errors'
 import type { PlaneAContainer } from '../container'
 
 const logger = createLogger('plane-a.telemetry')
+
+const recordTelemetryBusinessMetric = (
+  name: string,
+  value: number,
+  dimensions?: Record<string, string>,
+  unit: 'Count' | 'None' = 'Count',
+) => {
+  try {
+    recordBusinessMetric(name, value, dimensions, { unit })
+  } catch (error) {
+    logger.debug('telemetry_business_metric_record_failed', {
+      metric_name: name,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
 
 const searchSchema = z.object({
   session_id: z.string().min(8),
@@ -277,6 +294,14 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         page_path: input.page_path ?? null,
       })
 
+      const [fromCountry = 'unknown', toCountry = 'unknown'] = input.corridor_id.split('-')
+      recordTelemetryBusinessMetric('telemetry_search_events_total', 1, {
+        from_country: fromCountry.toUpperCase(),
+        to_country: toCountry.toUpperCase(),
+        payin: (input.payin || 'unknown').toLowerCase(),
+        payout: (input.payout || 'unknown').toLowerCase(),
+      })
+
       return { success: true }
     } catch (error) {
       logger.warn('telemetry_search_failed', {
@@ -352,6 +377,20 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         quoted_fee: input.quoted_fee ?? null,
       })
 
+      const providerId = input.provider_id.toLowerCase()
+      recordTelemetryBusinessMetric('telemetry_click_events_total', 1, {
+        provider_id: providerId,
+        is_affiliate: input.is_affiliate ? '1' : '0',
+      })
+      recordTelemetryBusinessMetric('telemetry_provider_visits_total', 1, {
+        provider_id: providerId,
+      })
+      if (input.is_affiliate) {
+        recordTelemetryBusinessMetric('telemetry_affiliate_click_events_total', 1, {
+          provider_id: providerId,
+        })
+      }
+
       return { success: true }
     } catch (error) {
       logger.warn('telemetry_click_failed', {
@@ -411,6 +450,22 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         li_fat_id: input.li_fat_id ?? null,
       })
 
+      const providerId = input.provider_id.toLowerCase()
+      const source = (input.source || 'unknown').toLowerCase()
+      const currency = (input.conversion_currency || 'UNKNOWN').toUpperCase()
+      recordTelemetryBusinessMetric('telemetry_affiliate_conversions_total', 1, {
+        provider_id: providerId,
+        source,
+      })
+      if (Number.isFinite(input.conversion_value)) {
+        recordTelemetryBusinessMetric(
+          'telemetry_affiliate_conversion_value',
+          Number(input.conversion_value),
+          { provider_id: providerId, conversion_currency: currency, source },
+          'None',
+        )
+      }
+
       return { success: true }
     } catch (error) {
       logger.warn('telemetry_conversion_failed', {
@@ -447,6 +502,20 @@ export const telemetryRoutes = async (app: FastifyInstance) => {
         msclkid: parsed.data.msclkid ?? null,
         ttclid: parsed.data.ttclid ?? null,
         li_fat_id: parsed.data.li_fat_id ?? null,
+      })
+
+      const acquisitionSource = (() => {
+        const utmSource = parsed.data.utm?.utm_source || parsed.data.utm?.source
+        if (typeof utmSource === 'string' && utmSource.trim()) return utmSource.trim().toLowerCase()
+        if (parsed.data.gclid) return 'google_ads'
+        if (parsed.data.fbclid) return 'meta_ads'
+        if (parsed.data.ttclid) return 'tiktok_ads'
+        if (parsed.data.li_fat_id) return 'linkedin_ads'
+        if (parsed.data.msclkid) return 'microsoft_ads'
+        return 'direct_or_unknown'
+      })()
+      recordTelemetryBusinessMetric('telemetry_sessions_started_total', 1, {
+        acquisition_source: acquisitionSource,
       })
 
       return {
