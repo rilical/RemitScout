@@ -201,7 +201,7 @@
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <span class="text-body-sm text-neutral-300">365-day rate history</span>
+                <span class="text-body-sm text-neutral-300">90-day rate history</span>
               </div>
               <div class="flex items-start gap-2">
                 <svg

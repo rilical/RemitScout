@@ -24,7 +24,10 @@
       </div>
     </section>
 
-    <section class="mx-auto max-w-5xl px-page-x py-10">
+    <section
+      v-reveal
+      class="mx-auto max-w-5xl px-page-x py-10"
+    >
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <NuxtLink
           v-for="doc in docs"

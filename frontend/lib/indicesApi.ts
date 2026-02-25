@@ -15,3 +15,8 @@ export async function getIndexSeries(params: IndexSeriesParams): Promise<IndexSe
   const headers = api_key ? { 'x-api-key': api_key } : undefined
   return await request<IndexSeriesResponse>('/indices/series', { query, headers })
 }
+
+export async function getPublicIndexSeries(params: Omit<IndexSeriesParams, 'api_key'>): Promise<IndexSeriesResponse> {
+  const { request } = useApi()
+  return await request<IndexSeriesResponse>('/public/indices/series', { query: params })
+}

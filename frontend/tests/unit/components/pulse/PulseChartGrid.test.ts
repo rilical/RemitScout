@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { getChartById } from '~/lib/pulseChartRegistry'
@@ -20,7 +20,7 @@ describe('PulseChartGrid', () => {
     payoutMethod: 'bank',
   }
 
-  it('shows pending insight for charts marked unavailable in availability metadata', () => {
+  it('shows pending insight for charts marked unavailable in availability metadata', async () => {
     const metadata = getChartById('indices-confidence')
     if (!metadata) throw new Error('indices-confidence chart metadata missing')
 
@@ -62,8 +62,10 @@ describe('PulseChartGrid', () => {
       },
     })
 
+    await nextTick()
+
     const preview = wrapper.findAll('.preview')
-      .find((node) => node.text().startsWith('indices-confidence|'))
+      .find(node => node.text().startsWith('indices-confidence|'))
     expect(preview).toBeTruthy()
     expect(preview!.text()).toContain('Data pending for this corridor.')
   })

@@ -387,7 +387,7 @@
               <span class="font-semibold">Remit-Scout Plus</span>
             </div>
             <p class="text-body-sm text-neutral-300 mb-4">
-              Unlock 365 days of history, CSV exports, and premium insights.
+              Unlock 90 days of history, CSV exports, and premium insights.
             </p>
             <NuxtLink
               to="/plus"

@@ -28,7 +28,7 @@ describe('entitlements', () => {
         exports_enabled: true,
         exports_max_days: 30,
         alerts_max: 16,
-        history_max_days: 365,
+        history_max_days: 90,
         watchlist_items: 16,
         api_access: false,
         api_tier: null,
@@ -141,7 +141,7 @@ describe('entitlements', () => {
       const enterprise = getEntitlementsForPlan('enterprise')
 
       expect(free.history_max_days).toBe(30)
-      expect(plus.history_max_days).toBe(365)
+      expect(plus.history_max_days).toBe(90)
       expect(enterprise.history_max_days).toBeNull()
     })
 

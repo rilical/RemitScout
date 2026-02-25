@@ -40,6 +40,8 @@ Backend (providers of truth):
 - **Delivery time**: ranges must be consistent (min/max) and should not render as “Unknown” when data exists.
 - **Affiliate links**: outbound URLs must come from backend; never hardcode in UI.
 - **Localization**: currency and formatting must use returned numeric fields, not string parsing.
+- **History entitlement policy**: Plus history is capped at 90 days; Enterprise remains extended/unlimited.
+- **Plan-gated ranges**: dashboard and Pulse selectors must enforce entitlement-consistent ranges (for example, 6M/1Y visible only for Enterprise).
 
 ## Contract map (key endpoints and fields)
 Use route definitions to confirm field names and types before asserting.
@@ -141,6 +143,8 @@ Backend:
 - `corridor_unsupported`: should be 4xx with clear message.
 - `quotes_unavailable`: should be 503 or 404 based on contract, but must be consistent.
 - `rate_unavailable`: should be explicit; UI must show “no rate history”.
+- `/rates/history` empty responses must preserve backend `status` (`warming` vs `unavailable`) and `message`;
+  clients must not collapse both into a generic “No rate history yet”.
 - All errors must include `requestId` when present.
 - Error bodies must be stable across environments.
 

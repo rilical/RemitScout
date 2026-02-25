@@ -103,6 +103,7 @@ const LazyChartSlot = defineComponent({
 
     onMounted(() => {
       if (!containerRef.value) return
+      const observedEl = containerRef.value as unknown as Element
       observer = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
@@ -112,7 +113,7 @@ const LazyChartSlot = defineComponent({
         },
         { rootMargin: '200px' },
       )
-      observer.observe(containerRef.value)
+      observer.observe(observedEl)
     })
 
     onUnmounted(() => {
@@ -120,7 +121,7 @@ const LazyChartSlot = defineComponent({
     })
 
     return () =>
-      h('div', { ref: containerRef, 'data-chart-id': lazyProps.chartId }, [
+      h('div', { 'ref': containerRef, 'data-chart-id': lazyProps.chartId }, [
         isVisible.value
           ? slots.default?.()
           : h('div', {

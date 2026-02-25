@@ -1028,10 +1028,10 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
 
 	        const reason = smartAlertDisabledReason.value
 	        const smartDisabled = reason !== null
-	        const isDataIssue = reason && !['plus_required', 'loading'].includes(reason)
-	        const isLoading = reason === 'loading'
-	        const unavailableLabel = !isDataIssue
-	          ? undefined
+        const isDataIssue = Boolean(reason && !['plus_required', 'loading'].includes(reason))
+        const isLoading = reason === 'loading'
+        const unavailableLabel = !isDataIssue
+          ? undefined
 	          : reason === 'rolling_out'
 	            ? 'Collecting'
 	            : reason === 'not_offered'
@@ -1043,12 +1043,12 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
 	          value: 'sendScore' as const,
 	          label: 'Intelligent Alert',
 	          disabled: smartDisabled,
-	          locked: !isPlus.value,
-	          unavailable: isDataIssue,
-	          unavailableLabel,
-	          loading: isLoading,
-	          unavailableReason: smartAlertDisabledMessage.value,
-	        })
+          locked: !isPlus.value,
+          unavailable: isDataIssue,
+          unavailableLabel,
+          loading: isLoading,
+          unavailableReason: smartAlertDisabledMessage.value ?? undefined,
+        })
 	      }
 	      options.push(
 	        { value: 'rci_threshold' as const, label: 'RCI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },

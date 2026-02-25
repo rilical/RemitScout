@@ -260,7 +260,10 @@
     </section>
 
     <!-- Countries by Region -->
-    <section class="relative py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal
+      class="relative py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-16">
           <h2 class="text-h1 font-bold text-rs-fg mb-6">
@@ -464,7 +467,10 @@
     <WhyTrustUs />
 
     <!-- Mini FAQ Section -->
-    <section class="relative py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-white">
+    <section
+      v-reveal
+      class="relative py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-white"
+    >
       <div class="mx-auto max-w-6xl px-page-x">
         <div class="text-center mb-12">
           <h2 class="text-h2 font-bold text-rs-fg mb-4">

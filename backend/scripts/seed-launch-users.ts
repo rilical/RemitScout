@@ -91,6 +91,9 @@ export const parseArgsFromArgv = (argv: string[]): ScriptArgs => {
   }
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]
+    if (arg === '--') {
+      continue
+    }
     if (arg === '--help') {
       usage()
       process.exit(0)

@@ -136,7 +136,7 @@ export const buildChartData = (chartId: string): ChartData => {
     tooltipCopy: 'No data yet.',
     sourceNotes: 'Live data pending.',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   }
 
   const overrides = chartOverrides[chartId]

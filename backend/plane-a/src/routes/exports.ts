@@ -34,6 +34,17 @@ export const exportsRoutes = async (app: FastifyInstance) => {
       })
     }
 
+    if (parsed.data.dataType === 'indices') {
+      const entitlements = request.entitlementsContext?.entitlements
+      if (!entitlements?.indices_api) {
+        reply.code(403)
+        return {
+          error: 'indices_export_enterprise_only',
+          message: 'TEER, RCI, and RVI exports require an Enterprise plan.',
+        }
+      }
+    }
+
     const actor = resolveActor(request, reply)
     if (!actor) return
 

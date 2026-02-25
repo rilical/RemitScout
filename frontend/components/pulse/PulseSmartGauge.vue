@@ -88,7 +88,7 @@
             {{ analystLevelLabel }}
           </span>
           <span class="text-body-sm font-mono text-neutral-400">
-            {{ bpsDelta >= 0 ? '+' : '' }}{{ bpsDelta.toFixed(1) }} bps
+            {{ bpsDelta >= 0 ? '+' : '' }}{{ bpsDelta.toFixed(1) }}%
           </span>
         </div>
 
@@ -145,32 +145,6 @@
                 :class="data.percentFromAvg >= 0 ? 'text-brand-600' : 'text-danger-600'"
               >
                 {{ data.percentFromAvg >= 0 ? '+' : '' }}{{ data.percentFromAvg.toFixed(2) }}%
-              </div>
-            </div>
-          </div>
-
-          <!-- Secondary Metrics (Analyst Only) -->
-          <div class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-700">
-            <div class="text-center">
-              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
-                Volatility (7D)
-              </div>
-              <div class="text-body font-bold font-mono text-white">
-                {{ volatility7D.toFixed(2) }}%
-              </div>
-              <div class="text-body-sm text-neutral-500">
-                σ = {{ stdDev.toFixed(4) }}
-              </div>
-            </div>
-            <div class="text-center">
-              <div class="text-body-sm text-neutral-500 uppercase tracking-wider">
-                Spread Rank
-              </div>
-              <div class="text-body font-bold font-mono text-white">
-                #{{ spreadRank }} of {{ totalProviders }}
-              </div>
-              <div class="text-body-sm text-neutral-500">
-                {{ spreadBps }} bps avg
               </div>
             </div>
           </div>
@@ -319,28 +293,6 @@ const bpsDelta = computed(() => {
   return data.value.percentFromAvg * 100
 })
 
-const volatility7D = computed(() => {
-  if (!data.value) return 0
-  return Math.abs(data.value.percentFromAvg * 1.5) + 0.8
-})
-
-const stdDev = computed(() => {
-  if (!data.value) return 0
-  return data.value.currentRate * 0.0025
-})
-
-const spreadRank = computed(() => {
-  if (!data.value) return 1
-  return Math.max(1, Math.floor((100 - data.value.percentile) / 10))
-})
-
-const totalProviders = computed(() => 12)
-
-const spreadBps = computed(() => {
-  if (!data.value) return 0
-  return Math.round(45 + (100 - data.value.percentile) * 0.5)
-})
-
 const dataLatency = computed(() => {
   if (!data.value?.lastUpdated) return 0
   const updatedAt = new Date(data.value.lastUpdated).getTime()
@@ -356,10 +308,10 @@ const lastTick = computed(() => {
 const analystRecommendation = computed(() => {
   if (!data.value) return ''
   const recs: Record<SmartSendLevel, string> = {
-    great: `Execution window open. Current spread ${spreadBps.value}bps below 30D VWAP. Recommend immediate execution.`,
-    good: `Favorable conditions. Spread compression detected. Consider phased execution over next 4-6 hours.`,
-    fair: `Neutral signal. Spreads at historical average. No urgency to execute.`,
-    wait: `Elevated spreads detected. Recommend deferring execution. Set alert for ${Math.round(data.value.percentile + 15)}th percentile.`,
+    great: `Execution window open. Rate is ${Math.abs(data.value.percentFromAvg).toFixed(2)}% above 30D VWAP. Recommend immediate execution.`,
+    good: `Favorable conditions. Rate above average. Consider phased execution over next 4-6 hours.`,
+    fair: `Neutral signal. Rate near 30-day average. No urgency to execute.`,
+    wait: `Below-average rate detected. Recommend deferring execution. Set alert for ${Math.round(data.value.percentile + 15)}th percentile.`,
   }
   return recs[data.value.level]
 })

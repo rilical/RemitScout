@@ -194,7 +194,7 @@ describe('pulse chart route', () => {
     })
   })
 
-  it('clamps non-full requests to 30d/30d at API level', async () => {
+  it('clamps non-full requests to 30d/90d at API level', async () => {
     mockGetEntries.mockResolvedValue([
       {
         key: 'pulse:chart:leader-edge',
@@ -226,7 +226,7 @@ describe('pulse chart route', () => {
     const candidates = mockGetEntries.mock.calls[0]?.[0] as string[]
     expect(Array.isArray(candidates)).toBe(true)
     expect(candidates[0]).toContain('timeframe=30d')
-    expect(candidates[0]).toContain('range=30d')
+    expect(candidates[0]).toContain('range=90d')
   })
 
   it('forces teaser charts to 7d preview for non-full users', async () => {

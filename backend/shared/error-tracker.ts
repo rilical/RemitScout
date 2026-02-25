@@ -277,13 +277,13 @@ export const captureMessage = (
   }
 }
 
-export const setUserContext = (userId: string, email?: string): void => {
+export const setUserContext = (userId: string, _email?: string): void => {
   if (!initialized) {
     return
   }
 
   try {
-    Sentry.setUser({ id: userId, email })
+    Sentry.setUser({ id: userId })
   } catch (error) {
     logger.warn('sentry_set_user_failed', {
       user_id: userId,

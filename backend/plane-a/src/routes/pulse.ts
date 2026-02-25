@@ -555,6 +555,8 @@ const clampLiteTimeframe = (value: string | null | undefined): string => {
 const clampLiteRange = (value: string | null | undefined): string => {
   const normalized = normalizePulseRange(value)
   if (normalized === '7d') return '7d'
+  if (normalized === '90d') return '90d'
+  if (normalized === '365d') return '90d'
   return '30d'
 }
 

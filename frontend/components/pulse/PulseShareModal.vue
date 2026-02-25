@@ -23,7 +23,7 @@
           id="pulse-share-title"
           class="text-body-lg font-bold text-white"
         >
-          {{ mode === 'share' ? 'Share Chart' : 'Embed Chart' }}
+          {{ modeTitle }}
         </h2>
         <button
           class="rounded-lg p-2 text-neutral-400 hover:bg-neutral-700 hover:text-white transition-colors"
@@ -35,6 +35,27 @@
             :size="20"
             class="text-current"
           />
+        </button>
+      </div>
+
+      <!-- Tab navigation (embed mode) -->
+      <div
+        v-if="mode === 'embed'"
+        class="flex border-b border-neutral-700"
+      >
+        <button
+          class="flex-1 px-4 py-3 text-body-sm font-semibold transition-colors"
+          :class="embedTab === 'iframe' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-neutral-400 hover:text-neutral-200'"
+          @click="embedTab = 'iframe'"
+        >
+          Embed Code
+        </button>
+        <button
+          class="flex-1 px-4 py-3 text-body-sm font-semibold transition-colors"
+          :class="embedTab === 'image' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-neutral-400 hover:text-neutral-200'"
+          @click="embedTab = 'image'"
+        >
+          Download Image
         </button>
       </div>
 
@@ -117,10 +138,10 @@
           </div>
         </template>
 
-        <!-- Embed Mode -->
-        <template v-else>
+        <!-- Embed Mode: Iframe Tab -->
+        <template v-else-if="embedTab === 'iframe'">
           <p class="mb-4 text-neutral-400">
-            Use the code below to embed this chart on your website.
+            Paste this code into your website. The chart updates automatically with live data, branded with your site's look.
           </p>
 
           <!-- Options -->
@@ -204,6 +225,86 @@
               />
             </div>
           </div>
+
+          <!-- Attribution note -->
+          <p class="mt-4 text-[11px] text-neutral-500">
+            Embeds are free to use. Charts auto-update with live data and include a "Powered by Remit-Scout" backlink.
+          </p>
+        </template>
+
+        <!-- Embed Mode: Download Image Tab -->
+        <template v-else-if="embedTab === 'image'">
+          <p class="mb-4 text-neutral-400">
+            Download a high-resolution PNG of this chart with full branding and source attribution. Perfect for blog posts, reports, and presentations.
+          </p>
+
+          <!-- Image includes -->
+          <div class="mb-6 rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+            <p class="mb-3 text-body-sm font-semibold text-white">
+              Image includes:
+            </p>
+            <ul class="space-y-2 text-body-sm text-neutral-400">
+              <li class="flex items-center gap-2">
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
+                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                </span>
+                Remit-Scout branded header with chart title
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
+                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                </span>
+                Full chart at 2x resolution (retina-ready)
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
+                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                </span>
+                Source attribution and remit-scout.com backlink
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
+                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                </span>
+                Corridor and date metadata in footer
+              </li>
+            </ul>
+          </div>
+
+          <!-- Download button -->
+          <button
+            class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            :disabled="imageExporting || !chartContainerRef"
+            @click="downloadImage"
+          >
+            {{ imageExporting ? 'Generating...' : 'Download PNG' }}
+          </button>
+
+          <p
+            v-if="imageError"
+            class="mt-2 text-body-sm text-danger-600"
+          >
+            {{ imageError }}
+          </p>
+
+          <p
+            v-if="!chartContainerRef"
+            class="mt-2 text-[11px] text-neutral-500"
+          >
+            Image export is available when a chart is currently rendered on the page.
+          </p>
+
+          <!-- Usage tips -->
+          <div class="mt-6 rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+            <p class="mb-2 text-body-sm font-semibold text-white">
+              Usage tips for bloggers
+            </p>
+            <ul class="space-y-1 text-[11px] text-neutral-400">
+              <li>Include an alt-text like: "{{ shareTitle }} — Source: Remit-Scout"</li>
+              <li>Link the image back to remit-scout.com/pulse for SEO credit</li>
+              <li>Use the embed code above for live-updating charts on your site</li>
+            </ul>
+          </div>
         </template>
       </div>
     </div>
@@ -216,14 +317,19 @@ import type { PulseFilters } from '~/types/pulse'
 import { getChartById } from '~/lib/pulseChartRegistry'
 import { Icon } from '~/ui'
 import { useFocusTrap } from '~/composables/useFocusTrap'
+import { useChartImageExport } from '~/composables/useChartImageExport'
 
 interface Props {
   chartId: string
   filters: PulseFilters
   mode: 'share' | 'embed'
+  /** Optional ref to the chart container element for image export */
+  chartContainerRef?: HTMLElement | null
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  chartContainerRef: null,
+})
 
 defineEmits<{
   close: []
@@ -237,8 +343,17 @@ const copiedEmbed = ref(false)
 const embedTheme = ref<'dark' | 'light'>('dark')
 const embedWidth = ref('100%')
 const embedHeight = ref('400')
+const embedTab = ref<'iframe' | 'image'>('iframe')
+const imageError = ref<string | null>(null)
+
+const { exportAsImage, exporting: imageExporting } = useChartImageExport()
 
 const chartMeta = computed(() => getChartById(props.chartId))
+
+const modeTitle = computed(() => {
+  if (props.mode === 'share') return 'Share Chart'
+  return embedTab.value === 'image' ? 'Download Chart Image' : 'Embed Chart'
+})
 
 const baseUrl = computed(() => {
   if (typeof window === 'undefined') return ''
@@ -252,6 +367,11 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   deactivate()
+})
+
+const corridorLabel = computed(() => {
+  if (props.filters.corridor === 'global') return 'Global'
+  return props.filters.corridor.toUpperCase()
 })
 
 const queryParams = computed(() => {
@@ -281,7 +401,10 @@ const embedCode = computed(() => {
   width="${embedWidth.value}"
   height="${embedHeight.value}"
   frameborder="0"
-  style="border-radius: 8px;"
+  loading="lazy"
+  style="border: 0; border-radius: 8px;"
+  title="${shareTitle.value} — Remit-Scout"
+  allow="clipboard-write"
 ></iframe>`
 })
 
@@ -333,6 +456,22 @@ async function copyEmbedCode() {
   }
   catch (e) {
     useLogger('PulseShareModal').error('Failed to copy', e)
+  }
+}
+
+async function downloadImage() {
+  if (!props.chartContainerRef) return
+  imageError.value = null
+  try {
+    await exportAsImage(props.chartContainerRef, {
+      title: shareTitle.value,
+      subtitle: `${corridorLabel.value} · $${props.filters.amount}`,
+      source: `Source: Remit-Scout · remit-scout.com/pulse · ${corridorLabel.value}`,
+      filename: `remit-scout-${props.chartId}-${props.filters.corridor}`,
+    })
+  }
+  catch (e) {
+    imageError.value = e instanceof Error ? e.message : 'Failed to generate image.'
   }
 }
 </script>

@@ -42,7 +42,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'RCI measures total cost (fees + FX markup) as a % of send amount.',
     sourceNotes: 'Gold indices · $500 bank bucket · updated daily',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'fx-markup',
@@ -59,7 +59,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: '1 basis point = 0.01%. Higher markup means worse pricing.',
     sourceNotes: 'Gold indices · $500 bank bucket · updated daily',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'fee-vs-markup',
@@ -76,7 +76,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Fee bps = fee / amount. Markup bps = FX spread vs mid-market.',
     sourceNotes: 'Computed from provider quotes and mid-market benchmark',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'spread-distribution',
@@ -93,7 +93,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Shows p25, p50, and p75 markup levels across providers.',
     sourceNotes: 'Distribution computed from provider quotes captured each hour',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'provider-winner',
@@ -110,7 +110,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Shows which provider delivered the most value on each day.',
     sourceNotes: 'Based on winner by delivered amount at each snapshot',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'leader-change-frequency',
@@ -127,7 +127,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Tracks how often the leader changes across snapshots.',
     sourceNotes: 'Leader flips computed from snapshot winner data',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'leader-edge',
@@ -144,7 +144,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Measures how far the leader is ahead of the runner-up in bps.',
     sourceNotes: 'Computed from winner and runner-up markup',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'pass-through-latency',
@@ -161,7 +161,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Lower latency means faster price updates after FX moves.',
     sourceNotes: 'Derived from mid-market and provider rate timestamps',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'volatility-pulse',
@@ -178,7 +178,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Higher RVI means more dispersion in provider pricing.',
     sourceNotes: 'Gold indices · $500 bank bucket · updated daily',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'indices-confidence',
@@ -246,7 +246,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Points far from the center indicate unusual pricing.',
     sourceNotes: 'Deviation from provider 30-day rolling average',
     defaultRange: '7d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'spread-volatility',
@@ -263,7 +263,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Tracks how dispersed provider pricing becomes over time.',
     sourceNotes: 'Std dev of best-to-worst spread by snapshot',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'quote-success',
@@ -280,7 +280,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Higher success rate means quotes are consistently available.',
     sourceNotes: 'Based on API response success rate',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'provider-availability',
@@ -297,7 +297,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Shows how many providers are active at each snapshot.',
     sourceNotes: 'Derived from successful quote fetches',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'data-freshness',
@@ -314,7 +314,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Lower values indicate fresher data.',
     sourceNotes: 'Calculated from quote capture timestamps',
     defaultRange: '7d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
   {
     id: 'corridor-liquidity',
@@ -331,7 +331,7 @@ export const pulseChartRegistry: ChartMetadata[] = [
     tooltipCopy: 'Higher scores indicate deeper quoting and coverage.',
     sourceNotes: 'Composite of quote density, coverage, and success rate',
     defaultRange: '30d',
-    plusRanges: ['90d', '365d'],
+    plusRanges: ['365d'],
   },
 ]
 
@@ -370,5 +370,5 @@ export function isRangeGated(chartId: string, range: string, hasFullAccess: bool
   if (hasFullAccess) return false
   const chart = getChartById(chartId)
   if (!chart) return false
-  return chart.plusRanges.includes(range as '90d' | '365d')
+  return chart.plusRanges.includes(range as '7d' | '30d' | '90d' | '365d')
 }

@@ -99,7 +99,7 @@ const HOUSE_ADS: AdCreative[] = [
   {
     id: 'rs-plus',
     name: 'Remit-Scout Plus',
-    tagline: 'Ad-free comparisons, Pulse access, 16 smart alerts, and 365-day history.',
+    tagline: 'Ad-free comparisons, Pulse access, 16 smart alerts, and 90-day history.',
     brandColor: '#2563EB',
     url: '/plus',
     ctaText: 'Upgrade',

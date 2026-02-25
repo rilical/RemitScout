@@ -42,7 +42,10 @@
     </section>
 
     <!-- Pricing -->
-    <section class="py-16 sm:py-20 bg-surface">
+    <section
+      v-reveal
+      class="py-16 sm:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-10">
           <h2 class="text-h1 font-bold text-rs-fg mb-3">
@@ -196,7 +199,7 @@
                 <span class="text-body-sm text-white/80">Rate history</span>
                 <span class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-white">
                   <span class="text-white/40 line-through font-normal">30d</span>
-                  365 days
+                  90 days
                 </span>
               </li>
               <li class="flex items-center justify-between gap-3">
@@ -294,7 +297,10 @@
     <TrustMetricsStrip bg-class="bg-brand-600" />
 
     <!-- Features -->
-    <section class="py-16 sm:py-20 bg-neutral-900">
+    <section
+      v-reveal.slide-left
+      class="py-16 sm:py-20 bg-neutral-900"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-12">
           <h2 class="text-h2 font-bold text-white mb-3">
@@ -373,13 +379,13 @@
               </div>
               <div class="flex items-center gap-2 text-body-sm">
                 <span class="text-white/30 line-through">30d</span>
-                <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">365d</span>
+                <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">90d</span>
               </div>
             </div>
             <div class="flex-1">
               <h3 class="text-body-lg font-bold text-white mb-1">Rate history</h3>
               <p class="text-body-sm text-white/60 leading-relaxed">
-                A full year of corridor data. Spot patterns, time recurring transfers, and see how rates trended.
+                Up to 90 days of corridor data. Spot patterns, time recurring transfers, and see how rates trended.
               </p>
             </div>
             <p class="text-body-sm text-white/30 pt-3 border-t border-white/10 mt-auto">Free: 30-day history only</p>
@@ -436,7 +442,10 @@
     </section>
 
     <!-- FAQ -->
-    <section class="py-16 bg-surface">
+    <section
+      v-reveal
+      class="py-16 bg-surface"
+    >
       <div class="mx-auto max-w-3xl px-page-x">
         <h2 class="text-h2 font-bold text-rs-fg text-center mb-10">
           Frequently asked questions
@@ -446,7 +455,10 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 sm:py-20 bg-brand-600">
+    <section
+      v-reveal.scale-in
+      class="py-16 sm:py-20 bg-brand-600"
+    >
       <div class="mx-auto max-w-3xl px-page-x text-center">
         <h2 class="text-h1 font-bold text-white mb-4">
           Ready to get started?
@@ -636,7 +648,7 @@ useHead({
   meta: [
     {
       name: 'description',
-      content: 'Upgrade to Remit-Scout Plus for 16 smart alerts, 365-day rate history, data exports, 16 watchlist corridors, and an ad-free experience.',
+      content: 'Upgrade to Remit-Scout Plus for 16 smart alerts, 90-day rate history, data exports, 16 watchlist corridors, and an ad-free experience.',
     },
   ],
 })

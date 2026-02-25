@@ -2,6 +2,7 @@
 entrypoints:
   - "ARCHITECTURE.md"
   - "agents/AGENT-MATCH.md"
+  - "docs/runbooks/agent-deploy-promotion-checklist.md"
   - ".remit-scout/AGENTS.md"
   - "ops/brain/README.md"
   - "backend/scripts/brain/brain.ts"
@@ -23,6 +24,7 @@ Primary source of truth:
 Required load order (before touching code):
 1. `ARCHITECTURE.md`
 1. `agents/AGENT-MATCH.md`
+1. `docs/runbooks/agent-deploy-promotion-checklist.md` (mandatory for any deploy/promotion work)
 1. `agents/rag/<agent>.md` (selected by AGENT-MATCH)
 
 Run requirements:

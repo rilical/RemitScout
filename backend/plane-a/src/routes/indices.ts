@@ -381,6 +381,146 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  // Public embed endpoint — no auth, clamped to 30 days, aggressive cache
+  app.get('/public/indices/series', async (request, reply) => {
+    const parsed = querySchema.safeParse(request.query)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const corridorId = parsed.data.corridor_id
+    const corridorParts = parseCorridorId(corridorId)
+    if (!corridorParts) {
+      throw new ValidationError('Invalid request', { details: { error: 'invalid_corridor_id', message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)' } })
+    }
+    const normalizedCorridorId = formatCorridorId({
+      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
+      destCountry: corridorParts.destCountry.toUpperCase(),
+      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
+      destCurrency: corridorParts.destCurrency.toUpperCase(),
+    })
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
+    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
+    const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 30) // Clamped to 30 days max for public access
+
+    const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
+    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } = tierInfo
+    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
+
+    try {
+      const publicCacheKey = `public:${normalizedCorridorId}:${amountBucket}:${methodProfile}:${requestedWindowDays}`
+      const cached = await indicesCache.get(publicCacheKey)
+      if (cached) {
+        reply.header('X-Data-Tier', String(dataTier))
+        reply.header('X-Cache', 'HIT')
+        reply.header('Cache-Control', 'public, max-age=600')
+        return cached
+      }
+
+      const availabilityRow = await goldIndicesRepository.getAvailability({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+      const minDate = availabilityRow?.min_date ? new Date(availabilityRow.min_date) : null
+      const maxDate = availabilityRow?.max_date ? new Date(availabilityRow.max_date) : null
+      const availableDays = (minDate && maxDate)
+        ? Math.max(1, Math.floor((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000)) + 1)
+        : null
+
+      const now = new Date()
+      const effectiveEndDate = (maxDate && maxDate < now) ? maxDate : now
+      const effectiveWindowDays = availableDays && availableDays > 0
+        ? Math.min(requestedWindowDays, availableDays)
+        : requestedWindowDays
+
+      const startDate = new Date(effectiveEndDate)
+      startDate.setUTCDate(startDate.getUTCDate() - (effectiveWindowDays - 1))
+      if (minDate && startDate < minDate) {
+        startDate.setTime(minDate.getTime())
+      }
+
+      const rows = await goldIndicesRepository.getIndicesSeries({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        startDate,
+        endDate: effectiveEndDate,
+      })
+
+      if (rows.length === 0) {
+        reply.code(404)
+        return {
+          corridorId: normalizedCorridorId,
+          dataAvailable: false,
+          reason: 'no_data',
+          message: `No data available for ${normalizedCorridorId} in the requested time range.`,
+        }
+      }
+
+      const lastUpdated = rows.reduce<Date | null>((latest, row) => {
+        if (!row.created_at) return latest
+        if (!latest || row.created_at > latest) return row.created_at
+        return latest
+      }, null)
+
+      const weightingModel = rows.find((row) => row.weighting_model)?.weighting_model || DEFAULT_WEIGHT_MODEL
+      const methodologyVersion = rows.find((row) => row.methodology_version)?.methodology_version || INDICES_METHODOLOGY_VERSION
+
+      const response: IndicesSeriesResponse = {
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        weightingModel,
+        methodologyVersion,
+        lastUpdated: lastUpdated ? lastUpdated.toISOString() : null,
+        dataTier,
+        cadenceMinutes: collectionCadenceMinutes,
+        exportCadenceMinutes,
+        collectionCadenceMinutes,
+        collectionTier,
+        isUsdOrigin,
+        series: rows.map((row) => ({
+          date: row.date instanceof Date ? toDateOnly(row.date) : String(row.date),
+          teer: row.teer_rate ?? null,
+          rci: row.rci_ratio ?? null,
+          rvi_bps: row.rvi_bps ?? null,
+          providerCountBinned: row.provider_count_binned ?? null,
+          providerCount: row.provider_count ?? null,
+          suppressionFlag: row.suppression_flag,
+          suppressionReason: row.suppression_reason ?? null,
+          midMarketRate: row.mid_market_rate ?? null,
+          weightConfidence: row.weight_confidence ?? null,
+          weightWindowDays: row.weight_window_days ?? null,
+        })),
+        dataWindow: {
+          requestedDays: requestedWindowDays,
+          availableDays,
+          availableStartDate: minDate ? toDateOnly(minDate) : null,
+          availableEndDate: maxDate ? toDateOnly(maxDate) : null,
+          startDate: toDateOnly(startDate),
+          endDate: toDateOnly(effectiveEndDate),
+          returnedDays: rows.length,
+          capped: Boolean(availableDays && availableDays < requestedWindowDays),
+        },
+      }
+
+      // 10-minute cache for public endpoint
+      await indicesCache.set(publicCacheKey, response, 10 * 60 * 1000)
+      reply.header('X-Data-Tier', String(dataTier))
+      reply.header('X-Cache', 'MISS')
+      reply.header('Cache-Control', 'public, max-age=600')
+      return response
+    } catch (error) {
+      logger.error('public_indices_series_failed', {
+        corridor_id: normalizedCorridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error', message: 'Failed to retrieve index data.' }
+    }
+  })
+
   app.get('/indices/latest', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {

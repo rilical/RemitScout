@@ -36,6 +36,93 @@ const formatSpeed = (min: number | null, max: number | null) => {
   return 'N/A'
 }
 
+type RateHistoryPoint = {
+  date: string
+  rate: number
+  bid: number | null
+  ask: number | null
+  source: string | null
+}
+
+type FxRefreshRequestState = {
+  status: string
+  retryCount: number
+  processedAt: string | Date | null
+}
+
+const HISTORY_BRIDGE_CURRENCIES = ['USD', 'EUR'] as const
+const FX_RATE_REFRESH_EXHAUSTED_RETRY_COUNT = 3
+const FX_RATE_REFRESH_FAILURE_COOLDOWN_MS = 15 * 60 * 1000
+
+const toRateDate = (value: string | Date): string => {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10)
+  }
+  const raw = String(value)
+  return raw.length >= 10 ? raw.slice(0, 10) : raw
+}
+
+const mapHistoryRows = (rows: Array<{
+  rate_date: string | Date
+  rate: number
+  bid: number | null
+  ask: number | null
+  source: string | null
+}>): RateHistoryPoint[] => {
+  return rows.map((row) => ({
+    date: toRateDate(row.rate_date),
+    rate: Number(row.rate),
+    bid: row.bid !== null && row.bid !== undefined ? Number(row.bid) : null,
+    ask: row.ask !== null && row.ask !== undefined ? Number(row.ask) : null,
+    source: row.source ?? null,
+  }))
+}
+
+const deriveHistoryFromBridge = (
+  baseToBridgeRows: Array<{ rate_date: string | Date; rate: number }>,
+  bridgeToQuoteRows: Array<{ rate_date: string | Date; rate: number }>,
+  bridgeCurrency: 'USD' | 'EUR',
+): RateHistoryPoint[] => {
+  const baseRatesByDate = new Map<string, number>()
+  for (const row of baseToBridgeRows) {
+    const rate = Number(row.rate)
+    if (!Number.isFinite(rate) || rate <= 0) continue
+    baseRatesByDate.set(toRateDate(row.rate_date), rate)
+  }
+
+  const derived: RateHistoryPoint[] = []
+  for (const row of bridgeToQuoteRows) {
+    const rightRate = Number(row.rate)
+    if (!Number.isFinite(rightRate) || rightRate <= 0) continue
+    const date = toRateDate(row.rate_date)
+    const leftRate = baseRatesByDate.get(date)
+    if (!leftRate || !Number.isFinite(leftRate) || leftRate <= 0) continue
+
+    derived.push({
+      date,
+      rate: leftRate * rightRate,
+      bid: null,
+      ask: null,
+      source: `DERIVED_${bridgeCurrency}_BRIDGE`,
+    })
+  }
+
+  return derived.sort((a, b) => a.date.localeCompare(b.date))
+}
+
+const isRecentlyExhaustedFailure = (
+  state: FxRefreshRequestState | null,
+  nowMs = Date.now(),
+) => {
+  if (!state) return false
+  if ((state.status || '').toLowerCase() !== 'failed') return false
+  if ((state.retryCount ?? 0) < FX_RATE_REFRESH_EXHAUSTED_RETRY_COUNT) return false
+  if (!state.processedAt) return false
+  const processedAtMs = new Date(state.processedAt).getTime()
+  if (!Number.isFinite(processedAtMs)) return false
+  return nowMs - processedAtMs <= FX_RATE_REFRESH_FAILURE_COOLDOWN_MS
+}
+
 const getFxRateStaleness = (
   record: { last_updated?: string | Date | null; updated_at?: string | Date | null } | null,
 ) => {
@@ -211,73 +298,139 @@ export const ratesRoutes = async (app: FastifyInstance) => {
     const endDate = parsed.data.endDate
 
     try {
-      const rowsPromise = startDate && endDate
-        ? fxRateHistoryRepository.getHistory(base, quote, startDate, endDate)
-        : fxRateHistoryRepository.getLatestHistory(base, quote, days)
+      const loadRows = (from: string, to: string) => {
+        return startDate && endDate
+          ? fxRateHistoryRepository.getHistory(from, to, startDate, endDate)
+          : fxRateHistoryRepository.getLatestHistory(from, to, days)
+      }
+
       const [rows, rateRecord] = await Promise.all([
-        rowsPromise,
+        loadRows(base, quote),
         fxRateRepository.getRateRecord(base, quote),
       ])
+
+      if (rows.length > 0) {
+        const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
+          base,
+          quote,
+          rateRecord,
+          fxRateRefreshRepository,
+        )
+        const history = mapHistoryRows(rows)
+        const lastUpdated = toIsoString(rows[0].created_at ?? rows[0].rate_date)
+
+        logger.info('rate_history_success', {
+          base,
+          quote,
+          count: history.length,
+          source: rows[0]?.source ?? 'unknown',
+        })
+
+        return {
+          base,
+          quote,
+          history,
+          lastUpdated,
+          status: 'ready' as const,
+          message: null,
+          refreshQueued: Boolean(refreshRequestId),
+          refreshRequestId,
+          derived: false,
+          bridgeCurrency: null,
+        }
+      }
+
+      if (base !== quote) {
+        for (const bridgeCurrency of HISTORY_BRIDGE_CURRENCIES) {
+          if (bridgeCurrency === base || bridgeCurrency === quote) continue
+          const [baseToBridgeRows, bridgeToQuoteRows] = await Promise.all([
+            loadRows(base, bridgeCurrency),
+            loadRows(bridgeCurrency, quote),
+          ])
+          const derivedHistory = deriveHistoryFromBridge(
+            baseToBridgeRows,
+            bridgeToQuoteRows,
+            bridgeCurrency,
+          )
+          if (derivedHistory.length === 0) continue
+          const lastDerivedDate = derivedHistory[derivedHistory.length - 1]?.date ?? null
+          return {
+            base,
+            quote,
+            history: derivedHistory,
+            lastUpdated: toIsoString(lastDerivedDate),
+            status: 'ready' as const,
+            message: `Rate history derived via ${bridgeCurrency} bridge while direct pair history is unavailable.`,
+            refreshQueued: false,
+            refreshRequestId: null,
+            derived: true,
+            bridgeCurrency,
+          }
+        }
+      }
+
+      logger.warn('rate_history_empty', {
+        base,
+        quote,
+        days,
+        startDate,
+        endDate,
+        message: 'No direct or derived rate history found in database.',
+      })
+
+      const refreshEnabled = config.fxRates?.refreshEnabled === true
+      if (!refreshEnabled) {
+        return {
+          base,
+          quote,
+          history: [],
+          lastUpdated: toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at),
+          status: 'unavailable' as const,
+          message: 'Rate history is unavailable. FX refresh is currently disabled.',
+          refreshQueued: false,
+          refreshRequestId: null,
+          derived: false,
+          bridgeCurrency: null,
+        }
+      }
+
+      const latestRefreshState = await fxRateRefreshRepository.getLatestRequestByPair(base, quote)
+      if (isRecentlyExhaustedFailure(latestRefreshState)) {
+        return {
+          base,
+          quote,
+          history: [],
+          lastUpdated: toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at),
+          status: 'unavailable' as const,
+          message: 'Rate history is unavailable for this corridor right now. Please try again shortly.',
+          refreshQueued: false,
+          refreshRequestId: null,
+          derived: false,
+          bridgeCurrency: null,
+        }
+      }
+
       const refreshRequestId = await enqueueFxRateRefreshIfNeeded(
         base,
         quote,
         rateRecord,
         fxRateRefreshRepository,
       )
-
-      if (rows.length === 0) {
-        logger.warn('rate_history_empty', {
-          base,
-          quote,
-          days,
-          startDate,
-          endDate,
-          message: 'No rate history found in database. Rate sync may not be running or data not yet populated.',
-        })
-        const refreshEnabled = config.fxRates?.refreshEnabled === true
-        const message = refreshEnabled
-          ? 'Rate history is warming up. Rate sync has been queued.'
-          : 'Rate history is unavailable. FX refresh is currently disabled.'
-        return {
-          base,
-          quote,
-          history: [],
-          lastUpdated: toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at),
-          status: refreshEnabled ? 'warming' as const : 'unavailable' as const,
-          message,
-          refreshQueued: Boolean(refreshRequestId),
-          refreshRequestId,
-        }
-      }
-
-      const history = rows.map((row) => ({
-        date: row.rate_date instanceof Date
-          ? row.rate_date.toISOString().slice(0, 10)
-          : String(row.rate_date),
-        rate: Number(row.rate),
-        bid: row.bid !== null && row.bid !== undefined ? Number(row.bid) : null,
-        ask: row.ask !== null && row.ask !== undefined ? Number(row.ask) : null,
-        source: row.source ?? null,
-      }))
-
-      const lastUpdated = toIsoString(rows[0].created_at ?? rows[0].rate_date)
-
-      logger.info('rate_history_success', {
-        base,
-        quote,
-        count: history.length,
-        source: rows[0]?.source ?? 'unknown',
-      })
+      const refreshQueued = Boolean(refreshRequestId)
 
       return {
         base,
         quote,
-        history,
-        lastUpdated,
-        status: 'ready' as const,
-        message: null,
-        refreshQueued: Boolean(refreshRequestId),
+        history: [],
+        lastUpdated: toIsoString(rateRecord?.last_updated ?? rateRecord?.updated_at),
+        status: 'warming' as const,
+        message: refreshQueued
+          ? 'Rate history is warming up. Rate sync has been queued.'
+          : 'Rate history is warming up. Refresh is pending.',
+        refreshQueued,
         refreshRequestId,
+        derived: false,
+        bridgeCurrency: null,
       }
     } catch (error) {
       logger.error('rate_history_failed', {

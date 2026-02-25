@@ -367,15 +367,21 @@ const gatedTitle = computed(() => {
 })
 
 const ranges = computed(() => {
-  const meta = chartMeta.value
-  if (!meta) return []
-
-  return [
+  const baseRanges = [
     { value: '7d' as TimeRange, label: '7D', isGated: false },
     { value: '30d' as TimeRange, label: '30D', isGated: false },
     { value: '90d' as TimeRange, label: '90D', isGated: isRangeGated(props.chartId, '90d', isFullAccess.value) },
-    { value: '365d' as TimeRange, label: '1Y', isGated: isRangeGated(props.chartId, '365d', isFullAccess.value) },
   ]
+
+  if (isFullAccess.value) {
+    baseRanges.push({
+      value: '365d' as TimeRange,
+      label: '1Y',
+      isGated: isRangeGated(props.chartId, '365d', isFullAccess.value),
+    })
+  }
+
+  return baseRanges
 })
 
 const chartComponent = computed(() => {

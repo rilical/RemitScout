@@ -36,7 +36,10 @@
     </section>
 
     <!-- The Problem -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal.slide-left
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
@@ -89,7 +92,10 @@
     </section>
 
     <!-- How It Works -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section
+      v-reveal.slide-right
+      class="py-16 lg:py-20 bg-neutral-50"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 font-bold text-neutral-900 mb-4">
@@ -202,7 +208,10 @@
     </section>
 
     <!-- Origin -->
-    <section class="py-16 lg:py-20 bg-brand-600">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-brand-600"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <div class="grid gap-10 lg:grid-cols-[auto_1fr] lg:items-start">
@@ -285,7 +294,10 @@
     </section>
 
     <!-- Our Standards -->
-    <section class="py-16 lg:py-20 bg-neutral-900">
+    <section
+      v-reveal.slide-left
+      class="py-16 lg:py-20 bg-neutral-900"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 font-bold text-white mb-4">
@@ -321,7 +333,10 @@
     </section>
 
     <!-- Transparency -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal.slide-right
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 font-bold text-neutral-900 mb-4">
@@ -377,7 +392,10 @@
     </section>
 
     <!-- Work with us -->
-    <section class="py-16 lg:py-20 bg-neutral-900">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-neutral-900"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 font-bold text-white mb-4">

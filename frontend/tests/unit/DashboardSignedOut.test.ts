@@ -23,5 +23,6 @@ describe('DashboardSignedOut', () => {
     expect(wrapper.text()).toContain('Create free account')
     expect(wrapper.text()).toContain('Watchlist')
     expect(wrapper.text()).toContain('Rate alerts')
+    expect(wrapper.text()).toContain('Plus: 90 days.')
   })
 })

@@ -8,6 +8,7 @@ import type {
   IFxRateRefreshRepository,
   FxRateRefreshRequestInput,
   FxRateRefreshStatusCount,
+  FxRateRefreshRequestState,
 } from '../interfaces/fx-rate-refresh-repository.interface'
 
 export class FxRateRefreshRepository implements IFxRateRefreshRepository {
@@ -80,5 +81,27 @@ export class FxRateRefreshRepository implements IFxRateRefreshRepository {
       this.pool,
     )
     return result.rows
+  }
+
+  async getLatestRequestByPair(
+    baseCurrency: string,
+    quoteCurrency: string,
+  ): Promise<FxRateRefreshRequestState | null> {
+    const result = await query<FxRateRefreshRequestState>(
+      `SELECT request_id AS "requestId",
+              status,
+              retry_count AS "retryCount",
+              processed_at AS "processedAt",
+              last_requested_at AS "lastRequestedAt",
+              error_message AS "errorMessage"
+         FROM silver.fx_rate_refresh_request
+        WHERE base_currency = $1
+          AND quote_currency = $2
+        ORDER BY last_requested_at DESC
+        LIMIT 1`,
+      [baseCurrency, quoteCurrency],
+      this.pool,
+    )
+    return result.rows[0] ?? null
   }
 }

@@ -22,4 +22,9 @@
   .animate-pulse-slow {
     animation: none !important;
   }
+
+  /* Ensure reveal elements stay visible when animations are disabled */
+  .reveal-hidden {
+    opacity: 1 !important;
+  }
 }

@@ -60,7 +60,10 @@
     </section>
 
     <!-- Main Content -->
-    <div class="mx-auto max-w-page px-page-x pb-20 pt-12">
+    <div
+      v-reveal
+      class="mx-auto max-w-page px-page-x pb-20 pt-12"
+    >
       <div class="lg:grid lg:grid-cols-12 lg:gap-12">
         <!-- Sticky Navigation (Desktop) -->
         <aside class="hidden lg:block lg:col-span-3">
@@ -200,7 +203,10 @@
     <WhyTrustUs />
 
     <!-- Final CTA Section -->
-    <section class="py-16 sm:py-20 bg-neutral-900">
+    <section
+      v-reveal.scale-in
+      class="py-16 sm:py-20 bg-neutral-900"
+    >
       <div class="mx-auto max-w-4xl px-page-x text-center">
         <h2 class="text-h2 font-bold text-white mb-4">
           Still have questions?

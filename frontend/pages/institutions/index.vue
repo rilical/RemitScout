@@ -26,7 +26,10 @@ const breadcrumbItems = [
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs :items="breadcrumbItems" />
 
-        <div class="mt-8 rounded-3xl border border-rs-border bg-surface p-8 sm:p-10 shadow-sm">
+        <div
+          v-reveal
+          class="mt-8 rounded-3xl border border-rs-border bg-surface p-8 sm:p-10 shadow-sm"
+        >
           <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
             For institutions
           </p>

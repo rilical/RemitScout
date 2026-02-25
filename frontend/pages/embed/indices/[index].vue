@@ -37,12 +37,6 @@
 
       <div class="p-4">
         <div
-          v-if="apiKeyWarning"
-          class="mb-3 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-body-sm text-warning-800"
-        >
-          {{ apiKeyWarning }}
-        </div>
-        <div
           v-if="loading"
           class="flex h-64 w-full items-center justify-center"
           role="status"
@@ -97,9 +91,10 @@
           Updated {{ formatLastUpdated(lastUpdated) }}
         </div>
         <a
-          :href="fullIndexUrl"
+          :href="`${siteUrl}/pulse`"
           target="_blank"
           rel="noopener"
+          :title="`${chartTitle} — Remit-Scout Remittance Intelligence`"
           class="flex items-center gap-1.5 text-body-sm font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"
         >
@@ -122,7 +117,7 @@ import { ref, computed, onMounted, watchEffect, defineAsyncComponent } from 'vue
 import { useRoute } from 'vue-router'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
-import { getIndexSeries } from '~/lib/indicesApi'
+import { getIndexSeries, getPublicIndexSeries } from '~/lib/indicesApi'
 import type { IndexKey } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
 import { setSeo } from '~/composables/useSeo'
@@ -172,7 +167,6 @@ const indexMeta: Record<IndexKey, { title: string, color: string, unit: 'rate' |
 
 const loading = ref(true)
 const error = ref<string | null>(null)
-const apiKeyWarning = ref<string | null>(null)
 const chartSeries = ref<ChartSeries[]>([])
 const lastUpdated = ref('')
 const weightingLabel = ref('synthetic volume weighted')
@@ -239,25 +233,23 @@ onMounted(async () => {
     loading.value = false
     return
   }
-  if (!apiKey.value) {
-    if (config.public.pulseEnabled) {
-      apiKeyWarning.value = 'API key is required for production embeds. Provide api_key to remove this warning.'
-    }
-    else {
-      error.value = 'Missing API key.'
-      loading.value = false
-      return
-    }
-  }
-
   try {
-    const data = await getIndexSeries({
-      corridor_id: corridorId.value.toUpperCase(),
-      amount_bucket: amountBucket.value,
-      method_profile: methodProfile.value,
-      days: days.value,
-      ...(apiKey.value ? { api_key: apiKey.value } : {}),
-    })
+    // Use authenticated endpoint when API key is provided (higher limits),
+    // otherwise use public endpoint (free, 30-day max, cached)
+    const data = apiKey.value
+      ? await getIndexSeries({
+          corridor_id: corridorId.value.toUpperCase(),
+          amount_bucket: amountBucket.value,
+          method_profile: methodProfile.value,
+          days: days.value,
+          api_key: apiKey.value,
+        })
+      : await getPublicIndexSeries({
+          corridor_id: corridorId.value.toUpperCase(),
+          amount_bucket: amountBucket.value,
+          method_profile: methodProfile.value,
+          days: days.value,
+        })
     lastUpdated.value = data.lastUpdated || ''
     weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'
 

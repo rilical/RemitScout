@@ -42,7 +42,14 @@ const run = async () => {
     }
 
     for (const entry of requiredTables) {
-      await pool.query(`SELECT 1 FROM ${entry.schema}.${entry.table} LIMIT 1`)
+      const check = await pool.query<{ exists: boolean }>(
+        'SELECT COALESCE(has_table_privilege(to_regclass($1), \'SELECT\'), false) AS exists',
+        [`${entry.schema}.${entry.table}`],
+      )
+
+      if (!check.rows[0]?.exists) {
+        throw new Error(`Insufficient SELECT privilege for ${entry.schema}.${entry.table}`)
+      }
     }
 
     console.log('✅ Gold/Silver seed sanity checks passed')

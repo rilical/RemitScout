@@ -15,6 +15,17 @@ describe('seed-launch-users args', () => {
     })
   })
 
+  it('ignores pnpm-style argument separator', () => {
+    const parsed = parseArgsFromArgv(['--', '--force', '--supabase-only'])
+
+    expect(parsed).toMatchObject({
+      force: true,
+      supabaseOnly: true,
+      printPasswords: false,
+      passwordOutputPath: null,
+    })
+  })
+
   it('rejects password export when env opt-in is not enabled', () => {
     const parsed = parseArgsFromArgv(['--print-passwords', '--password-output', '/tmp/seeds.json'])
 

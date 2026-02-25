@@ -471,7 +471,6 @@ export default defineNuxtConfig({
       adsEnabled,
       ezoicPlacementIds,
       ezoicAdvancedConfig,
-      ezoicAnchorAdEnabled: typeof ezoicAnchorAdEnabled === 'boolean' ? ezoicAnchorAdEnabled : null,
       sentryDsn: resolveEnvValue('NUXT_PUBLIC_SENTRY_DSN', 'PUBLIC_SENTRY_DSN', 'SENTRY_DSN') || '',
       sentryEnabled,
       appVersion,

@@ -40,7 +40,10 @@
     </section>
 
     <!-- Providers We Compare -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-8">
           <h2 class="text-h2 font-bold text-neutral-900 mb-4">
@@ -88,7 +91,10 @@
     </section>
 
     <!-- Partnership Types -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section
+      v-reveal.slide-left
+      class="py-16 lg:py-20 bg-neutral-50"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
@@ -236,7 +242,10 @@
     </section>
 
     <!-- Provider Benefits -->
-    <section class="py-16 lg:py-20 bg-neutral-900">
+    <section
+      v-reveal.slide-right
+      class="py-16 lg:py-20 bg-neutral-900"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm font-semibold text-brand-400 uppercase tracking-wide mb-3">
@@ -312,7 +321,10 @@
     </section>
 
     <!-- How Remit-Score Works -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
@@ -366,7 +378,10 @@
     </section>
 
     <!-- Independence Rules -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section
+      v-reveal.slide-left
+      class="py-16 lg:py-20 bg-neutral-50"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
@@ -453,7 +468,10 @@
     </section>
 
     <!-- Data Sourcing & Accuracy -->
-    <section class="py-16 lg:py-20 bg-brand-600">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-brand-600"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 font-bold text-white mb-4">
@@ -500,7 +518,10 @@
     </section>
 
     <!-- FAQ -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-3xl">
           <div class="text-center mb-10">
@@ -527,7 +548,10 @@
     </section>
 
     <!-- Final CTA -->
-    <section class="py-16 sm:py-20 bg-brand-600">
+    <section
+      v-reveal.scale-in
+      class="py-16 sm:py-20 bg-brand-600"
+    >
       <div class="mx-auto max-w-3xl px-page-x text-center">
         <h2 class="text-h1 font-bold text-white mb-4 [text-wrap:balance]">
           Ready to get listed?

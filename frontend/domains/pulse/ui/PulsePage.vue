@@ -196,12 +196,12 @@
             <p class="mt-2 text-body text-neutral-400 max-w-2xl mx-auto">Pricing, competition, volatility, and operational coverage — interactive charts powered by verified pipeline data. Hover to explore.</p>
           </div>
 
-          <div ref="previewGridRef" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div
               v-for="(chart, idx) in previewChartCards"
               :key="chart.id"
-              class="preview-card rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg overflow-hidden opacity-0 translate-y-4 motion-safe:transition-all duration-300"
-              :style="{ transitionDelay: `${idx * 80}ms` }"
+              v-reveal="{ delay: idx * 80 }"
+              class="preview-card rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg overflow-hidden"
             >
               <div class="px-5 pt-5 pb-2">
                 <div class="mb-2 flex items-center gap-2">
@@ -316,8 +316,8 @@
                   <div
                     v-for="(row, idx) in previewScreenerRows"
                     :key="row.corridor"
-                    class="screener-row flex items-center gap-4 px-5 py-4 hover:bg-neutral-50 transition-colors opacity-0 translate-y-2 motion-safe:transition-all duration-300"
-                    :style="{ transitionDelay: `${idx * 60}ms` }"
+                    v-reveal="{ delay: idx * 60 }"
+                    class="screener-row flex items-center gap-4 px-5 py-4 hover:bg-neutral-50 transition-colors"
                   >
                     <span class="text-xl leading-none">{{ row.flag }}</span>
                     <div class="flex-1 min-w-0">
@@ -513,7 +513,7 @@
                 Sender View
               </div>
               <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-medium text-neutral-300">
-                Verified Pipeline v2.4.1
+                Verified Pipeline
               </span>
               <div class="flex flex-col gap-3">
                 <NuxtLink
@@ -1281,7 +1281,7 @@
                     Use Pulse data in reports, workflows, and pricing systems.
                   </p>
                 </div>
-                <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-2">
+                <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-3">
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="text-body-sm font-semibold text-white">
                       Download Snapshot
@@ -1312,12 +1312,37 @@
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="text-body-sm font-semibold text-white">
+                      Download as Image
+                    </div>
+                    <p class="mt-1 text-body-sm text-neutral-400">
+                      Branded PNG with source attribution. Great for blog posts and reports.
+                    </p>
+                    <button
+                      type="button"
+                      class="mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-bold text-white hover:bg-brand-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      :disabled="chartImageExporting || !chartRef"
+                      @click="downloadChartImage"
+                    >
+                      {{ chartImageExporting ? 'Generating...' : 'Download PNG' }}
+                    </button>
+                    <p
+                      v-if="chartImageError"
+                      class="mt-2 text-[11px] text-danger-600"
+                    >
+                      {{ chartImageError }}
+                    </p>
+                  </div>
+                  <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
+                    <div class="text-body-sm font-semibold text-white">
                       Embed Charts
                     </div>
                     <p class="mt-1 text-body-sm text-neutral-400">
-                      Share corridor charts with attribution and timestamps.
+                      Live-updating charts for your website with backlink attribution.
                     </p>
-                    <button class="mt-3 w-full rounded-lg border border-neutral-600 px-3 py-2 text-body-sm font-semibold text-white">
+                    <button
+                      class="mt-3 w-full rounded-lg border border-neutral-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-700 transition-colors"
+                      @click="handleEmbed('all-in-cost')"
+                    >
                       Get Embed Code
                     </button>
                   </div>
@@ -1510,6 +1535,7 @@
         :chart-id="embedModalChart"
         :filters="legacyFilters"
         mode="embed"
+        :chart-container-ref="(chartRef as unknown as HTMLElement | null)"
         @close="embedModalChart = null"
       />
     </div>
@@ -1532,6 +1558,7 @@ import { useEntitlements } from '~/composables/useEntitlements'
 import { useWatchlist } from '~/composables/useWatchlist'
 import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
 import { useExports } from '~/composables/useExports'
+import { useChartImageExport } from '~/composables/useChartImageExport'
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
 import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
 import ProviderLogo from '~/components/shared/ProviderLogo.vue'
@@ -1678,29 +1705,7 @@ const enterpriseFeatures = [
   'Gold Indices health dashboard',
 ]
 
-// Preview card scroll animation
-const previewGridRef = ref<HTMLElement | null>(null)
-let previewCardObserver: IntersectionObserver | null = null
-
-watch(previewGridRef, (el) => {
-  previewCardObserver?.disconnect()
-  if (!el || typeof IntersectionObserver === 'undefined') return
-  previewCardObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          ;(entry.target as HTMLElement).style.opacity = '1'
-          ;(entry.target as HTMLElement).style.transform = 'translateY(0)'
-          previewCardObserver?.unobserve(entry.target)
-        }
-      }
-    },
-    { rootMargin: '0px 0px -50px 0px', threshold: 0.1 },
-  )
-  nextTick(() => {
-    el.querySelectorAll('.preview-card').forEach((card) => previewCardObserver?.observe(card))
-  })
-})
+// Preview card and screener row animations handled by v-reveal directive
 
 const kpiSectionRef = ref<HTMLElement | null>(null)
 const chartRef = ref<HTMLElement | null>(null)
@@ -1736,67 +1741,48 @@ let kpiObserver: IntersectionObserver | null = null
 watch(kpiSectionRef, (el) => {
   kpiObserver?.disconnect()
   if (!el || typeof IntersectionObserver === 'undefined') return
+  const observedEl = el as unknown as HTMLElement
   kpiObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          revealElements(el, '.kpi-value')
-          el.querySelectorAll<HTMLElement>('.kpi-value').forEach((valEl) => {
+          revealElements(observedEl, '.kpi-value')
+          observedEl.querySelectorAll<HTMLElement>('.kpi-value').forEach((valEl) => {
             const target = valEl.dataset.target
             if (target) animateCountUp(valEl, target)
           })
-          el.children && Array.from(el.children).forEach((child) => {
+          observedEl.children && Array.from(observedEl.children).forEach((child) => {
             ;(child as HTMLElement).style.opacity = '1'
             ;(child as HTMLElement).style.transform = 'translateY(0)'
           })
-          kpiObserver?.unobserve(entry.target)
+          kpiObserver?.unobserve(entry.target as Element)
         }
       }
     },
     { rootMargin: '0px 0px -30px 0px', threshold: 0.15 },
   )
-  kpiObserver.observe(el)
+  kpiObserver.observe(observedEl as unknown as Element)
 })
 
 let chartObserver: IntersectionObserver | null = null
 watch(chartRef, (el) => {
   chartObserver?.disconnect()
   if (!el || typeof IntersectionObserver === 'undefined') return
+  const observedEl = el as unknown as Element
   chartObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
           chartVisible.value = true
-          chartObserver?.unobserve(entry.target)
+          chartObserver?.unobserve(entry.target as Element)
         }
       }
     },
     { rootMargin: '0px 0px -50px 0px', threshold: 0.1 },
   )
-  chartObserver.observe(el)
+  chartObserver.observe(observedEl)
 })
 
-let screenerObserver: IntersectionObserver | null = null
-onMounted(() => {
-  if (typeof IntersectionObserver === 'undefined') return
-  nextTick(() => {
-    const screenerRows = document.querySelectorAll('.screener-row')
-    if (!screenerRows.length) return
-    screenerObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            ;(entry.target as HTMLElement).style.opacity = '1'
-            ;(entry.target as HTMLElement).style.transform = 'translateY(0)'
-            screenerObserver?.unobserve(entry.target)
-          }
-        }
-      },
-      { rootMargin: '0px 0px -20px 0px', threshold: 0.1 },
-    )
-    screenerRows.forEach((row) => screenerObserver?.observe(row))
-  })
-})
 
 const watchlist = useWatchlist()
 const saveAlertModal = useSaveAlertModal()
@@ -1837,7 +1823,6 @@ onUnmounted(() => {
   scrollspyObserver?.disconnect()
   kpiObserver?.disconnect()
   chartObserver?.disconnect()
-  screenerObserver?.disconnect()
 })
 
 const timeframes = computed<PulseTimeframe[]>(() => {
@@ -2441,6 +2426,27 @@ const pollExportStatus = async (jobId: string) => {
   snapshotExportPoll = setInterval(tick, 2500)
 }
 
+const { exportAsImage, exporting: chartImageExporting } = useChartImageExport()
+const chartImageError = ref<string | null>(null)
+
+async function downloadChartImage() {
+  const el = chartRef.value
+  if (!el || chartImageExporting.value) return
+  chartImageError.value = null
+  try {
+    const label = store.corridorLabel || store.corridorSlug || 'Global'
+    await exportAsImage(el as HTMLElement, {
+      title: 'All-in Cost Index',
+      subtitle: `${label} · $${store.amount}`,
+      source: `Source: Remit-Scout · remit-scout.com/pulse · ${label}`,
+      filename: `remit-scout-all-in-cost-${store.corridorSlug || 'global'}`,
+    })
+  }
+  catch (e) {
+    chartImageError.value = e instanceof Error ? e.message : 'Failed to generate image.'
+  }
+}
+
 async function downloadSnapshotCsv() {
   if (snapshotExporting.value) return
   snapshotExportError.value = null
@@ -2901,9 +2907,6 @@ useHead({
 </script>
 
 <style scoped>
-.preview-card {
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
 .chart-line-animate {
   stroke-dasharray: 1200;
   stroke-dashoffset: 1200;

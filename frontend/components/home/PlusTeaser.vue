@@ -17,7 +17,7 @@
           <span class="text-brand-600">send money every month.</span>
         </h2>
         <p class="text-body-lg text-white/70 max-w-2xl mx-auto mb-2 leading-relaxed">
-          Pulse access, 16 smart alerts, 365-day history, CSV/PDF exports, and an ad-free dashboard.
+          Pulse access, 16 smart alerts, 90-day history, CSV/PDF exports, and an ad-free dashboard.
         </p>
         <p class="text-body text-white/40">
           <template v-if="monthlyPrice">
@@ -102,7 +102,7 @@
             </div>
             <div class="flex items-center gap-2 text-body-sm">
               <span class="text-white/30 line-through">30d</span>
-              <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">365d</span>
+              <span class="font-semibold text-white bg-brand-600/50 px-2 py-0.5 rounded-lg border border-brand-600/60">90d</span>
             </div>
           </div>
           <div class="flex-1">

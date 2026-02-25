@@ -32,8 +32,7 @@ export const useStructuredData = () => {
   const { public: { siteUrl, siteName } } = useRuntimeConfig()
   const cspNonce = useCspNonce()
   const socialLinks = Object.values(BRAND.social)
-    .filter((value): value is string => typeof value === 'string' && value.length > 0)
-    .map(value => value as string)
+    .filter(value => value.length > 0)
 
   // Organization schema
   const addOrganizationSchema = () => {

@@ -39,7 +39,7 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     exports_enabled: true,
     exports_max_days: 30,
     alerts_max: 16,
-    history_max_days: 365,
+    history_max_days: 90,
     watchlist_items: 16,
     api_access: false,
     api_tier: null,

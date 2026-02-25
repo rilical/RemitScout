@@ -38,25 +38,138 @@ export const buildCsvSections = (sections: CsvSection[]): string => {
 
 export const renderPdf = async (title: string, sections: CsvSection[]): Promise<Buffer> => {
   return await new Promise<Buffer>((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40 })
+    const useLandscape = sections.some((s) => s.headers.length > 5)
+    const doc = new PDFDocument({
+      margin: 40,
+      size: 'A4',
+      layout: useLandscape ? 'landscape' : 'portrait',
+      bufferPages: true,
+      info: {
+        Title: title,
+        Author: 'Remit-Scout',
+        Creator: 'Remit-Scout Data Export',
+      },
+    })
     const chunks: Buffer[] = []
     doc.on('data', (chunk) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.on('error', reject)
 
-    doc.fontSize(18).text(title)
-    doc.moveDown()
+    const pageMargin = 40
+    const pageWidth = (doc.page.width as number) - pageMargin * 2
+    const generatedAt = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
 
-    for (const section of sections) {
-      doc.fontSize(14).text(section.title)
-      doc.moveDown(0.5)
-      doc.fontSize(10).text(section.headers.join(' | '))
-      doc.moveDown(0.25)
-      for (const row of section.rows) {
-        const line = section.headers.map((header) => String(row[header] ?? '')).join(' | ')
-        doc.text(line)
+    // --- Header ---
+    doc.font('Helvetica-Bold').fontSize(20).fillColor('#111827').text('Remit-Scout', pageMargin, pageMargin)
+    doc.font('Helvetica').fontSize(10).fillColor('#6B7280').text('Data Export Report', pageMargin, pageMargin + 24)
+    doc.fontSize(9).text(`Generated: ${generatedAt}`, pageMargin, pageMargin + 38)
+    doc.moveTo(pageMargin, pageMargin + 56).lineTo(pageMargin + pageWidth, pageMargin + 56).strokeColor('#D1D5DB').lineWidth(1).stroke()
+    doc.y = pageMargin + 68
+
+    // --- Title ---
+    doc.font('Helvetica-Bold').fontSize(16).fillColor('#111827').text(title)
+    doc.moveDown(0.8)
+
+    const HEADER_BG = '#1F2937'
+    const HEADER_TEXT = '#FFFFFF'
+    const ROW_ALT_BG = '#F9FAFB'
+    const BORDER_COLOR = '#E5E7EB'
+    const CELL_PAD_X = 4
+    const CELL_PAD_Y = 4
+    const FONT_SIZE = 8
+    const HEADER_FONT_SIZE = 8
+    const ROW_HEIGHT = 18
+    const HEADER_HEIGHT = 22
+    const MIN_COL_WIDTH = 50
+
+    for (let si = 0; si < sections.length; si++) {
+      const section = sections[si]
+      const colCount = section.headers.length
+      const rawColWidth = Math.max(MIN_COL_WIDTH, pageWidth / colCount)
+      const colWidths = section.headers.map(() => rawColWidth)
+      const totalTableWidth = colWidths.reduce((a, b) => a + b, 0)
+      const scale = totalTableWidth > pageWidth ? pageWidth / totalTableWidth : 1
+      const scaledWidths = colWidths.map((w) => w * scale)
+
+      // Section title
+      if (si > 0) doc.moveDown(0.5)
+      const sectionTitleY = doc.y
+      if (sectionTitleY + HEADER_HEIGHT + ROW_HEIGHT > (doc.page.height as number) - 80) {
+        doc.addPage()
       }
-      doc.moveDown()
+      doc.font('Helvetica-Bold').fontSize(12).fillColor('#374151').text(section.title)
+      doc.moveDown(0.3)
+
+      // Table header
+      let tableX = pageMargin
+      let tableY = doc.y
+
+      doc.save()
+      doc.rect(tableX, tableY, pageWidth, HEADER_HEIGHT).fill(HEADER_BG)
+      doc.font('Helvetica-Bold').fontSize(HEADER_FONT_SIZE).fillColor(HEADER_TEXT)
+      let cx = tableX
+      for (let ci = 0; ci < colCount; ci++) {
+        doc.text(section.headers[ci], cx + CELL_PAD_X, tableY + CELL_PAD_Y, {
+          width: scaledWidths[ci] - CELL_PAD_X * 2,
+          height: HEADER_HEIGHT,
+          ellipsis: true,
+          lineBreak: false,
+        })
+        cx += scaledWidths[ci]
+      }
+      doc.restore()
+      tableY += HEADER_HEIGHT
+
+      // Data rows
+      for (let ri = 0; ri < section.rows.length; ri++) {
+        if (tableY + ROW_HEIGHT > (doc.page.height as number) - 60) {
+          doc.addPage()
+          tableY = pageMargin
+        }
+
+        // Alternating row background
+        if (ri % 2 === 1) {
+          doc.save()
+          doc.rect(tableX, tableY, pageWidth, ROW_HEIGHT).fill(ROW_ALT_BG)
+          doc.restore()
+        }
+
+        // Row border
+        doc.save()
+        doc.moveTo(tableX, tableY + ROW_HEIGHT).lineTo(tableX + pageWidth, tableY + ROW_HEIGHT).strokeColor(BORDER_COLOR).lineWidth(0.5).stroke()
+        doc.restore()
+
+        cx = tableX
+        const row = section.rows[ri]
+        for (let ci = 0; ci < colCount; ci++) {
+          const val = String(row[section.headers[ci]] ?? '')
+          const isNumeric = val !== '' && !Number.isNaN(Number(val))
+          doc.font(isNumeric ? 'Courier' : 'Helvetica').fontSize(FONT_SIZE).fillColor('#374151')
+          doc.text(val, cx + CELL_PAD_X, tableY + CELL_PAD_Y, {
+            width: scaledWidths[ci] - CELL_PAD_X * 2,
+            height: ROW_HEIGHT,
+            ellipsis: true,
+            lineBreak: false,
+          })
+          cx += scaledWidths[ci]
+        }
+        tableY += ROW_HEIGHT
+      }
+
+      doc.y = tableY + 8
+    }
+
+    // --- Footer on every page ---
+    const pageCount = doc.bufferedPageRange().count
+    for (let i = 0; i < pageCount; i++) {
+      doc.switchToPage(i)
+      const footerY = (doc.page.height as number) - 30
+      doc.font('Helvetica').fontSize(8).fillColor('#9CA3AF')
+      doc.text(`Page ${i + 1} of ${pageCount}`, pageMargin, footerY, { width: pageWidth / 2 })
+      doc.text('Generated by Remit-Scout \u00B7 remit-scout.com', pageMargin + pageWidth / 2, footerY, {
+        width: pageWidth / 2,
+        align: 'right',
+      })
     }
 
     doc.end()

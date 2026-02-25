@@ -13,13 +13,14 @@ Detailed docs live under:
 ## Agent navigation (start here)
 1. System invariants: `ARCHITECTURE.md` (this file)
 2. IssueOps control plane: `docs/architecture/issueops.md`
-3. Providers: `docs/architecture/providers.md`
-4. Queues: `docs/architecture/queues.md`
-5. Observability: `docs/architecture/observability.md`
-6. Security posture: `docs/architecture/security.md`
-7. Deploy strategy: `docs/architecture/deploy-strategy.md`
-8. Runbooks (human-facing): `docs/runbooks/`
-9. DR runbook: `docs/runbooks/disaster-recovery.md`
+3. Agent deploy promotion checklist: `docs/runbooks/agent-deploy-promotion-checklist.md`
+4. Providers: `docs/architecture/providers.md`
+5. Queues: `docs/architecture/queues.md`
+6. Observability: `docs/architecture/observability.md`
+7. Security posture: `docs/architecture/security.md`
+8. Deploy strategy: `docs/architecture/deploy-strategy.md`
+9. Runbooks (human-facing): `docs/runbooks/`
+10. DR runbook: `docs/runbooks/disaster-recovery.md`
 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.
@@ -38,6 +39,7 @@ Detailed docs live under:
 - Method filters must only allow methods supported by providers.
 - Indices must respect rights-matrix allowlists (`allowed_in_teer`, `allowed_in_rci`, `allowed_in_rvi`) in both Gold and live API computations.
 - Cross-plane trace continuity is required for public request paths (A -> C -> B) using propagated trace context and correlation identifiers.
+- Plan-gated history windows must be enforced consistently across backend entitlements and UI selectors (free=30 days, plus=90 days, enterprise=extended/unlimited).
 
 ## Environment model
 - **dev**: optimized for speed of iteration, short TTLs, lower capacity.

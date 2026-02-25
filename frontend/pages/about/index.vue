@@ -1068,6 +1068,7 @@ defineOgImage({
 setSeo({
   title: 'About Remit-Scout | Independent Money Transfer Comparisons',
   description: 'Meet Remit-Scout: an independent platform built by expats to help families compare transfer costs, speed, and outcomes with transparent methods.',
+  noindex: true,
   canonical: canonicalUrl,
   ogImage: false,
   ogType: 'article',

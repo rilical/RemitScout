@@ -32,7 +32,10 @@
     </section>
 
     <!-- Start Here -->
-    <section class="py-16 lg:py-20 bg-surface">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-surface"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm font-semibold text-brand-600 uppercase tracking-wide mb-3">
@@ -81,7 +84,10 @@
     </section>
 
     <!-- Browse by Category -->
-    <section class="py-16 lg:py-20 bg-neutral-50">
+    <section
+      v-reveal
+      class="py-16 lg:py-20 bg-neutral-50"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="text-center mb-10">
           <h2 class="text-h2 font-bold text-neutral-900 mb-4">
@@ -126,6 +132,7 @@
     <template v-for="(cat, idx) in displayCategories" :key="cat.key">
       <section
         :id="cat.key"
+        v-reveal
         :class="['py-16 lg:py-20 scroll-mt-20', idx % 2 === 0 ? 'bg-surface' : 'bg-neutral-50']"
       >
         <div class="mx-auto max-w-page px-page-x">

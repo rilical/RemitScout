@@ -50,7 +50,6 @@ export const registerSessionTracker = (app: FastifyInstance) => {
       await repository.createSession({
         sessionId,
         userId: request.user.user_id,
-        ipAddress: anonymizedIp.truncatedIp ?? undefined,
         ipHash: anonymizedIp.ipHash ?? undefined,
         userAgent: userAgentFamily ?? undefined,
         deviceType: deviceType ?? undefined,

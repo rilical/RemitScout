@@ -47,7 +47,7 @@ const activeTourShot = computed(() => tourShots.find(s => s.id === activeTourSho
 const features = [
   { icon: 'bookmark', title: 'Watchlist', body: 'Save your corridors and see rate changes without searching again.', meta: 'Free: 3 corridors. Plus: 16 corridors.' },
   { icon: 'bell-alert', title: 'Rate alerts', body: 'Get notified when your target rate is hit.', meta: 'Free: 1 alert. Plus: 16 alerts.' },
-  { icon: 'clock', title: 'History', body: 'Understand the range before you send.', meta: 'Free: 30 days. Plus: 365 days.' },
+  { icon: 'clock', title: 'History', body: 'Understand the range before you send.', meta: 'Free: 30 days. Plus: 90 days.' },
   { icon: 'arrows-right-left', title: 'Comparison', body: 'Compare providers with fees and FX markup included.', meta: 'Always free.' },
   { icon: 'arrow-down-tray', title: 'Export', body: 'Download your history as CSV or PDF when you need records.', meta: 'Plus only.' },
   { icon: 'chart-bar', title: 'Pulse access', body: 'Live market intelligence: volatility signals, spread tracking, and provider shifts.', meta: 'Plus only.' },
@@ -160,7 +160,7 @@ const features = [
                       History
                     </div>
                     <div class="text-h4 font-bold text-rs-fg">
-                      365d
+                      90d
                     </div>
                   </div>
                   <div class="rounded-lg bg-neutral-50 p-3">

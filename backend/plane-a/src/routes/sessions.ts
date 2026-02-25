@@ -22,7 +22,6 @@ import {
   deriveRotatingSessionId,
   detectDeviceType,
   getLocationFromHeaders,
-  maskIpAddress,
 } from '../services/session-utils'
 import { anonymizeIpAddress, extractBrowserFamily } from '../services/privacy-utils'
 
@@ -261,7 +260,7 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
         session_id: session.session_id,
         device_type: session.device_type,
         location: session.location,
-        ip_address: maskIpAddress(session.ip_address),
+        ip_address: null,
         last_activity: session.last_activity.toISOString(),
         created_at: session.created_at.toISOString(),
         is_current: currentSessionId ? session.session_id === currentSessionId : false,
@@ -388,7 +387,6 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
         sessionId,
         userId: request.user?.user_id,
         anonId,
-        ipAddress: anonymizedIp.truncatedIp ?? undefined,
         ipHash: anonymizedIp.ipHash ?? undefined,
         userAgent: browserFamily ?? undefined,
         deviceType,

@@ -9,13 +9,13 @@ import {
 describe('currency limits', () => {
   it('computes USD min/max with expected bounds', () => {
     expect(getMinAmount('USD')).toBe(50)
-    expect(getMaxAmount('USD')).toBe(15000)
+    expect(getMaxAmount('USD')).toBe(10000)
   })
 
   it('sanitizes and clamps amounts when strict', () => {
     const sanitized = sanitizeAmount('10', 'USD')
     expect(sanitized).toBe(50)
-    expect(sanitizeAmount(20000, 'USD')).toBe(15000)
+    expect(sanitizeAmount(20000, 'USD')).toBe(10000)
   })
 
   it('validates amounts based on limits', () => {

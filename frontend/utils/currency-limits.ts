@@ -1,7 +1,7 @@
 /**
  * Fixed exchange rates relative to USD
  * These are approximate rates for validation purposes
- * Used to convert minimum ($50) and maximum ($15,000) amounts
+ * Used to convert minimum ($50) and maximum ($10,000) amounts
  */
 // Exchange rates below are rough estimates to USD for every supported currency, updated June 2024.
 // To add a new country or currency, insert the correct ISO code and an approximate USD rate.
@@ -219,13 +219,13 @@ export function getMinAmount(currencyCode: string): number {
 
 /**
  * Get the maximum amount for a given currency
- * Converts $15,000 USD to the target currency using fixed rates
+ * Converts $10,000 USD to the target currency using fixed rates
  */
 export function getMaxAmount(currencyCode: string): number {
   const currency = currencyCode.toUpperCase()
   const rate = FIXED_EXCHANGE_RATES[currency] || 1.0
 
-  // Convert $15,000 USD to target currency and round down to nearest reasonable number
+  // Convert $10,000 USD to target currency and round down to nearest reasonable number
   const maxAmount = MAX_AMOUNT_USD * rate
 
   // Round to reasonable precision based on currency value

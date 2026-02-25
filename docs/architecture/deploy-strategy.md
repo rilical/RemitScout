@@ -1,5 +1,8 @@
 # Deploy Strategy (Remit-Scout V2)
 
+Canonical agent checklist:
+- `docs/runbooks/agent-deploy-promotion-checklist.md`
+
 ## Current Production Path
 1. `ci/main` must succeed before `cd/deploy` starts from `main` for staging.
 2. Staging deploy runs image build, security gates, migration, smoke, and rollback-on-smoke-failure.
@@ -25,4 +28,3 @@
   - `ci/pr`
   - coverage status checks from Codecov (`project` and critical flags)
   - security scanning checks (`Security Scanning`, `codeql-analysis`)
-

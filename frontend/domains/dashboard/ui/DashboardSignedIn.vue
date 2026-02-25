@@ -229,7 +229,7 @@ class="text-body-sm text-white/70"
                 <span
 v-else
 class="text-body-sm text-white"
->365 days</span>
+>{{ isEnterprise ? '365 days' : '90 days' }}</span>
               </div>
               <div class="text-h3 font-semibold text-white">{{ compareCount }}</div>
                 <div
@@ -283,7 +283,7 @@ class="mt-2"
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="font-semibold text-body-lg">You're approaching your limits</h3>
-              <p class="text-white/90 text-body-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 365-day history, and exports.</p>
+              <p class="text-white/90 text-body-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 90-day history, and exports.</p>
             </div>
 	              <NuxtLink
 	                to="/plus/checkout"
@@ -424,14 +424,14 @@ class="mt-2"
                           isTimeframeLocked(period.value) ? 'opacity-50 cursor-not-allowed' : '',
                         ]"
                         :disabled="isTimeframeLocked(period.value)"
-                        :title="isTimeframeLocked(period.value) ? 'Plus required' : undefined"
+                        :title="lockedTimeframeTitle(period)"
                         @click="graphTimeframe = period.value"
                       >
                         {{ period.label }}
                         <span
-v-if="period.plusOnly && !isPlus"
+v-if="period.requiredPlan && isTimeframeLocked(period.value)"
 class="ml-1 text-[10px] text-neutral-400"
->Plus</span>
+>{{ period.requiredPlan === 'enterprise' ? 'Enterprise' : 'Plus' }}</span>
                       </button>
                     </div>
                   </div>
@@ -487,9 +487,15 @@ class="ml-1 text-[10px] text-neutral-400"
 			                          <span>Loading rate history...</span>
 			                        </span>
 			                        <span v-else-if="!selectedCorridor">Select a corridor</span>
-			                        <span v-else-if="!currentRate.isAvailable">No rate history yet</span>
+			                        <span v-else-if="!currentRate.isAvailable">{{ selectedHistoryStatusMessage }}</span>
 			                        <span v-else>{{ currentRate.updatedLabel }}</span>
 			                      </div>
+                        <div
+                          v-if="selectedHistoryDerivedLabel && currentRate.isAvailable"
+                          class="text-body-sm text-neutral-500 mt-0.5"
+                        >
+                          {{ selectedHistoryDerivedLabel }}
+                        </div>
                     </div>
 
                     <!-- Rate Stats -->
@@ -524,11 +530,11 @@ class="ml-1 text-[10px] text-neutral-400"
 	                        message="Loading rate history..."
 	                      />
 	                    </div>
-                    <div
+<div
 v-else-if="graphData.length === 0"
 class="absolute inset-0 flex items-center justify-center text-body-sm text-neutral-400"
 >
-                      No rate history yet
+                      {{ selectedHistoryStatusMessage }}
                     </div>
                     <svg
 v-else
@@ -1021,7 +1027,7 @@ class="bg-brand-600 rounded-xl p-5 text-white"
 	                  </div>
 	                  <div class="flex-1">
 	                    <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
-	                    <p class="text-body-sm text-white/90 mb-3">Get Pulse access, 16 alerts, 365-day history, exports, and an ad-free experience.</p>
+	                    <p class="text-body-sm text-white/90 mb-3">Get Pulse access, 16 alerts, 90-day history, exports, and an ad-free experience.</p>
 			                    <NuxtLink
 	to="/plus"
 	class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
@@ -2497,7 +2503,7 @@ class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
 	              </div>
               <div class="flex-1">
                 <h4 class="font-semibold text-brand-600 text-body-sm mb-1">Limited to 30-Day History</h4>
-                <p class="text-body-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 365-day history and export.</p>
+                <p class="text-body-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 90-day history and export.</p>
 	                <NuxtLink
 	to="/plus/checkout"
 	class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
@@ -4069,7 +4075,7 @@ class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border bord
 	                      </div>
                       <div class="flex-1">
                         <h4 class="text-body-sm font-semibold text-rs-fg">Upgrade to Plus</h4>
-                        <p class="text-body-sm text-neutral-600 mt-0.5">Pulse access, 16 alerts, 365-day history, exports, and ad-free</p>
+                        <p class="text-body-sm text-neutral-600 mt-0.5">Pulse access, 16 alerts, 90-day history, exports, and ad-free</p>
                       </div>
                       <button
                         type="button"
@@ -4805,6 +4811,7 @@ import { COUNTRIES } from '~/utils/countries-currencies'
 	import { getCorridors } from '~/lib/pulseApi'
 	import type { CorridorOption } from '~/types/pulse'
 	import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
+import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed'
 
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
 type AccountSection = 'profile' | 'billing' | 'notifications' | 'security' | 'privacy' | 'compliance'
@@ -4958,11 +4965,19 @@ type RateHistoryEntry = {
   source?: string | null
 }
 
+type RateHistoryStatus = 'ready' | 'warming' | 'unavailable'
+
 type RateHistoryResponse = {
   base: string
   quote: string
   history: RateHistoryEntry[]
   lastUpdated: string | null
+  status: RateHistoryStatus
+  message: string | null
+  refreshQueued: boolean
+  refreshRequestId: string | null
+  derived: boolean
+  bridgeCurrency: 'USD' | 'EUR' | null
 }
 
 type ProviderRateEntry = {
@@ -5109,9 +5124,70 @@ const getRateHistoryMeta = (base: string, quote: string, days: number) => {
   return rateHistoryCache.value[buildHistoryKey(base, quote, days)] ?? null
 }
 
-const loadRateHistory = async (base: string, quote: string, days: number, signal?: AbortSignal) => {
+const normalizeRateHistoryResponse = (
+  base: string,
+  quote: string,
+  response: Partial<RateHistoryResponse> | null | undefined,
+): RateHistoryResponse => {
+  const history = Array.isArray(response?.history)
+    ? response.history
+      .map(entry => ({
+        date: String(entry.date),
+        rate: Number(entry.rate),
+        bid: entry.bid ?? null,
+        ask: entry.ask ?? null,
+        source: entry.source ?? null,
+      }))
+      .filter(entry => entry.date && Number.isFinite(entry.rate))
+    : []
+
+  const rawStatus = response?.status
+  const status: RateHistoryStatus = (
+    rawStatus === 'ready' || rawStatus === 'warming' || rawStatus === 'unavailable'
+      ? rawStatus
+      : history.length > 0
+        ? 'ready'
+        : 'warming'
+  )
+
+  const message = typeof response?.message === 'string'
+    ? response.message
+    : status === 'warming'
+      ? 'Rate history is warming up.'
+      : status === 'unavailable'
+        ? 'Rate history is unavailable for this corridor right now.'
+        : null
+
+  return {
+    base: (response?.base || base).toUpperCase(),
+    quote: (response?.quote || quote).toUpperCase(),
+    history,
+    lastUpdated: typeof response?.lastUpdated === 'string' ? response.lastUpdated : null,
+    status,
+    message,
+    refreshQueued: Boolean(response?.refreshQueued),
+    refreshRequestId: typeof response?.refreshRequestId === 'string'
+      ? response.refreshRequestId
+      : null,
+    derived: Boolean(response?.derived),
+    bridgeCurrency: response?.bridgeCurrency === 'USD' || response?.bridgeCurrency === 'EUR'
+      ? response.bridgeCurrency
+      : null,
+  }
+}
+
+const loadRateHistory = async (
+  base: string,
+  quote: string,
+  days: number,
+  signal?: AbortSignal,
+  options: { force?: boolean } = {},
+) => {
+  const force = options.force === true
   const key = buildHistoryKey(base, quote, days)
-  if (rateHistoryLoading.value[key] || rateHistoryCache.value[key]) return
+  const cached = rateHistoryCache.value[key]
+  const isTerminal = Boolean(cached && (cached.history.length > 0 || cached.status === 'unavailable'))
+  if (rateHistoryLoading.value[key] || (!force && isTerminal)) return
   rateHistoryLoading.value[key] = true
   rateHistoryErrors.value[key] = null
   try {
@@ -5119,14 +5195,28 @@ const loadRateHistory = async (base: string, quote: string, days: number, signal
       query: { base, quote, days },
       signal,
     })
-    rateHistoryCache.value = { ...rateHistoryCache.value, [key]: response }
+    rateHistoryCache.value = {
+      ...rateHistoryCache.value,
+      [key]: normalizeRateHistoryResponse(base, quote, response),
+    }
   }
  catch (error: any) {
     if (error?.name === 'AbortError') return
     rateHistoryErrors.value[key] = error?.message || 'Unable to load rate history.'
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
-      [key]: { base, quote, history: [], lastUpdated: null },
+      [key]: {
+        base: base.toUpperCase(),
+        quote: quote.toUpperCase(),
+        history: [],
+        lastUpdated: null,
+        status: 'unavailable',
+        message: error?.message || 'Unable to load rate history.',
+        refreshQueued: false,
+        refreshRequestId: null,
+        derived: false,
+        bridgeCurrency: null,
+      },
     }
   }
  finally {
@@ -6507,17 +6597,47 @@ useAbortableWatch(
 	  },
 	)
 
-const timeframePeriods = [
-  { label: '7D', value: '7d' },
-  { label: '1M', value: '30d' },
-  { label: '3M', value: '90d', plusOnly: true },
-  { label: '6M', value: '180d', plusOnly: true },
-  { label: '1Y', value: '365d', plusOnly: true },
+type TimeframePeriod = {
+  label: string
+  value: '7d' | '30d' | '90d' | '180d' | '365d'
+  requiredPlan: 'plus' | 'enterprise' | null
+}
+
+const allTimeframePeriods: TimeframePeriod[] = [
+  { label: '7D', value: '7d', requiredPlan: null },
+  { label: '1M', value: '30d', requiredPlan: null },
+  { label: '3M', value: '90d', requiredPlan: 'plus' },
+  { label: '6M', value: '180d', requiredPlan: 'enterprise' },
+  { label: '1Y', value: '365d', requiredPlan: 'enterprise' },
 ]
 
+const timeframePeriods = computed<TimeframePeriod[]>(() => {
+  if (isEnterprise.value) return allTimeframePeriods
+  if (isPlus.value) return allTimeframePeriods.filter(period => period.requiredPlan !== 'enterprise')
+  return allTimeframePeriods
+})
+
+const hasTimeframeAccess = (period: TimeframePeriod) => {
+  if (!period.requiredPlan) return true
+  if (period.requiredPlan === 'plus') return isPlus.value
+  return isEnterprise.value
+}
+
 const isTimeframeLocked = (value: string) => {
-  if (isPlus.value) return false
-  return value === '90d' || value === '180d' || value === '365d'
+  const period = allTimeframePeriods.find(entry => entry.value === value)
+  if (!period) return false
+  return !hasTimeframeAccess(period)
+}
+
+const lockedTimeframeTitle = (period: TimeframePeriod) => {
+  if (hasTimeframeAccess(period)) return undefined
+  return period.requiredPlan === 'enterprise' ? 'Enterprise required' : 'Plus required'
+}
+
+const getAllowedTimeframes = () => {
+  if (isEnterprise.value) return ['7d', '30d', '90d', '180d', '365d']
+  if (isPlus.value) return ['7d', '30d', '90d']
+  return ['7d', '30d']
 }
 
 const countryOptions = computed(() => {
@@ -6537,10 +6657,35 @@ const inlineToOptions = computed(() => countryOptions.value)
 
 const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
 
-	const selectedPair = computed(() => {
+const selectedPair = computed(() => {
 	  if (!selectedCorridor.value) return null
 	  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
 	})
+
+const selectedHistoryMeta = computed(() => {
+  const pair = selectedPair.value
+  if (!pair) return null
+  return getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
+})
+
+const selectedHistoryStatusMessage = computed(() => {
+  if (!selectedCorridor.value) return 'Select a corridor'
+  const meta = selectedHistoryMeta.value
+  if (!meta) return 'No rate history yet'
+  if (typeof meta.message === 'string' && meta.message.trim().length > 0) return meta.message
+  if (meta.status === 'warming') return 'Rate history is warming up.'
+  if (meta.status === 'unavailable') return 'Rate history is unavailable for this corridor right now.'
+  return 'No rate history yet'
+})
+
+const selectedHistoryDerivedLabel = computed(() => {
+  const meta = selectedHistoryMeta.value
+  if (!meta?.derived) return null
+  if (meta.bridgeCurrency === 'USD' || meta.bridgeCurrency === 'EUR') {
+    return `Derived via ${meta.bridgeCurrency} bridge`
+  }
+  return 'Derived history'
+})
 
 const selectedSnapshot = computed<RateSnapshot>(() => {
   const pair = selectedPair.value
@@ -6555,6 +6700,7 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
       history: [],
     }
   }
+  const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
   const history = getRateHistory(pair.base, pair.quote, selectedHistoryDays.value)
   if (!history.length) {
     return {
@@ -6563,7 +6709,7 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
       change: null,
       changeValue: 0,
       hasChange: false,
-      lastUpdated: null,
+      lastUpdated: meta?.lastUpdated ?? null,
       history,
     }
   }
@@ -6573,7 +6719,6 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
     ? ((latest.rate - previous.rate) / previous.rate) * 100
     : null
   const hasChange = change !== null && change !== undefined && Number.isFinite(change)
-  const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
   return {
     rateLabel: formatRateValue(latest.rate),
     rateValue: latest.rate,
@@ -6591,6 +6736,53 @@ const selectedHistoryLoading = computed(() => {
   const key = buildHistoryKey(pair.base, pair.quote, selectedHistoryDays.value)
   return Boolean(rateHistoryLoading.value[key])
 })
+
+const SELECTED_HISTORY_REFRESH_POLL_MS = 2500
+const SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS = 8
+const selectedHistoryRefreshAttempts = ref(0)
+const selectedHistoryRefreshTimer = ref<number | null>(null)
+const selectedHistoryLastRefreshRequestId = ref<string | null>(null)
+const selectedHistoryLastPairKey = ref<string | null>(null)
+
+const stopSelectedHistoryRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (selectedHistoryRefreshTimer.value !== null) {
+    window.clearTimeout(selectedHistoryRefreshTimer.value)
+    selectedHistoryRefreshTimer.value = null
+  }
+}
+
+const shouldPollSelectedHistory = () => {
+  const meta = selectedHistoryMeta.value
+  if (!meta) return false
+  if (meta.history.length > 0) return false
+  if (meta.status !== 'warming') return false
+  return Boolean(meta.refreshQueued && meta.refreshRequestId)
+}
+
+const scheduleSelectedHistoryRefreshPoll = () => {
+  if (!import.meta.client) return
+  if (selectedHistoryRefreshTimer.value !== null) return
+  if (selectedHistoryRefreshAttempts.value >= SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS) return
+  const pair = selectedPair.value
+  if (!pair) return
+  if (!shouldPollSelectedHistory()) return
+
+  selectedHistoryRefreshTimer.value = window.setTimeout(async () => {
+    selectedHistoryRefreshTimer.value = null
+    selectedHistoryRefreshAttempts.value += 1
+    try {
+      await loadRateHistory(pair.base, pair.quote, selectedHistoryDays.value, undefined, { force: true })
+    }
+    catch (error: any) {
+      if (error?.name === 'AbortError') return
+    }
+
+    if (shouldPollSelectedHistory() && selectedHistoryRefreshAttempts.value < SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS) {
+      scheduleSelectedHistoryRefreshPoll()
+    }
+  }, SELECTED_HISTORY_REFRESH_POLL_MS)
+}
 
 const currentRate = computed(() => {
   return {
@@ -6633,11 +6825,59 @@ useAbortableWatch(
   { immediate: true },
 )
 
-watch(() => isPlus.value, (value) => {
-  if (!value && isTimeframeLocked(graphTimeframe.value)) {
-    graphTimeframe.value = '30d'
-  }
+watch(
+  () => ({
+    requestId: selectedHistoryMeta.value?.refreshRequestId ?? null,
+    refreshQueued: Boolean(selectedHistoryMeta.value?.refreshQueued),
+    status: selectedHistoryMeta.value?.status ?? null,
+    historyLength: selectedHistoryMeta.value?.history.length ?? 0,
+    pairKey: selectedPair.value ? `${selectedPair.value.base}-${selectedPair.value.quote}` : null,
+    days: selectedHistoryDays.value,
+  }),
+  (state) => {
+    if (!import.meta.client) return
+
+    if (state.pairKey !== selectedHistoryLastPairKey.value) {
+      selectedHistoryLastPairKey.value = state.pairKey
+      selectedHistoryRefreshAttempts.value = 0
+      stopSelectedHistoryRefreshPoll()
+    }
+
+    if (state.requestId !== selectedHistoryLastRefreshRequestId.value) {
+      selectedHistoryLastRefreshRequestId.value = state.requestId
+      selectedHistoryRefreshAttempts.value = 0
+    }
+
+    const canPoll = Boolean(
+      state.pairKey
+      && state.status === 'warming'
+      && state.refreshQueued
+      && state.requestId
+      && state.historyLength === 0,
+    )
+    if (!canPoll) {
+      stopSelectedHistoryRefreshPoll()
+      return
+    }
+
+    scheduleSelectedHistoryRefreshPoll()
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  stopSelectedHistoryRefreshPoll()
 })
+
+watch(
+  () => [isPlus.value, isEnterprise.value] as const,
+  () => {
+    const allowedTimeframes = getAllowedTimeframes()
+    if (allowedTimeframes.includes(graphTimeframe.value)) return
+    graphTimeframe.value = isPlus.value ? '90d' : '30d'
+  },
+  { immediate: true },
+)
 
 	function selectCorridor(from: string, to: string) {
 	  const nextFrom = (from || '').trim().toUpperCase()
@@ -7733,31 +7973,11 @@ function openCreateAlert() {
     openLimitModal('alert')
     return
   }
-  const selected = selectedCorridor.value
-    ? ({
-        target: { type: 'corridor', from: selectedCorridor.value.from, to: selectedCorridor.value.to, method: 'bank' } as WatchTarget,
-        label: `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`,
-      })
-    : null
-
-  const first = corridorWatchlistItems.value[0]
-  const fromWatchlist = first?.target?.type === 'corridor'
-    ? ({ target: first.target as WatchTarget, label: first.label })
-    : null
-
-  const recent = recentSearches.value?.[0]
-  const fromRecent = recent?.from && recent?.to
-    ? ({
-        target: { type: 'corridor', from: String(recent.from).toUpperCase(), to: String(recent.to).toUpperCase(), method: 'bank' } as WatchTarget,
-        label: `${String(recent.from).toUpperCase()} → ${String(recent.to).toUpperCase()}`,
-      })
-    : null
-
-  const fallback = selected ?? fromWatchlist ?? fromRecent
-  if (!fallback) {
-    showCorridorSelector.value = true
-    return
-  }
+  const fallback = resolveDashboardAlertSeed({
+    selectedCorridor: selectedCorridor.value,
+    watchlistCorridors: corridorWatchlistItems.value,
+    recentSearches: recentSearches.value,
+  })
 
   modal.open({
     target: fallback.target,

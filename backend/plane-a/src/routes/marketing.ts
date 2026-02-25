@@ -184,10 +184,11 @@ const sendToMeta = async (payload: {
   }
 
   try {
-    const response = await fetch(`https://graph.facebook.com/v17.0/${pixelId}/events?access_token=${accessToken}`, {
+    const response = await fetch(`https://graph.facebook.com/v17.0/${pixelId}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(body),
     })
@@ -223,8 +224,8 @@ const sendToTikTok = async (payload: {
   email?: string | null
   phone?: string | null
   external_id?: string | null
-  client_ip?: string | null
-  user_agent?: string | null
+  client_ip_hash?: string | null
+  user_agent_family?: string | null
   custom_data?: Record<string, unknown>
 }) => {
   const pixelId = config.marketing.tiktok.pixelId
@@ -247,8 +248,8 @@ const sendToTikTok = async (payload: {
     email: hashValue(payload.email),
     phone_number: hashPhone(payload.phone),
     external_id: hashValue(payload.external_id),
-    ip: payload.client_ip ?? undefined,
-    user_agent: payload.user_agent ?? undefined,
+    ip: payload.client_ip_hash ?? undefined,
+    user_agent: payload.user_agent_family ?? undefined,
     ttclid: payload.ttclid ?? undefined,
     ttp: payload.ttp ?? undefined,
   })
@@ -398,7 +399,7 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         li_fat_id: input.li_fat_id ?? null,
         fbc: input.fbc ?? null,
         fbp: input.fbp ?? null,
-        client_ip: privacyContext.clientIp ?? null,
+        client_ip: null,
         client_ip_hash: privacyContext.clientIpHash ?? null,
         user_agent: privacyContext.userAgentFamily ?? null,
       })
@@ -460,10 +461,6 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       ip: request.ip,
       headers: request.headers as Record<string, unknown>,
     })
-    const rawUserAgent = typeof request.headers['user-agent'] === 'string'
-      ? request.headers['user-agent']
-      : null
-    const rawClientIp = typeof request.ip === 'string' ? request.ip : null
     const seed = `${privacyContext.clientIpHash || privacyContext.clientIp || 'unknown'}:${input.event_name}`
     const rateKey = buildRateLimitKey('marketing:tiktok', seed)
     if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
@@ -496,7 +493,7 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         li_fat_id: input.li_fat_id ?? null,
         fbc: input.fbc ?? null,
         fbp: input.fbp ?? null,
-        client_ip: privacyContext.clientIp ?? null,
+        client_ip: null,
         client_ip_hash: privacyContext.clientIpHash ?? null,
         user_agent: privacyContext.userAgentFamily ?? null,
       })
@@ -520,8 +517,8 @@ export const marketingRoutes = async (app: FastifyInstance) => {
         email: request.user?.email ?? input.email ?? null,
         phone: input.phone ?? null,
         external_id: request.user?.user_id ?? input.external_id ?? null,
-        client_ip: rawClientIp,
-        user_agent: rawUserAgent,
+        client_ip_hash: privacyContext.clientIpHash ?? null,
+        user_agent_family: privacyContext.userAgentFamily ?? null,
         custom_data: input.custom_data,
       })
 

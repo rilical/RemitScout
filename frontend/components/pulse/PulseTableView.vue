@@ -158,7 +158,7 @@
             Unlock full history with Plus
           </p>
           <p class="mt-1 text-body-sm text-neutral-400">
-            Get access to 365 days of data, full table access, and CSV export.
+            Get access to 90 days of data, full table access, and CSV export.
           </p>
           <NuxtLink
             to="/plus"

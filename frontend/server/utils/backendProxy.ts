@@ -383,6 +383,12 @@ const mockRatesHistory = (query: Record<string, unknown>): MockResult => {
       quote,
       history,
       lastUpdated,
+      status: 'ready',
+      message: null,
+      refreshQueued: false,
+      refreshRequestId: null,
+      derived: false,
+      bridgeCurrency: null,
     },
   }
 }

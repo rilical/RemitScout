@@ -4,7 +4,10 @@
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs :items="breadcrumbItems" />
         <!-- Hero Section -->
-        <div class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl relative overflow-hidden">
+        <div
+          v-reveal
+          class="mb-10 rounded-3xl border border-rs-border bg-surface p-10 shadow-xl relative overflow-hidden"
+        >
           <div>
             <div class="inline-flex items-center gap-2 rounded-full border border-rs-border bg-surface px-4 py-2 text-body-sm font-semibold uppercase tracking-[0.2em] text-neutral-600 mb-6">
               Contact
@@ -248,7 +251,10 @@
     </div>
 
     <!-- FAQ Section -->
-    <section class="py-16 bg-neutral-50">
+    <section
+      v-reveal
+      class="py-16 bg-neutral-50"
+    >
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-3xl">
           <div class="text-center mb-10">

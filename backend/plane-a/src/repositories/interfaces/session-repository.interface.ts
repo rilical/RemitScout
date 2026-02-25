@@ -3,7 +3,6 @@ export type SessionRecord = {
   session_id: string
   user_id: string | null
   anon_id: string | null
-  ip_address: string | null
   ip_hash: string | null
   user_agent: string | null
   device_type: string | null
@@ -19,7 +18,6 @@ export type SessionCreateInput = {
   sessionId: string
   userId?: string
   anonId?: string
-  ipAddress?: string
   ipHash?: string
   userAgent?: string
   deviceType?: string

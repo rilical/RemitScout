@@ -7,22 +7,25 @@
     />
 
     <!-- 4. Top 3 live results preview (right under hero) -->
-    <FeaturedProvidersDynamic />
+    <FeaturedProvidersDynamic v-reveal />
 
     <!-- 4b. Remit-Score explanation -->
-    <RemitScoreBanner />
+    <RemitScoreBanner v-reveal />
 
     <!-- EEAT: Transparency Strip (how we compare) -->
-    <TransparencyStrip />
+    <TransparencyStrip v-reveal />
 
     <!-- 5. Trust metrics strip (compact) -->
-    <TrustMetricsStrip />
+    <TrustMetricsStrip v-reveal />
 
     <!-- EEAT: Independence Badge -->
-    <IndependenceBadge />
+    <IndependenceBadge v-reveal />
 
     <!-- 6. Popular corridor chips -->
-    <AsyncErrorBoundary skeleton-height="160">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="160"
+    >
       <CorridorsGridDynamic
 dark
 @corridor-selected="handleCorridorSelected"
@@ -30,77 +33,115 @@ dark
     </AsyncErrorBoundary>
 
     <!-- Educational comparison: Bank vs Specialist -->
-    <AsyncErrorBoundary skeleton-height="220">
+    <AsyncErrorBoundary
+      v-reveal.slide-left
+      skeleton-height="220"
+    >
       <BankVsSpecialistDynamic />
     </AsyncErrorBoundary>
 
     <!-- 7. How it works (3 steps) -->
-    <AsyncErrorBoundary skeleton-height="220">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="220"
+    >
       <HowItWorks />
     </AsyncErrorBoundary>
 
     <!-- 8. The story behind Remit-Scout (Omar's story) -->
-    <AsyncErrorBoundary skeleton-height="260">
+    <AsyncErrorBoundary
+      v-reveal.slide-right
+      skeleton-height="260"
+    >
       <FounderStory />
     </AsyncErrorBoundary>
 
     <!-- EEAT: Why prices vary (user education) -->
-    <AsyncErrorBoundary skeleton-height="220">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="220"
+    >
       <WhyPricesVary />
     </AsyncErrorBoundary>
 
     <!-- 9b. Remit-Scout Pulse (What's Moving Today) -->
     <AsyncErrorBoundary
       v-if="pulseEnabled"
+      v-reveal
       skeleton-height="220"
     >
       <PulseTeaserSection />
     </AsyncErrorBoundary>
 
     <!-- 10b. Remit-Scout Plus teaser (upgrade benefits) -->
-    <AsyncErrorBoundary skeleton-height="180">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="180"
+    >
       <PlusTeaser />
     </AsyncErrorBoundary>
 
     <!-- 9c. Institutional teaser (subtle B2B signal) -->
     <AsyncErrorBoundary
+      v-reveal
       skeleton-height="180"
     >
       <InstitutionalTeaser />
     </AsyncErrorBoundary>
 
     <!-- 11. Testimonials (3 short, real quotes) -->
-    <AsyncErrorBoundary skeleton-height="240">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="240"
+    >
       <TestimonialsCarousel />
     </AsyncErrorBoundary>
 
     <!-- 12. Education / Resources cards -->
-    <AsyncErrorBoundary skeleton-height="240">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="240"
+    >
       <LatestGuides />
     </AsyncErrorBoundary>
 
     <!-- Travel Tools as part of resources -->
-    <AsyncErrorBoundary skeleton-height="240">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="240"
+    >
       <TravelToolsSection />
     </AsyncErrorBoundary>
 
     <!-- 13. Countries coverage grid (154 countries) -->
-    <AsyncErrorBoundary skeleton-height="300">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="300"
+    >
       <CountryGrid />
     </AsyncErrorBoundary>
 
     <!-- 14. FAQ (accordion, 5-7 items) -->
-    <AsyncErrorBoundary skeleton-height="240">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="240"
+    >
       <HomeFaq />
     </AsyncErrorBoundary>
 
     <!-- 15. Newsletter signup (AFTER FAQ, before final CTA) -->
-    <AsyncErrorBoundary skeleton-height="180">
+    <AsyncErrorBoundary
+      v-reveal
+      skeleton-height="180"
+    >
       <NewsletterSignup />
     </AsyncErrorBoundary>
 
     <!-- 16. Final CTA band -->
-    <AsyncErrorBoundary skeleton-height="180">
+    <AsyncErrorBoundary
+      v-reveal.scale-in
+      skeleton-height="180"
+    >
       <CtaBanner />
     </AsyncErrorBoundary>
 

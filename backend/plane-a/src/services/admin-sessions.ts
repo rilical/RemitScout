@@ -418,9 +418,7 @@ export const revokeAdminJti = async (jti: string, ttlSeconds: number) => {
 }
 
 const shouldFailClosedOnRevocationCheck = (): boolean => {
-  const raw = process.env.PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED
-  if (!raw) return false
-  return ['1', 'true', 'yes', 'on'].includes(raw.toLowerCase())
+  return config.planeA.adminRevocationFailClosed
 }
 
 export const isAdminJtiRevoked = async (jti: string) => {
