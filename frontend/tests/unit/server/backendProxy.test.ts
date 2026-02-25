@@ -178,10 +178,18 @@ describe('proxyToBackend', () => {
       return await proxyToBackend(event, '/pulse/teaser')
     })
 
-    await fetch(`${active.baseUrl}/`)
-    await fetch(`${active.baseUrl}/`)
+    const first = await fetch(`${active.baseUrl}/`)
+    const second = await fetch(`${active.baseUrl}/`)
 
-    const criticalCalls = errorSpy.mock.calls.filter((call) =>
+    expect(first.status).toBe(503)
+    expect(second.status).toBe(503)
+    await expect(first.json()).resolves.toMatchObject({
+      error: 'service_unavailable',
+      code: 'e2e_mock_forbidden',
+      requestId: 'req_mock_warn',
+    })
+
+    const criticalCalls = errorSpy.mock.calls.filter(call =>
       String(call[0]).includes('[CRITICAL] E2E_MOCK_API is enabled'),
     )
 
@@ -189,6 +197,31 @@ describe('proxyToBackend', () => {
     expect($fetch.raw).not.toHaveBeenCalled()
 
     errorSpy.mockRestore()
+  })
+
+  it('fails closed for watchlist writes when E2E mocks are enabled in prod-like env', async () => {
+    process.env.E2E_MOCK_API = '1'
+    process.env.NODE_ENV = 'production'
+    process.env.ENVIRONMENT = 'staging'
+
+    active = await startServer(async (event) => {
+      event.context.requestId = 'req_watchlist_mock_block'
+      return await proxyToBackend(event, '/watchlist')
+    })
+
+    const res = await fetch(`${active.baseUrl}/`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ target: { type: 'corridor', from: 'US', to: 'MX' } }),
+    })
+
+    expect(res.status).toBe(503)
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'service_unavailable',
+      code: 'e2e_mock_forbidden',
+      requestId: 'req_watchlist_mock_block',
+    })
+    expect($fetch.raw).not.toHaveBeenCalled()
   })
 
   it('does not log critical warning for E2E mocks in dev env', async () => {
@@ -205,7 +238,7 @@ describe('proxyToBackend', () => {
 
     await fetch(`${active.baseUrl}/`)
 
-    const criticalCalls = errorSpy.mock.calls.filter((call) =>
+    const criticalCalls = errorSpy.mock.calls.filter(call =>
       String(call[0]).includes('[CRITICAL] E2E_MOCK_API is enabled'),
     )
     expect(criticalCalls).toHaveLength(0)

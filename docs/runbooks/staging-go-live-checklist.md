@@ -59,6 +59,8 @@ Source template:
 - [ ] `ENVIRONMENT=staging`
 - [ ] `NODE_ENV=staging`
 - [ ] `STRICT_CONFIG=1`
+- [ ] `READ_ONLY_MODE=0`
+- [ ] `E2E_MOCK_API` is unset (`0`/empty)
 - [ ] Staging DB URLs set (no prod DB values).
 - [ ] Staging Redis URL set.
 - [ ] Staging S3 buckets set (`BRONZE_S3_BUCKET`, `EXPORTS_S3_BUCKET`).
@@ -104,6 +106,7 @@ Source template:
 - [ ] Run workflow: `.github/workflows/staging-go-live-readiness.yml` (PASS).
 - [ ] Run workflow: `.github/workflows/deploy.yml` with `env=staging` (PASS).
 - [ ] Runtime config validation passes (`ci:config-validate` in staging profile).
+- [ ] Authenticated watchlist/alerts smoke passes (`pnpm -C backend ci:alerts-watchlists-smoke` in deploy pipeline).
 
 ## 10) Functional checks after deploy
 - [ ] Plane A health and key API routes respond.

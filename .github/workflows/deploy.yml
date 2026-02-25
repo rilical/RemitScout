@@ -814,6 +814,41 @@ jobs:
             exit 1
           fi
 
+      - name: Authenticated Watchlist/Alerts Smoke (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: ${{ secrets.SMOKE_USER_EMAIL }}
+          SMOKE_USER_PASSWORD: ${{ secrets.SMOKE_USER_PASSWORD }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for authenticated smoke."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_EMAIL:-}" ] || [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD secrets for authenticated smoke."
+            exit 1
+          fi
+
+          SMOKE_BASE_URL="$api_base" \
+          SUPABASE_URL="$SUPABASE_URL" \
+          SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+          SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
+          SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
+          pnpm -C backend ci:alerts-watchlists-smoke
+
       - name: Post-deploy Smoke (staging) + Auto Rollback On Failure
         shell: bash
         env:

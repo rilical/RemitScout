@@ -1,6 +1,13 @@
 import { createId } from '~/utils/id'
 import type { WatchTarget, WatchlistItem } from '~/types/tracking'
 
+export type WatchlistSaveErrorReason =
+  | 'unauthorized'
+  | 'account_deleted'
+  | 'limit_reached'
+  | 'service_unavailable'
+  | 'unknown'
+
 export type SaveResult =
   | {
     status: 'saved' | 'already_saved'
@@ -13,7 +20,10 @@ export type SaveResult =
   }
   | {
     status: 'error'
+    reason: WatchlistSaveErrorReason
     message: string
+    requestId?: string
+    cloudfrontRequestId?: string
   }
 
 type WatchlistApiResponse = {
@@ -28,6 +38,133 @@ type WatchlistApiResponse = {
 
 export type WatchlistSyncResult = {
   idMap: Record<string, string>
+}
+
+type WatchlistSaveApiErrorData = {
+  error?: string
+  message?: string
+  limit?: number
+}
+
+type WatchlistRequestError = Error & {
+  statusCode?: number
+  data?: WatchlistSaveApiErrorData
+  requestId?: string
+  cloudfrontRequestId?: string
+}
+
+type WatchlistSaveFailureDetails = {
+  statusCode: number | null
+  code: string | null
+  message: string | null
+  limit: number | null
+  requestId?: string
+  cloudfrontRequestId?: string
+}
+
+const WATCHLIST_SAVE_DEFAULT_ERROR_MESSAGE = 'Unable to save watchlist item right now.'
+const WATCHLIST_SAVE_UNAUTHORIZED_MESSAGE = 'Your session expired. Please sign in again to save your watchlist.'
+const WATCHLIST_SAVE_ACCOUNT_DELETED_MESSAGE = 'This account has been deleted and can no longer save watchlist items.'
+const WATCHLIST_SAVE_SERVICE_UNAVAILABLE_MESSAGE = 'Watchlist service is temporarily unavailable. Please try again.'
+
+const toNonEmptyString = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+const normalizeErrorData = (value: unknown): WatchlistSaveApiErrorData => {
+  if (!value || typeof value !== 'object') return {}
+  const data = value as Record<string, unknown>
+  const error = toNonEmptyString(data.error)
+  const message = toNonEmptyString(data.message)
+  const limit = typeof data.limit === 'number' && Number.isFinite(data.limit) ? data.limit : undefined
+  return { error: error || undefined, message: message || undefined, limit }
+}
+
+const extractSaveFailureDetails = (error: unknown): WatchlistSaveFailureDetails => {
+  const normalized = (error || {}) as WatchlistRequestError
+  const statusCode = typeof normalized.statusCode === 'number' ? normalized.statusCode : null
+  const data = normalizeErrorData(normalized.data)
+  const code = toNonEmptyString(data.error)?.toLowerCase() || null
+  const message = data.message || toNonEmptyString(normalized.message)
+  const limit = typeof data.limit === 'number' ? data.limit : null
+
+  return {
+    statusCode,
+    code,
+    message,
+    limit,
+    requestId: toNonEmptyString(normalized.requestId) || undefined,
+    cloudfrontRequestId: toNonEmptyString(normalized.cloudfrontRequestId) || undefined,
+  }
+}
+
+export function mapWatchlistSaveFailure(error: unknown): Extract<SaveResult, { status: 'error' }> {
+  const details = extractSaveFailureDetails(error)
+
+  const isUnauthorized = details.statusCode === 401
+    || details.code === 'unauthorized'
+    || details.code === 'missing_token'
+    || details.code === 'invalid_token'
+    || details.code === 'expired_token'
+    || details.code === 'token_too_old'
+    || details.code === 'revoked_token'
+    || details.code === 'verification_failed'
+
+  if (details.code === 'limit_reached' || (details.statusCode === 403 && details.code === 'limit_reached')) {
+    return {
+      status: 'error',
+      reason: 'limit_reached',
+      message: details.message || 'Watchlist limit reached.',
+      requestId: details.requestId,
+      cloudfrontRequestId: details.cloudfrontRequestId,
+    }
+  }
+
+  if (isUnauthorized) {
+    return {
+      status: 'error',
+      reason: 'unauthorized',
+      message: details.message || WATCHLIST_SAVE_UNAUTHORIZED_MESSAGE,
+      requestId: details.requestId,
+      cloudfrontRequestId: details.cloudfrontRequestId,
+    }
+  }
+
+  if (details.statusCode === 403 && details.code === 'account_deleted') {
+    return {
+      status: 'error',
+      reason: 'account_deleted',
+      message: details.message || WATCHLIST_SAVE_ACCOUNT_DELETED_MESSAGE,
+      requestId: details.requestId,
+      cloudfrontRequestId: details.cloudfrontRequestId,
+    }
+  }
+
+  const isServiceUnavailable = details.statusCode === 503
+    || details.code === 'service_unavailable'
+    || details.code === 'backend_unreachable'
+    || (typeof details.statusCode === 'number' && details.statusCode >= 500)
+    || (details.message ? /timeout|timed out|fetch failed/i.test(details.message) : false)
+
+  if (isServiceUnavailable) {
+    return {
+      status: 'error',
+      reason: 'service_unavailable',
+      message: details.message || WATCHLIST_SAVE_SERVICE_UNAVAILABLE_MESSAGE,
+      requestId: details.requestId,
+      cloudfrontRequestId: details.cloudfrontRequestId,
+    }
+  }
+
+  return {
+    status: 'error',
+    reason: 'unknown',
+    message: details.message || WATCHLIST_SAVE_DEFAULT_ERROR_MESSAGE,
+    requestId: details.requestId,
+    cloudfrontRequestId: details.cloudfrontRequestId,
+  }
 }
 
 function normalizeTarget(target: WatchTarget): WatchTarget {
@@ -322,12 +459,15 @@ export const useWatchlist = () => {
         return await saveToBackend(normalized, label)
       }
       catch (error) {
-        useLogger('watchlist').error('Error saving watchlist item to backend', error)
-        toast.error('Failed to save watchlist item. Please try again.')
-        return {
-          message: 'Unable to save watchlist item right now.',
-          status: 'error',
-        }
+        const details = extractSaveFailureDetails(error)
+        useLogger('watchlist').error('Error saving watchlist item to backend', {
+          statusCode: details.statusCode,
+          code: details.code,
+          message: details.message,
+          requestId: details.requestId,
+          cloudfrontRequestId: details.cloudfrontRequestId,
+        })
+        return mapWatchlistSaveFailure(error)
       }
     }
 

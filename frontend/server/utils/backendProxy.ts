@@ -597,6 +597,15 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
         environment: process.env.ENVIRONMENT || null,
       })
     }
+    if (isProdLikeEnvironment()) {
+      setResponseStatus(event, 503)
+      return {
+        error: 'service_unavailable',
+        code: 'e2e_mock_forbidden',
+        message: 'E2E mock API is disabled in staging/production runtimes.',
+        requestId,
+      }
+    }
     const mocked = maybeMockApi(path, method, query as any)
     if (mocked) {
       setResponseStatus(event, mocked.status)

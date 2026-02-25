@@ -117,6 +117,10 @@ const handleAdd = async (m: PulseTeaserMover) => {
       actionError.value = result.message
       return
     }
+    if (result.status === 'error') {
+      actionError.value = result.message
+      return
+    }
     emit('added', m)
   }
   catch (error: any) {

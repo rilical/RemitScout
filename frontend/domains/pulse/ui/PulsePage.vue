@@ -2373,6 +2373,10 @@ async function handleAddToWatchlist() {
       setActionMessage({ error: result.message })
       return
     }
+    if (result.status === 'error') {
+      setActionMessage({ error: result.message })
+      return
+    }
     setActionMessage({ status: 'Added to watchlist.' })
   }
   catch (error: any) {

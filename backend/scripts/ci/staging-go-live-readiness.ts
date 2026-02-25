@@ -54,6 +54,20 @@ const looksLikePlaceholder = (value: string) => PLACEHOLDER_PATTERNS.some(patter
 
 const hasStagingMarker = (value: string) => /staging/i.test(value)
 
+const splitCsv = (value: string) =>
+  value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+
+const toOrigin = (value: string): string | null => {
+  try {
+    return new URL(value).origin.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
 const printGroup = (title: string, lines: string[]) => {
   if (!lines.length) return
   console.log(`\n${title}`)
@@ -110,6 +124,49 @@ const run = () => {
   const publicApiBase = getValue('PUBLIC_API_BASE')
   if (publicApiBase && !hasStagingMarker(publicApiBase)) {
     policyViolations.push('PUBLIC_API_BASE must contain a staging hostname')
+  }
+
+  const readOnlyMode = getValue('READ_ONLY_MODE') || '0'
+  if (readOnlyMode !== '0') {
+    policyViolations.push(`READ_ONLY_MODE must be "0" for staging (received "${readOnlyMode}")`)
+  }
+
+  const e2eMockApi = getValue('E2E_MOCK_API')
+  if (e2eMockApi === '1') {
+    policyViolations.push('E2E_MOCK_API must not be enabled in staging')
+  }
+
+  const corsMethodsRaw = getValue('PLANE_A_CORS_ALLOWED_METHODS')
+  if (corsMethodsRaw) {
+    const methods = new Set(splitCsv(corsMethodsRaw).map(value => value.toUpperCase()))
+    const requiredMethods = ['POST', 'PATCH', 'DELETE', 'OPTIONS']
+    const missingMethods = requiredMethods.filter(method => !methods.has(method))
+    if (missingMethods.length > 0) {
+      policyViolations.push(
+        `PLANE_A_CORS_ALLOWED_METHODS must include ${requiredMethods.join(', ')} (missing ${missingMethods.join(', ')})`,
+      )
+    }
+  }
+
+  const corsHeadersRaw = getValue('PLANE_A_CORS_ALLOWED_HEADERS')
+  if (corsHeadersRaw) {
+    const headers = new Set(splitCsv(corsHeadersRaw).map(value => value.toLowerCase()))
+    const requiredHeaders = ['authorization', 'content-type']
+    const missingHeaders = requiredHeaders.filter(header => !headers.has(header))
+    if (missingHeaders.length > 0) {
+      policyViolations.push(
+        `PLANE_A_CORS_ALLOWED_HEADERS must include ${requiredHeaders.join(', ')} (missing ${missingHeaders.join(', ')})`,
+      )
+    }
+  }
+
+  const corsOriginsRaw = getValue('PLANE_A_CORS_ORIGINS')
+  const siteOrigin = toOrigin(publicSiteUrl)
+  if (siteOrigin && corsOriginsRaw) {
+    const corsOrigins = new Set(splitCsv(corsOriginsRaw).map(value => value.toLowerCase().replace(/\/$/, '')))
+    if (!corsOrigins.has(siteOrigin)) {
+      policyViolations.push(`PLANE_A_CORS_ORIGINS must include PUBLIC_SITE_URL origin (${siteOrigin})`)
+    }
   }
 
   const wafAdminAllowlist = getValue('WAF_ADMIN_ALLOWLIST_IPS')

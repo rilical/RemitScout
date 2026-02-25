@@ -6812,6 +6812,22 @@ async function handleAddToWatchlist() {
     openLimitModal('watchlist', result.limit)
   }
   else if (result.status === 'error') {
+    if (result.reason === 'limit_reached') {
+      openLimitModal('watchlist')
+      return
+    }
+    if (result.reason === 'unauthorized') {
+      toast.error('Your session expired. Please sign in again to save watchlist items.')
+      return
+    }
+    if (result.reason === 'account_deleted') {
+      toast.error('This account has been deleted and can no longer save watchlist items.')
+      return
+    }
+    if (result.reason === 'service_unavailable') {
+      toast.error('Watchlist service is temporarily unavailable. Please try again.')
+      return
+    }
     toast.error(result.message)
   }
 }
@@ -7646,6 +7662,18 @@ async function handleAddWatchlist() {
  else if (result.status === 'limit_reached' || result.status === 'error') {
     if (result.status === 'limit_reached') {
       openLimitModal('watchlist', result.limit)
+    }
+    else if (result.reason === 'limit_reached') {
+      openLimitModal('watchlist')
+    }
+    else if (result.reason === 'unauthorized') {
+      toast.error('Your session expired. Please sign in again to save watchlist items.')
+    }
+    else if (result.reason === 'account_deleted') {
+      toast.error('This account has been deleted and can no longer save watchlist items.')
+    }
+    else if (result.reason === 'service_unavailable') {
+      toast.error('Watchlist service is temporarily unavailable. Please try again.')
     }
     else {
       toast.error(result.message)
