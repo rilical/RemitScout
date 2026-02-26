@@ -2,6 +2,7 @@ import type { RecentSearch } from '~/types/remit'
 import type { WatchTarget } from '~/types/tracking'
 
 type CorridorWatchTarget = Extract<WatchTarget, { type: 'corridor' }>
+type TriangulatedCorridorWatchTarget = Extract<WatchTarget, { type: 'triangulatedCorridor' }>
 
 type CorridorSelection = {
   from: string
@@ -10,7 +11,7 @@ type CorridorSelection = {
 
 type CorridorWatchlistItem = {
   label: string
-  target: CorridorWatchTarget
+  target: CorridorWatchTarget | TriangulatedCorridorWatchTarget
 }
 
 type RecentSearchSeed = Pick<RecentSearch, 'from' | 'to'>
@@ -22,7 +23,7 @@ export type DashboardAlertSeedInput = {
 }
 
 export type DashboardAlertSeed = {
-  target: CorridorWatchTarget
+  target: CorridorWatchTarget | TriangulatedCorridorWatchTarget
   label: string
 }
 
@@ -77,6 +78,23 @@ export function resolveDashboardAlertSeed(input: DashboardAlertSeedInput): Dashb
         firstWatchlistCorridor.label || `${normalized.from} → ${normalized.to}`,
         firstWatchlistCorridor.target.method,
       )
+    }
+  }
+  if (firstWatchlistCorridor?.target?.type === 'triangulatedCorridor') {
+    const t = firstWatchlistCorridor.target
+    const normalized = normalizeCorridor({ from: t.from, to: t.to })
+    if (normalized) {
+      return {
+        target: {
+          type: 'triangulatedCorridor',
+          from: normalized.from,
+          to: normalized.to,
+          fromCurrency: t.fromCurrency.toUpperCase(),
+          toCurrency: t.toCurrency.toUpperCase(),
+          hub: 'USD' as const,
+        },
+        label: firstWatchlistCorridor.label || `${normalized.from}→${normalized.to} via USD`,
+      }
     }
   }
 

@@ -312,6 +312,16 @@ export async function evaluateAlert(
         const base = targetPayload.base as string
         const quote = targetPayload.quote as string
         currentValue = await fxRateRepository.getRate(base, quote)
+      } else if (watchlist_item.target_type === 'triangulatedCorridor') {
+        const fromCurrency = typeof targetPayload.fromCurrency === 'string' ? targetPayload.fromCurrency.toUpperCase() : null
+        const toCurrency = typeof targetPayload.toCurrency === 'string' ? targetPayload.toCurrency.toUpperCase() : null
+        if (fromCurrency && toCurrency) {
+          const leg1 = await fxRateRepository.getRate(fromCurrency, 'USD')
+          const leg2 = await fxRateRepository.getRate('USD', toCurrency)
+          if (leg1 !== null && leg2 !== null) {
+            currentValue = leg1 * leg2
+          }
+        }
       }
     } else if (alert.metric === 'recipientGets' && watchlist_item.target_type === 'corridor') {
       // Get best quote for recipient amount

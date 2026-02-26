@@ -63,6 +63,14 @@ const watchTargetSchema = z.discriminatedUnion('type', [
     type: z.literal('guide'),
     slug: z.string(),
   }),
+  z.object({
+    type: z.literal('triangulatedCorridor'),
+    from: z.string(),
+    to: z.string(),
+    fromCurrency: z.string(),
+    toCurrency: z.string(),
+    hub: z.literal('USD'),
+  }),
 ])
 
 const createWatchlistItemSchema = z.object({
@@ -92,6 +100,14 @@ function targetToPayload(target: z.infer<typeof watchTargetSchema>): Record<stri
       return { chartId: target.chartId }
     case 'guide':
       return { slug: target.slug }
+    case 'triangulatedCorridor':
+      return {
+        from: target.from.toUpperCase(),
+        to: target.to.toUpperCase(),
+        fromCurrency: target.fromCurrency.toUpperCase(),
+        toCurrency: target.toCurrency.toUpperCase(),
+        hub: target.hub,
+      }
   }
 }
 
@@ -135,6 +151,23 @@ function payloadToTarget(
         }
       }
       return null
+    case 'triangulatedCorridor':
+      if (
+        typeof payload.from === 'string'
+        && typeof payload.to === 'string'
+        && typeof payload.fromCurrency === 'string'
+        && typeof payload.toCurrency === 'string'
+      ) {
+        return {
+          type: 'triangulatedCorridor',
+          from: payload.from,
+          to: payload.to,
+          fromCurrency: payload.fromCurrency,
+          toCurrency: payload.toCurrency,
+          hub: 'USD' as const,
+        }
+      }
+      return null
     default:
       return null
   }
@@ -150,6 +183,8 @@ function defaultLabel(target: z.infer<typeof watchTargetSchema>): string {
       return `Pulse chart ${target.chartId}`
     case 'guide':
       return `Guide: ${target.slug}`
+    case 'triangulatedCorridor':
+      return `${target.from}→${target.to} via USD`
   }
 }
 

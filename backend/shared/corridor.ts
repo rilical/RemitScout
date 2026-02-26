@@ -39,6 +39,22 @@ export const normalizeCorridorIds = (corridorIds: Array<string | null | undefine
   )
 }
 
+export const HUB_CURRENCY = 'USD' as const
+
+export const decomposeTriangulatedCorridor = (
+  fromCurrency: string,
+  toCurrency: string,
+): { leg1: { base: string; quote: string }; leg2: { base: string; quote: string } } => {
+  return {
+    leg1: { base: fromCurrency.toUpperCase(), quote: HUB_CURRENCY },
+    leg2: { base: HUB_CURRENCY, quote: toCurrency.toUpperCase() },
+  }
+}
+
+export const computeTriangulatedRate = (leg1Rate: number, leg2Rate: number): number => {
+  return leg1Rate * leg2Rate
+}
+
 export const normalizeCorridorFilter = (corridorIds?: Array<string | null | undefined>) => {
   if (!corridorIds) return null
   const unique = normalizeCorridorIds(corridorIds)

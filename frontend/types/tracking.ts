@@ -20,6 +20,14 @@ export type WatchTarget =
     type: 'guide'
     slug: string
   }
+  | {
+    type: 'triangulatedCorridor'
+    from: string
+    to: string
+    fromCurrency: string
+    toCurrency: string
+    hub: 'USD'
+  }
 
 export type WatchlistItem = {
   id: string

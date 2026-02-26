@@ -47,6 +47,8 @@ function defaultRuleForTarget(target: WatchTarget): AlertRule {
       return { metric: 'index', comparator: 'gte', value: 0 }
     case 'guide':
       throw new Error('Guide alerts are not supported yet.')
+    case 'triangulatedCorridor':
+      return { metric: 'rate', comparator: 'gte', value: 0 }
   }
 }
 

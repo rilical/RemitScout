@@ -65,11 +65,12 @@ export const ALERT_METRICS = [
 
 export type AlertMetric = (typeof ALERT_METRICS)[number]
 
-export const TARGET_SUPPORTED_ALERT_METRICS: Record<'corridor' | 'fxPair' | 'pulseChart' | 'guide', AlertMetric[]> = {
+export const TARGET_SUPPORTED_ALERT_METRICS: Record<'corridor' | 'fxPair' | 'pulseChart' | 'guide' | 'triangulatedCorridor', AlertMetric[]> = {
   corridor: ['rate', 'recipientGets', 'totalCost', 'fee', 'index', 'midMarketRate', 'sendScore', 'rci_threshold', 'rvi_threshold'],
   fxPair: ['rate', 'midMarketRate'],
   pulseChart: ['index'],
   guide: [],
+  triangulatedCorridor: ['rate', 'midMarketRate'],
 }
 
 export const alertRuleSchema = z.object({
@@ -275,6 +276,7 @@ export const resolveCorridorIdFromWatchlist = (
   targetType: string,
   payload: Record<string, unknown>,
 ): string | null => {
+  if (targetType === 'triangulatedCorridor') return null
   if (targetType !== 'corridor') return null
 
   if (typeof payload.corridorId === 'string' && payload.corridorId.length > 0) {

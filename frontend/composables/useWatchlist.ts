@@ -186,6 +186,15 @@ function normalizeTarget(target: WatchTarget): WatchTarget {
       return target
     case 'guide':
       return target
+    case 'triangulatedCorridor':
+      return {
+        type: 'triangulatedCorridor',
+        from: target.from.toUpperCase(),
+        to: target.to.toUpperCase(),
+        fromCurrency: target.fromCurrency.toUpperCase(),
+        toCurrency: target.toCurrency.toUpperCase(),
+        hub: target.hub,
+      }
   }
 }
 
@@ -199,6 +208,8 @@ function targetKey(target: WatchTarget) {
       return `pulse:${target.chartId}`
     case 'guide':
       return `guide:${target.slug}`
+    case 'triangulatedCorridor':
+      return `tri:${target.from}-${target.to}:${target.fromCurrency}-${target.toCurrency}`
   }
 }
 
@@ -212,6 +223,8 @@ function defaultLabel(target: WatchTarget) {
       return `Pulse chart ${target.chartId}`
     case 'guide':
       return `Guide: ${target.slug}`
+    case 'triangulatedCorridor':
+      return `${target.from}→${target.to} via USD`
   }
 }
 

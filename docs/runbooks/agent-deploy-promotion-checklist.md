@@ -13,6 +13,7 @@ Purpose:
 - Runtime readiness checks: `backend/scripts/ci/staging-go-live-readiness.ts`
 - Runtime config validation: `backend/scripts/ci/validate-runtime-config.ts`
 - Architecture invariants: `ARCHITECTURE.md`
+- Nested-stack migration runbook: `docs/runbooks/cdk-nested-stack-migration.md`
 
 ## Promotion invariants (all stages)
 - Promote by immutable commit SHA, not by branch name alone.
@@ -32,6 +33,9 @@ Purpose:
 - [ ] Confirm required staging/prod env contracts exist (vars + secrets in GitHub Environment).
 - [ ] Confirm AWS caller identity and region are correct for target env.
 - [ ] Confirm no active critical alarms in current target env before changing anything.
+- [ ] If this is the first deploy after CDK stack split:
+  - run nested-stack migration procedure from `docs/runbooks/cdk-nested-stack-migration.md`
+  - require zero replacement before normal deploy
 
 ## Stage 1: Develop -> Staging Minimal
 

@@ -16,6 +16,21 @@ permission:
     ops-runbook: allow
     coding-engineer: allow
     testing-engineer: allow
+    cloud-architect: allow
+    plane-a-api-guardian: allow
+    plane-b-ingest-collectors: allow
+    data-lineage: allow
+    queues-workers: allow
+    auth-entitlements: allow
+    observability-alerts: allow
+    performance-caching: allow
+    frontend-api-contract: allow
+    security-compliance: allow
+    delta-drift: allow
+    slo-police: allow
+    infra-sentinel: allow
+    provider-onboarding: allow
+    data-quality-sentinel: allow
     "*": deny
 ---
 
@@ -35,13 +50,29 @@ Execution pattern:
 3) Invoke `coding-engineer` for implementation planning, patching, and file-level edits.
 4) If the request changes ingest/normalization/onboarding, invoke `provider-integrator`.
 5) If the request changes incident response or promotion/runbook flow, invoke `ops-runbook`.
-6) Invoke `testing-engineer` to propose/apply verification commands.
-7) Return a consolidated output with:
-    - Decision summary
-    - Implementation boundary checks
-    - Ordered action list
-    - File references for each action
-    - Validation and rollback plan
+6) If the request is in one of these domains, invoke the mapped specialist:
+   - Cloud architecture -> `cloud-architect`
+   - Plane A/API -> `plane-a-api-guardian`
+   - Plane B/ingest -> `plane-b-ingest-collectors`
+   - Data lineage -> `data-lineage`
+   - Queues/workers -> `queues-workers`
+   - Auth/entitlements -> `auth-entitlements`
+   - Observability/alerts -> `observability-alerts`
+   - Performance/caching -> `performance-caching`
+   - Frontend-API contract -> `frontend-api-contract`
+   - Security/compliance -> `security-compliance`
+   - Delta/drift -> `delta-drift`
+   - SLO/freshness -> `slo-police`
+   - Infrastructure sentinel -> `infra-sentinel`
+   - Provider onboarding -> `provider-onboarding`
+   - Data quality -> `data-quality-sentinel`
+7) Invoke `testing-engineer` to propose/apply verification commands.
+8) Return a consolidated output with:
+     - Decision summary
+     - Implementation boundary checks
+     - Ordered action list
+     - File references for each action
+     - Validation and rollback plan
 
 Use the tool outputs to be specific. If any assumption is missing, ask for that one missing value.
 

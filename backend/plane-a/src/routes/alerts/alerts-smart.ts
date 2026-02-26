@@ -129,6 +129,18 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
       ? await computeFxCoverage(corridorCurrencies.base, corridorCurrencies.quote, pool)
       : { supported: false }
 
+    // Check triangulation availability (both legs through USD)
+    let triangulation: { available: boolean; leg1: { supported: boolean }; leg2: { supported: boolean } } | null = null
+    if (corridorCurrencies && !fxCoverage.supported) {
+      const leg1Fx = await computeFxCoverage(corridorCurrencies.base, 'USD', pool)
+      const leg2Fx = await computeFxCoverage('USD', corridorCurrencies.quote, pool)
+      triangulation = {
+        available: leg1Fx.supported && leg2Fx.supported,
+        leg1: leg1Fx,
+        leg2: leg2Fx,
+      }
+    }
+
     const amountBucket =
       toPositiveNumberOrNull(queryParams.amountBucket) ?? resolveBucketForEligibility(corridorId)
     const method = resolveMethodForEligibility(queryParams.method)
@@ -181,6 +193,7 @@ export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
           : 'Quotes for this corridor are refreshed when users view it or before alert evaluation.',
         fxCoverage,
         quoteCoverage,
+        triangulation: triangulation ?? undefined,
       },
     }
   }

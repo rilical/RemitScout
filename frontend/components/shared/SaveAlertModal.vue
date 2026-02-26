@@ -166,6 +166,13 @@
                   <span>Checking corridor data...</span>
                 </div>
               </div>
+              <!-- Triangulation notice -->
+              <div
+                v-if="!eligibilityLoading && corridorEligibility && triangulationAvailable && !isTriangulatedTarget"
+                class="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-body-sm text-amber-800"
+              >
+                Direct quotes not available. Track estimated rate via USD instead?
+              </div>
             </div>
 
             <div v-else>
@@ -874,6 +881,11 @@ type CorridorEligibility = {
       fresh: boolean
       supportedMetrics: Array<'recipientGets' | 'fee' | 'totalCost'>
     }
+    triangulation?: {
+      available: boolean
+      leg1: { supported: boolean }
+      leg2: { supported: boolean }
+    }
   }
 }
 
@@ -903,7 +915,7 @@ const loadCorridorEligibility = async () => {
     return
   }
 
-  if (target.value.type !== 'corridor') {
+  if (target.value.type !== 'corridor' && target.value.type !== 'triangulatedCorridor') {
     corridorEligibility.value = null
     return
   }
@@ -945,6 +957,9 @@ const quoteCoverageCopy = computed(() => {
   if (quoteCoverageSupported.value) return null
   return 'Quote-based alerts aren’t available for this corridor yet. Use an FX Rate Alert instead.'
 })
+
+const triangulationAvailable = computed(() => corridorEligibility.value?.regularAlerts?.triangulation?.available === true)
+const isTriangulatedTarget = computed(() => target.value.type === 'triangulatedCorridor')
 
 const smartAlertDisabledReason = computed(() => {
   if (!isPlus.value) return 'plus_required'
@@ -1062,6 +1077,10 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
 	      break
 	    case 'pulseChart':
 	      options.push({ value: 'index' as const, label: 'Index' })
+	      break
+	    case 'triangulatedCorridor':
+	      options.push({ value: 'rate' as const, label: 'FX rate (via USD)' })
+	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate (via USD)' })
 	      break
 	    case 'guide':
 	      options.push({

@@ -1,0 +1,57 @@
+import { NestedStack } from 'aws-cdk-lib'
+import type { Construct } from 'constructs'
+
+import { createCompute } from '../compute'
+import { createEcsServices } from '../ecs-services'
+import { createEcsTasks } from '../ecs-tasks'
+import type { RuntimeNestedStackProps, RuntimeResources } from './contracts'
+
+export class RuntimeNestedStack extends NestedStack {
+  public readonly resources: RuntimeResources
+
+  constructor(scope: Construct, id: string, props: RuntimeNestedStackProps) {
+    super(scope, id, props)
+
+    const compute = createCompute(this, {
+      envName: props.envName,
+      vpc: props.foundation.networking.vpc,
+      roles: props.foundation.iam,
+    })
+
+    const tasks = createEcsTasks(this, {
+      envName: props.envName,
+      minimalMode: props.minimalMode,
+      cpuArchitecture: props.cpuArchitecture,
+      backendRepository: props.foundation.registry.backendRepository,
+      imageTag: props.imageTag,
+      roles: props.foundation.iam,
+      ...props.taskOptions,
+    })
+
+    const ecsServices = createEcsServices(this, {
+      envName: props.envName,
+      cluster: compute.cluster,
+      planeBSecurityGroup: props.foundation.networking.planeBSecurityGroup,
+      planeBIngestTask: tasks.planeBIngestTask,
+      b2cRefreshTask: tasks.b2cRefreshTask,
+      fxRateRefreshTask: tasks.fxRateRefreshTask,
+      ingestFanoutTier1Task: tasks.ingestFanoutTier1Task,
+      ingestFanoutTier2Task: tasks.ingestFanoutTier2Task,
+      goldLiveTask: tasks.goldLiveTask,
+      notificationsQueueTask: tasks.notificationsQueueTask,
+      opsAlertsQueueTask: tasks.opsAlertsQueueTask,
+      alertEvaluationTask: tasks.alertEvaluationTask,
+      exportWorkerTask: tasks.exportWorkerTask,
+      queues: props.foundation.queues,
+      paused: props.paused,
+      minimalMode: props.minimalMode,
+      ...props.serviceOptions,
+    })
+
+    this.resources = {
+      compute,
+      tasks,
+      ecsServices,
+    }
+  }
+}

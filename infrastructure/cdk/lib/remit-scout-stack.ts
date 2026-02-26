@@ -12,30 +12,11 @@ import { SnsTopic } from 'aws-cdk-lib/aws-events-targets'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { Construct } from 'constructs'
 
-import { createNetworking } from './vpc'
-import { createIam } from './iam'
-import { createCompute } from './compute'
-import { createScheduledJobs } from './scheduled-jobs'
-import { createRegistry } from './registry'
-import { createEcsTasks } from './ecs-tasks'
-import { createEcsServices } from './ecs-services'
-import { createDatabase } from './database'
-import { createCache } from './cache'
-import { createStorage } from './storage'
-import { createQueues } from './queues'
-import { createApi } from './api'
-import { createFrontend } from './frontend'
-import { createPipeline } from './pipeline'
-import { createBackup } from './backup'
-import { createCostGuardrails } from './budgets'
-import { createMonitoring } from './monitoring'
-import { createSynthetics } from './synthetics'
-import { createSnsSubscriptions } from './sns-subscriptions'
-import { createComplianceServices } from './compliance'
-import { createPinpoint } from './pinpoint'
-import { createOpsPause } from './ops-pause'
-import { createGithubActionsOidcRoles } from './github-actions-oidc'
 import { loadCdkContextConfig } from './config-schema'
+import { EdgeNestedStack } from './stacks/edge-nested-stack'
+import { FoundationNestedStack } from './stacks/foundation-nested-stack'
+import { OpsNestedStack } from './stacks/ops-nested-stack'
+import { RuntimeNestedStack } from './stacks/runtime-nested-stack'
 
 const toOptionalBool = (value: string | boolean | undefined): boolean | undefined => {
   if (typeof value === 'boolean') return value
@@ -317,46 +298,6 @@ export class RemitScoutStack extends Stack {
       )
     }
 
-    const networking = createNetworking(this, {
-      envName,
-      natGateways,
-      interfaceEndpointMode,
-    })
-    const pinpoint = pinpointEnabled
-      ? createPinpoint(this, {
-          envName,
-          enabled: true,
-          sesIdentityArn: sesIdentityArns[0],
-          fromAddress: process.env.NEWSLETTER_EMAIL_FROM || process.env.SES_FROM_ADDRESS || `no-reply@remit-scout.com`,
-        })
-      : null
-    const iam = createIam(this, {
-      envName,
-      sharedSecretArns: [sharedSecretArn],
-      sesIdentityArns,
-      snsTopicArns,
-      pinpointAppId: pinpoint?.pinpointAppId,
-    })
-    const registry = createRegistry(this, { envName })
-
-    createGithubActionsOidcRoles(this, {
-      enabled: enableGithubActionsOidc,
-      repoOwner: String(githubRepoOwner),
-      repoName: String(githubRepoName),
-      providerArn: githubActionsOidcProviderArn ? String(githubActionsOidcProviderArn) : undefined,
-    })
-
-    const database = createDatabase(this, {
-      envName,
-      vpc: networking.vpc,
-      dbSecurityGroup: networking.dbSecurityGroup,
-      enableProxy: enableDbProxy,
-    })
-    const cache = createCache(this, {
-      envName,
-      vpc: networking.vpc,
-      redisSecurityGroup: networking.redisSecurityGroup,
-    })
     const bronzePrefix =
       this.node.tryGetContext('bronzePrefix') ??
       process.env.BRONZE_S3_PREFIX ??
@@ -374,8 +315,41 @@ export class RemitScoutStack extends Stack {
       process.env.AUDIT_LOGS_S3_PREFIX ??
       'audit-logs'
 
-    const storage = createStorage(this, { envName, exportsPrefix })
-    const queues = createQueues(this, { envName })
+    const foundationStack = new FoundationNestedStack(this, 'Foundation', {
+      envName,
+      networkingOptions: {
+        natGateways,
+        interfaceEndpointMode,
+      },
+      sharedSecretArn,
+      sesIdentityArns,
+      snsTopicArns,
+      enableDbProxy,
+      enableGithubActionsOidc,
+      githubRepoOwner: String(githubRepoOwner),
+      githubRepoName: String(githubRepoName),
+      githubActionsOidcProviderArn: githubActionsOidcProviderArn
+        ? String(githubActionsOidcProviderArn)
+        : undefined,
+      exportsPrefix,
+      pinpointEnabled,
+      pinpointFromAddress:
+        process.env.NEWSLETTER_EMAIL_FROM ||
+        process.env.SES_FROM_ADDRESS ||
+        'no-reply@remit-scout.com',
+    })
+
+    const {
+      networking,
+      iam,
+      registry,
+      database,
+      cache,
+      storage,
+      queues,
+      pinpoint,
+      redisUrl,
+    } = foundationStack.resources
 
     let snowflakePartnerRole: Role | undefined
 
@@ -421,9 +395,6 @@ export class RemitScoutStack extends Stack {
     const redisSsmName =
       this.node.tryGetContext('redisSsmName') ??
       process.env.REDIS_SSM_NAME
-    const redisHost = cache.replicationGroup.attrPrimaryEndPointAddress
-    const redisPort = cache.replicationGroup.attrPrimaryEndPointPort
-    let redisUrl = `rediss://${redisHost}:${redisPort}`
     const supabaseSecretArn =
       this.node.tryGetContext('supabaseSecretArn') ??
       process.env.SUPABASE_SECRET_ARN ??
@@ -1145,12 +1116,6 @@ export class RemitScoutStack extends Stack {
       (suffix) => purgeQueueTargetsBySuffix[suffix as keyof typeof purgeQueueTargetsBySuffix].arn,
     )
 
-    const compute = createCompute(this, {
-      envName,
-      vpc: networking.vpc,
-      roles: iam,
-    })
-
     const planeADbHost = database.proxy?.endpoint ?? database.cluster.clusterEndpoint.hostname
     const planeADbPort = '5432'
     const planeADbName = 'remit_scout'
@@ -1170,207 +1135,211 @@ export class RemitScoutStack extends Stack {
     const planeCDbTimeoutPolicy =
       planeCDbConnectionRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout'
 
-		    const tasks = createEcsTasks(this, {
-		      envName,
-		      minimalMode,
-		      cpuArchitecture,
-		      backendRepository: registry.backendRepository,
-		      imageTag,
-		      roles: iam,
-	      planeBDbSecretArn,
-	      planeBDbMigratorSecretArn,
-	      planeBDbSsmName,
-	      redisSecretArn,
-	      redisSecretJsonKey,
-	      redisSsmName,
-      redisUrl,
-      planeBDbHost,
-      planeBDbPort,
-      planeBDbName,
-      alertsSlackWebhookUrl: slackWebhookUrl,
-      planeCDbSecretArn,
-      planeCDbSsmName,
-      planeCDbHost,
-      planeCDbPort,
-      planeCDbName,
-      sentrySecretArn,
-      sentrySecretJsonKey,
-      quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
-      quoteRefreshDlqUrl: queues.quoteRefreshDlq.queueUrl,
-      quoteRefreshQueueMode,
-      fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
-      fxRateRefreshDlqUrl: queues.fxRateRefreshDlq.queueUrl,
-      fxRateRefreshQueueMode,
-      ingestFanoutQueueTier1Url: queues.ingestFanoutQueue.queueUrl,
-      ingestFanoutQueueTier2Url: queues.ingestFanoutTier2Queue.queueUrl,
-      goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
-      goldLiveQueueMode,
-      notificationsQueueUrl: queues.notificationsQueue.queueUrl,
-      opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
-      proxyResidentialSecretArn,
-      proxyResidentialSecretJsonKey,
-      proxyResidentialSsmName,
-      proxyResidentialUrl,
-      proxyDatacenterSecretArn,
-      proxyDatacenterSecretJsonKey,
-      proxyDatacenterSsmName,
-      proxyDatacenterUrl,
-      bronzeBucketName: storage.bronzeBucket.bucketName,
-      bronzePrefix,
-      planeADbSecretArn,
-      planeADbSsmName,
-      planeADbHost,
-      planeADbPort,
-      planeADbName,
-      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
-      exportJobQueueUrl: queues.exportJobQueue.queueUrl,
-      exportJobQueueMode,
-      exportsBucketName: storage.exportsBucket.bucketName,
-      exportsPrefix,
-      communicationsSecretArn,
-      b2cQueueInSweep,
-      // Services are long-running queue workers; allow desiredCount=0 with autoscaling without
-      // forcing one-shot tasks that churn. Scheduled tasks are disabled when services are enabled.
-      b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
-      fxRateRefreshLoopEnabled: fxRateRefreshServiceEnabled,
-      planeBB2bTargetMinutes,
-      planeBB2bObservationMode,
-      planeBB2bMaxQueueDepth,
-      planeBIngestFanoutMessageMode,
-      goldIndicesMinProviders,
-      planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
-      ingestFanoutMode,
-      notificationsMode,
-      opsAlertsMode,
-      planeBDbPoolMax: String(planeBDbPoolMax),
-      planeBDbPoolMin: String(planeBDbPoolMin),
-    })
-
-    const api = createApi(this, {
+    const runtimeStack = new RuntimeNestedStack(this, 'Runtime', {
       envName,
-      lambdaArchitecture,
-      vpc: networking.vpc,
-      roles: iam,
-      planeASecurityGroup: networking.planeASecurityGroup,
-      planeCSecurityGroup: networking.planeCSecurityGroup,
-      quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
-      quoteRefreshQueueMode,
-      fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
-      fxRateRefreshQueueMode,
-      exportJobQueueUrl: queues.exportJobQueue.queueUrl,
-      exportJobQueueMode,
-      exportsBucketName: storage.exportsBucket.bucketName,
-      exportsPrefix,
-      ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
-      ingestFanoutTier1QueueUrl: queues.ingestFanoutQueue.queueUrl,
-      ingestFanoutTier2QueueUrl: queues.ingestFanoutTier2Queue.queueUrl,
-      notificationsQueueUrl: queues.notificationsQueue.queueUrl,
-      opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
-      goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
-      goldLiveQueueMode,
-      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
-      userAssetsBucketName: storage.userAssetsBucket.bucketName,
-      userAssetsPrefix,
-      bronzeBucketName: storage.bronzeBucket.bucketName,
-      planeADbSecretArn,
-      planeADbSecretJsonKey,
-      planeADbSsmName,
-      planeADbHost,
-      planeADbPort,
-      planeADbName,
-      supabaseSecretArn,
-      supabaseSsmName,
-      stripeSecretArn,
-      stripeSsmName,
-      communicationsSecretArn,
-      sentrySecretArn,
-      sentrySecretJsonKey,
-      sharedSecretArn,
-      planeCInternalApiTokenSecretJsonKey,
-      planeAAdminEmails,
-      planeAAdminIpAllowlist,
-      planeAB2cMaxBucketDeltaPct,
-      planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
-      planeACorsOrigins,
-      planeACorsAllowedHeaders,
-      planeACorsAllowedMethods,
-      planeACorsAllowCredentials,
-      planeAAdminRevocationFailClosed,
-      frontendBaseUrl,
-      planeCDbSecretArn,
-      planeCDbSecretJsonKey,
-      planeCDbSsmName,
-      planeCDbHost,
-      planeCDbPort,
-      planeCDbName,
-      redisSecretArn,
-      redisSecretJsonKey,
-      redisSsmName,
-      redisUrl,
-      planeCBaseUrl,
-      enableCloudFront,
-      enableWaf,
-      cloudFrontAccessLogsBucket: storage.storageAccessLogsBucket,
-      enablePlaneAJwtAuth,
-      planeAJwtIssuer,
-      planeAJwtAudiences,
-      enablePlaneCIamAuth,
-      disablePlaneAExecuteEndpoint,
-      disablePlaneCExecuteEndpoint,
-      wafAllowListIps,
-      wafBlockListIps,
-      wafStripeWebhookAllowListIps,
-      wafAdminAllowListIps,
-      wafEnableBotControl,
-      otelLambdaLayerArn,
-      planeAThrottleRate,
-      planeAThrottleBurst,
-      planeCThrottleRate,
-      planeCThrottleBurst,
-      planeADomainName:
-        this.node.tryGetContext('planeADomainName') ?? process.env.PLANE_A_DOMAIN_NAME,
-      planeACertificateArn:
-        this.node.tryGetContext('planeACertificateArn') ?? process.env.PLANE_A_CERT_ARN,
-      planeAHostedZoneId:
-        this.node.tryGetContext('planeAHostedZoneId') ?? process.env.PLANE_A_HOSTED_ZONE_ID,
-      planeAHostedZoneName:
-        this.node.tryGetContext('planeAHostedZoneName') ?? process.env.PLANE_A_HOSTED_ZONE_NAME,
+      imageTag,
+      minimalMode,
+      paused: devPaused,
+      cpuArchitecture,
+      foundation: foundationStack.resources,
+      taskOptions: {
+        planeBDbSecretArn,
+        planeBDbMigratorSecretArn,
+        planeBDbSsmName,
+        redisSecretArn,
+        redisSecretJsonKey,
+        redisSsmName,
+        redisUrl,
+        planeBDbHost,
+        planeBDbPort,
+        planeBDbName,
+        alertsSlackWebhookUrl: slackWebhookUrl,
+        planeCDbSecretArn,
+        planeCDbSsmName,
+        planeCDbHost,
+        planeCDbPort,
+        planeCDbName,
+        sentrySecretArn,
+        sentrySecretJsonKey,
+        quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+        quoteRefreshDlqUrl: queues.quoteRefreshDlq.queueUrl,
+        quoteRefreshQueueMode,
+        fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+        fxRateRefreshDlqUrl: queues.fxRateRefreshDlq.queueUrl,
+        fxRateRefreshQueueMode,
+        ingestFanoutQueueTier1Url: queues.ingestFanoutQueue.queueUrl,
+        ingestFanoutQueueTier2Url: queues.ingestFanoutTier2Queue.queueUrl,
+        goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
+        goldLiveQueueMode,
+        notificationsQueueUrl: queues.notificationsQueue.queueUrl,
+        opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
+        proxyResidentialSecretArn,
+        proxyResidentialSecretJsonKey,
+        proxyResidentialSsmName,
+        proxyResidentialUrl,
+        proxyDatacenterSecretArn,
+        proxyDatacenterSecretJsonKey,
+        proxyDatacenterSsmName,
+        proxyDatacenterUrl,
+        bronzeBucketName: storage.bronzeBucket.bucketName,
+        bronzePrefix,
+        planeADbSecretArn,
+        planeADbSsmName,
+        planeADbHost,
+        planeADbPort,
+        planeADbName,
+        alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+        exportJobQueueUrl: queues.exportJobQueue.queueUrl,
+        exportJobQueueMode,
+        exportsBucketName: storage.exportsBucket.bucketName,
+        exportsPrefix,
+        communicationsSecretArn,
+        b2cQueueInSweep,
+        b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
+        fxRateRefreshLoopEnabled: fxRateRefreshServiceEnabled,
+        planeBB2bTargetMinutes,
+        planeBB2bObservationMode,
+        planeBB2bMaxQueueDepth,
+        planeBIngestFanoutMessageMode,
+        goldIndicesMinProviders,
+        planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
+        ingestFanoutMode,
+        notificationsMode,
+        opsAlertsMode,
+        planeBDbPoolMax: String(planeBDbPoolMax),
+        planeBDbPoolMin: String(planeBDbPoolMin),
+      },
+      serviceOptions: {
+        ingestFanoutMode,
+        quoteRefreshMode: quoteRefreshQueueMode,
+        fxRateRefreshMode: fxRateRefreshQueueMode,
+        goldLiveMode: goldLiveQueueMode,
+        notificationsMode,
+        opsAlertsMode,
+        alertEvaluationMode: alertEvaluationServiceEnabled ? 'queue' : 'off',
+        exportJobMode: exportJobQueueMode,
+        b2cRefreshServiceEnabled,
+        fxRateRefreshServiceEnabled,
+        alertEvaluationServiceEnabled,
+        exportServiceEnabled,
+        b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0,
+        fxRateRefreshDesiredCount: fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0,
+        planeBIngestDesiredCount,
+        queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
+        queueWorkerMaxCount: planeBQueueWorkerMaxCount,
+        ingestFanoutTier1DesiredCount,
+        ingestFanoutTier2DesiredCount,
+        goldLiveDesiredCount,
+        notificationsDesiredCount,
+        opsAlertsDesiredCount,
+        alertEvaluationDesiredCount: alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0,
+        exportWorkerDesiredCount: exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0,
+        queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
+      },
     })
+    const { compute, tasks, ecsServices } = runtimeStack.resources
 
-    const frontend = createFrontend(this, {
+    const edgeStack = new EdgeNestedStack(this, 'Edge', {
       envName,
-      frontendDomainName,
-      frontendCertificateArn:
-        this.node.tryGetContext('frontendCertificateArn') ?? process.env.FRONTEND_CERT_ARN,
-      frontendHostedZoneId:
-        this.node.tryGetContext('frontendHostedZoneId') ?? process.env.FRONTEND_HOSTED_ZONE_ID,
-      frontendHostedZoneName:
-        this.node.tryGetContext('frontendHostedZoneName') ?? process.env.FRONTEND_HOSTED_ZONE_NAME,
-      planeAWaf: api.planeAWaf,
-      planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
-      enableFrontend,
+      foundation: foundationStack.resources,
+      defaultFrontendBaseUrl: frontendBaseUrl,
+      apiOptions: {
+        lambdaArchitecture,
+        quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+        quoteRefreshQueueMode,
+        fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+        fxRateRefreshQueueMode,
+        exportJobQueueUrl: queues.exportJobQueue.queueUrl,
+        exportJobQueueMode,
+        exportsBucketName: storage.exportsBucket.bucketName,
+        exportsPrefix,
+        ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
+        ingestFanoutTier1QueueUrl: queues.ingestFanoutQueue.queueUrl,
+        ingestFanoutTier2QueueUrl: queues.ingestFanoutTier2Queue.queueUrl,
+        notificationsQueueUrl: queues.notificationsQueue.queueUrl,
+        opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
+        goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
+        goldLiveQueueMode,
+        alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+        userAssetsBucketName: storage.userAssetsBucket.bucketName,
+        userAssetsPrefix,
+        bronzeBucketName: storage.bronzeBucket.bucketName,
+        planeADbSecretArn,
+        planeADbSecretJsonKey,
+        planeADbSsmName,
+        planeADbHost,
+        planeADbPort,
+        planeADbName,
+        supabaseSecretArn,
+        supabaseSsmName,
+        stripeSecretArn,
+        stripeSsmName,
+        communicationsSecretArn,
+        sentrySecretArn,
+        sentrySecretJsonKey,
+        sharedSecretArn,
+        planeCInternalApiTokenSecretJsonKey,
+        planeAAdminEmails,
+        planeAAdminIpAllowlist,
+        planeAB2cMaxBucketDeltaPct,
+        planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
+        planeACorsOrigins,
+        planeACorsAllowedHeaders,
+        planeACorsAllowedMethods,
+        planeACorsAllowCredentials,
+        planeAAdminRevocationFailClosed,
+        frontendBaseUrl,
+        planeCDbSecretArn,
+        planeCDbSecretJsonKey,
+        planeCDbSsmName,
+        planeCDbHost,
+        planeCDbPort,
+        planeCDbName,
+        redisSecretArn,
+        redisSecretJsonKey,
+        redisSsmName,
+        redisUrl,
+        planeCBaseUrl,
+        enableCloudFront,
+        enableWaf,
+        cloudFrontAccessLogsBucket: storage.storageAccessLogsBucket,
+        enablePlaneAJwtAuth,
+        planeAJwtIssuer,
+        planeAJwtAudiences,
+        enablePlaneCIamAuth,
+        disablePlaneAExecuteEndpoint,
+        disablePlaneCExecuteEndpoint,
+        wafAllowListIps,
+        wafBlockListIps,
+        wafStripeWebhookAllowListIps,
+        wafAdminAllowListIps,
+        wafEnableBotControl,
+        otelLambdaLayerArn,
+        planeAThrottleRate,
+        planeAThrottleBurst,
+        planeCThrottleRate,
+        planeCThrottleBurst,
+        planeADomainName:
+          this.node.tryGetContext('planeADomainName') ?? process.env.PLANE_A_DOMAIN_NAME,
+        planeACertificateArn:
+          this.node.tryGetContext('planeACertificateArn') ?? process.env.PLANE_A_CERT_ARN,
+        planeAHostedZoneId:
+          this.node.tryGetContext('planeAHostedZoneId') ?? process.env.PLANE_A_HOSTED_ZONE_ID,
+        planeAHostedZoneName:
+          this.node.tryGetContext('planeAHostedZoneName') ?? process.env.PLANE_A_HOSTED_ZONE_NAME,
+      },
+      frontendOptions: {
+        frontendDomainName,
+        frontendCertificateArn:
+          this.node.tryGetContext('frontendCertificateArn') ?? process.env.FRONTEND_CERT_ARN,
+        frontendHostedZoneId:
+          this.node.tryGetContext('frontendHostedZoneId') ?? process.env.FRONTEND_HOSTED_ZONE_ID,
+        frontendHostedZoneName:
+          this.node.tryGetContext('frontendHostedZoneName') ?? process.env.FRONTEND_HOSTED_ZONE_NAME,
+        enableFrontend,
+      },
     })
-
-    const frontendUrlFromStack = frontend
-      ? (frontendDomainName
-          ? `https://${frontendDomainName}`
-          : `https://${frontend.distribution.distributionDomainName}`)
-      : undefined
-
-    if (!frontendBaseUrl && frontendUrlFromStack) {
-      api.planeAFunction.addEnvironment('FRONTEND_BASE_URL', frontendUrlFromStack)
-    }
-    if (pinpoint) {
-      api.planeAFunction.addEnvironment('PINPOINT_APP_ID', pinpoint.pinpointAppId)
-      api.planeAFunction.addEnvironment('PINPOINT_ENABLED', '1')
-    }
-
-    const backup = createBackup(this, {
-      envName,
-      cluster: database.cluster,
-      dbSecurityGroup: networking.dbSecurityGroup,
-      enabled: enableBackup,
-    })
+    const { api, frontend } = edgeStack.resources
 
     const costGuardrailTopic =
       envName === 'dev' && enableCostGuardrails
@@ -1401,119 +1370,179 @@ export class RemitScoutStack extends Stack {
       )
     }
 
-    const costGuardrails = createCostGuardrails(this, {
-      envName,
-      enabled: enableCostGuardrails,
-      costAlertEmails: resolvedCostAlertEmails,
-      costAlertSnsTopicArn: costGuardrailTopic?.topicArn,
-      monthlyBudgetAmountUsd: costBudgetAmountUsd,
-      anomalyThresholdUsd: costAnomalyThresholdUsd,
-      createCur: costGuardrailsCreateCur,
-    })
+    const queueWorkerBaseline = planeBQueueWorkerDesiredCount ?? 0
+    const ingestFanoutTier1Baseline =
+      ingestFanoutMode === 'queue' ? (ingestFanoutTier1DesiredCount ?? queueWorkerBaseline) : 0
+    const ingestFanoutTier2Baseline =
+      ingestFanoutMode === 'queue'
+        ? (ingestFanoutTier2DesiredCount ?? Math.max(0, ingestFanoutTier1Baseline - 1))
+        : 0
+    const goldLiveBaseline =
+      goldLiveQueueMode === 'queue' ? (goldLiveDesiredCount ?? queueWorkerBaseline) : 0
+    const notificationsBaseline =
+      notificationsMode === 'queue' ? (notificationsDesiredCount ?? queueWorkerBaseline) : 0
+    const opsAlertsBaseline =
+      opsAlertsMode === 'queue' ? (opsAlertsDesiredCount ?? queueWorkerBaseline) : 0
+    const b2cRefreshBaseline = b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0
+    const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
+    const alertEvaluationBaseline = alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0
+    const exportWorkerBaseline = exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0
+    const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
-    const ecsServices = createEcsServices(this, {
+    const managedEcsServiceNames: string[] = []
+    const managedEcsBaselines: Record<string, number> = {}
+
+    const addManagedService = (service: { serviceName: string } | undefined, baseline: number): void => {
+      if (!service) return
+      managedEcsServiceNames.push(service.serviceName)
+      managedEcsBaselines[service.serviceName] = baseline
+    }
+
+    addManagedService(ecsServices.planeBIngestService, planeBIngestBaseline)
+    addManagedService(ecsServices.b2cRefreshService, b2cRefreshBaseline)
+    addManagedService(ecsServices.fxRateRefreshService, fxRateRefreshBaseline)
+    addManagedService(ecsServices.ingestFanoutTier1Service, ingestFanoutTier1Baseline)
+    addManagedService(ecsServices.ingestFanoutTier2Service, ingestFanoutTier2Baseline)
+    addManagedService(ecsServices.goldLiveService, goldLiveBaseline)
+    addManagedService(ecsServices.notificationsQueueService, notificationsBaseline)
+    addManagedService(ecsServices.opsAlertsQueueService, opsAlertsBaseline)
+    addManagedService(ecsServices.alertEvaluationService, alertEvaluationBaseline)
+    addManagedService(ecsServices.exportWorkerService, exportWorkerBaseline)
+
+    const opsStack = new OpsNestedStack(this, 'Ops', {
       envName,
-      cluster: compute.cluster,
-      planeBSecurityGroup: networking.planeBSecurityGroup,
-      planeBIngestTask: tasks.planeBIngestTask,
-      b2cRefreshTask: tasks.b2cRefreshTask,
-      fxRateRefreshTask: tasks.fxRateRefreshTask,
-      ingestFanoutTier1Task: tasks.ingestFanoutTier1Task,
-      ingestFanoutTier2Task: tasks.ingestFanoutTier2Task,
-      goldLiveTask: tasks.goldLiveTask,
-      notificationsQueueTask: tasks.notificationsQueueTask,
-      opsAlertsQueueTask: tasks.opsAlertsQueueTask,
-      alertEvaluationTask: tasks.alertEvaluationTask,
-      exportWorkerTask: tasks.exportWorkerTask,
-      queues,
-      ingestFanoutMode,
-      quoteRefreshMode: quoteRefreshQueueMode,
-      fxRateRefreshMode: fxRateRefreshQueueMode,
-      goldLiveMode: goldLiveQueueMode,
-      notificationsMode,
-      opsAlertsMode,
-      alertEvaluationMode: alertEvaluationServiceEnabled ? 'queue' : 'off',
-      exportJobMode: exportJobQueueMode,
-      b2cRefreshServiceEnabled,
-      fxRateRefreshServiceEnabled,
-      alertEvaluationServiceEnabled,
-      exportServiceEnabled,
-      b2cRefreshDesiredCount: b2cRefreshServiceEnabled
-        ? (b2cRefreshDesiredCount ?? 0)
-        : 0,
-      fxRateRefreshDesiredCount: fxRateRefreshServiceEnabled
-        ? (fxRateRefreshDesiredCount ?? 0)
-        : 0,
-      planeBIngestDesiredCount,
-      queueWorkerDesiredCount: planeBQueueWorkerDesiredCount,
-      queueWorkerMaxCount: planeBQueueWorkerMaxCount,
-      ingestFanoutTier1DesiredCount,
-      ingestFanoutTier2DesiredCount,
-      goldLiveDesiredCount,
-      notificationsDesiredCount,
-      opsAlertsDesiredCount,
-      alertEvaluationDesiredCount: alertEvaluationServiceEnabled
-        ? (alertEvaluationDesiredCount ?? 0)
-        : 0,
-      exportWorkerDesiredCount: exportServiceEnabled
-        ? (exportWorkerDesiredCount ?? 0)
-        : 0,
-      queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
       minimalMode,
-      paused: devPaused,
+      enableSynthetics,
+      enableMonitoring,
+      enableComplianceServices,
+      pipelineEnabled,
+      foundation: foundationStack.resources,
+      runtime: runtimeStack.resources,
+      edge: edgeStack.resources,
+      snsOptions: {
+        slackWorkspaceId,
+        slackCriticalChannelId,
+        slackWarningChannelId,
+        slackOpsChannelId,
+        slackWebhookUrl,
+        pagerDutyIntegrationKey,
+        betterUptimeWebhookSsmParamName,
+      },
+      backupOptions: {
+        enabled: enableBackup,
+      },
+      costGuardrailsOptions: {
+        enabled: enableCostGuardrails,
+        costAlertEmails: resolvedCostAlertEmails,
+        costAlertSnsTopicArn: costGuardrailTopic?.topicArn,
+        monthlyBudgetAmountUsd: costBudgetAmountUsd,
+        anomalyThresholdUsd: costAnomalyThresholdUsd,
+        createCur: costGuardrailsCreateCur,
+      },
+      pipelineOptions: {
+        connectionArn: pipelineConnectionArn,
+        repoOwner: pipelineRepoOwner,
+        repoName: pipelineRepoName,
+        repoBranch: pipelineRepoBranch,
+        enableDeploy: pipelineEnableDeploy,
+        requireApproval: pipelineRequireApproval,
+        publicSupabaseUrl,
+        publicSupabaseAnonKey,
+        publicSupabaseSecretArn: supabaseSecretArn,
+        publicSupabaseUrlSecretJsonKey,
+        publicSupabaseAnonKeySecretJsonKey,
+        publicGa4MeasurementId,
+        publicMetaPixelId,
+        publicAdsEnabled,
+        publicPulseEnabled,
+        devPaused,
+      },
+      scheduledJobsOptions: {
+        lambdaArchitecture,
+        b2cRefreshServiceEnabled,
+        b2cRefreshDesiredCount,
+        fxRateRefreshServiceEnabled,
+        fxRateRefreshDesiredCount,
+        goldIndicesLookbackDays,
+        goldIndicesMinProviders,
+        providerWeightWindowDays,
+        institutionalExportFormat,
+        institutionalExportWriteManifest,
+        paused: devPaused,
+        otelLambdaLayerArn,
+        sentrySecretArn,
+        sentrySecretJsonKey,
+        planeBDbSecretArn,
+        planeBDbSsmName,
+        planeCDbSecretArn,
+        planeCDbSsmName,
+        redisSecretArn,
+        redisSsmName,
+        redisUrl,
+        oandaSecretArn,
+        oandaSsmName,
+        communicationsSecretArn,
+        planeADbSecretArn,
+        planeADbSsmName,
+        planeADbHost,
+        planeADbPort,
+        planeADbName,
+        quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+        quoteRefreshQueueMode,
+        exportJobQueueUrl: queues.exportJobQueue.queueUrl,
+        exportJobQueueMode,
+        exportsBucketName: storage.exportsBucket.bucketName,
+        exportsPrefix,
+        auditLogsBucketName: storage.auditLogsBucket.bucketName,
+        auditLogsPrefix,
+        alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+        alertEvaluationServiceEnabled,
+        exportServiceEnabled,
+        minimalMode,
+        planeBDbHost,
+        planeBDbPort,
+        planeBDbName,
+        planeCDbHost,
+        planeCDbPort,
+        planeCDbName,
+        providerProbeMode,
+      },
+      opsPauseOptions: {
+        ecsServiceNames: managedEcsServiceNames,
+        ecsBaselineDesired: managedEcsBaselines,
+        eventRulePrefix: `remit-scout-${envName}-`,
+        eventRuleAllowlist: opsPauseAllowlist,
+        eventRuleResumeAllowlist: resolvedOpsResumeAllowlist,
+        hardStopEnabled,
+        dbClusterIdentifier: database.cluster.clusterIdentifier,
+        redisReplicationGroupId: cache.replicationGroup.ref,
+        redisSubnetGroupName: cache.subnetGroup.cacheSubnetGroupName ?? cache.subnetGroup.ref,
+        redisSecurityGroupIds: [networking.redisSecurityGroup.securityGroupId],
+        redisNodeType: envName === 'prod' ? 'cache.t4g.small' : 'cache.t4g.micro',
+        redisEngineVersion: '7.1',
+        redisNumNodeGroups: 1,
+        redisReplicasPerNodeGroup: envName === 'prod' ? 1 : 0,
+        redisAutomaticFailover: envName === 'prod',
+        redisMultiAz: envName === 'prod',
+        redisTransitEncryption: true,
+        redisAtRestEncryption: true,
+        redisAutoMinorVersionUpgrade: true,
+        purgeQueuesOnResume,
+        purgeQueueUrls: purgeQueuesOnResume ? resolvedPurgeQueueUrls : [],
+        purgeQueueArns: purgeQueuesOnResume ? resolvedPurgeQueueArns : [],
+      },
     })
+    const {
+      snsSubscriptions,
+      backup,
+      costGuardrails,
+      monitoring,
+      synthetics,
+      pipeline,
+      opsPause,
+    } = opsStack.resources
 
-    // Create SNS subscriptions for alert routing (Slack, PagerDuty)
-    const snsSubscriptions = createSnsSubscriptions(this, {
-      envName,
-      slackWorkspaceId,
-      slackCriticalChannelId,
-      slackWarningChannelId,
-      slackOpsChannelId,
-      slackWebhookUrl,
-      pagerDutyIntegrationKey,
-      betterUptimeWebhookSsmParamName,
-    })
-
-    if (enableComplianceServices) {
-      createComplianceServices(this, {
-        envName,
-        criticalTopic: snsSubscriptions.criticalTopic,
-      })
-    }
-
-    // Determine Plane A base URL for synthetics (CloudFront if enabled, otherwise API Gateway)
-    const planeABaseUrl =
-      api.planeACloudFront?.distributionDomainName
-        ? `https://${api.planeACloudFront.distributionDomainName}`
-        : api.planeAApi.apiEndpoint
-
-    let monitoring: Awaited<ReturnType<typeof createMonitoring>> | undefined
-    let synthetics: Awaited<ReturnType<typeof createSynthetics>> | undefined
-
-    if (!minimalMode && envName !== 'dev' && enableSynthetics) {
-      // Create CloudWatch Synthetics canaries
-      synthetics = createSynthetics(this, {
-        envName,
-        planeABaseUrl,
-        alertsTopic: snsSubscriptions.criticalTopic,
-      })
-    }
-
-    if (!minimalMode && envName !== 'dev' && enableMonitoring) {
-      // Create monitoring with SNS topics from subscriptions
-      monitoring = createMonitoring(this, {
-        envName,
-        queues,
-        api,
-        ecs: ecsServices,
-        database,
-        cache,
-        criticalTopic: snsSubscriptions.criticalTopic,
-        warningTopic: snsSubscriptions.warningTopic,
-        opsTopic: snsSubscriptions.opsTopic,
-      })
-
+    if (monitoring) {
       const exportsRequestMetrics = [
         { id: 'ExportsIndicesMetrics', label: 'Indices' },
         { id: 'ExportsParquetMetrics', label: 'Parquet' },
@@ -1561,161 +1590,6 @@ export class RemitScoutStack extends Stack {
         assumeRoleFailureRule.addTarget(new SnsTopic(snsSubscriptions.opsTopic))
       }
     }
-
-    const pipeline = pipelineEnabled
-      ? createPipeline(this, {
-          envName,
-          connectionArn: pipelineConnectionArn,
-          repoOwner: pipelineRepoOwner,
-          repoName: pipelineRepoName,
-          repoBranch: pipelineRepoBranch,
-          enableDeploy: pipelineEnableDeploy,
-          requireApproval: pipelineRequireApproval,
-          backendRepository: registry.backendRepository,
-          frontendBucket: frontend?.bucket,
-          frontendDistribution: frontend?.distribution,
-          planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
-          planeAApiEndpoint: api.planeAApi.apiEndpoint,
-          publicSupabaseUrl,
-          publicSupabaseAnonKey,
-          publicSupabaseSecretArn: supabaseSecretArn,
-          publicSupabaseUrlSecretJsonKey,
-          publicSupabaseAnonKeySecretJsonKey,
-          publicGa4MeasurementId,
-          publicMetaPixelId,
-          publicAdsEnabled,
-          publicPulseEnabled,
-          devPaused,
-        })
-      : null
-
-    createScheduledJobs(this, {
-      envName,
-      lambdaArchitecture,
-      roles: iam,
-      cluster: compute.cluster,
-      b2cRefreshTask: tasks.b2cRefreshTask,
-      fxRateRefreshTask: tasks.fxRateRefreshTask,
-      b2bSweepSchedulerTask: tasks.b2bSweepSchedulerTask,
-      b2cRefreshServiceEnabled,
-      b2cRefreshDesiredCount,
-      fxRateRefreshServiceEnabled,
-      fxRateRefreshDesiredCount,
-      goldIndicesLookbackDays,
-      goldIndicesMinProviders,
-      providerWeightWindowDays,
-      institutionalExportFormat,
-      institutionalExportWriteManifest,
-      paused: devPaused,
-      vpc: networking.vpc,
-      planeASecurityGroup: networking.planeASecurityGroup,
-      planeBSecurityGroup: networking.planeBSecurityGroup,
-      planeCSecurityGroup: networking.planeCSecurityGroup,
-      otelLambdaLayerArn,
-      sentrySecretArn,
-      sentrySecretJsonKey,
-      planeBDbSecretArn,
-      planeBDbSsmName,
-      planeCDbSecretArn,
-      planeCDbSsmName,
-      redisSecretArn,
-      redisSsmName,
-      redisUrl,
-      oandaSecretArn,
-      oandaSsmName,
-      communicationsSecretArn,
-      planeADbSecretArn,
-      planeADbSsmName,
-      planeADbHost,
-      planeADbPort,
-      planeADbName,
-      quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
-      quoteRefreshQueueMode,
-      exportJobQueueUrl: queues.exportJobQueue.queueUrl,
-      exportJobQueueMode,
-      exportsBucketName: storage.exportsBucket.bucketName,
-      exportsPrefix,
-      auditLogsBucketName: storage.auditLogsBucket.bucketName,
-      auditLogsPrefix,
-      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
-      alertEvaluationServiceEnabled,
-      exportServiceEnabled,
-      minimalMode,
-      planeBDbHost,
-      planeBDbPort,
-      planeBDbName,
-      planeCDbHost,
-      planeCDbPort,
-      planeCDbName,
-      providerProbeMode,
-    })
-
-    const queueWorkerBaseline = planeBQueueWorkerDesiredCount ?? 0
-    const ingestFanoutTier1Baseline =
-      ingestFanoutMode === 'queue' ? (ingestFanoutTier1DesiredCount ?? queueWorkerBaseline) : 0
-    const ingestFanoutTier2Baseline =
-      ingestFanoutMode === 'queue'
-        ? (ingestFanoutTier2DesiredCount ?? Math.max(0, ingestFanoutTier1Baseline - 1))
-        : 0
-    const goldLiveBaseline =
-      goldLiveQueueMode === 'queue' ? (goldLiveDesiredCount ?? queueWorkerBaseline) : 0
-    const notificationsBaseline =
-      notificationsMode === 'queue' ? (notificationsDesiredCount ?? queueWorkerBaseline) : 0
-    const opsAlertsBaseline =
-      opsAlertsMode === 'queue' ? (opsAlertsDesiredCount ?? queueWorkerBaseline) : 0
-    const b2cRefreshBaseline = b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0
-    const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
-    const alertEvaluationBaseline = alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0
-    const exportWorkerBaseline = exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0
-    const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
-
-    const managedEcsServiceNames: string[] = []
-    const managedEcsBaselines: Record<string, number> = {}
-
-    const addManagedService = (service: { serviceName: string } | undefined, baseline: number): void => {
-      if (!service) return
-      managedEcsServiceNames.push(service.serviceName)
-      managedEcsBaselines[service.serviceName] = baseline
-    }
-
-    addManagedService(ecsServices.planeBIngestService, planeBIngestBaseline)
-    addManagedService(ecsServices.b2cRefreshService, b2cRefreshBaseline)
-    addManagedService(ecsServices.fxRateRefreshService, fxRateRefreshBaseline)
-    addManagedService(ecsServices.ingestFanoutTier1Service, ingestFanoutTier1Baseline)
-    addManagedService(ecsServices.ingestFanoutTier2Service, ingestFanoutTier2Baseline)
-    addManagedService(ecsServices.goldLiveService, goldLiveBaseline)
-    addManagedService(ecsServices.notificationsQueueService, notificationsBaseline)
-    addManagedService(ecsServices.opsAlertsQueueService, opsAlertsBaseline)
-    addManagedService(ecsServices.alertEvaluationService, alertEvaluationBaseline)
-    addManagedService(ecsServices.exportWorkerService, exportWorkerBaseline)
-
-    const opsPause = createOpsPause(this, {
-      envName,
-      clusterName: compute.cluster.clusterName,
-      ecsServiceNames: managedEcsServiceNames,
-      ecsBaselineDesired: managedEcsBaselines,
-      eventRulePrefix: `remit-scout-${envName}-`,
-      eventRuleAllowlist: opsPauseAllowlist,
-      eventRuleResumeAllowlist: resolvedOpsResumeAllowlist,
-      hardStopEnabled,
-      dbClusterIdentifier: database.cluster.clusterIdentifier,
-      redisReplicationGroupId: cache.replicationGroup.ref,
-      redisSubnetGroupName: cache.subnetGroup.cacheSubnetGroupName ?? cache.subnetGroup.ref,
-      redisSecurityGroupIds: [networking.redisSecurityGroup.securityGroupId],
-      redisNodeType: envName === 'prod' ? 'cache.t4g.small' : 'cache.t4g.micro',
-      redisEngineVersion: '7.1',
-      redisNumNodeGroups: 1,
-      redisReplicasPerNodeGroup: envName === 'prod' ? 1 : 0,
-      redisAutomaticFailover: envName === 'prod',
-      redisMultiAz: envName === 'prod',
-      redisTransitEncryption: true,
-      redisAtRestEncryption: true,
-      redisAutoMinorVersionUpgrade: true,
-      purgeQueuesOnResume,
-      purgeQueueUrls: purgeQueuesOnResume ? resolvedPurgeQueueUrls : [],
-      purgeQueueArns: purgeQueuesOnResume ? resolvedPurgeQueueArns : [],
-      role: iam.opsPauseLambdaRole,
-    })
 
     if (envName === 'dev' && devNightlyPauseEnabled) {
       const nightlyPauseDlq = new Queue(this, 'DevNightlyPauseSchedulerDlq', {
@@ -1916,6 +1790,33 @@ export class RemitScoutStack extends Stack {
       value: storage.exportsBucket.bucketName,
       description: 'Exports S3 bucket name',
     })
+    if (frontend) {
+      const frontendUrl = frontendDomainName
+        ? `https://${frontendDomainName}`
+        : `https://${frontend.distribution.distributionDomainName}`
+      new CfnOutput(this, 'FrontendBucketName', {
+        value: frontend.bucket.bucketName,
+        description: 'Frontend S3 Bucket Name',
+      })
+      new CfnOutput(this, 'FrontendDistributionId', {
+        value: frontend.distribution.distributionId,
+        description: 'Frontend CloudFront Distribution ID',
+      })
+      new CfnOutput(this, 'FrontendDistributionDomain', {
+        value: frontend.distribution.distributionDomainName,
+        description: 'Frontend CloudFront Distribution Domain',
+      })
+      new CfnOutput(this, 'FrontendUrl', {
+        value: frontendUrl,
+        description: 'Frontend URL',
+      })
+    }
+    if (pinpoint) {
+      new CfnOutput(this, 'PinpointAppId', {
+        value: pinpoint.pinpointAppId,
+        description: 'Amazon Pinpoint application ID for newsletter campaigns',
+      })
+    }
     if (snowflakePartnerRole) {
       new CfnOutput(this, 'SnowflakePartnerRoleArn', {
         value: snowflakePartnerRole.roleArn,
