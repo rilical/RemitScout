@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "ARCHITECTURE.md",
+    "agents/AGENT-MATCH.md",
+    "agents/RUNBOOKS.md",
+    ".remit-scout/AGENTS.md",
+    "docs/runbooks/agent-deploy-promotion-checklist.md"
+  ],
+  "default_agent": "build"
+}
