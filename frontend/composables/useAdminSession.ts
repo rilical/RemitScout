@@ -68,6 +68,9 @@ export const useAdminSession = () => {
 
     const response = await request<AdminExchangeResponse>('/sessions/admin/exchange', {
       method: 'POST',
+      headers: {
+        authorization: `Bearer ${supabaseToken}`,
+      },
       body: {
         supabase_token: supabaseToken,
       },
