@@ -32,6 +32,7 @@ import {
   recordJobStart,
   recordJobComplete,
   recordJobFailure,
+  recordIndicesAggregateMetrics,
 } from './gold-indices-job-metrics'
 import { startHealthServer } from './gold-indices-job-health'
 
@@ -644,6 +645,39 @@ export const upsertGoldIndices = async (
   return result.rows[0]?.upserted ?? 0
 }
 
+const readLatestIndicesAggregates = async (
+  pool: Pool,
+  targetBucket: number,
+): Promise<{ teerRate: number | null; rciRatio: number | null; rviBps: number | null }> => {
+  const result = await query<{
+    teer_rate: number | null
+    rci_ratio: number | null
+    rvi_bps: number | null
+  }>(
+    `WITH latest_day AS (
+       SELECT MAX(date) AS date
+       FROM gold_export.cdp_daily
+       WHERE amount_bucket = $1
+     )
+     SELECT
+       AVG(teer_rate) FILTER (WHERE teer_rate IS NOT NULL)::double precision AS teer_rate,
+       AVG(rci_ratio) FILTER (WHERE rci_ratio IS NOT NULL)::double precision AS rci_ratio,
+       AVG(rvi_bps) FILTER (WHERE rvi_bps IS NOT NULL)::double precision AS rvi_bps
+     FROM gold_export.cdp_daily cdp
+     JOIN latest_day ld ON ld.date = cdp.date
+     WHERE cdp.amount_bucket = $1
+       AND cdp.suppression_flag = false`,
+    [targetBucket],
+    pool,
+  )
+
+  return {
+    teerRate: result.rows[0]?.teer_rate ?? null,
+    rciRatio: result.rows[0]?.rci_ratio ?? null,
+    rviBps: result.rows[0]?.rvi_bps ?? null,
+  }
+}
+
 export const runGoldIndicesJob = async (
   options: { enableHealthServer?: boolean } = {},
 ): Promise<void> => {
@@ -767,12 +801,17 @@ export const runGoldIndicesJob = async (
     )
     const durationMs = Date.now() - startTime
     const durationSeconds = durationMs / 1000
+    const indicesAggregates = await readLatestIndicesAggregates(pool!, amountBucket)
+    recordIndicesAggregateMetrics(indicesAggregates)
 
     logger.info('job_complete', {
       upserted,
       duration_ms: durationMs,
       amount_bucket: amountBucket,
       lookback_days: lookbackDays,
+      indices_teer_rate: indicesAggregates.teerRate,
+      indices_rci_ratio: indicesAggregates.rciRatio,
+      indices_rvi_bps: indicesAggregates.rviBps,
     })
     recordJobComplete(durationSeconds, upserted)
     await recordBatchJobMetric('gold-indices-job', 'job_complete', durationSeconds, {

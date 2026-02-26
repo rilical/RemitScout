@@ -243,9 +243,16 @@ const scopeClause = (token, envName) =>
     OR appName LIKE '%${token}%'
   )`
 
+const metricNameFilter = (name) =>
+  `(metricName = '${name}' OR metricName = 'aws.remitscout.${name}')`
+
 const buildConditionDefinitions = ({ envName, envLabel, token }) => {
   const scope = scopeClause(token, envName)
   const queueNamePrefix = `remit-scout-${envName}-`
+  const runtimeEnvironmentFilter =
+    envName === 'prod'
+      ? `(environment = 'prod' OR environment = 'production')`
+      : `environment = '${envName}'`
   const apiErrorThreshold = envName === 'prod' ? 0.02 : 0.05
   const probeFailureBurstThreshold = envName === 'prod' ? 3 : 5
   const runbookBase =
@@ -258,8 +265,8 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       description: 'Mirror of CloudWatch gate: remit-scout-<env>-api-error-rate-high',
       query:
         `FROM Metric SELECT ` +
-        `filter(sum(newrelic.timeslice.value), WHERE metricName LIKE 'aws.apigateway.5XXError%') ` +
-        `/ filter(sum(newrelic.timeslice.value), WHERE metricName LIKE 'aws.apigateway.Count%') ` +
+        `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.5XXError%') ` +
+        `/ filter(sum(value), WHERE metricName LIKE 'aws.apigateway.Count%') ` +
         `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope}`,
       operator: 'ABOVE',
       threshold: apiErrorThreshold,
@@ -271,7 +278,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       name: `[${envLabel}] api-p99-latency-high (mirror)`,
       description: 'Mirror of CloudWatch gate: remit-scout-<env>-api-p99-latency-high',
       query:
-        `FROM Metric SELECT percentile(newrelic.timeslice.value, 99) ` +
+        `FROM Metric SELECT percentile(value, 99) ` +
         `WHERE aws.Namespace = 'AWS/ApiGateway' ` +
         `AND metricName LIKE 'aws.apigateway.Latency%' ` +
         `AND ${scope}`,
@@ -285,7 +292,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       name: `[${envLabel}] dlq-depth-high (mirror)`,
       description: 'Mirror of DLQ depth critical signal (>=1)',
       query:
-        `FROM Metric SELECT sum(newrelic.timeslice.value) ` +
+        `FROM Metric SELECT sum(value) ` +
         `WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%' ` +
         `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq'`,
       operator: 'ABOVE_OR_EQUALS',
@@ -298,9 +305,9 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       name: `[${envLabel}] slo-breach-total (mirror)`,
       description: 'Mirror of SLO breach metric signal',
       query:
-        `FROM Metric SELECT sum(newrelic.timeslice.value) ` +
-        `WHERE metricName = 'slo_breach_total' ` +
-        `AND environment = '${envName}'`,
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${metricNameFilter('slo_breach_total')} ` +
+        `AND ${runtimeEnvironmentFilter}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: 1,
       thresholdDuration: 300,
@@ -311,9 +318,9 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       name: `[${envLabel}] provider-probe-failures-high (mirror)`,
       description: 'Mirror of provider probe failure burst alarm',
       query:
-        `FROM Metric SELECT sum(newrelic.timeslice.value) ` +
-        `WHERE metricName = 'probe_result' ` +
-        `AND Status = 'failure' AND environment = '${envName}'`,
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${metricNameFilter('probe_result')} ` +
+        `AND Status = 'failure' AND ${runtimeEnvironmentFilter}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: probeFailureBurstThreshold,
       thresholdDuration: 300,

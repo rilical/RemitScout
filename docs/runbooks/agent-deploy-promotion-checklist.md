@@ -1,6 +1,6 @@
 # Agent Deploy Promotion Checklist (Develop -> Staging Minimal -> Staging Full -> Prod)
 
-Last updated: 2026-02-24
+Last updated: 2026-02-26
 
 Purpose:
 - This is the canonical promotion checklist for agents.
@@ -87,8 +87,10 @@ Execution:
 - [ ] Verify frontend staging host + TLS + API base are correct.
 - [ ] Verify New Relic staging observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
+  - `NEW_RELIC_STAGING_AWS_ROLE_ARN=<staging_role_arn> NEW_RELIC_PROD_AWS_ROLE_ARN=<prod_role_arn> node ops/newrelic/sync-cloud-links.mjs`
   - `node ops/newrelic/sync-alerts.mjs`
-  - `NEW_RELIC_TARGET_ENV=staging node ops/newrelic/verify-signals.mjs`
+  - `NEW_RELIC_TARGET_ENV=staging NEW_RELIC_STAGING_AWS_ACCOUNT_ID=<staging_account_id> node ops/newrelic/verify-signals.mjs`
+  - Confirm New Relic dashboard pages include `Indices (TEER/RCI/RVI)`, `Exports Health`, `API Health`, and `Provider Health (Per Provider)`.
 - [ ] Re-run staging smoke after migration/user seeding.
 - [ ] Re-check critical alarms are still clear.
 
@@ -124,8 +126,10 @@ Execution:
   - `/remit-scout/prod/last-good-image` updated
 - [ ] Verify New Relic prod observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
+  - `NEW_RELIC_STAGING_AWS_ROLE_ARN=<staging_role_arn> NEW_RELIC_PROD_AWS_ROLE_ARN=<prod_role_arn> node ops/newrelic/sync-cloud-links.mjs`
   - `node ops/newrelic/sync-alerts.mjs`
-  - `NEW_RELIC_TARGET_ENV=prod node ops/newrelic/verify-signals.mjs`
+  - `NEW_RELIC_TARGET_ENV=prod NEW_RELIC_PROD_AWS_ACCOUNT_ID=<prod_account_id> node ops/newrelic/verify-signals.mjs`
+  - Confirm New Relic dashboard pages include `Indices (TEER/RCI/RVI)`, `Exports Health`, `API Health`, and `Provider Health (Per Provider)`.
 
 Exit criteria:
 - [ ] Prod deployment successful for tagged SHA.

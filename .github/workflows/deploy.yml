@@ -898,10 +898,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          dispatch_ref="${GITHUB_REF_NAME:-}"
-          if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "${GITHUB_SHA}" ]; then
-            dispatch_ref="$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')"
-          fi
+          dispatch_ref="${GITHUB_SHA}"
 
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true
@@ -921,7 +918,7 @@ jobs:
           fi
 
           for i in $(seq 1 240); do
-            run_payload="$(gh run view "$run_id" --json status,conclusion 2>/dev/null || true)"
+            run_payload="$(gh run view "$run_id" --json status,conclusion,headSha 2>/dev/null || true)"
             if [ -z "${run_payload}" ]; then
               sleep 5
               continue
@@ -929,7 +926,12 @@ jobs:
 
             run_status="$(echo "$run_payload" | jq -r '.status')"
             run_conclusion="$(echo "$run_payload" | jq -r '.conclusion // ""')"
+            run_head_sha="$(echo "$run_payload" | jq -r '.headSha // ""')"
             if [ "$run_status" = "completed" ]; then
+              if [ "$run_head_sha" != "${GITHUB_SHA}" ]; then
+                echo "Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${GITHUB_SHA}."
+                exit 1
+              fi
               if [ "$run_conclusion" = "success" ]; then
                 echo "Staging readiness workflow run ${run_id} succeeded."
                 exit 0

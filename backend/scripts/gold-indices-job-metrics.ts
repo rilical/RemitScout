@@ -36,6 +36,7 @@ const lastDurationSeconds = new Gauge({
 })
 
 let jobStartTime: number | null = null
+const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
 export const recordJobStart = (): void => {
   jobStartTime = Date.now()
@@ -92,6 +93,35 @@ export const recordJobFailure = (errorType: string): void => {
     unit: 'Count',
     dimensions: { error_type: errorType },
   })
+}
+
+export const recordIndicesAggregateMetrics = (metrics: {
+  teerRate: number | null
+  rciRatio: number | null
+  rviBps: number | null
+}): void => {
+  const dimensions = { environment: environmentDimension }
+  if (metrics.teerRate !== null && Number.isFinite(metrics.teerRate)) {
+    recordCloudWatchMetric({
+      name: 'indices_teer_rate',
+      value: metrics.teerRate,
+      dimensions,
+    })
+  }
+  if (metrics.rciRatio !== null && Number.isFinite(metrics.rciRatio)) {
+    recordCloudWatchMetric({
+      name: 'indices_rci_ratio',
+      value: metrics.rciRatio,
+      dimensions,
+    })
+  }
+  if (metrics.rviBps !== null && Number.isFinite(metrics.rviBps)) {
+    recordCloudWatchMetric({
+      name: 'indices_rvi_bps',
+      value: metrics.rviBps,
+      dimensions,
+    })
+  }
 }
 
 export { getMetrics, metricsContentType }
