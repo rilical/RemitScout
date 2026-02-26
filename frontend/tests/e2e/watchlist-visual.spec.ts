@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Watchlist button - Visual documentation', () => {
   test('documents the full watchlist button flow with screenshots', async ({ page }) => {
     // Navigate to a corridor page
-    await page.goto('/send-money/us-to-gt')
+    await page.goto('/send-money/united-states-to-philippines')
 
     // Wait for the watchlist button to appear
-    const watchlistButton = page.getByRole('button', { name: /add to watchlist/i }).first()
+    const watchlistButton = page.getByRole('button', { name: /add to watchlist|save/i }).first()
     await expect(watchlistButton).toBeVisible({ timeout: 15000 })
 
     // 1. Capture the initial state
@@ -47,7 +47,7 @@ test.describe('Watchlist button - Visual documentation', () => {
       console.log('📸 Screenshot 3: Auth modal appeared')
 
       // Verify modal content
-      await expect(modal.getByText(/sign in to save corridors/i)).toBeVisible()
+      await expect(modal.getByText(/sign in to save/i)).toBeVisible()
       console.log('✅ Auth modal contains expected messaging')
 
       // Check for sign in buttons in the modal

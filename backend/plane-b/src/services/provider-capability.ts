@@ -8,6 +8,7 @@ import { createLogger } from '../../../shared/logger'
 import { isWiseDestinationCurrency, isWiseSourceCurrency } from '../../../shared/provider-currencies'
 import { ProviderCapabilityRepository } from '../repositories'
 import type { ProxyTier } from '../lib/proxy-router'
+import { resolveCapabilityProbeProxyTier } from './capability-proxy-tier'
 import { fetchRemitlyQuote } from '../providers/remitly/fetch'
 import { extractRemitlyMethodPairs } from '../providers/remitly/parse'
 import { REMITLY_SUPPORTED_CORRIDORS } from '../providers/remitly/supported-corridors'
@@ -297,7 +298,10 @@ const probeProviderCapability = async (
 
   let fetchResult: FetchResult
   try {
-    fetchResult = await probe.fetch(request, { jitterMs: 0, proxyTier: 'NONE' })
+    fetchResult = await probe.fetch(request, {
+      jitterMs: 0,
+      proxyTier: resolveCapabilityProbeProxyTier(),
+    })
   } catch (error) {
     logger.warn('provider_capability_probe_failed', {
       provider_id: request.provider_id,

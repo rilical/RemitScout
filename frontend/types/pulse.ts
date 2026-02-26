@@ -2,7 +2,7 @@ export type AmountBucket = 100 | 200 | 500 | 1000
 
 export type FundingMethod = 'bank' | 'card' | 'cash'
 
-export type PayoutMethod = 'bank' | 'cash' | 'wallet'
+export type PayoutMethod = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
 
 export type TimeRange = '7d' | '30d' | '90d' | '365d'
 

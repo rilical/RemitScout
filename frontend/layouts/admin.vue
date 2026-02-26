@@ -9,7 +9,6 @@ const runtimeConfig = useRuntimeConfig()
 
 const sidebarCollapsed = ref(false)
 const mobileNavOpen = ref(false)
-const isDark = ref(false)
 const commandPaletteOpen = ref(false)
 const isSigningOut = ref(false)
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
@@ -56,17 +55,6 @@ const commands = computed<AdminCommand[]>(() => [
     keywords: ['audit', 'actor', 'search', 'query'],
   },
 ])
-
-const applyTheme = (nextDark: boolean) => {
-  if (!isBrowser()) return
-  document.documentElement.classList.toggle('dark', nextDark)
-  try {
-    window.localStorage.setItem('admin:theme', nextDark ? 'dark' : 'light')
-  }
-  catch {
-    // ignore storage errors
-  }
-}
 
 const ensureAdminSessionSafe = async () => {
   const ok = await ensureAdminSession()
@@ -133,23 +121,10 @@ watch(
   },
 )
 
-watch(isDark, (next) => {
-  applyTheme(next)
-})
-
 onMounted(() => {
   if (!route.path.startsWith('/admin')) return
 
   void ensureAdminSessionSafe()
-
-  try {
-    const stored = window.localStorage.getItem('admin:theme')
-    isDark.value = stored === 'dark'
-  }
-  catch {
-    isDark.value = false
-  }
-  applyTheme(isDark.value)
 
   if (isBrowser()) {
     window.addEventListener('keydown', onGlobalKeydown)
@@ -180,7 +155,7 @@ onUnmounted(() => {
           </div>
           <button
             type="button"
-            class="rounded-md border border-rs-border px-2 py-1 text-body-sm text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800"
+            class="rounded-md border border-rs-border px-2 py-1 text-body-sm text-rs-muted hover:bg-neutral-50"
             :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
             @click="sidebarCollapsed = !sidebarCollapsed"
           >
@@ -253,7 +228,7 @@ onUnmounted(() => {
             <!-- Mobile hamburger -->
             <button
               type="button"
-              class="rounded-lg border border-rs-border p-2 text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800 lg:hidden"
+              class="rounded-lg border border-rs-border p-2 text-rs-muted hover:bg-neutral-50 lg:hidden"
               aria-label="Open navigation menu"
               @click="mobileNavOpen = !mobileNavOpen"
             >
@@ -270,14 +245,6 @@ onUnmounted(() => {
             <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="environmentBadge.className">
               {{ environmentBadge.label }}
             </span>
-
-            <button
-              type="button"
-              class="rounded-lg border border-rs-border px-3 py-2 text-body-sm text-rs-muted hover:bg-neutral-50 dark:hover:bg-slate-800"
-              @click="isDark = !isDark"
-            >
-              {{ isDark ? 'Light' : 'Dark' }}
-            </button>
 
             <button
               type="button"

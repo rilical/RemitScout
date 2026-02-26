@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Watchlist button functionality', () => {
   test('shows auth modal when logged out user clicks "Add to watchlist"', async ({ page }) => {
     // Navigate to a corridor page
-    await page.goto('/send-money/us-to-gt')
+    await page.goto('/send-money/united-states-to-philippines')
 
     // Wait for the watchlist button to appear (this means the page is loaded)
-    const watchlistButton = page.getByRole('button', { name: /add to watchlist/i }).first()
+    const watchlistButton = page.getByRole('button', { name: /add to watchlist|save/i }).first()
     await expect(watchlistButton).toBeVisible({ timeout: 15000 })
 
     // Check if user is logged in by looking for sign in button
@@ -27,7 +27,7 @@ test.describe('Watchlist button functionality', () => {
       await expect(modal).toBeVisible({ timeout: 3000 })
 
       // Check modal contains sign in messaging
-      await expect(modal.getByText(/sign in to save corridors/i)).toBeVisible()
+      await expect(modal.getByText(/sign in to save/i)).toBeVisible()
 
       console.log('✓ Auth modal appeared as expected for logged-out user')
     }
@@ -44,7 +44,7 @@ test.describe('Watchlist button functionality', () => {
   })
 
   test('checks header for user authentication state', async ({ page }) => {
-    await page.goto('/send-money/us-to-gt')
+    await page.goto('/send-money/united-states-to-philippines')
 
     // Wait for navigation to load
     await page.waitForLoadState('networkidle')

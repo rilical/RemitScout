@@ -60,9 +60,21 @@ const hasCountrySets = (row: RightsRow | undefined): boolean =>
     && row.destination_countries.length > 0,
   )
 
+const resolveExpectedDisabledProviders = (): string[] => {
+  const raw = process.env.EXPECTED_DISABLED_PROVIDERS
+  if (raw === undefined) {
+    return ['wellsfargo']
+  }
+  const value = raw.trim()
+  if (!value) {
+    return []
+  }
+  return normalizeList(value.split(','))
+}
+
 export const runRightsActivationValidate = async (): Promise<void> => {
   const expectedProviders = normalizeList(providerRegistry.map((provider) => provider.providerId))
-  const expectedDisabled = ['wellsfargo']
+  const expectedDisabled = resolveExpectedDisabledProviders()
 
   const pool = createPool(config.db.planeBUrl)
   try {

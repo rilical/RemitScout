@@ -233,6 +233,7 @@ const WEEKLY_SEND_DOW = config.alerts.smart.weeklySendDow
 const WEEKLY_SEND_HOUR = config.alerts.smart.weeklySendHour
 const ALERT_EVALUATION_CONCURRENCY = config.alerts.evaluation.concurrency
 const GOLD_ALERT_AMOUNT_BUCKET = config.indices.amountBucket
+const GOLD_ALERT_METHOD_PROFILE = 'standard_bank'
 
 export async function evaluateAlert(
   pool: Pool,
@@ -383,10 +384,10 @@ export async function evaluateAlert(
            FROM gold_export.cdp_daily
           WHERE corridor_id = $1
             AND amount_bucket = $2
-            AND method_profile = 'standard_bank'
+            AND method_profile = $3
           ORDER BY date DESC, created_at DESC
           LIMIT 1`,
-        [corridorId, GOLD_ALERT_AMOUNT_BUCKET],
+        [corridorId, GOLD_ALERT_AMOUNT_BUCKET, GOLD_ALERT_METHOD_PROFILE],
         pool,
       )
 
@@ -500,10 +501,10 @@ export async function evaluateAlert(
            FROM gold_export.cdp_daily
           WHERE corridor_id = $1
             AND amount_bucket = $2
-            AND method_profile = 'standard_bank'
+            AND method_profile = $3
           ORDER BY date DESC, created_at DESC
           LIMIT 1`,
-        [corridorId, GOLD_ALERT_AMOUNT_BUCKET],
+        [corridorId, GOLD_ALERT_AMOUNT_BUCKET, GOLD_ALERT_METHOD_PROFILE],
         pool,
       )
 

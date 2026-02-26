@@ -131,6 +131,12 @@ export type ScheduledJobsOptions = {
   redisSecretArn?: string
   redisSsmName?: string
   redisUrl?: string
+  proxyResidentialSecretArn?: string
+  proxyResidentialSsmName?: string
+  proxyResidentialUrl?: string
+  proxyDatacenterSecretArn?: string
+  proxyDatacenterSsmName?: string
+  proxyDatacenterUrl?: string
   oandaSecretArn?: string
   oandaSsmName?: string
   planeBDbHost?: string
@@ -175,6 +181,53 @@ const applyRedisEnv = (
   }
   if (!redisSecretArn && !redisSsmName && redisUrl) {
     fn.addEnvironment('REDIS_URL', redisUrl)
+  }
+}
+
+const applyProxyEnv = (
+  scope: Construct,
+  fn: NodejsFunction,
+  options: {
+    proxyResidentialSecretId: string
+    proxyDatacenterSecretId: string
+    proxyResidentialSecretArn?: string
+    proxyResidentialSsmName?: string
+    proxyResidentialUrl?: string
+    proxyDatacenterSecretArn?: string
+    proxyDatacenterSsmName?: string
+    proxyDatacenterUrl?: string
+  },
+): void => {
+  if (options.proxyResidentialSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      options.proxyResidentialSecretId,
+      options.proxyResidentialSecretArn,
+    )
+    secret.grantRead(fn)
+    fn.addEnvironment('PROXY_RESIDENTIAL_SECRET_ARN', options.proxyResidentialSecretArn)
+  }
+  if (options.proxyResidentialSsmName) {
+    fn.addEnvironment('PROXY_RESIDENTIAL_SSM_NAME', options.proxyResidentialSsmName)
+  }
+  if (!options.proxyResidentialSecretArn && !options.proxyResidentialSsmName && options.proxyResidentialUrl) {
+    fn.addEnvironment('PROXY_RESIDENTIAL_URL', options.proxyResidentialUrl)
+  }
+
+  if (options.proxyDatacenterSecretArn) {
+    const secret = Secret.fromSecretCompleteArn(
+      scope,
+      options.proxyDatacenterSecretId,
+      options.proxyDatacenterSecretArn,
+    )
+    secret.grantRead(fn)
+    fn.addEnvironment('PROXY_DATACENTER_SECRET_ARN', options.proxyDatacenterSecretArn)
+  }
+  if (options.proxyDatacenterSsmName) {
+    fn.addEnvironment('PROXY_DATACENTER_SSM_NAME', options.proxyDatacenterSsmName)
+  }
+  if (!options.proxyDatacenterSecretArn && !options.proxyDatacenterSsmName && options.proxyDatacenterUrl) {
+    fn.addEnvironment('PROXY_DATACENTER_URL', options.proxyDatacenterUrl)
   }
 }
 
@@ -340,6 +393,12 @@ export const createScheduledJobs = (
   const planeBDbHost = options.planeBDbHost
   const planeBDbPort = options.planeBDbPort
   const planeBDbName = options.planeBDbName
+  const proxyResidentialSecretArn = options.proxyResidentialSecretArn
+  const proxyResidentialSsmName = options.proxyResidentialSsmName
+  const proxyResidentialUrl = options.proxyResidentialUrl
+  const proxyDatacenterSecretArn = options.proxyDatacenterSecretArn
+  const proxyDatacenterSsmName = options.proxyDatacenterSsmName
+  const proxyDatacenterUrl = options.proxyDatacenterUrl
   const planeCDbHost = options.planeCDbHost
   const planeCDbPort = options.planeCDbPort
   const planeCDbName = options.planeCDbName
@@ -1977,6 +2036,16 @@ export const createScheduledJobs = (
       redisSsmName,
       redisUrl,
     )
+    applyProxyEnv(scope, probeFanInFunction, {
+      proxyResidentialSecretId: 'ProviderProbeFanInProxyResidentialSecret',
+      proxyDatacenterSecretId: 'ProviderProbeFanInProxyDatacenterSecret',
+      proxyResidentialSecretArn,
+      proxyResidentialSsmName,
+      proxyResidentialUrl,
+      proxyDatacenterSecretArn,
+      proxyDatacenterSsmName,
+      proxyDatacenterUrl,
+    })
 
     const probeFanInRule = new Rule(scope, 'ProviderProbeFanInSchedule', {
       schedule: Schedule.rate(Duration.minutes(probeIntervalMinutes)),
@@ -2057,6 +2126,16 @@ export const createScheduledJobs = (
         redisSsmName,
         redisUrl,
       )
+      applyProxyEnv(scope, fn, {
+        proxyResidentialSecretId: `${id}ProbeProxyResidentialSecret`,
+        proxyDatacenterSecretId: `${id}ProbeProxyDatacenterSecret`,
+        proxyResidentialSecretArn,
+        proxyResidentialSsmName,
+        proxyResidentialUrl,
+        proxyDatacenterSecretArn,
+        proxyDatacenterSsmName,
+        proxyDatacenterUrl,
+      })
 
       const rule = new Rule(scope, `${id}ProbeSchedule`, {
         schedule: Schedule.rate(Duration.minutes(probeIntervalMinutes)),

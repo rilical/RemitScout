@@ -14,6 +14,11 @@ import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
+import {
+  enqueueExportJob,
+  getExportPipelineStatus,
+  getSignedExportDownload,
+} from './exports.service'
 
 const logger = createLogger('plane-a.me')
 
@@ -29,6 +34,13 @@ const passwordUpdateSchema = z.object({
 const apiKeyCreateSchema = z.object({
   name: z.string().max(80).optional(),
   scopes: z.array(z.string().max(64)).max(20).optional(),
+})
+
+const exportJobCreateSchema = z.object({
+  jobType: z.enum(['history', 'watchlist', 'alerts', 'all', 'indices']),
+  format: z.enum(['csv', 'pdf']).default('csv'),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
 })
 
 type BillingInfo = {
@@ -201,6 +213,7 @@ const updateSupabasePassword = async (accessToken: string, newPassword: string):
 export const meRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
   const userAccountRepository = repositories.userAccount
+  const exportJobRepository = repositories.exportJob
 
   app.get('/me', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
@@ -516,6 +529,184 @@ export const meRoutes = async (app: FastifyInstance) => {
       logger.error('api_key_revoke_failed', {
         user_id: user.user_id,
         key_id: keyId,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.get('/me/export-jobs', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+
+    try {
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      const limit = Math.min(Number((request.query as any)?.limit) || 20, 100)
+      const jobs = await exportJobRepository.listByUserId(user.user_id, limit)
+
+      return {
+        success: true,
+        jobs: jobs.map((job) => ({
+          id: job.id,
+          jobType: job.job_type,
+          status: job.status,
+          params: job.params,
+          createdAt: job.created_at.toISOString(),
+          startedAt: job.started_at ? job.started_at.toISOString() : null,
+          finishedAt: job.finished_at ? job.finished_at.toISOString() : null,
+          expiresAt: job.expires_at ? job.expires_at.toISOString() : null,
+          error: job.error,
+        })),
+      }
+    } catch (error: unknown) {
+      logger.error('export_job_list_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.post('/me/export-jobs', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const parsed = exportJobCreateSchema.safeParse(request.body)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    try {
+      await ensureUserPlan(planeAPool, user.user_id)
+      const plan = await getUserPlan(planeAPool, user.user_id)
+      if (!isEnterprisePlan(plan)) {
+        reply.code(403)
+        return { error: 'enterprise_required' }
+      }
+
+      const pipeline = getExportPipelineStatus()
+      if (!pipeline.ok) {
+        reply.code(503)
+        return { error: pipeline.error, message: pipeline.message }
+      }
+
+      const recent = await query<{ count: string }>(
+        `SELECT COUNT(*) AS count
+         FROM silver.export_job
+         WHERE user_id = $1
+           AND created_at >= NOW() - INTERVAL '24 hours'
+           AND job_type != 'gdpr_export'`,
+        [user.user_id],
+        planeAPool,
+      )
+      const count = parseInt(recent.rows[0]?.count || '0', 10)
+      if (count >= 10) {
+        reply.code(429)
+        return { error: 'rate_limited', message: 'Maximum 10 export jobs per 24 hours.' }
+      }
+
+      const jobType = `${parsed.data.jobType}_${parsed.data.format}` as any
+      const job = await exportJobRepository.create({
+        user_id: user.user_id,
+        job_type: jobType,
+        params: {
+          format: parsed.data.format,
+          dateFrom: parsed.data.dateFrom || null,
+          dateTo: parsed.data.dateTo || null,
+        },
+      })
+
+      await enqueueExportJob(job.id, job.job_type, user.user_id)
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'export_job.create',
+          entityType: 'export_job',
+          entityId: job.id,
+          afterSnapshot: { job_type: job.job_type, status: job.status },
+          category: 'user_action',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', { user_id: user.user_id, error: getErrorMessage(error) })
+      }
+
+      return {
+        success: true,
+        job: {
+          id: job.id,
+          jobType: job.job_type,
+          status: job.status,
+          createdAt: job.created_at.toISOString(),
+        },
+      }
+    } catch (error: unknown) {
+      if (error instanceof ValidationError) throw error
+      logger.error('export_job_create_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.get('/me/export-jobs/:jobId/download', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const jobId = String((request.params as { jobId: string }).jobId)
+
+    try {
+      const job = await exportJobRepository.getById(jobId)
+      if (!job || job.user_id !== user.user_id) {
+        throw new NotFoundError('Not found', { details: { error: 'not_found' } })
+      }
+      if (job.status !== 'done' || !job.s3_key) {
+        reply.code(409)
+        return { error: 'export_not_ready' }
+      }
+      if (job.expires_at && job.expires_at.getTime() < Date.now()) {
+        reply.code(410)
+        return { error: 'export_expired' }
+      }
+
+      const signed = await getSignedExportDownload(job.s3_key)
+      if (!signed) {
+        reply.code(500)
+        return { error: 'exports_bucket_not_configured' }
+      }
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'export_job.download',
+          entityType: 'export_job',
+          entityId: job.id,
+          metadata: { job_type: job.job_type, s3_key: job.s3_key },
+          category: 'user_action',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', { user_id: user.user_id, error: getErrorMessage(error) })
+      }
+
+      return { success: true, url: signed.url, expiresIn: signed.expiresIn }
+    } catch (error: unknown) {
+      if (error instanceof NotFoundError) throw error
+      logger.error('export_job_download_failed', {
+        user_id: user.user_id,
+        job_id: jobId,
         error: getErrorMessage(error),
       })
       reply.code(500)

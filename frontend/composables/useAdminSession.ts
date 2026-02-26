@@ -32,7 +32,7 @@ const isTokenUsable = (state: AdminSessionState) => {
 
 export const useAdminSession = () => {
   const { request } = useApi()
-  const { signOut, session } = useAuth()
+  const { signOut, session, ensureHydrated } = useAuth()
   const state = useState<AdminSessionState>('auth:admin-session', () => ({
     accessToken: null,
     expiresAt: null,
@@ -63,6 +63,8 @@ export const useAdminSession = () => {
   }
 
   const exchangeAdminSession = async () => {
+    await ensureHydrated()
+
     const supabaseToken = session.value?.access_token
     if (!supabaseToken) return null
 
@@ -90,6 +92,8 @@ export const useAdminSession = () => {
   }
 
   const ensureAdminSession = async () => {
+    await ensureHydrated()
+
     if (isTokenUsable(state.value)) {
       return true
     }

@@ -92,6 +92,18 @@ base_raw AS (
       WHEN qr.payout = 'bank_deposit'
         AND qr.payin IN ('debit_card', 'credit_card', 'apple_pay', 'google_pay')
         THEN 'standard_card'
+      WHEN qr.payout = 'mobile_wallet'
+        AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+        THEN 'mobile_wallet'
+      WHEN qr.payout = 'airtime'
+        AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+        THEN 'airtime_topup'
+      WHEN qr.payout = 'debit_card'
+        AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay')
+        THEN 'card_delivery'
+      WHEN qr.payout = 'home_delivery'
+        AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+        THEN 'home_delivery'
       ELSE NULL
     END AS method_profile,
     rm.allowed_in_rvi,

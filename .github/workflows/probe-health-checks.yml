@@ -44,10 +44,26 @@ jobs:
           const path = require('node:path');
           const p = path.join(process.cwd(), '.remit-scout', 'providers', 'catalog.json');
           const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const noProbeProviders = (raw.providers || [])
+            .map((x) => ({
+              provider_id: String(x?.provider_id || '').trim(),
+              aws_scheduled: x?.probe?.aws_scheduled === true,
+              github_actions: x?.probe?.github_actions === true,
+            }))
+            .filter((x) => x.provider_id && !x.aws_scheduled && !x.github_actions)
+            .map((x) => x.provider_id);
+          if (noProbeProviders.length > 0) {
+            console.error(`providers missing both probe paths: ${noProbeProviders.join(', ')}`);
+            process.exit(3);
+          }
           const providers = (raw.providers || [])
             .filter((x) => x && x.probe && x.probe.github_actions === true)
             .map((x) => String(x.provider_id || '').trim())
             .filter(Boolean);
+          if (providers.length === 0) {
+            console.error('No github_actions probe providers found in catalog.');
+            process.exit(4);
+          }
           const only = String(process.env.PROVIDER_ONLY || '').trim();
           if (only) {
             if (!providers.includes(only)) {

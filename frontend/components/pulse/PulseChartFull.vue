@@ -112,7 +112,7 @@
           :is-gated="true"
           tier="enterprise"
           :title="gatedTitle"
-          description="Enterprise feature. Contact sales for access to Pulse charts (stacked, scatter, matrix views)."
+          description="Enterprise feature. Contact sales for access to Pulse charts."
         >
           <template #preview>
             <div class="h-80 rounded-lg border border-neutral-700 bg-neutral-900/30" />
@@ -355,11 +355,7 @@ const chartMeta = computed(() => getChartById(props.chartId))
 const isPlus = computed(() => props.pulseLevel !== 'none')
 const isFullAccess = computed(() => props.pulseLevel === 'full')
 const isPro = computed(() => props.pulseLevel === 'full')
-const isProChart = computed(() => {
-  const type = chartMeta.value?.type
-  return type === 'stacked' || type === 'scatter' || type === 'matrix'
-})
-const isGated = computed(() => isProChart.value && !isPro.value)
+const isGated = computed(() => !isPro.value)
 
 const gatedTitle = computed(() => {
   const title = chartMeta.value?.title

@@ -11,6 +11,8 @@ export type Entitlements = {
   api_tier: 1 | 2 | null
   bulk_export: boolean
   indices_api: boolean
+  api_key_max: number
+  api_rate_limit_rpm: number
 }
 
 /**
@@ -33,6 +35,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     api_tier: null,
     bulk_export: false,
     indices_api: false,
+    api_key_max: 0,
+    api_rate_limit_rpm: 0,
   },
   plus: {
     pulse_access: 'lite',
@@ -45,6 +49,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     api_tier: null,
     bulk_export: false,
     indices_api: false,
+    api_key_max: 0,
+    api_rate_limit_rpm: 0,
   },
   enterprise: {
     pulse_access: 'full',
@@ -57,6 +63,8 @@ const entitlementsByPlan: Record<PlanCode, Entitlements> = {
     api_tier: 2,
     bulk_export: true,
     indices_api: true,
+    api_key_max: 5,
+    api_rate_limit_rpm: 600,
   },
 }
 

@@ -19,6 +19,7 @@ const PAYOUT_TO_CANONICAL: Record<string, string> = {
   bank: 'bank_deposit',
   bank_account: 'bank_deposit',
   bank_deposit: 'bank_deposit',
+  bank_transfer: 'bank_deposit',
   cash: 'cash_pickup',
   cash_pickup: 'cash_pickup',
   cash_collection: 'cash_pickup',
@@ -27,6 +28,20 @@ const PAYOUT_TO_CANONICAL: Record<string, string> = {
   mobile_wallet: 'mobile_wallet',
   wallet: 'mobile_wallet',
   gcash: 'mobile_wallet',
+  bkash: 'mobile_wallet',
+  wave: 'mobile_wallet',
+  chipper: 'mobile_wallet',
+  ecocash: 'mobile_wallet',
+  mtn: 'mobile_wallet',
+  mtn_mobile_money: 'mobile_wallet',
+  vodafone: 'mobile_wallet',
+  vodafone_cash: 'mobile_wallet',
+  airtel_money: 'mobile_wallet',
+  tigo_pesa: 'mobile_wallet',
+  orange_money: 'mobile_wallet',
+  mpesa: 'mobile_wallet',
+  m_pesa: 'mobile_wallet',
+  momo: 'mobile_wallet',
 }
 
 const buildMethodMap = (mapping: Record<string, string>) => {

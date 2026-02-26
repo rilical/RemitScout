@@ -32,7 +32,9 @@ export const vReveal: Directive<HTMLElement, RevealValue> = {
       threshold = binding.value.threshold
     }
 
-    observeReveal(el, animation, delay, threshold)
+    const childrenOnly = !binding.modifiers.self
+
+    observeReveal(el, animation, delay, threshold, childrenOnly)
   },
 
   unmounted(el) {

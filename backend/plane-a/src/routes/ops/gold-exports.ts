@@ -16,7 +16,7 @@ const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/
 
 const listQuerySchema = z.object({
   amount_bucket: z.coerce.number().int().positive().default(500),
-  method_profile: z.enum(['standard_bank', 'standard_card', 'cash_pickup']).default('standard_bank'),
+  method_profile: z.enum(['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery']).default('standard_bank'),
   date: z.string().optional(),
   q: z.string().trim().min(1).max(64).optional(),
   send_currencies: z.string().optional(),

@@ -20,6 +20,11 @@ vi.mock('../shared/health-corridors', () => ({
   getHealthCorridors: (...args: unknown[]) => mockGetHealthCorridors(...args),
 }))
 
+vi.mock('../shared/corridor-tiers', () => ({
+  getCorridorTier: () => 'tier_1',
+  getTierSloMinutes: () => 10,
+}))
+
 vi.mock('../plane-a/src/services/provider-metadata', () => ({
   getProviderMetadata: () => null,
 }))

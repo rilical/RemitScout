@@ -23,7 +23,7 @@ const DISBURSEMENT_TYPE_TO_CANONICAL: Record<string, string> = {
   PICKUP: 'cash_pickup',
   CASH_PICKUP: 'cash_pickup',
   CARD_DEPOSIT: 'bank_deposit',
-  DELIVERY: 'cash_pickup',
+  DELIVERY: 'home_delivery',
   MOBILE_WALLET: 'mobile_wallet',
 }
 

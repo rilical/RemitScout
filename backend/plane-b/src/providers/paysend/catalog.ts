@@ -16,7 +16,7 @@ export const amountBuckets = DEFAULT_AMOUNT_BUCKETS
 
 export const payinMethods: string[] = ['debit_card', 'credit_card', 'bank_transfer']
 
-export const payoutMethods: string[] = ['bank_deposit', 'debit_card']
+export const payoutMethods: string[] = ['bank_deposit', 'debit_card', 'cash_pickup', 'mobile_wallet']
 
 export const defaultPayinMethod = 'debit_card'
 export const defaultPayoutMethod = 'bank_deposit'

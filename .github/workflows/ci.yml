@@ -194,6 +194,8 @@ jobs:
         run: pnpm -C backend exec tsx scripts/ci/validate-reason-codes.ts
       - name: Skill catalog lint (skills <-> workflows)
         run: pnpm -C backend exec tsx scripts/ci/validate-skill-catalog.ts
+      - name: Provider probe coverage lint
+        run: pnpm -C backend exec tsx scripts/ci/validate-provider-probe-coverage.ts
       - name: Code map lint (LLM Code Map headers)
         run: pnpm -C backend exec tsx scripts/ci/validate-code-maps.ts --changed-only
       - name: IssueOps contracts validation

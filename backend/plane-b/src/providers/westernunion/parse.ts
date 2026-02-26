@@ -84,7 +84,7 @@ const payoutAliases: Record<string, string> = {
   account_deposit: 'bank_deposit',
   cash_pickup: 'cash_pickup',
   direct_to_card: 'other',
-  home_delivery: 'other',
+  home_delivery: 'home_delivery',
 }
 
 const mapPayin = (code?: string | null) => {

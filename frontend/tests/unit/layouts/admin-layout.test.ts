@@ -15,7 +15,6 @@ describe('admin layout', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    document.documentElement.classList.remove('dark')
     window.localStorage.clear()
 
     ;(globalThis as any).useRoute = () => route
@@ -55,20 +54,6 @@ describe('admin layout', () => {
         },
       },
     })
-
-  it('toggles dark mode and persists preference', async () => {
-    const wrapper = mountLayout()
-    await nextTick()
-
-    const darkToggle = wrapper.findAll('button').find(button => button.text() === 'Dark')
-    expect(darkToggle).toBeTruthy()
-
-    await darkToggle!.trigger('click')
-    await nextTick()
-
-    expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(window.localStorage.getItem('admin:theme')).toBe('dark')
-  })
 
   it('signs out and redirects to sign-in', async () => {
     const wrapper = mountLayout()

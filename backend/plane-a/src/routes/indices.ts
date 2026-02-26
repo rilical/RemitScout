@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { query } from '../../../shared/db'
@@ -18,17 +19,30 @@ import { ValidationError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.indices')
 const indicesCache = createTtlCache<IndicesSeriesResponse>({ namespace: 'plane_a:indices' })
+const indicesEmbedSnapshotCache = createTtlCache<IndicesEmbedSnapshotResponse>({
+  namespace: 'plane_a:indices_embed_snapshot',
+})
+const INDICES_EMBED_SNAPSHOT_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const envName = (process.env.ENVIRONMENT || '').toLowerCase()
 const isVitestRuntime = Boolean(process.env.VITEST_WORKER_ID || process.env.VITEST)
 const allowUnauthedIndices =
   !isVitestRuntime && (envName === 'dev' || config.env === 'development')
 const apiAccessGuard = allowUnauthedIndices ? undefined : requireEntitlement('api_access')
 
+const METHOD_PROFILES = ['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery'] as const
+
 const querySchema = z.object({
   corridor_id: z.string().min(3),
   amount_bucket: z.coerce.number().int().positive().optional(),
-  method_profile: z.enum(['standard_bank', 'standard_card', 'cash_pickup']).optional(),
+  method_profile: z.enum(METHOD_PROFILES).optional(),
   days: z.coerce.number().int().positive().optional(),
+})
+
+const embedSnapshotBodySchema = z.object({
+  corridor_id: z.string().min(3),
+  amount_bucket: z.coerce.number().int().positive().optional(),
+  method_profile: z.enum(METHOD_PROFILES).optional(),
+  days: z.coerce.number().int().positive().max(365).optional(),
 })
 
 type IndicesSeriesPoint = {
@@ -62,6 +76,28 @@ type IndicesSeriesResponse = {
   isUsdOrigin: boolean
   series: IndicesSeriesPoint[]
   dataWindow: DataWindowInfo
+}
+
+type IndicesEmbedSnapshotResponse = {
+  snapshotId: string
+  corridorId: string
+  amountBucket: number
+  methodProfile: string
+  weightingModel: string
+  methodologyVersion: string
+  weightConfidence?: number | null
+  weightWindowDays?: number | null
+  lastUpdated: string | null
+  dataTier: 1 | 2
+  cadenceMinutes: number
+  exportCadenceMinutes: number
+  collectionCadenceMinutes: number
+  collectionTier: 'tier_1' | 'tier_2'
+  isUsdOrigin: boolean
+  series: IndicesSeriesPoint[]
+  dataWindow: DataWindowInfo
+  createdAt: string
+  expiresAt: string
 }
 
 type IndicesLatestPoint = {
@@ -124,6 +160,7 @@ type DataWindowInfo = {
 }
 
 const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
+const embedSnapshotIdPattern = /^[a-f0-9]{32}$/i
 
 /**
  * Get tier info for API responses.
@@ -519,6 +556,191 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       reply.code(500)
       return { error: 'internal_error', message: 'Failed to retrieve index data.' }
     }
+  })
+
+  app.post('/indices/embed-snapshots', { preHandler: requireEntitlement('pulse_full') }, async (request, reply) => {
+    const parsed = embedSnapshotBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const corridorId = parsed.data.corridor_id
+    const corridorParts = parseCorridorId(corridorId)
+    if (!corridorParts) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_corridor_id',
+          message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)',
+        },
+      })
+    }
+
+    const normalizedCorridorId = formatCorridorId({
+      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
+      destCountry: corridorParts.destCountry.toUpperCase(),
+      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
+      destCurrency: corridorParts.destCurrency.toUpperCase(),
+    })
+    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
+    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
+    const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
+
+    const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
+    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } = tierInfo
+    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
+
+    try {
+      const existsResult = await query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
+        [normalizedCorridorId],
+        planeAPool,
+      )
+      const corridorTracked = (existsResult.rows[0]?.count ?? 0) > 0
+      if (!corridorTracked) {
+        reply.code(404)
+        return {
+          error: 'corridor_not_tracked',
+          message: `Corridor ${normalizedCorridorId} is not available in Gold export.`,
+        }
+      }
+
+      const availabilityRow = await goldIndicesRepository.getAvailability({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+      })
+      const minDate = availabilityRow?.min_date ? new Date(availabilityRow.min_date) : null
+      const maxDate = availabilityRow?.max_date ? new Date(availabilityRow.max_date) : null
+      const availableDays = (minDate && maxDate)
+        ? Math.max(1, Math.floor((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000)) + 1)
+        : null
+
+      const now = new Date()
+      const effectiveEndDate = (maxDate && maxDate < now) ? maxDate : now
+      const effectiveWindowDays = availableDays && availableDays > 0
+        ? Math.min(requestedWindowDays, availableDays)
+        : requestedWindowDays
+
+      const startDate = new Date(effectiveEndDate)
+      startDate.setUTCDate(startDate.getUTCDate() - (effectiveWindowDays - 1))
+      if (minDate && startDate < minDate) {
+        startDate.setTime(minDate.getTime())
+      }
+
+      const rows = await goldIndicesRepository.getIndicesSeries({
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        startDate,
+        endDate: effectiveEndDate,
+      })
+
+      if (rows.length === 0) {
+        reply.code(404)
+        return {
+          error: 'no_data',
+          message: `No data available for ${normalizedCorridorId} in the requested time range.`,
+        }
+      }
+
+      const lastUpdated = rows.reduce<Date | null>((latest, row) => {
+        if (!row.created_at) return latest
+        if (!latest || row.created_at > latest) return row.created_at
+        return latest
+      }, null)
+
+      const weightingModel = rows.find((row) => row.weighting_model)?.weighting_model || DEFAULT_WEIGHT_MODEL
+      const methodologyVersion = rows.find((row) => row.methodology_version)?.methodology_version || INDICES_METHODOLOGY_VERSION
+      const createdAt = new Date().toISOString()
+      const expiresAt = new Date(Date.now() + INDICES_EMBED_SNAPSHOT_TTL_MS).toISOString()
+      const snapshotId = randomUUID().replace(/-/g, '')
+
+      const snapshot: IndicesEmbedSnapshotResponse = {
+        snapshotId,
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        weightingModel,
+        methodologyVersion,
+        weightConfidence: rows.at(-1)?.weight_confidence ?? null,
+        weightWindowDays: rows.at(-1)?.weight_window_days ?? null,
+        lastUpdated: lastUpdated ? lastUpdated.toISOString() : null,
+        dataTier,
+        cadenceMinutes: collectionCadenceMinutes,
+        exportCadenceMinutes,
+        collectionCadenceMinutes,
+        collectionTier,
+        isUsdOrigin,
+        series: rows.map((row) => ({
+          date: row.date instanceof Date ? toDateOnly(row.date) : String(row.date),
+          teer: row.teer_rate ?? null,
+          rci: row.rci_ratio ?? null,
+          rvi_bps: row.rvi_bps ?? null,
+          providerCountBinned: row.provider_count_binned ?? null,
+          providerCount: row.provider_count ?? null,
+          suppressionFlag: row.suppression_flag,
+          suppressionReason: row.suppression_reason ?? null,
+          midMarketRate: row.mid_market_rate ?? null,
+          weightConfidence: row.weight_confidence ?? null,
+          weightWindowDays: row.weight_window_days ?? null,
+        })),
+        dataWindow: {
+          requestedDays: requestedWindowDays,
+          availableDays,
+          availableStartDate: minDate ? toDateOnly(minDate) : null,
+          availableEndDate: maxDate ? toDateOnly(maxDate) : null,
+          startDate: toDateOnly(startDate),
+          endDate: toDateOnly(effectiveEndDate),
+          returnedDays: rows.length,
+          capped: Boolean(availableDays && availableDays < requestedWindowDays),
+        },
+        createdAt,
+        expiresAt,
+      }
+
+      await indicesEmbedSnapshotCache.set(snapshotId, snapshot, INDICES_EMBED_SNAPSHOT_TTL_MS)
+
+      return {
+        success: true,
+        snapshotId,
+        createdAt,
+        expiresAt,
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        returnedDays: rows.length,
+      }
+    } catch (error) {
+      logger.error('indices_embed_snapshot_create_failed', {
+        corridor_id: normalizedCorridorId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error', message: 'Failed to create embed snapshot.' }
+    }
+  })
+
+  app.get('/public/indices/embed-snapshots/:snapshotId', async (request, reply) => {
+    const snapshotId = String((request.params as { snapshotId?: string }).snapshotId || '').trim()
+    if (!embedSnapshotIdPattern.test(snapshotId)) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_snapshot_id',
+        },
+      })
+    }
+
+    const snapshot = await indicesEmbedSnapshotCache.get(snapshotId)
+    if (!snapshot) {
+      reply.code(404)
+      return {
+        error: 'not_found',
+        message: 'Embed snapshot not found or expired.',
+      }
+    }
+
+    reply.header('Cache-Control', 'public, max-age=300')
+    return snapshot
   })
 
   app.get('/indices/latest', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {

@@ -12,7 +12,9 @@
  *   - Never return unbounded payloads; always cap series/annotations sizes.
  *   - Entitlements gate "Pulse Pro" chart surfaces (Enterprise only).
  */
+import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
+import { z } from 'zod'
 
 import { query } from '../../../shared/db'
 import { config } from '../../../shared/config'
@@ -42,6 +44,10 @@ import { getCountryByCode } from '../../../shared/countries-currencies'
 const logger = createLogger('plane-a.pulse')
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
 const pulseCorridorsCache = createTtlCache({ namespace: 'plane_a:pulse_corridors' })
+const pulseEmbedSnapshotCache = createTtlCache<PulseEmbedSnapshot>({
+  namespace: 'plane_a:pulse_embed_snapshot',
+})
+const PULSE_EMBED_SNAPSHOT_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
 const INDEX_CHART_IDS = new Set([
   'all-in-cost',
@@ -140,11 +146,15 @@ const resolveRangeDays = (range?: string | null): number => {
 
 const resolveIndicesMethodProfile = (
   filters: PulseCacheFilters,
-): 'standard_bank' | 'standard_card' | 'cash_pickup' | null => {
+): string | null => {
   const payin = typeof filters.payin === 'string' ? filters.payin.toLowerCase() : null
   const payout = typeof filters.payout === 'string' ? filters.payout.toLowerCase() : null
 
   if (payout === 'cash') return 'cash_pickup'
+  if (payout === 'wallet') return 'mobile_wallet'
+  if (payout === 'airtime') return 'airtime_topup'
+  if (payout === 'home') return 'home_delivery'
+  if (payout === 'card') return 'card_delivery'
   if (payout === 'bank' || payout === null) {
     if (payin === 'card') return 'standard_card'
     if (payin === 'bank' || payin === null) return 'standard_bank'
@@ -199,6 +209,12 @@ const parseCorridorFromId = (corridorId?: string | null) => {
   }
 }
 
+const formatCorridorLabelFromId = (corridorId: string): string => {
+  const parsed = parseCorridorFromId(corridorId)
+  if (!parsed) return corridorId
+  return `${parsed.sendCurrency} ${arrow} ${parsed.recvCurrency}`
+}
+
 const normalizeLowerToken = (value: string): string =>
   value
     .trim()
@@ -220,9 +236,13 @@ const capabilityAllowsPayout = (payoutMethods: string[] | null, requiredMethod: 
 }
 
 const resolvePayoutMethodForMethodProfile = (
-  methodProfile: 'standard_bank' | 'standard_card' | 'cash_pickup',
-): 'bank_deposit' | 'cash_pickup' => {
+  methodProfile: string,
+): string => {
   if (methodProfile === 'cash_pickup') return 'cash_pickup'
+  if (methodProfile === 'mobile_wallet') return 'mobile_wallet'
+  if (methodProfile === 'airtime_topup') return 'airtime'
+  if (methodProfile === 'card_delivery') return 'debit_card'
+  if (methodProfile === 'home_delivery') return 'home_delivery'
   return 'bank_deposit'
 }
 
@@ -253,6 +273,36 @@ type PulseScreenerResponse = {
   success: true
   updatedAt: string | null
   rows: PulseScreenerRow[]
+}
+
+type PulseEmbedSnapshot = {
+  snapshotId: string
+  chartId: string
+  chart: ReturnType<typeof buildChartData> & {
+    dataAvailable: boolean
+    updatedAt: string | null
+    source: 'gold_export' | 'gold_cache' | 'none'
+    previewLocked?: boolean
+  }
+  methodCoverage?: Array<{
+    provider: string
+    bank: boolean
+    cash: boolean
+    wallet: boolean
+    card: boolean
+    speed: string
+  }>
+  filters: {
+    corridor: string
+    corridorId: string
+    amount: number
+    fundingMethod: 'bank' | 'card' | 'cash'
+    payoutMethod: 'bank' | 'cash' | 'wallet'
+    range: '7d' | '30d' | '90d' | '365d'
+  }
+  corridorLabel: string
+  createdAt: string
+  expiresAt: string
 }
 
 const normalizeCommaList = (value: string) => value
@@ -290,6 +340,18 @@ const parseBooleanParam = (value: unknown, fallback: boolean) => {
   }
   return fallback
 }
+
+const embedSnapshotIdPattern = /^[a-f0-9]{32}$/i
+
+const pulseEmbedSnapshotBodySchema = z.object({
+  chart_id: z.string().min(1).max(64).regex(/^[a-z0-9-]+$/i),
+  corridor: z.string().optional(),
+  corridor_id: z.string().optional(),
+  amount: z.coerce.number().int().positive().optional(),
+  funding_method: z.enum(['bank', 'card', 'cash']).optional(),
+  payout_method: z.enum(['bank', 'cash', 'wallet']).optional(),
+  range: z.enum(['7d', '30d', '90d', '365d']).optional(),
+})
 
 const toSafeNumber = (value: unknown): number | null => {
   const parsed = typeof value === 'number' ? value : Number(value)
@@ -1561,7 +1623,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/pulse/charts', guardLite, async (request, reply) => {
+  app.get('/pulse/charts', guardPro, async (request, reply) => {
     const startTime = Date.now()
     try {
       const queryParams = (request.query ?? {}) as Record<string, unknown>
@@ -1685,7 +1747,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/pulse/charts/:chartId', guardLite, async (request, reply) => {
+  app.get('/pulse/charts/:chartId', guardPro, async (request, reply) => {
     const chartId = (request.params as { chartId?: string }).chartId
     if (!chartId) {
       throw new ValidationError('Invalid request', { details: { error: 'missing_chart_id' } })
@@ -1726,6 +1788,166 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  app.post('/pulse/embed-snapshots', guardPro, async (request, reply) => {
+    const parsed = pulseEmbedSnapshotBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'bad_request',
+          details: parsed.error.issues,
+        },
+      })
+    }
+
+    const chartId = parsed.data.chart_id
+    if (!PULSE_CHART_IDS.includes(chartId as any)) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_chart_id',
+          chart_id: chartId,
+        },
+      })
+    }
+
+    const queryParams: Record<string, unknown> = {
+      corridor: parsed.data.corridor,
+      corridor_id: parsed.data.corridor_id,
+      amount: parsed.data.amount ?? INDICES_AMOUNT_BUCKET,
+      fundingMethod: parsed.data.funding_method ?? 'bank',
+      payoutMethod: parsed.data.payout_method ?? 'bank',
+      range: parsed.data.range ?? '30d',
+    }
+
+    const filters = buildRequestFilters(request, queryParams)
+    const resolvedCorridorId = await resolveIndicesCorridorId(
+      goldIndicesRepository,
+      filters,
+      parsed.data.corridor_id ?? null,
+    )
+
+    if (!resolvedCorridorId) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'missing_corridor_id',
+          message: 'corridor_id is required for embed snapshots.',
+        },
+      })
+    }
+
+    const trackedResult = await query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
+      [resolvedCorridorId],
+      planeAPool,
+    )
+    const corridorTracked = (trackedResult.rows[0]?.count ?? 0) > 0
+    if (!corridorTracked) {
+      reply.code(404)
+      return {
+        error: 'corridor_not_tracked',
+        message: `Corridor ${resolvedCorridorId} is not available in Gold export.`,
+      }
+    }
+
+    const snapshotFilters: PulseCacheFilters = {
+      ...filters,
+      amount: parsed.data.amount ?? filters.amount ?? INDICES_AMOUNT_BUCKET,
+      payin: parsed.data.funding_method ?? filters.payin ?? 'bank',
+      payout: parsed.data.payout_method ?? filters.payout ?? 'bank',
+      range: parsed.data.range ?? filters.range ?? '30d',
+    }
+
+    const chart = INDEX_CHART_IDS.has(chartId)
+      ? (() => {
+          const indicesFilters: PulseCacheFilters = {
+            ...snapshotFilters,
+            corridor: snapshotFilters.corridor ?? resolvedCorridorId,
+          }
+          return loadIndices(chartId, indicesFilters, {
+            ...queryParams,
+            corridor_id: resolvedCorridorId,
+          })
+        })()
+      : (() => loadPulse(`chart:${chartId}`, snapshotFilters, null).then(({ payload, updatedAt }) => ({
+          ...normalizeChartPayload(chartId, payload, updatedAt),
+          dataAvailable: Boolean(updatedAt),
+          updatedAt: updatedAt || null,
+          source: updatedAt ? ('gold_cache' as const) : ('none' as const),
+        })))()
+
+    const [resolvedChart, methodCoverage] = await Promise.all([
+      chart,
+      chartId === 'payment-rail-coverage'
+        ? loadPulse('method-coverage', snapshotFilters, pulseDefaults.methodCoverage)
+          .then(({ payload }) => mapMethodCoverage(payload))
+        : Promise.resolve(undefined),
+    ])
+    const chartWithState = INDEX_CHART_IDS.has(chartId)
+      ? {
+          ...resolvedChart,
+          dataAvailable: Array.isArray((resolvedChart as any).series) && (resolvedChart as any).series.length > 0,
+          updatedAt: (resolvedChart as any).metadata?.lastUpdated || null,
+          source: 'gold_export' as const,
+        }
+      : (resolvedChart as PulseEmbedSnapshot['chart'])
+
+    const snapshotId = randomUUID().replace(/-/g, '')
+    const createdAt = new Date().toISOString()
+    const expiresAt = new Date(Date.now() + PULSE_EMBED_SNAPSHOT_TTL_MS).toISOString()
+    const snapshot: PulseEmbedSnapshot = {
+      snapshotId,
+      chartId,
+      chart: chartWithState,
+      methodCoverage: Array.isArray(methodCoverage)
+        ? methodCoverage as PulseEmbedSnapshot['methodCoverage']
+        : undefined,
+      filters: {
+        corridor: snapshotFilters.corridor || 'global',
+        corridorId: resolvedCorridorId,
+        amount: Number(snapshotFilters.amount) || INDICES_AMOUNT_BUCKET,
+        fundingMethod: (snapshotFilters.payin as 'bank' | 'card' | 'cash') || 'bank',
+        payoutMethod: (snapshotFilters.payout as 'bank' | 'cash' | 'wallet') || 'bank',
+        range: (normalizePulseRange(snapshotFilters.range) || '30d') as '7d' | '30d' | '90d' | '365d',
+      },
+      corridorLabel: formatCorridorLabelFromId(resolvedCorridorId),
+      createdAt,
+      expiresAt,
+    }
+
+    await pulseEmbedSnapshotCache.set(snapshotId, snapshot, PULSE_EMBED_SNAPSHOT_TTL_MS)
+
+    return {
+      success: true,
+      snapshotId,
+      createdAt,
+      expiresAt,
+      chartId,
+      corridorId: resolvedCorridorId,
+    }
+  })
+
+  app.get('/public/pulse/embed-snapshots/:snapshotId', async (request, reply) => {
+    const snapshotId = String((request.params as { snapshotId?: string }).snapshotId || '').trim()
+    if (!embedSnapshotIdPattern.test(snapshotId)) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_snapshot_id',
+        },
+      })
+    }
+
+    const snapshot = await pulseEmbedSnapshotCache.get(snapshotId)
+    if (!snapshot) {
+      reply.code(404)
+      return {
+        error: 'not_found',
+        message: 'Embed snapshot not found or expired.',
+      }
+    }
+
+    reply.header('Cache-Control', 'public, max-age=300')
+    return snapshot
+  })
+
   app.get('/pulse/coverage-by-currency', guardPro, async (request) => {
     const startTime = Date.now()
     try {
@@ -1740,13 +1962,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         .filter((value) => /^[A-Z]{3}$/.test(value))
         .slice(0, 10)
 
-      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup'])
+      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery'])
       const methodProfileParam = typeof queryParams.method_profile === 'string'
         ? queryParams.method_profile.trim()
         : null
       const derivedMethodProfile = resolveIndicesMethodProfile(filters) || 'standard_bank'
       const methodProfile = (methodProfileParam && allowedMethodProfiles.has(methodProfileParam))
-        ? (methodProfileParam as 'standard_bank' | 'standard_card' | 'cash_pickup')
+        ? methodProfileParam
         : derivedMethodProfile
 
       const amountBucketRaw = typeof queryParams.amount_bucket === 'string' || typeof queryParams.amount_bucket === 'number'
@@ -1887,13 +2109,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         })
       }
 
-      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup'])
+      const allowedMethodProfiles = new Set(['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery'])
       const methodProfileParam = typeof queryParams.method_profile === 'string'
         ? queryParams.method_profile.trim()
         : null
       const derivedMethodProfile = resolveIndicesMethodProfile(filters) || 'standard_bank'
       const methodProfile = (methodProfileParam && allowedMethodProfiles.has(methodProfileParam))
-        ? (methodProfileParam as 'standard_bank' | 'standard_card' | 'cash_pickup')
+        ? methodProfileParam
         : derivedMethodProfile
 
       const requiredPayoutMethod = resolvePayoutMethodForMethodProfile(methodProfile)

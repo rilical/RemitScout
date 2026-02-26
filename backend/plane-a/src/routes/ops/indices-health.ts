@@ -16,8 +16,13 @@ const toNumber = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+const VALID_METHOD_PROFILES = new Set([
+  'standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet',
+  'airtime_topup', 'card_delivery', 'home_delivery',
+])
+
 export const indicesHealthRoutes = (app: FastifyInstance) => {
-  app.get('/ops/indices/health', { preHandler: requireAdmin() }, async (_request, reply) => {
+  app.get('/ops/indices/health', { preHandler: requireAdmin() }, async (request, reply) => {
     if (tier0Corridors.length === 0) {
       reply.code(500)
       return {
@@ -28,7 +33,10 @@ export const indicesHealthRoutes = (app: FastifyInstance) => {
     }
 
     const amountBucket = 500
-    const methodProfile = 'standard_bank'
+    const rawProfile = (request.query as { method_profile?: string }).method_profile
+    const methodProfile = typeof rawProfile === 'string' && VALID_METHOD_PROFILES.has(rawProfile)
+      ? rawProfile
+      : 'standard_bank'
 
     try {
       const result = await planeAPool.query<{

@@ -13,7 +13,6 @@
 
 import { createLogger } from '../../shared/logger'
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
-import { runGenericProbe } from '../lib/generic-probe'
 import { formatError } from '../../shared/utils/error-handling'
 
 type ProbeInvocationResult = {
@@ -138,6 +137,10 @@ export const handler = async (): Promise<ProbeLambdaResponse> => {
         threshold_ms: timeoutWarningThreshold,
       })
     }
+
+    // Lazy-load workload module only after runtime env resolution.
+    // This prevents config initialization from freezing pre-resolution DB settings.
+    const { runGenericProbe } = await import('../lib/generic-probe')
 
     const results: ProbeInvocationResult[] = []
     for (const providerId of providerIds) {

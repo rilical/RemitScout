@@ -74,6 +74,7 @@
             </div>
 
             <button
+              v-if="isPro"
               class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showShareModal = true"
             >
@@ -93,6 +94,7 @@
               Share
             </button>
             <button
+              v-if="isPro"
               class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showEmbedModal = true"
             >
@@ -348,9 +350,9 @@
             </div>
           </div>
 
-          <!-- Plus Upsell (if not Plus) -->
+          <!-- Enterprise Upsell -->
           <div
-            v-if="!isPlus"
+            v-if="!isPro"
             class="rounded-xl border border-brand-600/30 bg-brand-600/10 p-6"
           >
             <div class="flex items-center gap-2 text-brand-600 mb-3">
@@ -367,16 +369,16 @@
                   d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
                 />
               </svg>
-              <span class="font-semibold">Remit-Scout Plus</span>
+              <span class="font-semibold">Remit-Scout Enterprise</span>
             </div>
             <p class="text-body-sm text-neutral-300 mb-4">
-              Unlock 90 days of history, CSV exports, and premium insights.
+              Pulse chart access and static public embeds are available on Enterprise.
             </p>
             <NuxtLink
-              to="/plus"
+              to="/contact?type=enterprise&topic=pulse"
               class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-medium text-white hover:bg-brand-700 motion-safe:transition-colors"
             >
-              Upgrade Now
+              Contact Sales
               <svg
                 class="h-4 w-4"
                 fill="none"
@@ -468,6 +470,7 @@ const filters = ref<PulseFilters>({
 })
 
 const isPlus = computed(() => pulseLevel.value !== 'none')
+const isPro = computed(() => pulseLevel.value === 'full')
 const lastUpdated = ref<string>('')
 const showShareModal = ref(false)
 const showEmbedModal = ref(false)
@@ -664,8 +667,15 @@ function handleSetAlert() {
 }
 
 onMounted(async () => {
-  const overview = await getPulseOverview(filters.value)
-  lastUpdated.value = overview.lastUpdated
+  if (isPlus.value) {
+    try {
+      const overview = await getPulseOverview(filters.value)
+      lastUpdated.value = overview.lastUpdated
+    }
+    catch {
+      lastUpdated.value = ''
+    }
+  }
   await store.initFromRoute(route.query as Record<string, string>)
 })
 

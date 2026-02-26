@@ -4,7 +4,7 @@ import { getCorridorTier, type CorridorTier } from './corridor-tiers'
 export const MAJOR_SEND_CURRENCIES = ['USD', 'EUR', 'CAD', 'AED', 'JPY', 'GBP'] as const
 export type MajorSendCurrency = (typeof MAJOR_SEND_CURRENCIES)[number]
 
-export const PAYOUT_METHODS = ['bank_deposit', 'cash_pickup', 'mobile_wallet'] as const
+export const PAYOUT_METHODS = ['bank_deposit', 'cash_pickup', 'mobile_wallet', 'airtime'] as const
 export type PayoutMethod = (typeof PAYOUT_METHODS)[number]
 
 export const B2B_FIXED_AMOUNT_USD = 500

@@ -290,39 +290,7 @@ watch(() => route.path, () => {
           aria-modal="true"
           aria-label="Mobile navigation"
         >
-          <div class="flex items-center justify-between border-b border-rs-border px-4 py-4">
-            <NuxtLink
-              to="/"
-            class="flex items-center gap-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md"
-            @click="closeMobileMenu"
-          >
-              <NuxtImg
-                v-if="isPlus && !logoError"
-                :src="logoPlusSrc"
-                alt="Remit-Scout Plus logo"
-                width="40"
-                height="40"
-                loading="lazy"
-                class="h-10 w-10 object-contain flex-shrink-0"
-                @error="handleLogoError"
-              />
-              <NuxtImg
-                v-else
-                :src="logoRegularSrc"
-                alt="Remit-Scout logo"
-                width="40"
-                height="40"
-                loading="lazy"
-                class="h-10 w-10 object-contain flex-shrink-0"
-              />
-              <span class="text-body font-bold text-neutral-900 whitespace-nowrap">
-                Remit-Scout
-                <span
-                  v-if="isPlus && !logoError"
-                  class="text-brand-600"
-                > Plus</span>
-              </span>
-            </NuxtLink>
+          <div class="flex items-center justify-end border-b border-rs-border px-4 py-4">
             <button
               class="rounded-md p-2 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Close menu"

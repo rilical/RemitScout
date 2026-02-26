@@ -2,10 +2,10 @@ import fs from 'node:fs'
 import { test, expect } from '@playwright/test'
 
 test('Debug watchlist button click behavior', async ({ page }) => {
-  await page.goto('/send-money/us-to-gt')
+  await page.goto('/send-money/united-states-to-philippines')
 
   // Wait for watchlist button
-  const watchlistButton = page.getByRole('button', { name: /add to watchlist/i }).first()
+  const watchlistButton = page.getByRole('button', { name: /add to watchlist|save/i }).first()
   await expect(watchlistButton).toBeVisible({ timeout: 15000 })
 
   console.log('\n=== BEFORE CLICK ===')

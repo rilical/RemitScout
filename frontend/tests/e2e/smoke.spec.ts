@@ -26,22 +26,21 @@ test('legal + legacy redirects exist', async ({ page }) => {
 
 test('dashboard + plus + pulse surfaces load (logged out)', async ({ page }) => {
   await page.goto('/dashboard')
-  await expect(page.getByRole('heading', { name: /your transfer dashboard/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /create free account/i }).first()).toBeVisible()
+  await expect(page).toHaveURL(/\/sign-in\?redirect=\/dashboard/)
 
   await page.goto('/plus')
   await expect(page.getByRole('heading', { name: /never miss a great rate/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /choose your plan/i })).toBeVisible()
 
   await page.goto('/pulse')
-  await expect(page.getByRole('heading', { name: /pulse for remittance markets/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /unlock plus|upgrade to plus/i }).first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: /remit-scout pulse/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /get plus|unlock plus|upgrade to plus/i }).first()).toBeVisible()
 })
 
 test('US corridor page renders', async ({ page }) => {
   await page.goto('/send-money/united-states-to-philippines')
   await expect(page.getByText('United States to Philippines', { exact: true }).first()).toBeVisible()
-  await expect(page.getByRole('button', { name: /add to watchlist/i }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /add to watchlist|save/i }).first()).toBeVisible()
 })
 
 test('mobile nav renders', async ({ page }) => {

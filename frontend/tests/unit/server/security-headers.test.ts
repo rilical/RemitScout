@@ -44,10 +44,10 @@ describe('security-headers middleware', () => {
     expect(res.headers.get('x-frame-options')).toBe('DENY')
   })
 
-  it('sets X-Frame-Options: SAMEORIGIN for /embed/*', async () => {
+  it('omits X-Frame-Options for /embed/*', async () => {
     active = await startServer()
     const res = await fetch(`${active.baseUrl}/embed/pulse/chart`)
-    expect(res.headers.get('x-frame-options')).toBe('SAMEORIGIN')
+    expect(res.headers.get('x-frame-options')).toBeNull()
   })
 
   it('sets HSTS with 1 year max-age', async () => {
@@ -87,6 +87,6 @@ describe('security-headers middleware', () => {
     const res = await fetch(`${active.baseUrl}/embed/pulse/chart`)
     const csp = getCsp(res)
     expect(csp).toContain('frame-ancestors *')
-    expect(res.headers.get('x-frame-options')).toBe('SAMEORIGIN')
+    expect(res.headers.get('x-frame-options')).toBeNull()
   })
 })

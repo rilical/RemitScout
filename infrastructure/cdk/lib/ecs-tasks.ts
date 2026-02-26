@@ -243,6 +243,7 @@ export const createEcsTasks = (
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
   const goldIndicesMinProviders = options.goldIndicesMinProviders
+  const capabilityProbeProxyTier = process.env.CAPABILITY_PROBE_PROXY_TIER?.trim()
   const b2cRefreshLimit = isConservativeWorkerDefaults ? '25' : '50'
   const b2cRefreshConcurrency = isConservativeWorkerDefaults ? '1' : '5'
   const ingestFanoutMode = options.ingestFanoutMode
@@ -614,6 +615,9 @@ export const createEcsTasks = (
   }
   if (goldIndicesMinProviders) {
     sharedEnv.GOLD_INDICES_MIN_PROVIDERS = String(goldIndicesMinProviders)
+  }
+  if (capabilityProbeProxyTier) {
+    sharedEnv.CAPABILITY_PROBE_PROXY_TIER = capabilityProbeProxyTier
   }
   if (process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY) {
     sharedEnv.PLANE_B_B2B_NATIVE_CURRENCY_ONLY = process.env.PLANE_B_B2B_NATIVE_CURRENCY_ONLY

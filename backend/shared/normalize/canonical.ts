@@ -20,6 +20,8 @@ export const canonicalPayoutMethods = [
   'cash_pickup',
   'mobile_wallet',
   'airtime',
+  'debit_card',
+  'home_delivery',
   'other',
 ] as const
 

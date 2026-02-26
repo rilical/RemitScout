@@ -216,16 +216,24 @@
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="p-2 rounded-lg text-rs-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              :class="[
+                'p-2 rounded-lg transition-colors',
+                props.watchlistActive
+                  ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100'
+                  : 'text-rs-muted hover:text-brand-600 hover:bg-brand-50',
+              ]"
               title="Add to watchlist"
               aria-label="Add to watchlist"
+              :aria-pressed="props.watchlistActive"
+              data-testid="corridor-sticky-watchlist-button"
               @click="emit('save')"
             >
               <svg
                 class="w-5 h-5"
-                fill="none"
+                :fill="props.watchlistActive ? 'currentColor' : 'none'"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                data-testid="corridor-sticky-watchlist-icon"
               >
                 <path
                   stroke-linecap="round"
@@ -237,16 +245,24 @@
             </button>
             <button
               type="button"
-              class="p-2 rounded-lg text-rs-muted hover:text-brand-600 hover:bg-brand-50 transition-colors"
+              :class="[
+                'p-2 rounded-lg transition-colors',
+                props.alertActive
+                  ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100'
+                  : 'text-rs-muted hover:text-brand-600 hover:bg-brand-50',
+              ]"
               title="Set rate alert"
               aria-label="Set rate alert"
+              :aria-pressed="props.alertActive"
+              data-testid="corridor-sticky-alert-button"
               @click="emit('alert')"
             >
               <svg
                 class="w-5 h-5"
-                fill="none"
+                :fill="props.alertActive ? 'currentColor' : 'none'"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                data-testid="corridor-sticky-alert-icon"
               >
                 <path
                   stroke-linecap="round"
@@ -307,6 +323,9 @@ const AirtimeIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewB
 const CardIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' }),
 ])
+const HomeIcon = () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', 'd': 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z' }),
+])
 
 const props = withDefaults(defineProps<{
   amount: number
@@ -320,6 +339,8 @@ const props = withDefaults(defineProps<{
   availableFromCurrencies?: string | string[]
   availableMethods?: string | string[]
   methodsLoading?: boolean
+  watchlistActive?: boolean
+  alertActive?: boolean
 }>(), {
   currency: 'USD',
   fromCurrency: 'USD',
@@ -329,6 +350,8 @@ const props = withDefaults(defineProps<{
   availableFromCurrencies: () => [],
   availableMethods: () => [],
   methodsLoading: false,
+  watchlistActive: false,
+  alertActive: false,
 })
 
 const emit = defineEmits<{
@@ -378,6 +401,7 @@ const methodConfig: Record<string, { label: string, value: string, icon: ReturnT
   cash: { label: 'Cash Pickup', value: 'cash', icon: CashIcon() },
   wallet: { label: 'Mobile Wallet', value: 'wallet', icon: WalletIcon() },
   airtime: { label: 'Airtime', value: 'airtime', icon: AirtimeIcon() },
+  home: { label: 'Home Delivery', value: 'home', icon: HomeIcon() },
   card: { label: 'Card', value: 'card', icon: CardIcon() },
 }
 

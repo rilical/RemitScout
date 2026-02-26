@@ -20,6 +20,8 @@ export const DELIVERY_METHODS = [
   { value: 'cash', label: 'Cash Pickup', icon: '💵' },
   { value: 'wallet', label: 'Mobile Wallet', icon: '📱' },
   { value: 'airtime', label: 'Airtime', icon: '📶' },
+  { value: 'home', label: 'Home Delivery', icon: '🏠' },
+  { value: 'card', label: 'Card Delivery', icon: '💳' },
 ] as const
 
 const globalForm = ref<CompareFormState>({
@@ -137,6 +139,12 @@ export function useCompareForm() {
     }
     if (method === 'airtime') {
       return { payin: 'bank_transfer', payout: 'airtime' }
+    }
+    if (method === 'home') {
+      return { payin: 'bank_transfer', payout: 'home_delivery' }
+    }
+    if (method === 'card') {
+      return { payin: 'debit_card', payout: 'debit_card' }
     }
     return { payin: 'bank_transfer', payout: 'bank_deposit' }
   }

@@ -20,7 +20,7 @@
       ],
       "probe": {
         "aws_scheduled": true,
-        "github_actions": false,
+        "github_actions": true,
         "aws_cdk_id": "AlAnsari"
       }
     },
@@ -42,8 +42,8 @@
         "US-GB-USD-GBP"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -106,7 +106,7 @@
         "US-PH-USD-PHP"
       ],
       "probe": {
-        "aws_scheduled": false,
+        "aws_scheduled": true,
         "github_actions": true
       }
     },
@@ -128,8 +128,8 @@
         "RO-MN-RON-MNT"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -169,8 +169,8 @@
         "NZ-US-NZD-USD"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -191,8 +191,8 @@
         "US-TH-USD-THB"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -213,8 +213,8 @@
         "NL-NG-EUR-NGN"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -235,8 +235,8 @@
         "US-SN-USD-XOF"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -258,8 +258,8 @@
         "CA-LK-CAD-LKR"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -350,7 +350,7 @@
       ],
       "probe": {
         "aws_scheduled": true,
-        "github_actions": false,
+        "github_actions": true,
         "aws_cdk_id": "Singx"
       }
     },
@@ -372,8 +372,8 @@
         "SE-GB-SEK-GBP"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -385,8 +385,8 @@
         "US-MX-USD-MXN"
       ],
       "probe": {
-        "aws_scheduled": false,
-        "github_actions": false
+        "aws_scheduled": true,
+        "github_actions": true
       }
     },
     {
@@ -431,7 +431,7 @@
         "KR-NZ-KRW-NZD"
       ],
       "probe": {
-        "aws_scheduled": false,
+        "aws_scheduled": true,
         "github_actions": true
       }
     },

@@ -38,4 +38,5 @@ export const payoutMethods: string[] = [
   'bank_deposit',
   'cash_pickup',
   'mobile_wallet',
+  'home_delivery',
 ]

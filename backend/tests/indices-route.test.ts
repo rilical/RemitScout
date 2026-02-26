@@ -19,11 +19,25 @@ vi.mock('../plane-a/src/repositories', () => ({
   })),
 }))
 
-const makeApp = () => ({ get: vi.fn() }) as unknown as FastifyInstance
+const makeApp = () =>
+  ({
+    get: vi.fn(),
+    post: vi.fn(),
+    container: {
+      pool: {},
+      repositories: {
+        goldIndices: {
+          getAvailability: vi.fn(),
+          getIndicesSeries: vi.fn(),
+          getIndicesLatest: vi.fn(),
+        },
+      },
+    },
+  }) as unknown as FastifyInstance
 
 const getHandler = (app: FastifyInstance, url: string) => {
   const call = vi.mocked(app.get).mock.calls.find((entry) => entry[0] === url)
-  return call?.[call.length - 1] as ((request: any, reply: any) => Promise<any>)
+  return call?.[call.length - 1] as unknown as (request: any, reply: any) => Promise<any>
 }
 
 describe('indices route', () => {

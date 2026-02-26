@@ -8,10 +8,10 @@
  * - `standard_bank`: Bank transfer to bank deposit (bank-to-bank)
  * - `standard_card`: Card payment to bank deposit (card-to-bank)
  * - `cash_pickup`: Any payin method to cash pickup
- *
- * **Note**: Database schema (`silver.method_profile` enum) defines these three profiles.
- * Other combinations (e.g., to mobile_wallet, to airtime) return `null` and are flagged
- * as `invalid_method_profile` in quality flags.
+ * - `mobile_wallet`: Any payin method to mobile wallet (e.g. M-Pesa, GCash)
+ * - `airtime_topup`: Any payin method to airtime top-up
+ * - `card_delivery`: Any payin method to debit/credit card payout
+ * - `home_delivery`: Any payin method to home/door delivery
  */
 
 import { CanonicalPayinMethod, CanonicalPayoutMethod } from '../../../shared/normalize/canonical'
@@ -20,9 +20,16 @@ import { CanonicalPayinMethod, CanonicalPayoutMethod } from '../../../shared/nor
  * Method profile types matching database enum.
  *
  * These values MUST match the `method_profile` enum in the database schema
- * (backend/db/migrations/002_rse_silver_core.sql).
+ * (backend/db/migrations/002_rse_silver_core.sql + 088_expand_method_profile.sql).
  */
-export type MethodProfile = 'standard_bank' | 'standard_card' | 'cash_pickup'
+export type MethodProfile =
+  | 'standard_bank'
+  | 'standard_card'
+  | 'cash_pickup'
+  | 'mobile_wallet'
+  | 'airtime_topup'
+  | 'card_delivery'
+  | 'home_delivery'
 
 /**
  * Payin method categories for profile derivation.
@@ -32,7 +39,7 @@ type PayinCategory = 'bank' | 'card' | 'cash' | 'other'
 /**
  * Payout method categories for profile derivation.
  */
-type PayoutCategory = 'bank' | 'cash' | 'wallet' | 'airtime' | 'other'
+type PayoutCategory = 'bank' | 'cash' | 'wallet' | 'airtime' | 'card' | 'home' | 'other'
 
 /**
  * Checks if a payin method is card-based.
@@ -81,6 +88,8 @@ const getPayoutCategory = (payout: CanonicalPayoutMethod): PayoutCategory => {
   if (payout === 'cash_pickup') return 'cash'
   if (payout === 'mobile_wallet') return 'wallet'
   if (payout === 'airtime') return 'airtime'
+  if (payout === 'debit_card') return 'card'
+  if (payout === 'home_delivery') return 'home'
   return 'other'
 }
 
@@ -96,41 +105,32 @@ const PROFILE_LOOKUP: Record<string, MethodProfile> = {
   bank_to_cash: 'cash_pickup',
   card_to_cash: 'cash_pickup',
   cash_to_cash: 'cash_pickup',
+  bank_to_wallet: 'mobile_wallet',
+  card_to_wallet: 'mobile_wallet',
+  cash_to_wallet: 'mobile_wallet',
+  bank_to_airtime: 'airtime_topup',
+  card_to_airtime: 'airtime_topup',
+  bank_to_card: 'card_delivery',
+  card_to_card: 'card_delivery',
+  bank_to_home: 'home_delivery',
+  card_to_home: 'home_delivery',
+  cash_to_home: 'home_delivery',
 }
 
 /**
  * Derives a method profile from payin and payout method combinations.
  *
- * Method profiles categorize transfer types based on payin and payout methods:
- * - `standard_bank`: Bank transfer to bank deposit
- * - `standard_card`: Card payment to bank deposit
- * - `cash_pickup`: Any payin method to cash pickup
- *
- * Returns `null` if the combination is not supported (e.g., to mobile_wallet, to airtime,
- * or 'other' methods). When `null` is returned, the quote normalizer should set the
- * `invalid_method_profile` quality flag.
- *
- * **Supported Combinations**:
- * - bank_transfer → bank_deposit = `standard_bank`
- * - debit_card/credit_card/apple_pay/google_pay → bank_deposit = `standard_card`
- * - bank_transfer/card/cash → cash_pickup = `cash_pickup`
- *
- * **Unsupported Combinations** (returns null):
- * - Any → mobile_wallet (not in database enum)
- * - Any → airtime (not in database enum)
- * - 'other' payin or payout methods
- *
- * @param payin - Canonical payin method
- * @param payout - Canonical payout method
- * @returns Method profile matching database enum, or null if unsupported
+ * Returns `null` for unrecognized combinations (e.g. 'other' payin/payout).
+ * When `null` is returned, the quote normalizer sets `invalid_method_profile`.
  *
  * @example
- * deriveMethodProfile('bank_transfer', 'bank_deposit') // 'standard_bank'
- * deriveMethodProfile('debit_card', 'bank_deposit') // 'standard_card'
- * deriveMethodProfile('bank_transfer', 'cash_pickup') // 'cash_pickup'
- * deriveMethodProfile('cash', 'cash_pickup') // 'cash_pickup'
- * deriveMethodProfile('bank_transfer', 'mobile_wallet') // null (unsupported)
- * deriveMethodProfile('other', 'bank_deposit') // null (unsupported)
+ * deriveMethodProfile('bank_transfer', 'bank_deposit')   // 'standard_bank'
+ * deriveMethodProfile('debit_card', 'bank_deposit')      // 'standard_card'
+ * deriveMethodProfile('bank_transfer', 'cash_pickup')    // 'cash_pickup'
+ * deriveMethodProfile('bank_transfer', 'mobile_wallet')  // 'mobile_wallet'
+ * deriveMethodProfile('debit_card', 'airtime')           // 'airtime_topup'
+ * deriveMethodProfile('debit_card', 'debit_card')        // 'card_delivery'
+ * deriveMethodProfile('bank_transfer', 'home_delivery')  // 'home_delivery'
  */
 export const deriveMethodProfile = (
   payin: CanonicalPayinMethod,
@@ -149,18 +149,16 @@ export const deriveMethodProfile = (
 
 /**
  * Type guard to check if a string is a valid method profile.
- *
- * Validates that the value matches one of the database enum values.
- *
- * @param value - String to check
- * @returns True if value is a valid method profile
- *
- * @example
- * isMethodProfile('standard_bank') // true
- * isMethodProfile('bank_to_bank') // false (old format, not in database)
- * isMethodProfile('invalid') // false
  */
 export const isMethodProfile = (value: unknown): value is MethodProfile => {
-  const validProfiles: MethodProfile[] = ['standard_bank', 'standard_card', 'cash_pickup']
+  const validProfiles: MethodProfile[] = [
+    'standard_bank',
+    'standard_card',
+    'cash_pickup',
+    'mobile_wallet',
+    'airtime_topup',
+    'card_delivery',
+    'home_delivery',
+  ]
   return typeof value === 'string' && validProfiles.includes(value as MethodProfile)
 }

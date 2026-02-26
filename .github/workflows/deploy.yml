@@ -394,6 +394,15 @@ jobs:
       OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
       OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+      PROXY_RESIDENTIAL_SECRET_ARN: ${{ vars.PROXY_RESIDENTIAL_SECRET_ARN }}
+      PROXY_RESIDENTIAL_SECRET_JSON_KEY: ${{ vars.PROXY_RESIDENTIAL_SECRET_JSON_KEY }}
+      PROXY_RESIDENTIAL_SSM_NAME: ${{ vars.PROXY_RESIDENTIAL_SSM_NAME }}
+      PROXY_RESIDENTIAL_URL: ${{ secrets.PROXY_RESIDENTIAL_URL || vars.PROXY_RESIDENTIAL_URL }}
+      PROXY_DATACENTER_SECRET_ARN: ${{ vars.PROXY_DATACENTER_SECRET_ARN }}
+      PROXY_DATACENTER_SECRET_JSON_KEY: ${{ vars.PROXY_DATACENTER_SECRET_JSON_KEY }}
+      PROXY_DATACENTER_SSM_NAME: ${{ vars.PROXY_DATACENTER_SSM_NAME }}
+      PROXY_DATACENTER_URL: ${{ secrets.PROXY_DATACENTER_URL || vars.PROXY_DATACENTER_URL }}
+      CAPABILITY_PROBE_PROXY_TIER: ${{ vars.CAPABILITY_PROBE_PROXY_TIER || 'NONE' }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
       SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -655,13 +664,16 @@ jobs:
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
             -c minimalInfra=false \
+            -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
+            -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
             -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
@@ -683,13 +695,16 @@ jobs:
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
             -c minimalInfra=false \
+            -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
             -c enableWaf=false \
+            -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
             -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutMode=queue \
             -c planeBIngestFanoutTier1DesiredCount=1 \
@@ -1032,6 +1047,15 @@ jobs:
       OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
       OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+      PROXY_RESIDENTIAL_SECRET_ARN: ${{ vars.PROXY_RESIDENTIAL_SECRET_ARN }}
+      PROXY_RESIDENTIAL_SECRET_JSON_KEY: ${{ vars.PROXY_RESIDENTIAL_SECRET_JSON_KEY }}
+      PROXY_RESIDENTIAL_SSM_NAME: ${{ vars.PROXY_RESIDENTIAL_SSM_NAME }}
+      PROXY_RESIDENTIAL_URL: ${{ secrets.PROXY_RESIDENTIAL_URL || vars.PROXY_RESIDENTIAL_URL }}
+      PROXY_DATACENTER_SECRET_ARN: ${{ vars.PROXY_DATACENTER_SECRET_ARN }}
+      PROXY_DATACENTER_SECRET_JSON_KEY: ${{ vars.PROXY_DATACENTER_SECRET_JSON_KEY }}
+      PROXY_DATACENTER_SSM_NAME: ${{ vars.PROXY_DATACENTER_SSM_NAME }}
+      PROXY_DATACENTER_URL: ${{ secrets.PROXY_DATACENTER_URL || vars.PROXY_DATACENTER_URL }}
+      CAPABILITY_PROBE_PROXY_TIER: ${{ vars.CAPABILITY_PROBE_PROXY_TIER || 'NONE' }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
       SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1376,6 +1400,19 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c minimalInfra=false \
+            -c providerProbeMode=per_provider \
+            -c planeBDisableTier1=false \
+            -c planeBB2cRefreshServiceEnabled=true \
+            -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestFanoutMode=queue \
+            -c quoteRefreshQueueMode=queue \
+            -c fxRateRefreshQueueMode=queue \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBIngestFanoutTier1DesiredCount=1 \
+            -c planeBIngestFanoutTier2DesiredCount=1 \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -1390,6 +1427,19 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c minimalInfra=false \
+            -c providerProbeMode=per_provider \
+            -c planeBDisableTier1=false \
+            -c planeBB2cRefreshServiceEnabled=true \
+            -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestFanoutMode=queue \
+            -c quoteRefreshQueueMode=queue \
+            -c fxRateRefreshQueueMode=queue \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBIngestFanoutTier1DesiredCount=1 \
+            -c planeBIngestFanoutTier2DesiredCount=1 \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \

@@ -21,6 +21,16 @@ const healthCorridors = Array.from(
   ),
 )
 
+const INDICES_METHOD_PROFILES = [
+  'standard_bank',
+  'standard_card',
+  'cash_pickup',
+  'mobile_wallet',
+  'airtime_topup',
+  'card_delivery',
+  'home_delivery',
+] as const
+
 const toNumber = (value: unknown): number | null => {
   if (value === null || value === undefined) return null
   const parsed = Number(value)
@@ -181,21 +191,51 @@ export const runDataHealthSloJob = async (): Promise<void> => {
     if (coverageTier2 !== null) recordSLOValue('provider_coverage_tier2', '1h', coverageTier2)
 
     if (healthCorridors.length > 0) {
-      const indices = await fetchIndicesReadiness(
-        goldPool,
-        healthCorridors,
-        500,
-        'standard_bank',
-      )
-      const total = Math.max(0, indices.total)
-      const availableRatio = total > 0 ? indices.available / total : 0
-      const suppressedRatio = total > 0 ? indices.suppressed / total : 0
+      let minAvailableRatio = 1
+      let maxSuppressedRatio = 0
+      let worstIndices: {
+        total: number
+        available: number
+        suppressed: number
+        minProviderCount: number | null
+        weightConfidenceP10: number | null
+        latestDate: string | null
+      } | null = null
+      let worstProfile: string = INDICES_METHOD_PROFILES[0]
+      const amountBucket = 500
 
-      recordSLOValue('indices_available_ratio', '1h', availableRatio)
-      recordSLOValue('indices_suppressed_ratio', '1h', suppressedRatio)
-      if (indices.weightConfidenceP10 !== null) {
-        recordSLOValue('weight_confidence_p10', '1h', indices.weightConfidenceP10)
+      for (const methodProfile of INDICES_METHOD_PROFILES) {
+        const indices = await fetchIndicesReadiness(
+          goldPool,
+          healthCorridors,
+          amountBucket,
+          methodProfile,
+        )
+        const total = Math.max(0, indices.total)
+        const availableRatio = total > 0 ? indices.available / total : 0
+        const suppressedRatio = total > 0 ? indices.suppressed / total : 0
+
+        if (worstIndices === null || availableRatio < minAvailableRatio) {
+          minAvailableRatio = availableRatio
+          maxSuppressedRatio = suppressedRatio
+          worstIndices = indices
+          worstProfile = methodProfile
+        } else if (availableRatio === minAvailableRatio && suppressedRatio > maxSuppressedRatio) {
+          maxSuppressedRatio = suppressedRatio
+          worstIndices = indices
+          worstProfile = methodProfile
+        }
       }
+
+      recordSLOValue('indices_available_ratio', '1h', minAvailableRatio)
+      recordSLOValue('indices_suppressed_ratio', '1h', maxSuppressedRatio)
+      if (worstIndices?.weightConfidenceP10 != null) {
+        recordSLOValue('weight_confidence_p10', '1h', worstIndices.weightConfidenceP10)
+      }
+
+      const total = Math.max(0, worstIndices?.total ?? 0)
+      const availableRatio = minAvailableRatio
+      const suppressedRatio = maxSuppressedRatio
 
       logger.info('indices_readiness', {
         corridors_expected: healthCorridors.length,
@@ -203,9 +243,10 @@ export const runDataHealthSloJob = async (): Promise<void> => {
         corridors_missing: Math.max(0, healthCorridors.length - total),
         available_ratio: availableRatio,
         suppressed_ratio: suppressedRatio,
-        min_provider_count: indices.minProviderCount,
-        weight_confidence_p10: indices.weightConfidenceP10,
-        latest_date: indices.latestDate,
+        min_provider_count: worstIndices?.minProviderCount ?? null,
+        weight_confidence_p10: worstIndices?.weightConfidenceP10 ?? null,
+        latest_date: worstIndices?.latestDate ?? null,
+        worst_profile: worstProfile,
       })
     } else {
       logger.warn('health_corridors_empty', { reason: 'no_tier0_corridors' })

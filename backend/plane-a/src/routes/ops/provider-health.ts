@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createLogger } from '../../../../shared/logger'
 import { getRedisClient } from '../../../../shared/redis'
 import { getHealthCorridors, type ProviderId } from '../../../../shared/health-corridors'
+import { getCorridorTier, getTierSloMinutes } from '../../../../shared/corridor-tiers'
 import { requireAdmin } from '../../plugins/auth-plugin'
 import { getProviderMetadata } from '../../services/provider-metadata'
 import { sendAdminWebhook } from '../../services/admin-webhooks'
@@ -15,6 +16,8 @@ type ProviderHealthOptions = {
 
 type ProviderHealthCorridor = {
   corridor_id: string
+  collection_tier: 'tier_1' | 'tier_2'
+  slo_minutes: number
   last_attempt_at: Date | string | null
   last_attempt_age_minutes: number | null
   last_attempt_success: boolean | null
@@ -24,6 +27,7 @@ type ProviderHealthCorridor = {
   last_attempt_request: string | null
   last_quote_at: Date | string | null
   last_quote_age_minutes: number | null
+  stale: boolean
   payin: string | null
   payout: string | null
   send_amount: number | null
@@ -136,9 +140,18 @@ const fetchProviderHealth = async (
   const corridors = healthCorridors.map((corridorId) => {
     const attempt = attemptsByCorridor.get(corridorId) || null
     const quote = quotesByCorridor.get(corridorId) || null
+    const tier = getCorridorTier(corridorId)
+    const sloMinutes = getTierSloMinutes(tier)
+    const quoteAge = minutesSince(quote?.collected_at ?? null)
+    // Stale = no quote at all, or quote age exceeds 8x the tier SLO
+    // (generous multiplier accounts for occasional missed cycles)
+    const staleThresholdMinutes = sloMinutes * 8
+    const isStale = quoteAge === null || quoteAge > staleThresholdMinutes
 
     return {
       corridor_id: corridorId,
+      collection_tier: tier,
+      slo_minutes: sloMinutes,
       last_attempt_at: attempt?.attempted_at ?? null,
       last_attempt_age_minutes: minutesSince(attempt?.attempted_at ?? null),
       last_attempt_success: attempt?.success ?? null,
@@ -147,7 +160,8 @@ const fetchProviderHealth = async (
       last_attempt_error_message: attempt?.error_message ?? null,
       last_attempt_request: attempt?.request_fingerprint ?? null,
       last_quote_at: quote?.collected_at ?? null,
-      last_quote_age_minutes: minutesSince(quote?.collected_at ?? null),
+      last_quote_age_minutes: quoteAge,
+      stale: isStale,
       payin: quote?.payin ?? null,
       payout: quote?.payout ?? null,
       send_amount: quote?.send_amount ?? null,
@@ -167,10 +181,7 @@ const fetchProviderHealth = async (
   })
 
   const freshWindowMinutes = 24 * 60
-  const staleCorridors = corridors.filter((corridor) => {
-    const age = corridor.last_quote_age_minutes
-    return age === null || age > freshWindowMinutes
-  })
+  const staleCorridors = corridors.filter((corridor) => corridor.stale)
 
   const metadata = getProviderMetadata(options.providerId)
   const affiliateUrl = metadata?.affiliateUrl ?? null

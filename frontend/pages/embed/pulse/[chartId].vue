@@ -111,9 +111,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watchEffect, markRaw, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow, AmountBucket } from '~/types/pulse'
+import type { ChartData, PulseFilters, MethodCoverageRow, AmountBucket } from '~/types/pulse'
 import { getChartById } from '~/lib/pulseChartRegistry'
-import { getChartData, getMethodCoverage, getCorridors, getCorridorBySlug } from '~/lib/pulseApi'
+import { getPublicPulseEmbedSnapshot } from '~/lib/pulseApi'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import PulseBarChart from '~/components/pulse/PulseBarChart.vue'
@@ -144,7 +144,7 @@ const { addVideoObjectSchema } = useStructuredData()
 
 const chartId = computed(() => route.params.chartId as string)
 const theme = computed(() => (route.query.theme as 'dark' | 'light') || 'dark')
-const range = computed(() => (route.query.range as TimeRange) || '30d')
+const snapshotId = computed(() => ((route.query.snapshot_id as string) || '').trim())
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
@@ -154,21 +154,20 @@ const filters = ref<PulseFilters>({
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
 })
 
-await useAsyncData('pulse-corridors', () => getCorridors())
-
 const loading = ref(true)
 const chartData = ref<ChartData | null>(null)
 const matrixRows = ref<MethodCoverageRow[]>([])
 const lastUpdated = ref('')
 const insight = ref('')
 const loadError = ref<string | null>(null)
+const snapshotCorridorLabel = ref<string | null>(null)
 
 const chartMeta = computed(() => getChartById(chartId.value))
 
 const corridorLabel = computed(() => {
+  if (snapshotCorridorLabel.value) return snapshotCorridorLabel.value
   if (filters.value.corridor === 'global') return 'Global'
-  const corridorInfo = getCorridorBySlug(filters.value.corridor)
-  return corridorInfo?.label || filters.value.corridor
+  return filters.value.corridor
 })
 
 const fullChartUrl = computed(() => {
@@ -236,13 +235,28 @@ function formatLastUpdated(timestamp: string): string {
 onMounted(async () => {
   try {
     loadError.value = null
-    if (chartMeta.value?.type === 'matrix') {
-      matrixRows.value = await getMethodCoverage(filters.value)
+    if (!snapshotId.value) {
+      loadError.value = 'Embed snapshot is required.'
+      return
     }
-    chartData.value = await getChartData(chartId.value, filters.value, range.value)
-    if (chartData.value) {
-      lastUpdated.value = chartData.value.metadata.lastUpdated
-      insight.value = chartData.value.insight
+
+    const snapshot = await getPublicPulseEmbedSnapshot(snapshotId.value)
+    if (snapshot.chartId !== chartId.value) {
+      loadError.value = 'Embed snapshot does not match this chart.'
+      return
+    }
+
+    chartData.value = snapshot.chart
+    matrixRows.value = snapshot.methodCoverage || []
+    lastUpdated.value = snapshot.chart.updatedAt || snapshot.chart.metadata.lastUpdated
+    insight.value = snapshot.chart.insight
+    snapshotCorridorLabel.value = snapshot.corridorLabel || null
+    filters.value = {
+      corridor: snapshot.filters.corridor as PulseFilters['corridor'],
+      corridorId: snapshot.filters.corridorId,
+      amount: snapshot.filters.amount as AmountBucket,
+      fundingMethod: snapshot.filters.fundingMethod,
+      payoutMethod: snapshot.filters.payoutMethod,
     }
   }
   catch (e) {

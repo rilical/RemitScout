@@ -840,10 +840,24 @@ const ratePairAvailable = computed(() => {
 })
 
 const currentRateValue = ref<number | null>(null)
+let currentRateRequestId = 0
 const currentRateLabel = computed(() => {
   if (currentRateValue.value === null) return '—'
   return currentRateValue.value.toFixed(4)
 })
+
+const parseRateValue = (rate: unknown): number | null => {
+  if (typeof rate === 'number' && Number.isFinite(rate)) {
+    return rate
+  }
+  if (typeof rate === 'string' && rate.trim().length > 0) {
+    const parsed = Number(rate)
+    if (Number.isFinite(parsed)) {
+      return parsed
+    }
+  }
+  return null
+}
 
 type CorridorEligibility = {
   corridorId: string
@@ -989,19 +1003,23 @@ const smartAlertDisabledMessage = computed(() => {
 })
 
 const loadCurrentRate = async () => {
+  const requestId = ++currentRateRequestId
+
   if (!ratePairAvailable.value || !isOpen.value || import.meta.server) {
     currentRateValue.value = null
     return
   }
   try {
-    const data = await request<{ rate?: number }>('/rates/spot', {
+    const data = await request<{ rate?: unknown }>('/rates/spot', {
       query: { base: ratePairBase.value, quote: ratePairQuote.value },
       timeoutMs: 5000,
       retries: 0,
     })
-    currentRateValue.value = typeof data?.rate === 'number' ? data.rate : null
+    if (requestId !== currentRateRequestId) return
+    currentRateValue.value = parseRateValue(data?.rate)
   }
   catch {
+    if (requestId !== currentRateRequestId) return
     currentRateValue.value = null
   }
 }

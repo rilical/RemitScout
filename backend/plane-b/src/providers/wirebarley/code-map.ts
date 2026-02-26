@@ -26,7 +26,8 @@ export const mapPayoutMethod = (value?: string | null): string => {
   if (token.includes('mobile_wallet') || token.includes('wallet') || token.includes('alipay') || token.includes('wechat')) {
     return 'mobile_wallet'
   }
-  if (token.includes('cash_pickup') || token.includes('cash') || token.includes('home_delivery')) {
+  if (token.includes('home_delivery')) return 'home_delivery'
+  if (token.includes('cash_pickup') || token.includes('cash')) {
     return 'cash_pickup'
   }
   if (token.includes('bank_account') || token.includes('bank') || token.includes('card')) {

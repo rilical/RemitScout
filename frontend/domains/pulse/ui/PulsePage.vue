@@ -152,11 +152,14 @@
                 <circle cx="651" cy="42" r="4.5" fill="#2563EB" stroke="white" stroke-width="2" />
                 <circle cx="770" cy="64" r="4.5" fill="#2563EB" stroke="white" stroke-width="2" />
 
-                <rect x="618" y="16" width="66" height="18" rx="4" fill="#2563EB" />
-                <text x="651" y="29" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="system-ui">56.12 Peak</text>
+                <rect x="618" y="16" width="84" height="18" rx="4" fill="#2563EB" />
+                <text x="660" y="29" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="system-ui">56.12 Best rate</text>
 
-                <rect x="738" y="44" width="54" height="16" rx="3" fill="#eff6ff" stroke="#2563EB" stroke-width="0.5" />
-                <text x="765" y="55" text-anchor="middle" fill="#2563EB" font-size="10" font-weight="600" font-family="system-ui">56.04</text>
+                <rect x="676" y="65" width="88" height="16" rx="3" fill="white" stroke="#d4d4d4" stroke-width="1" />
+                <text x="720" y="76" text-anchor="middle" fill="#a3a3a3" font-size="9.5" font-family="system-ui">56.00 Mid-market</text>
+
+                <rect x="710" y="44" width="82" height="16" rx="3" fill="#eff6ff" stroke="#2563EB" stroke-width="0.5" />
+                <text x="751" y="55" text-anchor="middle" fill="#2563EB" font-size="10" font-weight="600" font-family="system-ui">56.04 Best rate</text>
               </svg>
             </div>
           </div>
@@ -1236,6 +1239,7 @@
 
           <!-- 7. Deep Dives - Historical Charts -->
           <section
+            v-if="isPro"
             id="deep-dives"
             ref="deepDivesRef"
             class="mb-10 px-page-x"
@@ -2528,7 +2532,7 @@ const executiveNote = computed(() => {
 })
 
 async function loadChartData() {
-  if (!isPlus.value) return
+  if (!isPro.value) return
   if (store.viewMode !== 'analyst') return
   if (!deepDivesVisible.value) return
   if (chartLoading.value) return
@@ -2733,7 +2737,9 @@ watch(
     void loadSenderHighlights()
     if (store.viewMode === 'analyst') {
       void loadSnapshotSummary()
-      void setupDeepDivesObserver()
+      if (isPro.value) {
+        void setupDeepDivesObserver()
+      }
     }
   },
   { immediate: true },
@@ -2771,7 +2777,9 @@ watch(
   () => {
     if (!isPlus.value) return
     void loadSnapshotSummary()
-    void loadChartData()
+    if (isPro.value) {
+      void loadChartData()
+    }
     void loadCoverageSummary()
     void loadSenderHighlights()
   },
@@ -2785,7 +2793,9 @@ watch(
     if (mode === 'analyst') {
       void loadSnapshotSummary()
       void loadCoverageSummary()
-      void setupDeepDivesObserver()
+      if (isPro.value) {
+        void setupDeepDivesObserver()
+      }
       return
     }
     void loadSenderHighlights()
@@ -2818,12 +2828,12 @@ onMounted(async () => {
     if (isPro.value) {
       void loadScreener()
       void loadPinnedCorridors()
+      void loadChartData()
+      void setupDeepDivesObserver()
     }
     void loadSnapshotSummary()
-    void loadChartData()
     void loadCoverageSummary()
     void loadSenderHighlights()
-    void setupDeepDivesObserver()
   }
 })
 

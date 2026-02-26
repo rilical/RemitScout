@@ -64,6 +64,8 @@ type MeResponse = {
     watchlist_items: number | null
     api_access: boolean
     api_tier: number | null
+    api_key_max: number | null
+    api_rate_limit_rpm: number | null
   }
   usage: {
     alerts_count?: number
@@ -95,6 +97,8 @@ export const useEntitlements = () => {
   }))
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
+  const apiKeyMax = useState<number | null>('entitlements:api-key-max', () => null)
+  const apiRateLimitRpm = useState<number | null>('entitlements:api-rate-limit-rpm', () => null)
   const pulseAccess = useState<BackendPulseAccess>('entitlements:pulse-access', () => 'none')
   const billing = useState<MeResponse['billing'] | null>('entitlements:billing', () => null)
   const loading = useState<boolean>('entitlements:loading', () => false)
@@ -128,6 +132,8 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      apiKeyMax.value = null
+      apiRateLimitRpm.value = null
       pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
@@ -150,6 +156,8 @@ export const useEntitlements = () => {
         limits.value = mapEntitlementsToLimits(data.entitlements)
         apiAccess.value = Boolean(data.entitlements.api_access)
         apiTier.value = data.entitlements.api_tier
+        apiKeyMax.value = data.entitlements.api_key_max ?? null
+        apiRateLimitRpm.value = data.entitlements.api_rate_limit_rpm ?? null
         pulseAccess.value = data.entitlements.pulse_access
         billing.value = data.billing ?? null
         if (data.user) {
@@ -174,6 +182,8 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      apiKeyMax.value = null
+      apiRateLimitRpm.value = null
       pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
@@ -220,6 +230,8 @@ export const useEntitlements = () => {
       }
       apiAccess.value = false
       apiTier.value = null
+      apiKeyMax.value = null
+      apiRateLimitRpm.value = null
       pulseAccess.value = 'none'
       billing.value = null
       hydrated.value = true
@@ -238,6 +250,8 @@ export const useEntitlements = () => {
     pulseLevel,
     apiAccess: readonly(apiAccess),
     apiTier: readonly(apiTier),
+    apiKeyMax: readonly(apiKeyMax),
+    apiRateLimitRpm: readonly(apiRateLimitRpm),
     refreshPlan,
   }
 }

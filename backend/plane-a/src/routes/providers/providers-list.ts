@@ -733,10 +733,14 @@ const resolveRequestedMethod = (method?: string | null, payout?: string | null) 
 }
 
 const resolveIndicesMethodProfile = (
-  method: 'bank' | 'cash' | 'wallet' | 'airtime',
-): 'standard_bank' | 'cash_pickup' | 'standard_card' | null => {
+  method: 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card',
+): string | null => {
   if (method === 'bank') return 'standard_bank'
   if (method === 'cash') return 'cash_pickup'
+  if (method === 'wallet') return 'mobile_wallet'
+  if (method === 'airtime') return 'airtime_topup'
+  if (method === 'home') return 'home_delivery'
+  if (method === 'card') return 'card_delivery'
   return null
 }
 

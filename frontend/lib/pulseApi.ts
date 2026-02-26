@@ -215,6 +215,60 @@ export async function getChartData(
   return await request<ChartData>(`/pulse/charts/${chartId}`, { query: buildPulseQuery(filters, { range }) })
 }
 
+export type PulseEmbedSnapshotCreateParams = {
+  chart_id: string
+  corridor?: string
+  corridor_id?: string
+  amount?: number
+  funding_method?: 'bank' | 'card' | 'cash'
+  payout_method?: 'bank' | 'cash' | 'wallet'
+  range?: TimeRange
+}
+
+export type PulseEmbedSnapshotCreateResponse = {
+  success: true
+  snapshotId: string
+  createdAt: string
+  expiresAt: string
+  chartId: string
+  corridorId: string
+}
+
+export type PulseEmbedSnapshotResponse = {
+  snapshotId: string
+  chartId: string
+  chart: ChartData
+  methodCoverage?: MethodCoverageRow[]
+  filters: {
+    corridor: string
+    corridorId: string
+    amount: number
+    fundingMethod: 'bank' | 'card' | 'cash'
+    payoutMethod: 'bank' | 'cash' | 'wallet'
+    range: TimeRange
+  }
+  corridorLabel: string
+  createdAt: string
+  expiresAt: string
+}
+
+export async function createPulseEmbedSnapshot(
+  payload: PulseEmbedSnapshotCreateParams,
+): Promise<PulseEmbedSnapshotCreateResponse> {
+  const { request } = useApi()
+  return await request<PulseEmbedSnapshotCreateResponse>('/pulse/embed-snapshots', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getPublicPulseEmbedSnapshot(
+  snapshotId: string,
+): Promise<PulseEmbedSnapshotResponse> {
+  const { request } = useApi()
+  return await request<PulseEmbedSnapshotResponse>(`/public/pulse/embed-snapshots/${encodeURIComponent(snapshotId)}`)
+}
+
 export type PulseChartSource = 'gold_export' | 'gold_cache' | 'none'
 
 export interface PulseChartsBatchItem {
@@ -297,7 +351,7 @@ export interface PulseCoverageGapsResponse {
   date: string | null
   updatedAt: string | null
   sendCurrency: string
-  methodProfile: 'standard_bank' | 'standard_card' | 'cash_pickup'
+  methodProfile: 'standard_bank' | 'standard_card' | 'cash_pickup' | 'mobile_wallet' | 'airtime_topup' | 'card_delivery' | 'home_delivery'
   amountBucket: number
   bin: 'none' | 'low'
   rows: PulseCoverageGapRow[]

@@ -19,15 +19,6 @@
   --rs-radius-lg: 16px;
 }
 
-html.dark {
-  --rs-color-bg: 2 6 23;
-  --rs-color-surface: 15 23 42;
-  --rs-color-fg: 226 232 240;
-  --rs-color-muted: 148 163 184;
-  --rs-color-border: 51 65 85;
-  --rs-color-brand: 56 189 248;
-}
-
 @media (min-width: 768px) {
   :root {
     --rs-space-page-x: 1.5rem;

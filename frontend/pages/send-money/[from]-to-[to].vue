@@ -127,13 +127,16 @@ aria-current="page"
               <button
                 type="button"
                 class="inline-flex items-center gap-2 rounded-xl bg-surface/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-surface/20 motion-safe:transition-all"
+                :aria-pressed="isCorridorSaved"
+                data-testid="corridor-hero-watchlist-button"
                 @click="handleSave"
               >
                 <svg
                   class="w-4 h-4"
-                  fill="none"
+                  :fill="isCorridorSaved ? 'currentColor' : 'none'"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  data-testid="corridor-hero-watchlist-icon"
                 >
                   <path
                     stroke-linecap="round"
@@ -147,13 +150,16 @@ aria-current="page"
               <button
                 type="button"
                 class="inline-flex items-center gap-2 rounded-xl bg-surface/10 backdrop-blur-sm border border-white/10 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-surface/20 motion-safe:transition-all"
+                :aria-pressed="hasCorridorAlerts"
+                data-testid="corridor-hero-alert-button"
                 @click="handleAlert"
               >
                 <svg
                   class="w-4 h-4"
-                  fill="none"
+                  :fill="hasCorridorAlerts ? 'currentColor' : 'none'"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  data-testid="corridor-hero-alert-icon"
                 >
                   <path
                     stroke-linecap="round"
@@ -526,6 +532,8 @@ aria-current="page"
             :available-from-currencies="availableFromCurrencies"
             :available-methods="availableMethods"
             :methods-loading="isRefreshQueued && !lastKnownMethods.length"
+            :watchlist-active="isCorridorSaved"
+            :alert-active="hasCorridorAlerts"
             @update="handleBarUpdate"
             @sort="handleSort"
             @save="handleSave"
@@ -904,6 +912,40 @@ aria-current="page"
                             /></svg>
                             Airtime
                           </span>
+                          <span
+                            v-if="row.methods.includes('home') || row.methods.includes('home_delivery')"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
+                          >
+                            <svg
+                              class="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            ><path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"
+                            /></svg>
+                            Home Delivery
+                          </span>
+                          <span
+                            v-if="row.methods.includes('card') || row.methods.includes('debit_card') || row.methods.includes('card_delivery')"
+                            class="inline-flex items-center gap-1 rounded bg-surface/20 border border-white/30 px-2 py-0.5 text-body-sm text-white"
+                          >
+                            <svg
+                              class="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            ><path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            /></svg>
+                            Card Delivery
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1275,6 +1317,31 @@ aria-current="page"
                   }).length
                 }} providers</span>
               </div>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Home Delivery</span>
+                <span class="font-semibold text-brand-600">{{
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('home')
+                      || methods.includes('home_delivery')
+                      || payOut.includes('home')
+                  }).length
+                }} providers</span>
+              </div>
+              <div class="flex items-center justify-between text-body-sm">
+                <span class="text-neutral-600">Card Delivery</span>
+                <span class="font-semibold text-brand-600">{{
+                  currentRows.filter(r => {
+                    const methods = r.methods || []
+                    const payOut = (r.payOut || '').toLowerCase()
+                    return methods.includes('card')
+                      || methods.includes('debit_card')
+                      || methods.includes('card_delivery')
+                      || payOut.includes('card')
+                  }).length
+                }} providers</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1485,13 +1552,16 @@ aria-current="page"
                 <button
                   type="button"
                   class="w-full rounded-lg bg-surface px-4 py-3 text-body font-bold text-brand-700 hover:bg-brand-50 motion-safe:transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  :aria-pressed="isCorridorSaved"
+                  data-testid="corridor-sidebar-watchlist-button"
                   @click="handleSave"
                 >
                   <svg
                     class="w-5 h-5"
-                    fill="none"
+                    :fill="isCorridorSaved ? 'currentColor' : 'none'"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    data-testid="corridor-sidebar-watchlist-icon"
                   >
                     <path
                       stroke-linecap="round"
@@ -1505,13 +1575,16 @@ aria-current="page"
                 <button
                   type="button"
                   class="w-full rounded-lg border-2 border-white bg-transparent px-4 py-3 text-body font-bold text-white hover:bg-surface hover:text-brand-700 motion-safe:transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  :aria-pressed="hasCorridorAlerts"
+                  data-testid="corridor-sidebar-alert-button"
                   @click="handleAlert"
                 >
                   <svg
                     class="w-5 h-5"
-                    fill="none"
+                    :fill="hasCorridorAlerts ? 'currentColor' : 'none'"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    data-testid="corridor-sidebar-alert-icon"
                   >
                     <path
                       stroke-linecap="round"
@@ -2124,7 +2197,7 @@ const toCurrencyCode = computed(() => {
   return fallback.toUpperCase()
 })
 const initialAmount = computed(() => Number(amountParam.value) || 1000)
-const supportedMethods: Method[] = ['bank', 'cash', 'wallet', 'airtime']
+const supportedMethods: Method[] = ['bank', 'cash', 'wallet', 'airtime', 'home', 'card']
 const normalizeMethod = (value?: string | null): Method | null => {
   if (!value || typeof value !== 'string') return null
   const token = value.trim().toLowerCase().replace(/[\s-]+/g, '_')
@@ -2132,6 +2205,8 @@ const normalizeMethod = (value?: string | null): Method | null => {
   if (token === 'cash' || token === 'cash_pickup') return 'cash'
   if (token === 'wallet' || token === 'mobile_wallet') return 'wallet'
   if (token === 'airtime') return 'airtime'
+  if (token === 'home' || token === 'home_delivery') return 'home'
+  if (token === 'card' || token === 'card_delivery' || token === 'debit_card') return 'card'
   return null
 }
 const initialMethod = computed(() => {
@@ -2257,7 +2332,7 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
   payoutMethod,
   {
     key: currentRoute.fullPath,
-    watch: [fromCountryCode, toCountryCode, displayAmount, providersLive],
+    watch: [fromCountryCode, toCountryCode, displayAmount],
     server: true,
     lazy: false,
     fromCurrency: fromCurrencyCode,
@@ -2266,6 +2341,10 @@ const { data: quotesData, pending: quotesPending, error: quotesError, refresh: r
     signal: providersRequestSignal,
   },
 )
+
+watch(providersLive, (isLive) => {
+  if (isLive) refreshQuotes()
+})
 
 const toPositiveMs = (value: unknown, fallback: number) => {
   const parsed = Number(value)
@@ -3206,6 +3285,7 @@ const methodLabelMap: Record<string, string> = {
   cash: 'Cash pickup',
   wallet: 'Mobile wallet',
   airtime: 'Airtime',
+  home: 'Home delivery',
   card: 'Card',
 }
 
@@ -3988,6 +4068,15 @@ const corridorWatchTarget = computed(() => ({
 
 const corridorWatchLabel = computed(() => `${content.value.from}→${content.value.to} • ${payoutMethod.value}`)
 
+const corridorWatchlistItem = computed(() => watchlist.findByTarget(corridorWatchTarget.value))
+
+const isCorridorSaved = computed(() => Boolean(corridorWatchlistItem.value))
+
+const hasCorridorAlerts = computed(() => {
+  if (!corridorWatchlistItem.value) return false
+  return alerts.listByWatchlistItemId(corridorWatchlistItem.value.id).length > 0
+})
+
 const bestTotalCost = computed(() => {
   const midMarket = midMarketRate.value
   if (!midMarket) return 0
@@ -4148,6 +4237,12 @@ function getQuoteRefreshMethods(method: Method) {
   }
   if (method === 'airtime') {
     return { payin: 'bank_transfer', payout: 'airtime' }
+  }
+  if (method === 'home') {
+    return { payin: 'bank_transfer', payout: 'home_delivery' }
+  }
+  if (method === 'card') {
+    return { payin: 'debit_card', payout: 'debit_card' }
   }
   return { payin: 'bank_transfer', payout: 'bank_deposit' }
 }

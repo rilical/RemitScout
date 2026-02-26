@@ -147,7 +147,7 @@ const CURRENCY_ID_MAP: Record<string, string> = {
   MXN: BOOTSTRAP_TO_CURRENCY_ID,
 }
 
-let currencyMapPromise: Promise<void> | null = null
+const currencyMapPromises = new Map<ProxyTier, Promise<void>>()
 
 type FetchOptions = {
   jitterMs?: number
@@ -205,10 +205,11 @@ const updateMapsFromPayload = (payload: unknown) => {
   visit(payload)
 }
 
-const loadCurrencyMap = async () => {
-  if (currencyMapPromise) return currencyMapPromise
+const loadCurrencyMap = async (proxyTier: ProxyTier = 'NONE') => {
+  const existing = currencyMapPromises.get(proxyTier)
+  if (existing) return existing
 
-  currencyMapPromise = (async () => {
+  const promise = (async () => {
     const params = new URLSearchParams({
       fromCurrId: BOOTSTRAP_FROM_CURRENCY_ID,
       toCurrId: BOOTSTRAP_TO_CURRENCY_ID,
@@ -231,6 +232,7 @@ const loadCurrencyMap = async () => {
         'x-session-token': `ps_session_${randomUUID()}`,
       },
       body: '',
+      proxyTier,
       corridorId: BOOTSTRAP_CORRIDOR_ID,
     })
 
@@ -240,19 +242,20 @@ const loadCurrencyMap = async () => {
 
     updateMapsFromPayload(response.json)
   })().catch((error) => {
-    currencyMapPromise = null
+    currencyMapPromises.delete(proxyTier)
     throw error
   })
 
-  return currencyMapPromise
+  currencyMapPromises.set(proxyTier, promise)
+  return promise
 }
 
-const resolveCurrencyId = async (code: string) => {
+const resolveCurrencyId = async (code: string, proxyTier: ProxyTier) => {
   const normalized = code.trim().toUpperCase()
   if (CURRENCY_ID_MAP[normalized]) return CURRENCY_ID_MAP[normalized]
 
   try {
-    await loadCurrencyMap()
+    await loadCurrencyMap(proxyTier)
   } catch (error) {
     logger.warn('paysend_currency_bootstrap_failed', {
       error: error instanceof Error ? error.message : String(error),
@@ -266,6 +269,7 @@ export const fetchPaysendQuote = async (
   request: CollectorRequest,
   options: FetchOptions = {},
 ): Promise<FetchResult> => {
+  const proxyTier = options.proxyTier ?? 'NONE'
   const { sourceCountry, destCountry, sourceCurrency, destCurrency } = requireCorridorId(
     request.corridor_id,
   )
@@ -274,8 +278,8 @@ export const fetchPaysendQuote = async (
   const fromSlug = resolveCountrySlug(sourceCountry)
   const toSlug = resolveCountrySlug(destCountry)
   const [fromCurrencyId, toCurrencyId] = await Promise.all([
-    resolveCurrencyId(sourceCurrency),
-    resolveCurrencyId(destCurrency),
+    resolveCurrencyId(sourceCurrency, proxyTier),
+    resolveCurrencyId(destCurrency, proxyTier),
   ])
 
   const params = new URLSearchParams({
@@ -302,7 +306,7 @@ export const fetchPaysendQuote = async (
     },
     body: '',
     jitterMs: options.jitterMs,
-    proxyTier: options.proxyTier,
+    proxyTier,
     corridorId: request.corridor_id,
   })
 

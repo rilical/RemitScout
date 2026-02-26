@@ -24,4 +24,6 @@ export const payinMethods: string[] = [
 
 export const payoutMethods: string[] = [
   'cash_pickup',
+  'bank_deposit',
+  'mobile_wallet',
 ]

@@ -452,7 +452,7 @@ const gapsSendCurrency = ref<string>('USD')
 const gapsBin = ref<'none' | 'low'>('none')
 const gapsDate = ref<string | null>(null)
 const gapsUpdatedAt = ref<string | null>(null)
-const gapsMethodProfile = ref<'standard_bank' | 'standard_card' | 'cash_pickup'>('standard_bank')
+const gapsMethodProfile = ref<'standard_bank' | 'standard_card' | 'cash_pickup' | 'mobile_wallet' | 'airtime_topup' | 'card_delivery' | 'home_delivery'>('standard_bank')
 const gapsAmountBucket = ref<number>(500)
 
 const gapsTitle = computed(() => {

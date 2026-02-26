@@ -12,10 +12,9 @@ export default defineEventHandler((event) => {
     = (process.env.CSP_ENFORCE === '1' || process.env.CSP_ENFORCE === 'true')
       || prodLike
 
-  // NOTE: If `/embed/*` pages must be iframe-embeddable on third-party sites,
-  // `X-Frame-Options: SAMEORIGIN` will block them. In that case, omit XFO for
-  // embed pages and rely on CSP `frame-ancestors` allowlisting instead.
-  const xFrameOptions = isEmbed ? 'SAMEORIGIN' : 'DENY'
+  // `X-Frame-Options` cannot express domain allowlists and SAMEORIGIN blocks
+  // third-party embeds. For `/embed/*`, omit XFO and rely on CSP frame-ancestors.
+  const xFrameOptions = isEmbed ? null : 'DENY'
   const nonce = randomBytes(16).toString('base64')
   ;(event.context as any).cspNonce = nonce
   const frameAncestors = isEmbed ? '*' : '\'none\''
@@ -34,15 +33,20 @@ export default defineEventHandler((event) => {
 
   const cspHeaderName = enforceCsp ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only'
 
-  setResponseHeaders(event, {
+  const headers: Record<string, string> = {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': xFrameOptions,
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(self)',
     'X-DNS-Prefetch-Control': 'on',
     'X-Download-Options': 'noopen',
     'X-Permitted-Cross-Domain-Policies': 'none',
     [cspHeaderName]: csp,
-  })
+  }
+
+  if (xFrameOptions) {
+    headers['X-Frame-Options'] = xFrameOptions
+  }
+
+  setResponseHeaders(event, headers)
 })

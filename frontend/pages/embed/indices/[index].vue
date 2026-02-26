@@ -23,7 +23,7 @@
               class="text-body-sm"
               :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'"
             >
-              {{ corridorLabel }} · {{ methodLabel }} · ${{ amountBucket }}
+              {{ resolvedCorridorLabel }} · {{ resolvedMethodLabel }} · ${{ resolvedAmountBucket }}
             </p>
           </div>
           <div
@@ -117,7 +117,7 @@ import { ref, computed, onMounted, watchEffect, defineAsyncComponent } from 'vue
 import { useRoute } from 'vue-router'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
-import { getIndexSeries, getPublicIndexSeries } from '~/lib/indicesApi'
+import { getPublicIndicesEmbedSnapshot } from '~/lib/indicesApi'
 import type { IndexKey } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
 import { setSeo } from '~/composables/useSeo'
@@ -138,11 +138,11 @@ const { addVideoObjectSchema } = useStructuredData()
 
 const theme = computed(() => (route.query.theme as 'dark' | 'light') || 'dark')
 const indexKey = computed(() => route.params.index as IndexKey)
+const snapshotId = computed(() => ((route.query.snapshot_id as string) || '').trim())
 const corridorId = computed(() => (route.query.corridor_id as string) || 'US-PH-USD-PHP')
 const amountBucket = computed(() => Number.parseInt(route.query.amount_bucket as string) || 500)
 const methodProfile = computed(() => (route.query.method_profile as string) || 'standard_bank')
 const days = computed(() => clampExportDays(Number.parseInt(route.query.days as string) || 30))
-const apiKey = computed(() => (route.query.api_key as string) || '')
 
 const indexMeta: Record<IndexKey, { title: string, color: string, unit: 'rate' | 'percent' | 'bps', unitLabel: string }> = {
   teer: {
@@ -171,19 +171,28 @@ const chartSeries = ref<ChartSeries[]>([])
 const lastUpdated = ref('')
 const weightingLabel = ref('synthetic volume weighted')
 const emptyStateMessage = ref('No data available yet.')
+const snapshotCreatedAt = ref<string | null>(null)
+const snapshotCorridorId = ref<string | null>(null)
+const snapshotMethodProfile = ref<string | null>(null)
+const snapshotAmountBucket = ref<number | null>(null)
 
 const meta = computed(() => indexMeta[indexKey.value])
 const chartTitle = computed(() => meta.value?.title || 'Index')
 const unit = computed(() => meta.value?.unit || 'rate')
 const unitLabel = computed(() => meta.value?.unitLabel || 'rate')
-const methodLabel = computed(() => {
-  if (methodProfile.value === 'standard_card') return 'Card to Bank'
-  if (methodProfile.value === 'cash_pickup') return 'Cash Pickup'
+const resolvedMethodLabel = computed(() => {
+  const profile = snapshotMethodProfile.value || methodProfile.value
+  if (profile === 'standard_card') return 'Card to Bank'
+  if (profile === 'cash_pickup') return 'Cash Pickup'
   return 'Bank to Bank'
 })
-const corridorLabel = computed(() => corridorId.value.toUpperCase())
+const resolvedCorridorLabel = computed(() => (snapshotCorridorId.value || corridorId.value).toUpperCase())
+const resolvedAmountBucket = computed(() => snapshotAmountBucket.value || amountBucket.value)
 const citationText = computed(() => {
-  return `Source: Remit-Scout (${indexKey.value.toUpperCase()}) · ${weightingLabel.value} · Retrieved ${new Date().toLocaleDateString()}`
+  const retrieved = snapshotCreatedAt.value
+    ? new Date(snapshotCreatedAt.value).toLocaleDateString()
+    : new Date().toLocaleDateString()
+  return `Source: Remit-Scout (${indexKey.value.toUpperCase()}) · ${weightingLabel.value} · Retrieved ${retrieved}`
 })
 
 const fullIndexUrl = computed(() => {
@@ -234,22 +243,27 @@ onMounted(async () => {
     return
   }
   try {
-    // Use authenticated endpoint when API key is provided (higher limits),
-    // otherwise use public endpoint (free, 30-day max, cached)
-    const data = apiKey.value
-      ? await getIndexSeries({
-          corridor_id: corridorId.value.toUpperCase(),
-          amount_bucket: amountBucket.value,
-          method_profile: methodProfile.value,
-          days: days.value,
-          api_key: apiKey.value,
-        })
-      : await getPublicIndexSeries({
-          corridor_id: corridorId.value.toUpperCase(),
-          amount_bucket: amountBucket.value,
-          method_profile: methodProfile.value,
-          days: days.value,
-        })
+    if (!snapshotId.value) {
+      error.value = 'Embed snapshot is required.'
+      return
+    }
+
+    const data = snapshotId.value
+      ? await getPublicIndicesEmbedSnapshot(snapshotId.value)
+      : null
+
+    if (!data) {
+      error.value = 'Embed snapshot is required.'
+      return
+    }
+
+    if ('snapshotId' in data) {
+      snapshotCreatedAt.value = data.createdAt
+      snapshotCorridorId.value = data.corridorId
+      snapshotMethodProfile.value = data.methodProfile
+      snapshotAmountBucket.value = data.amountBucket
+    }
+
     lastUpdated.value = data.lastUpdated || ''
     weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'
 

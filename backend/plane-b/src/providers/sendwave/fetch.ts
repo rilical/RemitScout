@@ -2,8 +2,11 @@ import type { CollectorRequest, FetchResult } from '../../collectors/types'
 import { httpRequest } from '../../collectors/http-client'
 import type { ProxyTier } from '../../lib/proxy-router'
 import { requireCorridorId } from '../../../../shared/corridor'
+import { createLogger } from '../../../../shared/logger'
 import { getUserAgentForCorridor } from '../../collectors/user-agent'
 import { mapSendwavePayoutMethod } from './code-map'
+
+const logger = createLogger('plane-b.sendwave.fetch')
 
 const SENDWAVE_BASE_URL = 'https://app.sendwave.com/v2'
 const SEGMENTS_ENDPOINT = `${SENDWAVE_BASE_URL}/pricing-segments`
@@ -126,6 +129,19 @@ export const fetchSendwaveQuote = async (
   let pricingPayload: unknown = null
   let status = segmentResponse.status
   let bodyText = segmentResponse.bodyText
+
+  if (!segmentSelection.segmentName && segmentResponse.status < 400) {
+    const groups = resolvePayoutGroups(segmentsPayload)
+    const rawMethods = groups.map(g => g.payoutMethod ?? g.label ?? null)
+    logger.warn('sendwave_segment_resolution_failed', {
+      corridor_id: request.corridor_id,
+      http_status: segmentResponse.status,
+      payout_group_count: groups.length,
+      raw_payout_methods: rawMethods,
+      segment_name: segmentSelection.segmentName,
+      payout_method: segmentSelection.payoutMethod,
+    })
+  }
 
   if (segmentSelection.segmentName && segmentResponse.status < 400) {
     const pricingParams = new URLSearchParams({

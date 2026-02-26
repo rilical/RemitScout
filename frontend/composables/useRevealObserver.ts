@@ -7,7 +7,7 @@ const ANIMATION_MAP: Record<string, string> = {
 }
 
 let observer: IntersectionObserver | null = null
-const elements = new Map<Element, { animation: string; delay: number }>()
+const elements = new Map<Element, { animation: string; delay: number; childrenOnly: boolean }>()
 
 function getObserver(): IntersectionObserver {
   if (observer) return observer
@@ -23,8 +23,15 @@ function getObserver(): IntersectionObserver {
         const el = entry.target as HTMLElement
 
         const reveal = () => {
-          el.classList.remove('reveal-hidden')
-          el.classList.add(config.animation)
+          if (config.childrenOnly) {
+            for (const child of Array.from(el.children) as HTMLElement[]) {
+              child.classList.remove('reveal-hidden')
+              child.classList.add(config.animation)
+            }
+          } else {
+            el.classList.remove('reveal-hidden')
+            el.classList.add(config.animation)
+          }
           observer?.unobserve(el)
           elements.delete(el)
         }
@@ -47,6 +54,7 @@ export function observeReveal(
   animation: string = 'fade-up',
   delay: number = 0,
   threshold?: number,
+  childrenOnly: boolean = true,
 ) {
   // Skip if reduced motion is preferred
   if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -55,8 +63,14 @@ export function observeReveal(
 
   const animClass = ANIMATION_MAP[animation] || ANIMATION_MAP['fade-up']
 
-  el.classList.add('reveal-hidden')
-  elements.set(el, { animation: animClass, delay })
+  if (childrenOnly) {
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      child.classList.add('reveal-hidden')
+    }
+  } else {
+    el.classList.add('reveal-hidden')
+  }
+  elements.set(el, { animation: animClass, delay, childrenOnly })
 
   // Use custom threshold observer if needed, otherwise shared observer
   if (threshold !== undefined && threshold !== 0.1) {
@@ -69,8 +83,15 @@ export function observeReveal(
           const target = entry.target as HTMLElement
 
           const reveal = () => {
-            target.classList.remove('reveal-hidden')
-            target.classList.add(config.animation)
+            if (config.childrenOnly) {
+              for (const child of Array.from(target.children) as HTMLElement[]) {
+                child.classList.remove('reveal-hidden')
+                child.classList.add(config.animation)
+              }
+            } else {
+              target.classList.remove('reveal-hidden')
+              target.classList.add(config.animation)
+            }
             custom.unobserve(target)
             elements.delete(target)
           }
@@ -92,6 +113,12 @@ export function observeReveal(
 }
 
 export function unobserveReveal(el: HTMLElement) {
+  const config = elements.get(el)
+  if (config?.childrenOnly) {
+    for (const child of Array.from(el.children) as HTMLElement[]) {
+      child.classList.remove('reveal-hidden')
+    }
+  }
   observer?.unobserve(el)
   elements.delete(el)
 }
