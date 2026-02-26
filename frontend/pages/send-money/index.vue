@@ -261,7 +261,6 @@
 
     <!-- Countries by Region -->
     <section
-      v-reveal
       class="relative py-16 lg:py-20 bg-surface"
     >
       <div class="mx-auto max-w-page px-page-x">
@@ -468,7 +467,6 @@
 
     <!-- Mini FAQ Section -->
     <section
-      v-reveal
       class="relative py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-white"
     >
       <div class="mx-auto max-w-6xl px-page-x">
