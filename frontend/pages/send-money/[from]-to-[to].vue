@@ -700,10 +700,16 @@ aria-current="page"
                         />
                         <!-- Best Deal Badge (only for top option) -->
                         <span
-                          v-if="index === 0"
+                          v-if="index === 0 && !row.isStale"
                           class="rounded px-2 py-0.5 text-body-sm font-bold bg-surface text-brand-600"
                         >
                           Best Deal
+                        </span>
+                        <span
+                          v-if="row.isStale"
+                          class="rounded bg-warning-500 px-2 py-0.5 text-body-sm font-bold text-neutral-900"
+                        >
+                          Refreshing
                         </span>
                         <span
                           v-if="row.warning"
@@ -716,6 +722,12 @@ aria-current="page"
                         <p class="text-body-sm text-white/70">
                           {{ row.speed }} · {{ row.speedNote }}
                         </p>
+                        <p
+                          v-if="row.isStale"
+                          class="text-body-sm font-medium text-warning-100"
+                        >
+                          {{ formatStaleAge(row.staleAgeSeconds) }}
+                        </p>
                         <NuxtLink
                           v-if="getProviderSlug(row)"
                           :to="`/learn/providers/${getProviderSlug(row)}`"
@@ -727,7 +739,7 @@ aria-current="page"
                       <!-- Promotional Info -->
                       <div
                         v-if="row.hasPromo && row.promoInfo"
-                        class="mt-2 flex items-center gap-2 rounded-lg bg-surface border-2 border-brand-200 px-3 py-1.5 w-full"
+                        class="mt-2 flex items-center gap-2 rounded-lg bg-white border border-neutral-200 px-3 py-1.5 w-full shadow-sm"
                       >
                         <svg
                           class="h-4 w-4 text-brand-600 flex-shrink-0"
@@ -1926,6 +1938,8 @@ type TableRow = {
   feeAmount?: number
   hasPromo?: boolean
   methods?: string[]
+  isStale?: boolean
+  staleAgeSeconds?: number | null
   promoInfo?: {
     fee: number
     rate: number
@@ -2184,15 +2198,15 @@ const shouldBlockResults = computed(() => {
 
   const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
-    if (refreshCompletion.value && !refreshCompletion.value.done) return true
+    if (!hasApiQuotes.value && refreshCompletion.value && !refreshCompletion.value.done) return true
     if (!refreshCompletion.value && !hasApiQuotes.value) return true
-    if (refreshFinalizing.value) return true
-    if (quotesPending.value) return true
+    if (!hasApiQuotes.value && refreshFinalizing.value) return true
+    if (!hasApiQuotes.value && quotesPending.value) return true
     if (!hasApiQuotes.value) return true
   }
 
-  if (quoteRefreshPending.value) return true
-  if (providersLive.value) return true
+  if (!hasApiQuotes.value && quoteRefreshPending.value) return true
+  if (!hasApiQuotes.value && providersLive.value) return true
   if (quotesPending.value && !hasApiQuotes.value) return true
   if (searchInitiated.value && !hasApiQuotes.value) return true
   return false
@@ -3297,6 +3311,10 @@ const apiRows = computed<TableRow[]>(() => {
 
   return ratedQuotes.value.map((quote, index) => {
     const score = Number.isFinite(quote.score) ? Number(quote.score).toFixed(1) : '0.0'
+    const quoteIsStale = quote.isStale === true
+    const quoteStaleAgeSeconds = Number.isFinite(quote.staleAgeSeconds)
+      ? Number(quote.staleAgeSeconds)
+      : null
 
     // Get all methods for this provider from the map, fallback to quote methods
     const allProviderMethods = providerMethodsMap.value.get(quote.id)
@@ -3329,11 +3347,36 @@ const apiRows = computed<TableRow[]>(() => {
       hasPromo: quote.hasPromo ?? false,
       methods: methodsArray,
       promoInfo: quote.promoInfo ?? null,
+      isStale: quoteIsStale,
+      staleAgeSeconds: quoteStaleAgeSeconds,
     }
   })
 })
 
 const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
+
+const excludedProviders = computed(() => {
+  const raw = (quotesData.value as { excludedProviders?: Array<{ provider?: string, reason?: string }> } | null)?.excludedProviders
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((entry) => ({
+      provider: String(entry?.provider || '').trim().toLowerCase(),
+      reason: String(entry?.reason || '').trim().toLowerCase(),
+    }))
+    .filter((entry) => entry.provider && entry.reason)
+})
+
+const hasNoQuotesExclusions = computed(() => (
+  excludedProviders.value.some((entry) => entry.reason === 'no_quotes')
+))
+
+const hasStaleVisibleQuotes = computed(() => (
+  apiRows.value.some((row) => row.isStale)
+))
+
+const needsCoverageRefresh = computed(() => (
+  hasNoQuotesExclusions.value || hasStaleVisibleQuotes.value
+))
 
 const currentRows = computed(() => hasApiQuotes.value ? apiRows.value : content.value.table.rows)
 
@@ -3852,24 +3895,43 @@ const sortLabels: Record<string, string> = {
   'remit-score': 'remit-score',
 }
 
+const formatStaleAge = (ageSeconds?: number | null) => {
+  if (!Number.isFinite(ageSeconds)) return 'Updated recently'
+  const seconds = Math.max(0, Number(ageSeconds))
+  if (seconds < 60) return 'Updated just now'
+  if (seconds < 3600) return `Updated ${Math.max(1, Math.floor(seconds / 60))}m ago`
+  if (seconds < 86400) return `Updated ${Math.floor(seconds / 3600)}h ago`
+  return `Updated ${Math.floor(seconds / 86400)}d ago`
+}
+
 const isQuotesLoading = computed(() => quotesPending.value && !hasApiQuotes.value)
 
-const sortedProviders = computed(() => {
-  const rows = [...content.value.table.rows]
+const sortRowsBySelectedMode = (rows: TableRow[]) => {
+  const sorted = [...rows]
   if (sortBy.value === 'cost') {
-    return rows.sort((a, b) => getProviderTrueCost(a, 0).totalCost - getProviderTrueCost(b, 0).totalCost)
+    return sorted.sort((a, b) => getProviderTrueCost(a, 0).totalCost - getProviderTrueCost(b, 0).totalCost)
   }
   if (sortBy.value === 'fees') {
-    return rows.sort((a, b) => {
+    return sorted.sort((a, b) => {
       const feeA = getProviderTrueCost(a, 0).upfrontFee
       const feeB = getProviderTrueCost(b, 0).upfrontFee
       return feeA - feeB
     })
   }
   if (sortBy.value === 'remit-score') {
-    return rows.sort((a, b) => Number.parseFloat(b.score) - Number.parseFloat(a.score))
+    return sorted.sort((a, b) => Number.parseFloat(b.score) - Number.parseFloat(a.score))
   }
-  return rows
+  return sorted
+}
+
+const sortedProviders = computed(() => {
+  const rows = [...content.value.table.rows]
+  const freshRows = rows.filter(row => !row.isStale)
+  const staleRows = rows.filter(row => Boolean(row.isStale))
+  return [
+    ...sortRowsBySelectedMode(freshRows),
+    ...sortRowsBySelectedMode(staleRows),
+  ]
 })
 
 // Pre-compute expensive row data to avoid repeated calculations in template
@@ -4165,7 +4227,7 @@ const scheduleRefreshPoll = () => {
       && !hasApiError.value
       && !corridorUnavailable.value
       && !corridorUnsupported.value
-      && !hasApiQuotes.value
+      && (!hasApiQuotes.value || needsCoverageRefresh.value)
       && !refreshTimedOut.value
     if (shouldContinue) {
       scheduleRefreshPoll()
@@ -4280,19 +4342,22 @@ const requestQuoteRefresh = async (source: 'auto' | 'manual', signal?: AbortSign
       retries: 0,
       signal,
     })
-    if (response?.refresh?.enqueued) {
-      const requestIds = Array.isArray(response.refresh.request_ids)
-        ? response.refresh.request_ids
+    const refreshMeta = response?.refresh
+    if (refreshMeta?.attempted) {
+      const requestIds = Array.isArray(refreshMeta.request_ids)
+        ? refreshMeta.request_ids
         : []
-      if (requestIds.length) {
+      if (source === 'auto') {
         lastRefreshKey.value = refreshKey
+      }
+      if (requestIds.length) {
         providersLive.value = true
       }
       refreshStatus.value = {
-        enqueued: true,
-        requestId: response.refresh.request_id ?? null,
+        enqueued: Boolean(refreshMeta.enqueued),
+        requestId: refreshMeta.request_id ?? null,
         requestIds,
-        providers: response.refresh.providers ?? [],
+        providers: refreshMeta.providers ?? [],
         requestedAt: new Date().toISOString(),
       }
       if (requestIds.length) {
@@ -4350,12 +4415,23 @@ watch(quotesPending, (pending) => {
 }, { immediate: true })
 
 useAbortableWatch(
-  [quoteRefreshKey, quotesPending, hasApiQuotes, hasApiError, corridorUnavailable, corridorUnsupported, isQuoteStale, refreshTimedOut],
-  async ([, pending, hasQuotes, hasError, unavailable, unsupported, stale, timedOut], signal) => {
+  [
+    quoteRefreshKey,
+    quotesPending,
+    hasApiError,
+    corridorUnavailable,
+    corridorUnsupported,
+    refreshTimedOut,
+    hasApiQuotes,
+    isQuoteStale,
+    needsCoverageRefresh,
+  ],
+  async ([, pending, hasError, unavailable, unsupported, timedOut, hasQuotes, stale, coverageRefresh], signal) => {
     if (!import.meta.client || pending || hasError || unavailable || unsupported || timedOut) {
       return
     }
-    if (hasQuotes && !stale) {
+    const shouldRefresh = !hasQuotes || stale || coverageRefresh
+    if (!shouldRefresh) {
       return
     }
     await requestQuoteRefresh('auto', signal)

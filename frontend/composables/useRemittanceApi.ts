@@ -27,6 +27,35 @@ type ProviderIndices = {
   reason?: string | null
 }
 
+type ExcludedProvider = {
+  provider: string
+  reason: string
+}
+
+type ExcludedProviderDetailed = {
+  provider: string
+  reason: string
+  details?: {
+    maxAgeSeconds?: number
+    bucketUsed?: number
+    lastCollectedAt?: string | null
+    ageSeconds?: number | null
+    refreshAttempted?: boolean
+    refreshRequestIds?: string[]
+    [key: string]: unknown
+  }
+}
+
+type ProvidersRefreshInfo = {
+  enabled?: boolean
+  attempted?: boolean
+  enqueued?: boolean
+  providers?: string[]
+  requestIds?: string[]
+  dedupedProviders?: string[]
+  [key: string]: unknown
+}
+
 type ProvidersResponse = {
   comparisonId?: string
   start?: string
@@ -40,12 +69,17 @@ type ProvidersResponse = {
   midMarketRate?: number | null
   midMarketSource?: string | null
   midMarketUpdatedAt?: string | null
+  staleGraceSeconds?: number
   cache?: {
     ttl_seconds: number
     age_seconds: number
     fresh: boolean
   }
   availableMethods?: string[]
+  availableMethodsByProvider?: Record<string, string[]>
+  excludedProviders?: ExcludedProvider[]
+  excludedProvidersDetailed?: ExcludedProviderDetailed[]
+  refresh?: ProvidersRefreshInfo
   indicesReason?: string | null
   message?: string
   data: ProviderQuote[]

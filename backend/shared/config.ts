@@ -314,6 +314,7 @@ const rawConfig = {
       fxRateCacheTtlSeconds: toNumber(process.env.PLANE_A_FX_RATE_CACHE_TTL_SECONDS, 300),
       latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 15),
       maxQuoteAgeSeconds: toNumber(process.env.PLANE_A_B2C_MAX_QUOTE_AGE_SECONDS, 1800),
+      staleGraceSeconds: toNumber(process.env.PLANE_A_B2C_STALE_GRACE_SECONDS, 1800),
       maxBucketDeltaPct: toNumber(process.env.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT, 0),
       providerWeightedMidMarketEnabled: toBoolean(
         process.env.PLANE_A_B2C_PROVIDER_WEIGHTED_MID_MARKET,
