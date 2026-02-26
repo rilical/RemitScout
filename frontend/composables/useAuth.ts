@@ -89,6 +89,11 @@ export const useAuth = () => {
   const isConfigured = computed(() => Boolean(
     config.public.supabaseUrl && config.public.supabaseAnonKey,
   ))
+  const authClientMfaEnforced = computed(() => {
+    const raw = (config.public.authClientMfaEnforced ?? '') as string | boolean
+    if (typeof raw === 'boolean') return raw
+    return raw === '1' || raw.toLowerCase() === 'true'
+  })
 
   const setSession = (nextSession: Session | null) => {
     const effectiveSession = nextSession?.user && !isEmailConfirmed(nextSession.user)
@@ -331,15 +336,17 @@ export const useAuth = () => {
       return { ok: false, error: lastError.value }
     }
 
-    const factor = await resolvePrimaryMfaFactor()
-    if (factor && factor.status === 'verified') {
-      // Enforce app-layer MFA for accounts with verified factors.
-      // Keep Supabase session available for challenge/verify, but block app auth state
-      // until verifyMfaChallenge promotes the session.
-      session.value = null
-      user.value = null
-      hydrated.value = true
-      return { ok: false, mfaRequired: true, factorId: factor.id }
+    if (authClientMfaEnforced.value) {
+      const factor = await resolvePrimaryMfaFactor()
+      if (factor && factor.status === 'verified') {
+        // Optional app-layer MFA enforcement for non-admin user login.
+        // Keep Supabase session available for challenge/verify, but block app auth state
+        // until verifyMfaChallenge promotes the session.
+        session.value = null
+        user.value = null
+        hydrated.value = true
+        return { ok: false, mfaRequired: true, factorId: factor.id }
+      }
     }
 
     setSession(data.session ?? null)

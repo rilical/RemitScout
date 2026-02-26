@@ -451,6 +451,9 @@ export default defineNuxtConfig({
         'NUXT_PUBLIC_SUPABASE_ANON_KEY',
         'SUPABASE_PUBLISHABLE_KEY',
       ) || '',
+      authClientMfaEnforced: parseEnvFlag(
+        resolveEnvValue('PUBLIC_AUTH_CLIENT_MFA_ENFORCED', 'AUTH_CLIENT_MFA_ENFORCED') || '',
+      ),
       supabaseSuppressConfigError: process.env.NUXT_PUBLIC_SUPABASE_SUPPRESS_CONFIG_ERROR === '1',
       pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
       ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
