@@ -104,12 +104,33 @@ export const useAuth = () => {
     return useSupabaseClient()
   }
 
-  const getRedirectBase = () => {
-    if (config.public.siteUrl) return config.public.siteUrl
-    if (import.meta.client && typeof window !== 'undefined') {
-      return window.location.origin
+  const isLocalhostUrl = (value: string) => {
+    if (!value) return false
+    try {
+      const hostname = new URL(value).hostname.toLowerCase()
+      return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
     }
-    return ''
+    catch {
+      return false
+    }
+  }
+
+  const getRedirectBase = () => {
+    const configured = String(config.public.siteUrl || '').trim()
+    const browserOrigin = import.meta.client && typeof window !== 'undefined'
+      ? window.location.origin
+      : ''
+
+    // In browser flows, prefer the active origin so auth emails/callbacks always
+    // target the host the user is currently using (staging/prod/custom domain).
+    if (browserOrigin) {
+      if (isLocalhostUrl(browserOrigin)) {
+        return configured || browserOrigin
+      }
+      return browserOrigin
+    }
+
+    return configured
   }
 
   const ensureHydrated = async () => {

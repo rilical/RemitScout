@@ -346,6 +346,54 @@ describe('providers indices gating', () => {
     expect(result.indices?.rci).not.toBeNull()
   })
 
+  it('includes recently stale quotes with stale metadata and triggers refresh attempts', async () => {
+    const staleCollectedAt = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    mockListLatestByCorridorAllMethods.mockResolvedValue([
+      buildQuote({
+        provider_id: 'wise',
+        collected_at: staleCollectedAt,
+      }),
+    ])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 500,
+        method: 'bank',
+        live: true,
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(mockListLatestByCorridorAllMethods).toHaveBeenCalledWith(
+      'US-PH-USD-PHP',
+      500,
+      2400,
+    )
+    expect(result.data).toHaveLength(1)
+    expect(result.data[0]).toEqual(
+      expect.objectContaining({
+        id: 'wise',
+        isStale: true,
+        staleMaxAgeSeconds: 600,
+        staleGraceSeconds: 1800,
+      }),
+    )
+    expect(result.refresh).toEqual(
+      expect.objectContaining({
+        attempted: true,
+        providers: ['wise'],
+      }),
+    )
+    expect(result.excludedProviders).toEqual([])
+  })
+
   it('returns schema-complete quotes_unavailable payload when no quotes exist', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([])
 

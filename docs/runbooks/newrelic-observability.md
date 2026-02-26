@@ -1,6 +1,6 @@
 # New Relic Observability Runbook (Staging + Prod)
 
-Last updated: 2026-02-25
+Last updated: 2026-02-26
 
 ## Purpose
 
@@ -39,6 +39,12 @@ node ops/newrelic/bootstrap-dashboards.mjs
 Expected:
 - `Remit-Scout Staging Ops`
 - `Remit-Scout Production Ops`
+
+New dedicated pages (kept alongside existing pages):
+- `Indices (TEER/RCI/RVI)`
+- `Exports Health`
+- `API Health`
+- `Provider Health (Per Provider)`
 
 ## Step 1a: Full bootstrap (preferred)
 
@@ -85,22 +91,50 @@ NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructur
 node ops/newrelic/sync-cloud-links.mjs
 ```
 
+Reconcile command (recommended in staging-full and prod promotion windows):
+
+```bash
+NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout \
+NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout \
+node ops/newrelic/sync-cloud-links.mjs
+```
+
 This upserts:
 - staging/prod `PUSH` + `PULL` links
 - API polling integrations needed by Remit-Scout
 - metadata/tags integrations for stream mode
 
+If drift is detected, the script fails closed. To auto-repair drifted links in-place:
+
+```bash
+NEW_RELIC_REPAIR_DRIFTED_LINKS=1 \
+NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout \
+NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout \
+node ops/newrelic/sync-cloud-links.mjs
+```
+
 ## Step 4: Verify signal readiness
 
-Staging:
+Staging (account-pinned, required for promotion checks):
+
+```bash
+NEW_RELIC_TARGET_ENV=staging \
+NEW_RELIC_STAGING_AWS_ACCOUNT_ID=010630709504 \
+node ops/newrelic/verify-signals.mjs
+```
+
+Production (account-pinned, required for promotion checks):
+
+```bash
+NEW_RELIC_TARGET_ENV=prod \
+NEW_RELIC_PROD_AWS_ACCOUNT_ID=938998270127 \
+node ops/newrelic/verify-signals.mjs
+```
+
+Fallback (debug only; can be cross-account noisy in shared New Relic tenants):
 
 ```bash
 NEW_RELIC_TARGET_ENV=staging node ops/newrelic/verify-signals.mjs
-```
-
-Production:
-
-```bash
 NEW_RELIC_TARGET_ENV=prod node ops/newrelic/verify-signals.mjs
 ```
 

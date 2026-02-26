@@ -512,9 +512,6 @@
               >
                 Sender View
               </div>
-              <span class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-body-sm font-medium text-neutral-300">
-                Verified Pipeline
-              </span>
               <div class="flex flex-col gap-3">
                 <NuxtLink
                   to="/contact?type=enterprise&topic=pulse"

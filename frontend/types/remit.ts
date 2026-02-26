@@ -30,6 +30,10 @@ export type ProviderQuote = {
   outboundUrl?: string | null
   isAffiliate?: boolean
   hasPromo?: boolean
+  isStale?: boolean
+  staleAgeSeconds?: number | null
+  staleMaxAgeSeconds?: number
+  staleGraceSeconds?: number
   promoInfo?: {
     fee: number
     rate: number

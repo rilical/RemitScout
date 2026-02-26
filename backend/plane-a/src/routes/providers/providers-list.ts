@@ -328,6 +328,10 @@ type FrontendProviderQuote = {
   affiliateUrl?: string | null
   outboundUrl?: string | null
   isAffiliate?: boolean
+  isStale?: boolean
+  staleAgeSeconds?: number | null
+  staleMaxAgeSeconds?: number
+  staleGraceSeconds?: number
 }
 
 type ExcludedProviderReason = 'method_mismatch' | 'no_quotes' | 'capability' | 'rights'
@@ -368,6 +372,7 @@ type ProvidersResponseBase = {
   midMarketRate?: number | null
   midMarketSource?: string | null
   midMarketUpdatedAt?: string | null
+  staleGraceSeconds?: number
   cache?: {
     ttl_seconds: number
     age_seconds: number | null
@@ -442,6 +447,7 @@ const querySchema = z.object({
 })
 
 const DEFAULT_MAX_QUOTE_AGE_SECONDS = Math.max(0, config.planeA.b2c.maxQuoteAgeSeconds ?? 0)
+const DEFAULT_STALE_GRACE_SECONDS = Math.max(0, config.planeA.b2c.staleGraceSeconds ?? 0)
 const loadActiveB2cProviderIdsByCountry = async (
   sourceCountry: string,
   destCountry: string,
@@ -466,6 +472,13 @@ const toIsoString = (value?: string | Date | null) => {
   if (!value) return null
   const date = value instanceof Date ? value : new Date(value)
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+const toAgeSeconds = (value?: string | Date | null) => {
+  if (!value) return null
+  const ts = value instanceof Date ? value.getTime() : new Date(value).getTime()
+  if (!Number.isFinite(ts) || ts <= 0) return null
+  return Math.max(0, Math.round((Date.now() - ts) / 1000))
 }
 
 const normalizeCurrencyCode = (value?: string | null) => {
@@ -942,6 +955,7 @@ const providersGetSchema = {
         midMarketRate: { type: ['number', 'null'] },
         midMarketSource: { type: ['string', 'null'] },
         midMarketUpdatedAt: { type: ['string', 'null'] },
+        staleGraceSeconds: { type: 'number' },
         cache: {
           type: 'object',
           properties: {
@@ -1159,11 +1173,15 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
+      const staleGraceSeconds = DEFAULT_STALE_GRACE_SECONDS
+      const quoteWindowSeconds = maxAgeSeconds > 0
+        ? maxAgeSeconds + staleGraceSeconds
+        : maxAgeSeconds
       const dynamicCacheTtlSeconds = await getDynamicCacheTtl(corridorId)
       const cacheTtlSeconds = maxAgeSeconds > 0
         ? Math.min(dynamicCacheTtlSeconds, maxAgeSeconds)
         : dynamicCacheTtlSeconds
-      const cacheKey = `providers:v2:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
+      const cacheKey = `providers:v2:${corridorId}:${amountBucket}:${requestedMethod}:${maxAgeSeconds}:${staleGraceSeconds}:${includeProviderQuotes ? 'with_provider_quotes' : 'flat'}`
       if (!bypassCache) {
         const cached = await providersCache.get(cacheKey)
         if (cached !== null) {
@@ -1270,7 +1288,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       let quotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
         corridorId,
         amountBucket,
-        maxAgeSeconds || undefined,
+        quoteWindowSeconds || undefined,
       )
 
       if (!Array.isArray(quotes)) {
@@ -1285,7 +1303,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           const fallbackQuotes = await latestQuoteRepository.listLatestByCorridorAllMethods(
             corridorId,
             candidate,
-            maxAgeSeconds || undefined,
+            quoteWindowSeconds || undefined,
           )
           if (Array.isArray(fallbackQuotes) && fallbackQuotes.length) {
             quotes = fallbackQuotes
@@ -1356,7 +1374,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       const providerHasAnyQuote = new Set<string>()
-      const providerHasRequestedMethod = new Set<string>()
+      const providerRequestedMethodAgeBySlug = new Map<string, number>()
       if (allowedProviderSlugs.size > 0) {
         for (const quote of quotes) {
           const metadata = getProviderMetadata(quote.provider_id)
@@ -1365,7 +1383,22 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           providerHasAnyQuote.add(slug)
           const methodValue = toAvailableMethod(quote.payout)
           if (methodValue && methodValue === requestedMethod) {
-            providerHasRequestedMethod.add(slug)
+            const ageSeconds = toAgeSeconds(quote.collected_at)
+            if (ageSeconds === null) continue
+            const existing = providerRequestedMethodAgeBySlug.get(slug)
+            if (existing === undefined || ageSeconds < existing) {
+              providerRequestedMethodAgeBySlug.set(slug, ageSeconds)
+            }
+          }
+        }
+      }
+
+      const providerHasRequestedMethod = new Set(providerRequestedMethodAgeBySlug.keys())
+      const providerHasStaleRequestedMethod = new Set<string>()
+      if (maxAgeSeconds > 0) {
+        for (const [slug, ageSeconds] of providerRequestedMethodAgeBySlug.entries()) {
+          if (ageSeconds > maxAgeSeconds) {
+            providerHasStaleRequestedMethod.add(slug)
           }
         }
       }
@@ -1388,6 +1421,11 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const noQuoteProviderSlugs = excludedProviders
         .filter((entry) => entry.reason === 'no_quotes')
         .map((entry) => entry.provider)
+      const staleProviderSlugs = Array.from(providerHasStaleRequestedMethod.values())
+        .filter((slug) => !noQuoteProviderSlugs.includes(slug))
+      const refreshCandidateProviderSlugs = Array.from(
+        new Set([...noQuoteProviderSlugs, ...staleProviderSlugs]),
+      )
 
       const refreshRequestIdsByProvider = new Map<string, string[]>()
       const refreshDedupedProviders: string[] = []
@@ -1397,9 +1435,9 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const payinMethod = normalizePayinMethod(payin ?? 'bank') || 'bank_transfer'
       const payoutMethod = normalizePayoutMethod(requestedMethod) || 'bank_deposit'
 
-      if (refreshEnabled && noQuoteProviderSlugs.length > 0) {
+      if (refreshEnabled && refreshCandidateProviderSlugs.length > 0) {
         const dedupeTtlMs = 90 * 1000
-        for (const slug of noQuoteProviderSlugs) {
+        for (const slug of refreshCandidateProviderSlugs) {
           const providerId = providerIdBySlug.get(slug)
           if (!providerId) continue
           const dedupeKey = `providers_refresh:${corridorId}:${bucketUsed}:${payinMethod}:${payoutMethod}:${providerId}`
@@ -1442,7 +1480,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
             requested_method: requestedMethod,
             requested_payin: payinMethod,
             requested_payout: payoutMethod,
-            attempted: noQuoteProviderSlugs.length,
+            attempted: refreshCandidateProviderSlugs.length,
             enqueued: refreshRequestIds.length,
             deduped: refreshDedupedProviders.length,
           })
@@ -1452,9 +1490,9 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const refreshInfo: ProvidersRefreshInfo | undefined = refreshEnabled
         ? {
             enabled: true,
-            attempted: noQuoteProviderSlugs.length > 0,
+            attempted: refreshCandidateProviderSlugs.length > 0,
             enqueued: refreshRequestIds.length > 0,
-            providers: noQuoteProviderSlugs,
+            providers: refreshCandidateProviderSlugs,
             requestIds: refreshRequestIds,
             dedupedProviders: refreshDedupedProviders.length > 0 ? refreshDedupedProviders : undefined,
           }
@@ -1548,6 +1586,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           midMarketRate: midMarketRate ?? null,
           midMarketSource: midMarketSource ?? null,
           midMarketUpdatedAt,
+          staleGraceSeconds,
           data: [],
           cache: {
             ttl_seconds: cacheTtlSeconds,
@@ -1610,7 +1649,11 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       const flattenedQuotes = providerQuotes.flatMap((pq) => {
-        const quote = selectBestQuote(pq.quotes)
+        const requestedMethodQuotes = pq.quotes.filter((candidate) => {
+          const candidateMethod = toAvailableMethod(candidate.originalQuote.payout)
+          return candidateMethod === requestedMethod
+        })
+        const quote = selectBestQuote(requestedMethodQuotes.length ? requestedMethodQuotes : pq.quotes)
         if (!quote) return []
         const feeTotal = quote.fee.total
         const fxRate = quote.rate
@@ -1647,6 +1690,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
               const fallback = toAvailableMethod(quote.originalQuote.payout)
               return fallback ? [fallback] : ['bank']
             })()) as FrontendProviderQuote['methods']
+        const requestedMethodAgeSeconds = providerRequestedMethodAgeBySlug.get(pq.psp.slug) ?? null
+        const isStale = requestedMethodAgeSeconds !== null
+          && maxAgeSeconds > 0
+          && requestedMethodAgeSeconds > maxAgeSeconds
 
         const bestFor = quote.payout === 'CASH'
           ? 'Fast cash pickup'
@@ -1688,6 +1735,10 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           isAffiliate: pq.psp.affiliate,
           hasPromo,
           promoInfo,
+          isStale,
+          staleAgeSeconds: requestedMethodAgeSeconds,
+          staleMaxAgeSeconds: maxAgeSeconds,
+          staleGraceSeconds,
         }]
       })
 
@@ -1888,6 +1939,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         midMarketRate: midMarketRate ?? null,
         midMarketSource: midMarketSource ?? null,
         midMarketUpdatedAt,
+        staleGraceSeconds,
         cache: {
           ttl_seconds: cacheTtlSeconds,
           age_seconds: cacheAgeSeconds,
@@ -1913,7 +1965,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       }
 
       const hasNoQuotes = noQuoteProviderSlugs.length > 0
-      if (!bypassCache && !hasNoQuotes) {
+      const hasStaleRequestedMethodQuotes = staleProviderSlugs.length > 0
+      if (!bypassCache && !hasNoQuotes && !hasStaleRequestedMethodQuotes) {
         const ttlMs = Math.max(0, cacheTtlSeconds * 1000)
         await providersCache.set(cacheKey, responseBase, ttlMs)
       }
@@ -1964,6 +2017,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           midMarketRate: null,
           midMarketSource: null,
           midMarketUpdatedAt: null,
+          staleGraceSeconds: DEFAULT_STALE_GRACE_SECONDS,
           data: [],
           cache: {
             ttl_seconds: config.planeA.b2c.cacheTtlSeconds,
