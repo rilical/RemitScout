@@ -5,6 +5,7 @@
     "outDir": "../dist/scripts"
   },
   "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["monito-vs-provider/**"],
   "references": [
     { "path": "../plane-a" },
     { "path": "../shared" },
