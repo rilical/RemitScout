@@ -1,4 +1,5 @@
 import { NestedStack } from 'aws-cdk-lib'
+import { Role } from 'aws-cdk-lib/aws-iam'
 import type { Construct } from 'constructs'
 
 import { createCompute } from '../compute'
@@ -18,13 +19,30 @@ export class RuntimeNestedStack extends NestedStack {
       roles: props.foundation.iam,
     })
 
+    const immutableTaskExecutionRole = Role.fromRoleArn(
+      this,
+      'PlaneBEcsTaskExecutionRoleRef',
+      props.foundation.iam.planeBEcsTaskExecutionRole.roleArn,
+      { mutable: false },
+    )
+    const immutableTaskRole = Role.fromRoleArn(
+      this,
+      'PlaneBEcsTaskRoleRef',
+      props.foundation.iam.planeBEcsTaskRole.roleArn,
+      { mutable: false },
+    )
+
     const tasks = createEcsTasks(this, {
       envName: props.envName,
       minimalMode: props.minimalMode,
       cpuArchitecture: props.cpuArchitecture,
       backendRepository: props.foundation.registry.backendRepository,
       imageTag: props.imageTag,
-      roles: props.foundation.iam,
+      roles: {
+        ...props.foundation.iam,
+        planeBEcsTaskExecutionRole: immutableTaskExecutionRole,
+        planeBEcsTaskRole: immutableTaskRole,
+      },
       ...props.taskOptions,
     })
 

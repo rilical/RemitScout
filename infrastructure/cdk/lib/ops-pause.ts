@@ -1,12 +1,11 @@
 import path from 'path'
 
-import { Duration, Stack, Tags } from 'aws-cdk-lib'
+import { Duration, Tags } from 'aws-cdk-lib'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
-import type { Role } from 'aws-cdk-lib/aws-iam'
+import type { IRole } from 'aws-cdk-lib/aws-iam'
 import type { Construct } from 'constructs'
 
 export type OpsPauseResources = {
@@ -39,7 +38,7 @@ export type OpsPauseOptions = {
   redisTransitEncryption?: boolean
   redisAtRestEncryption?: boolean
   redisAutoMinorVersionUpgrade?: boolean
-  role: Role
+  role: IRole
 }
 
 export const createOpsPause = (
@@ -48,7 +47,6 @@ export const createOpsPause = (
 ): OpsPauseResources => {
   const isDev = options.envName === 'dev'
   const isProd = options.envName === 'prod'
-  const stack = Stack.of(scope)
   const logRetention = isProd
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
@@ -106,62 +104,6 @@ export const createOpsPause = (
       REDIS_ALLOW_DELETE: '0',
     },
   })
-
-  pauseParam.grantRead(controllerFunction)
-  pauseParam.grantWrite(controllerFunction)
-
-  const ecsServiceArn = stack.formatArn({
-    service: 'ecs',
-    resource: 'service',
-    resourceName: `${options.clusterName}/*`,
-  })
-  const ecsClusterArn = stack.formatArn({
-    service: 'ecs',
-    resource: 'cluster',
-    resourceName: options.clusterName,
-  })
-
-  options.role.addToPolicy(new PolicyStatement({
-    actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
-    resources: [ecsServiceArn, ecsClusterArn],
-  }))
-  // OpsPause must also stop any orphaned scheduled ECS tasks (startedBy=events-rule/*) that
-  // are not controlled by service desiredCount (otherwise dev can keep spending while "paused").
-  options.role.addToPolicy(new PolicyStatement({
-    actions: ['ecs:ListTasks', 'ecs:DescribeTasks', 'ecs:StopTask'],
-    resources: ['*'],
-  }))
-  options.role.addToPolicy(new PolicyStatement({
-    actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],
-    resources: ['*'],
-  }))
-  if ((options.purgeQueueArns?.length ?? 0) > 0) {
-    options.role.addToPolicy(new PolicyStatement({
-      actions: ['sqs:PurgeQueue', 'sqs:GetQueueAttributes'],
-      resources: options.purgeQueueArns,
-    }))
-  }
-  if (options.dbClusterIdentifier && options.hardStopEnabled) {
-    options.role.addToPolicy(new PolicyStatement({
-      actions: ['rds:StartDBCluster', 'rds:StopDBCluster'],
-      resources: ['*'],
-    }))
-    options.role.addToPolicy(new PolicyStatement({
-      actions: ['rds:DescribeDBClusters'],
-      resources: ['*'],
-    }))
-  }
-  if (options.redisReplicationGroupId) {
-    options.role.addToPolicy(new PolicyStatement({
-      actions: [
-        'elasticache:CreateReplicationGroup',
-        'elasticache:DeleteReplicationGroup',
-        'elasticache:DescribeReplicationGroups',
-        'elasticache:DescribeCacheSubnetGroups',
-      ],
-      resources: ['*'],
-    }))
-  }
 
   Tags.of(controllerFunction).add('managed-by', 'ops-pause')
   Tags.of(pauseParam).add('managed-by', 'ops-pause')

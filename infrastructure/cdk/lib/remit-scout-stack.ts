@@ -12,11 +12,13 @@ import { SnsTopic } from 'aws-cdk-lib/aws-events-targets'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { Construct } from 'constructs'
 
+import { createApi } from './api'
 import { loadCdkContextConfig } from './config-schema'
 import { EdgeNestedStack } from './stacks/edge-nested-stack'
 import { FoundationNestedStack } from './stacks/foundation-nested-stack'
 import { OpsNestedStack } from './stacks/ops-nested-stack'
 import { RuntimeNestedStack } from './stacks/runtime-nested-stack'
+import { createNetworking } from './vpc'
 
 const toOptionalBool = (value: string | boolean | undefined): boolean | undefined => {
   if (typeof value === 'boolean') return value
@@ -315,12 +317,15 @@ export class RemitScoutStack extends Stack {
       process.env.AUDIT_LOGS_S3_PREFIX ??
       'audit-logs'
 
+    const networking = createNetworking(this, {
+      envName,
+      natGateways,
+      interfaceEndpointMode,
+    })
+
     const foundationStack = new FoundationNestedStack(this, 'Foundation', {
       envName,
-      networkingOptions: {
-        natGateways,
-        interfaceEndpointMode,
-      },
+      networking,
       sharedSecretArn,
       sesIdentityArns,
       snsTopicArns,
@@ -340,7 +345,6 @@ export class RemitScoutStack extends Stack {
     })
 
     const {
-      networking,
       iam,
       registry,
       database,
@@ -1239,95 +1243,102 @@ export class RemitScoutStack extends Stack {
     })
     const { compute, tasks, ecsServices } = runtimeStack.resources
 
+    const api = createApi(this, {
+      envName,
+      vpc: networking.vpc,
+      roles: foundationStack.resources.iam,
+      planeASecurityGroup: networking.planeASecurityGroup,
+      planeCSecurityGroup: networking.planeCSecurityGroup,
+      lambdaArchitecture,
+      quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
+      quoteRefreshQueueMode,
+      fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
+      fxRateRefreshQueueMode,
+      exportJobQueueUrl: queues.exportJobQueue.queueUrl,
+      exportJobQueueMode,
+      exportsBucketName: storage.exportsBucket.bucketName,
+      exportsPrefix,
+      ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
+      ingestFanoutTier1QueueUrl: queues.ingestFanoutQueue.queueUrl,
+      ingestFanoutTier2QueueUrl: queues.ingestFanoutTier2Queue.queueUrl,
+      notificationsQueueUrl: queues.notificationsQueue.queueUrl,
+      opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
+      goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
+      goldLiveQueueMode,
+      alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+      userAssetsBucketName: storage.userAssetsBucket.bucketName,
+      userAssetsPrefix,
+      bronzeBucketName: storage.bronzeBucket.bucketName,
+      planeADbSecretArn,
+      planeADbSecretJsonKey,
+      planeADbSsmName,
+      planeADbHost,
+      planeADbPort,
+      planeADbName,
+      supabaseSecretArn,
+      supabaseSsmName,
+      stripeSecretArn,
+      stripeSsmName,
+      communicationsSecretArn,
+      sentrySecretArn,
+      sentrySecretJsonKey,
+      sharedSecretArn,
+      planeCInternalApiTokenSecretJsonKey,
+      planeAAdminEmails,
+      planeAAdminIpAllowlist,
+      planeAB2cMaxBucketDeltaPct,
+      planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
+      planeACorsOrigins,
+      planeACorsAllowedHeaders,
+      planeACorsAllowedMethods,
+      planeACorsAllowCredentials,
+      planeAAdminRevocationFailClosed,
+      frontendBaseUrl,
+      planeCDbSecretArn,
+      planeCDbSecretJsonKey,
+      planeCDbSsmName,
+      planeCDbHost,
+      planeCDbPort,
+      planeCDbName,
+      redisSecretArn,
+      redisSecretJsonKey,
+      redisSsmName,
+      redisUrl,
+      planeCBaseUrl,
+      enableCloudFront,
+      enableWaf,
+      cloudFrontAccessLogsBucket: storage.storageAccessLogsBucket,
+      enablePlaneAJwtAuth,
+      planeAJwtIssuer,
+      planeAJwtAudiences,
+      enablePlaneCIamAuth,
+      disablePlaneAExecuteEndpoint,
+      disablePlaneCExecuteEndpoint,
+      wafAllowListIps,
+      wafBlockListIps,
+      wafStripeWebhookAllowListIps,
+      wafAdminAllowListIps,
+      wafEnableBotControl,
+      otelLambdaLayerArn,
+      planeAThrottleRate,
+      planeAThrottleBurst,
+      planeCThrottleRate,
+      planeCThrottleBurst,
+      planeADomainName:
+        this.node.tryGetContext('planeADomainName') ?? process.env.PLANE_A_DOMAIN_NAME,
+      planeACertificateArn:
+        this.node.tryGetContext('planeACertificateArn') ?? process.env.PLANE_A_CERT_ARN,
+      planeAHostedZoneId:
+        this.node.tryGetContext('planeAHostedZoneId') ?? process.env.PLANE_A_HOSTED_ZONE_ID,
+      planeAHostedZoneName:
+        this.node.tryGetContext('planeAHostedZoneName') ?? process.env.PLANE_A_HOSTED_ZONE_NAME,
+    })
+
     const edgeStack = new EdgeNestedStack(this, 'Edge', {
       envName,
-      foundation: foundationStack.resources,
+      api,
       defaultFrontendBaseUrl: frontendBaseUrl,
-      apiOptions: {
-        lambdaArchitecture,
-        quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
-        quoteRefreshQueueMode,
-        fxRateRefreshQueueUrl: queues.fxRateRefreshQueue.queueUrl,
-        fxRateRefreshQueueMode,
-        exportJobQueueUrl: queues.exportJobQueue.queueUrl,
-        exportJobQueueMode,
-        exportsBucketName: storage.exportsBucket.bucketName,
-        exportsPrefix,
-        ingestFanoutQueueUrl: queues.ingestFanoutQueue.queueUrl,
-        ingestFanoutTier1QueueUrl: queues.ingestFanoutQueue.queueUrl,
-        ingestFanoutTier2QueueUrl: queues.ingestFanoutTier2Queue.queueUrl,
-        notificationsQueueUrl: queues.notificationsQueue.queueUrl,
-        opsAlertsQueueUrl: queues.opsAlertsQueue.queueUrl,
-        goldLiveQueueUrl: queues.goldLiveQueue.queueUrl,
-        goldLiveQueueMode,
-        alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
-        userAssetsBucketName: storage.userAssetsBucket.bucketName,
-        userAssetsPrefix,
-        bronzeBucketName: storage.bronzeBucket.bucketName,
-        planeADbSecretArn,
-        planeADbSecretJsonKey,
-        planeADbSsmName,
-        planeADbHost,
-        planeADbPort,
-        planeADbName,
-        supabaseSecretArn,
-        supabaseSsmName,
-        stripeSecretArn,
-        stripeSsmName,
-        communicationsSecretArn,
-        sentrySecretArn,
-        sentrySecretJsonKey,
-        sharedSecretArn,
-        planeCInternalApiTokenSecretJsonKey,
-        planeAAdminEmails,
-        planeAAdminIpAllowlist,
-        planeAB2cMaxBucketDeltaPct,
-        planeBDisableTier1: planeBDisableTier1 ? '1' : undefined,
-        planeACorsOrigins,
-        planeACorsAllowedHeaders,
-        planeACorsAllowedMethods,
-        planeACorsAllowCredentials,
-        planeAAdminRevocationFailClosed,
-        frontendBaseUrl,
-        planeCDbSecretArn,
-        planeCDbSecretJsonKey,
-        planeCDbSsmName,
-        planeCDbHost,
-        planeCDbPort,
-        planeCDbName,
-        redisSecretArn,
-        redisSecretJsonKey,
-        redisSsmName,
-        redisUrl,
-        planeCBaseUrl,
-        enableCloudFront,
-        enableWaf,
-        cloudFrontAccessLogsBucket: storage.storageAccessLogsBucket,
-        enablePlaneAJwtAuth,
-        planeAJwtIssuer,
-        planeAJwtAudiences,
-        enablePlaneCIamAuth,
-        disablePlaneAExecuteEndpoint,
-        disablePlaneCExecuteEndpoint,
-        wafAllowListIps,
-        wafBlockListIps,
-        wafStripeWebhookAllowListIps,
-        wafAdminAllowListIps,
-        wafEnableBotControl,
-        otelLambdaLayerArn,
-        planeAThrottleRate,
-        planeAThrottleBurst,
-        planeCThrottleRate,
-        planeCThrottleBurst,
-        planeADomainName:
-          this.node.tryGetContext('planeADomainName') ?? process.env.PLANE_A_DOMAIN_NAME,
-        planeACertificateArn:
-          this.node.tryGetContext('planeACertificateArn') ?? process.env.PLANE_A_CERT_ARN,
-        planeAHostedZoneId:
-          this.node.tryGetContext('planeAHostedZoneId') ?? process.env.PLANE_A_HOSTED_ZONE_ID,
-        planeAHostedZoneName:
-          this.node.tryGetContext('planeAHostedZoneName') ?? process.env.PLANE_A_HOSTED_ZONE_NAME,
-      },
+      pinpointAppId: pinpoint?.pinpointAppId ?? undefined,
       frontendOptions: {
         frontendDomainName,
         frontendCertificateArn:
@@ -1339,7 +1350,7 @@ export class RemitScoutStack extends Stack {
         enableFrontend,
       },
     })
-    const { api, frontend } = edgeStack.resources
+    const { frontend } = edgeStack.resources
 
     const costGuardrailTopic =
       envName === 'dev' && enableCostGuardrails

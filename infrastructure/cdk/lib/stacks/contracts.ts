@@ -2,7 +2,7 @@ import type { NestedStackProps } from 'aws-cdk-lib'
 import type { CpuArchitecture } from 'aws-cdk-lib/aws-ecs'
 import type { Architecture } from 'aws-cdk-lib/aws-lambda'
 
-import type { ApiOptions, ApiResources } from '../api'
+import type { ApiResources } from '../api'
 import type { BackupOptions, BackupResources } from '../backup'
 import type { CostGuardrailsOptions, CostGuardrailsResources } from '../budgets'
 import type { CacheResources } from '../cache'
@@ -22,7 +22,7 @@ import type { ScheduledJobsOptions } from '../scheduled-jobs'
 import type { SnsSubscriptionOptions, SnsSubscriptionResources } from '../sns-subscriptions'
 import type { StorageResources } from '../storage'
 import type { SyntheticsResources } from '../synthetics'
-import type { NetworkingOptions, NetworkingResources } from '../vpc'
+import type { NetworkingResources } from '../vpc'
 
 export type FoundationResources = {
   networking: NetworkingResources
@@ -38,7 +38,7 @@ export type FoundationResources = {
 
 export type FoundationNestedStackProps = NestedStackProps & {
   envName: string
-  networkingOptions: Omit<NetworkingOptions, 'envName'>
+  networking: NetworkingResources
   sharedSecretArn: string
   sesIdentityArns: string[]
   snsTopicArns: string[]
@@ -92,10 +92,10 @@ export type RuntimeResources = {
 
 export type EdgeNestedStackProps = NestedStackProps & {
   envName: string
-  foundation: FoundationResources
-  apiOptions: Omit<ApiOptions, 'envName' | 'vpc' | 'roles' | 'planeASecurityGroup' | 'planeCSecurityGroup'>
+  api: ApiResources
   frontendOptions: Omit<FrontendOptions, 'envName' | 'planeAWaf' | 'planeACloudFrontDomain'>
   defaultFrontendBaseUrl?: string
+  pinpointAppId?: string
 }
 
 export type EdgeResources = {

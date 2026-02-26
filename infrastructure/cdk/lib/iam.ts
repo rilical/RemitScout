@@ -1,14 +1,20 @@
 import { type Construct } from 'constructs'
 import { Annotations } from 'aws-cdk-lib'
-import { ManagedPolicy, Role, ServicePrincipal, PolicyStatement } from 'aws-cdk-lib/aws-iam'
+import {
+  ManagedPolicy,
+  Role,
+  ServicePrincipal,
+  PolicyStatement,
+  type IRole,
+} from 'aws-cdk-lib/aws-iam'
 
 export type IamResources = {
-  planeALambdaRole: Role
-  planeBLambdaRole: Role
-  planeCLambdaRole: Role
-  opsPauseLambdaRole: Role
-  planeBEcsTaskExecutionRole: Role
-  planeBEcsTaskRole: Role
+  planeALambdaRole: IRole
+  planeBLambdaRole: IRole
+  planeCLambdaRole: IRole
+  opsPauseLambdaRole: IRole
+  planeBEcsTaskExecutionRole: IRole
+  planeBEcsTaskRole: IRole
 }
 
 export type IamOptions = {
@@ -164,6 +170,46 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     role.addToPolicy(cloudWatchPolicy)
     role.addToPolicy(xrayPolicy)
   }
+
+  // Keep ops-pause permissions scoped by remit-scout environment naming conventions.
+  // These permissions are attached in Foundation so nested stacks do not need to mutate this role.
+  const remitScoutClusterName = `remit-scout-${options.envName}`
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ssm:PutParameter'],
+    resources: [`arn:aws:ssm:*:*:parameter/remit-scout/${options.envName}/ops/paused`],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
+    resources: [
+      `arn:aws:ecs:*:*:service/${remitScoutClusterName}/*`,
+      `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
+    ],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['ecs:ListTasks', 'ecs:DescribeTasks', 'ecs:StopTask'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['sqs:PurgeQueue', 'sqs:GetQueueAttributes'],
+    resources: [`arn:aws:sqs:*:*:remit-scout-${options.envName}-*`],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['rds:StartDBCluster', 'rds:StopDBCluster', 'rds:DescribeDBClusters'],
+    resources: ['*'],
+  }))
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: [
+      'elasticache:CreateReplicationGroup',
+      'elasticache:DeleteReplicationGroup',
+      'elasticache:DescribeReplicationGroups',
+      'elasticache:DescribeCacheSubnetGroups',
+    ],
+    resources: ['*'],
+  }))
 
   // Add SES and SNS permissions to Plane A Lambda (for contact form and alerts)
   planeALambdaRole.addToPolicy(sesPolicy)

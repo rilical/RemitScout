@@ -1,7 +1,6 @@
 import { NestedStack } from 'aws-cdk-lib'
 import type { Construct } from 'constructs'
 
-import { createApi } from '../api'
 import { createFrontend } from '../frontend'
 import type { EdgeNestedStackProps, EdgeResources } from './contracts'
 
@@ -11,14 +10,7 @@ export class EdgeNestedStack extends NestedStack {
   constructor(scope: Construct, id: string, props: EdgeNestedStackProps) {
     super(scope, id, props)
 
-    const api = createApi(this, {
-      envName: props.envName,
-      vpc: props.foundation.networking.vpc,
-      roles: props.foundation.iam,
-      planeASecurityGroup: props.foundation.networking.planeASecurityGroup,
-      planeCSecurityGroup: props.foundation.networking.planeCSecurityGroup,
-      ...props.apiOptions,
-    })
+    const api = props.api
 
     const frontend = createFrontend(this, {
       envName: props.envName,
@@ -37,8 +29,8 @@ export class EdgeNestedStack extends NestedStack {
       api.planeAFunction.addEnvironment('FRONTEND_BASE_URL', frontendUrlFromStack)
     }
 
-    if (props.foundation.pinpoint) {
-      api.planeAFunction.addEnvironment('PINPOINT_APP_ID', props.foundation.pinpoint.pinpointAppId)
+    if (props.pinpointAppId) {
+      api.planeAFunction.addEnvironment('PINPOINT_APP_ID', props.pinpointAppId)
       api.planeAFunction.addEnvironment('PINPOINT_ENABLED', '1')
     }
 

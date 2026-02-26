@@ -9,7 +9,6 @@ import { createPinpoint } from '../pinpoint'
 import { createQueues } from '../queues'
 import { createRegistry } from '../registry'
 import { createStorage } from '../storage'
-import { createNetworking } from '../vpc'
 import type { FoundationNestedStackProps, FoundationResources } from './contracts'
 
 export class FoundationNestedStack extends NestedStack {
@@ -18,10 +17,7 @@ export class FoundationNestedStack extends NestedStack {
   constructor(scope: Construct, id: string, props: FoundationNestedStackProps) {
     super(scope, id, props)
 
-    const networking = createNetworking(this, {
-      envName: props.envName,
-      ...props.networkingOptions,
-    })
+    const networking = props.networking
 
     const pinpoint = props.pinpointEnabled
       ? createPinpoint(this, {
