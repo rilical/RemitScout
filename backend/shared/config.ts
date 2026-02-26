@@ -905,7 +905,10 @@ const rawConfig = {
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
-    refreshEnabled: toBoolean(process.env.FX_RATE_REFRESH_ENABLED),
+    refreshEnabled:
+      process.env.FX_RATE_REFRESH_ENABLED !== undefined
+        ? toBoolean(process.env.FX_RATE_REFRESH_ENABLED)
+        : isProdLikeEnvironment,
     cacheTtlSeconds: toNumber(process.env.FX_RATE_CACHE_TTL_SECONDS, 300),
     historyCacheTtlSeconds: toNumber(process.env.FX_RATE_HISTORY_CACHE_TTL_SECONDS, 3600),
     dbFreshnessHours: toNumber(process.env.FX_RATE_DB_FRESHNESS_HOURS, 1),
