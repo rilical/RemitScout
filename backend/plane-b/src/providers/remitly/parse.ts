@@ -86,7 +86,7 @@ const mapPayout = (code?: string | null) => {
 }
 
 /**
- * Determines delivery time based on payment method (following Monito's logic):
+ * Determines delivery time based on payment method (heuristic mapping):
  * - Bank transfers: 1-3 days (1440-4320 minutes)
  * - Card payments (debit/credit): In minutes (15-60 minutes)
  */
@@ -212,7 +212,7 @@ export const parseRemitlyPayload = (
     ? feeDiscountAmount
     : null
 
-  // Determine delivery time based on payment method (Monito logic)
+  // Determine delivery time based on payment method heuristic
   const deliveryTime = getDeliveryTimeForPayinMethod(payin)
 
   return {
