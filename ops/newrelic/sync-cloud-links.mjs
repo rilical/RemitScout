@@ -24,6 +24,7 @@ const NEW_RELIC_UNLINK_ACCOUNT_IDS = (process.env.NEW_RELIC_UNLINK_ACCOUNT_IDS |
   .split(',')
   .map((value) => Number.parseInt(value.trim(), 10))
   .filter((value) => Number.isFinite(value))
+const NEW_RELIC_REPAIR_DRIFTED_LINKS = process.env.NEW_RELIC_REPAIR_DRIFTED_LINKS === '1'
 
 if (!NEW_RELIC_USER_API_KEY) {
   console.error('Missing NEW_RELIC_USER_API_KEY')
@@ -230,6 +231,12 @@ const parseAwsAccountId = (arn) => {
   return match[1]
 }
 
+const parseAwsAccountIdFromAuthLabel = (authLabel) => {
+  if (!authLabel) return null
+  const match = String(authLabel).match(/\b(\d{12})\b/)
+  return match ? match[1] : null
+}
+
 const main = async () => {
   const trust = await getAwsProviderTrustRequirements()
   console.log(`NR AWS role principal account: ${trust.roleAccountId}`)
@@ -243,21 +250,25 @@ const main = async () => {
       name: 'remit-scout-staging-aws-metric-stream-push',
       arn: NEW_RELIC_STAGING_AWS_ROLE_ARN,
       metricCollectionMode: 'PUSH',
+      expectedAwsAccountId: stagingAwsAccountId,
     },
     {
       name: 'remit-scout-staging-aws-metric-stream-pull',
       arn: NEW_RELIC_STAGING_AWS_ROLE_ARN,
       metricCollectionMode: 'PULL',
+      expectedAwsAccountId: stagingAwsAccountId,
     },
     {
       name: 'remit-scout-prod-aws-metric-stream-push',
       arn: NEW_RELIC_PROD_AWS_ROLE_ARN,
       metricCollectionMode: 'PUSH',
+      expectedAwsAccountId: prodAwsAccountId,
     },
     {
       name: 'remit-scout-prod-aws-metric-stream-pull',
       arn: NEW_RELIC_PROD_AWS_ROLE_ARN,
       metricCollectionMode: 'PULL',
+      expectedAwsAccountId: prodAwsAccountId,
     },
   ]
 
@@ -269,6 +280,53 @@ const main = async () => {
     await linkAccounts(missingLinks)
   } else {
     console.log('Cloud links already present; skipping link create step')
+  }
+
+  const driftSnapshot = await listLinkedAccounts()
+  const driftByName = new Map(driftSnapshot.map((item) => [item.name, item]))
+  const driftedLinks = desiredLinks
+    .map((desired) => {
+      const existing = driftByName.get(desired.name)
+      if (!existing) return null
+      const observedAwsAccountId = parseAwsAccountIdFromAuthLabel(existing.authLabel)
+      const reasons = []
+      if (existing.metricCollectionMode !== desired.metricCollectionMode) {
+        reasons.push(
+          `mode_mismatch expected=${desired.metricCollectionMode} observed=${existing.metricCollectionMode}`,
+        )
+      }
+      if (observedAwsAccountId && observedAwsAccountId !== desired.expectedAwsAccountId) {
+        reasons.push(
+          `aws_account_mismatch expected=${desired.expectedAwsAccountId} observed=${observedAwsAccountId}`,
+        )
+      }
+      if (!observedAwsAccountId) {
+        reasons.push('aws_account_unverified authLabel_missing_or_unparseable')
+      }
+      return reasons.length > 0
+        ? {
+            linkedAccountId: existing.id,
+            name: desired.name,
+            reasons,
+          }
+        : null
+    })
+    .filter(Boolean)
+
+  if (driftedLinks.length > 0) {
+    if (!NEW_RELIC_REPAIR_DRIFTED_LINKS) {
+      throw new Error(
+        `Linked account drift detected. Re-run with NEW_RELIC_REPAIR_DRIFTED_LINKS=1 to auto-unlink and relink drifted accounts. Details: ${JSON.stringify(
+          driftedLinks,
+        )}`,
+      )
+    }
+
+    const driftedIds = driftedLinks.map((item) => item.linkedAccountId)
+    await unlinkAccounts(driftedIds)
+    const namesToRepair = new Set(driftedLinks.map((item) => item.name))
+    const linksToRepair = desiredLinks.filter((item) => namesToRepair.has(item.name))
+    await linkAccounts(linksToRepair)
   }
 
   const linked = await listLinkedAccounts()
@@ -329,6 +387,42 @@ const main = async () => {
   }
 
   const summary = await listLinkedAccounts()
+  const summaryByName = new Map(summary.map((account) => [account.name, account]))
+  const missingDesiredNames = desiredLinks
+    .map((item) => item.name)
+    .filter((name) => !summaryByName.has(name))
+  if (missingDesiredNames.length > 0) {
+    throw new Error(`Cloud link mapping missing desired links: ${JSON.stringify(missingDesiredNames)}`)
+  }
+
+  const desiredByName = new Map(desiredLinks.map((item) => [item.name, item]))
+  const mappingSummary = summary
+    .map((account) => {
+      const desired = desiredByName.get(account.name)
+      if (!desired) return null
+      const observedAwsAccountId = parseAwsAccountIdFromAuthLabel(account.authLabel)
+      const modeMatches = account.metricCollectionMode === desired.metricCollectionMode
+      const accountMatches = observedAwsAccountId === desired.expectedAwsAccountId
+      return {
+        name: account.name,
+        linkedAccountId: account.id,
+        expectedMode: desired.metricCollectionMode,
+        observedMode: account.metricCollectionMode,
+        expectedAwsAccountId: desired.expectedAwsAccountId,
+        observedAwsAccountId,
+        modeMatches,
+        accountMatches,
+      }
+    })
+    .filter(Boolean)
+
+  const mismatchedMappings = mappingSummary.filter(
+    (item) => item.modeMatches !== true || item.accountMatches !== true,
+  )
+  if (mismatchedMappings.length > 0) {
+    throw new Error(`Cloud link mapping validation failed: ${JSON.stringify(mismatchedMappings)}`)
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -342,6 +436,7 @@ const main = async () => {
           authLabel: account.authLabel,
           integrationCount: account.integrations.length,
         })),
+        mappingSummary,
       },
       null,
       2,

@@ -11,9 +11,6 @@
         <span class="text-body-sm font-bold text-white/80">Remit-Scout Pulse</span>
       </div>
       <div class="flex items-center gap-2">
-        <span class="rounded-full border border-success-600/30 bg-success-600/15 px-2.5 py-0.5 text-[10px] font-semibold text-success-400">
-          Verified Pipeline v2.4.1
-        </span>
         <span class="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
           Sender View
         </span>

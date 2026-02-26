@@ -113,7 +113,7 @@ const nrqlRows = async (query) => {
   return data.actor.account.nrql.results || []
 }
 
-const scopeClause = (token, envName, awsAccountId) => {
+const scopeClause = (token, envName) => {
   const environmentFilter =
     envName === 'prod'
       ? `(environment = 'prod' OR environment = 'production')`
@@ -126,18 +126,46 @@ const scopeClause = (token, envName, awsAccountId) => {
     OR aws.sqs.QueueName LIKE '%${token}%'
     OR aws.logs.Resource LIKE '%${token}%'
     OR appName LIKE '%${token}%'
-    ${awsAccountId ? `OR aws.accountId = '${awsAccountId}'` : ''}
   )`
 }
 
+const toDualMetricNames = (names) => {
+  const all = new Set()
+  for (const name of names) {
+    all.add(name)
+    all.add(`aws.remitscout.${name}`)
+  }
+  return Array.from(all)
+}
+
 const verifyTarget = async ({ envName, token, awsAccountId }) => {
-  const scope = scopeClause(token, envName, awsAccountId)
+  const scope = scopeClause(token, envName)
+  const metricScope = awsAccountId
+    ? `(${scope}) AND aws.accountId = '${awsAccountId}'`
+    : scope
+  const apiGatewaySampleAccountScope = awsAccountId
+    ? ` AND (aws.accountId = '${awsAccountId}' OR providerAccountName LIKE '%${awsAccountId}%')`
+    : ''
   const since = `${WINDOW_MINUTES} minutes ago`
   const queuePrefix = `remit-scout-${envName}-`
+  const expectedCustomMetricNames = toDualMetricNames([
+    'slo_actual_value',
+    'slo_compliance_ratio',
+    'slo_breach_total',
+    'worker_backpressure_active',
+    'cross_plane_hop_duration_ms',
+    'cross_plane_error_amplification',
+    'indices_teer_rate',
+    'indices_rci_ratio',
+    'indices_rvi_bps',
+    'export_jobs_completed',
+    'export_jobs_failed',
+  ])
+  const expectedCustomMetricNamesNrql = expectedCustomMetricNames.map((name) => `'${name}'`).join(',')
 
   const checks = {
     metricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE ${scope} SINCE ${since}`,
+      `FROM Metric SELECT count(*) AS value WHERE ${metricScope} SINCE ${since}`,
       'value',
     ),
     logCount: await nrqlValue(
@@ -149,23 +177,20 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
       'value',
     ),
     apiGatewayMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} SINCE ${since}`,
+      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/ApiGateway' AND ${metricScope} SINCE ${since}`,
       'value',
     ),
     apiGatewaySampleCount: await nrqlValue(
-      `FROM ApiGatewaySample SELECT count(*) AS value WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%') SINCE ${since}`,
+      `FROM ApiGatewaySample SELECT count(*) AS value WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%')${apiGatewaySampleAccountScope} SINCE ${since}`,
       'value',
     ),
     sqsMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/SQS' AND aws.sqs.QueueName LIKE '${queuePrefix}%' SINCE ${since}`,
+      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/SQS' AND aws.sqs.QueueName LIKE '${queuePrefix}%' AND ${metricScope} SINCE ${since}`,
       'value',
     ),
     customMetricCount: await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE metricName IN (` +
-        `'slo_actual_value','slo_compliance_ratio','slo_breach_total','worker_backpressure_active','cross_plane_hop_duration_ms',` +
-        `'aws.remitscout.slo_actual_value','aws.remitscout.slo_compliance_ratio','aws.remitscout.slo_breach_total','aws.remitscout.worker_backpressure_active','aws.remitscout.cross_plane_hop_duration_ms'` +
-        `) AND ${scope} SINCE ${since}`,
+        `WHERE metricName IN (${expectedCustomMetricNamesNrql}) AND ${metricScope} SINCE ${since}`,
       'value',
     ),
   }
@@ -183,17 +208,18 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
   const diagnostics = {}
   if (failures.length > 0) {
     diagnostics.topNamespaces = await nrqlRows(
-      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL FACET aws.Namespace SINCE ${since} LIMIT 10`,
+      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${metricScope} FACET aws.Namespace SINCE ${since} LIMIT 10`,
     )
     diagnostics.topEntities = await nrqlRows(
-      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL FACET entity.name SINCE ${since} LIMIT 15`,
+      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${metricScope} FACET entity.name SINCE ${since} LIMIT 15`,
     )
     diagnostics.tokenMetricCount = await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE entity.name LIKE '%${token}%' ` +
+        `WHERE ${metricScope} ` +
+        `AND (entity.name LIKE '%${token}%' ` +
         `OR aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
         `OR aws.lambda.FunctionName LIKE '%${token}%' ` +
-        `OR appName LIKE '%${token}%' ` +
+        `OR appName LIKE '%${token}%') ` +
         `SINCE ${since}`,
       'value',
     )
