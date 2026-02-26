@@ -1726,90 +1726,14 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       let indices: CorridorIndices | undefined
       let suppressedGoldIndices: CorridorIndices | undefined
       let indicesReason: string | null = null
-      let fallbackTriggerReason: string | null = null
       const indicesMethodProfile = resolveIndicesMethodProfile(requestedMethod)
       const indicesAmountBasis = INDICES_AMOUNT_BUCKET
 
       if (!indicesMethodProfile) {
         indicesReason = 'unsupported_method'
-        fallbackTriggerReason = 'unsupported_method'
-      } else {
-        try {
-          const latest = await goldIndicesRepository.getIndicesLatest({
-            corridorId,
-            amountBucket: indicesAmountBasis,
-            methodProfile: indicesMethodProfile,
-          })
-
-          if (!latest) {
-            indicesReason = 'gold_indices_unavailable'
-            fallbackTriggerReason = 'gold_indices_unavailable'
-          } else {
-            const suppressed = latest.suppression_flag === true
-            if (suppressed) {
-              indicesReason = latest.suppression_reason || 'suppressed'
-              fallbackTriggerReason = indicesReason
-              suppressedGoldIndices = {
-                teer: null,
-                rvi_bps: null,
-                rci: null,
-                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-                amount: indicesAmountBasis,
-                midMarketRate: null,
-                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
-                weightConfidence: latest.weight_confidence ?? null,
-                weightWindowDays: latest.weight_window_days ?? null,
-                source: 'gold',
-                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
-                indicesBucket: indicesAmountBasis,
-                methodProfile: indicesMethodProfile,
-                suppressionFlag: latest.suppression_flag,
-                suppressionReason: latest.suppression_reason ?? null,
-                basisAmount: indicesAmountBasis,
-                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-                reason: latest.suppression_reason ?? 'suppressed',
-              }
-            }
-            if (!suppressed) {
-              indices = {
-                teer: latest.teer_rate ?? null,
-                rvi_bps: latest.rvi_bps ?? null,
-                rci: latest.rci_ratio ?? null,
-                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-                amount: indicesAmountBasis,
-                midMarketRate: latest.mid_market_rate ?? null,
-                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
-                weightConfidence: latest.weight_confidence ?? null,
-                weightWindowDays: latest.weight_window_days ?? null,
-                source: 'gold',
-                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
-                indicesBucket: indicesAmountBasis,
-                methodProfile: indicesMethodProfile,
-                suppressionFlag: latest.suppression_flag,
-                suppressionReason: latest.suppression_reason ?? null,
-                basisAmount: indicesAmountBasis,
-                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
-                reason: null,
-              }
-            }
-          }
-        } catch (error) {
-          logger.warn('gold_indices_latest_failed', {
-            corridor_id: corridorId,
-            error: error instanceof Error ? error.message : String(error),
-          })
-          indicesReason = 'gold_indices_unavailable'
-          fallbackTriggerReason = 'gold_indices_unavailable'
-        }
       }
 
-      const canUseQuoteFallback =
-        fallbackTriggerReason === null
-        || fallbackTriggerReason === 'gold_indices_unavailable'
-        || fallbackTriggerReason === 'insufficient_providers'
-        || fallbackTriggerReason === 'insufficient_coverage'
-
-      if (!indices && canUseQuoteFallback && indicesMethodProfile && midMarketRate && midMarketRate > 0) {
+      if (!indices && indicesMethodProfile && midMarketRate && midMarketRate > 0) {
         const effectiveAmount = Number(requestedAmount ?? bucketUsed ?? indicesAmountBasis)
         const amountScale = Number.isFinite(effectiveAmount) && effectiveAmount > 0
           ? (indicesAmountBasis / effectiveAmount)
@@ -1871,10 +1795,78 @@ export const providersListRoutes = async (app: FastifyInstance) => {
               methodProfile: indicesMethodProfile,
               basisAmount: indicesAmountBasis,
               providerCountUsed: computed.providerCount,
-              reason: fallbackTriggerReason ? `fallback:${fallbackTriggerReason}` : 'computed_from_quotes',
+              reason: 'computed_from_quotes',
             }
             indicesReason = 'computed_from_quotes'
           }
+        }
+      }
+
+      if (!indices && indicesMethodProfile) {
+        try {
+          const latest = await goldIndicesRepository.getIndicesLatest({
+            corridorId,
+            amountBucket: indicesAmountBasis,
+            methodProfile: indicesMethodProfile,
+          })
+
+          if (!latest) {
+            indicesReason = indicesReason ?? 'gold_indices_unavailable'
+          } else {
+            const suppressed = latest.suppression_flag === true
+            if (suppressed) {
+              indicesReason = latest.suppression_reason || 'suppressed'
+              suppressedGoldIndices = {
+                teer: null,
+                rvi_bps: null,
+                rci: null,
+                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                amount: indicesAmountBasis,
+                midMarketRate: null,
+                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
+                weightConfidence: latest.weight_confidence ?? null,
+                weightWindowDays: latest.weight_window_days ?? null,
+                source: 'gold',
+                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
+                indicesBucket: indicesAmountBasis,
+                methodProfile: indicesMethodProfile,
+                suppressionFlag: latest.suppression_flag,
+                suppressionReason: latest.suppression_reason ?? null,
+                basisAmount: indicesAmountBasis,
+                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                reason: latest.suppression_reason ?? 'suppressed',
+              }
+            }
+            if (!suppressed) {
+              indices = {
+                teer: latest.teer_rate ?? null,
+                rvi_bps: latest.rvi_bps ?? null,
+                rci: latest.rci_ratio ?? null,
+                providerCount: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                amount: indicesAmountBasis,
+                midMarketRate: latest.mid_market_rate ?? null,
+                weights: latest.weighting_model || DEFAULT_WEIGHT_MODEL,
+                weightConfidence: latest.weight_confidence ?? null,
+                weightWindowDays: latest.weight_window_days ?? null,
+                source: 'gold',
+                updatedAt: latest.created_at ? latest.created_at.toISOString() : null,
+                indicesBucket: indicesAmountBasis,
+                methodProfile: indicesMethodProfile,
+                suppressionFlag: latest.suppression_flag,
+                suppressionReason: latest.suppression_reason ?? null,
+                basisAmount: indicesAmountBasis,
+                providerCountUsed: Number(latest.provider_count ?? latest.provider_count_binned ?? 0),
+                reason: null,
+              }
+              indicesReason = null
+            }
+          }
+        } catch (error) {
+          logger.warn('gold_indices_latest_failed', {
+            corridor_id: corridorId,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          indicesReason = indicesReason ?? 'gold_indices_unavailable'
         }
       }
 

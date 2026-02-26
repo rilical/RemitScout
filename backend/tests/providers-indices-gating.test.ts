@@ -186,7 +186,7 @@ describe('providers indices gating', () => {
     await providersRoutes(app as FastifyInstance)
   })
 
-  it('returns Gold indices using the canonical $500 basis even when request bucket != 500', async () => {
+  it('prefers search-derived indices using the canonical $500 basis even when request bucket != 500', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([
       buildQuote({ amount_bucket: 100 }),
     ])
@@ -207,10 +207,12 @@ describe('providers indices gating', () => {
 
     const result = await handler(mockRequest, mockReply)
 
-    expect(result.indicesReason).toBeNull()
-    expect(result.indices?.source).toBe('gold')
+    expect(result.indicesReason).toBe('computed_from_quotes')
+    expect(result.indices?.source).toBe('search_estimate')
     expect(result.indices?.indicesBucket).toBe(500)
     expect(result.indices?.amount).toBe(500)
+    expect(result.indices?.reason).toBe('computed_from_quotes')
+    expect(mockGetIndicesLatest).not.toHaveBeenCalled()
   })
 
   it('falls back to search-derived indices when Gold indices are unavailable', async () => {
@@ -241,7 +243,8 @@ describe('providers indices gating', () => {
     expect(result.indices?.amount).toBe(500)
     expect(result.indices?.teer).not.toBeNull()
     expect(result.indices?.rci).not.toBeNull()
-    expect(result.indices?.reason).toContain('fallback:gold_indices_unavailable')
+    expect(result.indices?.reason).toBe('computed_from_quotes')
+    expect(mockGetIndicesLatest).not.toHaveBeenCalled()
   })
 
   it('returns indicesReason unsupported_method for wallet payouts', async () => {
@@ -272,7 +275,7 @@ describe('providers indices gating', () => {
     expect(result.indices).toBeUndefined()
   })
 
-  it('falls back to search-derived indices when Gold indices are suppressed for insufficient providers', async () => {
+  it('prefers search-derived indices when Gold indices are suppressed for insufficient providers', async () => {
     mockGetIndicesLatest.mockResolvedValue(buildGoldIndicesRow({
       provider_count: 2,
       provider_count_binned: 2,
@@ -306,10 +309,10 @@ describe('providers indices gating', () => {
     expect(result.indices?.source).toBe('search_estimate')
     expect(result.indices?.teer).not.toBeNull()
     expect(result.indices?.rci).not.toBeNull()
-    expect(result.indices?.reason).toContain('fallback:insufficient_providers')
+    expect(result.indices?.reason).toBe('computed_from_quotes')
   })
 
-  it('keeps Gold suppression when reason is outlier', async () => {
+  it('prefers search-derived indices when current quotes are available even if Gold is suppressed for outliers', async () => {
     mockGetIndicesLatest.mockResolvedValue(buildGoldIndicesRow({
       provider_count: 4,
       provider_count_binned: 3,
@@ -336,11 +339,11 @@ describe('providers indices gating', () => {
 
     const result = await handler(mockRequest, mockReply)
 
-    expect(result.indicesReason).toBe('rate_inversion_or_outlier')
-    expect(result.indices?.source).toBe('gold')
-    expect(result.indices?.suppressionFlag).toBe(true)
-    expect(result.indices?.teer).toBeNull()
-    expect(result.indices?.rci).toBeNull()
+    expect(result.indicesReason).toBe('computed_from_quotes')
+    expect(result.indices?.source).toBe('search_estimate')
+    expect(result.indices?.suppressionFlag).toBeUndefined()
+    expect(result.indices?.teer).not.toBeNull()
+    expect(result.indices?.rci).not.toBeNull()
   })
 
   it('returns schema-complete quotes_unavailable payload when no quotes exist', async () => {

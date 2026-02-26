@@ -3407,13 +3407,13 @@ const indicesBasisAmount = computed(() => {
 })
 const indicesSourceLabel = computed(() => (
   corridorIndices.value?.source === 'search_estimate'
-    ? 'Search-derived estimate'
-    : 'Gold index snapshot'
+    ? 'Live quote-derived estimate'
+    : 'Gold fallback snapshot'
 ))
 const indicesSourceSummary = computed(() => (
   corridorIndices.value?.source === 'search_estimate'
-    ? 'Estimated from quotes returned in this search.'
-    : 'Gold indices snapshot refreshed by scheduled jobs.'
+    ? 'Computed from quotes returned in this search.'
+    : 'Using the latest gold indices snapshot as fallback.'
 ))
 const indicesBasisSummary = computed(() => (
   indicesBasisAmount.value === 500
