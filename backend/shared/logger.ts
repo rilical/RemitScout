@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { context as otelContext, trace } from '@opentelemetry/api'
 import { redactSensitive } from './log-redactor'
+import { enqueueNewRelicLog } from './newrelic-log-exporter'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -17,6 +18,22 @@ const normalizeLevel = (value?: string): LogLevel => {
     return lowered
   }
   return 'info'
+}
+
+const resolveEnvironment = (): string => {
+  const raw = (process.env.ENVIRONMENT || process.env.NODE_ENV || 'development').trim().toLowerCase()
+  if (raw === 'production') return 'prod'
+  if (raw === 'development') return 'dev'
+  return raw || 'dev'
+}
+
+const resolveService = (): string => {
+  const fromEnv =
+    process.env.SERVICE_NAME?.trim() ||
+    process.env.APP_NAME?.trim() ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME?.trim() ||
+    process.env.ECS_CONTAINER_NAME?.trim()
+  return fromEnv || 'remit-scout-backend'
 }
 
 const resolveLogLevel = (): LogLevel => {
@@ -91,6 +108,8 @@ export const createLogger = (component: string, traceId?: string) => {
   const currentLevel = resolveLogLevel()
   const fallbackTraceId = traceId || randomUUID()
   const awsContext = getAwsLogContext()
+  const environment = resolveEnvironment()
+  const service = resolveService()
 
   const emit = (level: LogLevel, event: string, context?: Record<string, unknown>) => {
     if (levelRank[level] < levelRank[currentLevel]) return
@@ -100,17 +119,28 @@ export const createLogger = (component: string, traceId?: string) => {
     const spanContext = activeSpan?.spanContext()
     const trace_id = traceId || spanContext?.traceId || fallbackTraceId
     const span_id = spanContext?.spanId || null
+    const normalizedContext = normalizeContext(context)
+    const time = new Date().toISOString()
 
     const payload = {
       level,
-      time: new Date().toISOString(),
+      time,
+      environment,
+      service,
       component,
       event,
       trace_id,
       span_id,
       ...awsContext,
-      ...normalizeContext(context),
+      ...normalizedContext,
     }
+
+    enqueueNewRelicLog({
+      ...payload,
+      message: event,
+      timestamp: Date.now(),
+    })
+
     if (level === 'error') {
       console.error(JSON.stringify(payload))
       return

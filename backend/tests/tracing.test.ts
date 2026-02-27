@@ -14,6 +14,7 @@ import {
 import * as opentelemetry from '@opentelemetry/api'
 import * as sdkTraceNode from '@opentelemetry/sdk-trace-node'
 import * as sdkTraceBase from '@opentelemetry/sdk-trace-base'
+import * as otelResources from '@opentelemetry/resources'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 
 vi.mock('@opentelemetry/sdk-trace-node', () => ({
@@ -126,6 +127,20 @@ describe('tracing', () => {
           'api-key': 'nr-ingest-key',
         },
       })
+    })
+
+    it('sets environment attributes from ENVIRONMENT', () => {
+      process.env.ENVIRONMENT = 'staging'
+      process.env.NODE_ENV = 'production'
+
+      initTracing('test-service')
+
+      expect(vi.mocked(otelResources.Resource)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          environment: 'staging',
+          'deployment.environment': 'staging',
+        }),
+      )
     })
 
     it('uses BatchSpanProcessor in production', () => {

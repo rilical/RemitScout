@@ -6,7 +6,7 @@ Last updated: 2026-02-26
 
 Canonical steps to keep Remit-Scout New Relic dashboards and alert mirrors consistent across staging and production.
 
-CloudWatch remains deploy-gate source of truth. New Relic is the mirrored visibility and triage layer.
+CloudWatch remains rollback-alarm source of truth. New Relic is now a hard promotion gate for observability readiness in staging/prod.
 
 ## Required environment variables
 
@@ -15,8 +15,11 @@ export NEW_RELIC_USER_API_KEY=...
 export NEW_RELIC_ACCOUNT_ID=7756888
 export NEW_RELIC_REGION=US
 export NEW_RELIC_INGEST_KEY=...
+export NEW_RELIC_LOGS_ENABLED=1
 export NEW_RELIC_STAGING_AWS_ACCOUNT_ID=010630709504
 export NEW_RELIC_PROD_AWS_ACCOUNT_ID=938998270127
+export NEW_RELIC_STAGING_AWS_ROLE_ARN=arn:aws:iam::010630709504:role/NewRelicInfrastructure-Integrations-RemitScout
+export NEW_RELIC_PROD_AWS_ROLE_ARN=arn:aws:iam::938998270127:role/NewRelicInfrastructure-Integrations-RemitScout
 ```
 
 ## Runtime telemetry requirements
@@ -25,10 +28,27 @@ Backend services (Plane A/B/C + workers) must have:
 
 ```bash
 TRACING_EXPORTER=otlp
-OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net/v1/traces
+OTEL_EXPORTER_OTLP_ENDPOINT=<optional override; defaults by NEW_RELIC_REGION in staging/prod>
 OTEL_EXPORTER_OTLP_HEADERS=api-key=<NEW_RELIC_INGEST_KEY>
 # or set NEW_RELIC_INGEST_KEY directly and omit OTEL_EXPORTER_OTLP_HEADERS
+NEW_RELIC_LOGS_ENABLED=1
 ```
+
+Default OTLP trace endpoint by region (when endpoint override is not supplied):
+- `US`: `https://otlp.nr-data.net/v1/traces`
+- `EU`: `https://otlp.eu01.nr-data.net/v1/traces`
+
+## Metric namespace map (custom metrics)
+
+Use namespace-aware NRQL filters; avoid single exact metric-name assumptions:
+
+- `RemitScout`: `slo_*`, `indices_*`, `oanda_sync_failures_total`, `db_connection_pool_waiting`, `worker_backpressure_active`
+- `RemitScout/Business`: `telemetry_*`, `export_jobs_completed`, `export_jobs_failed`
+- `RemitScout/Workers`: `message_failed`, `dlq_sent`, `lock_failed`, `envelope_parse_error`, `stale_dropped`
+- `RemitScout/Probes`: `probe_*`
+- `RemitScout/Collectors`: `collector_*`
+
+AWS-native metrics should be filtered by `aws.Namespace` plus tolerant metric-name fragments (not one exact prefixed token).
 
 ## Step 1: Upsert dashboards
 
@@ -120,6 +140,7 @@ Staging (account-pinned, required for promotion checks):
 ```bash
 NEW_RELIC_TARGET_ENV=staging \
 NEW_RELIC_STAGING_AWS_ACCOUNT_ID=010630709504 \
+REQUIRE_ACCOUNT_PINNING=1 \
 node ops/newrelic/verify-signals.mjs
 ```
 
@@ -128,6 +149,7 @@ Production (account-pinned, required for promotion checks):
 ```bash
 NEW_RELIC_TARGET_ENV=prod \
 NEW_RELIC_PROD_AWS_ACCOUNT_ID=938998270127 \
+REQUIRE_ACCOUNT_PINNING=1 \
 node ops/newrelic/verify-signals.mjs
 ```
 
@@ -144,7 +166,13 @@ The check fails if any required signal group is missing:
 - `Span`
 - `AWS/ApiGateway` metrics
 - `AWS/SQS` metrics
-- key custom `RemitScout` metrics
+- required custom metric families (core SLO/indices)
+
+## Hybrid log model (required)
+
+- Primary (New Relic visibility): application-level async New Relic logs exporter via `NEW_RELIC_INGEST_KEY`.
+- Secondary (forensics/audit): unchanged stdout JSON logs to CloudWatch.
+- Do not disable CloudWatch logs; New Relic logs are additive, not a replacement.
 
 ## Step 5: Workloads and incident routing
 
@@ -184,7 +212,13 @@ If these account IDs differ, New Relic is linked to the wrong AWS account. Re-ru
 
 ## Promotion rule
 
-Do not treat New Relic as operationally ready until `verify-signals` passes for staging and production.
+Staging/prod promotion must fail if New Relic gate fails. Deploy workflows now run:
+1) `bootstrap-dashboards`
+2) `sync-alerts`
+3) `sync-cloud-links`
+4) `verify-signals` (logs + spans required, account pinned)
+
+Gate placement: before last-known-good image write in deploy workflows.
 
 ## Notes
 

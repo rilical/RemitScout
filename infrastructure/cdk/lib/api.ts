@@ -35,6 +35,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv } from './env-utils'
+import { resolveTracingEnv } from './newrelic-observability'
 
 export type ApiOptions = {
   envName: string
@@ -146,22 +147,15 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const enablePlaneCIamAuth =
     options.enablePlaneCIamAuth ?? (options.envName === 'prod' || options.envName === 'staging')
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
-  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const tracingEnv = resolveTracingEnv({
+    envName: options.envName,
+    defaultExporter: 'xray',
+    defaultEndpoint: options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined,
+  })
+  const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otlpEndpoint =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
-    (options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined)
-  const otlpHeaders =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
-  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
-  const tracingEnv: Record<string, string> = {
-    TRACING_EXPORTER: tracingExporter,
-    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
-    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
-    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
-  }
+  const newRelicLogsEnabled =
+    process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
   const lambdaSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
   const lambdaArchitecture = options.lambdaArchitecture
 
@@ -171,6 +165,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -355,6 +350,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -875,18 +871,22 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
 
       if (regionReady) {
         const rules: CfnWebACL.RuleProperty[] = []
-        const buildPathMatch = (paths: string[]): CfnWebACL.StatementProperty => ({
-          orStatement: {
-            statements: paths.map((pathMatch) => ({
-              byteMatchStatement: {
-                fieldToMatch: { uriPath: {} },
-                positionalConstraint: 'STARTS_WITH',
-                searchString: pathMatch,
-                textTransformations: [{ priority: 0, type: 'NONE' }],
-              },
-            })),
-          },
-        })
+        const buildPathMatch = (paths: string[]): CfnWebACL.StatementProperty => {
+          const statements = paths.map((pathMatch) => ({
+            byteMatchStatement: {
+              fieldToMatch: { uriPath: {} },
+              positionalConstraint: 'STARTS_WITH',
+              searchString: pathMatch,
+              textTransformations: [{ priority: 0, type: 'NONE' }],
+            },
+          }))
+          if (statements.length === 1) return statements[0]
+          return {
+            orStatement: {
+              statements,
+            },
+          }
+        }
         const withApiPrefixes = (pathMatch: string): string[] => [`/api/v1${pathMatch}`]
         const notIpSet = (ipSetArn: string): CfnWebACL.StatementProperty => ({
           notStatement: {

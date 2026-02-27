@@ -61,11 +61,25 @@ Shared gates + metrics:
 - Amount buckets are exact; no reuse of unrelated buckets.
 
 ## End-to-end lineage flow (expected)
+
+### Quote lineage (existing)
 1) Provider fetch -> Bronze (raw payload, full request context).
 2) Normalization -> Silver (canonical quote rows + quality flags).
 3) Aggregation -> Gold (FX history, pulse cache, popular corridors, exports).
 4) Publish -> Plane C (gated by readiness and freshness).
 5) Serve -> Plane A (reads Gold for aggregates, Silver for real-time alerts).
+
+### Observation lineage (new — multi-signal)
+1) Signal module fetch -> Bronze (raw payload to S3, ref in `raw_payload_ref`).
+2) Parse + normalize -> Silver (`silver.observation` with typed `normalized_payload` JSONB).
+3) Triangulation -> Gold (`gold.triangulated_index` — composite corridor scores).
+4) Quote collectors also dual-write to `silver.observation` (behind `EMIT_OBSERVATIONS` flag).
+5) All observations have: `observation_id`, `module_id`, `signal_layer`, `corridor_id`, `confidence`, `quality_flags`.
+
+### Related agents
+- **Triangulation Engine** (`agents/rag/triangulation-engine.md`): reads from `silver.observation` + `gold_export.cdp_daily` to compute composite indices.
+- **Signal Modules** (`agents/rag/signal-modules.md`): non-quote collectors producing observations.
+- **Agent Orchestration** (`agents/rag/agent-orchestration.md`): self-healing for parsers, logged in `silver.failure_bundle` and `silver.agent_action`.
 
 ## SQL-first workflow (required)
 1) Identify tables/columns from `backend/db/migrations/*` and repository SQL.

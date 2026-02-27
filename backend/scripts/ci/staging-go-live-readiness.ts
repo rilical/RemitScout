@@ -30,6 +30,14 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'PUBLIC_GA4_MEASUREMENT_ID', description: 'GA4 measurement id' },
   { key: 'PUBLIC_GOOGLE_ADS_CONVERSION_ID', description: 'Google Ads conversion id' },
   { key: 'PUBLIC_ENABLE_EZOIC', description: 'Ezoic flag enabled for staging test surface' },
+  { key: 'NEW_RELIC_USER_API_KEY', description: 'New Relic user API key for dashboard/alert/verify gates' },
+  { key: 'NEW_RELIC_ACCOUNT_ID', description: 'New Relic account ID' },
+  { key: 'NEW_RELIC_REGION', description: 'New Relic region (US/EU)' },
+  { key: 'NEW_RELIC_INGEST_KEY', description: 'New Relic ingest key for logs/spans' },
+  { key: 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID', description: 'Staging AWS account ID pinned for verify-signals' },
+  { key: 'NEW_RELIC_PROD_AWS_ACCOUNT_ID', description: 'Prod AWS account ID pinned for verify-signals parity' },
+  { key: 'NEW_RELIC_STAGING_AWS_ROLE_ARN', description: 'Staging AWS role ARN for New Relic cloud-link sync' },
+  { key: 'NEW_RELIC_PROD_AWS_ROLE_ARN', description: 'Prod AWS role ARN for New Relic cloud-link sync' },
   { key: 'SLACK_BOT_TOKEN', description: 'Slack bot token for frontdesk + brain posts' },
   { key: 'SLACK_APP_TOKEN', description: 'Slack app token for Socket Mode' },
   { key: 'SLACK_SIGNING_SECRET', description: 'Slack signing secret for action verification' },
@@ -205,6 +213,30 @@ const run = () => {
   const ezoic = getValue('PUBLIC_ENABLE_EZOIC').toLowerCase()
   if (ezoic !== 'true' && ezoic !== '1') {
     policyViolations.push('PUBLIC_ENABLE_EZOIC must be true/1 for this go-live profile')
+  }
+
+  const tracingExporter = getValue('TRACING_EXPORTER').toLowerCase()
+  if (
+    tracingExporter &&
+    !tracingExporter.includes('otlp') &&
+    tracingExporter !== 'both' &&
+    tracingExporter !== 'all'
+  ) {
+    policyViolations.push('TRACING_EXPORTER must include otlp in staging for New Relic span export')
+  }
+
+  const logsEnabled = getValue('NEW_RELIC_LOGS_ENABLED').toLowerCase()
+  if (logsEnabled && ['0', 'false', 'off', 'no'].includes(logsEnabled)) {
+    policyViolations.push('NEW_RELIC_LOGS_ENABLED must not disable New Relic logs in staging')
+  }
+
+  const otlpEndpoint = getValue('OTEL_EXPORTER_OTLP_ENDPOINT')
+  const otlpHeaders = getValue('OTEL_EXPORTER_OTLP_HEADERS')
+  const newRelicIngestKey = getValue('NEW_RELIC_INGEST_KEY')
+  if (otlpEndpoint.includes('nr-data.net') && !otlpHeaders && !newRelicIngestKey) {
+    policyViolations.push(
+      'OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY is required for New Relic OTLP endpoint',
+    )
   }
 
   if (soc2ReportState) {

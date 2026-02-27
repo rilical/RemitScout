@@ -18,6 +18,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
+import { resolveTracingEnv } from './newrelic-observability'
 
 type ProviderCatalogFile = {
   version: number
@@ -302,24 +303,23 @@ export const createScheduledJobs = (
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
-  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
+  const resolvedTracingEnv = resolveTracingEnv({
+    envName: options.envName,
+    defaultExporter: 'xray',
+    defaultEndpoint: options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined,
+  })
+  const tracingExporter = resolvedTracingEnv.TRACING_EXPORTER ?? 'xray'
+  const newRelicLogsEnabled =
+    process.env.NEW_RELIC_LOGS_ENABLED
+    ?? (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
+  const tracingEnv: Record<string, string> = {
+    ...resolvedTracingEnv,
+    TRACING_EXPORTER: tracingExporter,
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
+  }
   const oandaThrottleEnv = collectOandaThrottleEnv()
   const providerThrottleEnv = collectPlaneBProviderThrottleEnv()
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otlpEndpoint =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
-    (options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined)
-  const otlpHeaders =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
-  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
-  const tracingEnv: Record<string, string> = {
-    TRACING_EXPORTER: tracingExporter,
-    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
-    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
-    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
-  }
   const minimalMode = options.minimalMode === true
 
   if (minimalMode) {
@@ -2239,22 +2239,16 @@ const createPlaneBLambdaJob = ({
 }: LambdaJobOptions): Rule => {
   const isDev = options.envName === 'dev'
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = process.env.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const tracingEnv = resolveTracingEnv({
+    envName: options.envName,
+    defaultExporter: isDev ? 'none' : 'xray',
+    defaultEndpoint: otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined,
+  })
+  const tracingExporter = tracingEnv.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const newRelicLogsEnabled =
+    process.env.NEW_RELIC_LOGS_ENABLED
+    ?? (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otlpEndpoint =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
-    (otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined)
-  const otlpHeaders =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
-  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
-  const tracingEnv: Record<string, string> = {
-    TRACING_EXPORTER: tracingExporter,
-    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
-    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
-    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
-  }
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
@@ -2262,6 +2256,8 @@ const createPlaneBLambdaJob = ({
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
+    TRACING_EXPORTER: tracingExporter,
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
@@ -2354,22 +2350,16 @@ const createPlaneCLambdaJob = ({
 }: LambdaJobOptions): Rule => {
   const isDev = options.envName === 'dev'
   const cloudwatchMetricsEnabled = isDev ? '0' : '1'
-  const tracingExporter = process.env.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const tracingEnv = resolveTracingEnv({
+    envName: options.envName,
+    defaultExporter: isDev ? 'none' : 'xray',
+    defaultEndpoint: otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined,
+  })
+  const tracingExporter = tracingEnv.TRACING_EXPORTER ?? (isDev ? 'none' : 'xray')
+  const newRelicLogsEnabled =
+    process.env.NEW_RELIC_LOGS_ENABLED
+    ?? (options.envName === 'staging' || options.envName === 'prod' ? '1' : '0')
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
-  const otlpEndpoint =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
-    (otelLambdaLayer ? 'http://127.0.0.1:4318/v1/traces' : undefined)
-  const otlpHeaders =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
-  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
-  const tracingEnv: Record<string, string> = {
-    TRACING_EXPORTER: tracingExporter,
-    ...(otlpEndpoint ? { OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint } : {}),
-    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
-    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
-  }
   const environment: Record<string, string> = {
     JOB_NAME: jobName,
     ENVIRONMENT: options.envName,
@@ -2377,6 +2367,8 @@ const createPlaneCLambdaJob = ({
     PGSSLMODE: 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '1',
     ...tracingEnv,
+    TRACING_EXPORTER: tracingExporter,
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',

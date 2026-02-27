@@ -40,6 +40,8 @@ type Logger = {
   error: (event: string, context?: Record<string, unknown>) => void
 }
 
+type JsonRecord = Record<string, unknown>
+
 let loggerPromise: Promise<Logger> | null = null
 
 const getLogger = (): Promise<Logger> => {
@@ -136,16 +138,27 @@ const withRetry = async <T>(
   throw lastError
 }
 
+const coerceSecretPrimitive = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed ? trimmed : undefined
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value)
+  }
+  return undefined
+}
+
 const parseSecretValue = (raw: string, jsonKeys?: string[]): string => {
   if (!jsonKeys || jsonKeys.length === 0) {
     return raw
   }
 
   try {
-    const parsed = JSON.parse(raw) as Record<string, string>
+    const parsed = JSON.parse(raw) as JsonRecord
     for (const key of jsonKeys) {
-      const value = parsed[key]
-      if (typeof value === 'string' && value.trim()) {
+      const value = coerceSecretPrimitive(parsed[key])
+      if (value) {
         return value
       }
     }
@@ -159,9 +172,9 @@ const parseSecretValue = (raw: string, jsonKeys?: string[]): string => {
   return raw
 }
 
-const parseSecretJson = (raw: string): Record<string, string> | null => {
+const parseSecretJson = (raw: string): JsonRecord | null => {
   try {
-    const parsed = JSON.parse(raw) as Record<string, string>
+    const parsed = JSON.parse(raw) as JsonRecord
     return parsed
   } catch (error) {
     logger.debug('secret_json_parse_failed', {
@@ -172,13 +185,13 @@ const parseSecretJson = (raw: string): Record<string, string> | null => {
 }
 
 const pickJsonValue = (
-  parsed: Record<string, string>,
+  parsed: JsonRecord,
   keys: string[] | undefined,
 ): string | undefined => {
   if (!keys || keys.length === 0) return undefined
   for (const key of keys) {
-    const value = parsed[key]
-    if (typeof value === 'string' && value.trim()) {
+    const value = coerceSecretPrimitive(parsed[key])
+    if (value) {
       return value
     }
   }
@@ -336,8 +349,8 @@ export const resolveProxyUrl = async (source: ProxyUrlSource): Promise<string | 
       let url: string | undefined
       if (source.jsonKey) {
         try {
-          const parsed = JSON.parse(raw) as Record<string, string>
-          url = parsed[source.jsonKey]
+          const parsed = JSON.parse(raw) as JsonRecord
+          url = coerceSecretPrimitive(parsed[source.jsonKey])
         } catch (error) {
           logger.debug('proxy_url_secret_json_parse_failed', {
             env_var: source.envVar,

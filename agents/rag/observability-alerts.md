@@ -37,10 +37,12 @@ Infra wiring:
 - Ensure SLOs are defined and tracked (p95 latency, freshness, queue depth).
 - Ensure alert routing works (Slack/email/ops queues).
 - Ensure log groups are created and retention configured.
+- Ensure New Relic logs + spans are present in staging/prod (not metrics-only dashboards).
 - Ensure dashboards reflect real workload and not idle state.
 
 ## Non-negotiable invariants
 - Critical workflows must emit metrics (ingest, refresh, publish).
+- Staging/prod deploys must fail if New Relic verify gate fails (dashboards/alerts/cloud-links/verify-signals).
 - All alerts must have owners and clear action.
 - DLQs must have alarms.
 - SLO violations must trigger alerts.
@@ -80,6 +82,12 @@ Infra wiring:
 - Include `environment` and `service` dimensions.
 - Use consistent metric names across Plane A/B/C.
 - Avoid high cardinality labels unless required.
+- Use namespace-aware mapping for New Relic NRQL:
+  - `RemitScout`: `slo_*`, `indices_*`, `oanda_sync_failures_total`, `db_connection_pool_waiting`, `worker_backpressure_active`
+  - `RemitScout/Business`: `telemetry_*`, `export_jobs_completed`, `export_jobs_failed`
+  - `RemitScout/Workers`: `message_failed`, `dlq_sent`, `lock_failed`, `envelope_parse_error`, `stale_dropped`
+  - `RemitScout/Probes`: `probe_*`
+  - `RemitScout/Collectors`: `collector_*`
 
 ## Alert routing chain
 - SLO breach -> ops alerts queue -> Slack/email.
@@ -167,6 +175,7 @@ Infra wiring:
 ## Log expectations
 - Structured JSON logs with request_id.
 - Error logs include stack and error code.
+- Hybrid export required: stdout JSON to CloudWatch + async application export to New Relic Logs API.
 
 ## Evidence requirements (logs)
 - Provide sample log entry for a failing request.

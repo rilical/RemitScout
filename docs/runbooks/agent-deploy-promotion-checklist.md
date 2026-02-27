@@ -24,6 +24,7 @@ Purpose:
 - Do not skip evidence:
   - smoke
   - alarm gate
+  - New Relic hard observability gate
   - last-known-good image update
 
 ## Stage 0: Preflight (required every time)
@@ -89,8 +90,9 @@ Execution:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
   - `NEW_RELIC_STAGING_AWS_ROLE_ARN=<staging_role_arn> NEW_RELIC_PROD_AWS_ROLE_ARN=<prod_role_arn> node ops/newrelic/sync-cloud-links.mjs`
   - `node ops/newrelic/sync-alerts.mjs`
-  - `NEW_RELIC_TARGET_ENV=staging NEW_RELIC_STAGING_AWS_ACCOUNT_ID=<staging_account_id> node ops/newrelic/verify-signals.mjs`
+  - `NEW_RELIC_TARGET_ENV=staging NEW_RELIC_STAGING_AWS_ACCOUNT_ID=<staging_account_id> REQUIRE_ACCOUNT_PINNING=1 node ops/newrelic/verify-signals.mjs`
   - Confirm New Relic dashboard pages include `Indices (TEER/RCI/RVI)`, `Exports Health`, `API Health`, and `Provider Health (Per Provider)`.
+  - Note: deploy/readiness workflows now run this as a hard gate; this manual run is for incident/debug confirmation.
 - [ ] Re-run staging smoke after migration/user seeding.
 - [ ] Re-check critical alarms are still clear.
 
@@ -128,8 +130,9 @@ Execution:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
   - `NEW_RELIC_STAGING_AWS_ROLE_ARN=<staging_role_arn> NEW_RELIC_PROD_AWS_ROLE_ARN=<prod_role_arn> node ops/newrelic/sync-cloud-links.mjs`
   - `node ops/newrelic/sync-alerts.mjs`
-  - `NEW_RELIC_TARGET_ENV=prod NEW_RELIC_PROD_AWS_ACCOUNT_ID=<prod_account_id> node ops/newrelic/verify-signals.mjs`
+  - `NEW_RELIC_TARGET_ENV=prod NEW_RELIC_PROD_AWS_ACCOUNT_ID=<prod_account_id> REQUIRE_ACCOUNT_PINNING=1 node ops/newrelic/verify-signals.mjs`
   - Confirm New Relic dashboard pages include `Indices (TEER/RCI/RVI)`, `Exports Health`, `API Health`, and `Provider Health (Per Provider)`.
+  - Note: deploy workflow blocks promotion before last-known-good write if this gate fails.
 
 Exit criteria:
 - [ ] Prod deployment successful for tagged SHA.
@@ -142,6 +145,7 @@ Exit criteria:
 - Migration failure in target env.
 - Smoke failure in target env.
 - Critical alarm active in target env.
+- New Relic observability gate failure (dashboards/alerts/cloud links/verify-signals).
 - Auth/JWT validation broken on staging full.
 - Environment contract drift (missing required vars/secrets).
 - Enterprise path is active (`PLANE_A_REQUIRE_API_KEY=1`) but `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` is not `audited`.

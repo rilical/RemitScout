@@ -10,9 +10,19 @@
  * - NEW_RELIC_REGION (US|EU, default US)
  */
 
+import {
+  buildAwsMetricLikeFilter,
+  buildEnvScopeClause,
+  buildEnvironmentFilter,
+  buildMetricNameFilter,
+  buildMetricNamesFilter,
+} from './nrql-helpers.mjs'
+
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
 const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
+const NEW_RELIC_STAGING_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID || '').trim()
+const NEW_RELIC_PROD_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID || '').trim()
 
 if (!NEW_RELIC_USER_API_KEY) {
   console.error('Missing NEW_RELIC_USER_API_KEY')
@@ -95,26 +105,20 @@ const widgetMarkdown = (title, text, row, column, width = 12, height = 2) => ({
   },
 })
 
-const envScopeClause = (nameToken, envName) =>
-  `(
-    environment = '${envName}'
-    OR entity.name LIKE '%${nameToken}%'
-    OR aws.lambda.FunctionName LIKE '%${nameToken}%'
-    OR aws.sqs.QueueName LIKE '%${nameToken}%'
-    OR aws.logs.Resource LIKE '%${nameToken}%'
-    OR aws.arn LIKE '%${nameToken}%'
-    OR aws.Arn LIKE '%${nameToken}%'
-    OR appName LIKE '%${nameToken}%'
-  )`
-
-const metricNameFilter = (name) =>
-  `(metricName = '${name}' OR metricName = 'aws.remitscout.${name}')`
-
-const metricNamesFilter = (names) =>
-  `(${names.map((name) => metricNameFilter(name)).join(' OR ')})`
-
-const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
-  const scope = envScopeClause(nameToken, envName)
+const buildDashboardInput = ({ environmentName, envName, nameToken, awsAccountId }) => {
+  const scope = buildEnvScopeClause({
+    envName,
+    nameToken,
+    awsAccountId,
+    allowMissingAwsAccount: true,
+  })
+  const awsScope = buildEnvScopeClause({
+    envName,
+    nameToken,
+    awsAccountId,
+    allowMissingAwsAccount: false,
+  })
+  const runtimeEnvironmentFilter = buildEnvironmentFilter(envName)
   const queueNamePrefix = `remit-scout-${envName}-`
   const dashboardName = `Remit-Scout ${environmentName} Ops`
 
@@ -156,16 +160,16 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           ),
           widgetBillboard(
             'SLO Breaches (60m)',
-            `FROM Metric SELECT sum(value) WHERE ${metricNameFilter('slo_breach_total')} AND environment = '${envName}' SINCE 60 minutes ago`,
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('slo_breach_total')} AND ${runtimeEnvironmentFilter} SINCE 60 minutes ago`,
             3,
             10,
           ),
           widgetLine(
             'Deploy Gate Signals: API 5xx + p99',
             `FROM Metric SELECT ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.5XXError%') AS '5xx', ` +
-              `filter(percentile(value, 99), WHERE metricName LIKE 'aws.apigateway.Latency%') AS 'p99_ms' ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.5XXError')}) AS '5xx', ` +
+              `filter(percentile(value, 99), WHERE ${buildAwsMetricLikeFilter('apigateway.Latency')}) AS 'p99_ms' ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} SINCE 6 hours ago TIMESERIES 10 minutes`,
             6,
             1,
             6,
@@ -174,8 +178,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'DLQ Depth (All Remit-Scout DLQs)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%' ` +
+              `WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')} ` +
               `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq' ` +
+              `AND ${awsScope} ` +
               `SINCE 6 hours ago TIMESERIES 10 minutes`,
             6,
             7,
@@ -202,10 +207,10 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'API Requests / 4xx / 5xx',
             `FROM Metric SELECT ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.Count%') AS 'requests', ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.4XXError%') AS '4xx', ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.5XXError%') AS '5xx' ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.Count')}) AS 'requests', ` +
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.4XXError')}) AS '4xx', ` +
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.5XXError')}) AS '5xx' ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             1,
             6,
@@ -215,37 +220,33 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             'API Latency p95/p99 (ms)',
             `FROM Metric SELECT percentile(value, 95, 99) ` +
               `WHERE aws.Namespace = 'AWS/ApiGateway' ` +
-              `AND metricName LIKE 'aws.apigateway.Latency%' ` +
-              `AND ${scope} SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `AND ${buildAwsMetricLikeFilter('apigateway.Latency')} ` +
+              `AND ${awsScope} SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             7,
             6,
             4,
           ),
-          widgetLine(
-            'Cross-Plane Hop p95 (ms)',
-            `FROM Metric SELECT percentile(value, 95) ` +
-              `WHERE ${metricNameFilter('cross_plane_hop_duration_ms')} ` +
-              `AND environment = '${envName}' SINCE 6 hours ago TIMESERIES 10 minutes`,
+          widgetMarkdown(
+            'Cross-Plane Hop (Not Instrumented)',
+            'Cross-plane hop custom metric is not currently emitted in this profile. Use API Gateway and Span widgets for triage.',
             5,
             1,
             6,
-            4,
+            2,
           ),
-          widgetLine(
-            'Cross-Plane Error Amplification',
-            `FROM Metric SELECT average(value) ` +
-              `WHERE ${metricNameFilter('cross_plane_error_amplification')} ` +
-              `AND environment = '${envName}' SINCE 6 hours ago TIMESERIES 10 minutes`,
+          widgetMarkdown(
+            'Cross-Plane Error Amplification (Not Instrumented)',
+            'Cross-plane amplification custom metric is not currently emitted in this profile. Treat this as explicit coverage gap.',
             5,
             7,
             6,
-            4,
+            2,
           ),
           widgetTable(
             'API Metric Breakdown',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} ` +
               `FACET metricName SINCE 6 hours ago LIMIT 30`,
             9,
             1,
@@ -253,7 +254,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Top API Entities',
             `FROM Metric SELECT count(*) ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} ` +
               `FACET entity.name SINCE 6 hours ago LIMIT 25`,
             9,
             7,
@@ -266,8 +267,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Queue Depth (Visible Messages)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%' ` +
+              `WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')} ` +
               `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%' ` +
+              `AND ${awsScope} ` +
               `SINCE 6 hours ago FACET aws.sqs.QueueName TIMESERIES 10 minutes`,
             1,
             1,
@@ -277,8 +279,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Queue Age (Oldest Message, sec)',
             `FROM Metric SELECT max(value) ` +
-              `WHERE metricName LIKE 'aws.sqs.ApproximateAgeOfOldestMessage%' ` +
+              `WHERE ${buildAwsMetricLikeFilter('ApproximateAgeOfOldestMessage')} ` +
               `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%' ` +
+              `AND ${awsScope} ` +
               `SINCE 6 hours ago FACET aws.sqs.QueueName TIMESERIES 10 minutes`,
             1,
             7,
@@ -288,8 +291,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'DLQ Depth',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%' ` +
+              `WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')} ` +
               `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq' ` +
+              `AND ${awsScope} ` +
               `SINCE 6 hours ago FACET aws.sqs.QueueName TIMESERIES 10 minutes`,
             5,
             1,
@@ -299,8 +303,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Worker Failures / DLQ Sends / Lock Failures',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNamesFilter(['message_failed', 'dlq_sent', 'lock_failed', 'envelope_parse_error', 'stale_dropped'])} ` +
-              `AND environment = '${envName}' FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNamesFilter(['message_failed', 'dlq_sent', 'lock_failed', 'envelope_parse_error', 'stale_dropped'])} ` +
+              `AND ${runtimeEnvironmentFilter} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             7,
             6,
@@ -309,8 +313,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Backpressure Active',
             `FROM Metric SELECT max(value) ` +
-              `WHERE ${metricNameFilter('worker_backpressure_active')} ` +
-              `AND environment = '${envName}' FACET worker SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNameFilter('worker_backpressure_active')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET worker SINCE 6 hours ago TIMESERIES 10 minutes`,
             9,
             1,
             6,
@@ -318,7 +322,10 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           ),
           widgetTable(
             'Queue Signal Inventory',
-            `FROM Metric SELECT count(*) WHERE aws.sqs.QueueName LIKE '${queueNamePrefix}%' FACET metricName SINCE 6 hours ago LIMIT 50`,
+            `FROM Metric SELECT count(*) ` +
+              `WHERE aws.sqs.QueueName LIKE '${queueNamePrefix}%' ` +
+              `AND ${awsScope} ` +
+              `FACET metricName SINCE 6 hours ago LIMIT 50`,
             9,
             7,
           ),
@@ -330,8 +337,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'SLO Actual Values',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('slo_actual_value')} ` +
-              `AND environment = '${envName}' FACET slo_name SINCE 6 hours ago TIMESERIES 15 minutes`,
+              `WHERE ${buildMetricNameFilter('slo_actual_value')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET slo_name SINCE 6 hours ago TIMESERIES 15 minutes`,
             1,
             1,
             6,
@@ -340,8 +347,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'SLO Compliance Ratios',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('slo_compliance_ratio')} ` +
-              `AND environment = '${envName}' FACET slo_name SINCE 6 hours ago TIMESERIES 15 minutes`,
+              `WHERE ${buildMetricNameFilter('slo_compliance_ratio')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET slo_name SINCE 6 hours ago TIMESERIES 15 minutes`,
             1,
             7,
             6,
@@ -350,8 +357,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Indices Availability / Suppression / Confidence',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('slo_actual_value')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('slo_actual_value')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `AND slo_name IN ('indices_available_ratio', 'indices_suppressed_ratio', 'weight_confidence_p10') ` +
               `FACET slo_name SINCE 6 hours ago TIMESERIES 15 minutes`,
             5,
@@ -362,8 +369,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Gold-Live Queue Age',
             `FROM Metric SELECT max(value) ` +
-              `WHERE metricName LIKE 'aws.sqs.ApproximateAgeOfOldestMessage%' ` +
+              `WHERE ${buildAwsMetricLikeFilter('ApproximateAgeOfOldestMessage')} ` +
               `AND aws.sqs.QueueName LIKE '${queueNamePrefix}gold-live%' ` +
+              `AND ${awsScope} ` +
               `SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             7,
@@ -373,8 +381,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'OANDA Sync Failures',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('oanda_sync_failures_total')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago TIMESERIES 30 minutes`,
+              `WHERE ${buildMetricNameFilter('oanda_sync_failures_total')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago TIMESERIES 30 minutes`,
             9,
             1,
             6,
@@ -383,7 +391,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Freshness Metrics by Name',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('slo_actual_value')} AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('slo_actual_value')} AND ${runtimeEnvironmentFilter} ` +
               `FACET slo_name, time_window SINCE 6 hours ago LIMIT 50`,
             9,
             7,
@@ -396,8 +404,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Probe Failures by Provider',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('probe_result')} ` +
-              `AND Status = 'failure' AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('probe_result')} ` +
+              `AND Status = 'failure' AND ${runtimeEnvironmentFilter} ` +
               `FACET ProviderId SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             1,
@@ -407,7 +415,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Probe Heartbeat (runs)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('probe_run_total')} AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('probe_run_total')} AND ${runtimeEnvironmentFilter} ` +
               `FACET ProviderId SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             7,
@@ -417,8 +425,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Provider Collection Failures',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('provider_collection_failure_by_provider_total')} ` +
-              `AND environment = '${envName}' FACET provider_id ` +
+              `WHERE ${buildMetricNameFilter('provider_collection_failure_by_provider_total')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET provider_id ` +
               `SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             1,
@@ -428,8 +436,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Provider Collection Successes',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('provider_collection_success_by_provider_total')} ` +
-              `AND environment = '${envName}' FACET provider_id ` +
+              `WHERE ${buildMetricNameFilter('provider_collection_success_by_provider_total')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET provider_id ` +
               `SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             7,
@@ -439,9 +447,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Collector Blocks / Attempt Latency',
             `FROM Metric SELECT ` +
-              `filter(sum(value), WHERE ${metricNameFilter('collector_block_count')}) AS 'block_count', ` +
-              `filter(average(value), WHERE ${metricNameFilter('collector_avg_attempt_ms')}) AS 'avg_attempt_ms' ` +
-              `WHERE environment = '${envName}' FACET ProviderId ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('collector_block_count')}) AS 'block_count', ` +
+              `filter(average(value), WHERE ${buildMetricNameFilter('collector_avg_attempt_ms')}) AS 'avg_attempt_ms' ` +
+              `WHERE ${runtimeEnvironmentFilter} FACET ProviderId ` +
               `SINCE 6 hours ago TIMESERIES 10 minutes`,
             9,
             1,
@@ -450,7 +458,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           ),
           widgetTable(
             'Provider Signal Inventory',
-            `FROM Metric SELECT count(*) WHERE environment = '${envName}' ` +
+            `FROM Metric SELECT count(*) WHERE ${runtimeEnvironmentFilter} ` +
               `AND (ProviderId IS NOT NULL OR provider_id IS NOT NULL) ` +
               `FACET metricName SINCE 6 hours ago LIMIT 50`,
             9,
@@ -464,8 +472,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Indices Aggregate: TEER Rate',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('indices_teer_rate')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago TIMESERIES 30 minutes`,
+              `WHERE ${buildMetricNameFilter('indices_teer_rate')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago TIMESERIES 30 minutes`,
             1,
             1,
             6,
@@ -474,9 +482,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Indices Aggregate: RCI Ratio / RVI BPS',
             `FROM Metric SELECT ` +
-              `filter(latest(value), WHERE ${metricNameFilter('indices_rci_ratio')}) AS 'rci_ratio', ` +
-              `filter(latest(value), WHERE ${metricNameFilter('indices_rvi_bps')}) AS 'rvi_bps' ` +
-              `WHERE environment = '${envName}' SINCE 24 hours ago TIMESERIES 30 minutes`,
+              `filter(latest(value), WHERE ${buildMetricNameFilter('indices_rci_ratio')}) AS 'rci_ratio', ` +
+              `filter(latest(value), WHERE ${buildMetricNameFilter('indices_rvi_bps')}) AS 'rvi_bps' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 24 hours ago TIMESERIES 30 minutes`,
             1,
             7,
             6,
@@ -485,8 +493,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Indices Availability / Suppression / Confidence',
             `FROM Metric SELECT latest(value) ` +
-              `WHERE ${metricNameFilter('slo_actual_value')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('slo_actual_value')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `AND slo_name IN ('indices_available_ratio', 'indices_suppressed_ratio', 'weight_confidence_p10') ` +
               `FACET slo_name SINCE 24 hours ago TIMESERIES 30 minutes`,
             5,
@@ -497,8 +505,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Indices Metric Inventory',
             `FROM Metric SELECT count(*) ` +
-              `WHERE ${metricNamesFilter(['indices_teer_rate', 'indices_rci_ratio', 'indices_rvi_bps', 'slo_actual_value'])} ` +
-              `AND environment = '${envName}' FACET metricName SINCE 24 hours ago LIMIT 20`,
+              `WHERE ${buildMetricNamesFilter(['indices_teer_rate', 'indices_rci_ratio', 'indices_rvi_bps', 'slo_actual_value'])} ` +
+              `AND ${runtimeEnvironmentFilter} FACET metricName SINCE 24 hours ago LIMIT 20`,
             5,
             7,
           ),
@@ -509,22 +517,23 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
         widgets: [
           widgetBillboard(
             'Exports Completed (24h)',
-            `FROM Metric SELECT sum(value) WHERE ${metricNameFilter('export_jobs_completed')} AND environment = '${envName}' SINCE 24 hours ago`,
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('export_jobs_completed')} AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             1,
           ),
           widgetBillboard(
             'Exports Failed (24h)',
-            `FROM Metric SELECT sum(value) WHERE ${metricNameFilter('export_jobs_failed')} AND environment = '${envName}' SINCE 24 hours ago`,
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('export_jobs_failed')} AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             4,
           ),
           widgetLine(
             'Export Queue Depth / Age',
             `FROM Metric SELECT ` +
-              `filter(max(value), WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%') AS 'visible', ` +
-              `filter(max(value), WHERE metricName LIKE 'aws.sqs.ApproximateAgeOfOldestMessage%') AS 'oldest_sec' ` +
+              `filter(max(value), WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')}) AS 'visible', ` +
+              `filter(max(value), WHERE ${buildAwsMetricLikeFilter('ApproximateAgeOfOldestMessage')}) AS 'oldest_sec' ` +
               `WHERE aws.sqs.QueueName LIKE '${queueNamePrefix}export-job%' ` +
+              `AND ${awsScope} ` +
               `SINCE 24 hours ago TIMESERIES 10 minutes`,
             1,
             7,
@@ -534,9 +543,9 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Export Worker Failures / DLQ Sends',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNamesFilter(['message_failed', 'dlq_sent'])} ` +
+              `WHERE ${buildMetricNamesFilter(['message_failed', 'dlq_sent'])} ` +
               `AND WorkerName LIKE 'export-%' ` +
-              `AND environment = '${envName}' FACET WorkerName, metricName SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `AND ${runtimeEnvironmentFilter} FACET WorkerName, metricName SINCE 24 hours ago TIMESERIES 10 minutes`,
             5,
             1,
             6,
@@ -545,8 +554,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Exports Metric Inventory',
             `FROM Metric SELECT count(*) ` +
-              `WHERE environment = '${envName}' ` +
-              `AND (${metricNamesFilter(['export_jobs_completed', 'export_jobs_failed', 'message_failed', 'dlq_sent'])}) ` +
+              `WHERE ${runtimeEnvironmentFilter} ` +
+              `AND (${buildMetricNamesFilter(['export_jobs_completed', 'export_jobs_failed', 'message_failed', 'dlq_sent'])}) ` +
               `FACET metricName, WorkerName SINCE 24 hours ago LIMIT 30`,
             5,
             7,
@@ -559,10 +568,10 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'API Requests / 4xx / 5xx',
             `FROM Metric SELECT ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.Count%') AS 'requests', ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.4XXError%') AS '4xx', ` +
-              `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.5XXError%') AS '5xx' ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.Count')}) AS 'requests', ` +
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.4XXError')}) AS '4xx', ` +
+              `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.5XXError')}) AS '5xx' ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} SINCE 24 hours ago TIMESERIES 10 minutes`,
             1,
             1,
             6,
@@ -572,8 +581,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             'API Latency p95/p99 (ms)',
             `FROM Metric SELECT percentile(value, 95, 99) ` +
               `WHERE aws.Namespace = 'AWS/ApiGateway' ` +
-              `AND metricName LIKE 'aws.apigateway.Latency%' ` +
-              `AND ${scope} SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `AND ${buildAwsMetricLikeFilter('apigateway.Latency')} ` +
+              `AND ${awsScope} SINCE 24 hours ago TIMESERIES 10 minutes`,
             1,
             7,
             6,
@@ -582,37 +591,33 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'API Gateway Samples (fallback)',
             `FROM ApiGatewaySample SELECT count(*) ` +
-              `WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%') ` +
+              `WHERE ((${awsScope}) OR providerAccountName LIKE 'remit-scout-${envName}-%') ` +
               `SINCE 24 hours ago TIMESERIES 10 minutes`,
             5,
             1,
             6,
             4,
           ),
-          widgetLine(
-            'Cross-Plane Hop p95 (ms)',
-            `FROM Metric SELECT percentile(value, 95) ` +
-              `WHERE ${metricNameFilter('cross_plane_hop_duration_ms')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago TIMESERIES 10 minutes`,
+          widgetMarkdown(
+            'Cross-Plane Hop (Not Instrumented)',
+            'Cross-plane hop custom metric is not currently emitted in this profile. Use API Gateway latency and Span throughput widgets.',
             5,
             7,
             6,
-            4,
+            2,
           ),
-          widgetLine(
-            'Cross-Plane Error Amplification',
-            `FROM Metric SELECT average(value) ` +
-              `WHERE ${metricNameFilter('cross_plane_error_amplification')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago TIMESERIES 10 minutes`,
+          widgetMarkdown(
+            'Cross-Plane Error Amplification (Not Instrumented)',
+            'Cross-plane amplification custom metric is not currently emitted in this profile. This is an explicit instrumentation gap widget.',
             9,
             1,
             6,
-            4,
+            2,
           ),
           widgetTable(
             'API Metric Breakdown',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope} ` +
+              `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsScope} ` +
               `FACET metricName SINCE 24 hours ago LIMIT 30`,
             9,
             7,
@@ -625,8 +630,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Probe Success/Failure by Provider',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('probe_result')} ` +
-              `AND environment = '${envName}' FACET ProviderId, Status SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNameFilter('probe_result')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET ProviderId, Status SINCE 24 hours ago TIMESERIES 10 minutes`,
             1,
             1,
             6,
@@ -635,8 +640,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Probe Runs by Provider',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('probe_run_total')} ` +
-              `AND environment = '${envName}' FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNameFilter('probe_run_total')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
             1,
             7,
             6,
@@ -645,8 +650,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Provider Probe Failures (24h)',
             `FROM Metric SELECT sum(value) AS failures ` +
-              `WHERE ${metricNameFilter('probe_result')} ` +
-              `AND Status = 'failure' AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('probe_result')} ` +
+              `AND Status = 'failure' AND ${runtimeEnvironmentFilter} ` +
               `FACET ProviderId SINCE 24 hours ago LIMIT 50`,
             5,
             1,
@@ -654,16 +659,16 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Provider Probe Coverage (24h)',
             `FROM Metric SELECT sum(value) AS runs ` +
-              `WHERE ${metricNameFilter('probe_run_total')} ` +
-              `AND environment = '${envName}' FACET ProviderId SINCE 24 hours ago LIMIT 50`,
+              `WHERE ${buildMetricNameFilter('probe_run_total')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET ProviderId SINCE 24 hours ago LIMIT 50`,
             5,
             7,
           ),
           widgetLine(
             'Collector Block Count by Provider',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('collector_block_count')} ` +
-              `AND environment = '${envName}' FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNameFilter('collector_block_count')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
             9,
             1,
             6,
@@ -672,8 +677,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Collector Avg Attempt (ms) by Provider',
             `FROM Metric SELECT average(value) ` +
-              `WHERE ${metricNameFilter('collector_avg_attempt_ms')} ` +
-              `AND environment = '${envName}' FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
+              `WHERE ${buildMetricNameFilter('collector_avg_attempt_ms')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET ProviderId SINCE 24 hours ago TIMESERIES 10 minutes`,
             9,
             7,
             6,
@@ -687,43 +692,43 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetBillboard(
             'Search Events (24h)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('telemetry_search_events_total')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago`,
+              `WHERE ${buildMetricNameFilter('telemetry_search_events_total')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             1,
           ),
           widgetBillboard(
             'Provider Visits (24h)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('telemetry_provider_visits_total')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago`,
+              `WHERE ${buildMetricNameFilter('telemetry_provider_visits_total')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             4,
           ),
           widgetBillboard(
             'Affiliate Clicks (24h)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('telemetry_affiliate_click_events_total')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago`,
+              `WHERE ${buildMetricNameFilter('telemetry_affiliate_click_events_total')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             7,
           ),
           widgetBillboard(
             'Affiliate Conversions (24h)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('telemetry_affiliate_conversions_total')} ` +
-              `AND environment = '${envName}' SINCE 24 hours ago`,
+              `WHERE ${buildMetricNameFilter('telemetry_affiliate_conversions_total')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago`,
             1,
             10,
           ),
           widgetLine(
             'Sessions / Searches / Clicks / Conversions',
             `FROM Metric SELECT ` +
-              `filter(sum(value), WHERE ${metricNameFilter('telemetry_sessions_started_total')}) AS 'sessions', ` +
-              `filter(sum(value), WHERE ${metricNameFilter('telemetry_search_events_total')}) AS 'searches', ` +
-              `filter(sum(value), WHERE ${metricNameFilter('telemetry_click_events_total')}) AS 'clicks', ` +
-              `filter(sum(value), WHERE ${metricNameFilter('telemetry_affiliate_conversions_total')}) AS 'conversions' ` +
-              `WHERE environment = '${envName}' SINCE 24 hours ago TIMESERIES 30 minutes`,
+              `filter(sum(value), WHERE ${buildMetricNameFilter('telemetry_sessions_started_total')}) AS 'sessions', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('telemetry_search_events_total')}) AS 'searches', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('telemetry_click_events_total')}) AS 'clicks', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('telemetry_affiliate_conversions_total')}) AS 'conversions' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 24 hours ago TIMESERIES 30 minutes`,
             4,
             1,
             6,
@@ -732,8 +737,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'Affiliate Conversion Value (Money Made Proxy)',
             `FROM Metric SELECT sum(value) ` +
-              `WHERE ${metricNameFilter('telemetry_affiliate_conversion_value')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('telemetry_affiliate_conversion_value')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `FACET conversion_currency SINCE 24 hours ago TIMESERIES 30 minutes`,
             4,
             7,
@@ -743,8 +748,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Top Providers by Clicks (24h)',
             `FROM Metric SELECT sum(value) AS clicks ` +
-              `WHERE ${metricNameFilter('telemetry_click_events_total')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('telemetry_click_events_total')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `FACET provider_id SINCE 24 hours ago LIMIT 25`,
             8,
             1,
@@ -752,8 +757,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Top Providers by Conversion Value (24h)',
             `FROM Metric SELECT sum(value) AS conversion_value ` +
-              `WHERE ${metricNameFilter('telemetry_affiliate_conversion_value')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('telemetry_affiliate_conversion_value')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `FACET provider_id, conversion_currency SINCE 24 hours ago LIMIT 25`,
             8,
             7,
@@ -761,8 +766,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetTable(
             'Acquisition Sources (Sessions, 24h)',
             `FROM Metric SELECT sum(value) AS sessions ` +
-              `WHERE ${metricNameFilter('telemetry_sessions_started_total')} ` +
-              `AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('telemetry_sessions_started_total')} ` +
+              `AND ${runtimeEnvironmentFilter} ` +
               `FACET acquisition_source SINCE 24 hours ago LIMIT 20`,
             12,
             1,
@@ -804,8 +809,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             'Aurora: CPU + Connections',
             `FROM Metric SELECT average(value) ` +
               `WHERE aws.Namespace = 'AWS/RDS' ` +
-              `AND metricName IN ('aws.rds.CPUUtilization', 'aws.rds.DatabaseConnections') ` +
-              `AND ${scope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `AND (${buildAwsMetricLikeFilter('rds.CPUUtilization')} OR ${buildAwsMetricLikeFilter('rds.DatabaseConnections')}) ` +
+              `AND ${awsScope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             1,
             6,
@@ -815,8 +820,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             'Aurora: Memory / Disk Queue / Replica Lag',
             `FROM Metric SELECT average(value) ` +
               `WHERE aws.Namespace = 'AWS/RDS' ` +
-              `AND metricName IN ('aws.rds.FreeableMemory', 'aws.rds.DiskQueueDepth', 'aws.rds.AuroraReplicaLagMaximum') ` +
-              `AND ${scope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `AND (${buildAwsMetricLikeFilter('rds.FreeableMemory')} OR ${buildAwsMetricLikeFilter('rds.DiskQueueDepth')} OR ${buildAwsMetricLikeFilter('rds.AuroraReplicaLagMaximum')}) ` +
+              `AND ${awsScope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
             1,
             7,
             6,
@@ -826,8 +831,8 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             'Redis: Connections + Engine CPU',
             `FROM Metric SELECT average(value) ` +
               `WHERE aws.Namespace = 'AWS/ElastiCache' ` +
-              `AND metricName IN ('aws.elasticache.CurrConnections', 'aws.elasticache.MaxConnections', 'aws.elasticache.EngineCPUUtilization') ` +
-              `AND ${scope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `AND (${buildAwsMetricLikeFilter('elasticache.CurrConnections')} OR ${buildAwsMetricLikeFilter('elasticache.MaxConnections')} OR ${buildAwsMetricLikeFilter('elasticache.EngineCPUUtilization')}) ` +
+              `AND ${awsScope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             1,
             6,
@@ -838,7 +843,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
             `FROM Metric SELECT average(value) ` +
               `WHERE aws.Namespace IN ('AWS/ECS', 'ECS/ContainerInsights') ` +
               `AND (metricName LIKE '%CPU%' OR metricName LIKE '%Memory%' OR metricName LIKE '%RestartCount%') ` +
-              `AND ${scope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
+              `AND ${awsScope} FACET metricName SINCE 6 hours ago TIMESERIES 10 minutes`,
             5,
             7,
             6,
@@ -847,7 +852,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           widgetLine(
             'DB Pool Waiting',
             `FROM Metric SELECT max(value) ` +
-              `WHERE ${metricNameFilter('db_connection_pool_waiting')} AND environment = '${envName}' ` +
+              `WHERE ${buildMetricNameFilter('db_connection_pool_waiting')} AND ${runtimeEnvironmentFilter} ` +
               `FACET pool_name SINCE 6 hours ago TIMESERIES 10 minutes`,
             9,
             1,
@@ -856,7 +861,7 @@ const buildDashboardInput = ({ environmentName, envName, nameToken }) => {
           ),
           widgetTable(
             'Top Infra Metric Names',
-            `FROM Metric SELECT count(*) WHERE ${scope} FACET aws.Namespace, metricName SINCE 6 hours ago LIMIT 50`,
+            `FROM Metric SELECT count(*) WHERE ${awsScope} FACET aws.Namespace, metricName SINCE 6 hours ago LIMIT 50`,
             9,
             7,
           ),
@@ -977,8 +982,18 @@ const upsertDashboard = async (dashboardInput) => {
 
 const main = async () => {
   const targets = [
-    { environmentName: 'Staging', envName: 'staging', nameToken: 'remit-scout-staging' },
-    { environmentName: 'Production', envName: 'prod', nameToken: 'remit-scout-prod' },
+    {
+      environmentName: 'Staging',
+      envName: 'staging',
+      nameToken: 'remit-scout-staging',
+      awsAccountId: NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
+    },
+    {
+      environmentName: 'Production',
+      envName: 'prod',
+      nameToken: 'remit-scout-prod',
+      awsAccountId: NEW_RELIC_PROD_AWS_ACCOUNT_ID,
+    },
   ]
 
   const results = []

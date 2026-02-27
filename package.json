@@ -28,7 +28,13 @@
     "ops:newrelic:full": "node ops/newrelic/bootstrap-all.mjs",
     "ops:newrelic:verify": "node ops/newrelic/verify-signals.mjs",
     "verifier:contract": "node scripts/verifier/check-quality-contract.mjs",
-    "verifier:workflow-consumer-contract": "node scripts/verifier/check-workflow-consumer.mjs"
+    "verifier:workflow-consumer-contract": "node scripts/verifier/check-workflow-consumer.mjs",
+    "ralph:plan": "node scripts/ralph/plan.mjs build",
+    "ralph:sync-specs": "node scripts/ralph/plan.mjs sync",
+    "ralph:next": "node scripts/ralph/plan.mjs next",
+    "ralph:loop:plan": "scripts/ralph-loop.sh plan",
+    "ralph:loop": "scripts/ralph-loop.sh run",
+    "ralph:loop:forever": "RALPH_MAX_ITERATIONS=0 scripts/ralph-loop.sh run"
   },
   "lint-staged": {
     "{pnpm-lock.yaml,package.json,backend/package.json,frontend/package.json,infrastructure/cdk/package.json}": "node scripts/ci/precommit-audit.mjs"

@@ -5,6 +5,7 @@ import { shutdownTracing } from './tracing'
 import { captureError } from './error-tracker'
 import { getLambdaContext, isLambdaTimeoutWarning, type LambdaContext } from './utils/aws-context'
 import { emitOpsEvent } from './ops-events'
+import { shutdownNewRelicLogExport } from './newrelic-log-exporter'
 
 const logger = createLogger('shared.shutdown')
 
@@ -190,10 +191,25 @@ const performCleanup = async (
     },
   })
 
+  cleanupTasks.push({
+    name: 'flush_new_relic_logs',
+    priority: 5,
+    task: async () => {
+      try {
+        await shutdownNewRelicLogExport()
+        log.debug('new_relic_logs_flushed')
+      } catch (error) {
+        log.warn('new_relic_logs_flush_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    },
+  })
+
   for (const hook of shutdownHooks) {
     cleanupTasks.push({
       name: 'custom_shutdown_hook',
-      priority: 5,
+      priority: 6,
       task: async () => {
         try {
           await Promise.resolve(hook())

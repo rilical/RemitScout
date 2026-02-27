@@ -211,6 +211,17 @@ Shared logic:
   - `SELECT provider_id, COUNT(*) FROM silver.provider_corridor_capability GROUP BY provider_id;`
 
 
+## Related agents (cross-reference when needed)
+- **Triangulation Engine** (`agents/rag/triangulation-engine.md`): Consumes observations from collectors to compute composite corridor indices. When collector output changes, triangulation inputs may be affected.
+- **Agent Orchestration** (`agents/rag/agent-orchestration.md`): Provides LLM-powered self-healing for collectors. When a collector persistently fails, the agent orchestrator assembles a FailureBundle from BaseCollector error context and proposes parser patches.
+- **Signal Modules** (`agents/rag/signal-modules.md`): Non-quote data collectors that follow the same Bronze→Silver pattern but use the generic `JobHandler` interface instead of `BaseCollector`. Existing quote collectors are bridged via `QuoteJobHandlerAdapter`.
+
+## Integration with agent-first layer
+- `BaseCollector` emits `FailureBundle` to SQS `agent-failure` queue on persistent failures (>3 consecutive, behind `AGENT_ENABLED` flag).
+- `BaseCollector` optionally dual-writes `ObservationEnvelope` to `silver.observation` alongside `silver.quote_record` (behind `EMIT_OBSERVATIONS` flag).
+- `QuoteJobHandlerAdapter` wraps existing `BaseCollector` subclasses as `JobHandler` instances for the new handler framework.
+- Provider `parse.ts` files are the ONLY files the agent orchestrator is allowed to propose patches for.
+
 ## Self-healing loop
 - Detect missing/incorrect fundamentals that affect multiple agents and propose updates to `ARCHITECTURE.md`.
 - Detect agent-specific gaps and propose updates to this RAG file.

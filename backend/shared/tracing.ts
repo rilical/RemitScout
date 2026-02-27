@@ -26,10 +26,34 @@ let initialized = false
 
 const configValue = (value?: string) => value?.trim() || ''
 
+const normalizeEnvironmentName = (value?: string): string => {
+  const normalized = configValue(value).toLowerCase()
+  if (!normalized) return 'development'
+  if (normalized === 'production') return 'prod'
+  if (normalized === 'development') return 'dev'
+  return normalized
+}
+
+const resolveDeploymentEnvironment = (): string => {
+  const envFromEnvironment = configValue(process.env.ENVIRONMENT) || configValue(config.envName)
+  if (envFromEnvironment) return normalizeEnvironmentName(envFromEnvironment)
+  return normalizeEnvironmentName(configValue(config.env) || configValue(process.env.NODE_ENV))
+}
+
+const resolveDefaultNewRelicOtlpEndpoint = (): string => {
+  const environment = resolveDeploymentEnvironment()
+  if (environment !== 'staging' && environment !== 'prod') return ''
+  const newRelicRegion = configValue(process.env.NEW_RELIC_REGION).toUpperCase()
+  return newRelicRegion === 'EU'
+    ? 'https://otlp.eu01.nr-data.net/v1/traces'
+    : 'https://otlp.nr-data.net/v1/traces'
+}
+
 const resolveOtlpEndpoint = (): string =>
   configValue(process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) ||
   configValue(process.env.OTEL_EXPORTER_OTLP_ENDPOINT) ||
-  configValue(config.observability.tracing.otlpEndpoint)
+  configValue(config.observability.tracing.otlpEndpoint) ||
+  resolveDefaultNewRelicOtlpEndpoint()
 
 const parseOtlpHeaders = (): Record<string, string> => {
   const raw =
@@ -80,6 +104,7 @@ const parseExporterMode = (): string[] => {
       if (!mode) continue
       if (mode === 'both' || mode === 'all') {
         modes.push('xray')
+        modes.push('otlp')
       } else {
         modes.push(mode)
       }
@@ -88,7 +113,7 @@ const parseExporterMode = (): string[] => {
   }
 
   if (resolveOtlpEndpoint()) {
-    return ['xray']
+    return ['otlp']
   }
 
   return ['none']
@@ -104,11 +129,12 @@ export const initTracing = (serviceName: string): void => {
     return
   }
 
-  const environment = config.env || 'development'
+  const environment = resolveDeploymentEnvironment()
   const version = config.build.version || 'unknown'
   const nodeEnv = configValue(process.env.NODE_ENV) || 'development'
   const isProdNodeEnv = nodeEnv === 'production'
-  const isProdEnvName = environment === 'prod' || environment === 'production'
+  const isProdEnvName =
+    environment === 'prod' || environment === 'production' || environment === 'staging'
   const exporterModes = parseExporterMode()
   const requestedXray = exporterModes.includes('xray')
   const requestedOtlp = exporterModes.includes('otlp')
@@ -125,6 +151,7 @@ export const initTracing = (serviceName: string): void => {
     const resource = new Resource({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: version,
+      environment,
       'deployment.environment': environment,
     })
 

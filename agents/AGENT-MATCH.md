@@ -17,6 +17,11 @@ Rules:
 - If it mentions release readiness, deploy gate, or pre-deploy validation, use release-readiness-gate skill.
 - If it mentions capacity, scaling projections, or growth limits, use capacity-planner skill.
 - If it mentions IssueOps cases, `.remit-scout/` contracts, the Brain loop, Slack front desk, or skill routing/dispatch, include IssueOps Operator.
+- If it mentions triangulation, corridor stress, composite indices, informal premium, capital control intensity, or multi-signal observation, include Triangulation Engine.
+- If it mentions agent self-healing, parser patches, failure bundles, LLM-driven fixes, adaptive probing, stress response, or canary rollout of parser changes, include Agent Orchestration.
+- If it mentions signal modules, observation envelopes, status page monitoring, app intelligence, search trends, sanctions diffs, on-chain flows, hawala observations, or adding a new non-quote data source, include Signal Modules.
+- If it mentions index methodology, versioning, point-in-time truth, Total Collection Error, data quality framework, mystery shopper audits, reprocessing/backfills, or benchmark governance, include Index Governance.
+- If it mentions Tool Gateway, Knowledge Plane, tool requests, domain allowlists, agent tool permissions, or debug capture, include Agent Orchestration.
 
 Output format (exact):
 Chosen agents: <list>

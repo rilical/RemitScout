@@ -10,9 +10,17 @@
  * - NEW_RELIC_REGION (US|EU, default US)
  */
 
+import {
+  buildAwsMetricLikeFilter,
+  buildEnvScopeClause,
+  buildMetricNameFilter,
+} from './nrql-helpers.mjs'
+
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
 const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
+const NEW_RELIC_STAGING_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID || '').trim()
+const NEW_RELIC_PROD_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID || '').trim()
 
 if (!NEW_RELIC_USER_API_KEY) {
   console.error('Missing NEW_RELIC_USER_API_KEY')
@@ -233,26 +241,20 @@ const toConditionUpdateInput = (definition) => ({
   violationTimeLimitSeconds: 86400,
 })
 
-const scopeClause = (token, envName) =>
-  `(
-    environment = '${envName}'
-    OR entity.name LIKE '%${token}%'
-    OR aws.lambda.FunctionName LIKE '%${token}%'
-    OR aws.sqs.QueueName LIKE '%${token}%'
-    OR aws.logs.Resource LIKE '%${token}%'
-    OR appName LIKE '%${token}%'
-  )`
-
-const metricNameFilter = (name) =>
-  `(metricName = '${name}' OR metricName = 'aws.remitscout.${name}')`
-
-const buildConditionDefinitions = ({ envName, envLabel, token }) => {
-  const scope = scopeClause(token, envName)
+const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) => {
+  const scope = buildEnvScopeClause({
+    envName,
+    nameToken: token,
+    awsAccountId,
+    allowMissingAwsAccount: false,
+  })
   const queueNamePrefix = `remit-scout-${envName}-`
-  const runtimeEnvironmentFilter =
-    envName === 'prod'
-      ? `(environment = 'prod' OR environment = 'production')`
-      : `environment = '${envName}'`
+  const runtimeScopedFilter = buildEnvScopeClause({
+    envName,
+    nameToken: token,
+    awsAccountId,
+    allowMissingAwsAccount: true,
+  })
   const apiErrorThreshold = envName === 'prod' ? 0.02 : 0.05
   const probeFailureBurstThreshold = envName === 'prod' ? 3 : 5
   const runbookBase =
@@ -265,8 +267,8 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       description: 'Mirror of CloudWatch gate: remit-scout-<env>-api-error-rate-high',
       query:
         `FROM Metric SELECT ` +
-        `filter(sum(value), WHERE metricName LIKE 'aws.apigateway.5XXError%') ` +
-        `/ filter(sum(value), WHERE metricName LIKE 'aws.apigateway.Count%') ` +
+        `filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.5XXError')}) ` +
+        `/ filter(sum(value), WHERE ${buildAwsMetricLikeFilter('apigateway.Count')}) ` +
         `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${scope}`,
       operator: 'ABOVE',
       threshold: apiErrorThreshold,
@@ -280,7 +282,7 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       query:
         `FROM Metric SELECT percentile(value, 99) ` +
         `WHERE aws.Namespace = 'AWS/ApiGateway' ` +
-        `AND metricName LIKE 'aws.apigateway.Latency%' ` +
+        `AND ${buildAwsMetricLikeFilter('apigateway.Latency')} ` +
         `AND ${scope}`,
       operator: 'ABOVE',
       threshold: 5000,
@@ -293,8 +295,9 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       description: 'Mirror of DLQ depth critical signal (>=1)',
       query:
         `FROM Metric SELECT sum(value) ` +
-        `WHERE metricName LIKE 'aws.sqs.ApproximateNumberOfMessagesVisible%' ` +
-        `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq'`,
+        `WHERE ${buildAwsMetricLikeFilter('ApproximateNumberOfMessagesVisible')} ` +
+        `AND aws.sqs.QueueName LIKE '${queueNamePrefix}%-dlq' ` +
+        `AND ${scope}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: 1,
       thresholdDuration: 300,
@@ -306,8 +309,8 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       description: 'Mirror of SLO breach metric signal',
       query:
         `FROM Metric SELECT sum(value) ` +
-        `WHERE ${metricNameFilter('slo_breach_total')} ` +
-        `AND ${runtimeEnvironmentFilter}`,
+        `WHERE ${buildMetricNameFilter('slo_breach_total')} ` +
+        `AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: 1,
       thresholdDuration: 300,
@@ -319,8 +322,8 @@ const buildConditionDefinitions = ({ envName, envLabel, token }) => {
       description: 'Mirror of provider probe failure burst alarm',
       query:
         `FROM Metric SELECT sum(value) ` +
-        `WHERE ${metricNameFilter('probe_result')} ` +
-        `AND Status = 'failure' AND ${runtimeEnvironmentFilter}`,
+        `WHERE ${buildMetricNameFilter('probe_result')} ` +
+        `AND Status = 'failure' AND ${runtimeScopedFilter}`,
       operator: 'ABOVE_OR_EQUALS',
       threshold: probeFailureBurstThreshold,
       thresholdDuration: 300,
@@ -346,8 +349,18 @@ const upsertCondition = async (policyId, definition) => {
 
 const main = async () => {
   const targets = [
-    { envName: 'staging', envLabel: 'STAGING', token: 'remit-scout-staging' },
-    { envName: 'prod', envLabel: 'PROD', token: 'remit-scout-prod' },
+    {
+      envName: 'staging',
+      envLabel: 'STAGING',
+      token: 'remit-scout-staging',
+      awsAccountId: NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
+    },
+    {
+      envName: 'prod',
+      envLabel: 'PROD',
+      token: 'remit-scout-prod',
+      awsAccountId: NEW_RELIC_PROD_AWS_ACCOUNT_ID,
+    },
   ]
 
   for (const target of targets) {

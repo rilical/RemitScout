@@ -12,6 +12,7 @@
  * - NEW_RELIC_WINDOW_MINUTES (default 60)
  * - NEW_RELIC_STAGING_AWS_ACCOUNT_ID (optional AWS account scoping)
  * - NEW_RELIC_PROD_AWS_ACCOUNT_ID (optional AWS account scoping)
+ * - REQUIRE_ACCOUNT_PINNING (0|1, default 1)
  * - REQUIRE_LOGS (0|1, default 1)
  * - REQUIRE_SPANS (0|1, default 1)
  * - REQUIRE_API_GW_METRICS (0|1, default 1)
@@ -19,12 +20,23 @@
  * - REQUIRE_CUSTOM_METRICS (0|1, default 1)
  */
 
+import {
+  buildAwsMetricLikeFilter,
+  buildEnvScopeClause,
+  buildEnvironmentFilter,
+  buildMetricNamesFilter,
+  normalizeEnvName,
+} from './nrql-helpers.mjs'
+
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
 const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
-const TARGET_ENV = (process.env.NEW_RELIC_TARGET_ENV || 'all').trim().toLowerCase()
+const TARGET_ENV = normalizeEnvName((process.env.NEW_RELIC_TARGET_ENV || 'all').trim().toLowerCase())
 const WINDOW_MINUTES = Number.parseInt(process.env.NEW_RELIC_WINDOW_MINUTES || '60', 10)
+const NEW_RELIC_STAGING_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID || '').trim()
+const NEW_RELIC_PROD_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID || '').trim()
 
+const requireAccountPinning = process.env.REQUIRE_ACCOUNT_PINNING !== '0'
 const requireLogs = process.env.REQUIRE_LOGS !== '0'
 const requireSpans = process.env.REQUIRE_SPANS !== '0'
 const requireApiGatewayMetrics = process.env.REQUIRE_API_GW_METRICS !== '0'
@@ -113,59 +125,85 @@ const nrqlRows = async (query) => {
   return data.actor.account.nrql.results || []
 }
 
-const scopeClause = (token, envName) => {
-  const environmentFilter =
-    envName === 'prod'
-      ? `(environment = 'prod' OR environment = 'production')`
-      : `environment = '${envName}'`
-
-  return `(
-    ${environmentFilter}
-    OR entity.name LIKE '%${token}%'
-    OR aws.lambda.FunctionName LIKE '%${token}%'
-    OR aws.sqs.QueueName LIKE '%${token}%'
-    OR aws.logs.Resource LIKE '%${token}%'
-    OR appName LIKE '%${token}%'
-  )`
-}
-
-const toDualMetricNames = (names) => {
-  const all = new Set()
-  for (const name of names) {
-    all.add(name)
-    all.add(`aws.remitscout.${name}`)
-  }
-  return Array.from(all)
-}
-
 const verifyTarget = async ({ envName, token, awsAccountId }) => {
-  const scope = scopeClause(token, envName)
-  const metricScope = awsAccountId
-    ? `(${scope}) AND aws.accountId = '${awsAccountId}'`
-    : scope
+  const runtimeScope = buildEnvironmentFilter(envName)
+  const scope = buildEnvScopeClause({
+    envName,
+    nameToken: token,
+    awsAccountId,
+    allowMissingAwsAccount: true,
+  })
+  const awsMetricScope = buildEnvScopeClause({
+    envName,
+    nameToken: token,
+    awsAccountId,
+    allowMissingAwsAccount: false,
+  })
   const apiGatewaySampleAccountScope = awsAccountId
     ? ` AND (aws.accountId = '${awsAccountId}' OR providerAccountName LIKE '%${awsAccountId}%')`
     : ''
   const since = `${WINDOW_MINUTES} minutes ago`
   const queuePrefix = `remit-scout-${envName}-`
-  const expectedCustomMetricNames = toDualMetricNames([
-    'slo_actual_value',
-    'slo_compliance_ratio',
-    'slo_breach_total',
-    'worker_backpressure_active',
-    'cross_plane_hop_duration_ms',
-    'cross_plane_error_amplification',
-    'indices_teer_rate',
-    'indices_rci_ratio',
-    'indices_rvi_bps',
-    'export_jobs_completed',
-    'export_jobs_failed',
-  ])
-  const expectedCustomMetricNamesNrql = expectedCustomMetricNames.map((name) => `'${name}'`).join(',')
+  const customMetricFamilies = [
+    {
+      name: 'core_slo_indices',
+      required: true,
+      metricNames: [
+        'slo_actual_value',
+        'slo_compliance_ratio',
+        'slo_breach_total',
+        'indices_teer_rate',
+        'indices_rci_ratio',
+        'indices_rvi_bps',
+        'oanda_sync_failures_total',
+        'db_connection_pool_waiting',
+        'worker_backpressure_active',
+      ],
+    },
+    {
+      name: 'workers',
+      required: false,
+      metricNames: ['message_failed', 'dlq_sent', 'lock_failed', 'envelope_parse_error', 'stale_dropped'],
+    },
+    {
+      name: 'probes_collectors',
+      required: false,
+      metricNames: [
+        'probe_result',
+        'probe_run_total',
+        'collector_block_count',
+        'collector_avg_attempt_ms',
+        'provider_collection_failure_by_provider_total',
+        'provider_collection_success_by_provider_total',
+      ],
+    },
+    {
+      name: 'business',
+      required: false,
+      metricNames: [
+        'telemetry_search_events_total',
+        'telemetry_provider_visits_total',
+        'telemetry_affiliate_click_events_total',
+        'telemetry_affiliate_conversions_total',
+        'telemetry_affiliate_conversion_value',
+        'export_jobs_completed',
+        'export_jobs_failed',
+      ],
+    },
+  ]
+  const familyCounts = {}
+  for (const family of customMetricFamilies) {
+    familyCounts[family.name] = await nrqlValue(
+      `FROM Metric SELECT count(*) AS value ` +
+        `WHERE ${buildMetricNamesFilter(family.metricNames)} AND ${runtimeScope} SINCE ${since}`,
+      'value',
+    )
+  }
+  const customMetricCount = Object.values(familyCounts).reduce((sum, count) => sum + Number(count || 0), 0)
 
   const checks = {
     metricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE ${metricScope} SINCE ${since}`,
+      `FROM Metric SELECT count(*) AS value WHERE ${scope} SINCE ${since}`,
       'value',
     ),
     logCount: await nrqlValue(
@@ -177,7 +215,10 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
       'value',
     ),
     apiGatewayMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/ApiGateway' AND ${metricScope} SINCE ${since}`,
+      `FROM Metric SELECT count(*) AS value ` +
+        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsMetricScope} ` +
+        `AND (${buildAwsMetricLikeFilter('apigateway.Count')} OR ${buildAwsMetricLikeFilter('apigateway.Latency')} OR ${buildAwsMetricLikeFilter('apigateway.5XXError')}) ` +
+        `SINCE ${since}`,
       'value',
     ),
     apiGatewaySampleCount: await nrqlValue(
@@ -185,14 +226,16 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
       'value',
     ),
     sqsMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value WHERE aws.Namespace = 'AWS/SQS' AND aws.sqs.QueueName LIKE '${queuePrefix}%' AND ${metricScope} SINCE ${since}`,
-      'value',
-    ),
-    customMetricCount: await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE metricName IN (${expectedCustomMetricNamesNrql}) AND ${metricScope} SINCE ${since}`,
+        `WHERE aws.Namespace = 'AWS/SQS' ` +
+        `AND aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
+        `AND ${buildAwsMetricLikeFilter('Approximate')} ` +
+        `AND ${awsMetricScope} ` +
+        `SINCE ${since}`,
       'value',
     ),
+    customMetricCount,
+    customMetricFamilies: familyCounts,
   }
 
   const failures = []
@@ -204,18 +247,25 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
   }
   if (requireSqsMetrics && checks.sqsMetricCount <= 0) failures.push('sqsMetricCount')
   if (requireCustomMetrics && checks.customMetricCount <= 0) failures.push('customMetricCount')
+  if (requireCustomMetrics) {
+    for (const family of customMetricFamilies) {
+      if (family.required && Number(checks.customMetricFamilies[family.name] || 0) <= 0) {
+        failures.push(`customMetricFamily:${family.name}`)
+      }
+    }
+  }
 
   const diagnostics = {}
   if (failures.length > 0) {
     diagnostics.topNamespaces = await nrqlRows(
-      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${metricScope} FACET aws.Namespace SINCE ${since} LIMIT 10`,
+      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${scope} FACET aws.Namespace SINCE ${since} LIMIT 10`,
     )
     diagnostics.topEntities = await nrqlRows(
-      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${metricScope} FACET entity.name SINCE ${since} LIMIT 15`,
+      `FROM Metric SELECT count(*) WHERE metricName IS NOT NULL AND ${scope} FACET entity.name SINCE ${since} LIMIT 15`,
     )
     diagnostics.tokenMetricCount = await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE ${metricScope} ` +
+        `WHERE ${scope} ` +
         `AND (entity.name LIKE '%${token}%' ` +
         `OR aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
         `OR aws.lambda.FunctionName LIKE '%${token}%' ` +
@@ -223,6 +273,7 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
         `SINCE ${since}`,
       'value',
     )
+    diagnostics.customMetricFamilies = checks.customMetricFamilies
   }
 
   return {
@@ -238,17 +289,29 @@ const main = async () => {
     {
       envName: 'staging',
       token: 'remit-scout-staging',
-      awsAccountId: process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID || '',
+      awsAccountId: NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
     },
     {
       envName: 'prod',
       token: 'remit-scout-prod',
-      awsAccountId: process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID || '',
+      awsAccountId: NEW_RELIC_PROD_AWS_ACCOUNT_ID,
     },
   ].filter((target) => TARGET_ENV === 'all' || TARGET_ENV === target.envName)
 
   if (targets.length === 0) {
     throw new Error(`Unsupported NEW_RELIC_TARGET_ENV: ${TARGET_ENV}`)
+  }
+
+  if (requireAccountPinning) {
+    const missingPins = targets
+      .filter((target) => !target.awsAccountId)
+      .map((target) => target.envName)
+    if (missingPins.length > 0) {
+      throw new Error(
+        `Missing pinned AWS account IDs for target env(s): ${missingPins.join(', ')}. ` +
+          `Set NEW_RELIC_STAGING_AWS_ACCOUNT_ID and/or NEW_RELIC_PROD_AWS_ACCOUNT_ID.`,
+      )
+    }
   }
 
   const results = []

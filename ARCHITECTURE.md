@@ -22,6 +22,11 @@ Detailed docs live under:
 9. Runbooks (human-facing): `docs/runbooks/`
 10. DR runbook: `docs/runbooks/disaster-recovery.md`
 11. New Relic observability runbook: `docs/runbooks/newrelic-observability.md`
+12. Triangulation engine: `agents/rag/triangulation-engine.md`
+13. Agent orchestration (self-healing + adaptive probing + tool gateway): `agents/rag/agent-orchestration.md`
+14. Signal modules (non-quote data collectors): `agents/rag/signal-modules.md`
+15. Index governance (methodology versioning + Total Collection Error + audit protocol): `agents/rag/index-governance.md`
+16. Architecture roadmap: `docs/architecture/triangulation-roadmap.md`
 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.
@@ -42,19 +47,57 @@ Detailed docs live under:
 - Cross-plane trace continuity is required for public request paths (A -> C -> B) using propagated trace context and correlation identifiers.
 - Plan-gated history windows must be enforced consistently across backend entitlements and UI selectors (free=30 days, plus=90 days, enterprise=extended/unlimited).
 
+### Index semantic rules (hard constraints)
+- **TEER** (price-level): only fees, spreads, markups in bps/effective rate. Status incidents, policy shocks, behavioral signals do NOT belong in TEER.
+- **RVI** (microstructure/volatility): dispersion and tail behavior. Outages/policy shocks are regime labels conditioning RVI, NOT direct inputs.
+- **RCI** (constraints/friction): status degradation, sanctions/policy, behavioral stress proxies. Raw FX rates/fees do NOT belong in RCI.
+- Three-axis versioning: `parser_version` (extractor logic), `schema_version` (payload contract), `methodology_version` (index construction). All must be stored on output records.
+- Point-in-time truth: given (corridor, timestamp, methodology_version) → deterministic output.
+
+### Triangulation + agent invariants
+- Triangulated indices must never treat a single signal layer as ground truth. Composite scores always include `confidence` and `contributing_signals`.
+- Missing signals reduce confidence; they never cause computation failure. Weights are re-normalized.
+- Observations in `silver.observation` are immutable. Corrections produce new observations with lineage references.
+- Provider volume data (`volume` signal layer) must never be exposed in per-provider breakdowns to other providers.
+- Agent system = 5 scoped agents behind Tool Gateway. Privileged actions (PRs, deploys, Slack) route through Brain/executor only.
+- Agent self-healing (parser patches) requires human approval via GitHub PR in propose-only mode. Auto-deploy requires explicit `AGENT_AUTO_DEPLOY=true` flag.
+- Agent can only modify `parse.ts` files in provider/module directories. No other files.
+- All agent actions logged to `silver.agent_action`. All tool requests logged to `silver.agent_tool_request`.
+- Tool Gateway enforces: domain allowlists, PII redaction, geo restrictions, rate limits, tool type permissions.
+- Adaptive probing cadence overrides have mandatory TTL (max 60 min) and maximum 4x multiplier.
+- Module catalog (`.remit-scout/modules/catalog.json`) is the single source of truth for non-quote signal modules.
+- Module onboarding requires: legal basis classification, ToS review, policy profile, payload schema, contract tests, canary rollout.
+
 ## Environment model
 - **dev**: optimized for speed of iteration, short TTLs, lower capacity.
 - **staging**: mirrors production for networking and security validation.
 - **prod**: high SLOs, zero-risk changes, full auditability.
 
-## System map (3 planes + 3 tiers)
-- Plane A (public API): serves `/api/v1/*`, backed by Redis hot cache.
-- Plane B (ingestion/refresh): collectors fetch providers, write Bronze raw + Silver normalized.
-- Plane C (publisher): aggregates Gold outputs, serves internal/publisher surfaces.
-- Tiers:
-  - Bronze: raw provider payloads
-  - Silver: normalized quotes + ops truth
-  - Gold: curated aggregates, indices, exports
+## System map (4 planes + 3 tiers + lane-based orchestration)
+
+### Runtime planes
+- **Plane A** (public API): serves `/api/v1/*`, backed by Redis hot cache.
+- **Plane B** (ingestion/refresh): collectors fetch providers, write Bronze raw + Silver normalized.
+  - **Signal modules** (`plane-b/src/modules/`): non-quote data collectors (PSP status, sanctions, app intel, trends, on-chain, telecom, maritime, migration, human/hawala, volume).
+  - **Triangulation engine** (`plane-b/src/triangulation/`): combines multi-layer signals into composite corridor indices (stress score, informal premium, capital control intensity).
+  - **Agent Tool Plane** (`plane-b/src/agents/`): 5 scoped agents (Knowledge, Debug Capture, Repair, Governance/Policy, SLO/Quality) behind Tool Gateway. Privileged actions route through Brain/executor.
+- **Plane C** (publisher): aggregates Gold outputs, serves internal/publisher surfaces.
+
+### Orchestration lanes
+- **Lane A (tick dispatch)**: high-throughput polling jobs (quote/status/trends/onchain). Postgres-backed next-due scheduler + SQS emission.
+- **Lane B (durable workflows)**: module onboarding, repair pipelines, backfills, human missions. Step Functions or Temporal.
+- **Lane C (batch/data)**: replay raw payloads, recompute indices, training, factor sets. Dagster or Airflow.
+
+### Data tiers
+- **Bronze**: raw provider payloads + raw observation payloads (S3, immutable)
+- **Silver**: normalized quotes (`silver.quote_record`) + universal observations (`silver.observation`) + factor library + ops truth
+- **Gold**: curated aggregates, indices, exports + triangulated indices (`gold.triangulated_index`)
+
+### Value flow
+```
+Sources → ModuleSpec-governed collection → ObservationEnvelope → Canonical facts →
+Factor library → Index families (TEER/RVI/RCI + composites) → Products → Governance loops
+```
 
 ## Where to debug X (fast routing)
 
@@ -71,6 +114,9 @@ Detailed docs live under:
 | DB pressure / long queries | `evidence.db_health.github_actions` | infra drift checks + migration/index review | `backend/shared/db.ts` + `backend/db/migrations/` | `docs/runbooks/db-health.md` |
 | Indices readiness issues | `evidence.indices_readiness.github_actions` | SLO job + ops endpoint + reconciliation | `backend/scripts/data-health-slo-job.ts` + `backend/plane-a/src/routes/ops/indices-health.ts` | `docs/runbooks/indices-readiness.md` |
 | Pulse stale / cache lag | `evidence.pulse_cache_health.github_actions` | indices readiness + Gold pulse job health | `backend/scripts/gold-pulse-cache-job.ts` + `backend/plane-a/src/routes/pulse.ts` | `docs/runbooks/pulse-cache.md` |
+| Triangulated index stale | Check `gold.triangulated_index` freshness | Observation pipeline + signal module health | `backend/plane-b/src/triangulation/` + `backend/scripts/triangulation-job.ts` | `agents/rag/triangulation-engine.md` |
+| Agent self-heal failure | Check `silver.failure_bundle` for escalated bundles | LLM client logs + contract test results | `backend/plane-b/src/agents/` | `agents/rag/agent-orchestration.md` |
+| Signal module down | Check `silver.job_run` for failed runs | Module-specific fetch/parse errors | `backend/plane-b/src/modules/` | `agents/rag/signal-modules.md` |
 
 ## IssueOps Control Plane (Brain / Executors / Judge)
 Remit-Scout runs ops work as durable artifacts and bounded loops:
