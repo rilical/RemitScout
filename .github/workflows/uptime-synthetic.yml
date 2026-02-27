@@ -59,7 +59,7 @@ jobs:
           curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
 
       - name: Alert PagerDuty on outage
-        if: failure() && secrets.PAGERDUTY_ROUTING_KEY != ''
+        if: failure() && env.PAGERDUTY_ROUTING_KEY != ''
         shell: bash
         env:
           PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
@@ -77,4 +77,3 @@ jobs:
                 "severity":"critical"
               }
             }' >/dev/null
-

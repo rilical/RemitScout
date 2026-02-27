@@ -550,7 +550,7 @@ jobs:
           curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
 
       - name: Alert PagerDuty on DAST failure
-        if: secrets.PAGERDUTY_ROUTING_KEY != ''
+        if: env.PAGERDUTY_ROUTING_KEY != ''
         shell: bash
         env:
           PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
