@@ -28,8 +28,8 @@ permissions:
 jobs:
   deploy-dev:
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') ||
-      (github.event_name == 'workflow_dispatch' && inputs.env == 'dev')
+      (github.event_name == 'workflow_dispatch' && inputs.env == 'dev') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop')
     concurrency:
       group: deploy-dev
       cancel-in-progress: false
@@ -374,8 +374,8 @@ jobs:
 
   deploy-staging:
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') ||
-      (github.event_name == 'workflow_dispatch' && inputs.env == 'staging')
+      (github.event_name == 'workflow_dispatch' && inputs.env == 'staging') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     concurrency:
       group: deploy-staging
       cancel-in-progress: false
