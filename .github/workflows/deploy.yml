@@ -501,6 +501,65 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Recover failed staging stack (if needed)
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME || 'remit-scout-staging' }}
+        run: |
+          set -euo pipefail
+
+          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || true)"
+          if [ -z "${status}" ] || [ "${status}" = "None" ]; then
+            echo "No existing stack found for ${STACK_NAME}; continuing."
+            exit 0
+          fi
+
+          echo "Current ${STACK_NAME} status: ${status}"
+          case "${status}" in
+            ROLLBACK_FAILED|ROLLBACK_COMPLETE|CREATE_FAILED|DELETE_FAILED|UPDATE_ROLLBACK_FAILED)
+              echo "Stack is not deployable; starting recovery cleanup."
+              cluster="remit-scout-staging"
+              cluster_status="$(aws ecs describe-clusters --clusters "${cluster}" --query 'clusters[0].status' --output text 2>/dev/null || true)"
+              if [ -n "${cluster_status}" ] && [ "${cluster_status}" != "None" ] && [ "${cluster_status}" != "MISSING" ] && [ "${cluster_status}" != "INACTIVE" ]; then
+                services_raw="$(aws ecs list-services --cluster "${cluster}" --query 'serviceArns' --output text 2>/dev/null || true)"
+                if [ -n "${services_raw}" ] && [ "${services_raw}" != "None" ]; then
+                  read -r -a services <<< "${services_raw}"
+                  for svc in "${services[@]}"; do
+                    aws ecs update-service --cluster "${cluster}" --service "${svc}" --desired-count 0 >/dev/null 2>&1 || true
+                  done
+                  for svc in "${services[@]}"; do
+                    aws ecs delete-service --cluster "${cluster}" --service "${svc}" --force >/dev/null 2>&1 || true
+                  done
+                fi
+                aws ecs delete-cluster --cluster "${cluster}" >/dev/null 2>&1 || true
+              fi
+
+              aws cloudformation delete-stack --stack-name "${STACK_NAME}" >/dev/null 2>&1 || true
+
+              for i in $(seq 1 90); do
+                post_status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo STACK_DELETED)"
+                if [ "${post_status}" = "STACK_DELETED" ]; then
+                  echo "Recovered: ${STACK_NAME} deleted."
+                  exit 0
+                fi
+                if [ "${post_status}" = "DELETE_FAILED" ]; then
+                  echo "Recovery failed: ${STACK_NAME} is DELETE_FAILED."
+                  aws cloudformation describe-stack-events --stack-name "${STACK_NAME}" --max-items 20 \
+                    --query 'StackEvents[0:20].[Timestamp,LogicalResourceId,ResourceStatus,ResourceStatusReason]' --output table || true
+                  exit 1
+                fi
+                echo "Waiting for stack deletion (${i}/90): ${post_status}"
+                sleep 10
+              done
+
+              echo "Timed out waiting for ${STACK_NAME} deletion."
+              exit 1
+              ;;
+            *)
+              echo "Stack status is deployable; continuing."
+              ;;
+          esac
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/setup-qemu-action@v3
