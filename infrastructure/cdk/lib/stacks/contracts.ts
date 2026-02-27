@@ -39,6 +39,7 @@ export type FoundationResources = {
 export type FoundationNestedStackProps = NestedStackProps & {
   envName: string
   networking: NetworkingResources
+  importExistingBackendRepository?: boolean
   sharedSecretArn: string
   sesIdentityArns: string[]
   snsTopicArns: string[]

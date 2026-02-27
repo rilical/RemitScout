@@ -36,7 +36,10 @@ export class FoundationNestedStack extends NestedStack {
       pinpointAppId: pinpoint?.pinpointAppId,
     })
 
-    const registry = createRegistry(this, { envName: props.envName })
+    const registry = createRegistry(this, {
+      envName: props.envName,
+      importExistingBackendRepository: props.importExistingBackendRepository,
+    })
 
     createGithubActionsOidcRoles(this, {
       enabled: props.enableGithubActionsOidc,

@@ -10,7 +10,7 @@ import {
   Secret as EcsSecret,
 } from 'aws-cdk-lib/aws-ecs'
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
-import type { Repository } from 'aws-cdk-lib/aws-ecr'
+import type { IRepository } from 'aws-cdk-lib/aws-ecr'
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { Construct } from 'constructs'
@@ -36,7 +36,7 @@ export type EcsTaskResources = {
 export type EcsTaskOptions = {
   envName: string
   minimalMode?: boolean
-  backendRepository: Repository
+  backendRepository: IRepository
   imageTag: string
   roles: IamResources
   cpuArchitecture?: CpuArchitecture

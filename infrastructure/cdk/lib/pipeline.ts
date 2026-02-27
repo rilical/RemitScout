@@ -13,7 +13,7 @@ import {
   type BuildEnvironmentVariable,
 } from 'aws-cdk-lib/aws-codebuild'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
-import type { Repository } from 'aws-cdk-lib/aws-ecr'
+import type { IRepository } from 'aws-cdk-lib/aws-ecr'
 import type { Bucket } from 'aws-cdk-lib/aws-s3'
 import type { Distribution } from 'aws-cdk-lib/aws-cloudfront'
 import type { Construct } from 'constructs'
@@ -27,7 +27,7 @@ export type PipelineOptions = {
   enableDeploy?: boolean
   requireApproval?: boolean
   devPaused?: boolean
-  backendRepository?: Repository
+  backendRepository?: IRepository
   frontendBucket?: Bucket
   frontendDistribution?: Distribution
   planeACloudFrontDomain?: string

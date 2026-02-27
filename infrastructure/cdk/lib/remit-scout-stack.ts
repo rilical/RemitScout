@@ -192,6 +192,11 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('minimalInfra') ??
           process.env.MINIMAL_INFRA,
       ) ?? false
+    const importExistingBackendRepository =
+      toOptionalBool(
+        this.node.tryGetContext('importExistingBackendRepository') ??
+          process.env.IMPORT_EXISTING_BACKEND_REPOSITORY,
+      ) ?? false
     const costAlertEmailsRaw =
       this.node.tryGetContext('costAlertEmails') ??
       process.env.COST_ALERT_EMAILS
@@ -326,6 +331,7 @@ export class RemitScoutStack extends Stack {
     const foundationStack = new FoundationNestedStack(this, 'Foundation', {
       envName,
       networking,
+      importExistingBackendRepository,
       sharedSecretArn,
       sesIdentityArns,
       snsTopicArns,

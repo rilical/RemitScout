@@ -663,6 +663,7 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
@@ -694,6 +695,7 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
