@@ -357,7 +357,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -366,6 +366,10 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
   deploy-staging:
@@ -526,6 +530,38 @@ jobs:
             echo "Missing OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY for New Relic OTLP endpoint."
             exit 1
           fi
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
+            echo "WARN: New Relic hard gate vars missing; observability gates will be skipped for this staging deploy."
+          fi
+          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "WARN: New Relic cloud-link vars missing; observability gates will be skipped for this staging deploy."
+          fi
+
+      - name: Observability prereq gate (staging)
+        env:
+          ENVIRONMENT: staging
+          NODE_ENV: staging
+          STRICT_CONFIG: '1'
+          SENTRY_DSN: ${{ secrets.NUXT_PUBLIC_SENTRY_DSN }}
+          TRACING_EXPORTER: ${{ vars.TRACING_EXPORTER || 'otlp' }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
+          NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Skipping staging observability prereq gate: New Relic prerequisites are incomplete."
+            exit 0
+          fi
+          pnpm -C backend ci:observability
 
       - name: Compute Build Vars
         id: vars
@@ -960,6 +996,52 @@ jobs:
           echo "Timed out waiting for staging-go-live-readiness run ${run_id}."
           exit 1
 
+      - name: New Relic observability gate (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
+          GH_TOKEN: ${{ github.token }}
+          NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
+          NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
+          NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
+          NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+          NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
+          NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Skipping staging New Relic gate: prerequisites are incomplete."
+            exit 0
+          fi
+          set +e
+          node ops/newrelic/bootstrap-dashboards.mjs
+          dashboards_ec=$?
+          node ops/newrelic/sync-alerts.mjs
+          alerts_ec=$?
+          node ops/newrelic/sync-cloud-links.mjs
+          cloud_links_ec=$?
+          NEW_RELIC_TARGET_ENV=staging \
+          REQUIRE_ACCOUNT_PINNING=1 \
+          REQUIRE_LOGS=1 \
+          REQUIRE_SPANS=1 \
+          node ops/newrelic/verify-signals.mjs
+          verify_ec=$?
+          set -e
+
+          if [ "$dashboards_ec" != "0" ] || [ "$alerts_ec" != "0" ] || [ "$cloud_links_ec" != "0" ] || [ "$verify_ec" != "0" ]; then
+            echo "New Relic gate failed (dashboards=${dashboards_ec}, alerts=${alerts_ec}, cloud_links=${cloud_links_ec}, verify=${verify_ec})."
+            if [ -n "${PREV_GOOD_TAG:-}" ] && [ "${PREV_GOOD_TAG:-}" != "None" ]; then
+              gh workflow run rollback.yml -f env="${ENV_NAME}" -f image_tag="${PREV_GOOD_TAG}" || true
+            fi
+            exit 1
+          fi
       - name: Alarm rollback gate (staging)
         shell: bash
         env:
@@ -1009,7 +1091,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1018,6 +1100,10 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
   deploy-prod:
@@ -1607,7 +1693,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1616,4 +1702,8 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
