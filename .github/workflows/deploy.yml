@@ -542,7 +542,7 @@ jobs:
           fi
 
       - name: Observability prereq gate (staging)
-        if: ${{ secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -995,7 +995,7 @@ jobs:
           exit 1
 
       - name: New Relic observability gate (staging)
-        if: ${{ secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         shell: bash
         env:
           ENV_NAME: staging
