@@ -111,7 +111,7 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
       deliveryFrequency: 'TwentyFour_Hours',
     },
   })
-  configDeliveryChannel.addDependency(configRecorder)
+  configRecorder.addDependency(configDeliveryChannel)
 
   const managedRuleIds = [
     'CLOUD_TRAIL_ENABLED',
@@ -129,6 +129,7 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
       },
     })
     managedRule.addDependency(configRecorder)
+    managedRule.addDependency(configDeliveryChannel)
   }
 
   const inspectorResourceTypes = ['ECR', 'EC2']
