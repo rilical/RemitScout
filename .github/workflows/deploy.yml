@@ -1056,7 +1056,6 @@ jobs:
             fi
             exit 1
           fi
-
       - name: Alarm rollback gate (staging)
         shell: bash
         env:
