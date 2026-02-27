@@ -56,6 +56,17 @@ const publishProbeMetrics = async (
             ],
           },
           {
+            // Aggregate probe result without ProviderId dimension for fleet-wide alarms.
+            MetricName: 'probe_result_global',
+            Value: 1,
+            Unit: 'Count',
+            Timestamp: new Date(),
+            Dimensions: [
+              { Name: 'Status', Value: result.success ? 'success' : 'failure' },
+              { Name: 'environment', Value: environmentDimension },
+            ],
+          },
+          {
             MetricName: 'probe_duration',
             Value: result.durationMs / 1000, // Convert to seconds
             Unit: 'Seconds',

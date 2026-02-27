@@ -22,6 +22,7 @@ export type CostGuardrailsOptions = {
   monthlyBudgetAmountUsd?: number
   anomalyThresholdUsd?: number
   createCur?: boolean
+  enableAnomalyDetection?: boolean
 }
 
 const toNumber = (value: number | undefined, fallback: number): number => {
@@ -41,6 +42,7 @@ export const createCostGuardrails = (
   const stack = Stack.of(scope)
   const region = stack.region
   const createCur = options.createCur ?? isProd
+  const anomalyDetectionEnabled = options.enableAnomalyDetection ?? isProd
 
   let curBucket: Bucket | undefined
   let curReport: CfnReportDefinition | undefined
@@ -173,19 +175,21 @@ export const createCostGuardrails = (
       ],
     })
 
-    anomalyMonitor = new CfnAnomalyMonitor(scope, 'CostAnomalyMonitor', {
-      monitorName: `remit-scout-${options.envName}-service-anomalies${nameSuffix}`,
-      monitorType: 'DIMENSIONAL',
-      monitorDimension: 'SERVICE',
-    })
+    if (anomalyDetectionEnabled) {
+      anomalyMonitor = new CfnAnomalyMonitor(scope, 'CostAnomalyMonitor', {
+        monitorName: `remit-scout-${options.envName}-service-anomalies${nameSuffix}`,
+        monitorType: 'DIMENSIONAL',
+        monitorDimension: 'SERVICE',
+      })
 
-    anomalySubscription = new CfnAnomalySubscription(scope, 'CostAnomalySubscription', {
-      subscriptionName: `remit-scout-${options.envName}-anomaly-subscription${nameSuffix}`,
-      frequency: anomalyFrequency,
-      threshold: anomalyThreshold,
-      monitorArnList: [anomalyMonitor.attrMonitorArn],
-      subscribers: anomalySubscribers,
-    })
+      anomalySubscription = new CfnAnomalySubscription(scope, 'CostAnomalySubscription', {
+        subscriptionName: `remit-scout-${options.envName}-anomaly-subscription${nameSuffix}`,
+        frequency: anomalyFrequency,
+        threshold: anomalyThreshold,
+        monitorArnList: [anomalyMonitor.attrMonitorArn],
+        subscribers: anomalySubscribers,
+      })
+    }
   }
 
   return {

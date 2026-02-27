@@ -1070,55 +1070,17 @@ export const createMonitoring = (
   }
 
   // Aggregate probe failure signal: pages ops when multiple providers fail at once.
-  // Single-provider failures remain warning-level (per-provider alarms above).
-  const probeFailureMetricsByProvider: Record<string, Metric> = {}
-  for (const providerId of probeProviders) {
-    probeFailureMetricsByProvider[providerId] = new Metric({
-      namespace: 'RemitScout/Probes',
-      metricName: 'probe_result',
-      statistic: 'Sum',
-      period: Duration.minutes(5),
-      dimensionsMap: {
-        ProviderId: providerId,
-        Status: 'failure',
-        environment: options.envName,
-      },
-    })
-  }
-  // CloudWatch alarms on math expressions can include at most 10 underlying metrics.
-  // Build chunk expressions and then sum the chunks so provider cardinality can grow.
-  const providerChunkSize = 10
-  const probeFailureChunks: MathExpression[] = []
-  for (let chunkStart = 0; chunkStart < probeProviders.length; chunkStart += providerChunkSize) {
-    const chunkProviders = probeProviders.slice(chunkStart, chunkStart + providerChunkSize)
-    const chunkMetrics: Record<string, Metric> = {}
-    chunkProviders.forEach((providerId, idx) => {
-      const metricKey = `m${chunkStart + idx + 1}`
-      chunkMetrics[metricKey] = probeFailureMetricsByProvider[providerId]
-    })
-    const chunkExpression = chunkProviders
-      .map((_, idx) => `FILL(m${chunkStart + idx + 1}, 0)`)
-      .join(' + ')
-    probeFailureChunks.push(new MathExpression({
-      label: `Probe failures chunk ${Math.floor(chunkStart / providerChunkSize) + 1}`,
-      expression: chunkExpression || '0',
-      usingMetrics: chunkMetrics,
-      period: Duration.minutes(5),
-    }))
-  }
-
-  const probeFailureUsingMetrics: Record<string, MathExpression> = {}
-  probeFailureChunks.forEach((chunkMetric, idx) => {
-    probeFailureUsingMetrics[`c${idx + 1}`] = chunkMetric
-  })
-  const probeFailureSumExpression = Object.keys(probeFailureUsingMetrics)
-    .map((metricKey) => `FILL(${metricKey}, 0)`)
-    .join(' + ')
-  const probeFailuresAllProviders5m = new MathExpression({
-    label: 'Probe failures (all providers)',
-    expression: probeFailureSumExpression || '0',
-    usingMetrics: probeFailureUsingMetrics,
+  // This metric is emitted by probes without ProviderId dimension to avoid CloudWatch
+  // alarm metric-query cardinality limits.
+  const probeFailuresAllProviders5m = new Metric({
+    namespace: 'RemitScout/Probes',
+    metricName: 'probe_result_global',
+    statistic: 'Sum',
     period: Duration.minutes(5),
+    dimensionsMap: {
+      Status: 'failure',
+      environment: options.envName,
+    },
   })
 
   const probeFailureBurstThreshold = isProd ? 3 : 5

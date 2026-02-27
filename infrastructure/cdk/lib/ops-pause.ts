@@ -55,6 +55,14 @@ export const createOpsPause = (
     parameterName: `/remit-scout/${options.envName}/ops/paused`,
     stringValue: 'false',
   })
+  const ecsServicesParam = new StringParameter(scope, 'OpsPauseEcsServicesParam', {
+    parameterName: `/remit-scout/${options.envName}/ops/pause/ecs-services`,
+    stringValue: JSON.stringify(options.ecsServiceNames),
+  })
+  const ecsBaselineParam = new StringParameter(scope, 'OpsPauseEcsBaselineParam', {
+    parameterName: `/remit-scout/${options.envName}/ops/pause/ecs-baseline`,
+    stringValue: JSON.stringify(options.ecsBaselineDesired),
+  })
 
   const controllerFunction = new NodejsFunction(scope, 'OpsPauseControllerFunction', {
     entry: path.resolve(
@@ -79,8 +87,8 @@ export const createOpsPause = (
       HARD_STOP_ENABLED: options.hardStopEnabled ? '1' : '0',
       PAUSE_ECS: options.hardStopEnabled ? '1' : '0',
       ECS_CLUSTER_NAME: options.clusterName,
-      ECS_SERVICES_JSON: JSON.stringify(options.ecsServiceNames),
-      ECS_BASELINE_JSON: JSON.stringify(options.ecsBaselineDesired),
+      ECS_SERVICES_PARAM_NAME: ecsServicesParam.parameterName,
+      ECS_BASELINE_PARAM_NAME: ecsBaselineParam.parameterName,
       EVENT_RULE_PREFIX: options.eventRulePrefix,
       EVENT_RULE_ALLOWLIST: JSON.stringify(options.eventRuleAllowlist ?? []),
       EVENT_RULE_RESUME_ALLOWLIST: JSON.stringify(
@@ -107,6 +115,8 @@ export const createOpsPause = (
 
   Tags.of(controllerFunction).add('managed-by', 'ops-pause')
   Tags.of(pauseParam).add('managed-by', 'ops-pause')
+  Tags.of(ecsServicesParam).add('managed-by', 'ops-pause')
+  Tags.of(ecsBaselineParam).add('managed-by', 'ops-pause')
   Tags.of(controllerFunction).add('environment', options.envName)
 
   return {

@@ -14,6 +14,7 @@ import type { Construct } from 'constructs'
 export type ComplianceOptions = {
   envName: string
   criticalTopic: Topic
+  manageGuardDutyDetector?: boolean
 }
 
 export const createComplianceServices = (scope: Construct, options: ComplianceOptions): void => {
@@ -51,11 +52,13 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
     enableFileValidation: true,
   })
 
-  // GuardDuty detector for threat findings.
-  new CfnDetector(scope, 'GuardDutyDetector', {
-    enable: true,
-    findingPublishingFrequency: 'FIFTEEN_MINUTES',
-  })
+  // GuardDuty detector is account-level singleton. Many orgs bootstrap it outside this stack.
+  if (options.manageGuardDutyDetector ?? false) {
+    new CfnDetector(scope, 'GuardDutyDetector', {
+      enable: true,
+      findingPublishingFrequency: 'FIFTEEN_MINUTES',
+    })
+  }
 
   // Security Hub with AWS Foundational Security Best Practices standard.
   const securityHub = new CfnHub(scope, 'SecurityHub', {
@@ -87,7 +90,7 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
     roleName: `remit-scout-${envName}-config-recorder`,
     assumedBy: new ServicePrincipal('config.amazonaws.com'),
     managedPolicies: [
-      ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole'),
+      ManagedPolicy.fromAwsManagedPolicyName('service-role/AWS_ConfigRole'),
     ],
   })
 
@@ -137,7 +140,9 @@ export const createComplianceServices = (scope: Construct, options: ComplianceOp
     },
     physicalResourceId: PhysicalResourceId.of(`remit-scout-${envName}-inspector-v2`),
     // If Inspector is already enabled with the same options, tolerate idempotent retries.
-    ignoreErrorCodesMatching: 'ResourceConflictException',
+    // Some staging accounts intentionally do not allow service-linked role bootstrap.
+    // Treat access-denied as non-fatal so deploys remain unblocked.
+    ignoreErrorCodesMatching: 'ResourceConflictException|AccessDeniedException|AccessDenied',
   }
 
   new AwsCustomResource(scope, 'InspectorV2Enablement', {

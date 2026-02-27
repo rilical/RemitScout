@@ -62,6 +62,26 @@ const parseJson = <T>(value: string | undefined, fallback: T): T => {
   }
 }
 
+const readJsonParameter = async <T>(
+  client: SSMClient,
+  parameterName: string | undefined,
+  fallback: T,
+): Promise<T> => {
+  if (!parameterName) return fallback
+  try {
+    const response = await client.send(
+      new GetParameterCommand({ Name: parameterName }),
+    )
+    return parseJson<T>(response.Parameter?.Value, fallback)
+  } catch (error) {
+    logger.warn('pause_config_param_read_failed', {
+      parameterName,
+      error: String(error),
+    })
+    return fallback
+  }
+}
+
 const toBool = (value?: string): boolean => value === '1' || value?.toLowerCase() === 'true'
 
 const normalizeRuleName = (prefix: string, name: string): string => {
@@ -538,8 +558,10 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const hardStopEnabled = toBool(process.env.HARD_STOP_ENABLED)
   const pauseEcs = toBool(process.env.PAUSE_ECS ?? '1')
   const ecsClusterName = process.env.ECS_CLUSTER_NAME ?? `remit-scout-${envName}`
-  const ecsServiceNames = parseJson<string[]>(process.env.ECS_SERVICES_JSON, [])
-  const ecsBaseline = parseJson<Record<string, number>>(process.env.ECS_BASELINE_JSON, {})
+  const ecsServicesParamName = process.env.ECS_SERVICES_PARAM_NAME
+  const ecsBaselineParamName = process.env.ECS_BASELINE_PARAM_NAME
+  const ecsServiceNamesFromEnv = parseJson<string[]>(process.env.ECS_SERVICES_JSON, [])
+  const ecsBaselineFromEnv = parseJson<Record<string, number>>(process.env.ECS_BASELINE_JSON, {})
   const rulePrefix = process.env.EVENT_RULE_PREFIX ?? `remit-scout-${envName}-`
   const resumeAllowlistRaw = parseJson<string[]>(
     process.env.EVENT_RULE_RESUME_ALLOWLIST ?? process.env.EVENT_RULE_ALLOWLIST,
@@ -567,6 +589,16 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const redisAllowDelete = toBool(process.env.REDIS_ALLOW_DELETE)
 
   const ssm = new SSMClient({})
+  const ecsServiceNames = await readJsonParameter(
+    ssm,
+    ecsServicesParamName,
+    ecsServiceNamesFromEnv,
+  )
+  const ecsBaseline = await readJsonParameter(
+    ssm,
+    ecsBaselineParamName,
+    ecsBaselineFromEnv,
+  )
   const ecs = new ECSClient({})
   const events = new EventBridgeClient({})
   const rds = new RDSClient({})
