@@ -695,6 +695,7 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c cpuArchitecture=x86_64 \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
@@ -728,6 +729,7 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c cpuArchitecture=x86_64 \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
