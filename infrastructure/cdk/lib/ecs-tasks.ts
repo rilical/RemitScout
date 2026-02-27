@@ -17,6 +17,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
+import { getNewRelicTraceEndpoint, resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
   planeBIngestTask: FargateTaskDefinition
@@ -121,15 +122,17 @@ export const createEcsTasks = (
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
-  const tracingExporter = process.env.TRACING_EXPORTER ?? 'xray'
-  const otlpEndpoint =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_ENDPOINT?.trim() ||
-    'http://127.0.0.1:4318/v1/traces'
-  const otlpHeaders =
-    process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS?.trim() ||
-    process.env.OTEL_EXPORTER_OTLP_HEADERS?.trim()
-  const newRelicIngestKey = process.env.NEW_RELIC_INGEST_KEY?.trim()
+  const tracingEnv = resolveTracingEnv({
+    envName: options.envName,
+    defaultExporter: 'xray',
+    defaultEndpoint: 'http://127.0.0.1:4318/v1/traces',
+    preferDefaultEndpoint: true,
+  })
+  const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
+  const newRelicLogsEnabled =
+    process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
+  const newRelicIngestKey = tracingEnv.NEW_RELIC_INGEST_KEY || ''
+  const newRelicTraceEndpoint = getNewRelicTraceEndpoint(options.envName)
   const enableTelemetry = process.env.ENABLE_TELEMETRY
     ? process.env.ENABLE_TELEMETRY !== '0'
     : true
@@ -149,11 +152,19 @@ export const createEcsTasks = (
     '        endpoint: 0.0.0.0:4318',
     'exporters:',
     '  awsxray:',
+    ...(newRelicIngestKey && newRelicTraceEndpoint
+      ? [
+          '  otlphttp/newrelic:',
+          `    endpoint: ${newRelicTraceEndpoint}`,
+          '    headers:',
+          `      api-key: ${newRelicIngestKey}`,
+        ]
+      : []),
     'service:',
     '  pipelines:',
     '    traces:',
     '      receivers: [otlp]',
-    '      exporters: [awsxray]',
+    `      exporters: [awsxray${newRelicIngestKey && newRelicTraceEndpoint ? ', otlphttp/newrelic' : ''}]`,
   ].join('\n')
 
   const workerHealthCheck: HealthCheck = {
@@ -236,8 +247,11 @@ export const createEcsTasks = (
   const bronzeBucketName = options.bronzeBucketName
   const bronzePrefix = options.bronzePrefix
   const b2cQueueInSweep = options.b2cQueueInSweep
-  const b2cRefreshLoopEnabled = options.b2cRefreshLoopEnabled ?? false
-  const fxRateRefreshLoopEnabled = options.fxRateRefreshLoopEnabled ?? false
+  // Queue-mode workers are deployed as ECS services and must keep running.
+  const b2cRefreshLoopEnabled =
+    options.quoteRefreshQueueMode === 'queue' || options.b2cRefreshLoopEnabled === true
+  const fxRateRefreshLoopEnabled =
+    options.fxRateRefreshQueueMode === 'queue' || options.fxRateRefreshLoopEnabled === true
   const planeBB2bTargetMinutes = options.planeBB2bTargetMinutes
   const planeBB2bObservationMode =
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
@@ -400,10 +414,9 @@ export const createEcsTasks = (
     DB_CONNECTION_ROUTE: planeBDbRoute,
     DB_STATEMENT_TIMEOUT_POLICY:
       planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
+    ...tracingEnv,
     TRACING_EXPORTER: tracingExporter,
-    OTEL_EXPORTER_OTLP_ENDPOINT: otlpEndpoint,
-    ...(otlpHeaders ? { OTEL_EXPORTER_OTLP_HEADERS: otlpHeaders } : {}),
-    ...(newRelicIngestKey ? { NEW_RELIC_INGEST_KEY: newRelicIngestKey } : {}),
+    NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
