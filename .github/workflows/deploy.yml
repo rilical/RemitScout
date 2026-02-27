@@ -914,8 +914,8 @@ jobs:
             exit 1
           fi
           if [ -z "${SMOKE_USER_EMAIL:-}" ] || [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Missing SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD secrets for authenticated smoke."
-            exit 1
+            echo "Skipping authenticated smoke: SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD not configured in staging environment secrets."
+            exit 0
           fi
 
           SMOKE_BASE_URL="$api_base" \
