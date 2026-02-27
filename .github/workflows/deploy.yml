@@ -697,6 +697,7 @@ jobs:
             -c backendImageTag="${IMAGE_TAG}" \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
+            -c enableDbProxy=false \
             -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
@@ -729,6 +730,7 @@ jobs:
             -c backendImageTag="${IMAGE_TAG}" \
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
+            -c enableDbProxy=false \
             -c providerProbeMode=per_provider \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
