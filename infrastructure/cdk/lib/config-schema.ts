@@ -91,6 +91,7 @@ const cdkContextShape = {
   enableCloudFront: optionalBool,
   devMinimalInfra: optionalBool,
   minimalInfra: optionalBool,
+  importExistingBackendRepository: optionalBool,
   devNightlyPauseEnabled: optionalBool,
   devNightlyPauseTimezone: z.string().optional(),
   devNightlyPauseCron: z.string().optional(),

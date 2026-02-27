@@ -45,6 +45,10 @@
       "type": "boolean",
       "description": "Deploy reduced infrastructure footprint (disables monitoring/synthetics block) for bootstrap scenarios."
     },
+    "importExistingBackendRepository": {
+      "type": "boolean",
+      "description": "Import an existing backend ECR repository instead of creating it in CloudFormation."
+    },
     "enableMonitoring": {
       "type": "boolean",
       "description": "Enable monitoring stack creation (CloudWatch alarms, dashboards, alerts)."
