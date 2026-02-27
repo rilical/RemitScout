@@ -357,7 +357,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -366,6 +366,10 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
   deploy-staging:
@@ -542,7 +546,6 @@ jobs:
           fi
 
       - name: Observability prereq gate (staging)
-        if: ${{ env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -557,7 +560,16 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
-        run: pnpm -C backend ci:observability
+        run: |
+          set -euo pipefail
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Skipping staging observability prereq gate: New Relic prerequisites are incomplete."
+            exit 0
+          fi
+          pnpm -C backend ci:observability
 
       - name: Compute Build Vars
         id: vars
@@ -999,7 +1011,6 @@ jobs:
           exit 1
 
       - name: New Relic observability gate (staging)
-        if: ${{ env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         shell: bash
         env:
           ENV_NAME: staging
@@ -1016,6 +1027,13 @@ jobs:
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
+             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
+             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Skipping staging New Relic gate: prerequisites are incomplete."
+            exit 0
+          fi
           set +e
           node ops/newrelic/bootstrap-dashboards.mjs
           dashboards_ec=$?
@@ -1088,7 +1106,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1097,6 +1115,10 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
   deploy-prod:
@@ -1767,7 +1789,7 @@ jobs:
             --dimensions "Environment=${ENV_NAME},Commit=${COMMIT_SHA}"
 
       - name: Notify Slack
-        if: always() && vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -1776,4 +1798,8 @@ jobs:
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK:-}" ]; then
+            echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null

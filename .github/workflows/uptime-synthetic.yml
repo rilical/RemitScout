@@ -48,24 +48,32 @@ jobs:
           echo "Synthetic check passed: status=${http_code} target=${TARGET_URL}"
 
       - name: Alert Slack on outage
-        if: failure() && vars.SLACK_WEBHOOK_URL != ''
+        if: failure()
         shell: bash
         env:
           SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
           TARGET_URL: ${{ steps.target.outputs.target }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "Skipping Slack alert: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           payload='{"text":"[Synthetic] Uptime check failed for '"${TARGET_URL}"' ('"${GITHUB_REPOSITORY}"')"}'
           curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
 
       - name: Alert PagerDuty on outage
-        if: failure() && env.PAGERDUTY_ROUTING_KEY != ''
+        if: failure()
         shell: bash
         env:
           PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
           TARGET_URL: ${{ steps.target.outputs.target }}
         run: |
           set -euo pipefail
+          if [ -z "${PAGERDUTY_ROUTING_KEY:-}" ]; then
+            echo "Skipping PagerDuty alert: PAGERDUTY_ROUTING_KEY is not configured."
+            exit 0
+          fi
           curl -sS https://events.pagerduty.com/v2/enqueue \
             -H 'Content-Type: application/json' \
             -d '{

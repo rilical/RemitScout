@@ -539,24 +539,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Alert Slack on DAST failure
-        if: vars.SLACK_WEBHOOK_URL != ''
+        if: always()
         shell: bash
         env:
           SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
           TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
         run: |
           set -euo pipefail
+          if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
+            echo "Skipping Slack alert: SLACK_WEBHOOK_URL is not configured."
+            exit 0
+          fi
           payload="{\"text\":\"[Security] DAST failure on ${GITHUB_REPOSITORY} @ ${GITHUB_SHA} (target=${TARGET_URL})\"}"
           curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
 
       - name: Alert PagerDuty on DAST failure
-        if: env.PAGERDUTY_ROUTING_KEY != ''
+        if: always()
         shell: bash
         env:
           PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}
           TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
         run: |
           set -euo pipefail
+          if [ -z "${PAGERDUTY_ROUTING_KEY:-}" ]; then
+            echo "Skipping PagerDuty alert: PAGERDUTY_ROUTING_KEY is not configured."
+            exit 0
+          fi
           summary="DAST failure (${GITHUB_REPOSITORY}, target=${TARGET_URL})"
           curl -sS https://events.pagerduty.com/v2/enqueue \
             -H 'Content-Type: application/json' \
