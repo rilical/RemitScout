@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS silver.pulse_pinned_corridor (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES silver.user_account(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES silver.user_account(user_id) ON DELETE CASCADE,
   corridor_id TEXT NOT NULL,
   label TEXT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
