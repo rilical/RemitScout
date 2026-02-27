@@ -963,7 +963,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          dispatch_ref="${GITHUB_SHA}"
+          dispatch_ref="${GITHUB_REF_NAME:-staging}"
+          if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
+            dispatch_ref="staging"
+          fi
 
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true
