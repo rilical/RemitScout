@@ -22,7 +22,6 @@ import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
-import { CfnWebACLAssociation } from 'aws-cdk-lib/aws-wafv2'
 import type { CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
 import type { Construct } from 'constructs'
 
@@ -235,14 +234,8 @@ export const createFrontend = (
     ],
     defaultRootObject: 'index.html',
     comment: `Remit-Scout Frontend Distribution (${options.envName})`,
+    webAclId: options.planeAWaf?.attrArn,
   })
-
-  if (options.planeAWaf) {
-    new CfnWebACLAssociation(scope, 'FrontendWafAssociation', {
-      resourceArn: distribution.distributionArn,
-      webAclArn: options.planeAWaf.attrArn,
-    })
-  }
 
   if (
     options.frontendDomainName &&
