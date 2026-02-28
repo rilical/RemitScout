@@ -129,9 +129,10 @@ export const createEcsServices = (
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
   // Non-prod accounts often have tighter Fargate vCPU quotas.
-  // Use in-place replacement to avoid temporary 2x capacity during deploy.
+  // Keep updates effectively in-place while satisfying ECS AZ rebalancing
+  // requirement that maximumPercent must be > 100.
   const minHealthyPercent = isProd ? undefined : 0
-  const maxHealthyPercent = isProd ? undefined : 100
+  const maxHealthyPercent = isProd ? undefined : 101
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
     rollback: true,
