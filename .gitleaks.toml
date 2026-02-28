@@ -39,12 +39,10 @@ regexes = [
   '''your.*here''',
 ]
 
-[rules]
-description = "Custom rules for Remit-Scout"
+[[rules]]
 id = "remit-scout-custom"
 description = "Custom patterns for Remit-Scout"
 regex = '''(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|private[_-]?key)\s*[=:]\s*['"]?[a-zA-Z0-9]{20,}['"]?'''
-
 
 
 

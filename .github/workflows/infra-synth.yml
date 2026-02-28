@@ -48,6 +48,9 @@ jobs:
           pnpm_version: 10.19.0
       - name: CDK synth (dev context)
         if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra == 'true'
+        env:
+          CDK_DEFAULT_ACCOUNT: '123456789012'
+          CDK_DEFAULT_REGION: us-east-1
         run: |
           pnpm -C infrastructure/cdk build
           pnpm -C infrastructure/cdk exec -- cdk synth -c env=dev -c backendImageTag=ci --quiet
