@@ -113,27 +113,38 @@
             </div>
             <div class="px-4 py-6 sm:px-6">
               <svg viewBox="0 0 780 280" class="w-full" preserveAspectRatio="xMidYMid meet">
-                <line x1="55" y1="20" x2="770" y2="20" stroke="#f5f5f5" stroke-width="1" />
-                <line x1="55" y1="75" x2="770" y2="75" stroke="#f5f5f5" stroke-width="1" />
-                <line x1="55" y1="130" x2="770" y2="130" stroke="#f5f5f5" stroke-width="1" />
-                <line x1="55" y1="185" x2="770" y2="185" stroke="#f5f5f5" stroke-width="1" />
-                <line x1="55" y1="240" x2="770" y2="240" stroke="#e5e5e5" stroke-width="1" />
+                <line
+                  v-for="tick in previewRateYTicks"
+                  :key="`grid-${tick.y}`"
+                  x1="55"
+                  :y1="tick.y"
+                  x2="770"
+                  :y2="tick.y"
+                  :stroke="tick.isBaseline ? '#e5e5e5' : '#f5f5f5'"
+                  stroke-width="1"
+                />
 
-                <text x="48" y="24" text-anchor="end" fill="#a3a3a3" font-size="11" font-family="system-ui">56.20</text>
-                <text x="48" y="79" text-anchor="end" fill="#a3a3a3" font-size="11" font-family="system-ui">56.00</text>
-                <text x="48" y="134" text-anchor="end" fill="#a3a3a3" font-size="11" font-family="system-ui">55.80</text>
-                <text x="48" y="189" text-anchor="end" fill="#a3a3a3" font-size="11" font-family="system-ui">55.60</text>
-                <text x="48" y="244" text-anchor="end" fill="#a3a3a3" font-size="11" font-family="system-ui">55.40</text>
+                <text
+                  v-for="tick in previewRateYTicks"
+                  :key="`label-${tick.y}`"
+                  x="48"
+                  :y="tick.y + 4"
+                  text-anchor="end"
+                  fill="#a3a3a3"
+                  font-size="11"
+                  font-family="system-ui"
+                >{{ tick.label }}</text>
 
-                <text x="55" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Mon</text>
-                <text x="174" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Tue</text>
-                <text x="293" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Wed</text>
-                <text x="413" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Thu</text>
-                <text x="532" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Fri</text>
-                <text x="651" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Sat</text>
-                <text x="770" y="262" text-anchor="middle" fill="#a3a3a3" font-size="11" font-family="system-ui">Sun</text>
-
-                <line x1="55" y1="75" x2="770" y2="75" stroke="#d4d4d4" stroke-width="1" stroke-dasharray="6 4" />
+                <text
+                  v-for="tick in previewRateDayTicks"
+                  :key="`day-${tick.label}`"
+                  :x="tick.x"
+                  y="262"
+                  text-anchor="middle"
+                  fill="#a3a3a3"
+                  font-size="11"
+                  font-family="system-ui"
+                >{{ tick.label }}</text>
 
                 <defs>
                   <linearGradient id="sample-area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -141,25 +152,93 @@
                     <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
                   </linearGradient>
                 </defs>
-                <path d="M 55,152 L 174,116 L 293,64 L 413,100 L 532,81 L 651,42 L 770,64 L 770,240 L 55,240 Z" fill="url(#sample-area-grad)" :class="{ 'chart-area-animate': chartVisible }" />
-                <polyline points="55,152 174,116 293,64 413,100 532,81 651,42 770,64" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :class="{ 'chart-line-animate': chartVisible }" />
+                <path :d="previewRateBestAreaPath" fill="url(#sample-area-grad)" :class="{ 'chart-area-animate': chartVisible }" />
+                <polyline
+                  :points="previewRateMidPolyline"
+                  fill="none"
+                  stroke="#9ca3af"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-dasharray="6 4"
+                />
+                <polyline
+                  :points="previewRateBestPolyline"
+                  fill="none"
+                  stroke="#2563EB"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  :class="{ 'chart-line-animate': chartVisible }"
+                />
 
-                <circle cx="55" cy="152" r="3.5" fill="white" stroke="#2563EB" stroke-width="2" />
-                <circle cx="174" cy="116" r="3.5" fill="white" stroke="#2563EB" stroke-width="2" />
-                <circle cx="293" cy="64" r="3.5" fill="white" stroke="#2563EB" stroke-width="2" />
-                <circle cx="413" cy="100" r="3.5" fill="white" stroke="#2563EB" stroke-width="2" />
-                <circle cx="532" cy="81" r="3.5" fill="white" stroke="#2563EB" stroke-width="2" />
-                <circle cx="651" cy="42" r="4.5" fill="#2563EB" stroke="white" stroke-width="2" />
-                <circle cx="770" cy="64" r="4.5" fill="#2563EB" stroke="white" stroke-width="2" />
+                <circle
+                  v-for="point in previewRateBestPoints"
+                  :key="`best-${point.x}`"
+                  :cx="point.x"
+                  :cy="point.y"
+                  :r="point.highlight ? 4.5 : 3.5"
+                  :fill="point.highlight ? '#2563EB' : 'white'"
+                  stroke="#2563EB"
+                  stroke-width="2"
+                />
 
-                <rect x="618" y="16" width="84" height="18" rx="4" fill="#2563EB" />
-                <text x="660" y="29" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="system-ui">56.12 Best rate</text>
+                <rect
+                  :x="previewPeakBestLabelRect.x"
+                  :y="previewPeakBestLabelRect.y"
+                  :width="previewPeakBestLabelRect.width"
+                  :height="previewPeakBestLabelRect.height"
+                  rx="4"
+                  fill="#2563EB"
+                />
+                <text
+                  :x="previewPeakBestLabelRect.x + previewPeakBestLabelRect.width / 2"
+                  :y="previewPeakBestLabelRect.y + 13"
+                  text-anchor="middle"
+                  fill="white"
+                  font-size="10"
+                  font-weight="bold"
+                  font-family="system-ui"
+                >{{ previewPeakBestLabel }}</text>
 
-                <rect x="676" y="65" width="88" height="16" rx="3" fill="white" stroke="#d4d4d4" stroke-width="1" />
-                <text x="720" y="76" text-anchor="middle" fill="#a3a3a3" font-size="9.5" font-family="system-ui">56.00 Mid-market</text>
+                <rect
+                  :x="previewLatestMidLabelRect.x"
+                  :y="previewLatestMidLabelRect.y"
+                  :width="previewLatestMidLabelRect.width"
+                  :height="previewLatestMidLabelRect.height"
+                  rx="3"
+                  fill="white"
+                  stroke="#d4d4d4"
+                  stroke-width="1"
+                />
+                <text
+                  :x="previewLatestMidLabelRect.x + previewLatestMidLabelRect.width / 2"
+                  :y="previewLatestMidLabelRect.y + 11"
+                  text-anchor="middle"
+                  fill="#9ca3af"
+                  font-size="9.5"
+                  font-family="system-ui"
+                >{{ previewLatestMidLabel }}</text>
 
-                <rect x="710" y="44" width="82" height="16" rx="3" fill="#eff6ff" stroke="#2563EB" stroke-width="0.5" />
-                <text x="751" y="55" text-anchor="middle" fill="#2563EB" font-size="10" font-weight="600" font-family="system-ui">56.04 Best rate</text>
+                <rect
+                  :x="previewLatestBestLabelRect.x"
+                  :y="previewLatestBestLabelRect.y"
+                  :width="previewLatestBestLabelRect.width"
+                  :height="previewLatestBestLabelRect.height"
+                  rx="3"
+                  fill="#eff6ff"
+                  stroke="#2563EB"
+                  stroke-width="0.5"
+                />
+                <text
+                  :x="previewLatestBestLabelRect.x + previewLatestBestLabelRect.width / 2"
+                  :y="previewLatestBestLabelRect.y + 11"
+                  text-anchor="middle"
+                  fill="#2563EB"
+                  font-size="10"
+                  font-weight="600"
+                  font-family="system-ui"
+                >{{ previewLatestBestLabel }}</text>
               </svg>
             </div>
           </div>
@@ -1613,6 +1692,151 @@ const sampleKpis = [
   { id: 'provider-count', label: 'Providers live', value: '7', delta: '', deltaType: 'neutral', deltaClass: 'text-neutral-400', deltaLabel: 'reporting', icon: 'trophy' },
   { id: 'rci', label: 'RCI', value: '2.34%', delta: '-8 bps', deltaType: 'positive', deltaClass: 'text-brand-600', deltaLabel: 'vs 30d', icon: 'activity' },
 ]
+
+const PREVIEW_RATE_CHART_BOUNDS = {
+  xStart: 55,
+  xEnd: 770,
+  yTop: 20,
+  yBottom: 240,
+} as const
+const previewRateDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+const previewBestRates = [55.72, 55.85, 56.04, 55.91, 55.98, 56.12, 56.04] as const
+const previewMidMarketRates = [55.80, 55.89, 56.01, 55.94, 56.00, 56.07, 56.00] as const
+
+type PreviewRatePoint = {
+  index: number
+  x: number
+  y: number
+  value: number
+  highlight: boolean
+}
+
+const previewRateScale = computed(() => {
+  const values = [...previewBestRates, ...previewMidMarketRates]
+  const rawMin = Math.min(...values)
+  const rawMax = Math.max(...values)
+  const padding = 0.12
+  const min = Math.floor((rawMin - padding) * 100) / 100
+  const max = Math.ceil((rawMax + padding) * 100) / 100
+  return { min, max }
+})
+
+const previewRateToY = (value: number) => {
+  const { min, max } = previewRateScale.value
+  const ratio = (value - min) / Math.max(max - min, 0.0001)
+  const { yTop, yBottom } = PREVIEW_RATE_CHART_BOUNDS
+  return yBottom - ratio * (yBottom - yTop)
+}
+
+const previewRateToX = (index: number) => {
+  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS
+  const step = (xEnd - xStart) / Math.max(previewRateDays.length - 1, 1)
+  return xStart + step * index
+}
+
+const previewRateYTicks = computed(() => {
+  const { min, max } = previewRateScale.value
+  const ticks = 5
+  return Array.from({ length: ticks }, (_, index) => {
+    const ratio = index / (ticks - 1)
+    const value = max - (max - min) * ratio
+    const y = previewRateToY(value)
+    return {
+      label: value.toFixed(2),
+      y,
+      isBaseline: index === ticks - 1,
+    }
+  })
+})
+
+const previewRateDayTicks = computed(() =>
+  previewRateDays.map((label, index) => ({
+    label,
+    x: previewRateToX(index),
+  })),
+)
+
+const previewRateBestPoints = computed<PreviewRatePoint[]>(() =>
+  previewBestRates.map((value, index) => ({
+    index,
+    value,
+    x: previewRateToX(index),
+    y: previewRateToY(value),
+    highlight: index >= previewBestRates.length - 2,
+  })),
+)
+
+const previewRateMidPoints = computed(() =>
+  previewMidMarketRates.map((value, index) => ({
+    index,
+    value,
+    x: previewRateToX(index),
+    y: previewRateToY(value),
+  })),
+)
+
+const toPolyline = (points: Array<{ x: number, y: number }>) =>
+  points.map(point => `${point.x},${point.y}`).join(' ')
+
+const previewRateBestPolyline = computed(() => toPolyline(previewRateBestPoints.value))
+const previewRateMidPolyline = computed(() => toPolyline(previewRateMidPoints.value))
+const previewRateBestAreaPath = computed(() => {
+  const points = previewRateBestPoints.value
+  if (points.length === 0) return ''
+  const first = points[0]
+  const last = points[points.length - 1]
+  return `M ${first.x},${first.y} L ${points.slice(1).map(point => `${point.x},${point.y}`).join(' L ')} L ${last.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} L ${first.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} Z`
+})
+
+const previewRateBestPeakPoint = computed(() => {
+  const points = previewRateBestPoints.value
+  return points.reduce((peak, point) => (point.value > peak.value ? point : peak), points[0])
+})
+const previewRateBestLatestPoint = computed(() => previewRateBestPoints.value[previewRateBestPoints.value.length - 1])
+const previewRateMidLatestPoint = computed(() => previewRateMidPoints.value[previewRateMidPoints.value.length - 1])
+
+const clampPreviewRectX = (x: number, width: number) => {
+  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS
+  return Math.min(Math.max(x, xStart), xEnd - width)
+}
+
+const previewPeakBestLabelRect = computed(() => {
+  const point = previewRateBestPeakPoint.value
+  const width = 100
+  const height = 18
+  return {
+    x: clampPreviewRectX(point.x - width / 2, width),
+    y: Math.max(2, point.y - 26),
+    width,
+    height,
+  }
+})
+const previewLatestBestLabelRect = computed(() => {
+  const point = previewRateBestLatestPoint.value
+  const width = 106
+  const height = 16
+  return {
+    x: clampPreviewRectX(point.x + 8, width),
+    y: Math.max(2, point.y - 20),
+    width,
+    height,
+  }
+})
+const previewLatestMidLabelRect = computed(() => {
+  const point = previewRateMidLatestPoint.value
+  const width = 116
+  const height = 16
+  return {
+    x: clampPreviewRectX(point.x - width + 2, width),
+    y: Math.min(PREVIEW_RATE_CHART_BOUNDS.yBottom - height - 2, point.y + 8),
+    width,
+    height,
+  }
+})
+
+const previewPeakBestLabel = computed(() => `${previewRateBestPeakPoint.value.value.toFixed(2)} Best rate`)
+const previewLatestBestLabel = computed(() => `${previewRateBestLatestPoint.value.value.toFixed(2)} Best rate`)
+const previewLatestMidLabel = computed(() => `${previewRateMidLatestPoint.value.value.toFixed(2)} Mid-market`)
 
 const providerSlugs = [
   'wise', 'remitly', 'worldremit', 'western-union', 'xe-money', 'ria',

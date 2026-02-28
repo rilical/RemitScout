@@ -8,6 +8,7 @@
           <ProviderLogo
             :slug="provider?.slug || ''"
             :alt="provider?.name"
+            :source="provider?.logo?.sm"
             size="small"
             fit
           />
@@ -104,6 +105,7 @@ interface Provider {
   id?: string
   slug: string
   name: string
+  logo?: { sm: string, ico: string }
   score?: number
   rating?: number
   reviewCount?: number

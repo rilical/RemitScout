@@ -186,8 +186,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/png/SVG/PROVIDERS/PANGEA_LOGO.webp',
-      ico: '/png/SVG/PROVIDERS/PANGEA_LOGO.webp',
+      sm: '/logos/pangea.webp',
+      ico: '/logos/pangea.webp',
     },
     remitScore: 8.3,
     scoreBreakdown: {
@@ -252,8 +252,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/logos/WIREBARELY_LOGO.PNG',
-      ico: '/logos/WIREBARELY_LOGO.PNG',
+      sm: '/logos/wirebarley.png',
+      ico: '/logos/wirebarley.png',
     },
     remitScore: 8.2,
     scoreBreakdown: {
@@ -362,8 +362,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/png/SVG/PROVIDERS/SINGX_LOGO.png',
-      ico: '/png/SVG/PROVIDERS/SINGX_LOGO.png',
+      sm: '/logos/singx.png',
+      ico: '/logos/singx.png',
     },
     remitScore: 8.2,
     scoreBreakdown: {
@@ -384,8 +384,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/png/SVG/PROVIDERS/PLACID_LOGO.png',
-      ico: '/png/SVG/PROVIDERS/PLACID_LOGO.png',
+      sm: '/logos/placid.png',
+      ico: '/logos/placid.png',
     },
     remitScore: 8.2,
     scoreBreakdown: {
@@ -450,8 +450,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
-      ico: '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
+      sm: '/logos/dahabshiil.png',
+      ico: '/logos/dahabshiil.png',
     },
     remitScore: 8.0,
     scoreBreakdown: {
@@ -516,8 +516,8 @@ const PROVIDER_METADATA: Record<string, ProviderMetadata> = {
     affiliateUrl: null,
     isAffiliate: false,
     logo: {
-      sm: '/logos/MUKURU_LOGO.PNG',
-      ico: '/logos/MUKURU_LOGO.PNG',
+      sm: '/logos/mukuru.png',
+      ico: '/logos/mukuru.png',
     },
     remitScore: 8.4,
     scoreBreakdown: {

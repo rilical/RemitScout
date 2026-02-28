@@ -2,49 +2,94 @@
  * Shared utility for provider logo sizing and path resolution
  */
 
+const PROVIDER_LOGO_ALIASES: Record<string, string> = {
+  'westernunion': 'western-union',
+  'xe': 'xe-money',
+  'alansari': 'al-ansari-exchange',
+  'bossmoney': 'boss-money',
+  'wellsfargo': 'wells-fargo',
+}
+
+const PROVIDER_LOGO_CANDIDATES: Record<string, { logos: string[], providers: string[] }> = {
+  'wise': { logos: ['/logos/wise.svg'], providers: ['/png/SVG/PROVIDERS/WISE_LOGO.svg'] },
+  'remitly': { logos: ['/logos/remitly.svg'], providers: ['/png/SVG/PROVIDERS/REMITLY_LOGO.svg'] },
+  'worldremit': { logos: ['/logos/worldremit.svg'], providers: ['/png/SVG/PROVIDERS/WORLD_REMIT_LOGO.svg'] },
+  'western-union': { logos: ['/logos/western-union.svg'], providers: ['/png/SVG/PROVIDERS/WESTERN_UNION_LOGO.svg'] },
+  'xe-money': { logos: ['/logos/xe-money.svg'], providers: ['/png/SVG/PROVIDERS/XE_LOGO.svg'] },
+  'sendwave': { logos: ['/logos/sendwave.svg'], providers: ['/png/SVG/PROVIDERS/SENDWAVE_LOGO.svg'] },
+  'xoom': { logos: ['/logos/xoom.svg'], providers: ['/png/SVG/PROVIDERS/XOOM_LOGO.svg'] },
+  'transfergo': { logos: ['/logos/transfergo.svg'], providers: ['/png/SVG/PROVIDERS/TRANSFERGO_LOGO.svg'] },
+  'paysend': { logos: ['/logos/paysend.svg'], providers: ['/png/SVG/PROVIDERS/PAYSEND_LOGO.svg'] },
+  'pangea': {
+    logos: ['/logos/pangea.webp', '/logos/pangea.png'],
+    providers: ['/png/SVG/PROVIDERS/PANGEA_LOGO.webp', '/png/SVG/PROVIDERS/PANGEA_LOGO.png'],
+  },
+  'orbitremit': { logos: ['/logos/orbitremit.png'], providers: ['/png/SVG/PROVIDERS/ORBITREMIT_LOGO.png'] },
+  'boss-money': { logos: ['/logos/boss-money.svg', '/logos/boss-money.png'], providers: ['/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png'] },
+  'instarem': { logos: ['/logos/instarem.svg'], providers: ['/png/SVG/PROVIDERS/INSTAREM_LOGO.svg'] },
+  'wirebarley': {
+    logos: ['/logos/wirebarley.png', '/logos/WIREBARELY_LOGO.PNG'],
+    providers: ['/png/SVG/PROVIDERS/WIREBARLEY_LOGO.png'],
+  },
+  'intermex': { logos: ['/logos/intermex.svg', '/logos/intermex.png'], providers: ['/png/SVG/PROVIDERS/INTERMEX_LOGO.png'] },
+  'koronapay': { logos: ['/logos/koronapay.svg'], providers: ['/png/SVG/PROVIDERS/KORONAPAY_LOGO.svg'] },
+  'remitbee': {
+    logos: ['/logos/remitbee.svg', '/logos/remitbee.jpeg', '/logos/remitbee.jpg'],
+    providers: ['/png/SVG/PROVIDERS/REMITBEE_LOGO.svg', '/png/SVG/PROVIDERS/REMITBEE_LOGO.jpeg'],
+  },
+  'ria': { logos: ['/logos/ria.svg'], providers: ['/png/SVG/PROVIDERS/RIA_LOGO.svg'] },
+  'al-ansari-exchange': { logos: ['/logos/alansari.png'], providers: ['/png/SVG/PROVIDERS/ALANSARI_LOGO.svg'] },
+  'mukuru': {
+    logos: ['/logos/mukuru.png', '/logos/MUKURU_LOGO.PNG'],
+    providers: ['/png/SVG/PROVIDERS/MUKURU_LOGO.png'],
+  },
+  'wells-fargo': { logos: ['/logos/wellsfargo.svg'], providers: ['/png/SVG/PROVIDERS/WELLS_FARGO_LOGO.svg'] },
+  'singx': { logos: ['/logos/singx.png'], providers: ['/png/SVG/PROVIDERS/SINGX_LOGO.png'] },
+  'placid': { logos: ['/logos/placid.png'], providers: ['/png/SVG/PROVIDERS/PLACID_LOGO.png'] },
+  'dahabshiil': { logos: ['/logos/dahabshiil.png'], providers: ['/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png'] },
+}
+
+function toCanonicalProviderSlug(slug: string): string {
+  const normalized = slug.toLowerCase().trim()
+  return PROVIDER_LOGO_ALIASES[normalized] || normalized
+}
+
+/**
+ * Get ordered logo candidates for a provider slug.
+ * Order: preferred source -> canonical /logos variants -> /png provider assets -> generated fallback paths.
+ */
+export function getProviderLogoSources(slug: string, preferredSource?: string | null): string[] {
+  const canonicalSlug = toCanonicalProviderSlug(slug)
+  const candidates = PROVIDER_LOGO_CANDIDATES[canonicalSlug]
+  const fallbackStem = canonicalSlug.toUpperCase().replace(/-/g, '_')
+  const ordered = [
+    preferredSource || null,
+    ...(candidates?.logos || []),
+    ...(candidates?.providers || []),
+    `/png/SVG/PROVIDERS/${fallbackStem}_LOGO.svg`,
+    `/png/SVG/PROVIDERS/${fallbackStem}_LOGO.png`,
+    `/png/SVG/PROVIDERS/${fallbackStem}_LOGO.webp`,
+    `/png/SVG/PROVIDERS/${fallbackStem}_LOGO.jpeg`,
+    `/png/SVG/PROVIDERS/${fallbackStem}_LOGO.jpg`,
+  ]
+
+  const unique: string[] = []
+  const seen = new Set<string>()
+  for (const candidate of ordered) {
+    const value = String(candidate || '').trim()
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    unique.push(value)
+  }
+  return unique
+}
+
 /**
  * Get the logo file path for a provider slug
  */
 export function getProviderLogoPath(slug: string): string {
-  const slugMap: Record<string, string> = {
-    'wise': '/png/SVG/PROVIDERS/WISE_LOGO.svg',
-    'remitly': '/png/SVG/PROVIDERS/REMITLY_LOGO.svg',
-    'worldremit': '/png/SVG/PROVIDERS/WORLD_REMIT_LOGO.svg',
-    'western-union': '/png/SVG/PROVIDERS/WESTERN_UNION_LOGO.svg',
-    'westernunion': '/png/SVG/PROVIDERS/WESTERN_UNION_LOGO.svg',
-    'xe': '/png/SVG/PROVIDERS/XE_LOGO.svg',
-    'xe-money': '/png/SVG/PROVIDERS/XE_LOGO.svg',
-    'sendwave': '/png/SVG/PROVIDERS/SENDWAVE_LOGO.svg',
-    'xoom': '/png/SVG/PROVIDERS/XOOM_LOGO.svg',
-    'transfergo': '/png/SVG/PROVIDERS/TRANSFERGO_LOGO.svg',
-    'paysend': '/png/SVG/PROVIDERS/PAYSEND_LOGO.svg',
-    'pangea': '/png/SVG/PROVIDERS/PANGEA_LOGO.png',
-    'orbitremit': '/png/SVG/PROVIDERS/ORBITREMIT_LOGO.png',
-    'bossmoney': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',
-    'boss-money': '/png/SVG/PROVIDERS/BOSSMONEY_LOGO.png',
-    'instarem': '/png/SVG/PROVIDERS/INSTAREM_LOGO.svg',
-    'wirebarley': '/png/SVG/PROVIDERS/WIREBARLEY_LOGO.png',
-    'intermex': '/png/SVG/PROVIDERS/INTERMEX_LOGO.png',
-    'koronapay': '/png/SVG/PROVIDERS/KORONAPAY_LOGO.svg',
-    'remitbee': '/png/SVG/PROVIDERS/REMITBEE_LOGO.jpeg',
-    'ria': '/png/SVG/PROVIDERS/RIA_LOGO.svg',
-    'al-ansari-exchange': '/png/SVG/PROVIDERS/ALANSARI_LOGO.svg',
-    'alansari': '/png/SVG/PROVIDERS/ALANSARI_LOGO.svg',
-    'mukuru': '/png/SVG/PROVIDERS/MUKURU_LOGO.png',
-    'wellsfargo': '/png/SVG/PROVIDERS/WELLS_FARGO_LOGO.svg',
-    'wells-fargo': '/png/SVG/PROVIDERS/WELLS_FARGO_LOGO.svg',
-    'singx': '/png/SVG/PROVIDERS/SINGX_LOGO.png',
-    'placid': '/png/SVG/PROVIDERS/PLACID_LOGO.png',
-    'dahabshiil': '/png/SVG/PROVIDERS/DAHABSHIIL_LOGO.png',
-  }
-
-  const normalizedSlug = slug.toLowerCase().trim()
-  const logoFile = slugMap[normalizedSlug]
-  if (logoFile) return logoFile
-
-  // Fallback: try to construct path from slug
-  const fallbackPath = `/png/SVG/PROVIDERS/${normalizedSlug.toUpperCase().replace(/-/g, '_')}_LOGO.svg`
-  return fallbackPath
+  const [primary] = getProviderLogoSources(slug)
+  return primary || '/logos/remit-scout.svg'
 }
 
 /**
@@ -52,7 +97,7 @@ export function getProviderLogoPath(slug: string): string {
  * Sizes are optimized for each provider's logo dimensions
  */
 export function getProviderLogoSize(slug: string, context: 'default' | 'large' | 'small' | 'xlarge' = 'default'): string {
-  const normalizedSlug = slug.toLowerCase().trim()
+  const normalizedSlug = toCanonicalProviderSlug(slug)
 
   // Base sizes for different contexts
   const contextSizes: Record<string, Record<string, string>> = {
@@ -177,7 +222,7 @@ export function getProviderLogoSize(slug: string, context: 'default' | 'large' |
  * Used for small context (provider cards).
  */
 export function getProviderLogoDimensions(slug: string): { width: number, height: number } {
-  const normalizedSlug = slug.toLowerCase().trim()
+  const normalizedSlug = toCanonicalProviderSlug(slug)
   const dimensions: Record<string, { width: number, height: number }> = {
     'wise': { width: 220, height: 50 },
     'remitly': { width: 230, height: 100 },

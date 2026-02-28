@@ -85,17 +85,30 @@ const normalizeApiBase = (base?: string) => {
   return url.toString().replace(/\/$/, '')
 }
 const resolvePublicApiBase = () => {
+  const forceDirectPublicApi = parseEnvFlag(
+    resolveEnvValue('PUBLIC_API_BASE_DIRECT', 'NUXT_PUBLIC_API_BASE_DIRECT') || '',
+  )
   const publicBase = readEnvValue('PUBLIC_API_BASE')
-  if (publicBase) return normalizeApiBase(publicBase) || publicBase
-  const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
-  if (cloudFrontDomain) {
-    return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`
+  if (publicBase) {
+    const normalized = normalizeApiBase(publicBase) || publicBase
+    if (isAbsoluteUrl(normalized) && !forceDirectPublicApi) {
+      return '/api'
+    }
+    return normalized
   }
-  const apiEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
-  if (apiEndpoint) {
-    return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
+
+  if (forceDirectPublicApi) {
+    const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+    if (cloudFrontDomain) {
+      return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`
+    }
+    const apiEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+    if (apiEndpoint) {
+      return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
+    }
   }
-  // Default to the local BFF proxy (Nitro server/api/* routes).
+
+  // Default to same-origin BFF proxy (Nitro server/api/* routes) to avoid browser CORS drift.
   return '/api'
 }
 const resolveServerApiBase = () => {
@@ -642,7 +655,7 @@ export default defineNuxtConfig({
         await fs.mkdir(providersDestDir, { recursive: true })
         const providerFiles = await fs.readdir(providersSourceDirForPublic)
         for (const file of providerFiles) {
-          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp')) {
+          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp') || file.endsWith('.jpeg') || file.endsWith('.jpg')) {
             const sourcePath = join(providersSourceDirForPublic, file)
             const destPath = join(providersDestDir, file)
             await fs.copyFile(sourcePath, destPath)
@@ -656,29 +669,42 @@ export default defineNuxtConfig({
       // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
       const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
       const logosDestDir = join(projectRoot, 'public', 'logos')
-      const providerLogoMap: Record<string, string> = {
-        'WISE_LOGO.svg': 'wise.svg',
-        'REMITLY_LOGO.svg': 'remitly.svg',
-        'WORLD_REMIT_LOGO.svg': 'worldremit.svg',
-        'WESTERN_UNION_LOGO.svg': 'western-union.svg',
-        'XE_LOGO.svg': 'xe-money.svg',
-        'WELLS_FARGO_LOGO.svg': 'wellsfargo.svg',
-        'TRANSFERGO_LOGO.svg': 'transfergo.svg',
-        'PAYSEND_LOGO.svg': 'paysend.svg',
-        'SENDWAVE_LOGO.svg': 'sendwave.svg',
-        'INSTAREM_LOGO.svg': 'instarem.svg',
-        'KORONAPAY_LOGO.svg': 'koronapay.svg',
-        'REMITBEE_LOGO.svg': 'remitbee.svg',
-        'RIA_LOGO.svg': 'ria.svg',
-        'XOOM_LOGO.svg': 'xoom.svg',
+      const providerLogoMap: Record<string, string[]> = {
+        'WISE_LOGO.svg': ['wise.svg'],
+        'REMITLY_LOGO.svg': ['remitly.svg'],
+        'WORLD_REMIT_LOGO.svg': ['worldremit.svg'],
+        'WESTERN_UNION_LOGO.svg': ['western-union.svg'],
+        'XE_LOGO.svg': ['xe-money.svg'],
+        'WELLS_FARGO_LOGO.svg': ['wellsfargo.svg'],
+        'TRANSFERGO_LOGO.svg': ['transfergo.svg'],
+        'PAYSEND_LOGO.svg': ['paysend.svg'],
+        'SENDWAVE_LOGO.svg': ['sendwave.svg'],
+        'INSTAREM_LOGO.svg': ['instarem.svg'],
+        'KORONAPAY_LOGO.svg': ['koronapay.svg'],
+        'REMITBEE_LOGO.svg': ['remitbee.svg'],
+        'REMITBEE_LOGO.jpeg': ['remitbee.jpeg'],
+        'RIA_LOGO.svg': ['ria.svg'],
+        'XOOM_LOGO.svg': ['xoom.svg'],
+        'PANGEA_LOGO.webp': ['pangea.webp'],
+        'ORBITREMIT_LOGO.png': ['orbitremit.png'],
+        'ALANSARI_LOGO.svg': ['alansari.svg'],
+        'WIREBARLEY_LOGO.png': ['wirebarley.png', 'WIREBARELY_LOGO.PNG'],
+        'INTERMEX_LOGO.png': ['intermex.png'],
+        'MUKURU_LOGO.png': ['mukuru.png', 'MUKURU_LOGO.PNG'],
+        'SINGX_LOGO.png': ['singx.png'],
+        'PLACID_LOGO.png': ['placid.png'],
+        'DAHABSHIIL_LOGO.png': ['dahabshiil.png'],
+        'BOSSMONEY_LOGO.png': ['boss-money.png'],
       }
       try {
         await fs.mkdir(logosDestDir, { recursive: true })
         const providerFiles = await fs.readdir(providersSourceDir)
         for (const file of providerFiles) {
-          if (file.endsWith('.svg') && providerLogoMap[file]) {
-            const sourcePath = join(providersSourceDir, file)
-            const destPath = join(logosDestDir, providerLogoMap[file])
+          const targets = providerLogoMap[file]
+          if (!targets || targets.length === 0) continue
+          const sourcePath = join(providersSourceDir, file)
+          for (const target of targets) {
+            const destPath = join(logosDestDir, target)
             await fs.copyFile(sourcePath, destPath)
           }
         }

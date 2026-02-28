@@ -1,4 +1,4 @@
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
+import type { Session, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js'
 
 type OAuthProvider = 'google'
 
@@ -104,6 +104,73 @@ export const useAuth = () => {
     hydrated.value = true
   }
 
+  const readPersistedSession = (): Session | null => {
+    if (!import.meta.client || typeof window === 'undefined') return null
+    try {
+      const raw = window.localStorage.getItem('remit-scout-auth')
+      if (!raw) return null
+      const parsed = JSON.parse(raw) as Partial<Session>
+      if (!parsed || typeof parsed !== 'object') return null
+      if (typeof parsed.access_token !== 'string' || typeof parsed.refresh_token !== 'string') {
+        return null
+      }
+      if (!parsed.user || typeof parsed.user !== 'object') {
+        return null
+      }
+      return parsed as Session
+    }
+    catch {
+      return null
+    }
+  }
+
+  const isSessionExpired = (nextSession: Session | null) => {
+    if (!nextSession) return true
+    const expiresAt = nextSession.expires_at
+    if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt)) return false
+    const now = Math.floor(Date.now() / 1000)
+    return expiresAt <= now
+  }
+
+  const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
+    let nextSession: Session | null = null
+
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) {
+        lastError.value = error.message
+      }
+      nextSession = data.session ?? null
+    }
+    catch (error) {
+      lastError.value = error instanceof Error ? error.message : String(error)
+    }
+
+    if (!nextSession) {
+      // Some clients can return null before auth storage finishes initialization.
+      await new Promise(resolve => setTimeout(resolve, 0))
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          lastError.value = error.message
+        }
+        nextSession = data.session ?? null
+      }
+      catch (error) {
+        lastError.value = error instanceof Error ? error.message : String(error)
+      }
+    }
+
+    if (!nextSession) {
+      const persisted = readPersistedSession()
+      if (persisted && !isSessionExpired(persisted)) {
+        nextSession = persisted
+      }
+    }
+
+    return nextSession
+  }
+
   const getSupabase = () => {
     if (!import.meta.client) return null
     return useSupabaseClient()
@@ -155,22 +222,23 @@ export const useAuth = () => {
     }
 
     if (!initPromise.value) {
-      initPromise.value = supabase.auth
-        .getSession()
-        .then(({ data, error }) => {
-          if (error) {
-            lastError.value = error.message
-          }
-          setSession(data.session ?? null)
-        })
+      initPromise.value = resolveInitialSession(supabase)
+        .then(nextSession => setSession(nextSession))
         .catch((error) => {
           lastError.value = error instanceof Error ? error.message : String(error)
-          hydrated.value = true
+          setSession(null)
         })
         .finally(() => {
           if (!listenerAttached.value) {
             listenerAttached.value = true
-            supabase.auth.onAuthStateChange((_event, nextSession) => {
+            supabase.auth.onAuthStateChange((event, nextSession) => {
+              if (!nextSession && event === 'INITIAL_SESSION') {
+                const persisted = readPersistedSession()
+                if (persisted && !isSessionExpired(persisted)) {
+                  setSession(persisted)
+                  return
+                }
+              }
               setSession(nextSession)
             })
           }
