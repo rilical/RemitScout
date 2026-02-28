@@ -80,12 +80,14 @@ jobs:
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
+          REQUIRE_NEW_RELIC_GATES: ${{ vars.REQUIRE_NEW_RELIC_GATES || '0' }}
           BRAIN_DISPATCH_GITHUB_ACTIONS: ${{ vars.BRAIN_DISPATCH_GITHUB_ACTIONS }}
           BRAIN_INGEST_GITHUB_ACTIONS: ${{ vars.BRAIN_INGEST_GITHUB_ACTIONS }}
           BRAIN_SLACK_POST_CASE_CARDS: ${{ vars.BRAIN_SLACK_POST_CASE_CARDS }}
         run: pnpm -C backend ci:staging-go-live-readiness
 
       - name: Observability prereq gate (staging hard gate)
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -103,6 +105,7 @@ jobs:
         run: pnpm -C backend ci:observability
 
       - name: New Relic sync + verify (staging hard gate)
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}

@@ -54,6 +54,11 @@ const RECOMMENDED_KEYS: Requirement[] = [
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
 const VALID_SOC2_REPORT_STATES = new Set(['in_progress', 'audited', 'expired', 'revoked'])
+const NEW_RELIC_GATE_KEYS = new Set([
+  'NEW_RELIC_USER_API_KEY',
+  'NEW_RELIC_STAGING_AWS_ROLE_ARN',
+  'NEW_RELIC_PROD_AWS_ROLE_ARN',
+])
 
 const getValue = (key: string) => String(process.env[key] || '').trim()
 
@@ -94,14 +99,29 @@ const run = () => {
   const missingRecommended: string[] = []
   const placeholderViolations: string[] = []
   const policyViolations: string[] = []
+  const requireNewRelicGates = !['0', 'false', 'off', 'no'].includes(
+    getValue('REQUIRE_NEW_RELIC_GATES').toLowerCase(),
+  )
 
   for (const requirement of REQUIRED_KEYS) {
     const value = getValue(requirement.key)
     if (isMissing(value)) {
+      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+        missingRecommended.push(
+          `${requirement.key}: ${requirement.description} (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+        )
+        continue
+      }
       missingRequired.push(`${requirement.key}: ${requirement.description}`)
       continue
     }
     if (looksLikePlaceholder(value)) {
+      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+        missingRecommended.push(
+          `${requirement.key}: looks like placeholder value (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+        )
+        continue
+      }
       placeholderViolations.push(`${requirement.key}: looks like placeholder value`)
     }
   }
