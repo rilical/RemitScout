@@ -26,6 +26,7 @@ export type NetworkingOptions = {
   envName: string
   natGateways?: number
   interfaceEndpointMode?: InterfaceEndpointMode
+  interfaceEndpointAllowlist?: string[]
 }
 
 export type InterfaceEndpointMode = 'all' | 'minimal' | 'none'
@@ -39,6 +40,11 @@ export const createNetworking = (
   const interfaceEndpointMode: InterfaceEndpointMode = isDev
     ? 'none'
     : (options.interfaceEndpointMode ?? 'all')
+  const interfaceEndpointAllowlist = new Set(
+    (options.interfaceEndpointAllowlist ?? [])
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  )
   const natGateways =
     typeof options.natGateways === 'number' && Number.isFinite(options.natGateways)
       ? options.natGateways
@@ -94,17 +100,29 @@ export const createNetworking = (
     )
     const endpointSubnets = { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
     const endpointDefinitions = [
-      { id: 'EcrApiEndpoint', service: InterfaceVpcEndpointAwsService.ECR, minimal: false },
-      { id: 'EcrDockerEndpoint', service: InterfaceVpcEndpointAwsService.ECR_DOCKER, minimal: false },
-      { id: 'CloudWatchLogsEndpoint', service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS, minimal: false },
-      { id: 'SecretsManagerEndpoint', service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER, minimal: true },
-      { id: 'SsmEndpoint', service: InterfaceVpcEndpointAwsService.SSM, minimal: true },
-      { id: 'StsEndpoint', service: InterfaceVpcEndpointAwsService.STS, minimal: true },
-      { id: 'SqsEndpoint', service: InterfaceVpcEndpointAwsService.SQS, minimal: false },
+      { id: 'EcrApiEndpoint', key: 'ecr.api', service: InterfaceVpcEndpointAwsService.ECR, minimal: false },
+      { id: 'EcrDockerEndpoint', key: 'ecr.dkr', service: InterfaceVpcEndpointAwsService.ECR_DOCKER, minimal: false },
+      { id: 'CloudWatchLogsEndpoint', key: 'logs', service: InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS, minimal: false },
+      { id: 'SecretsManagerEndpoint', key: 'secretsmanager', service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER, minimal: true },
+      { id: 'SsmEndpoint', key: 'ssm', service: InterfaceVpcEndpointAwsService.SSM, minimal: true },
+      { id: 'StsEndpoint', key: 'sts', service: InterfaceVpcEndpointAwsService.STS, minimal: true },
+      { id: 'SqsEndpoint', key: 'sqs', service: InterfaceVpcEndpointAwsService.SQS, minimal: false },
     ] as const
-    const selectedEndpoints = interfaceEndpointMode === 'minimal'
+    const knownEndpointKeys = new Set(endpointDefinitions.map((endpoint) => endpoint.key))
+    const unknownAllowlistKeys = [...interfaceEndpointAllowlist].filter(
+      (key) => !knownEndpointKeys.has(key as (typeof endpointDefinitions)[number]['key']),
+    )
+    if (unknownAllowlistKeys.length > 0) {
+      throw new Error(
+        `Unknown interface endpoint allowlist keys: ${unknownAllowlistKeys.join(', ')}.`,
+      )
+    }
+    const modeFilteredEndpoints = interfaceEndpointMode === 'minimal'
       ? endpointDefinitions.filter((endpoint) => endpoint.minimal)
       : endpointDefinitions
+    const selectedEndpoints = interfaceEndpointAllowlist.size > 0
+      ? modeFilteredEndpoints.filter((endpoint) => interfaceEndpointAllowlist.has(endpoint.key))
+      : modeFilteredEndpoints
 
     for (const endpoint of selectedEndpoints) {
       vpc.addInterfaceEndpoint(endpoint.id, {

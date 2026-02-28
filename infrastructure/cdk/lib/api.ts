@@ -152,6 +152,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     defaultExporter: 'xray',
     defaultEndpoint: options.otelLambdaLayerArn ? 'http://127.0.0.1:4318/v1/traces' : undefined,
   })
+  if (
+    isStaging
+    && !process.env.OTEL_TRACES_SAMPLER
+    && !process.env.OTEL_TRACES_SAMPLER_ARG
+  ) {
+    tracingEnv.OTEL_TRACES_SAMPLER = 'traceidratio'
+    tracingEnv.OTEL_TRACES_SAMPLER_ARG = '0.01'
+  }
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
   const newRelicLogsEnabled =

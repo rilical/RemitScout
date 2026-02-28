@@ -317,16 +317,25 @@ export const createScheduledJobs = (
     TRACING_EXPORTER: tracingExporter,
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
   }
+  if (
+    options.envName === 'staging'
+    && !process.env.OTEL_TRACES_SAMPLER
+    && !process.env.OTEL_TRACES_SAMPLER_ARG
+  ) {
+    tracingEnv.OTEL_TRACES_SAMPLER = 'traceidratio'
+    tracingEnv.OTEL_TRACES_SAMPLER_ARG = '0.01'
+  }
   const oandaThrottleEnv = collectOandaThrottleEnv()
   const providerThrottleEnv = collectPlaneBProviderThrottleEnv()
   const tracingMode = tracingExporter === 'none' ? Tracing.DISABLED : Tracing.ACTIVE
   const minimalMode = options.minimalMode === true
+  const b2bSweepIntervalMinutes = options.envName === 'staging' ? 5 : 1
 
   if (minimalMode) {
     const b2bSweepSchedulerRule = new Rule(scope, 'B2bSweepSchedulerSchedule', {
       ruleName: ruleName('b2b-sweep-scheduler'),
-      schedule: Schedule.rate(Duration.minutes(1)),
-      description: 'Runs the B2B sweep scheduler every minute to enqueue due tier runs.',
+      schedule: Schedule.rate(Duration.minutes(b2bSweepIntervalMinutes)),
+      description: `Runs the B2B sweep scheduler every ${b2bSweepIntervalMinutes} minute(s) to enqueue due tier runs.`,
       enabled: rulesEnabled,
     })
     tagManagedRule(b2bSweepSchedulerRule, options.envName)
@@ -1937,8 +1946,8 @@ export const createScheduledJobs = (
 
   const b2bSweepSchedulerRule = new Rule(scope, 'B2bSweepSchedulerSchedule', {
     ruleName: ruleName('b2b-sweep-scheduler'),
-    schedule: Schedule.rate(Duration.minutes(1)),
-    description: 'Runs the B2B sweep scheduler every minute to enqueue due tier runs.',
+    schedule: Schedule.rate(Duration.minutes(b2bSweepIntervalMinutes)),
+    description: `Runs the B2B sweep scheduler every ${b2bSweepIntervalMinutes} minute(s) to enqueue due tier runs.`,
     enabled: rulesEnabled,
   })
   tagManagedRule(b2bSweepSchedulerRule, options.envName)

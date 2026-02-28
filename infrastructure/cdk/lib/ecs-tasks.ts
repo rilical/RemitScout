@@ -128,6 +128,14 @@ export const createEcsTasks = (
     defaultEndpoint: 'http://127.0.0.1:4318/v1/traces',
     preferDefaultEndpoint: true,
   })
+  if (
+    isStaging
+    && !process.env.OTEL_TRACES_SAMPLER
+    && !process.env.OTEL_TRACES_SAMPLER_ARG
+  ) {
+    tracingEnv.OTEL_TRACES_SAMPLER = 'traceidratio'
+    tracingEnv.OTEL_TRACES_SAMPLER_ARG = '0.01'
+  }
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')

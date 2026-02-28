@@ -9,11 +9,13 @@ AWS_ACCOUNT ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --
 CDK_DEFAULT_ACCOUNT := $(AWS_ACCOUNT)
 CDK_DEFAULT_REGION := $(AWS_REGION)
 OPS_PAUSE_FN_PREFIX ?= remit-scout-dev-OpsPauseControllerFunction
+OPS_PAUSE_FN_PREFIX_OVERRIDE ?=
 COMMUNICATIONS_SECRET_NAME ?= remit-scout/dev/communications
 COMMUNICATIONS_SECRET_ARN ?= $(shell AWS_PROFILE=$(AWS_PROFILE) aws secretsmanager describe-secret --region $(AWS_REGION) --secret-id $(COMMUNICATIONS_SECRET_NAME) --query ARN --output text 2>/dev/null)
 
 # Single source of truth for dev pause/resume behavior (ops allowlist + nightly auto-pause).
 DEV_RUNTIME_CONFIG ?= ops/dev-runtime.json
+STAGING_RUNTIME_CONFIG ?= ops/staging-runtime.json
 OPS_PAUSE_RULE_ALLOWLIST ?= $(shell jq -r '.opsPauseRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
 OPS_RESUME_RULE_ALLOWLIST ?= $(shell jq -r '.opsResumeRuleAllowlist // [] | if type=="array" then join(",") else tostring end' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "")
 PURGE_QUEUES_ON_RESUME ?= $(shell jq -r '.purgeQueuesOnResume // true' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "true")
@@ -22,7 +24,7 @@ DEV_NIGHTLY_PAUSE_ENABLED ?= $(shell jq -r '.nightlyAutoPause.enabled // false' 
 DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "America/New_York"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "America/New_York")
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
-.PHONY: pause-dev resume-dev resume-dev-minimal status-dev ops-pause-dev ops-resume-dev dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
+.PHONY: pause-dev resume-dev resume-dev-minimal status-dev status-staging status-env status-% ops-pause-dev ops-resume-dev ops-pause-staging ops-resume-staging ops-pause-env ops-resume-env ops-pause-% ops-resume-% dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
 .PHONY: status-ops-permissions db-migrate-staging-dry-run db-migrate-staging-local
 
 pause-dev:
@@ -77,8 +79,7 @@ ops-pause-dev:
 	@echo "Ops-pause dev (disable rules, scale ECS to 0, stop DB)"
 	@FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
 		--region $(AWS_REGION) \
-		--query "Functions[?starts_with(FunctionName, '$(OPS_PAUSE_FN_PREFIX)')].FunctionName | [0]" \
-		--output text); \
+		--output json | jq -r '.Functions[]? | .FunctionName // empty | select(startswith("$(OPS_PAUSE_FN_PREFIX)"))' | head -n1); \
 	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
 		echo "ERROR: OpsPause controller Lambda not found (prefix: $(OPS_PAUSE_FN_PREFIX))"; \
 		exit 1; \
@@ -98,8 +99,7 @@ ops-resume-dev:
 	@echo "Ops-resume dev (enable rules, restore ECS baselines, start DB)"
 	@FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
 		--region $(AWS_REGION) \
-		--query "Functions[?starts_with(FunctionName, '$(OPS_PAUSE_FN_PREFIX)')].FunctionName | [0]" \
-		--output text); \
+		--output json | jq -r '.Functions[]? | .FunctionName // empty | select(startswith("$(OPS_PAUSE_FN_PREFIX)"))' | head -n1); \
 	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
 		echo "ERROR: OpsPause controller Lambda not found (prefix: $(OPS_PAUSE_FN_PREFIX))"; \
 		exit 1; \
@@ -187,6 +187,117 @@ status-dev:
 		--output table
 	@echo "Drift check (optional)"
 	@echo "aws cloudformation detect-stack-drift --stack-name remit-scout-dev --region $(AWS_REGION) --profile $(AWS_PROFILE)"
+
+status-env:
+	@echo "ECS service counts ($(OPS_AWS_ENV))"
+	@CLUSTER="remit-scout-$(OPS_AWS_ENV)"; \
+	SERVICES=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-services \
+		--cluster "$$CLUSTER" \
+		--region $(AWS_REGION) \
+		--query 'serviceArns' --output text); \
+	if [ -n "$$SERVICES" ] && [ "$$SERVICES" != "None" ]; then \
+		AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
+			--cluster "$$CLUSTER" \
+			--services $$SERVICES \
+			--region $(AWS_REGION) \
+			--query 'services[].{name:serviceName,desired:desiredCount,running:runningCount,pending:pendingCount}' \
+			--output table; \
+	else \
+		echo "No ECS services found."; \
+	fi
+	@echo "EventBridge rules ($(OPS_AWS_ENV))"
+	@AWS_PROFILE=$(AWS_PROFILE) aws events list-rules \
+		--name-prefix remit-scout-$(OPS_AWS_ENV) \
+		--region $(AWS_REGION) \
+		--query 'Rules[].{name:Name,state:State,expr:ScheduleExpression}' \
+		--output table
+	@echo "Aurora status ($(OPS_AWS_ENV))"
+	@AWS_PROFILE=$(AWS_PROFILE) aws rds describe-db-clusters \
+		--region $(AWS_REGION) \
+		--query "DBClusters[?starts_with(DBClusterIdentifier, 'remit-scout-$(OPS_AWS_ENV)')].{id:DBClusterIdentifier,status:Status,engine:Engine}" \
+		--output table
+	@echo "Drift check (optional)"
+	@echo "aws cloudformation detect-stack-drift --stack-name remit-scout-$(OPS_AWS_ENV) --region $(AWS_REGION) --profile $(AWS_PROFILE)"
+
+status-staging:
+	@$(MAKE) OPS_AWS_ENV=staging status-env
+
+status-%:
+	@$(MAKE) OPS_AWS_ENV=$* status-env
+
+ops-pause-env:
+	@echo "Ops-pause $(OPS_AWS_ENV) (disable rules, scale ECS to 0, stop DB)"
+	@FN_PREFIX=$${OPS_PAUSE_FN_PREFIX_OVERRIDE:-remit-scout-$(OPS_AWS_ENV)-OpsPauseControllerFunction}; \
+	FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
+		--region $(AWS_REGION) \
+		--output json | jq -r --arg prefix "$$FN_PREFIX" '.Functions[]? | .FunctionName // empty | select(startswith($$prefix))' | head -n1); \
+	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
+		FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
+			--region $(AWS_REGION) \
+			--output json | jq -r '.Functions[]? | .FunctionName // empty | select(contains("remit-scout-$(OPS_AWS_ENV)") and contains("OpsPauseControllerFuncti"))' | head -n1); \
+	fi; \
+	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
+		echo "ERROR: OpsPause controller Lambda not found (prefix: $$FN_PREFIX)"; \
+		exit 1; \
+	fi; \
+	OUT="/tmp/remit-scout-ops-pause-$(OPS_AWS_ENV).json"; \
+	AWS_PROFILE=$(AWS_PROFILE) aws lambda invoke \
+		--cli-connect-timeout 10 \
+		--cli-read-timeout 300 \
+		--region $(AWS_REGION) \
+		--cli-binary-format raw-in-base64-out \
+		--function-name "$$FN" \
+		--payload '{"paused": true}' \
+		"$$OUT" >/dev/null || exit 1; \
+	if [ ! -f "$$OUT" ]; then \
+		echo "ERROR: OpsPause invoke returned no output payload."; \
+		exit 1; \
+	fi; \
+	cat "$$OUT"; \
+	rm -f "$$OUT"
+
+ops-resume-env:
+	@echo "Ops-resume $(OPS_AWS_ENV) (enable rules, restore ECS baselines, start DB)"
+	@FN_PREFIX=$${OPS_PAUSE_FN_PREFIX_OVERRIDE:-remit-scout-$(OPS_AWS_ENV)-OpsPauseControllerFunction}; \
+	FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
+		--region $(AWS_REGION) \
+		--output json | jq -r --arg prefix "$$FN_PREFIX" '.Functions[]? | .FunctionName // empty | select(startswith($$prefix))' | head -n1); \
+	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
+		FN=$$(AWS_PROFILE=$(AWS_PROFILE) aws lambda list-functions \
+			--region $(AWS_REGION) \
+			--output json | jq -r '.Functions[]? | .FunctionName // empty | select(contains("remit-scout-$(OPS_AWS_ENV)") and contains("OpsPauseControllerFuncti"))' | head -n1); \
+	fi; \
+	if [ -z "$$FN" ] || [ "$$FN" = "None" ]; then \
+		echo "ERROR: OpsPause controller Lambda not found (prefix: $$FN_PREFIX)"; \
+		exit 1; \
+	fi; \
+	OUT="/tmp/remit-scout-ops-resume-$(OPS_AWS_ENV).json"; \
+	AWS_PROFILE=$(AWS_PROFILE) aws lambda invoke \
+		--cli-connect-timeout 10 \
+		--cli-read-timeout 300 \
+		--region $(AWS_REGION) \
+		--cli-binary-format raw-in-base64-out \
+		--function-name "$$FN" \
+		--payload '{"paused": false}' \
+		"$$OUT" >/dev/null || exit 1; \
+	if [ ! -f "$$OUT" ]; then \
+		echo "ERROR: OpsResume invoke returned no output payload."; \
+		exit 1; \
+	fi; \
+	cat "$$OUT"; \
+	rm -f "$$OUT"
+
+ops-pause-staging:
+	@$(MAKE) OPS_AWS_ENV=staging ops-pause-env
+
+ops-resume-staging:
+	@$(MAKE) OPS_AWS_ENV=staging ops-resume-env
+
+ops-pause-%:
+	@$(MAKE) OPS_AWS_ENV=$* ops-pause-env
+
+ops-resume-%:
+	@$(MAKE) OPS_AWS_ENV=$* ops-resume-env
 
 status-ops-permissions:
 	@echo "Checking ECS/cloudwatch visibility for current AWS principal"

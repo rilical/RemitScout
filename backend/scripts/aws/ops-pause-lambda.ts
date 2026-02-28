@@ -1,5 +1,6 @@
 import {
   DescribeServicesCommand,
+  ListServicesCommand,
   DescribeTasksCommand,
   ECSClient,
   ListTasksCommand,
@@ -159,6 +160,30 @@ const listRunningTaskArns = async (
     nextToken = response.nextToken
   } while (nextToken)
   return arns
+}
+
+const listClusterServiceNames = async (
+  client: ECSClient,
+  cluster: string,
+): Promise<string[]> => {
+  const names = new Set<string>()
+  let nextToken: string | undefined
+  do {
+    const response = await client.send(
+      new ListServicesCommand({
+        cluster,
+        nextToken,
+      }),
+    )
+    response.serviceArns?.forEach((serviceArn) => {
+      if (!serviceArn) return
+      const serviceName = serviceArn.split('/').pop()?.trim()
+      if (!serviceName) return
+      names.add(serviceName)
+    })
+    nextToken = response.nextToken
+  } while (nextToken)
+  return [...names]
 }
 
 const stopEventRuleStartedTasks = async (
@@ -589,17 +614,39 @@ export const handler = async (event: PauseEvent = {}): Promise<{ paused: boolean
   const redisAllowDelete = toBool(process.env.REDIS_ALLOW_DELETE)
 
   const ssm = new SSMClient({})
-  const ecsServiceNames = await readJsonParameter(
+  const configuredEcsServiceNames = await readJsonParameter(
     ssm,
     ecsServicesParamName,
     ecsServiceNamesFromEnv,
   )
-  const ecsBaseline = await readJsonParameter(
+  const configuredEcsBaseline = await readJsonParameter(
     ssm,
     ecsBaselineParamName,
     ecsBaselineFromEnv,
   )
   const ecs = new ECSClient({})
+  const discoveredEcsServiceNames = await listClusterServiceNames(ecs, ecsClusterName)
+  const ecsServiceNames = [...new Set([...configuredEcsServiceNames, ...discoveredEcsServiceNames])]
+  const ecsBaseline: Record<string, number> = {}
+  for (const [serviceName, desiredCount] of Object.entries(configuredEcsBaseline)) {
+    const normalized = Number(desiredCount)
+    ecsBaseline[serviceName] = Number.isFinite(normalized) ? Math.max(0, Math.trunc(normalized)) : 0
+  }
+  for (const serviceName of ecsServiceNames) {
+    if (!(serviceName in ecsBaseline)) {
+      ecsBaseline[serviceName] = 0
+    }
+  }
+  const unmanagedDiscoveredServices = discoveredEcsServiceNames.filter(
+    (serviceName) => !configuredEcsServiceNames.includes(serviceName),
+  )
+  if (unmanagedDiscoveredServices.length > 0) {
+    logger.warn('ops_pause_discovered_unmanaged_services', {
+      cluster: ecsClusterName,
+      count: unmanagedDiscoveredServices.length,
+      services: unmanagedDiscoveredServices,
+    })
+  }
   const events = new EventBridgeClient({})
   const rds = new RDSClient({})
   const elasticache = new ElastiCacheClient({})

@@ -110,10 +110,19 @@ export class RemitScoutStack extends Stack {
       Tags.of(this).add('owner', ownerTag)
     }
 
-    const imageTag =
+    const imageTag = String(
       this.node.tryGetContext('backendImageTag') ??
       process.env.BACKEND_IMAGE_TAG ??
-      'latest'
+      'latest',
+    ).trim()
+    if (!imageTag) {
+      throw new Error('backendImageTag/BACKEND_IMAGE_TAG cannot be empty.')
+    }
+    if (envName !== 'dev' && imageTag.toLowerCase() === 'latest') {
+      throw new Error(
+        'backendImageTag must be immutable in staging/prod. Use a release tag or digest, not "latest".',
+      )
+    }
     const devSharedSecretArn =
       this.node.tryGetContext('devSharedSecretArn') ??
       process.env.DEV_SHARED_SECRET_ARN
@@ -278,6 +287,24 @@ export class RemitScoutStack extends Stack {
             process.env.STAGING_INTERFACE_ENDPOINTS_MODE,
         )
       : undefined
+    const defaultStagingInterfaceEndpointAllowlist = [
+      'ecr.api',
+      'ecr.dkr',
+      'logs',
+      'secretsmanager',
+      'sqs',
+    ]
+    const stagingInterfaceEndpointAllowlist = envName === 'staging'
+      ? toList(
+          this.node.tryGetContext('stagingInterfaceEndpointAllowlist') ??
+            process.env.STAGING_INTERFACE_ENDPOINT_ALLOWLIST,
+        )
+      : []
+    const resolvedStagingInterfaceEndpointAllowlist = envName === 'staging'
+      ? (stagingInterfaceEndpointAllowlist.length > 0
+        ? stagingInterfaceEndpointAllowlist
+        : defaultStagingInterfaceEndpointAllowlist)
+      : []
     const prodInterfaceEndpointsMode = envName === 'prod'
       ? toInterfaceEndpointMode(
           this.node.tryGetContext('prodInterfaceEndpointsMode') ??
@@ -326,6 +353,8 @@ export class RemitScoutStack extends Stack {
       envName,
       natGateways,
       interfaceEndpointMode,
+      interfaceEndpointAllowlist:
+        envName === 'staging' ? resolvedStagingInterfaceEndpointAllowlist : undefined,
     })
 
     const foundationStack = new FoundationNestedStack(this, 'Foundation', {
@@ -1057,6 +1086,24 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('devNightlyPauseTimezone') ??
       process.env.DEV_NIGHTLY_PAUSE_TIMEZONE ??
       'America/New_York'
+    const stagingBusinessHoursEnabled = envName === 'staging'
+      ? (toOptionalBool(
+          this.node.tryGetContext('stagingBusinessHoursEnabled') ??
+            process.env.STAGING_BUSINESS_HOURS_ENABLED,
+        ) ?? false)
+      : false
+    const stagingPauseCron =
+      this.node.tryGetContext('stagingPauseCron') ??
+      process.env.STAGING_PAUSE_CRON ??
+      'cron(0 20 ? * MON-FRI *)'
+    const stagingResumeCron =
+      this.node.tryGetContext('stagingResumeCron') ??
+      process.env.STAGING_RESUME_CRON ??
+      'cron(0 8 ? * MON-FRI *)'
+    const stagingTimezone =
+      this.node.tryGetContext('stagingTimezone') ??
+      process.env.STAGING_TIMEZONE ??
+      'America/New_York'
 
     // OpsPause resume behavior:
     // - prod: keep a minimal allowlist by default
@@ -1614,6 +1661,51 @@ export class RemitScoutStack extends Stack {
       }
     }
 
+    if (envName === 'staging' || envName === 'prod') {
+      const scheduledTaskFamilyRules = [
+        'b2b-sweep-scheduler',
+        'b2c-refresh-worker',
+        'fx-rate-refresh-worker',
+        'export-worker',
+      ]
+      const failedTaskStartRule = new Rule(this, 'ScheduledTaskFailedToStartRule', {
+        ruleName: `remit-scout-${envName}-scheduled-task-failed-to-start`,
+        description: 'Detects ECS scheduled task startup failures (TaskFailedToStart).',
+        eventPattern: {
+          source: ['aws.ecs'],
+          detailType: ['ECS Task State Change'],
+          detail: {
+            clusterArn: [runtimeStack.resources.compute.cluster.clusterArn],
+            lastStatus: ['STOPPED'],
+            stopCode: ['TaskFailedToStart'],
+            startedBy: scheduledTaskFamilyRules.map((ruleSuffix) => ({
+              prefix: `events-rule/remit-scout-${envName}-${ruleSuffix}`,
+            })),
+          },
+        },
+      })
+      failedTaskStartRule.addTarget(new SnsTopic(snsSubscriptions.opsTopic))
+
+      const failedTaskStartAlarm = new Alarm(this, 'ScheduledTaskFailedToStartAlarm', {
+        alarmName: `remit-scout-${envName}-scheduled-task-failed-to-start`,
+        metric: new Metric({
+          namespace: 'AWS/Events',
+          metricName: 'MatchedEvents',
+          dimensionsMap: {
+            RuleName: failedTaskStartRule.ruleName,
+          },
+          statistic: 'Sum',
+          period: Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+        alarmDescription: 'Scheduled ECS task startup failure detected in the last 5 minutes.',
+      })
+      failedTaskStartAlarm.addAlarmAction(new SnsAction(snsSubscriptions.opsTopic))
+    }
+
     if (envName === 'dev' && devNightlyPauseEnabled) {
       const nightlyPauseDlq = new Queue(this, 'DevNightlyPauseSchedulerDlq', {
         queueName: `remit-scout-${envName}-nightly-pause-scheduler-dlq`,
@@ -1679,6 +1771,67 @@ export class RemitScoutStack extends Stack {
       }
     }
 
+    if (envName === 'staging' && stagingBusinessHoursEnabled) {
+      const businessHoursDlq = new Queue(this, 'StagingBusinessHoursSchedulerDlq', {
+        queueName: `remit-scout-${envName}-business-hours-scheduler-dlq`,
+        retentionPeriod: Duration.days(14),
+      })
+
+      const schedulerInvokeRole = new Role(this, 'StagingBusinessHoursSchedulerRole', {
+        assumedBy: new ServicePrincipal('scheduler.amazonaws.com'),
+      })
+      opsPause.controllerFunction.grantInvoke(schedulerInvokeRole)
+      businessHoursDlq.grantSendMessages(schedulerInvokeRole)
+
+      new CfnSchedule(this, 'StagingBusinessHoursPauseSchedule', {
+        name: `remit-scout-${envName}-business-hours-pause`,
+        scheduleExpression: stagingPauseCron,
+        scheduleExpressionTimezone: stagingTimezone,
+        flexibleTimeWindow: { mode: 'OFF' },
+        state: 'ENABLED',
+        target: {
+          arn: opsPause.controllerFunction.functionArn,
+          roleArn: schedulerInvokeRole.roleArn,
+          input: JSON.stringify({ paused: true }),
+          deadLetterConfig: { arn: businessHoursDlq.queueArn },
+          retryPolicy: {
+            maximumRetryAttempts: 2,
+            maximumEventAgeInSeconds: 60 * 60,
+          },
+        },
+      })
+
+      new CfnSchedule(this, 'StagingBusinessHoursResumeSchedule', {
+        name: `remit-scout-${envName}-business-hours-resume`,
+        scheduleExpression: stagingResumeCron,
+        scheduleExpressionTimezone: stagingTimezone,
+        flexibleTimeWindow: { mode: 'OFF' },
+        state: 'ENABLED',
+        target: {
+          arn: opsPause.controllerFunction.functionArn,
+          roleArn: schedulerInvokeRole.roleArn,
+          input: JSON.stringify({ paused: false }),
+          deadLetterConfig: { arn: businessHoursDlq.queueArn },
+          retryPolicy: {
+            maximumRetryAttempts: 2,
+            maximumEventAgeInSeconds: 60 * 60,
+          },
+        },
+      })
+
+      const dlqAlarm = new Alarm(this, 'StagingBusinessHoursSchedulerDlqAlarm', {
+        alarmName: `remit-scout-${envName}-business-hours-scheduler-dlq`,
+        metric: businessHoursDlq.metricApproximateNumberOfMessagesVisible({
+          period: Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: TreatMissingData.NOT_BREACHING,
+      })
+      dlqAlarm.addAlarmAction(new SnsAction(snsSubscriptions.opsTopic))
+    }
+
     storage.bronzeBucket.grantReadWrite(iam.planeBEcsTaskRole)
     storage.exportsBucket.grantReadWrite(iam.planeALambdaRole)
     storage.exportsBucket.grantReadWrite(iam.planeBEcsTaskRole)
@@ -1732,6 +1885,12 @@ export class RemitScoutStack extends Stack {
       value: interfaceEndpointMode,
       description: 'VPC interface endpoint mode (all|minimal|none)',
     })
+    if (envName === 'staging') {
+      new CfnOutput(this, 'StagingInterfaceEndpointAllowlist', {
+        value: resolvedStagingInterfaceEndpointAllowlist.join(','),
+        description: 'Staging interface endpoint allowlist',
+      })
+    }
     new CfnOutput(this, 'ProviderProbeMode', {
       value: providerProbeMode,
       description: 'Provider probe scheduler mode (per_provider|fan_in)',

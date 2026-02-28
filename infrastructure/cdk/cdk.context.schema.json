@@ -236,6 +236,22 @@
       "type": "string",
       "description": "Dev-only: cron() expression for the morning auto-resume schedule (e.g., cron(0 8 ? * MON-FRI *))"
     },
+    "stagingBusinessHoursEnabled": {
+      "type": "boolean",
+      "description": "Staging-only: enable weekday business-hours pause/resume schedules"
+    },
+    "stagingPauseCron": {
+      "type": "string",
+      "description": "Staging-only: cron() expression for pause schedule (e.g., cron(0 20 ? * MON-FRI *))"
+    },
+    "stagingResumeCron": {
+      "type": "string",
+      "description": "Staging-only: cron() expression for resume schedule (e.g., cron(0 8 ? * MON-FRI *))"
+    },
+    "stagingTimezone": {
+      "type": "string",
+      "description": "Staging-only: timezone used for business-hours schedules (e.g., America/New_York)"
+    },
     "goldIndicesLookbackDays": {
       "type": "string",
       "description": "Lookback window days for the gold indices job (GOLD_INDICES_LOOKBACK_DAYS override)"
@@ -765,6 +781,13 @@
         "none"
       ],
       "description": "Staging VPC interface endpoint mode"
+    },
+    "stagingInterfaceEndpointAllowlist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Staging-only list of interface endpoint keys to keep (ecr.api,ecr.dkr,logs,secretsmanager,sqs,ssm,sts)"
     },
     "prodInterfaceEndpointsMode": {
       "type": "string",

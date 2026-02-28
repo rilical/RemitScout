@@ -95,6 +95,10 @@ const cdkContextShape = {
   devNightlyPauseEnabled: optionalBool,
   devNightlyPauseTimezone: z.string().optional(),
   devNightlyPauseCron: z.string().optional(),
+  stagingBusinessHoursEnabled: optionalBool,
+  stagingPauseCron: z.string().optional(),
+  stagingResumeCron: z.string().optional(),
+  stagingTimezone: z.string().optional(),
   enableWaf: optionalBool,
   enablePlaneAJwtAuth: optionalBool,
   enablePlaneCIamAuth: optionalBool,
@@ -117,6 +121,7 @@ const cdkContextShape = {
   devMorningResumeCron: z.string().optional(),
   providerProbeMode: providerProbeMode.optional(),
   stagingInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
+  stagingInterfaceEndpointAllowlist: optionalStringList,
   prodInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
 
   // Queue / worker mode controls
