@@ -128,8 +128,10 @@ export const createEcsServices = (
   const enableExecuteCommand = !isProd
   const usePublicSubnets = isDev
   const subnetType = usePublicSubnets ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS
-  const minHealthyPercent = isDev ? 0 : undefined
-  const maxHealthyPercent = isDev ? 200 : undefined
+  // Non-prod accounts often have tighter Fargate vCPU quotas.
+  // Use in-place replacement to avoid temporary 2x capacity during deploy.
+  const minHealthyPercent = isProd ? undefined : 0
+  const maxHealthyPercent = isProd ? undefined : 100
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
     rollback: true,
