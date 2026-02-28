@@ -29,12 +29,10 @@ jobs:
     if: github.event_name == 'schedule' || github.event.inputs.schedule == 'weekly'
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version-file: '.node-version'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - name: Run weekly report job
         run: pnpm -C backend scheduled-report
         env:
@@ -52,12 +50,10 @@ jobs:
     if: github.event.inputs.schedule == 'monthly'
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version-file: '.node-version'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - name: Run monthly report job
         run: pnpm -C backend scheduled-report
         env:

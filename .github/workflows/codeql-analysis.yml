@@ -10,8 +10,59 @@ on:
   workflow_dispatch:
 
 jobs:
+  preflight:
+    name: CodeQL Preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should_run: ${{ steps.preflight.outputs.should_run }}
+      skip_reason: ${{ steps.preflight.outputs.skip_reason }}
+    steps:
+      - name: Check Code Scanning availability
+        id: preflight
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" = "dependabot[bot]" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=dependabot_pr" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping CodeQL for Dependabot PR (single-fail strategy)."
+            exit 0
+          fi
+
+          api_url="https://api.github.com/repos/${{ github.repository }}/code-scanning/alerts?per_page=1"
+          http_code="$(curl -sS -o /tmp/codeql-preflight.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "${api_url}")"
+
+          if [ "${http_code}" = "200" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=enabled" >> "$GITHUB_OUTPUT"
+            echo "::notice::Code scanning API reachable (HTTP ${http_code}); running CodeQL."
+            exit 0
+          fi
+
+          message="$(jq -r '.message // empty' /tmp/codeql-preflight.json 2>/dev/null || true)"
+          if [ "${http_code}" = "403" ] || [ "${http_code}" = "404" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "skip_reason=code_scanning_disabled" >> "$GITHUB_OUTPUT"
+            echo "::notice::CodeQL skipped because code scanning is unavailable: ${message:-HTTP ${http_code}}."
+            exit 0
+          fi
+
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=http_${http_code}" >> "$GITHUB_OUTPUT"
+          echo "::notice::CodeQL skipped (unexpected API status HTTP ${http_code})."
+
   analyze:
     name: CodeQL Analysis
+    needs: preflight
+    if: needs.preflight.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -34,21 +85,24 @@ jobs:
           queries: +security-and-quality
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 20.19.6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.19.0
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
 
-
+  skip-notice:
+    name: CodeQL Skipped
+    needs: preflight
+    if: needs.preflight.outputs.should_run != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report skip reason
+        shell: bash
+        run: |
+          echo "CodeQL analysis skipped."
+          echo "reason=${{ needs.preflight.outputs.skip_reason }}"

@@ -24,17 +24,28 @@ jobs:
         env:
           TARGET_INPUT: ${{ inputs.target_url }}
           TARGET_DEFAULT: ${{ vars.EXTERNAL_UPTIME_TARGET_URL }}
+          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
         run: |
           set -euo pipefail
-          target="${TARGET_INPUT:-${TARGET_DEFAULT:-}}"
+          target="${TARGET_INPUT:-}"
+          if [ -z "${target}" ]; then
+            target="${TARGET_DEFAULT:-}"
+          fi
+          if [ -z "${target}" ] && [ -n "${PUBLIC_SITE_URL:-}" ]; then
+            site_url="$(echo "${PUBLIC_SITE_URL}" | sed -E 's/[[:space:]]+//g; s:/*$::')"
+            target="${site_url}/healthz"
+          fi
           target="$(echo "$target" | tr -d ' ')"
           if [ -z "$target" ]; then
-            echo "Missing target URL. Set vars.EXTERNAL_UPTIME_TARGET_URL or pass workflow input."
-            exit 1
+            echo "::warning::Missing target URL. Checked input.target_url, vars.EXTERNAL_UPTIME_TARGET_URL, and vars.PUBLIC_SITE_URL + /healthz. Skipping synthetic run."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "target=${target}" >> "$GITHUB_OUTPUT"
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
 
       - name: Run synthetic uptime check
+        if: steps.target.outputs.should_run == 'true'
         shell: bash
         env:
           TARGET_URL: ${{ steps.target.outputs.target }}
@@ -48,7 +59,7 @@ jobs:
           echo "Synthetic check passed: status=${http_code} target=${TARGET_URL}"
 
       - name: Alert Slack on outage
-        if: failure()
+        if: failure() && steps.target.outputs.should_run == 'true'
         shell: bash
         env:
           SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
@@ -63,7 +74,7 @@ jobs:
           curl -sS -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d "$payload" >/dev/null
 
       - name: Alert PagerDuty on outage
-        if: failure()
+        if: failure() && steps.target.outputs.should_run == 'true'
         shell: bash
         env:
           PAGERDUTY_ROUTING_KEY: ${{ secrets.PAGERDUTY_ROUTING_KEY }}

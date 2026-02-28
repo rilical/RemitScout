@@ -89,14 +89,10 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          version: 10.19.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.19.6'
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - name: Run ${{ matrix.provider }} probe
         env:
           PROBE_TIMEOUT_MS: 300000
@@ -120,14 +116,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          version: 10.19.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.19.6'
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - name: Run cache TTL probe
         env:
           PROBE_TIMEOUT_MS: 60000

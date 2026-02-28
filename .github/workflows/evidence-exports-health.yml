@@ -37,18 +37,14 @@ jobs:
     environment: ${{ inputs.env }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          version: 10.19.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.19.6'
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
       - name: Generate evidence.json
         env:
           ENVIRONMENT: ${{ inputs.env }}
@@ -68,4 +64,3 @@ jobs:
           path: evidence.json
           if-no-files-found: ignore
           retention-days: 30
-

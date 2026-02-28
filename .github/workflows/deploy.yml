@@ -46,9 +46,52 @@ jobs:
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || '20' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
+      - name: Resolve deployment ref (dev)
+        id: resolve_ref
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+        run: |
+          set -euo pipefail
+          requested="$(echo "${REQUESTED_REF}" | xargs)"
+          if [ -z "${requested}" ]; then
+            echo "::error::Empty deploy ref; unable to continue."
+            exit 1
+          fi
+
+          resolved=""
+          candidate="${requested}"
+          for _ in 1 2 3; do
+            encoded="$(printf '%s' "${candidate}" | jq -sRr @uri)"
+            resolved="$(gh api "repos/${REPO}/commits/${encoded}" --jq '.sha' 2>/dev/null || true)"
+            if [ -n "${resolved}" ]; then
+              break
+            fi
+            if [[ "${candidate}" == refs/heads/* ]]; then
+              candidate="${candidate#refs/heads/}"
+              continue
+            fi
+            if [[ "${candidate}" == refs/tags/* ]]; then
+              candidate="${candidate#refs/tags/}"
+              continue
+            fi
+            break
+          done
+
+          if [ -z "${resolved}" ]; then
+            echo "::error::Unable to resolve deploy ref '${requested}' to a commit SHA."
+            echo "::error::Provide a valid branch name, tag, short SHA, or full SHA."
+            exit 1
+          fi
+
+          echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "requested_ref=${requested}" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy ref '${requested}' -> ${resolved}"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+          ref: ${{ steps.resolve_ref.outputs.sha }}
 
       - uses: ./.github/actions/setup-node-pnpm
         with:
@@ -85,10 +128,38 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials (primary role)
+        id: aws_creds_primary
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 3
+
+      - name: Configure AWS credentials (fallback role)
+        id: aws_creds_fallback
+        if: steps.aws_creds_primary.outcome != 'success' && vars.AWS_ROLE_TO_ASSUME_FALLBACK != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+          aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 2
+
+      - name: Validate AWS credential bootstrap
+        if: steps.aws_creds_primary.outcome != 'success' && steps.aws_creds_fallback.outcome != 'success'
+        shell: bash
+        env:
+          AWS_ROLE_PRIMARY: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          AWS_ROLE_FALLBACK: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+        run: |
+          set -euo pipefail
+          echo "::error::Failed to assume AWS role via OIDC using both primary and fallback roles."
+          echo "::error::Primary role: ${AWS_ROLE_PRIMARY}"
+          echo "::error::Fallback role: ${AWS_ROLE_FALLBACK:-<not configured>}"
+          echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
+          exit 1
 
       - name: Validate Required Secrets (dev)
         shell: bash
@@ -241,6 +312,50 @@ jobs:
             -c planeBQueueWorkerMaxCount=0 \
             -c planeBDisableTier1=true \
             -c enableFrontend=false
+
+      - name: Recover CloudFormation rollback state (dev)
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            echo "STACK_NAME is not set; cannot check rollback state."
+            exit 1
+          fi
+
+          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+            echo "Stack ${STACK_NAME} not found yet; continuing."
+            exit 0
+          fi
+
+          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          echo "Current stack status: ${status}"
+          if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
+            echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
+            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+          fi
+
+          for i in $(seq 1 60); do
+            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            case "${status}" in
+              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
+                echo "Stack is stable and deployable: ${status}"
+                exit 0
+                ;;
+              *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
+                sleep 10
+                ;;
+              *)
+                echo "::error::Stack is not deployable after recovery: ${status}"
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for stack to reach a deployable state."
+          exit 1
 
       - name: CDK Deploy (dev, paused)
         shell: bash
@@ -461,9 +576,52 @@ jobs:
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.STAGING_COST_ANOMALY_THRESHOLD_USD || '60' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.STAGING_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
+      - name: Resolve deployment ref (staging)
+        id: resolve_ref
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+        run: |
+          set -euo pipefail
+          requested="$(echo "${REQUESTED_REF}" | xargs)"
+          if [ -z "${requested}" ]; then
+            echo "::error::Empty deploy ref; unable to continue."
+            exit 1
+          fi
+
+          resolved=""
+          candidate="${requested}"
+          for _ in 1 2 3; do
+            encoded="$(printf '%s' "${candidate}" | jq -sRr @uri)"
+            resolved="$(gh api "repos/${REPO}/commits/${encoded}" --jq '.sha' 2>/dev/null || true)"
+            if [ -n "${resolved}" ]; then
+              break
+            fi
+            if [[ "${candidate}" == refs/heads/* ]]; then
+              candidate="${candidate#refs/heads/}"
+              continue
+            fi
+            if [[ "${candidate}" == refs/tags/* ]]; then
+              candidate="${candidate#refs/tags/}"
+              continue
+            fi
+            break
+          done
+
+          if [ -z "${resolved}" ]; then
+            echo "::error::Unable to resolve deploy ref '${requested}' to a commit SHA."
+            echo "::error::Provide a valid branch name, tag, short SHA, or full SHA."
+            exit 1
+          fi
+
+          echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "requested_ref=${requested}" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy ref '${requested}' -> ${resolved}"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
+          ref: ${{ steps.resolve_ref.outputs.sha }}
 
       - uses: ./.github/actions/setup-node-pnpm
         with:
@@ -500,10 +658,38 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials (primary role)
+        id: aws_creds_primary
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 3
+
+      - name: Configure AWS credentials (fallback role)
+        id: aws_creds_fallback
+        if: steps.aws_creds_primary.outcome != 'success' && vars.AWS_ROLE_TO_ASSUME_FALLBACK != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+          aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 2
+
+      - name: Validate AWS credential bootstrap
+        if: steps.aws_creds_primary.outcome != 'success' && steps.aws_creds_fallback.outcome != 'success'
+        shell: bash
+        env:
+          AWS_ROLE_PRIMARY: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          AWS_ROLE_FALLBACK: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+        run: |
+          set -euo pipefail
+          echo "::error::Failed to assume AWS role via OIDC using both primary and fallback roles."
+          echo "::error::Primary role: ${AWS_ROLE_PRIMARY}"
+          echo "::error::Fallback role: ${AWS_ROLE_FALLBACK:-<not configured>}"
+          echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
+          exit 1
 
       - uses: docker/setup-buildx-action@v3
 
@@ -751,13 +937,31 @@ jobs:
 
           status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
           echo "Current stack status: ${status}"
-
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
-            echo "Detected UPDATE_ROLLBACK_FAILED. Continuing rollback before deploy."
+            echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
-            aws cloudformation wait stack-rollback-complete --stack-name "${STACK_NAME}"
-            echo "Rollback recovery complete."
           fi
+
+          for i in $(seq 1 60); do
+            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            case "${status}" in
+              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
+                echo "Stack is stable and deployable: ${status}"
+                exit 0
+                ;;
+              *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
+                sleep 10
+                ;;
+              *)
+                echo "::error::Stack is not deployable after recovery: ${status}"
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for stack to reach a deployable state."
+          exit 1
 
       - name: CDK Deploy (staging)
         shell: bash
@@ -1024,8 +1228,8 @@ jobs:
             run_conclusion="$(echo "$run_payload" | jq -r '.conclusion // ""')"
             run_head_sha="$(echo "$run_payload" | jq -r '.headSha // ""')"
             if [ "$run_status" = "completed" ]; then
-              if [ "$run_head_sha" != "${GITHUB_SHA}" ]; then
-                echo "Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${GITHUB_SHA}."
+              if [ "$run_head_sha" != "${{ steps.resolve_ref.outputs.sha }}" ]; then
+                echo "Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${{ steps.resolve_ref.outputs.sha }}."
                 exit 1
               fi
               if [ "$run_conclusion" = "success" ]; then
@@ -1242,9 +1446,52 @@ jobs:
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.PROD_COST_ANOMALY_THRESHOLD_USD || '100' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.PROD_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
     steps:
+      - name: Resolve deployment ref (prod)
+        id: resolve_ref
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REQUESTED_REF: ${{ github.event_name == 'push' && github.ref || (inputs.ref != '' && inputs.ref || github.sha) }}
+        run: |
+          set -euo pipefail
+          requested="$(echo "${REQUESTED_REF}" | xargs)"
+          if [ -z "${requested}" ]; then
+            echo "::error::Empty deploy ref; unable to continue."
+            exit 1
+          fi
+
+          resolved=""
+          candidate="${requested}"
+          for _ in 1 2 3; do
+            encoded="$(printf '%s' "${candidate}" | jq -sRr @uri)"
+            resolved="$(gh api "repos/${REPO}/commits/${encoded}" --jq '.sha' 2>/dev/null || true)"
+            if [ -n "${resolved}" ]; then
+              break
+            fi
+            if [[ "${candidate}" == refs/heads/* ]]; then
+              candidate="${candidate#refs/heads/}"
+              continue
+            fi
+            if [[ "${candidate}" == refs/tags/* ]]; then
+              candidate="${candidate#refs/tags/}"
+              continue
+            fi
+            break
+          done
+
+          if [ -z "${resolved}" ]; then
+            echo "::error::Unable to resolve deploy ref '${requested}' to a commit SHA."
+            echo "::error::Provide a valid branch name, tag, short SHA, or full SHA."
+            exit 1
+          fi
+
+          echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "requested_ref=${requested}" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy ref '${requested}' -> ${resolved}"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'push' && github.ref || (inputs.ref != '' && inputs.ref || github.sha) }}
+          ref: ${{ steps.resolve_ref.outputs.sha }}
 
       - name: Verify staging readiness gate for this commit
         shell: bash
@@ -1252,9 +1499,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${GITHUB_SHA}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
+          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
-            echo "No successful staging-go-live-readiness run found for commit ${GITHUB_SHA}."
+            echo "No successful staging-go-live-readiness run found for commit ${deploy_sha}."
             echo "Block prod deploy until staging readiness gate passes on this exact commit."
             exit 1
           fi
@@ -1360,10 +1608,38 @@ jobs:
           pnpm -C backend lint
           pnpm -C backend test
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials (primary role)
+        id: aws_creds_primary
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 3
+
+      - name: Configure AWS credentials (fallback role)
+        id: aws_creds_fallback
+        if: steps.aws_creds_primary.outcome != 'success' && vars.AWS_ROLE_TO_ASSUME_FALLBACK != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+          aws-region: ${{ vars.AWS_REGION }}
+          retry-max-attempts: 2
+
+      - name: Validate AWS credential bootstrap
+        if: steps.aws_creds_primary.outcome != 'success' && steps.aws_creds_fallback.outcome != 'success'
+        shell: bash
+        env:
+          AWS_ROLE_PRIMARY: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          AWS_ROLE_FALLBACK: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
+        run: |
+          set -euo pipefail
+          echo "::error::Failed to assume AWS role via OIDC using both primary and fallback roles."
+          echo "::error::Primary role: ${AWS_ROLE_PRIMARY}"
+          echo "::error::Fallback role: ${AWS_ROLE_FALLBACK:-<not configured>}"
+          echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
+          exit 1
 
       - name: Validate Required GitHub Environment Vars (prod)
         shell: bash
@@ -1590,6 +1866,50 @@ jobs:
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
+
+      - name: Recover CloudFormation rollback state (prod)
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            echo "STACK_NAME is not set; cannot check rollback state."
+            exit 1
+          fi
+
+          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+            echo "Stack ${STACK_NAME} not found yet; continuing."
+            exit 0
+          fi
+
+          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          echo "Current stack status: ${status}"
+          if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
+            echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
+            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+          fi
+
+          for i in $(seq 1 60); do
+            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            case "${status}" in
+              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
+                echo "Stack is stable and deployable: ${status}"
+                exit 0
+                ;;
+              *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
+                sleep 10
+                ;;
+              *)
+                echo "::error::Stack is not deployable after recovery: ${status}"
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for stack to reach a deployable state."
+          exit 1
 
       - name: CDK Deploy (prod)
         shell: bash

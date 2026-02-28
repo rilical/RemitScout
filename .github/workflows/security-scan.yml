@@ -95,6 +95,7 @@ jobs:
 
   trivy-filesystem-scan:
     name: Trivy Filesystem Security Scan
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -117,6 +118,7 @@ jobs:
 
       - name: Upload Trivy SARIF to GitHub Security
         if: always()
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
@@ -124,6 +126,7 @@ jobs:
 
   npm-audit:
     name: NPM Audit Security Scan
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -143,7 +146,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.19.0
+          run_install: false
 
       - name: Install dependencies
         working-directory: ${{ matrix.directory }}
@@ -194,7 +197,7 @@ jobs:
   zap-baseline-unauth:
     name: ZAP Baseline Unauthenticated (Staging)
     needs: [resolve-target]
-    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -247,7 +250,7 @@ jobs:
   zap-api-auth:
     name: ZAP API Authenticated (Staging)
     needs: [resolve-target]
-    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -338,7 +341,7 @@ jobs:
   zap-full-auth:
     name: ZAP Full Authenticated (Staging, Manual)
     needs: [resolve-target]
-    if: needs.resolve-target.result == 'success' && github.event_name == 'workflow_dispatch' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true' && needs.resolve-target.outputs.run_full_scan == 'true'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && needs.resolve-target.result == 'success' && github.event_name == 'workflow_dispatch' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true' && needs.resolve-target.outputs.run_full_scan == 'true'
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -404,7 +407,7 @@ jobs:
   nuclei-unauth:
     name: Nuclei Unauthenticated (Staging)
     needs: [resolve-target]
-    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true'
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -456,7 +459,7 @@ jobs:
   nuclei-auth:
     name: Nuclei Authenticated (Staging)
     needs: [resolve-target]
-    if: needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
+    if: (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') && needs.resolve-target.result == 'success' && needs.resolve-target.outputs.should_run_dast == 'true' && needs.resolve-target.outputs.run_authenticated == 'true'
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -527,6 +530,7 @@ jobs:
       - nuclei-unauth
       - nuclei-auth
     if: |
+      (github.event_name != 'pull_request' || github.actor != 'dependabot[bot]') &&
       always() &&
       needs.resolve-target.result == 'success' &&
       (

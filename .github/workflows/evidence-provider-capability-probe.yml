@@ -52,14 +52,10 @@ jobs:
     environment: ${{ inputs.env }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup-node-pnpm
         with:
-          version: 10.19.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.19.6'
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          node_version: 20.19.6
+          pnpm_version: 10.19.0
       - name: Generate evidence.json
         env:
           ENVIRONMENT: ${{ inputs.env }}

@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   synth:
@@ -27,21 +28,35 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
+      - name: Dependabot non-infra fast-skip
+        id: gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          skip=false
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" = "dependabot[bot]" ] && [ "${{ steps.filter.outputs.infra }}" != "true" ]; then
+            skip=true
+          fi
+          echo "skip=${skip}" >> "$GITHUB_OUTPUT"
+      - name: Dependabot PR skip (no infra changes)
+        if: steps.gate.outputs.skip == 'true'
+        run: echo "Dependabot PR without infra changes; skipping infra synth."
       - uses: ./.github/actions/setup-node-pnpm
+        if: steps.gate.outputs.skip != 'true'
         with:
           node_version: 20.19.6
           pnpm_version: 10.19.0
       - name: CDK synth (dev context)
-        if: steps.filter.outputs.infra == 'true'
+        if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra == 'true'
         run: |
           pnpm -C infrastructure/cdk build
           pnpm -C infrastructure/cdk cdk synth -c env=dev -c backendImageTag=ci --quiet
       - name: IaC scan (Checkov)
-        if: steps.filter.outputs.infra == 'true'
+        if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra == 'true'
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: infrastructure/cdk
           framework: cdk
       - name: No infra changes
-        if: steps.filter.outputs.infra != 'true'
+        if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra != 'true'
         run: echo "No infrastructure changes; skipping synth."

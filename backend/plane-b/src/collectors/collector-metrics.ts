@@ -9,34 +9,83 @@ import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 
 const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
-const providerCollectionSuccessTotal = new Counter({
-  name: 'provider_collection_success_total',
-  help: 'Successful provider collections.',
-  labelNames: ['provider_id', 'corridor_id'],
-  registers: [metricsRegistry],
-})
+const getOrCreateCounter = (
+  name: string,
+  help: string,
+  labelNames: string[],
+) => {
+  const existing = metricsRegistry.getSingleMetric(name)
+  if (existing) {
+    return existing as Counter<string>
+  }
+  return new Counter({
+    name,
+    help,
+    labelNames,
+    registers: [metricsRegistry],
+  })
+}
 
-const providerCollectionFailureTotal = new Counter({
-  name: 'provider_collection_failure_total',
-  help: 'Failed provider collections.',
-  labelNames: ['provider_id', 'corridor_id', 'error_type'],
-  registers: [metricsRegistry],
-})
+const getOrCreateHistogram = (
+  name: string,
+  help: string,
+  labelNames: string[],
+  buckets: number[],
+) => {
+  const existing = metricsRegistry.getSingleMetric(name)
+  if (existing) {
+    return existing as Histogram<string>
+  }
+  return new Histogram({
+    name,
+    help,
+    labelNames,
+    buckets,
+    registers: [metricsRegistry],
+  })
+}
 
-const providerCollectionDurationSeconds = new Histogram({
-  name: 'provider_collection_duration_seconds',
-  help: 'Provider collection duration.',
-  labelNames: ['provider_id', 'corridor_id'],
-  buckets: [0.5, 1, 2, 5, 10, 30, 60],
-  registers: [metricsRegistry],
-})
+const getOrCreateGauge = (
+  name: string,
+  help: string,
+  labelNames: string[],
+) => {
+  const existing = metricsRegistry.getSingleMetric(name)
+  if (existing) {
+    return existing as Gauge<string>
+  }
+  return new Gauge({
+    name,
+    help,
+    labelNames,
+    registers: [metricsRegistry],
+  })
+}
 
-const circuitBreakerState = new Gauge({
-  name: 'circuit_breaker_state',
-  help: 'Circuit breaker state (0=closed, 1=open, 2=half_open).',
-  labelNames: ['provider_id', 'corridor_id'],
-  registers: [metricsRegistry],
-})
+const providerCollectionSuccessTotal = getOrCreateCounter(
+  'provider_collection_success_total',
+  'Successful provider collections.',
+  ['provider_id', 'corridor_id'],
+)
+
+const providerCollectionFailureTotal = getOrCreateCounter(
+  'provider_collection_failure_total',
+  'Failed provider collections.',
+  ['provider_id', 'corridor_id', 'error_type'],
+)
+
+const providerCollectionDurationSeconds = getOrCreateHistogram(
+  'provider_collection_duration_seconds',
+  'Provider collection duration.',
+  ['provider_id', 'corridor_id'],
+  [0.5, 1, 2, 5, 10, 30, 60],
+)
+
+const circuitBreakerState = getOrCreateGauge(
+  'circuit_breaker_state',
+  'Circuit breaker state (0=closed, 1=open, 2=half_open).',
+  ['provider_id', 'corridor_id'],
+)
 
 const normalizeCorridorId = (corridorId?: string | null) => corridorId ?? 'global'
 
@@ -128,4 +177,3 @@ export const updateCircuitBreakerState = (
 }
 
 export { getMetrics, metricsContentType }
-
