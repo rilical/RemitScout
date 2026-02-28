@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: staging
+    env:
+      NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -87,7 +89,7 @@ jobs:
         run: pnpm -C backend ci:staging-go-live-readiness
 
       - name: Observability prereq gate (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -105,7 +107,7 @@ jobs:
         run: pnpm -C backend ci:observability
 
       - name: New Relic sync + verify (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && secrets.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
         env:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
