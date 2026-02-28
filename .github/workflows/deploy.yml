@@ -560,6 +560,8 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
           if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
@@ -1398,6 +1400,8 @@ jobs:
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
+          NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
+          NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: pnpm -C backend ci:observability
 
       - uses: docker/setup-buildx-action@v3

@@ -1,0 +1,531 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "provider_id": "alansari",
+      "display_name": "Al Ansari",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "AE-IN-AED-INR",
+        "AE-PK-AED-PKR",
+        "AE-PH-AED-PHP",
+        "AE-EG-AED-EGP",
+        "AE-BD-AED-BDT",
+        "AE-LK-AED-LKR",
+        "AE-NP-AED-NPR",
+        "AE-SA-AED-SAR",
+        "AE-GB-AED-GBP",
+        "AE-US-AED-USD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "AlAnsari"
+      }
+    },
+    {
+      "provider_id": "bossmoney",
+      "display_name": "Boss Money",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-PH-USD-PHP",
+        "US-IN-USD-INR",
+        "US-GT-USD-GTQ",
+        "US-NG-USD-NGN",
+        "US-DO-USD-DOP",
+        "CA-PH-CAD-PHP",
+        "AU-PH-AUD-PHP",
+        "US-GN-USD-GNF",
+        "US-GB-USD-GBP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "dahabshiil",
+      "display_name": "Dahabshiil",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-KE-USD-KES",
+        "US-KE-USD-USD",
+        "US-SO-USD-USD",
+        "US-SD-USD-USD",
+        "US-DJ-USD-USD",
+        "US-UG-USD-USD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Dahabshiil"
+      }
+    },
+    {
+      "provider_id": "instarem",
+      "display_name": "Instarem",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-IN-USD-INR",
+        "US-PH-USD-PHP",
+        "US-MX-USD-MXN",
+        "US-NG-USD-NGN",
+        "SG-IN-SGD-INR",
+        "GB-IN-GBP-INR",
+        "AU-IN-AUD-INR",
+        "CA-IN-CAD-INR",
+        "HK-IN-HKD-INR",
+        "JP-IN-JPY-INR"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Instarem"
+      }
+    },
+    {
+      "provider_id": "intermex",
+      "display_name": "Intermex",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-GT-USD-GTQ",
+        "US-SV-USD-USD",
+        "US-HN-USD-HNL",
+        "US-DO-USD-DOP",
+        "US-CO-USD-COP",
+        "US-PE-USD-PEN",
+        "US-AR-USD-ARS",
+        "US-EC-USD-USD",
+        "US-PH-USD-PHP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "koronapay",
+      "display_name": "KoronaPay",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "BE-UZ-EUR-UZS",
+        "DE-TR-EUR-TRY",
+        "GB-KZ-GBP-KZT",
+        "FR-AM-EUR-AMD",
+        "IT-GE-EUR-GEL",
+        "ES-MA-EUR-MAD",
+        "NL-AZ-EUR-AZN",
+        "PL-BY-PLN-BYN",
+        "SE-KG-SEK-KGS",
+        "RO-MN-RON-MNT"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "mukuru",
+      "display_name": "Mukuru",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "ZA-ZW-ZAR-ZAR",
+        "ZA-ZW-ZAR-USD",
+        "ZA-KE-ZAR-KES",
+        "ZA-GB-ZAR-GBP",
+        "ZA-US-ZAR-USD",
+        "GB-ZW-GBP-USD",
+        "US-ZW-USD-ZAR",
+        "BW-KE-BWP-KES"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Mukuru"
+      }
+    },
+    {
+      "provider_id": "orbitremit",
+      "display_name": "OrbitRemit",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "AU-PH-AUD-PHP",
+        "AU-BR-AUD-BRL",
+        "AU-CN-AUD-CNY",
+        "AU-IN-AUD-INR",
+        "AU-GB-AUD-GBP",
+        "NZ-IN-NZD-INR",
+        "NZ-PH-NZD-PHP",
+        "NZ-US-NZD-USD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "pangea",
+      "display_name": "Pangea",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-PH-USD-PHP",
+        "US-GT-USD-GTQ",
+        "US-IN-USD-INR",
+        "US-GH-USD-GHS",
+        "US-KE-USD-KES",
+        "US-VN-USD-VND",
+        "US-BD-USD-BDT",
+        "US-DO-USD-DOP",
+        "US-TH-USD-THB"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "paysend",
+      "display_name": "Paysend",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "GB-IN-GBP-INR",
+        "GB-PH-GBP-PHP",
+        "DE-TR-EUR-TRY",
+        "FR-MA-EUR-MAD",
+        "IT-RO-EUR-RON",
+        "ES-CO-EUR-COP",
+        "CA-PH-CAD-PHP",
+        "AU-NZ-AUD-NZD",
+        "NL-NG-EUR-NGN"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "placid",
+      "display_name": "Placid",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-IN-USD-INR",
+        "US-PH-USD-PHP",
+        "US-PK-USD-PKR",
+        "US-BD-USD-BDT",
+        "US-KE-USD-KES",
+        "US-LK-USD-LKR",
+        "US-TH-USD-THB",
+        "US-VN-USD-VND",
+        "US-GH-USD-GHS",
+        "US-SN-USD-XOF"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "remitbee",
+      "display_name": "Remitbee",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "CA-IN-CAD-INR",
+        "CA-PH-CAD-PHP",
+        "CA-GH-CAD-GHS",
+        "CA-KE-CAD-KES",
+        "CA-CO-CAD-COP",
+        "CA-CR-CAD-USD",
+        "CA-DO-CAD-USD",
+        "CA-PE-CAD-PEN",
+        "CA-UA-CAD-UAH",
+        "CA-UY-CAD-UYU",
+        "CA-LK-CAD-LKR"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "remitly",
+      "display_name": "Remitly",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-PH-USD-PHP",
+        "US-IN-USD-INR",
+        "US-NG-USD-NGN",
+        "CA-IN-CAD-INR",
+        "CA-PH-CAD-PHP",
+        "GB-IN-GBP-INR",
+        "GB-NG-GBP-NGN",
+        "AU-IN-AUD-INR",
+        "SG-IN-SGD-INR"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Remitly"
+      }
+    },
+    {
+      "provider_id": "ria",
+      "display_name": "RIA",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-PH-USD-PHP",
+        "US-IN-USD-INR",
+        "US-CO-USD-COP",
+        "US-DO-USD-DOP",
+        "CA-IN-CAD-INR",
+        "CA-PH-CAD-PHP",
+        "GB-IN-GBP-INR",
+        "GB-PK-GBP-PKR",
+        "AU-IN-AUD-INR"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Ria"
+      }
+    },
+    {
+      "provider_id": "sendwave",
+      "display_name": "Sendwave",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-PH-USD-PHP",
+        "US-KE-USD-KES",
+        "US-NG-USD-NGN",
+        "GB-NG-GBP-NGN",
+        "FR-PH-EUR-PHP",
+        "DE-GH-EUR-GHS",
+        "CA-PH-CAD-PHP",
+        "ES-MA-EUR-MAD",
+        "IT-SN-EUR-XOF",
+        "BE-RW-EUR-RWF"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Sendwave"
+      }
+    },
+    {
+      "provider_id": "singx",
+      "display_name": "SingX",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "SG-IN-SGD-INR",
+        "SG-PH-SGD-PHP",
+        "SG-GB-SGD-GBP",
+        "SG-DE-SGD-EUR",
+        "SG-AU-SGD-AUD",
+        "US-IN-USD-INR",
+        "US-PK-USD-PKR",
+        "US-NG-USD-NGN",
+        "US-KE-USD-KES",
+        "US-JP-USD-JPY"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Singx"
+      }
+    },
+    {
+      "provider_id": "transfergo",
+      "display_name": "TransferGo",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "GB-PL-GBP-PLN",
+        "GB-RO-GBP-RON",
+        "DE-UA-EUR-UAH",
+        "PL-UA-PLN-UAH",
+        "LT-UA-EUR-UAH",
+        "RO-MD-RON-MDL",
+        "IT-AL-EUR-ALL",
+        "ES-MA-EUR-MAD",
+        "NL-TR-EUR-TRY",
+        "SE-GB-SEK-GBP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "wellsfargo",
+      "display_name": "Wells Fargo",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "westernunion",
+      "display_name": "Western Union",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-CO-USD-COP",
+        "US-PH-USD-PHP",
+        "US-IN-USD-INR",
+        "US-JO-USD-JOD",
+        "US-DO-USD-DOP",
+        "US-NG-USD-NGN",
+        "GB-IN-GBP-INR",
+        "GB-PH-GBP-PHP",
+        "CA-IN-CAD-INR",
+        "AU-PH-AUD-PHP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "WesternUnion"
+      }
+    },
+    {
+      "provider_id": "wirebarley",
+      "display_name": "WireBarley",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "KR-PH-KRW-PHP",
+        "KR-VN-KRW-VND",
+        "KR-IN-KRW-INR",
+        "KR-US-KRW-USD",
+        "KR-JP-KRW-JPY",
+        "KR-AU-KRW-AUD",
+        "KR-CA-KRW-CAD",
+        "KR-HK-KRW-HKD",
+        "KR-TH-KRW-THB",
+        "KR-NZ-KRW-NZD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true
+      }
+    },
+    {
+      "provider_id": "wise",
+      "display_name": "Wise",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-IN-USD-INR",
+        "US-PH-USD-PHP",
+        "US-MX-USD-MXN",
+        "US-GB-USD-GBP",
+        "US-AE-USD-AED",
+        "GB-IN-GBP-INR",
+        "GB-PK-GBP-PKR",
+        "CA-PH-CAD-PHP",
+        "AU-IN-AUD-INR",
+        "NZ-PH-NZD-PHP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Wise"
+      }
+    },
+    {
+      "provider_id": "worldremit",
+      "display_name": "WorldRemit",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-IN-USD-INR",
+        "US-PH-USD-PHP",
+        "US-MX-USD-MXN",
+        "US-NG-USD-NGN",
+        "US-KE-USD-KES",
+        "GB-IN-GBP-INR",
+        "GB-PK-GBP-PKR",
+        "CA-PH-CAD-PHP",
+        "AU-IN-AUD-INR",
+        "FR-MA-EUR-MAD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "WorldRemit"
+      }
+    },
+    {
+      "provider_id": "xe",
+      "display_name": "XE",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-IN-USD-INR",
+        "US-PH-USD-PHP",
+        "US-MX-USD-MXN",
+        "US-GB-USD-GBP",
+        "US-AE-USD-AED",
+        "GB-IN-GBP-INR",
+        "GB-MX-GBP-MXN",
+        "CA-PH-CAD-PHP",
+        "AU-IN-AUD-INR",
+        "NZ-PH-NZD-PHP"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Xe"
+      }
+    },
+    {
+      "provider_id": "xoom",
+      "display_name": "Xoom",
+      "supports_b2b": true,
+      "supports_b2c": true,
+      "health_corridors": [
+        "US-MX-USD-MXN",
+        "US-PH-USD-PHP",
+        "US-IN-USD-INR",
+        "US-CO-USD-COP",
+        "US-NG-USD-NGN",
+        "CA-IN-CAD-INR",
+        "CA-PH-CAD-PHP",
+        "GB-IN-GBP-INR",
+        "AU-IN-AUD-INR",
+        "DE-MA-EUR-MAD"
+      ],
+      "probe": {
+        "aws_scheduled": true,
+        "github_actions": true,
+        "aws_cdk_id": "Xoom"
+      }
+    }
+  ]
+}

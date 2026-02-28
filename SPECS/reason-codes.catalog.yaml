@@ -1,0 +1,327 @@
+version: 1
+reason_codes:
+  - code: "provider.no_recent_runs"
+    default_severity: "sev2"
+    description: "No ingestion runs observed for provider in the lookback window."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+    domain: "provider_health"
+
+  - code: "provider.no_recent_success"
+    default_severity: "sev2"
+    description: "No successful ingestion runs observed for provider in the lookback window."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+      - "forensics.corridor_provider.local"
+    domain: "provider_health"
+
+  - code: "provider.blocked.http_403"
+    default_severity: "sev2"
+    description: "Provider appears blocked (HTTP 403 observed)."
+    suggested_next_skill_ids:
+      - "forensics.corridor_provider.local"
+    domain: "provider_health"
+
+  - code: "provider.rate_limited.http_429"
+    default_severity: "sev1"
+    description: "Provider appears rate limited (HTTP 429 observed)."
+    suggested_next_skill_ids:
+      - "forensics.corridor_provider.local"
+    domain: "provider_health"
+
+  - code: "provider.circuit_open"
+    default_severity: "sev2"
+    description: "Circuit breaker is open for provider/corridor."
+    suggested_next_skill_ids:
+      - "forensics.corridor_provider.local"
+    domain: "provider_health"
+
+  - code: "provider.freshness_missing"
+    default_severity: "sev2"
+    description: "Freshness data is missing for provider health corridors."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+    domain: "provider_health"
+
+  - code: "provider.freshness_stale"
+    default_severity: "sev1"
+    description: "Freshness is stale for provider health corridors."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+    domain: "provider_health"
+
+  - code: "queue.dlq_nonzero"
+    default_severity: "sev3"
+    description: "DLQ depth is non-zero."
+    suggested_next_skill_ids:
+      - "evidence.queue_backlog.github_actions"
+    domain: "queue"
+
+  - code: "queue.oldest_age_high"
+    default_severity: "sev2"
+    description: "Queue oldest message age is above threshold."
+    suggested_next_skill_ids:
+      - "evidence.queue_backlog.github_actions"
+    domain: "queue"
+
+  - code: "queue.stats"
+    default_severity: "sev0"
+    description: "Aggregate queue stats (informational)."
+    domain: "queue"
+
+  - code: "http.p95_high"
+    default_severity: "sev2"
+    description: "HTTP p95 latency is above threshold."
+    suggested_next_skill_ids:
+      - "evidence.http_latency.github_actions"
+    domain: "api_latency"
+
+  - code: "http.error_rate_high"
+    default_severity: "sev2"
+    description: "HTTP error rate is above threshold."
+    suggested_next_skill_ids:
+      - "evidence.http_latency.github_actions"
+    domain: "api_latency"
+
+  - code: "http.timeout_rate_high"
+    default_severity: "sev2"
+    description: "HTTP timeout rate is above threshold."
+    suggested_next_skill_ids:
+      - "evidence.http_latency.github_actions"
+    domain: "api_latency"
+
+  - code: "http.stats"
+    default_severity: "sev0"
+    description: "Aggregate HTTP latency stats (informational)."
+    domain: "api_latency"
+
+  - code: "coverage.audit_stats"
+    default_severity: "sev0"
+    description: "Aggregate no-quotes audit stats (informational)."
+    domain: "provider_health"
+
+  - code: "coverage.no_quotes_detected"
+    default_severity: "sev2"
+    description: "No-quotes regressions detected across corridors/providers."
+    suggested_next_skill_ids:
+      - "evidence.provider_health.github_actions"
+      - "forensics.corridor_provider.local"
+    domain: "provider_health"
+
+  - code: "coverage.audit_failures"
+    default_severity: "sev3"
+    description: "No-quotes audit encountered failures calling Plane A or parsing responses."
+    domain: "provider_health"
+
+  - code: "capability.probe_supported"
+    default_severity: "sev0"
+    description: "Provider capability probe indicates supported combinations (informational)."
+    domain: "provider_health"
+
+  - code: "capability.probe_unsupported"
+    default_severity: "sev1"
+    description: "Provider capability probe indicates unsupported combinations."
+    suggested_next_skill_ids:
+      - "evidence.provider_health.github_actions"
+    domain: "provider_health"
+
+  - code: "capability.probe_failed"
+    default_severity: "sev2"
+    description: "Provider capability probe failed for one or more providers."
+    suggested_next_skill_ids:
+      - "evidence.provider_health.github_actions"
+    domain: "provider_health"
+
+  - code: "indices.missing_corridors"
+    default_severity: "sev2"
+    description: "Tier-0 corridors missing from latest Gold export indices snapshot."
+    domain: "indices"
+
+  - code: "indices.low_available_ratio"
+    default_severity: "sev2"
+    description: "Gold export indices available ratio is below threshold."
+    domain: "indices"
+
+  - code: "indices.high_suppressed_ratio"
+    default_severity: "sev2"
+    description: "Gold export indices suppressed ratio is above threshold."
+    domain: "indices"
+
+  - code: "indices.low_provider_count"
+    default_severity: "sev2"
+    description: "Gold export indices provider_count is below minimum."
+    domain: "indices"
+
+  - code: "indices.low_weight_confidence"
+    default_severity: "sev2"
+    description: "Gold export indices weight confidence is below minimum."
+    domain: "indices"
+
+  - code: "indices.fx_stale"
+    default_severity: "sev2"
+    description: "Gold FX rates appear stale."
+    domain: "indices"
+
+  - code: "indices.stats"
+    default_severity: "sev0"
+    description: "Aggregate indices readiness stats (informational)."
+    domain: "indices"
+
+  - code: "pulse.cache_missing_keys"
+    default_severity: "sev2"
+    description: "gold.pulse_cache is empty."
+    domain: "pulse"
+
+  - code: "pulse.cache_stale"
+    default_severity: "sev2"
+    description: "gold.pulse_cache appears stale."
+    domain: "pulse"
+
+  - code: "pulse.stats"
+    default_severity: "sev0"
+    description: "Aggregate pulse cache stats (informational)."
+    domain: "pulse"
+
+  - code: "exports.dlq_nonzero"
+    default_severity: "sev3"
+    description: "Exports DLQ depth is non-zero."
+    suggested_next_skill_ids:
+      - "evidence.queue_backlog.github_actions"
+    domain: "exports"
+
+  - code: "exports.job_failed_recently"
+    default_severity: "sev2"
+    description: "One or more export jobs failed in the lookback window."
+    domain: "exports"
+
+  - code: "exports.job_stuck_queued"
+    default_severity: "sev2"
+    description: "One or more export jobs are stuck in queued status past the age threshold."
+    domain: "exports"
+
+  - code: "exports.job_stuck_running"
+    default_severity: "sev2"
+    description: "One or more export jobs are stuck in running status past the age threshold."
+    domain: "exports"
+
+  - code: "exports.s3_artifact_missing"
+    default_severity: "sev3"
+    description: "Export job is marked done but its S3 artifact is missing."
+    domain: "exports"
+
+  - code: "exports.parquet_key_mismatch"
+    default_severity: "sev3"
+    description: "Parquet export job S3 key does not end with .parquet."
+    domain: "exports"
+
+  - code: "exports.snowflake_role_missing"
+    default_severity: "sev2"
+    description: "Snowflake partner role ARN configured but role not found."
+    domain: "exports"
+
+  - code: "exports.config_missing_bucket"
+    default_severity: "sev2"
+    description: "EXPORTS_S3_BUCKET is not configured so evidence cannot verify artifacts."
+    domain: "exports"
+
+  - code: "exports.stats"
+    default_severity: "sev0"
+    description: "Aggregate exports health stats (informational)."
+    domain: "exports"
+
+  - code: "freshness.p95_high"
+    default_severity: "sev2"
+    description: "Freshness p95 for tier-1 exceeds threshold."
+    domain: "freshness"
+
+  - code: "freshness.tier2_regression"
+    default_severity: "sev2"
+    description: "Freshness p95 for tier-2 exceeds threshold."
+    domain: "freshness"
+
+  - code: "freshness.missing_quotes"
+    default_severity: "sev2"
+    description: "Tier corridors missing fresh quotes within the lookback window."
+    suggested_next_skill_ids:
+      - "evidence.no_quotes_audit.github_actions"
+      - "evidence.provider_health.github_actions"
+    domain: "freshness"
+
+  - code: "freshness.stats"
+    default_severity: "sev0"
+    description: "Aggregate freshness SLO stats (informational)."
+    domain: "freshness"
+
+  - code: "pipeline.bronze_write_dropped"
+    default_severity: "sev2"
+    description: "Bronze has writes but Silver has no corresponding quote rows in the lookback window."
+    domain: "other"
+
+  - code: "pipeline.silver_lag_high"
+    default_severity: "sev2"
+    description: "Silver quote collection lags behind Bronze ingestion beyond threshold."
+    domain: "other"
+
+  - code: "pipeline.conversion_ratio_low"
+    default_severity: "sev1"
+    description: "Bronze->Silver conversion ratio is unusually low in the lookback window."
+    domain: "other"
+
+  - code: "pipeline.stats"
+    default_severity: "sev0"
+    description: "Aggregate pipeline throughput stats (informational)."
+    domain: "other"
+
+  - code: "db.connection_failed"
+    default_severity: "sev3"
+    description: "Database connection failed."
+    domain: "infra_drift"
+
+  - code: "db.connection_pressure_high"
+    default_severity: "sev2"
+    description: "DB connection pressure is high relative to max_connections."
+    domain: "infra_drift"
+
+  - code: "db.long_query_detected"
+    default_severity: "sev2"
+    description: "Long-running queries detected (non-idle statements exceeding threshold)."
+    domain: "infra_drift"
+
+  - code: "db.long_query_observation_failed"
+    default_severity: "sev1"
+    description: "Unable to inspect long-running queries (insufficient permissions or error)."
+    domain: "infra_drift"
+
+  - code: "db.table_size_high"
+    default_severity: "sev1"
+    description: "One or more tables exceed a conservative size threshold."
+    domain: "infra_drift"
+
+  - code: "db.stats"
+    default_severity: "sev0"
+    description: "Aggregate DB health stats (informational)."
+    domain: "infra_drift"
+
+  - code: "security.dast_medium_or_higher"
+    default_severity: "sev2"
+    description: "DAST scan produced medium-or-higher severity findings."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "security"
+
+  - code: "security.auth_scan_failed"
+    default_severity: "sev2"
+    description: "Authenticated DAST scan could not run or failed."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "security"
+
+  - code: "security.scan_stats"
+    default_severity: "sev0"
+    description: "Aggregate security scan stats (informational)."
+    domain: "security"
+
+  - code: "evidence.error"
+    default_severity: "sev2"
+    description: "Evidence skill encountered an unexpected error."
+    domain: "other"

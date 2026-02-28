@@ -20,7 +20,8 @@ const SKILL_FILTER = new Set(
 
 const [,, command, ...commandArgs] = process.argv
 const EMPTY_PLAN_ID = '__RALPH_NO_TASKS__'
-const taskFromPlanRe = /^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|\s*([^|]*?)\s*\|$/
+const DEFAULT_OWNERSHIP_TAG = 'owner.unassigned@v1'
+const DEFAULT_TRACEABILITY_TAG = 'trace.spec_refs+bounded_evidence+rollback_evidence@v1'
 
 function usage() {
   console.error('Usage:')
@@ -190,6 +191,8 @@ function readPrdItems() {
           title: String(entry.title || entry.name || `Task ${id}`),
           status: toStatus(entry.status || 'todo'),
           priority: Number.isFinite(Number(entry.priority)) ? Number(entry.priority) : 100,
+          ownership_tag: String(entry.ownership_tag || entry.owner_tag || entry.ownerTag || DEFAULT_OWNERSHIP_TAG),
+          traceability_tag: String(entry.traceability_tag || entry.trace_tag || entry.traceabilityTag || DEFAULT_TRACEABILITY_TAG),
           spec_refs: specRefs.length
             ? specRefs.join(', ')
             : String(entry.spec_refs || entry.specRefs || ''),
@@ -209,6 +212,8 @@ function normalizeTask(task) {
     title: String(task.title || '').trim(),
     status: toStatus(task.status),
     priority: Number.isFinite(Number(task.priority)) ? Number(task.priority) : 100,
+    ownership_tag: String(task.ownership_tag || task.owner_tag || task.ownerTag || DEFAULT_OWNERSHIP_TAG).trim(),
+    traceability_tag: String(task.traceability_tag || task.trace_tag || task.traceabilityTag || DEFAULT_TRACEABILITY_TAG).trim(),
     spec_refs: String(task.spec_refs || '').trim(),
     notes: String(task.notes || '').trim(),
   }
@@ -227,12 +232,22 @@ function parsePlanRows(markdown) {
       continue
     }
 
-    const match = trimmed.match(taskFromPlanRe)
-    if (!match) {
+    const segments = trimmed
+      .slice(1, -1)
+      .split('|')
+      .map((value) => value.trim())
+
+    if (segments.length !== 6 && segments.length !== 8) {
       continue
     }
 
-    const [, id, title, status, priority, spec_refs, notes] = match
+    if (segments.length === 8) {
+      const [id, title, status, priority, ownership_tag, traceability_tag, spec_refs, notes] = segments
+      rows.push(normalizeTask({ id, title, status, priority, ownership_tag, traceability_tag, spec_refs, notes }))
+      continue
+    }
+
+    const [id, title, status, priority, spec_refs, notes] = segments
     rows.push(normalizeTask({ id, title, status, priority, spec_refs, notes }))
   }
 
@@ -263,8 +278,8 @@ function writePlanRows(rows, sourceLabel) {
     `Generated: ${new Date().toISOString()}`,
     `Source: ${sourceLabel}`,
     '',
-    '| id | title | status | priority | spec_refs | notes |',
-    '| --- | --- | --- | --- | --- | --- |',
+    '| id | title | status | priority | ownership_tag | traceability_tag | spec_refs | notes |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- |',
   ]
 
   const rowsText = normalized.map((task) => {
@@ -272,14 +287,16 @@ function writePlanRows(rows, sourceLabel) {
     const title = String(task.title).replace(/\|/g, '\\|')
     const status = String(task.status)
     const priority = String(task.priority)
+    const ownershipTag = String(task.ownership_tag || DEFAULT_OWNERSHIP_TAG).replace(/\|/g, '\\|')
+    const traceabilityTag = String(task.traceability_tag || DEFAULT_TRACEABILITY_TAG).replace(/\|/g, '\\|')
     const specs = String(task.spec_refs || '').replace(/\|/g, '\\|')
     const notes = String(task.notes || '').replace(/\|/g, '\\|')
-    return `| ${id} | ${title} | ${status} | ${priority} | ${specs} | ${notes} |`
+    return `| ${id} | ${title} | ${status} | ${priority} | ${ownershipTag} | ${traceabilityTag} | ${specs} | ${notes} |`
   })
 
   if (!rowsText.length) {
     rowsText.push(
-      `| ${EMPTY_PLAN_ID} | No open tasks found. Add tasks to ${path.relative(ROOT_DIR, PRD_PATH)} or update progress.txt. | done | 0 | SPECS | Auto placeholder for empty plans. |`
+      `| ${EMPTY_PLAN_ID} | No open tasks found. Add tasks to ${path.relative(ROOT_DIR, PRD_PATH)} or update progress.txt. | done | 0 | ${DEFAULT_OWNERSHIP_TAG} | ${DEFAULT_TRACEABILITY_TAG} | SPECS | Auto placeholder for empty plans. |`
     )
   }
 
@@ -314,6 +331,8 @@ function getAllSources() {
       title: `Task ${id}`,
       status: value.status,
       priority: 100,
+      ownership_tag: DEFAULT_OWNERSHIP_TAG,
+      traceability_tag: DEFAULT_TRACEABILITY_TAG,
       spec_refs: 'SPECS',
       notes: value.note || 'Derived from progress.txt',
     }))

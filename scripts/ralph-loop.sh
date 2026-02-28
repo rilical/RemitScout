@@ -9,6 +9,10 @@ readonly LOG_DIR="${RALPH_LOG_DIR:-${ROOT_DIR}/.ralph/loop}"
 readonly MAX_ITERATIONS="${RALPH_MAX_ITERATIONS:-100}"
 readonly LOOP_SLEEP_SECONDS="${RALPH_LOOP_SLEEP_SECONDS:-0}"
 readonly CODEX_SANDBOX="${CODEX_SANDBOX:-danger-full-access}"
+readonly CODEX_MODEL="${RALPH_CODEX_MODEL:-gpt-5.3-codex}"
+readonly CODEX_FALLBACK_MODEL="${RALPH_CODEX_FALLBACK_MODEL:-gpt-5.3-codex}"
+readonly CODEX_ALLOW_MODEL_FALLBACK="${RALPH_CODEX_ALLOW_MODEL_FALLBACK:-1}"
+readonly CODEX_DISABLE_MCP="${RALPH_CODEX_DISABLE_MCP:-1}"
 
 print_usage() {
   cat <<'USAGE'
@@ -49,16 +53,17 @@ set_task_state() {
   local state="$2"
   local note="${3:-}"
   if [[ -n "${note}" ]]; then
-    node "$PLAN_SCRIPT" mark "${task_id}" "${state}" "${note}"
+    node "$PLAN_SCRIPT" mark "${task_id}" "${state}" "${note}" >/dev/null
   else
-    node "$PLAN_SCRIPT" mark "${task_id}" "${state}"
+    node "$PLAN_SCRIPT" mark "${task_id}" "${state}" >/dev/null
   fi
 }
 
 parse_task_payload() {
   local payload="$1"
-  IFS=$'\0' read -r CURRENT_TASK_ID CURRENT_TASK_TITLE CURRENT_TASK_PRIORITY CURRENT_TASK_SPEC_REFS CURRENT_TASK_NOTES < <(
-    node -e 'const task = JSON.parse(process.argv[1]); const safe = (value) => String(value || "").replace(/\\u0000/g, " "); process.stdout.write([safe(task.id), safe(task.title), String(task.priority || 100), safe(task.spec_refs), safe(task.notes)].join("\\u0000"));' "${payload}"
+  local separator=$'\x1f'
+  IFS="${separator}" read -r CURRENT_TASK_ID CURRENT_TASK_TITLE CURRENT_TASK_PRIORITY CURRENT_TASK_OWNERSHIP_TAG CURRENT_TASK_TRACEABILITY_TAG CURRENT_TASK_SPEC_REFS CURRENT_TASK_NOTES < <(
+    node -e 'const task = JSON.parse(process.argv[1]); const sep = "\u001f"; const clean = (value) => String(value ?? "").replace(/[\u0000\u001f]/g, " "); process.stdout.write([clean(task.id), clean(task.title), String(task.priority || 100), clean(task.ownership_tag), clean(task.traceability_tag), clean(task.spec_refs), clean(task.notes)].join(sep));' "${payload}"
   )
 
   [[ -n "${CURRENT_TASK_ID}" ]]
@@ -77,6 +82,8 @@ Task context:
 - id: ${CURRENT_TASK_ID}
 - title: ${CURRENT_TASK_TITLE}
 - priority: ${CURRENT_TASK_PRIORITY}
+- ownership_tag: ${CURRENT_TASK_OWNERSHIP_TAG}
+- traceability_tag: ${CURRENT_TASK_TRACEABILITY_TAG}
 - spec_refs: ${CURRENT_TASK_SPEC_REFS}
 - notes: ${CURRENT_TASK_NOTES}
 
@@ -91,6 +98,7 @@ Rules:
 - Do not start or execute more than one task in this iteration.
 - Update code for this task only, then run relevant checks.
 - If blocked, report the blocker clearly.
+- Do not send interim/progress updates. Return one final response only.
 - End response with one completion token:
   - <promise>DONE</promise> if the task is complete.
   - <promise>BLOCKED</promise> if the task is blocked.
@@ -108,8 +116,8 @@ extract_promise() {
     return 1
   fi
 
-  promise_status="$(printf '%s' "${line}" | sed -E 's/.*<promise>([^<]+)<\\/promise>.*/\\1/')"
-  promise_note="$(printf '%s' "${line}" | sed -E 's/.*<\\/promise>[[:space:]]*(.*)/\\1/' | sed 's/[[:space:]]*$//' | sed 's/^[[:space:]]*//')"
+  promise_status="$(printf '%s\n' "${line}" | awk '{ sub(/^.*<promise>/, "", $0); sub(/<\/promise>.*$/, "", $0); print }')"
+  promise_note="$(printf '%s\n' "${line}" | awk '{ sub(/^.*<\/promise>[[:space:]]*/, "", $0); gsub(/^[[:space:]]+|[[:space:]]+$/, "", $0); print }')"
   if [[ -z "${promise_note}" ]]; then
     promise_note="${promise_status} completed"
   fi
@@ -145,16 +153,41 @@ run_iteration() {
   set_task_state "${CURRENT_TASK_ID}" "in_progress" "iteration ${iteration} started"
   build_task_prompt "${iteration_prompt}"
 
-  if ! cat "${iteration_prompt}" | codex exec --cd "${ROOT_DIR}" --sandbox "${CODEX_SANDBOX}" --json --output-last-message "${last_message}" 2>&1 | tee "${iteration_log}"; then
-    set_task_state "${CURRENT_TASK_ID}" "blocked" "Codex execution failed"
-    rm -f "${iteration_prompt}" "${last_message}"
-    return 1
+  local -a codex_cmd=(codex exec --cd "${ROOT_DIR}" --sandbox "${CODEX_SANDBOX}" --json --output-last-message "${last_message}")
+  if [[ -n "${CODEX_MODEL}" ]]; then
+    codex_cmd+=(--model "${CODEX_MODEL}")
+  fi
+  if [[ "${CODEX_DISABLE_MCP}" == "1" ]]; then
+    codex_cmd+=(-c 'mcp_servers={}')
+  fi
+
+  if ! cat "${iteration_prompt}" | "${codex_cmd[@]}" 2>&1 | tee "${iteration_log}"; then
+    if [[ "${CODEX_ALLOW_MODEL_FALLBACK}" == "1" ]] && grep -q "model is not supported when using Codex with a ChatGPT account" "${iteration_log}"; then
+      log "WARN" "Model ${CODEX_MODEL} unsupported for current auth. Retrying with fallback model/default."
+      local -a fallback_cmd=(codex exec --cd "${ROOT_DIR}" --sandbox "${CODEX_SANDBOX}" --json --output-last-message "${last_message}")
+      if [[ -n "${CODEX_FALLBACK_MODEL}" ]]; then
+        fallback_cmd+=(--model "${CODEX_FALLBACK_MODEL}")
+      fi
+      if [[ "${CODEX_DISABLE_MCP}" == "1" ]]; then
+        fallback_cmd+=(-c 'mcp_servers={}')
+      fi
+      if ! cat "${iteration_prompt}" | "${fallback_cmd[@]}" 2>&1 | tee -a "${iteration_log}"; then
+        set_task_state "${CURRENT_TASK_ID}" "blocked" "Codex execution failed (primary model and fallback failed)"
+        rm -f "${iteration_prompt}" "${last_message}"
+        return 1
+      fi
+    else
+      set_task_state "${CURRENT_TASK_ID}" "blocked" "Codex execution failed"
+      rm -f "${iteration_prompt}" "${last_message}"
+      return 1
+    fi
   fi
 
   if ! extract_promise "${last_message}"; then
     set_task_state "${CURRENT_TASK_ID}" "blocked" "No <promise> token found in codex response"
+    log "WARN" "Task ${CURRENT_TASK_ID} blocked due to missing promise token; continuing."
     rm -f "${iteration_prompt}"
-    return 1
+    return 0
   fi
 
   if [[ "${promise_status}" == "DONE" ]]; then

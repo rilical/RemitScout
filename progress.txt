@@ -1,0 +1,8 @@
+# progress.txt
+# id|status|note
+AI-SH-0001|blocked|No <promise> token found in codex response
+AI-SH-0002|blocked|No <promise> token found in codex response
+AI-SH-0003|blocked|No <promise> token found in codex response
+AI-SH-0004|blocked|No <promise> token found in codex response
+AI-SH-0005|blocked|No <promise> token found in codex response
+AI-SH-0006|blocked|Unknown promise token:

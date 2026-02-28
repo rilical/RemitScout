@@ -1,0 +1,256 @@
+version: 1
+skills:
+  - skill_id: "probe.provider.github_actions"
+    purpose: "Run provider probe in GitHub Actions and upload probe-results.json."
+    executor: "github_actions"
+    workflow: ".github/workflows/probe-health-checks.yml"
+    required_inputs:
+      provider_id: "string"
+    outputs:
+      artifact: "probe-<provider_id>-results"
+      file: "probe-results.json"
+    risk_tier: 1
+
+  - skill_id: "probe.provider.aws_scheduled"
+    purpose: "Provider probe runs on AWS via scheduled Lambda/EventBridge (read-only evidence + metrics)."
+    executor: "aws_scheduled"
+    job: "infrastructure/cdk/lib/scheduled-jobs.ts#provider-probe-lambda"
+    required_inputs:
+      provider_id: "string"
+    outputs:
+      metrics_namespace: "RemitScout/Probes"
+    risk_tier: 1
+
+  - skill_id: "probe.cache_ttl.github_actions"
+    purpose: "Run the cache TTL probe to validate volatility TTL mapping."
+    executor: "github_actions"
+    workflow: ".github/workflows/probe-health-checks.yml"
+    required_inputs:
+      corridors_csv: "string"
+    outputs:
+      stdout: "json"
+    risk_tier: 1
+
+  - skill_id: "evidence.provider_health.github_actions"
+    purpose: "Generate bounded provider health evidence (DB-first) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-provider-health.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      provider_id: "string"
+      window_hours: "number"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-provider-health"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.queue_backlog.github_actions"
+    purpose: "Generate bounded queue backlog evidence (SQS stats + oldest age + DLQ) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-queue-backlog.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      queue_kind: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-queue-backlog"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.http_latency.github_actions"
+    purpose: "Generate bounded HTTP latency evidence (p50/p95/max + error/timeout rates) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-http-latency.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      target_url: "string"
+      requests: "number"
+      timeout_ms: "number"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-http-latency"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.indices_readiness.github_actions"
+    purpose: "Generate bounded indices readiness evidence (Gold export snapshot + FX freshness) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-indices-readiness.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      amount_bucket: "number"
+      method_profile: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-indices-readiness"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.pulse_cache_health.github_actions"
+    purpose: "Generate bounded pulse cache health evidence (Gold pulse cache freshness) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-pulse-cache-health.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-pulse-cache-health"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.exports_health.github_actions"
+    purpose: "Generate bounded exports health evidence (export_job status + SQS backlog + S3 artifact existence) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-exports-health.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      window_hours: "number"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-exports-health"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.freshness_slo.github_actions"
+    purpose: "Generate bounded freshness SLO evidence (p95 freshness + missing tier corridors) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-freshness-slo.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      window_hours: "number"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-freshness-slo"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.bronze_silver_throughput.github_actions"
+    purpose: "Generate bounded Bronze->Silver throughput evidence (counts, lag, conversion ratio) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-bronze-silver-throughput.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      window_hours: "number"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-bronze-silver-throughput"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.db_health.github_actions"
+    purpose: "Generate bounded DB health evidence (connection, max_connections pressure, long queries, table sizes) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-db-health.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-db-health"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.security_dast.github_actions"
+    purpose: "Generate bounded security DAST evidence (ZAP + Nuclei unauth/auth) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-security-dast.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      target_url: "string"
+      run_authenticated: "true|false"
+      run_full_scan: "true|false"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-security-dast"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "forensics.corridor_provider.local"
+    purpose: "Explain why a provider is missing for a corridor (rights/capability/quotes/refresh)."
+    executor: "local_codex"
+    command: "pnpm -C backend corridor:forensics"
+    required_inputs:
+      corridor_id: "string"
+      amount: "number"
+      method: "string"
+    outputs:
+      stdout: "json"
+    risk_tier: 0
+
+  - skill_id: "observe.dev.local"
+    purpose: "Run dev observation checks (stack/alarms/queues/logs) for a time window."
+    executor: "local_codex"
+    command: "bash ops/observe-dev.sh"
+    required_inputs:
+      session_file: "string"
+    outputs:
+      stdout: "text"
+    risk_tier: 0
+
+  - skill_id: "manual.human_triage"
+    purpose: "Human review/triage required (confirm severity, scope, and next action)."
+    executor: "manual"
+    outputs:
+      decision: "comment/approval"
+    risk_tier: 0
+
+  - skill_id: "evidence.no_quotes_audit.github_actions"
+    purpose: "Generate bounded no-quotes audit evidence (Plane A /providers exclusions) as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-no-quotes.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      plane_a_base_url: "string"
+      send_currencies: "string"
+      method: "string"
+      amount: "number"
+      refresh: "number"
+      max_corridors: "number"
+      providers: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-no-quotes"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "evidence.provider_capability_probe.github_actions"
+    purpose: "Generate bounded provider capability probe evidence as evidence.json artifact."
+    executor: "github_actions"
+    workflow: ".github/workflows/evidence-provider-capability-probe.yml"
+    required_inputs:
+      env: "dev|staging|prod"
+      case_id: "string"
+      dispatch_id: "string"
+      tiers: "string"
+      limit: "number"
+      amount_bucket: "number"
+      payin_method: "string"
+      payout_method: "string"
+    outputs:
+      artifact: "evidence-<case_id>-<dispatch_id>-provider-capability-probe"
+      file: "evidence.json"
+    risk_tier: 1
+
+  - skill_id: "provider.scaffold.local"
+    purpose: "Scaffold a new provider (folder + registry + catalog + config defaults)."
+    executor: "local_codex"
+    command: "pnpm -C backend provider:scaffold"
+    required_inputs:
+      provider_id: "string"
+      display_name: "string"
+      supports_b2b: "0|1"
+      supports_b2c: "0|1"
+    outputs:
+      stdout: "text"
+    risk_tier: 1

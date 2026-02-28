@@ -1,0 +1,60 @@
+# Frontend-local Ralph configuration
+#
+# Why this exists:
+# Ralph only looks for `ralph.yml` in the current working directory.
+# If someone runs Ralph from inside `frontend/`, it falls back to built-in
+# defaults which can auto-emit `verify.*` events without the required
+# `payload.quality.*` contract.
+#
+# This minimal config ensures the verifier hat never auto-publishes a `verify.*`
+# topic (it defaults to `verifier.noop` instead).
+
+cli:
+  backend: "codex"
+
+event_loop:
+  # When running from `frontend/`, the repo prompt lives one level up.
+  prompt_file: "../PROMPT.md"
+  completion_promise: "LOOP_COMPLETE"
+  max_iterations: 100
+
+hats:
+  refactorer:
+    name: "Refactorer"
+    description: "Executes a single atomic refactor step safely."
+    triggers: ["refactor.task"]
+    publishes: ["refactor.done", "refactor.blocked"]
+    default_publishes: refactor.done
+    instructions: |
+      ## REFACTORER MODE
+
+      Execute ONE refactoring step safely.
+
+      Publish `refactor.done` when complete, otherwise `refactor.blocked`.
+
+  verifier:
+    name: "Verifier"
+    description: "Verifies refactoring preserved behavior via tests and checks."
+    triggers: ["refactor.done"]
+    publishes: ["verify.passed", "verify.failed", "verifier.noop"]
+    default_publishes: verifier.noop
+    instructions: |
+      ## VERIFIER MODE (Node/TypeScript)
+
+      Goal: Always emit a structured JSON payload that includes quality fields.
+
+      Hard requirement: the payload MUST always include all `quality` keys
+      (`tests`, `coverage`, `lint`, `audit`, `mutation`, `complexity`) even when
+      failing early. If a signal is unavailable, set that field to `"n/a"`.
+
+      ### Emitting `verify.*` events (REQUIRED)
+      Do NOT call `ralph emit verify.passed` / `ralph emit verify.failed` directly.
+      That is the #1 source of drift (missing `quality.*` keys).
+
+      Blessed path:
+
+      ```bash
+      node ../scripts/verifier/run-frontend-quality.mjs --emit verify.passed
+      # or
+      node ../scripts/verifier/run-frontend-quality.mjs --emit verify.failed
+      ```
