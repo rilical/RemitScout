@@ -18,7 +18,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^25.3.2",
     "aws-cdk": "^2.171.0",
     "esbuild": "^0.24.0",
     "ts-node": "^10.9.2",
