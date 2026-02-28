@@ -179,7 +179,7 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
     resources: [`arn:aws:ssm:*:*:parameter/remit-scout/${options.envName}/ops/paused`],
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
-    actions: ['ecs:UpdateService', 'ecs:DescribeServices'],
+    actions: ['ecs:ListServices', 'ecs:UpdateService', 'ecs:DescribeServices'],
     resources: [
       `arn:aws:ecs:*:*:service/${remitScoutClusterName}/*`,
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
