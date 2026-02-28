@@ -131,6 +131,8 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      issues: write
+      pull-requests: write
     strategy:
       matrix:
         directory: ['.', 'backend', 'frontend']
@@ -169,6 +171,7 @@ jobs:
 
       - name: Comment PR with audit results
         if: github.event_name == 'pull_request' && always()
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
