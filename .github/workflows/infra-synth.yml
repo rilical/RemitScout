@@ -50,7 +50,7 @@ jobs:
         if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra == 'true'
         run: |
           pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk cdk synth -c env=dev -c backendImageTag=ci --quiet
+          pnpm -C infrastructure/cdk exec -- cdk synth -c env=dev -c backendImageTag=ci --quiet
       - name: IaC scan (Checkov)
         if: steps.gate.outputs.skip != 'true' && steps.filter.outputs.infra == 'true'
         uses: bridgecrewio/checkov-action@v12
