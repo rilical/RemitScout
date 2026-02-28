@@ -44,7 +44,7 @@
   "packageManager": "pnpm@10.19.0",
   "devDependencies": {
     "@nuxt/devtools": "^3.1.1",
-    "@nuxt/eslint-config": "^0.7.3",
+    "@nuxt/eslint-config": "^1.15.2",
     "@nuxt/image": "^1.8.1",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@playwright/test": "^1.50.1",
