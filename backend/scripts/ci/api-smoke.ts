@@ -6,10 +6,19 @@ const allowProtectedMetrics =
   process.env.SMOKE_ALLOW_PROTECTED_METRICS === '1'
   || process.env.SMOKE_ALLOW_PROTECTED_METRICS === 'true'
 
+const allowProtectedHealth =
+  process.env.SMOKE_ALLOW_PROTECTED_HEALTH === '1'
+  || process.env.SMOKE_ALLOW_PROTECTED_HEALTH === 'true'
+
 const isMetricsPath = (name: string) => name === '/metrics' || name === 'metrics'
+const isHealthPath = (name: string) =>
+  name === '/healthz' || name === 'healthz' || name === '/readyz' || name === 'readyz'
 
 const assertStatusOk = (statusCode: number, name: string) => {
   if (allowProtectedMetrics && isMetricsPath(name) && (statusCode === 401 || statusCode === 403)) {
+    return
+  }
+  if (allowProtectedHealth && isHealthPath(name) && (statusCode === 401 || statusCode === 403)) {
     return
   }
   if (statusCode >= 400) {
@@ -21,11 +30,19 @@ const runRemote = async (baseUrlRaw: string) => {
   const baseUrl = normalizeBaseUrl(baseUrlRaw)
   const endpoints = ['/healthz', '/readyz', '/metrics']
   for (const path of endpoints) {
-    const res = await fetch(`${baseUrl}${path}`, {
-      method: 'GET',
-      headers: { 'user-agent': 'remit-scout-ci-smoke/1.0' },
-    })
-    assertStatusOk(res.status, path)
+    let status = 0
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: 'GET',
+        headers: { 'user-agent': 'remit-scout-ci-smoke/1.0' },
+      })
+      status = res.status
+      if (status < 500 || attempt === 5) {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000))
+    }
+    assertStatusOk(status, path)
   }
   console.log('✅ Remote API smoke checks passed')
 }

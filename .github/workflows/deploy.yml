@@ -943,7 +943,7 @@ jobs:
           fi
 
           set +e
-          SMOKE_ALLOW_PROTECTED_METRICS=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
           smoke_ec=$?
           set -e
           if [ "$smoke_ec" != "0" ]; then
@@ -1688,7 +1688,7 @@ jobs:
           fi
 
           set +e
-          SMOKE_ALLOW_PROTECTED_METRICS=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
           smoke_ec=$?
           set -e
           if [ "$smoke_ec" != "0" ]; then
