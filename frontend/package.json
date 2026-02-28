@@ -72,7 +72,7 @@
     "@pinia/nuxt": "^0.11.3",
     "@sentry/nuxt": "10.39.0",
     "@sentry/vue": "10.39.0",
-    "@supabase/supabase-js": "^2.49.1",
+    "@supabase/supabase-js": "^2.98.0",
     "echarts": "^6.0.0",
     "katex": "^0.16.27",
     "nuxt-og-image": "5.1.13",
