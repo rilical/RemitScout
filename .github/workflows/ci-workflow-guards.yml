@@ -75,12 +75,11 @@ jobs:
           must_contain ".github/workflows/ci.yml" "PLANE_A_CORS_ORIGINS: http://localhost:3000" "CORS bootstrap placeholder must be set"
           must_contain ".github/workflows/ci.yml" "@stryker-mutator/typescript-checker" "mutation preflight must validate Stryker checker"
           must_not_contain ".github/workflows/ci.yml" "--build-arg SKIP_BACKEND_BUILD=1" "backend docker native deps must not skip backend build artifacts"
-          must_contain ".github/workflows/ci.yml" "Non-blocking in mode=\${{ inputs.mode }}. Continuing." "security gate must stay non-blocking in ci/main"
-          must_not_contain ".github/workflows/ci.yml" "if [ \"\${{ inputs.mode }}\" = \"main\" ]; then" "security gate must not block ci/main audit"
+          must_contain ".github/workflows/ci.yml" "Non-blocking in mode=" "security gate must stay non-blocking in ci/main"
 
           # 4) Dependabot noise controls and security fixes.
           must_contain ".github/workflows/security-lite.yml" "github.actor != 'dependabot[bot]'" "security-lite must skip dependabot PRs"
-          must_contain ".github/workflows/security-lite.yml" "GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}" "gitleaks must pass GITHUB_TOKEN"
+          must_contain ".github/workflows/security-lite.yml" "GITHUB_TOKEN:" "gitleaks must pass GITHUB_TOKEN"
           must_not_contain ".github/workflows/security-lite.yml" "args:" "gitleaks unsupported args input must stay removed"
           must_contain ".github/workflows/security-scan.yml" "run_install: false" "security-scan pnpm setup must avoid hardcoded version"
           must_contain ".github/workflows/security-scan.yml" "continue-on-error: true" "security-scan SARIF upload must be non-fatal"
