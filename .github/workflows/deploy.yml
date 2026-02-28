@@ -733,6 +733,32 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
 
+      - name: Recover CloudFormation rollback state (staging)
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            echo "STACK_NAME is not set; cannot check rollback state."
+            exit 1
+          fi
+
+          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+            echo "Stack ${STACK_NAME} not found yet; continuing."
+            exit 0
+          fi
+
+          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          echo "Current stack status: ${status}"
+
+          if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
+            echo "Detected UPDATE_ROLLBACK_FAILED. Continuing rollback before deploy."
+            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+            aws cloudformation wait stack-rollback-complete --stack-name "${STACK_NAME}"
+            echo "Rollback recovery complete."
+          fi
+
       - name: CDK Deploy (staging)
         shell: bash
         env:
