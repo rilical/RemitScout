@@ -95,10 +95,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -641,10 +642,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -1542,10 +1544,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Block prod deploy until ci/main succeeds on this exact commit."
