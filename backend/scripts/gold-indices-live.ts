@@ -16,6 +16,7 @@ import {
   GLOBAL_WEIGHT_CORRIDOR_ID,
   INDICES_METHODOLOGY_VERSION,
 } from '../shared/weighting-model'
+import { buildB2bEffectiveRateSql } from '../shared/quote-rate'
 
 const logger = createLogger('script.gold-indices-live')
 
@@ -33,6 +34,7 @@ const rateRatioMax = Math.max(rateRatioMin, toNumber(process.env.GOLD_INDICES_RA
 
 const weightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 const methodologyVersion = process.env.INDICES_METHODOLOGY_VERSION || INDICES_METHODOLOGY_VERSION
+const b2bEffectiveRateSql = buildB2bEffectiveRateSql('qr')
 
 const buildIndicesQuery = () => `
 WITH weight_snapshot AS (
@@ -75,7 +77,7 @@ base_raw AS (
   SELECT
     qr.corridor_id,
     lower(qr.provider_id) AS provider_id,
-    qr.implied_fx_rate::double precision AS implied_fx_rate,
+    ${b2bEffectiveRateSql} AS effective_fx_rate,
     qr.amount_bucket,
     qr.payin,
     qr.payout,
@@ -118,8 +120,8 @@ base_raw AS (
     ON pcc.provider_id = qr.provider_id
    AND pcc.corridor_id = qr.corridor_id
   WHERE qr.status = 'ok'
-    AND qr.implied_fx_rate IS NOT NULL
-    AND qr.implied_fx_rate > 0
+    AND (${b2bEffectiveRateSql}) IS NOT NULL
+    AND (${b2bEffectiveRateSql}) > 0
     AND qr.send_amount IS NOT NULL
     AND qr.send_amount > 0
     AND qr.fee_amount IS NOT NULL
@@ -156,7 +158,7 @@ latest AS (
   SELECT
     corridor_id,
     provider_id,
-    implied_fx_rate,
+    effective_fx_rate,
     amount_bucket,
     payin,
     payout,
@@ -179,7 +181,7 @@ daily_best AS (
     amount_bucket,
     method_profile,
     COUNT(*) AS provider_count,
-    MAX(implied_fx_rate)::double precision AS best_rate
+    MAX(effective_fx_rate)::double precision AS best_rate
   FROM latest
   WHERE allowed_in_rci = true
   GROUP BY corridor_id, bucket_day, amount_bucket, method_profile
@@ -191,7 +193,7 @@ rci_rows AS (
     l.amount_bucket,
     l.method_profile,
     l.provider_id,
-    l.implied_fx_rate,
+    l.effective_fx_rate,
     l.allowed_in_teer,
     l.allowed_in_rci,
     l.allowed_in_rvi,
@@ -199,7 +201,7 @@ rci_rows AS (
     b.provider_count,
     CASE
       WHEN b.best_rate IS NULL OR b.best_rate = 0 THEN NULL
-      ELSE ((b.best_rate - l.implied_fx_rate) / b.best_rate) * 10000
+      ELSE ((b.best_rate - l.effective_fx_rate) / b.best_rate) * 10000
     END AS rci_bps
   FROM latest l
   JOIN daily_best b
@@ -256,7 +258,7 @@ weighted_inputs AS (
     l.allowed_in_rvi,
     l.send_amount,
     l.fee_amount,
-    l.implied_fx_rate,
+    l.effective_fx_rate,
     COALESCE(fxh.rate, fx.rate)::double precision AS mid_market_rate,
     COALESCE(
       CASE
@@ -271,8 +273,8 @@ weighted_inputs AS (
       1
     )::double precision AS provider_weight,
     CASE
-      WHEN l.send_amount > 0 AND l.implied_fx_rate > 0 AND l.fee_amount >= 0
-        THEN ((l.send_amount - l.fee_amount) * l.implied_fx_rate) / l.send_amount
+      WHEN l.send_amount > 0 AND l.effective_fx_rate > 0 AND l.fee_amount >= 0
+        THEN ((l.send_amount - l.fee_amount) * l.effective_fx_rate) / l.send_amount
       ELSE NULL
     END AS effective_rate,
     CASE
@@ -280,10 +282,10 @@ weighted_inputs AS (
         AND l.fee_amount >= 0
         AND COALESCE(fxh.rate, fx.rate) IS NOT NULL
         AND COALESCE(fxh.rate, fx.rate) > 0
-        AND l.implied_fx_rate > 0
+        AND l.effective_fx_rate > 0
         THEN (
           l.fee_amount +
-          ((l.send_amount - l.fee_amount) * (COALESCE(fxh.rate, fx.rate) - l.implied_fx_rate)) /
+          ((l.send_amount - l.fee_amount) * (COALESCE(fxh.rate, fx.rate) - l.effective_fx_rate)) /
           COALESCE(fxh.rate, fx.rate)
         ) / l.send_amount
       ELSE NULL

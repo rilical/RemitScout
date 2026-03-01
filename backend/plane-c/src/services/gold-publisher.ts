@@ -3,13 +3,14 @@ import { query } from '../../../shared/db'
 import { evaluatePublisherGates } from './publisher-gates'
 import { createLogger } from '../../../shared/logger'
 import { getB2bAmountBucket } from '../../../shared/amount-bucket'
+import { buildB2bEffectiveRateSql } from '../../../shared/quote-rate'
 import type { AggregatedData, GateResult, PublisherResult } from './publisher-types'
 
 const logger = createLogger('plane-c.gold-publisher')
 
 type QuoteRecord = {
   provider_id: string
-  implied_fx_rate: number
+  effective_fx_rate: number
   collected_at: Date
 }
 
@@ -25,9 +26,10 @@ export class GoldPublisher {
     const amountBucket = getB2bAmountBucket(corridorId)
     const payoutMethod = 'bank_deposit'
     const payinMethods = ['bank_transfer', 'debit_card']
+    const effectiveRateSql = buildB2bEffectiveRateSql('qr')
 
     const result = await query<QuoteRecord>(
-      `SELECT qr.provider_id, qr.implied_fx_rate, qr.collected_at
+      `SELECT qr.provider_id, ${effectiveRateSql} AS effective_fx_rate, qr.collected_at
          FROM silver.quote_record qr
          JOIN silver.ingestion_run ir
            ON ir.run_id = qr.ingestion_run_id
@@ -49,6 +51,8 @@ export class GoldPublisher {
           AND rm.status = 'production'
           AND rm.stoplist_status = 'active'
           AND pcc.is_supported = true
+          AND (${effectiveRateSql}) IS NOT NULL
+          AND (${effectiveRateSql}) > 0
           AND qr.collected_at >= $5::timestamptz
           AND qr.collected_at < $6::timestamptz`,
       [corridorId, amountBucket, payoutMethod, payinMethods, timestampBucket, bucketEnd],
@@ -62,7 +66,7 @@ export class GoldPublisher {
     const providerRates = new Map<string, number[]>()
     for (const row of result.rows) {
       const rates = providerRates.get(row.provider_id) || []
-      rates.push(Number(row.implied_fx_rate))
+      rates.push(Number(row.effective_fx_rate))
       providerRates.set(row.provider_id, rates)
     }
 

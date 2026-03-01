@@ -450,24 +450,6 @@ const rawConfig = {
     })(),
   },
   email: {
-    billingEmail: {
-      enabled: (() => {
-        const raw = process.env.BILLING_EMAIL_ENABLED
-        if (raw === '0' || raw === 'false') return false
-        return true
-      })(),
-      from: process.env.BILLING_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
-      fromName: process.env.BILLING_EMAIL_FROM_NAME || 'Remit-Scout Billing',
-    },
-    securityEmail: {
-      enabled: (() => {
-        const raw = process.env.SECURITY_EMAIL_ENABLED
-        if (raw === '0' || raw === 'false') return false
-        return true
-      })(),
-      from: process.env.SECURITY_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
-      fromName: process.env.SECURITY_EMAIL_FROM_NAME || 'Remit-Scout Security',
-    },
     welcomeEmail: {
       enabled: (() => {
         const raw = process.env.WELCOME_EMAIL_ENABLED
@@ -483,21 +465,6 @@ const rawConfig = {
       from: process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
       fromName: process.env.CONTACT_EMAIL_FROM_NAME || 'Remit-Scout Contact Form',
     },
-    accountDeletion: {
-      graceDays: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_GRACE_DAYS, 7)),
-      tokenTtlHours: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_TOKEN_TTL_HOURS, 168)),
-      emailEnabled: (() => {
-        const raw = process.env.ACCOUNT_DELETION_EMAIL_ENABLED
-        if (raw == null) return true
-        return ['1', 'true', 'yes', 'on'].includes((raw || '').toLowerCase())
-      })(),
-      emailFrom: (process.env.ACCOUNT_DELETION_EMAIL_FROM || '').trim(),
-      emailFromName: (process.env.ACCOUNT_DELETION_EMAIL_FROM_NAME || 'Remit-Scout Security').trim(),
-      baseUrl: (process.env.ACCOUNT_DELETION_BASE_URL || '').trim(),
-    },
-  },
-  volatility: {
-    cacheOnDemand: toBoolean(process.env.VOLATILITY_CACHE_ON_DEMAND),
   },
   planeC: {
     port: toNumber(process.env.PLANE_C_PORT, 4100),
