@@ -164,9 +164,7 @@ export const createEcsTasks = (
     process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
   const newRelicIngestKey = tracingEnv.NEW_RELIC_INGEST_KEY || ''
   const newRelicTraceEndpoint = getNewRelicTraceEndpoint(options.envName)
-  const enableTelemetry = process.env.ENABLE_TELEMETRY
-    ? process.env.ENABLE_TELEMETRY !== '0'
-    : true
+  const enableTelemetry = process.env.ENABLE_TELEMETRY === '1'
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'
   const resolveCommand = (distEntry: string, tsEntry: string): string[] => {
