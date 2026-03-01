@@ -254,7 +254,20 @@ const verifyEnrollment = async () => {
   await loadFactors()
 
   if (mfaRequiredByPolicy.value) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+    const redirect = (() => {
+      const raw = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+      if (raw.startsWith('/') && !raw.startsWith('//')) return raw
+      try {
+        const parsed = new URL(raw, window.location.origin)
+        if (parsed.origin === window.location.origin) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`
+        }
+      }
+      catch {
+        // Ignore invalid redirect and fall back.
+      }
+      return '/dashboard'
+    })()
     await router.replace(redirect)
   }
 }

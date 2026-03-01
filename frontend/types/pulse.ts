@@ -24,6 +24,7 @@ export interface ChartPoint {
   t: number
   v: number
   label?: string
+  confidence?: number
 }
 
 export interface ChartSeries {
@@ -154,6 +155,10 @@ export interface CorridorOption {
   collectionCadenceMinutes?: number
   exportCadenceMinutes?: number
   isUsdOrigin?: boolean
+
+  // Triangulation / stress fields.
+  stressScore?: number | null
+  stressLevel?: string | null
 }
 
 export type PulseDeltaType = 'positive' | 'negative' | 'neutral'
@@ -228,6 +233,12 @@ export type PulseScreenerRow = {
 
   moverDeltaPct24h: number | null
   moverTimestampBucket: string | null
+
+  // Agent-native platform fields.
+  stressScore?: number | null
+  stressLevel?: 'normal' | 'elevated' | 'high' | 'critical' | null
+  moduleHealth?: 'healthy' | 'degraded' | 'quarantined' | null
+  confidence?: number | null
 }
 
 export type PulseScreenerResponse = {

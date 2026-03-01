@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import CenteredPage from '~/components/shared/CenteredPage.vue'
+import { CenteredPage } from '~/ui'
 import FxProviderPricingTable from '~/domains/market-data/ui/FxProviderPricingTable.vue'
 import type { FxProviderPricingRow } from '~/domains/market-data/application/fxProviderPricing'
 
@@ -24,7 +24,8 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <CenteredPage root-class="min-h-screen bg-neutral-50">
+  <div class="min-h-screen bg-neutral-50">
+  <CenteredPage>
     <template #header>
       <Breadcrumbs :items="breadcrumbItems" />
 
@@ -141,4 +142,5 @@ withDefaults(defineProps<Props>(), {
       </div>
     </div>
   </CenteredPage>
+  </div>
 </template>

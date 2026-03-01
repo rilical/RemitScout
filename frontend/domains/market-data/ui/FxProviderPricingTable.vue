@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DataTable from '~/components/shared/DataTable.vue'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 import type { FxProviderPricingRow } from '~/domains/market-data/application/fxProviderPricing'
 
 type Props = {
@@ -13,20 +13,21 @@ withDefaults(defineProps<Props>(), {
 })
 
 const columns: DataTableColumn[] = [
-  { key: 'name', header: 'Provider' },
-  { key: 'speed', header: 'Speed' },
-  { key: 'rate', header: 'Rate', align: 'right' },
-  { key: 'markupPercent', header: 'Markup vs mid', align: 'right' },
+  { key: 'name', label: 'Provider' },
+  { key: 'speed', label: 'Speed' },
+  { key: 'rate', label: 'Rate', align: 'right' },
+  { key: 'markupPercent', label: 'Markup vs mid', align: 'right' },
 ]
 </script>
 
 <template>
   <DataTable
-    variant="dashboard"
+    variant="consumer"
     caption="Provider markups"
     :columns="columns"
     :rows="rows"
+    :row-key="(row: any, idx: number) => row.name ?? String(idx)"
     :loading="loading"
-    empty-text="No provider pricing available"
+    :empty="{ title: 'No provider pricing available' }"
   />
 </template>

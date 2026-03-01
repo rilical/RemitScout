@@ -220,7 +220,7 @@ const ranges = ['7D', '30D', '90D']
 const selectedRange = ref('7D')
 const lastUpdated = ref<string | null>(null)
 
-const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
+const sendCurrency = computed(() => store.corridor?.fromCode || 'USD')
 const money = (amount: number) => formatMoneyUtil(amount, { currency: sendCurrency.value })
 
 const trendData = ref<number[]>([])

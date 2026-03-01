@@ -20,8 +20,22 @@ type AuditPagination = {
   offset: number
 }
 
+export type AuditLogEntry = {
+  event_id: string
+  occurred_at: string
+  actor_id?: string | null
+  actor_type?: string | null
+  actor_role?: string | null
+  action?: string | null
+  entity_type?: string | null
+  entity_id?: string | null
+  category?: string | null
+  severity?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
 type AuditLogsResponse = {
-  logs: any[]
+  logs: AuditLogEntry[]
   pagination: AuditPagination
 }
 
@@ -36,8 +50,8 @@ export const useAudit = () => {
     try {
       return await fn()
     }
-    catch (err: any) {
-      error.value = err?.message || 'Failed to load audit logs.'
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load audit logs.'
       throw err
     }
     finally {

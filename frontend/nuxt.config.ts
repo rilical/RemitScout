@@ -515,9 +515,9 @@ export default defineNuxtConfig({
       })(),
       pulseEnabled: (() => {
         const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
-        // Default ON. Pre-alpha: Pulse should be visible for marketing and gated by entitlements.
-        // Set NUXT_PUBLIC_PULSE_ENABLED=0 to hard-disable.
-        return flag !== undefined ? parseEnvFlag(flag) : true
+        // Default OFF. Set NUXT_PUBLIC_PULSE_ENABLED=1 when data pipelines are ready.
+        // Paying subscribers (Plus/Enterprise) bypass this flag via useFeatureFlags().
+        return flag !== undefined ? parseEnvFlag(flag) : false
       })(),
       pulseScreenerEnabled: (() => {
         const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_SCREENER_ENABLED', 'PUBLIC_PULSE_SCREENER_ENABLED')

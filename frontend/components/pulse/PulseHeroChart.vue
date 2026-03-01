@@ -12,6 +12,18 @@
   >
     <template #actions>
       <div class="flex items-center gap-4">
+        <span
+          v-if="daysAvailable > 0 && daysAvailable < 7"
+          class="rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300"
+        >
+          Limited data ({{ daysAvailable }} days)
+        </span>
+        <span
+          v-else-if="daysAvailable >= 7 && daysAvailable < 30"
+          class="rounded-lg border border-blue-500/40 bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-300"
+        >
+          {{ daysAvailable }} days of data
+        </span>
         <div class="text-right">
           <div class="text-body-sm text-neutral-400">
             Current markup
@@ -142,10 +154,12 @@ use([
 
 interface Props {
   metric?: 'rate' | 'markup'
+  daysAvailable?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   metric: 'rate',
+  daysAvailable: 0,
 })
 
 const store = usePulseStore()
@@ -169,7 +183,7 @@ const currentSpreadBps = computed(() => {
   return Math.round(data.value.currentSpreadPercent * 100)
 })
 
-const currencyCode = computed(() => data.value?.currency || store.corridor.fromCode)
+const currencyCode = computed(() => data.value?.currency || store.corridor?.fromCode || 'USD')
 const amountLabel = computed(() => formatMoney(store.amount, { currency: currencyCode.value, maximumFractionDigits: 0 }))
 const lossDisplay = computed(() => {
   if (!data.value) return '—'
@@ -205,9 +219,9 @@ const chartTitle = computed(() => {
 
 const chartSubtitle = computed(() => {
   if (props.metric === 'markup') {
-    return `Markup dispersion for ${store.corridor.label} • ${amountLabel.value}`
+    return `Markup dispersion for ${store.corridor?.label ?? ''} • ${amountLabel.value}`
   }
-  return `Mid-market vs leader vs bank benchmark • ${store.corridor.label}`
+  return `Mid-market vs leader vs bank benchmark • ${store.corridor?.label ?? ''}`
 })
 
 const chartOption = computed(() => {

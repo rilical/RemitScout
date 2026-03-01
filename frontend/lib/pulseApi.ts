@@ -221,7 +221,7 @@ export type PulseEmbedSnapshotCreateParams = {
   corridor_id?: string
   amount?: number
   funding_method?: 'bank' | 'card' | 'cash'
-  payout_method?: 'bank' | 'cash' | 'wallet'
+  payout_method?: 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
   range?: TimeRange
 }
 
@@ -244,7 +244,7 @@ export type PulseEmbedSnapshotResponse = {
     corridorId: string
     amount: number
     fundingMethod: 'bank' | 'card' | 'cash'
-    payoutMethod: 'bank' | 'cash' | 'wallet'
+    payoutMethod: 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
     range: TimeRange
   }
   corridorLabel: string
@@ -422,91 +422,117 @@ export function formatCurrency(value: number, currency: string): string {
   return `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${currency}`
 }
 
+const getPulseCorridorSlug = (corridor: PulseCorridor | null | undefined) => {
+  const slug = corridor?.slug?.trim()
+  return slug || undefined
+}
+
 export async function getHeroChartData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<HeroChartData> {
   const { request } = useApi()
-  return await request<HeroChartData>('/pulse/hero', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<HeroChartData>('/pulse/hero', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
+}
+
+export async function getPublicHeroChartData(
+  corridor: PulseCorridor | null,
+  timeframe: PulseTimeframe,
+  amount: number = 1000,
+): Promise<HeroChartData> {
+  const { request } = useApi()
+  return await request<HeroChartData>('/public/pulse/hero', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
+}
+
+export async function getPublicCorridors(): Promise<CorridorOption[]> {
+  const { request } = useApi()
+  try {
+    corridorCache = await request<CorridorOption[]>('/public/pulse/corridors')
+    return corridorCache
+  }
+  catch {
+    corridorCache = []
+    return []
+  }
 }
 
 export async function getPulseCoverageSummary(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
 ): Promise<PulseCoverageSummary> {
   const { request } = useApi()
-  return await request<PulseCoverageSummary>('/pulse/coverage-summary', { query: { corridor: corridor.slug, timeframe } })
+  return await request<PulseCoverageSummary>('/pulse/coverage-summary', { query: { corridor: getPulseCorridorSlug(corridor), timeframe } })
 }
 
 export async function getPulseSnapshotSummary(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<PulseSnapshotSummary> {
   const { request } = useApi()
-  return await request<PulseSnapshotSummary>('/pulse/snapshot-summary', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<PulseSnapshotSummary>('/pulse/snapshot-summary', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
 
 export async function getProviderBenchmarkingData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<PulseProviderBenchmarkRow[]> {
   const { request } = useApi()
   return await request<PulseProviderBenchmarkRow[]>('/pulse/providers/benchmarking', {
-    query: { corridor: corridor.slug, timeframe, amount },
+    query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount },
   })
 }
 
 export async function getPulseEventFeed(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
 ): Promise<PulseEventItem[]> {
   const { request } = useApi()
-  return await request<PulseEventItem[]>('/pulse/events', { query: { corridor: corridor.slug, timeframe } })
+  return await request<PulseEventItem[]>('/pulse/events', { query: { corridor: getPulseCorridorSlug(corridor), timeframe } })
 }
 
 export async function getProviderHeatmapData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
 ): Promise<ProviderHeatmapData> {
   const { request } = useApi()
-  return await request<ProviderHeatmapData>('/pulse/providers/heatmap', { query: { corridor: corridor.slug, timeframe } })
+  return await request<ProviderHeatmapData>('/pulse/providers/heatmap', { query: { corridor: getPulseCorridorSlug(corridor), timeframe } })
 }
 
 export async function getSmartSendData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<SmartSendData> {
   const { request } = useApi()
-  return await request<SmartSendData>('/pulse/smart-send', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<SmartSendData>('/pulse/smart-send', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
 
 export async function getPulseNarrative(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<PulseNarrativeData> {
   const { request } = useApi()
-  return await request<PulseNarrativeData>('/pulse/narrative', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<PulseNarrativeData>('/pulse/narrative', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
 
 export async function getPulsePersonalHistory(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   amount: number = 1000,
 ): Promise<PulsePersonalHistoryData> {
   const { request } = useApi()
-  return await request<PulsePersonalHistoryData>('/pulse/personal-history', { query: { corridor: corridor.slug, amount } })
+  return await request<PulsePersonalHistoryData>('/pulse/personal-history', { query: { corridor: getPulseCorridorSlug(corridor), amount } })
 }
 
 export async function getMarketSnapshot(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   amount: number = 1000,
 ): Promise<MarketSnapshotData> {
   const { request } = useApi()
-  return await request<MarketSnapshotData>('/pulse/market-snapshot', { query: { corridor: corridor.slug, amount } })
+  return await request<MarketSnapshotData>('/pulse/market-snapshot', { query: { corridor: getPulseCorridorSlug(corridor), amount } })
 }
 
 export function getCurrencySymbol(code: string): string {
@@ -526,44 +552,44 @@ export function getCurrencySymbol(code: string): string {
 }
 
 export async function getTrueCostBreakdown(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   amount: number = 1000,
 ): Promise<ProviderWithTrueCost[]> {
   const { request } = useApi()
-  return await request<ProviderWithTrueCost[]>('/pulse/true-cost', { query: { corridor: corridor.slug, amount } })
+  return await request<ProviderWithTrueCost[]>('/pulse/true-cost', { query: { corridor: getPulseCorridorSlug(corridor), amount } })
 }
 
 export async function getMarketDepthData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
 ): Promise<MarketDepth> {
   const { request } = useApi()
-  return await request<MarketDepth>('/pulse/market-depth', { query: { corridor: corridor.slug } })
+  return await request<MarketDepth>('/pulse/market-depth', { query: { corridor: getPulseCorridorSlug(corridor) } })
 }
 
 export async function getArbitrageOpportunities(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
 ): Promise<ArbitrageOpportunity | null> {
   const { request } = useApi()
-  return await request<ArbitrageOpportunity | null>('/pulse/arbitrage', { query: { corridor: corridor.slug, timeframe } })
+  return await request<ArbitrageOpportunity | null>('/pulse/arbitrage', { query: { corridor: getPulseCorridorSlug(corridor), timeframe } })
 }
 
 export async function getBankComparisonData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<BankComparisonData> {
   const { request } = useApi()
-  return await request<BankComparisonData>('/pulse/bank-comparison', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<BankComparisonData>('/pulse/bank-comparison', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
 
 export async function getCostTrendData(
-  corridor: PulseCorridor,
+  corridor: PulseCorridor | null,
   timeframe: PulseTimeframe,
   amount: number = 1000,
 ): Promise<CostTrendData[]> {
   const { request } = useApi()
-  return await request<CostTrendData[]>('/pulse/cost-trend', { query: { corridor: corridor.slug, timeframe, amount } })
+  return await request<CostTrendData[]>('/pulse/cost-trend', { query: { corridor: getPulseCorridorSlug(corridor), timeframe, amount } })
 }
 
 export async function getPulseScreener(options?: {
@@ -571,7 +597,7 @@ export async function getPulseScreener(options?: {
   timeframe?: PulseTimeframe | string
   amount?: number
   payin?: 'bank' | 'card' | 'cash'
-  payout?: 'bank' | 'cash' | 'wallet'
+  payout?: 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
   includeMovers?: boolean
 }): Promise<PulseScreenerResponse> {
   const { request } = useApi()

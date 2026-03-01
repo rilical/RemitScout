@@ -66,6 +66,7 @@ export const useAuth = () => {
 
   const user = useState<User | null>('auth:user', () => null)
   const session = useState<Session | null>('auth:session', () => null)
+  const mfaPending = useState<boolean>('auth:mfa-pending', () => false)
   const hydrated = useState<boolean>('auth:hydrated', () => false)
   const initPromise = useState<Promise<void> | null>('auth:init', () => null)
   const listenerAttached = useState<boolean>('auth:listener', () => false)
@@ -99,37 +100,15 @@ export const useAuth = () => {
     const effectiveSession = nextSession?.user && !isEmailConfirmed(nextSession.user)
       ? null
       : nextSession
+    if (mfaPending.value && effectiveSession) {
+      session.value = null
+      user.value = null
+      hydrated.value = true
+      return
+    }
     session.value = effectiveSession
     user.value = mapSupabaseUser(effectiveSession?.user ?? null)
     hydrated.value = true
-  }
-
-  const readPersistedSession = (): Session | null => {
-    if (!import.meta.client || typeof window === 'undefined') return null
-    try {
-      const raw = window.localStorage.getItem('remit-scout-auth')
-      if (!raw) return null
-      const parsed = JSON.parse(raw) as Partial<Session>
-      if (!parsed || typeof parsed !== 'object') return null
-      if (typeof parsed.access_token !== 'string' || typeof parsed.refresh_token !== 'string') {
-        return null
-      }
-      if (!parsed.user || typeof parsed.user !== 'object') {
-        return null
-      }
-      return parsed as Session
-    }
-    catch {
-      return null
-    }
-  }
-
-  const isSessionExpired = (nextSession: Session | null) => {
-    if (!nextSession) return true
-    const expiresAt = nextSession.expires_at
-    if (typeof expiresAt !== 'number' || !Number.isFinite(expiresAt)) return false
-    const now = Math.floor(Date.now() / 1000)
-    return expiresAt <= now
   }
 
   const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
@@ -161,13 +140,6 @@ export const useAuth = () => {
       }
     }
 
-    if (!nextSession) {
-      const persisted = readPersistedSession()
-      if (persisted && !isSessionExpired(persisted)) {
-        nextSession = persisted
-      }
-    }
-
     return nextSession
   }
 
@@ -196,13 +168,31 @@ export const useAuth = () => {
     // In browser flows, prefer the active origin so auth emails/callbacks always
     // target the host the user is currently using (staging/prod/custom domain).
     if (browserOrigin) {
-      if (isLocalhostUrl(browserOrigin)) {
+      if (import.meta.dev && isLocalhostUrl(browserOrigin)) {
         return configured || browserOrigin
       }
       return browserOrigin
     }
 
     return configured
+  }
+
+  const normalizeAuthRedirect = (value: string): string => {
+    const trimmed = value.trim()
+    if (!trimmed) return '/dashboard'
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed
+    if (import.meta.client && typeof window !== 'undefined') {
+      try {
+        const parsed = new URL(trimmed, window.location.origin)
+        if (parsed.origin === window.location.origin) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`
+        }
+      }
+      catch {
+        return '/dashboard'
+      }
+    }
+    return '/dashboard'
   }
 
   const ensureHydrated = async () => {
@@ -232,12 +222,9 @@ export const useAuth = () => {
           if (!listenerAttached.value) {
             listenerAttached.value = true
             supabase.auth.onAuthStateChange((event, nextSession) => {
-              if (!nextSession && event === 'INITIAL_SESSION') {
-                const persisted = readPersistedSession()
-                if (persisted && !isSessionExpired(persisted)) {
-                  setSession(persisted)
-                  return
-                }
+              if (event === 'INITIAL_SESSION' && !nextSession) {
+                setSession(null)
+                return
               }
               setSession(nextSession)
             })
@@ -324,7 +311,10 @@ export const useAuth = () => {
     // Read the current auth session explicitly after successful verification.
     const { data: sessionData } = await supabase.auth.getSession()
     if (sessionData?.session) {
+      mfaPending.value = false
       setSession(sessionData.session)
+    } else {
+      mfaPending.value = false
     }
 
     return { ok: true }
@@ -386,8 +376,13 @@ export const useAuth = () => {
       return { ok: false, error: lastError.value }
     }
 
+    if (authClientMfaEnforced.value) {
+      mfaPending.value = true
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      mfaPending.value = false
       const message = error.message || ''
       if (message.toLowerCase().includes('mfa')) {
         const factor = await resolvePrimaryMfaFactor()
@@ -417,6 +412,7 @@ export const useAuth = () => {
       }
     }
 
+    mfaPending.value = false
     setSession(data.session ?? null)
     return { ok: true }
   }
@@ -498,7 +494,7 @@ export const useAuth = () => {
     }
 
     if (import.meta.client) {
-      sessionStorage.setItem('auth:redirect', redirectPath)
+      sessionStorage.setItem('auth:redirect', normalizeAuthRedirect(redirectPath))
     }
 
     const redirectBase = getRedirectBase()
@@ -617,6 +613,7 @@ export const useAuth = () => {
 
   const signOut = async (): Promise<AuthResult> => {
     lastError.value = null
+    mfaPending.value = false
 
     if (!isConfigured.value) {
       user.value = null

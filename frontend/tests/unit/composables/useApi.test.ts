@@ -22,12 +22,12 @@ describe('createApiClient', () => {
     expect(init.headers.authorization).toBe('Bearer token_123')
   })
 
-  it('uses Plane A admin token for admin surface paths', async () => {
+  it('uses Plane A admin token for admin surface paths when user token is unavailable', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true })
     const client = createApiClient({
       base: '/api/v1',
       fetcher,
-      getAccessToken: () => 'supabase_token',
+      getAccessToken: () => null,
       getAdminAccessToken: () => 'plane_a_admin_token',
       makeRequestId: () => 'req_admin',
     })
@@ -36,6 +36,22 @@ describe('createApiClient', () => {
 
     const [, init] = fetcher.mock.calls[0] as any[]
     expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+  })
+
+  it('prefers user token over admin token on admin surface paths', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin_prefer_user',
+    })
+
+    await client.request('/admin/plans')
+
+    const [, init] = fetcher.mock.calls[0] as any[]
+    expect(init.headers.authorization).toBe('Bearer supabase_token')
   })
 
   it('uses default user token for non-admin paths', async () => {

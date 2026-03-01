@@ -7,13 +7,13 @@
           Provider Quotes
         </h2>
         <p class="text-body-sm text-neutral-400">
-          Quote snapshot for {{ amountLabel }} ({{ store.corridor.fromCode }} → {{ store.corridor.toCode }})
+          Quote snapshot for {{ amountLabel }} ({{ store.corridor?.fromCode }} → {{ store.corridor?.toCode }})
         </p>
       </div>
       <div class="flex items-center gap-2 text-body-sm">
         <span class="text-neutral-400">Mid-market:</span>
         <span class="font-mono font-bold text-white">{{ midMarketRateDisplay }}</span>
-        <span class="text-neutral-500">{{ store.corridor.toCode }}/{{ store.corridor.fromCode }}</span>
+        <span class="text-neutral-500">{{ store.corridor?.toCode }}/{{ store.corridor?.fromCode }}</span>
       </div>
     </div>
 
@@ -78,10 +78,10 @@
               class="text-body-lg font-bold"
               :class="index === 0 ? 'text-brand-600' : 'text-white'"
             >
-              {{ formatMoney(quote.recipientGets, { currency: store.corridor.toCode, maximumFractionDigits: 0 }) }}
+              {{ formatMoney(quote.recipientGets, { currency: store.corridor?.toCode ?? 'USD', maximumFractionDigits: 0 }) }}
             </div>
             <div class="flex items-center justify-end gap-2 text-body-sm">
-              <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: store.corridor.fromCode, maximumFractionDigits: 2 }) }}</span>
+              <span class="text-neutral-500">Fee: {{ formatMoney(quote.fee, { currency: store.corridor?.fromCode ?? 'USD', maximumFractionDigits: 2 }) }}</span>
               <span class="text-neutral-600">•</span>
               <span
                 class="rounded px-1.5 py-0.5"
@@ -111,7 +111,7 @@
               Best vs Worst
             </div>
             <div class="font-semibold text-brand-600">
-              {{ formatMoney(bestWorstDiff, { currency: store.corridor.toCode, maximumFractionDigits: 0 }) }} more
+              {{ formatMoney(bestWorstDiff, { currency: store.corridor?.toCode ?? 'USD', maximumFractionDigits: 0 }) }} more
             </div>
           </div>
           <div>
@@ -200,10 +200,10 @@ const midMarketRateDisplay = computed(() => {
   return formatNumberValue(data.value.midMarketRate, { minimumFractionDigits: 4, maximumFractionDigits: 4 })
 })
 
-const amountLabel = computed(() => formatMoney(store.amount, { currency: store.corridor.fromCode, maximumFractionDigits: 0 }))
+const amountLabel = computed(() => formatMoney(store.amount, { currency: store.corridor?.fromCode ?? 'USD', maximumFractionDigits: 0 }))
 
 const compareCorridorUrl = computed(() => {
-  const id = store.corridor.corridorId
+  const id = store.corridor?.corridorId
   const fallback = `/send-money/united-states-to-philippines?amount=${store.amount}`
   if (!id) return fallback
   const [from, to] = id.split('-')

@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { h } from 'vue'
-import DataTable from '~/components/shared/DataTable.vue'
+import DataTable from '~/ui/DataTable/DataTable.vue'
 
 describe('DataTable', () => {
   const columns = [
-    { key: 'name', header: 'Name' },
-    { key: 'amount', header: 'Amount', align: 'right' as const },
+    { key: 'name', label: 'Name' },
+    { key: 'amount', label: 'Amount', align: 'right' as const },
   ]
+
+  const rowKey = (row: any) => row.id
 
   it('renders headers and rows', () => {
     const wrapper = mount(DataTable, {
@@ -18,6 +20,7 @@ describe('DataTable', () => {
           { id: 'r1', name: 'Alice', amount: 10 },
           { id: 'r2', name: 'Bob', amount: 20 },
         ],
+        rowKey,
       },
     })
 
@@ -30,46 +33,37 @@ describe('DataTable', () => {
     expect(cells).toEqual(['Alice', '10', 'Bob', '20'])
   })
 
-  it('supports terminal and dashboard variants', () => {
-    const dashboard = mount(DataTable, {
-      props: { columns, rows: [{ id: 'r1', name: 'Alice', amount: 10 }] },
+  it('supports terminal and consumer variants', () => {
+    const consumer = mount(DataTable, {
+      props: { columns, rows: [{ id: 'r1', name: 'Alice', amount: 10 }], rowKey },
     })
 
-    expect(dashboard.get('[data-testid="data-table-root"]').classes()).toEqual(
-      expect.arrayContaining(['rounded-rs-lg']),
-    )
-    expect(dashboard.get('[data-testid="data-table"]').classes()).toEqual(
-      expect.arrayContaining(['text-body-sm']),
-    )
+    expect(consumer.classes()).toContain('rounded-xl')
 
     const terminal = mount(DataTable, {
       props: {
         variant: 'terminal',
         columns,
         rows: [{ id: 'r1', name: 'Alice', amount: 10 }],
+        rowKey,
       },
     })
 
-    expect(terminal.get('[data-testid="data-table-root"]').classes()).toEqual(
-      expect.arrayContaining(['rounded-rs-md']),
-    )
-    expect(terminal.get('[data-testid="data-table"]').classes()).toEqual(
-      expect.arrayContaining(['text-body-sm']),
-    )
+    expect(terminal.classes()).toContain('rounded-lg')
   })
 
   it('renders loading state and sets aria-busy', () => {
     const wrapper = mount(DataTable, {
       props: {
         columns,
+        rows: [],
+        rowKey,
         loading: true,
       },
     })
 
-    expect(wrapper.get('[data-testid="data-table"]').attributes('aria-busy')).toBe(
-      'true',
-    )
-    expect(wrapper.get('[role="status"]').attributes('aria-label')).toBe('Loading table')
+    expect(wrapper.get('table').attributes('aria-busy')).toBe('true')
+    expect(wrapper.text()).toContain('Loading')
   })
 
   it('renders empty state when no rows', () => {
@@ -77,7 +71,8 @@ describe('DataTable', () => {
       props: {
         columns,
         rows: [],
-        emptyText: 'Nothing here',
+        rowKey,
+        empty: { title: 'Nothing here' },
       },
     })
 
@@ -89,10 +84,11 @@ describe('DataTable', () => {
       props: {
         columns,
         rows: [{ id: 'r1', name: 'Alice', amount: 10 }],
+        rowKey,
       },
       slots: {
         'header-name': '<span>Full Name</span>',
-        'cell-amount': ({ value }) => h('span', `$${value}`),
+        'cell-amount': ({ value }: any) => h('span', `$${value}`),
       },
     })
 

@@ -19,6 +19,20 @@ export const useBilling = () => {
     return fallback
   }
 
+  const isSafeBillingRedirect = (value: string): boolean => {
+    if (!value) return false
+    try {
+      const parsed = new URL(value, import.meta.client ? window.location.origin : 'https://example.com')
+      if (!/^https?:$/.test(parsed.protocol)) return false
+      const host = parsed.hostname.toLowerCase()
+      if (import.meta.client && parsed.origin === window.location.origin) return true
+      return host === 'billing.stripe.com' || host.endsWith('.stripe.com')
+    }
+    catch {
+      return false
+    }
+  }
+
   const checkoutLoading = useState<boolean>('billing:checkout:loading', () => false)
   const portalLoading = useState<boolean>('billing:portal:loading', () => false)
   const error = useState<string | null>('billing:error', () => null)
@@ -70,8 +84,14 @@ export const useBilling = () => {
         return { ok: false, error: message }
       }
 
+      if (!isSafeBillingRedirect(response.url)) {
+        const message = 'Invalid billing portal URL.'
+        error.value = message
+        return { ok: false, error: message }
+      }
+
       if (import.meta.client) {
-        window.location.href = response.url
+        window.location.assign(response.url)
       }
 
       return { ok: true, url: response.url }

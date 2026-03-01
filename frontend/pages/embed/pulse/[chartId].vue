@@ -87,9 +87,9 @@
           <span>Updated {{ formatLastUpdated(lastUpdated) }}</span>
         </div>
         <a
-          :href="`${siteUrl}/pulse`"
+          href="https://remit-scout.com"
           target="_blank"
-          rel="noopener"
+          rel="dofollow"
           :title="`${chartMeta?.title || 'Pulse Chart'} — Remit-Scout Remittance Intelligence`"
           class="flex items-center gap-1.5 text-body-sm font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"

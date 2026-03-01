@@ -3,7 +3,19 @@
     class="group relative rounded-xl border border-neutral-700 bg-neutral-800 overflow-hidden transition-all duration-200 hover:border-brand-600"
   >
     <div
-      v-if="isGated"
+      v-if="daysAvailable > 0 && daysAvailable < 7 && !isGated"
+      class="absolute top-3 right-3 z-10 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-300"
+    >
+      Warming up ({{ daysAvailable }} days)
+    </div>
+    <div
+      v-else-if="daysAvailable >= 7 && daysAvailable < 30 && !isGated"
+      class="absolute top-3 right-3 z-10 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-1 text-[11px] font-semibold text-blue-300"
+    >
+      Early data
+    </div>
+    <div
+      v-else-if="isGated"
       class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-brand-600/20 px-2 py-1 text-body-sm font-semibold text-brand-600"
     >
       <Icon
@@ -19,9 +31,16 @@
         {{ metadata.categoryLabel }}
       </div>
 
-      <h3 class="mb-2 text-body-lg font-bold text-white group-hover:text-brand-600 transition-colors">
-        {{ metadata.title }}
-      </h3>
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h3 class="text-body-lg font-bold text-white group-hover:text-brand-600 transition-colors">
+          {{ metadata.title }}
+        </h3>
+        <ConfidenceIndicator
+          v-if="chartConfidence != null"
+          :value="chartConfidence"
+          :compact="true"
+        />
+      </div>
 
       <div
         v-if="isGated && !isTeaserLocked"
@@ -167,6 +186,15 @@
               />
             </linearGradient>
           </defs>
+          <rect
+            v-if="chartConfidence != null"
+            x="0"
+            y="0"
+            width="200"
+            height="60"
+            :fill="confidenceBandColor"
+            fill-opacity="0.08"
+          />
           <path
             :d="areaPath"
             :fill="`url(#gradient-${metadata.id})`"
@@ -272,6 +300,7 @@
 import { computed } from 'vue'
 import type { ChartMetadata, ChartPoint } from '~/types/pulse'
 import { Icon, EmptyState } from '~/ui'
+import ConfidenceIndicator from '~/components/shared/ConfidenceIndicator.vue'
 import { formatUpdatedLabel } from '~/shared/lib/format'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { getCategoryAccent, CHART_STYLE } from '~/lib/pulseChartStyle'
@@ -287,6 +316,7 @@ interface Props {
   ctaTo?: string
   ctaLabel?: string
   disableActions?: boolean
+  daysAvailable?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -298,6 +328,7 @@ const props = withDefaults(defineProps<Props>(), {
   ctaTo: undefined,
   ctaLabel: undefined,
   disableActions: undefined,
+  daysAvailable: 0,
 })
 
 const emit = defineEmits<{
@@ -335,6 +366,27 @@ const updatedAtLabel = computed(() => {
 
 const sparklineColor = computed(() => {
   return getCategoryAccent(props.metadata.category)
+})
+
+const chartConfidence = computed(() => {
+  const points = props.sparklineData
+  if (!points || points.length === 0) return null
+  const last = points[points.length - 1]
+  const c = (last as { confidence?: number })?.confidence
+  if (c != null && c >= 0 && c <= 1) return c
+  if (props.metadata.id === 'indices-confidence' && last && Number.isFinite(last.v)) {
+    const v = last.v / 100
+    return Math.min(1, Math.max(0, v))
+  }
+  return null
+})
+
+const confidenceBandColor = computed(() => {
+  const c = chartConfidence.value
+  if (c == null) return 'transparent'
+  if (c >= 0.8) return '#22c55e'
+  if (c >= 0.5) return '#f59e0b'
+  return '#ef4444'
 })
 
 const sparklinePoints = computed(() => {

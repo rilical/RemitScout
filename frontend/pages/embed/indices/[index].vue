@@ -85,15 +85,17 @@
         :class="theme === 'dark' ? 'border-neutral-700 bg-neutral-800' : 'border-neutral-200 bg-neutral-100'"
       >
         <div
-          class="text-body-sm"
+          class="flex flex-wrap items-center gap-2 text-body-sm"
           :class="theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500'"
         >
-          Updated {{ formatLastUpdated(lastUpdated) }}
+          <span>Updated {{ formatLastUpdated(lastUpdated) }}</span>
+          <MethodologyVersionBadge :version="methodologyVersion" />
+          <PublicationStatusBadge :status="publicationStatus" />
         </div>
         <a
-          :href="`${siteUrl}/pulse`"
+          href="https://remit-scout.com"
           target="_blank"
-          rel="noopener"
+          rel="dofollow"
           :title="`${chartTitle} — Remit-Scout Remittance Intelligence`"
           class="flex items-center gap-1.5 text-body-sm font-medium transition-colors"
           :class="theme === 'dark' ? 'text-brand-600 hover:text-brand-700' : 'text-brand-600 hover:text-brand-700'"
@@ -118,7 +120,7 @@ import { useRoute } from 'vue-router'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
 import { getPublicIndicesEmbedSnapshot } from '~/lib/indicesApi'
-import type { IndexKey } from '~/types/indices'
+import type { IndexKey, PublicationStatus } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
 import { setSeo } from '~/composables/useSeo'
 import { useStructuredData } from '~/composables/useStructuredData'
@@ -175,6 +177,8 @@ const snapshotCreatedAt = ref<string | null>(null)
 const snapshotCorridorId = ref<string | null>(null)
 const snapshotMethodProfile = ref<string | null>(null)
 const snapshotAmountBucket = ref<number | null>(null)
+const methodologyVersion = ref<string | null>(null)
+const publicationStatus = ref<PublicationStatus | null>(null)
 
 const meta = computed(() => indexMeta[indexKey.value])
 const chartTitle = computed(() => meta.value?.title || 'Index')
@@ -263,6 +267,9 @@ onMounted(async () => {
       snapshotMethodProfile.value = data.methodProfile
       snapshotAmountBucket.value = data.amountBucket
     }
+
+    methodologyVersion.value = data.methodologyVersion ?? data.series?.[data.series.length - 1]?.methodologyVersion ?? null
+    publicationStatus.value = data.series?.[data.series.length - 1]?.publicationStatus ?? null
 
     lastUpdated.value = data.lastUpdated || ''
     weightingLabel.value = data.weightingModel?.replace(/_/g, ' ') || 'synthetic volume weighted'

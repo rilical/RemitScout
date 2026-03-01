@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { CenteredPage, Icon } from '~/ui'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
+const { pulseEnabled } = useFeatureFlags()
 const previewFailed = ref(false)
 
 const screenshotSrc = '/images/dashboard-preview.png'
 
-const tourShots = [
+const allTourShots = [
   {
     id: 'watchlist',
     title: 'Watchlist',
@@ -41,10 +43,16 @@ const tourShots = [
   },
 ] as const
 
-const activeTourShotId = ref<(typeof tourShots)[number]['id']>('watchlist')
-const activeTourShot = computed(() => tourShots.find(s => s.id === activeTourShotId.value) ?? tourShots[0])
+const tourShots = computed(() =>
+  pulseEnabled.value
+    ? allTourShots
+    : allTourShots.filter(s => s.id !== 'pulse'),
+)
 
-const features = [
+const activeTourShotId = ref<(typeof allTourShots)[number]['id']>('watchlist')
+const activeTourShot = computed(() => tourShots.value.find(s => s.id === activeTourShotId.value) ?? tourShots.value[0])
+
+const allFeatures = [
   { icon: 'bookmark', title: 'Watchlist', body: 'Save your corridors and see rate changes without searching again.', meta: 'Free: 3 corridors. Plus: 16 corridors.' },
   { icon: 'bell-alert', title: 'Rate alerts', body: 'Get notified when your target rate is hit.', meta: 'Free: 1 alert. Plus: 16 alerts.' },
   { icon: 'clock', title: 'History', body: 'Understand the range before you send.', meta: 'Free: 30 days. Plus: 90 days.' },
@@ -52,6 +60,12 @@ const features = [
   { icon: 'arrow-down-tray', title: 'Export', body: 'Download your history as CSV or PDF when you need records.', meta: 'Plus only.' },
   { icon: 'chart-bar', title: 'Pulse access', body: 'Live market intelligence: volatility signals, spread tracking, and provider shifts.', meta: 'Plus only.' },
 ] as const
+
+const features = computed(() =>
+  pulseEnabled.value
+    ? allFeatures
+    : allFeatures.filter(f => f.title !== 'Pulse access'),
+)
 </script>
 
 <template>
@@ -202,7 +216,7 @@ const features = [
 	          A dashboard that feels like a product
 	        </h2>
 	        <p class="mx-auto mt-3 max-w-3xl text-neutral-600">
-	          Watchlist, alerts, history, exports, and Pulse. Built for repeat transfers, not one-off calculators.
+	        Watchlist, alerts, history, exports{{ pulseEnabled ? ', and Pulse' : '' }}. Built for repeat transfers, not one-off calculators.
 	        </p>
 	      </header>
 
@@ -333,7 +347,7 @@ section-gap-class="space-y-10"
             Choose your plan
           </h2>
           <p class="mx-auto mt-3 max-w-2xl text-neutral-600">
-            Start free. Upgrade when you need higher limits, exports, and Pulse analytics.
+            Start free. Upgrade when you need higher limits, exports{{ pulseEnabled ? ', and Pulse analytics' : '' }}.
           </p>
         </div>
 
@@ -433,7 +447,7 @@ class="text-white"
 />
                 16 alerts
               </li>
-              <li class="flex items-center gap-2">
+              <li v-if="pulseEnabled" class="flex items-center gap-2">
                 <Icon
 name="check"
 :size="20"

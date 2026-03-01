@@ -12,7 +12,7 @@ class="bg-brand-600 text-white"
         >
           <div class="py-2">
             <div class="flex items-center justify-center gap-3 text-body-sm">
-              <span><strong>Upgrade to Plus</strong> — Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience</span>
+              <span><strong>Upgrade to Plus</strong> — {{ upgradeBannerText }}</span>
 		              <NuxtLink
 	to="/plus"
 	class="inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100 underline underline-offset-2"
@@ -288,7 +288,7 @@ class="mt-2"
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 class="font-semibold text-body-lg">You're approaching your limits</h3>
-              <p class="text-white/90 text-body-sm mt-1">Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 90-day history, and exports.</p>
+              <p class="text-white/90 text-body-sm mt-1">{{ upgradeLimitsText }}</p>
             </div>
 	              <NuxtLink
 	                to="/plus/checkout"
@@ -392,6 +392,7 @@ class="mt-2"
                                 :options="inlineFromOptions"
                                 placeholder="Select country"
                                 button-class="h-10 text-body-sm"
+                                searchable
                               />
                             </div>
                             <div>
@@ -401,6 +402,7 @@ class="mt-2"
                                 :options="inlineToOptions"
                                 placeholder="Select country"
                                 button-class="h-10 text-body-sm"
+                                searchable
                               />
                             </div>
                             <button
@@ -1032,7 +1034,7 @@ class="bg-brand-600 rounded-xl p-5 text-white"
 	                  </div>
 	                  <div class="flex-1">
 	                    <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
-	                    <p class="text-body-sm text-white/90 mb-3">Get Pulse access, 16 alerts, 90-day history, exports, and an ad-free experience.</p>
+	                    <p class="text-body-sm text-white/90 mb-3">{{ removeAdsText }}</p>
 			                    <NuxtLink
 	to="/plus"
 	class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
@@ -1154,6 +1156,7 @@ class="flex flex-col sm:flex-row gap-3"
                     v-model="newWatchlist.from"
                     :options="inlineFromOptions"
                     placeholder="Select country"
+                    searchable
                   />
                 </div>
 	                <div class="flex items-center text-neutral-400">
@@ -1169,6 +1172,7 @@ class="flex flex-col sm:flex-row gap-3"
                     v-model="newWatchlist.to"
                     :options="inlineToOptions"
                     placeholder="Select country"
+                    searchable
                   />
                 </div>
               </div>
@@ -1884,7 +1888,7 @@ class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
 	                </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
-                  <p class="text-body-sm text-neutral-300">Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.</p>
+                  <p class="text-body-sm text-neutral-300">{{ alertsUpgradeText }}</p>
                 </div>
               </div>
 	              <NuxtLink
@@ -2787,46 +2791,6 @@ class="px-3 py-2 text-right tabular-nums"
                   Admin endpoints: /analytics/*, /audit/*, /telemetry/analytics, /ops/*
                 </div>
                 <div class="mt-5 border-t border-neutral-100 pt-4">
-                  <h4 class="text-body-sm font-semibold text-rs-fg">Role management</h4>
-                  <p class="text-body-sm text-rs-muted">Grant admin access by email.</p>
-                  <div class="mt-3 grid gap-2">
-                    <input
-                      v-model="adminRoleEmail"
-                      type="email"
-                      placeholder="user@example.com"
-                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                    >
-                    <select
-                      v-model="adminRoleSelection"
-                      class="w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                      <option value="super_admin">Super admin</option>
-                    </select>
-                    <button
-                      type="button"
-                      class="inline-flex items-center justify-center rounded-lg bg-neutral-900 px-3 py-2 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors disabled:cursor-not-allowed disabled:bg-neutral-400"
-                      :disabled="adminRoleLoading || !adminRoleEmail"
-                      @click="handleAdminRoleUpdate"
-                    >
-                      {{ adminRoleLoading ? 'Updating...' : 'Set role' }}
-                    </button>
-                    <p
-v-if="adminRoleSuccess"
-class="text-body-sm text-success-600"
->
-                      {{ adminRoleSuccess }}
-                    </p>
-                    <p
-v-else-if="adminRoleError"
-class="text-body-sm text-warning-600"
->
-                      {{ adminRoleError }}
-                    </p>
-                  </div>
-                </div>
-                <div class="mt-5 border-t border-neutral-100 pt-4">
                   <h4 class="text-body-sm font-semibold text-rs-fg">Plan management</h4>
                   <p class="text-body-sm text-rs-muted">Grant or revoke plan access by email.</p>
                   <div class="mt-3 grid gap-2">
@@ -3547,6 +3511,12 @@ class="space-y-6"
 	                      />
 	                      Changes saved!
 	                    </div>
+                    <p
+                      v-else-if="profileSaveError"
+                      class="text-body-sm text-danger-600"
+                    >
+                      {{ profileSaveError }}
+                    </p>
                     <div v-else />
                     <button
                       type="button"
@@ -3641,7 +3611,7 @@ class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border bord
 	                      </div>
                       <div class="flex-1">
                         <h4 class="text-body-sm font-semibold text-rs-fg">Upgrade to Plus</h4>
-                        <p class="text-body-sm text-neutral-600 mt-0.5">Pulse access, 16 alerts, 90-day history, exports, and ad-free</p>
+                        <p class="text-body-sm text-neutral-600 mt-0.5">{{ sidebarUpgradeText }}</p>
                       </div>
                       <button
                         type="button"
@@ -3920,7 +3890,7 @@ class="space-y-6"
 
                 <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <h3 class="font-medium text-rs-fg mb-4">Password</h3>
-                  <p class="text-body-sm text-rs-muted mb-4">Last changed 30 days ago</p>
+                  <p class="text-body-sm text-rs-muted mb-4">Update your password regularly to keep your account secure</p>
                   <div class="space-y-4">
                     <div>
                       <label class="block text-body-sm font-medium text-neutral-700 mb-1.5">Current Password</label>
@@ -3980,15 +3950,21 @@ class="mt-4 rounded-lg bg-success-50 px-3 py-2 text-body-sm text-success-800"
                       <h3 class="font-medium text-rs-fg">Two-Factor Authentication</h3>
                       <p class="text-body-sm text-rs-muted">Add an extra layer of security</p>
                     </div>
-                    <span class="px-2 py-1 rounded-full text-body-sm font-medium bg-neutral-100 text-neutral-600">
-                      Not enabled
+                    <span
+                      :class="[
+                        'px-2 py-1 rounded-full text-body-sm font-medium',
+                        mfaEnabled ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-600',
+                      ]"
+                    >
+                      {{ mfaEnabled ? 'Enabled' : 'Not enabled' }}
                     </span>
                   </div>
                   <button
                     type="button"
                     class="rounded-lg bg-neutral-100 px-4 py-2 text-body-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors"
+                    @click="navigateTo('/account/security')"
                   >
-                    Enable 2FA
+                    {{ mfaEnabled ? 'Manage 2FA' : 'Enable 2FA' }}
                   </button>
                 </div>
 
@@ -4378,6 +4354,7 @@ import { COUNTRIES } from '~/utils/countries-currencies'
 	import type { CorridorOption } from '~/types/pulse'
 	import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
 import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue'
 
 type DashboardTab = 'overview' | 'watchlist' | 'alerts' | 'history' | 'enterprise' | 'ops' | 'account'
@@ -4402,8 +4379,16 @@ const accountSections: { id: AccountSection, label: string, icon: IconName }[] =
   { id: 'compliance', label: 'Compliance', icon: 'document-text' },
 ]
 
+function extractErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError'
+}
+
 const route = useRoute()
-const { user, isAuthenticated, isAdmin, updatePasswordWithCurrent } = useAuth()
+const { user, isAuthenticated, isAdmin, updatePasswordWithCurrent, listMfaFactors } = useAuth()
 const { pendingVisits } = useProviderVisits()
 const providerVisitPromptRef = ref<{ open: () => void } | null>(null)
 const pendingProviderFeedbackCount = computed(() => pendingVisits.value.length)
@@ -4421,6 +4406,34 @@ const {
 } = useSessions()
 const { updateProfile } = useMe()
 const { isPlus, isEnterprise, apiAccess, apiTier, limits, billing, refreshPlan } = useEntitlements()
+const { pulseEnabled } = useFeatureFlags()
+
+const upgradeBannerText = computed(() =>
+  pulseEnabled.value
+    ? 'Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience'
+    : '16 alerts, 16 watchlist corridors, exports, and an ad-free experience',
+)
+const upgradeLimitsText = computed(() =>
+  pulseEnabled.value
+    ? 'Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 90-day history, and exports.'
+    : 'Upgrade to Plus for 16 watchlist corridors, 16 alerts, 90-day history, and exports.',
+)
+const removeAdsText = computed(() =>
+  pulseEnabled.value
+    ? 'Get Pulse access, 16 alerts, 90-day history, exports, and an ad-free experience.'
+    : 'Get 16 alerts, 90-day history, exports, and an ad-free experience.',
+)
+const alertsUpgradeText = computed(() =>
+  pulseEnabled.value
+    ? 'Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.'
+    : 'Free accounts are limited to 1 alert. Upgrade to Plus for daily alerts and up to 16 smart alerts.',
+)
+const sidebarUpgradeText = computed(() =>
+  pulseEnabled.value
+    ? 'Pulse access, 16 alerts, 90-day history, exports, and ad-free'
+    : '16 alerts, 90-day history, exports, and ad-free',
+)
+
 const billingActions = useBilling()
 const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.value)
 const billingPortalLoading = computed(() => billingActions.portalLoading.value)
@@ -4470,7 +4483,7 @@ const corridorWatchlistItems = computed(() =>
 	})
 
 	const formatRuleSummary = (rule: AlertRule) => {
-	  const currency = (rule as any)?.currency ? ` ${(rule as any).currency}` : ''
+	  const currency = rule.currency ? ` ${rule.currency}` : ''
 	  return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim()
 	}
 
@@ -4725,9 +4738,10 @@ const loadRateHistory = async (
       [key]: normalizeRateHistoryResponse(base, quote, response),
     }
   }
- catch (error: any) {
-    if (error?.name === 'AbortError') return
-    rateHistoryErrors.value[key] = error?.message || 'Unable to load rate history.'
+  catch (error: unknown) {
+    if (isAbortError(error)) return
+    const msg = extractErrorMessage(error, 'Unable to load rate history.')
+    rateHistoryErrors.value[key] = msg
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
       [key]: {
@@ -4736,7 +4750,7 @@ const loadRateHistory = async (
         history: [],
         lastUpdated: null,
         status: 'unavailable',
-        message: error?.message || 'Unable to load rate history.',
+        message: msg,
         refreshQueued: false,
         refreshRequestId: null,
         derived: false,
@@ -4761,9 +4775,9 @@ const loadProviderRates = async (base: string, quote: string, signal?: AbortSign
     })
     providerRatesCache.value = { ...providerRatesCache.value, [key]: response }
   }
- catch (error: any) {
-    if (error?.name === 'AbortError') return
-    providerRatesErrors.value[key] = error?.message || 'Unable to load provider rates.'
+  catch (error: unknown) {
+    if (isAbortError(error)) return
+    providerRatesErrors.value[key] = extractErrorMessage(error, 'Unable to load provider rates.')
     providerRatesCache.value = {
       ...providerRatesCache.value,
       [key]: { base, quote, midMarketRate: null, data: [] },
@@ -4820,8 +4834,8 @@ const adminAccessChecked = ref(false)
 	    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
 	    hasAdminAccess.value = Boolean(me?.user?.is_admin)
 	  }
-	 catch (error: any) {
-	    if (error?.name === 'AbortError') {
+	  catch (error: unknown) {
+	    if (isAbortError(error)) {
 	      aborted = true
       return
     }
@@ -5092,12 +5106,6 @@ const opsAdminLinks = [
     to: '/admin/ads',
   },
 ] as const
-
-const adminRoleEmail = ref('')
-const adminRoleSelection = ref<'user' | 'admin' | 'super_admin'>('user')
-const adminRoleLoading = ref(false)
-const adminRoleError = ref<string | null>(null)
-const adminRoleSuccess = ref<string | null>(null)
 
 const adminPlanEmail = ref('')
 const adminPlanSelection = ref<'free' | 'plus' | 'enterprise'>('free')
@@ -5396,25 +5404,25 @@ const telemetryListRows = computed<TelemetryListRow[]>(() => {
   const payload = telemetryLatest.value.value
   if (!Array.isArray(payload)) return []
   if (telemetryMetric.value === 'popular_corridors') {
-    return payload.slice(0, 12).map((row: any, index: number) => ({
+    return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
       key: `${row.corridor_id ?? 'corridor'}-${index}`,
-      corridor: row.corridor_id,
+      corridor: row.corridor_id as string | undefined,
       count: Number(row.search_count) || 0,
     }))
   }
   if (telemetryMetric.value === 'provider_favorites') {
-    return payload.slice(0, 12).map((row: any, index: number) => ({
+    return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
       key: `${row.provider_id ?? 'provider'}-${index}`,
-      provider: row.provider_id,
-      corridor: row.corridor_id,
+      provider: row.provider_id as string | undefined,
+      corridor: row.corridor_id as string | undefined,
       count: Number(row.click_count) || 0,
     }))
   }
   if (telemetryMetric.value === 'heatmap') {
-    return payload.slice(0, 12).map((row: any, index: number) => ({
+    return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
       key: `${row.from_country ?? 'from'}-${row.to_country ?? 'to'}-${index}`,
-      from: row.from_country,
-      to: row.to_country,
+      from: row.from_country as string | undefined,
+      to: row.to_country as string | undefined,
       count: Number(row.search_count) || 0,
     }))
   }
@@ -5496,33 +5504,6 @@ const refreshAllOps = async () => {
   opsLastRefreshedAt.value = new Date().toISOString()
 }
 
-const handleAdminRoleUpdate = async () => {
-  const email = adminRoleEmail.value.trim()
-  if (!email) {
-    adminRoleError.value = 'Enter a user email to update.'
-    return
-  }
-  adminRoleLoading.value = true
-  adminRoleError.value = null
-  adminRoleSuccess.value = null
-  try {
-    await request('/admin/users/role', {
-      method: 'PATCH',
-      body: {
-        email,
-        role: adminRoleSelection.value,
-      },
-    })
-    adminRoleSuccess.value = `Role updated for ${email}.`
-  }
- catch (error) {
-    adminRoleError.value = toOpsErrorMessage(error)
-  }
- finally {
-    adminRoleLoading.value = false
-  }
-}
-
 const handleAdminPlanGrant = async () => {
   const email = adminPlanEmail.value.trim()
   if (!email) {
@@ -5574,8 +5555,8 @@ const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
     })
     telemetryRows.value = response?.data ?? []
   }
- catch (error) {
-    if ((error as any)?.name === 'AbortError') return
+  catch (error: unknown) {
+    if (isAbortError(error)) return
     telemetryError.value = toOpsErrorMessage(error)
     telemetryRows.value = []
   }
@@ -5699,9 +5680,6 @@ watch(() => activeTab.value, (tab) => {
     void loadTelemetryAnalytics()
     void loadOpsAnalytics()
     void loadOpsAudit()
-  }
-  if (tab === 'enterprise' && isEnterprise.value && !apiKeysLoaded.value) {
-    setTimeout(() => void fetchApiKeys(), 400)
   }
 })
 
@@ -5965,8 +5943,8 @@ const scheduleSelectedHistoryRefreshPoll = () => {
     try {
       await loadRateHistory(pair.base, pair.quote, selectedHistoryDays.value, undefined, { force: true })
     }
-    catch (error: any) {
-      if (error?.name === 'AbortError') return
+    catch (error: unknown) {
+      if (isAbortError(error)) return
     }
 
     if (shouldPollSelectedHistory() && selectedHistoryRefreshAttempts.value < SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS) {
@@ -6366,6 +6344,11 @@ const securitySettings = ref({
 const passwordUpdateLoading = ref(false)
 const passwordUpdateError = ref<string | null>(null)
 const passwordUpdateSuccess = ref(false)
+const mfaEnabled = ref(false)
+
+listMfaFactors().then((factors) => {
+  mfaEnabled.value = factors.totp?.some(f => f.status === 'verified') ?? false
+})
 
 const {
   settings: privacySettings,
@@ -6380,6 +6363,7 @@ const privacySaveError = ref<string | null>(null)
 // Profile editing
 const profileName = ref('')
 const profileSaved = ref(false)
+const profileSaveError = ref<string | null>(null)
 
 watch(() => user.value?.name, (name) => {
   if (name) profileName.value = name
@@ -6424,6 +6408,7 @@ async function saveProfile() {
   const trimmed = profileName.value.trim()
   if (!trimmed) return
 
+  profileSaveError.value = null
   try {
     await updateProfile({ name: trimmed })
     profileSaved.value = true
@@ -6431,7 +6416,9 @@ async function saveProfile() {
       profileSaved.value = false
     }, 3000)
   }
- catch (error) {
+  catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Failed to save profile.'
+    profileSaveError.value = msg
     useLogger('DashboardSignedIn').warn('Profile update failed', error)
   }
 }
@@ -6439,29 +6426,39 @@ async function saveProfile() {
 async function handleSavePrivacySettings() {
   privacySaveError.value = null
   privacySaveSuccess.value = false
-  await savePrivacySettings()
-  if (privacyLoadError.value) {
-    privacySaveError.value = privacyLoadError.value
-    return
+  try {
+    await savePrivacySettings()
+    if (privacyLoadError.value) {
+      privacySaveError.value = privacyLoadError.value
+      return
+    }
+    privacySaveSuccess.value = true
+    setTimeout(() => {
+      privacySaveSuccess.value = false
+    }, 3000)
   }
-  privacySaveSuccess.value = true
-  setTimeout(() => {
-    privacySaveSuccess.value = false
-  }, 3000)
+  catch (error: unknown) {
+    privacySaveError.value = error instanceof Error ? error.message : 'Failed to save privacy settings.'
+  }
 }
 
 async function handleSaveNotificationSettings() {
   notificationSaveError.value = null
   notificationSaveSuccess.value = false
-  await saveNotificationSettings()
-  if (notificationLoadError.value) {
-    notificationSaveError.value = notificationLoadError.value
-    return
+  try {
+    await saveNotificationSettings()
+    if (notificationLoadError.value) {
+      notificationSaveError.value = notificationLoadError.value
+      return
+    }
+    notificationSaveSuccess.value = true
+    setTimeout(() => {
+      notificationSaveSuccess.value = false
+    }, 3000)
   }
-  notificationSaveSuccess.value = true
-  setTimeout(() => {
-    notificationSaveSuccess.value = false
-  }, 3000)
+  catch (error: unknown) {
+    notificationSaveError.value = error instanceof Error ? error.message : 'Failed to save notification settings.'
+  }
 }
 
 async function handlePushToggle() {
@@ -6586,8 +6583,8 @@ const fetchBillingHistory = async (force = false) => {
     const response = await request<{ invoices: BillingInvoice[] }>('/billing/history')
     billingHistory.value = Array.isArray(response.invoices) ? response.invoices : []
   }
- catch (error: any) {
-    billingHistoryError.value = error?.message || 'Unable to load billing history.'
+  catch (error: unknown) {
+    billingHistoryError.value = extractErrorMessage(error, 'Unable to load billing history.')
   }
  finally {
     billingHistoryLoading.value = false
@@ -6753,8 +6750,8 @@ const pollExportStatus = async (jobId: string) => {
         exportStatusMessage.value = 'Export in progress...'
       }
     }
- catch (error: any) {
-      exportErrorMessage.value = error?.message || 'Failed to check export status.'
+    catch (error: unknown) {
+      exportErrorMessage.value = extractErrorMessage(error, 'Failed to check export status.')
       isExporting.value = false
       clearExportPolling()
     }
@@ -6861,8 +6858,8 @@ async function handleExport() {
     exportStatusMessage.value = 'Export queued. We will start processing shortly.'
     await pollExportStatus(response.job.id)
   }
- catch (error: any) {
-    exportErrorMessage.value = error?.message || 'Failed to start export.'
+  catch (error: unknown) {
+    exportErrorMessage.value = extractErrorMessage(error, 'Failed to start export.')
     isExporting.value = false
   }
 }
@@ -6921,15 +6918,15 @@ const requestGdprExport = async () => {
         }
         gdprExportStatus.value = 'Export queued...'
       }
-      catch (error: any) {
+      catch (error: unknown) {
         gdprExportStatus.value = null
-        gdprExportError.value = error?.message || 'Failed to check export status.'
+        gdprExportError.value = extractErrorMessage(error, 'Failed to check export status.')
         clearGdprExportPolling()
       }
     }, 2500)
   }
- catch (error: any) {
-    gdprExportError.value = error?.message || 'Failed to request GDPR export.'
+  catch (error: unknown) {
+    gdprExportError.value = extractErrorMessage(error, 'Failed to request GDPR export.')
   }
 }
 

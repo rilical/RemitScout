@@ -285,7 +285,7 @@ const freeFeatures = [
 const plusFeatures = [
   'Rate alerts (email + SMS)',
   'Watchlist (save corridors)',
-  '1-year history + CSV export',
+  '30-day history + CSV export',
   'Ad-free experience',
   'Priority support',
 ]

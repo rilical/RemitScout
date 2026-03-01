@@ -316,10 +316,25 @@ const mfaChallengeId = ref<string | null>(null)
 const recoverySending = ref(false)
 const recoveryMessage = ref<string | null>(null)
 
+const isSafeRedirect = (url: string): boolean => {
+  if (!url) return false
+  if (url.startsWith('/') && !url.startsWith('//')) return true
+  try {
+    const parsed = new URL(url, window.location.origin)
+    return parsed.origin === window.location.origin
+  } catch {
+    return false
+  }
+}
+
+const getSafeRedirect = (): string => {
+  const raw = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  return isSafeRedirect(raw) ? raw : '/dashboard'
+}
+
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
-    navigateTo(redirect)
+    navigateTo(getSafeRedirect())
   }
 }, { immediate: true })
 
@@ -339,7 +354,7 @@ async function handleEmailSignIn() {
   errorMessage.value = null
   loading.value = true
 
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+  const redirect = getSafeRedirect()
   const result = await signIn(email.value, password.value)
   loading.value = false
 
@@ -384,8 +399,7 @@ async function handleMfaVerify() {
     return
   }
 
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
-  await navigateTo(redirect)
+  await navigateTo(getSafeRedirect())
 }
 
 async function sendMfaRecoveryEmail() {
@@ -413,7 +427,7 @@ async function sendMfaRecoveryEmail() {
 async function handleSocialSignIn(provider: 'google') {
   errorMessage.value = null
   loading.value = true
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/dashboard'
+  const redirect = getSafeRedirect()
   const result = await signInWithOAuth(provider, redirect)
   loading.value = false
 

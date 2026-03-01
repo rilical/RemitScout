@@ -1,5 +1,5 @@
 <template>
-  <section class="py-16 sm:py-20 bg-brand-600">
+  <section v-if="pulseEnabled" class="py-16 sm:py-20 bg-brand-600">
     <div class="container">
       <!-- Header -->
       <div class="text-center mb-12">
@@ -641,6 +641,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+
+const { pulseEnabled } = useFeatureFlags()
 
 const currentStatIndex = ref(0)
 let autoRotateInterval: ReturnType<typeof setInterval> | null = null

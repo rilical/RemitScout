@@ -92,14 +92,20 @@ const PLACEMENT_CONFIG: Record<AdPlacement, PlacementConfig> = {
   },
 }
 
+const PLUS_COPY_WITH_PULSE = 'Ad-free comparisons, Pulse access, 16 smart alerts, and 90-day history.'
+const PLUS_COPY_WITHOUT_PULSE = 'Ad-free comparisons, 16 smart alerts, and 90-day history.'
+
+export const getPlusCopy = (pulseEnabled: boolean): string =>
+  pulseEnabled ? PLUS_COPY_WITH_PULSE : PLUS_COPY_WITHOUT_PULSE
+
 // Add paid sponsor creatives here when available.
 const PAID_ADS: AdCreative[] = []
 
-const HOUSE_ADS: AdCreative[] = [
+const buildHouseAds = (pulseEnabled: boolean): AdCreative[] => [
   {
     id: 'rs-plus',
     name: 'Remit-Scout Plus',
-    tagline: 'Ad-free comparisons, Pulse access, 16 smart alerts, and 90-day history.',
+    tagline: getPlusCopy(pulseEnabled),
     brandColor: '#2563EB',
     url: '/plus',
     ctaText: 'Upgrade',
@@ -165,12 +171,12 @@ export const getPlacementConfig = (placement: AdPlacement): PlacementConfig => {
 export const pickAdForPlacement = (
   placement: AdPlacement,
   seed: string,
-  options?: { allowHouseAds?: boolean },
+  options?: { allowHouseAds?: boolean; pulseEnabled?: boolean },
 ): AdCreative | null => {
   const now = new Date()
   let candidates = filterByPlacement(PAID_ADS, placement, now)
   if (!candidates.length && options?.allowHouseAds !== false) {
-    candidates = filterByPlacement(HOUSE_ADS, placement, now)
+    candidates = filterByPlacement(buildHouseAds(options?.pulseEnabled ?? true), placement, now)
   }
   if (!candidates.length) return null
   return pickWeighted(candidates, seed || placement)

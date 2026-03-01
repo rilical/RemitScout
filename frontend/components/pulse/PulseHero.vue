@@ -221,7 +221,7 @@
     </div>
 
     <!-- Quick Stats Bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 border-t border-white/10">
+    <div class="grid grid-cols-2 md:grid-cols-5 border-t border-white/10">
       <div class="px-6 py-4 border-r border-white/10 last:border-r-0">
         <div class="text-body-sm text-neutral-400 mb-1">
           Best rate now
@@ -259,6 +259,19 @@
           +₱142
         </div>
       </div>
+      <div class="px-6 py-4 border-r border-white/10 last:border-r-0">
+        <div class="text-body-sm text-neutral-400 mb-1">
+          Corridor stress
+        </div>
+        <div class="mt-0.5">
+          <CorridorStressBadge
+            v-if="stressLevel && stressLevel !== 'normal'"
+            :level="stressLevel"
+            :score="stressScore"
+          />
+          <span v-else class="text-body-lg font-bold text-white">Normal</span>
+        </div>
+      </div>
       <div class="px-6 py-4">
         <div class="text-body-sm text-neutral-400 mb-1">
           Fastest option
@@ -273,6 +286,11 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+
+defineProps<{
+  stressLevel?: 'normal' | 'elevated' | 'high' | 'critical' | null
+  stressScore?: number | null
+}>()
 
 const emit = defineEmits<{
   'filter-change': [filters: {

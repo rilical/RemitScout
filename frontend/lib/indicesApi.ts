@@ -1,5 +1,5 @@
 import { useApi } from '~/composables/useApi'
-import type { IndexSeriesPoint, IndexSeriesResponse } from '~/types/indices'
+import type { IndexSeriesPoint, IndexSeriesResponse, TriangulatedIndexResponse } from '~/types/indices'
 
 type IndexSeriesParams = {
   corridor_id: string
@@ -7,6 +7,15 @@ type IndexSeriesParams = {
   method_profile?: string
   days?: number
   api_key?: string
+  as_of?: string
+  methodology?: string
+}
+
+export type TriangulatedIndexParams = {
+  amount_bucket?: number
+  method_profile?: string
+  as_of?: string
+  methodology?: string
 }
 
 export type IndicesEmbedSnapshotCreateParams = {
@@ -85,4 +94,15 @@ export async function getPublicIndicesEmbedSnapshot(
 ): Promise<IndicesEmbedSnapshotResponse> {
   const { request } = useApi()
   return await request<IndicesEmbedSnapshotResponse>(`/public/indices/embed-snapshots/${encodeURIComponent(snapshotId)}`)
+}
+
+export async function getTriangulatedIndex(
+  corridorId: string,
+  params?: TriangulatedIndexParams,
+): Promise<TriangulatedIndexResponse> {
+  const { request } = useApi()
+  return await request<TriangulatedIndexResponse>(
+    `/indices/triangulated/${encodeURIComponent(corridorId)}`,
+    { query: params },
+  )
 }

@@ -41,6 +41,7 @@ import AdSlot from '~/components/ads/AdSlot.vue'
 import SponsoredAd, { type SponsoredAdData } from '~/components/shared/SponsoredAd.vue'
 import { useAds } from '~/composables/useAds'
 import { useEntitlements } from '~/composables/useEntitlements'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import type { AdLayout, AdPlacement } from '~/lib/ads'
 import { getPlacementConfig, pickAdForPlacement } from '~/lib/ads'
@@ -77,6 +78,7 @@ const props = withDefaults(defineProps<Props>(), {
 const route = useRoute()
 const runtimeConfig = useRuntimeConfig()
 const { isPlus, hydrated } = useEntitlements()
+const { pulseEnabled } = useFeatureFlags()
 const { marketingConsent } = usePrivacySettings()
 const { fetchAdForPlacement, trackAdClick } = useAds()
 
@@ -139,7 +141,7 @@ const loadCreative = async () => {
     // Ignore and fall back to local creatives below.
   }
 
-  const fallback = pickAdForPlacement(props.placement, seed, { allowHouseAds: props.allowHouseAds })
+  const fallback = pickAdForPlacement(props.placement, seed, { allowHouseAds: props.allowHouseAds, pulseEnabled: pulseEnabled.value })
   if (!fallback) {
     creative.value = null
     return

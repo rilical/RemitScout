@@ -73,9 +73,6 @@ export const useAdminSession = () => {
       headers: {
         authorization: `Bearer ${supabaseToken}`,
       },
-      body: {
-        supabase_token: supabaseToken,
-      },
       retries: 0,
     })
 

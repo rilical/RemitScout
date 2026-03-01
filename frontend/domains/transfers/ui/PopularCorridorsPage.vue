@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import CenteredPage from '~/components/shared/CenteredPage.vue'
-import DataTable from '~/components/shared/DataTable.vue'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { CenteredPage, DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 import type { PopularCorridorGroup } from '~/domains/transfers/application/popularCorridorsModel'
 
 type Props = {
@@ -13,16 +12,16 @@ type Props = {
 defineProps<Props>()
 
 const columns: DataTableColumn[] = [
-  { key: 'to', header: 'Corridor' },
-  { key: 'topProvider', header: 'Top provider' },
-  { key: 'count24h', header: '24h searches', align: 'right' },
+  { key: 'to', label: 'Corridor' },
+  { key: 'topProvider', label: 'Top provider' },
+  { key: 'count24h', label: '24h searches', align: 'right' },
 ]
 </script>
 
 <template>
   <div class="min-h-screen bg-surface">
-    <section class="bg-neutral-900 text-white">
-      <CenteredPage container-class="!py-16 lg:!py-24">
+    <section class="bg-neutral-900 text-white py-16 lg:py-24">
+      <CenteredPage padding-y="none">
         <template #header>
           <nav class="mb-8 flex items-center space-x-2 text-body-sm text-white/70">
             <NuxtLink
@@ -90,17 +89,17 @@ const columns: DataTableColumn[] = [
               :columns="columns"
               :rows="group.corridors"
               :row-key="(row: any) => row.id"
-              empty-text="No corridors"
+              :empty="{ title: 'No corridors' }"
             >
               <template #cell-to="{ row }">
                 <NuxtLink
                   :to="(row as any).href as string"
                   class="inline-flex items-center gap-2 font-medium text-neutral-900 hover:text-brand-700"
                 >
-                  <span class="text-body-lg">{{ row.fromFlag }}</span>
+                  <span class="text-body-lg">{{ (row as any).fromFlag }}</span>
                   <span class="text-neutral-400">→</span>
-                  <span class="text-body-lg">{{ row.toFlag }}</span>
-                  <span class="ml-1">{{ row.from }} → {{ row.to }}</span>
+                  <span class="text-body-lg">{{ (row as any).toFlag }}</span>
+                  <span class="ml-1">{{ (row as any).from }} → {{ (row as any).to }}</span>
                 </NuxtLink>
               </template>
 

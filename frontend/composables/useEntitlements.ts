@@ -33,6 +33,9 @@ type MeResponse = {
     user_id: string
     email: string
     name: string | null
+    role?: string | null
+    app_role?: string | null
+    is_admin?: boolean
   }
   plan: {
     plan_code: string
@@ -169,8 +172,8 @@ export const useEntitlements = () => {
         throw new Error('Invalid response from /me endpoint')
       }
     }
-    catch (err: any) {
-      error.value = err.message || 'Failed to fetch plan'
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch plan'
       // Default to free plan on error
       plan.value = 'free'
       limits.value = {

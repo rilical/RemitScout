@@ -659,7 +659,10 @@
                 :loading="highlightsLoading"
               />
 
-              <PulseHeroChart metric="rate" />
+              <PulseHeroChart
+                metric="rate"
+                :days-available="selectedCorridorDaysAvailable"
+              />
 
               <PulseMarketQuotes />
             </div>
@@ -766,11 +769,15 @@
                 :rows="screenerRows"
                 :loading="screenerLoading"
                 :error="screenerError"
-                :selected-corridor-id="store.corridor.corridorId || null"
+                :selected-corridor-id="store.corridor?.corridorId || null"
+                :selected-timeframe="store.timeframe"
                 :pinned-corridor-ids="effectivePinnedCorridorIds"
+                :corridor-options="trackedCorridors"
+                :corridor-days-map="corridorDaysMap"
                 @select="handleScreenerSelect"
                 @pin="handlePinCorridor"
                 @unpin="handleUnpinCorridor"
+                @select-timeframe="handleScreenerSelectTimeframe"
               />
             </div>
 
@@ -778,7 +785,7 @@
               <PulseMoversList
                 variant="plus"
                 :limit="10"
-                :selected-corridor-id="store.corridor.corridorId || null"
+                :selected-corridor-id="store.corridor?.corridorId || null"
                 @select="handleMoverSelect"
                 @added="handleMoverAdded"
               />
@@ -1133,13 +1140,28 @@
                   Effective rates, market spread, and pricing dispersion over time.
                 </p>
               </div>
+              <div
+                v-if="selectedCorridorDaysAvailable > 0 && selectedCorridorDaysAvailable < 7"
+                class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-body-sm text-amber-800"
+              >
+                <span class="font-semibold">Limited data:</span> This corridor has {{ selectedCorridorDaysAvailable }} day(s) of data. Charts become more accurate after 7+ days of collection.
+              </div>
+              <div
+                v-else-if="selectedCorridorDaysAvailable >= 7 && selectedCorridorDaysAvailable < 30"
+                class="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-body-sm text-blue-700"
+              >
+                {{ selectedCorridorDaysAvailable }} days of data available. Trend analysis improves with 30+ days.
+              </div>
               <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div
                   id="snapshot-chart"
                   class="lg:col-span-8"
                   :class="highlightedSection === 'snapshot-chart' ? 'ring-1 ring-brand-600/60 rounded-xl ring-offset-2 ring-offset-neutral-900' : ''"
                 >
-                  <PulseHeroChart :metric="activeMetric" />
+                  <PulseHeroChart
+                    :metric="activeMetric"
+                    :days-available="selectedCorridorDaysAvailable"
+                  />
                 </div>
                 <div
                   v-if="isPro"
@@ -1338,6 +1360,7 @@
                 :chart-availability="chartAvailability"
                 :filters="legacyFilters"
                 :pulse-level="pulseLevel"
+                :days-available="selectedCorridorDaysAvailable"
                 @view="navigateToChart"
                 @share="handleShare"
                 @embed="handleEmbed"
@@ -2353,6 +2376,17 @@ async function handleScreenerSelect(corridorId: string) {
   await scrollToDecisionPanel()
 }
 
+async function handleScreenerSelectTimeframe(corridorId: string, timeframe: PulseTimeframe) {
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
+
+  store.setViewMode('sender')
+  setCorridorFromOption(option)
+  store.setTimeframe(timeframe)
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+  await scrollToDecisionPanel()
+}
+
 type PulseTeaserMover = {
   corridorId: string
   fromCountry: string
@@ -2433,17 +2467,33 @@ const setCorridorFromOption = (option: CorridorOption) => {
   selectedCorridorKey.value = option.corridorId || option.value
 }
 
-const corridorCoverageLabel = computed(() => {
-  const c = selectedCorridorOption.value
-  if (!c?.minDate || !c?.maxDate) return ''
+function computeDaysAvailable(c: CorridorOption | null | undefined): number {
+  if (!c?.minDate || !c?.maxDate) return 0
   const min = new Date(`${c.minDate}T00:00:00.000Z`)
   const max = new Date(`${c.maxDate}T00:00:00.000Z`)
-  if (Number.isNaN(min.getTime()) || Number.isNaN(max.getTime())) return ''
-  const daysAvailable = Math.floor((max.getTime() - min.getTime()) / (24 * 60 * 60 * 1000)) + 1
-  if (!Number.isFinite(daysAvailable) || daysAvailable <= 0) return ''
+  if (Number.isNaN(min.getTime()) || Number.isNaN(max.getTime())) return 0
+  const days = Math.floor((max.getTime() - min.getTime()) / (24 * 60 * 60 * 1000)) + 1
+  return Number.isFinite(days) && days > 0 ? days : 0
+}
+
+const selectedCorridorDaysAvailable = computed(() => computeDaysAvailable(selectedCorridorOption.value))
+
+const corridorDaysMap = computed<Record<string, number>>(() => {
+  const map: Record<string, number> = {}
+  for (const c of trackedCorridors.value) {
+    const id = c.corridorId || c.value
+    if (id) map[id] = computeDaysAvailable(c)
+  }
+  return map
+})
+
+const corridorCoverageLabel = computed(() => {
+  const c = selectedCorridorOption.value
+  const daysAvailable = computeDaysAvailable(c)
+  if (!daysAvailable) return ''
   const desiredDays = store.timeframeDays
   const cappedNote = desiredDays > daysAvailable ? ` • Only ${daysAvailable}d available for this corridor` : ''
-  return `Coverage: ${c.minDate} to ${c.maxDate} (${formatCount(daysAvailable)} days available)${cappedNote}`
+  return `Coverage: ${c?.minDate} to ${c?.maxDate} (${formatCount(daysAvailable)} days available)${cappedNote}`
 })
 
 function handleCorridorSelect() {
@@ -2468,8 +2518,9 @@ const initializeCorridorSelection = () => {
   if (!option && corridorSlugFromUrl) {
     option = getCorridorBySlug(corridorSlugFromUrl) || trackedCorridors.value.find(c => (c.slug || c.value) === corridorSlugFromUrl)
   }
-  if (!option && store.corridor.corridorId) {
-    option = getCorridorById(store.corridor.corridorId) || trackedCorridors.value.find(c => c.corridorId === store.corridor.corridorId)
+  const currentCorridorId = store.corridor?.corridorId
+  if (!option && currentCorridorId) {
+    option = getCorridorById(currentCorridorId) || trackedCorridors.value.find(c => c.corridorId === currentCorridorId)
   }
   if (!option) {
     option = prioritizedTrackedCorridors.value[0] || trackedCorridors.value[0]
@@ -2537,7 +2588,7 @@ const clearSnapshotExportPoll = () => {
 }
 
 const corridorCountries = computed(() => {
-  const id = store.corridor.corridorId
+  const id = store.corridor?.corridorId
   if (!id) return { from: 'US', to: 'PH' }
   const [from, to] = id.split('-')
   return { from: (from || 'US').toUpperCase(), to: (to || 'PH').toUpperCase() }
@@ -2606,7 +2657,7 @@ function handleCreateAlert() {
 const resolveExportDays = () => {
   if (!limits.value.exports) return 0
   const max = limits.value.exportsMaxDays
-  // Plus is capped at 30d exports. Enterprise full history export is handled via Dashboard.
+  // All plans capped at 30d exports (backend hard cap).
   if (max === 'unlimited') return 30
   if (typeof max === 'number' && max > 0) return Math.min(30, max)
   return 0
@@ -2687,7 +2738,7 @@ async function downloadSnapshotCsv() {
     const toDateOnlyUtc = (date: Date) => date.toISOString().split('T')[0]
     const dateTo = toDateOnlyUtc(new Date())
     const dateFrom = toDateOnlyUtc(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000))
-    const corridorId = store.corridor.corridorId
+    const corridorId = store.corridor?.corridorId
     const response = await exportsApi.createExport({
       dataType: 'history',
       format: 'csv',
@@ -2718,8 +2769,8 @@ function handleAmountInput() {
 }
 
 const legacyFilters = computed<PulseFilters>(() => ({
-  corridor: store.corridor.slug,
-  corridorId: store.corridor.corridorId,
+  corridor: store.corridor?.slug ?? '',
+  corridorId: store.corridor?.corridorId,
   amount: store.amount as 100 | 200 | 500 | 1000,
   fundingMethod: 'bank',
   payoutMethod: 'bank',
@@ -3032,6 +3083,7 @@ watch(
   (len) => {
     if (!import.meta.client) return
     if (len === 0) return
+    store.initCorridor(trackedCorridors.value)
     if (!selectedCorridorKey.value) {
       initializeCorridorSelection()
     }

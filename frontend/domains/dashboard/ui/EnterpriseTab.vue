@@ -173,7 +173,7 @@ const {
         </div>
 
         <DataTable
-          variant="dashboard"
+          variant="consumer"
           caption="API keys"
           :columns="apiKeyTableColumns"
           :rows="apiKeys"
@@ -491,7 +491,7 @@ const {
       </p>
 
       <DataTable
-        variant="dashboard"
+        variant="consumer"
         caption="Export jobs"
         :columns="exportJobTableColumns"
         :rows="exportJobs"

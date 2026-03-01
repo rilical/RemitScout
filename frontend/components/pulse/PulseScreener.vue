@@ -1,22 +1,51 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PulseScreenerRow } from '~/types/pulse'
+import type { CorridorOption, PulseScreenerRow } from '~/types/pulse'
+import type { PulseTimeframe } from '~/stores/pulse'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import { formatUpdatedLabel } from '~/shared/lib/format'
+import { getAvailableTimeframes, isTimeframeAvailable } from '~/composables/usePulseTimeframes'
 
-const props = defineProps<{
-  rows: PulseScreenerRow[]
-  loading?: boolean
-  error?: string | null
-  selectedCorridorId?: string | null
-  pinnedCorridorIds?: string[]
-}>()
+const TIMEFRAMES: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
+
+const props = withDefaults(
+  defineProps<{
+    rows: PulseScreenerRow[]
+    loading?: boolean
+    error?: string | null
+    selectedCorridorId?: string | null
+    selectedTimeframe?: PulseTimeframe
+    pinnedCorridorIds?: string[]
+    corridorOptions?: CorridorOption[]
+    corridorDaysMap?: Record<string, number>
+  }>(),
+  { corridorOptions: () => [], corridorDaysMap: () => ({}), selectedTimeframe: '7D' },
+)
 
 const emit = defineEmits<{
   (e: 'select', corridorId: string): void
   (e: 'pin', corridorId: string): void
   (e: 'unpin', corridorId: string): void
+  (e: 'selectTimeframe', corridorId: string, timeframe: PulseTimeframe): void
 }>()
+
+function getDaysAvailableForRow(row: PulseScreenerRow): number {
+  const fromMap = props.corridorDaysMap?.[row.corridorId]
+  if (typeof fromMap === 'number' && fromMap >= 0) return fromMap
+  const opt = props.corridorOptions.find(
+    c => c.corridorId === row.corridorId || (c.slug ?? c.value) === row.slug,
+  )
+  if (!opt?.minDate || !opt?.maxDate) return 0
+  const min = new Date(opt.minDate).getTime()
+  const max = new Date(opt.maxDate).getTime()
+  if (Number.isNaN(min) || Number.isNaN(max)) return 0
+  return Math.ceil((max - min) / 86400000)
+}
+
+function handleTimeframeClick(row: PulseScreenerRow, tf: PulseTimeframe) {
+  if (!isTimeframeAvailable(getDaysAvailableForRow(row), tf)) return
+  emit('selectTimeframe', row.corridorId, tf)
+}
 
 const pinnedSet = computed(() => new Set(props.pinnedCorridorIds ?? []))
 
@@ -176,6 +205,12 @@ const handleSelect = (row: PulseScreenerRow) => {
             <div>
               <div class="text-body-sm font-semibold text-white">
                 <span class="mr-2">{{ row.fromFlag }}</span>{{ row.label }}
+                <span
+                  v-if="getDaysAvailableForRow(row) > 0 && getDaysAvailableForRow(row) < 7"
+                  class="ml-2 rounded border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300"
+                >
+                  Insufficient data
+                </span>
               </div>
               <div class="mt-1 flex flex-wrap items-center gap-2 text-body-sm text-neutral-400">
                 <template v-if="row.corridorId === selectedCorridorId">
@@ -225,14 +260,40 @@ const handleSelect = (row: PulseScreenerRow) => {
                 v-if="row.moverDeltaPct24h !== null"
                 class="inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-mono font-bold"
                 :class="moverClass(row.moverDeltaPct24h)"
-                :title="row.moverTimestampBucket ? `Bucket: ${row.moverTimestampBucket}` : ''"
+                :title="getDaysAvailableForRow(row) < 30
+                  ? `Based on limited data (${getDaysAvailableForRow(row)} days). Trends become reliable after 30+ days.`
+                  : (row.moverTimestampBucket ? `Bucket: ${row.moverTimestampBucket}` : '')"
               >
                 {{ formatPct(row.moverDeltaPct24h) }}
+                <span
+                  v-if="getDaysAvailableForRow(row) > 0 && getDaysAvailableForRow(row) < 30"
+                  class="ml-1 text-[9px] font-normal text-neutral-500"
+                >
+                  (preliminary)
+                </span>
               </span>
             </div>
           </div>
 
-          <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="mt-3 flex flex-wrap items-center gap-1">
+            <button
+              v-for="tf in TIMEFRAMES"
+              :key="tf"
+              type="button"
+              class="rounded px-2 py-1 text-[11px] font-semibold transition-colors"
+              :class="isTimeframeAvailable(getDaysAvailableForRow(row), tf)
+                ? (row.corridorId === selectedCorridorId && selectedTimeframe === tf
+                  ? 'bg-brand-600 text-white'
+                  : 'text-neutral-400 hover:bg-neutral-700 hover:text-white')
+                : 'cursor-not-allowed text-neutral-600 opacity-50'"
+              :disabled="!isTimeframeAvailable(getDaysAvailableForRow(row), tf)"
+              @click="handleTimeframeClick(row, tf)"
+            >
+              {{ tf }}
+            </button>
+          </div>
+
+          <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div>
               <div class="text-[10px] font-mono uppercase tracking-wider text-neutral-600">
                 Spread (bps)
@@ -255,6 +316,20 @@ const handleSelect = (row: PulseScreenerRow) => {
               </div>
               <div class="mt-0.5 text-body-sm font-mono font-bold text-white">
                 {{ row.bankSavingsPercent === null ? '—' : `${(row.bankSavingsPercent * 100).toFixed(1)}%` }}
+              </div>
+            </div>
+            <div>
+              <div class="text-[10px] font-mono uppercase tracking-wider text-neutral-600">
+                Stress
+              </div>
+              <div class="mt-0.5">
+                <CorridorStressBadge
+                  v-if="row.stressLevel && row.stressLevel !== 'normal'"
+                  :level="row.stressLevel"
+                  :score="row.stressScore"
+                  compact
+                />
+                <span v-else class="text-body-sm font-mono font-bold text-white">—</span>
               </div>
             </div>
             <div>

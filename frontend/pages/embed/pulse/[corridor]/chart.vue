@@ -166,9 +166,9 @@
           {{ updatedLabel }}
         </div>
         <a
-          :href="pulseUrl"
+          href="https://remit-scout.com"
           target="_blank"
-          rel="noopener"
+          rel="dofollow"
           class="flex items-center gap-1 text-body-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
         >
           <span>Powered by</span>
@@ -200,7 +200,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { getCorridors, getCorridorBySlug, getHeroChartData, type HeroChartData } from '~/lib/pulseApi'
+import { getPublicCorridors, getCorridorBySlug, getPublicHeroChartData, type HeroChartData } from '~/lib/pulseApi'
 import type { PulseCorridor, PulseTimeframe } from '~/stores/pulse'
 import type { CorridorOption } from '~/types/pulse'
 import { formatUpdatedLabel } from '~/shared/lib/format'
@@ -237,13 +237,13 @@ const corridorSlug = computed(() => {
 
 const timeframe = computed<PulseTimeframe>(() => {
   const tf = route.query.timeframe as string
-  if (['24H', '7D', '30D', '1Y', 'MAX'].includes(tf)) {
+  if (['24H', '7D', '30D'].includes(tf)) {
     return tf as PulseTimeframe
   }
   return '7D'
 })
 
-const { data: corridorList } = await useAsyncData('pulse-corridors', () => getCorridors())
+const { data: corridorList } = await useAsyncData('pulse-corridors', () => getPublicCorridors())
 
 const corridorOption = computed<CorridorOption | undefined>(() => {
   const byCache = getCorridorBySlug(corridorSlug.value)
@@ -390,7 +390,7 @@ async function loadData() {
   try {
     const corridor = corridorData.value
     if (corridor) {
-      heroData.value = await getHeroChartData(corridor, timeframe.value, 1000)
+      heroData.value = await getPublicHeroChartData(corridor, timeframe.value, 1000)
     }
   }
   catch (e) {

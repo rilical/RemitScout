@@ -99,19 +99,18 @@
           <DataTable
             :columns="tableColumns"
             :rows="tableRows"
-            row-key="user_id"
+            :row-key="(row: any) => row.user_id ?? String(row)"
             :loading="loading"
-            :error="tableError || undefined"
-            :on-retry="loadUsers"
-            empty-text="No enterprise accounts yet."
+            :error="tableError ? { message: tableError } : null"
+            :empty="{ title: 'No enterprise accounts yet.' }"
           >
             <template #cell-actions="{ row }">
               <button
-                :disabled="revoking === row.user_id"
+                :disabled="revoking === (row as any).user_id"
                 class="text-body-sm font-medium text-danger-600 hover:text-danger-700 disabled:opacity-50"
-                @click="revokeAccess(toUserWithPlan(row.raw))"
+                @click="revokeAccess(toUserWithPlan((row as any).raw))"
               >
-                {{ revoking === row.user_id ? 'Revoking...' : 'Revoke' }}
+                {{ revoking === (row as any).user_id ? 'Revoking...' : 'Revoke' }}
               </button>
             </template>
           </DataTable>
@@ -123,7 +122,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -172,10 +172,10 @@ const enterpriseUsers = computed(() =>
 )
 
 const tableColumns: DataTableColumn[] = [
-  { key: 'email', header: 'Email' },
-  { key: 'enterprise_granted_at', header: 'Granted' },
-  { key: 'enterprise_notes', header: 'Notes' },
-  { key: 'actions', header: 'Actions', align: 'right' },
+  { key: 'email', label: 'Email' },
+  { key: 'enterprise_granted_at', label: 'Granted' },
+  { key: 'enterprise_notes', label: 'Notes' },
+  { key: 'actions', label: 'Actions', align: 'right' },
 ]
 
 const tableRows = computed(() =>

@@ -78,28 +78,27 @@
         <DataTable
           :columns="flagColumns"
           :rows="flagRows"
-          row-key="key"
+          :row-key="(row: any) => row.key ?? String(row)"
           :loading="loading"
-          :error="error || undefined"
-          :on-retry="loadFlags"
-          empty-text="No feature flags found."
+          :error="error ? { message: error } : null"
+          :empty="{ title: 'No feature flags found.' }"
         >
           <template #cell-key="{ row }">
-            <button
-              class="text-left text-body-sm font-semibold text-rs-fg hover:underline"
-              @click="selectFlag(asString(row.key))"
-            >
-              {{ asString(row.key) }}
-            </button>
-          </template>
-          <template #cell-enabled="{ row }">
-            <span
-              class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-              :class="asBoolean(row.enabled) ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-700'"
-            >
-              {{ asBoolean(row.enabled) ? 'true' : 'false' }}
-            </span>
-          </template>
+              <button
+                class="text-left text-body-sm font-semibold text-rs-fg hover:underline"
+                @click="selectFlag(asString((row as any).key))"
+              >
+                {{ asString((row as any).key) }}
+              </button>
+            </template>
+            <template #cell-enabled="{ row }">
+              <span
+                class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
+                :class="asBoolean((row as any).enabled) ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-700'"
+              >
+                {{ asBoolean((row as any).enabled) ? 'true' : 'false' }}
+              </span>
+            </template>
         </DataTable>
       </article>
 
@@ -202,7 +201,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -258,9 +258,9 @@ const editor = reactive({
 })
 
 const flagColumns: DataTableColumn[] = [
-  { key: 'key', header: 'Key' },
-  { key: 'enabled', header: 'Enabled' },
-  { key: 'updated_at', header: 'Updated' },
+  { key: 'key', label: 'Key' },
+  { key: 'enabled', label: 'Enabled' },
+  { key: 'updated_at', label: 'Updated' },
 ]
 
 const flagRows = computed(() =>
@@ -296,6 +296,15 @@ const parseJsonObject = (value: string, fallback: Record<string, unknown> = {}) 
   }
 }
 
+const normalizeFlagKey = (value: string): string => value.trim().toLowerCase()
+const FLAG_KEY_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{0,63})$/
+const isSafeFlagKey = (value: string): boolean => {
+  if (!FLAG_KEY_PATTERN.test(value)) return false
+  if (value.includes('..') || value.includes('//') || value.includes('/')) return false
+  return true
+}
+const encodeFlagKeyPathSegment = (value: string): string => encodeURIComponent(value)
+
 const hydrateEditor = (flag: FeatureFlag | null) => {
   if (!flag) return
   editor.enabled = flag.enabled
@@ -304,7 +313,12 @@ const hydrateEditor = (flag: FeatureFlag | null) => {
 }
 
 const loadHistory = async (key: string) => {
-  const response = await request<{ history?: FeatureFlagHistoryEntry[] }>(`/admin/feature-flags/${key}/history`, {
+  const normalized = normalizeFlagKey(key)
+  if (!isSafeFlagKey(normalized)) {
+    throw new Error('Invalid feature flag key.')
+  }
+  const encoded = encodeFlagKeyPathSegment(normalized)
+  const response = await request<{ history?: FeatureFlagHistoryEntry[] }>(`/admin/feature-flags/${encoded}/history`, {
     query: { limit: 50 },
   })
   history.value = response.history || []
@@ -336,8 +350,13 @@ const loadFlags = async () => {
 }
 
 const selectFlag = async (key: string) => {
-  selectedKey.value = key
-  const selected = flags.value.find((item) => item.key === key) || null
+  const normalized = normalizeFlagKey(key)
+  if (!isSafeFlagKey(normalized)) {
+    error.value = 'Invalid feature flag key.'
+    return
+  }
+  selectedKey.value = normalized
+  const selected = flags.value.find((item) => item.key === normalized) || null
   hydrateEditor(selected)
   if (!selected) return
   await loadHistory(selected.key)
@@ -348,11 +367,15 @@ const createFlag = async () => {
   createMessage.value = ''
   createSuccess.value = false
   try {
+    const key = normalizeFlagKey(createForm.key)
+    if (!isSafeFlagKey(key)) {
+      throw new Error('Feature flag key must be 1-64 chars using a-z, 0-9, dot, underscore, or hyphen.')
+    }
     const audienceRules = parseJsonObject(createForm.audienceJson, { global: true, audiences: [] })
     await request('/admin/feature-flags', {
       method: 'POST',
       body: {
-        key: createForm.key.trim().toLowerCase(),
+        key,
         enabled: createForm.enabled,
         audience_rules: audienceRules,
       },
@@ -378,9 +401,13 @@ const saveSelectedFlag = async () => {
   saveMessage.value = ''
   saveSuccess.value = false
   try {
+    const key = normalizeFlagKey(selectedFlag.value.key)
+    if (!isSafeFlagKey(key)) {
+      throw new Error('Invalid feature flag key.')
+    }
     const audienceRules = parseJsonObject(editor.audienceJson, {})
     const metadata = parseJsonObject(editor.metadataJson, {})
-    await request(`/admin/feature-flags/${selectedFlag.value.key}`, {
+    await request(`/admin/feature-flags/${encodeFlagKeyPathSegment(key)}`, {
       method: 'PATCH',
       body: {
         enabled: editor.enabled,

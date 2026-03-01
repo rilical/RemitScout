@@ -190,36 +190,35 @@
           <DataTable
             :columns="clientColumns"
             :rows="clientRows"
-            row-key="id"
+            :row-key="(row: any) => row.id ?? String(row)"
             :loading="loading"
-            :error="error || undefined"
-            :on-retry="loadClients"
-            empty-text="No institutional clients found."
+            :error="error ? { message: error } : null"
+            :empty="{ title: 'No institutional clients found.' }"
           >
             <template #cell-name="{ row }">
               <button
                 class="text-left text-body-sm font-semibold text-rs-fg hover:underline"
-                @click="toggleDetail(asString(row.id))"
+                @click="toggleDetail(asString((row as any).id))"
               >
-                {{ row.name }}
+                {{ (row as any).name }}
               </button>
             </template>
 
             <template #cell-tier="{ row }">
               <span
                 class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                :class="tierBadgeClass(clientFromRow(row.raw).tier)"
+                :class="tierBadgeClass(clientFromRow((row as any).raw).tier)"
               >
-                {{ clientFromRow(row.raw).tier }}
+                {{ clientFromRow((row as any).raw).tier }}
               </span>
             </template>
 
             <template #cell-status="{ row }">
               <span
                 class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                :class="statusBadgeClass(clientFromRow(row.raw).status)"
+                :class="statusBadgeClass(clientFromRow((row as any).raw).status)"
               >
-                {{ clientFromRow(row.raw).status }}
+                {{ clientFromRow((row as any).raw).status }}
               </span>
             </template>
 
@@ -227,34 +226,34 @@
               <div class="flex items-center justify-end gap-2">
                 <button
                   class="text-xs font-medium text-brand-600 hover:text-brand-700"
-                  @click="startEdit(clientFromRow(row.raw))"
+                  @click="startEdit(clientFromRow((row as any).raw))"
                 >
                   Edit
                 </button>
                 <button
-                  v-if="clientFromRow(row.raw).status === 'active'"
+                  v-if="clientFromRow((row as any).raw).status === 'active'"
                   class="text-xs font-medium text-amber-600 hover:text-amber-700"
-                  @click="changeStatus(clientFromRow(row.raw), 'suspended')"
+                  @click="changeStatus(clientFromRow((row as any).raw), 'suspended')"
                 >
                   Suspend
                 </button>
                 <button
-                  v-if="clientFromRow(row.raw).status === 'suspended'"
+                  v-if="clientFromRow((row as any).raw).status === 'suspended'"
                   class="text-xs font-medium text-success-600 hover:text-success-700"
-                  @click="changeStatus(clientFromRow(row.raw), 'active')"
+                  @click="changeStatus(clientFromRow((row as any).raw), 'active')"
                 >
                   Reactivate
                 </button>
                 <button
-                  v-if="clientFromRow(row.raw).status !== 'revoked'"
+                  v-if="clientFromRow((row as any).raw).status !== 'revoked'"
                   class="text-xs font-medium text-danger-600 hover:text-danger-700"
-                  @click="changeStatus(clientFromRow(row.raw), 'revoked')"
+                  @click="changeStatus(clientFromRow((row as any).raw), 'revoked')"
                 >
                   Revoke
                 </button>
                 <button
                   class="text-xs font-medium text-neutral-600 hover:text-neutral-800"
-                  @click="rotateKey(clientFromRow(row.raw))"
+                  @click="rotateKey(clientFromRow((row as any).raw))"
                 >
                   Rotate Key
                 </button>
@@ -447,7 +446,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useApi } from '~/composables/useApi'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -549,14 +549,14 @@ const statusBadgeClass = (status: string) => {
 }
 
 const clientColumns: DataTableColumn[] = [
-  { key: 'name', header: 'Name' },
-  { key: 'client_prefix', header: 'Prefix' },
-  { key: 'tier', header: 'Tier' },
-  { key: 'status', header: 'Status' },
-  { key: 'contract_end', header: 'Contract End' },
-  { key: 'rate_limits', header: 'Rate Limits' },
-  { key: 'report_schedule', header: 'Report' },
-  { key: 'actions', header: 'Actions', align: 'right' },
+  { key: 'name', label: 'Name' },
+  { key: 'client_prefix', label: 'Prefix' },
+  { key: 'tier', label: 'Tier' },
+  { key: 'status', label: 'Status' },
+  { key: 'contract_end', label: 'Contract End' },
+  { key: 'rate_limits', label: 'Rate Limits' },
+  { key: 'report_schedule', label: 'Report' },
+  { key: 'actions', label: 'Actions', align: 'right' },
 ]
 
 const clientRows = computed(() =>

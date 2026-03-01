@@ -331,6 +331,12 @@ const cardBorderClass = (source: string) => {
 
 const adminLinks = [
   { label: 'Operations Center', description: 'Merged observer + full provider ops view', to: '/admin/observer' },
+  { label: 'Module Registry', description: 'Signal module health, quarantine status, and cadence', to: '/admin/modules' },
+  { label: 'Delivery Progress', description: 'Module readiness and deployment progress by domain', to: '/admin/delivery-progress' },
+  { label: 'Self-Healing Pipeline', description: 'Agent actions, failure bundles, and repair metrics', to: '/admin/agents' },
+  { label: 'Incident Timeline', description: 'Full incident lifecycle from detection to resolution', to: '/admin/incidents' },
+  { label: 'Corridor Stress', description: 'Triangulation-derived stress scores across corridors', to: '/admin/stress' },
+  { label: 'Data Quality', description: 'Total Collection Error framework per module', to: '/admin/data-quality' },
   { label: 'Analytics Console', description: 'Usage, conversion, and engagement trends', to: '/admin/analytics' },
   { label: 'Enterprise Management', description: 'Grant or revoke enterprise access', to: '/admin/enterprise' },
   { label: 'Audit Log Console', description: 'Security and admin event investigations', to: '/admin/audit' },

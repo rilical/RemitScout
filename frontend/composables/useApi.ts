@@ -145,11 +145,14 @@ export const createApiClient = (deps: ApiClientDeps) => {
       const accessToken = deps.getAccessToken?.()
       const adminAccessToken = deps.getAdminAccessToken?.()
 
-      if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
-        headers.authorization = `Bearer ${adminAccessToken}`
-      }
-      else if (accessToken && !hasAuthHeader) {
+      // Prefer the primary user session token when present.
+      // Only fall back to the short-lived Plane A admin token for admin surfaces
+      // when there is no primary user token available.
+      if (accessToken && !hasAuthHeader) {
         headers.authorization = `Bearer ${accessToken}`
+      }
+      else if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
+        headers.authorization = `Bearer ${adminAccessToken}`
       }
 
       if (cloudfrontRequestId) {
@@ -224,7 +227,10 @@ export const useApi = () => {
   const config = useRuntimeConfig()
   // Avoid calling `useAuth()` here to prevent composable recursion (useAuth uses this API client for some calls).
   const session = useState<{ access_token?: string } | null>('auth:session', () => null)
-  const adminSession = useState<{ accessToken?: string | null }>('auth:admin-session', () => ({ accessToken: null }))
+  const adminSession = useState<{ accessToken?: string | null; expiresAt?: number | null }>('auth:admin-session', () => ({
+    accessToken: null,
+    expiresAt: null,
+  }))
 
   const base = import.meta.server
     ? (config.apiBase || config.public.apiBase || '/api')
@@ -252,7 +258,15 @@ export const useApi = () => {
     base,
     fetcher: $fetch as unknown as ApiClientDeps['fetcher'],
     getAccessToken: () => session.value?.access_token ?? null,
-    getAdminAccessToken: () => adminSession.value?.accessToken ?? null,
+    getAdminAccessToken: () => {
+      const token = adminSession.value?.accessToken ?? null
+      const expiresAt = Number(adminSession.value?.expiresAt ?? 0)
+      if (!token) return null
+      if (!Number.isFinite(expiresAt) || expiresAt <= 0) return null
+      const now = Math.floor(Date.now() / 1000)
+      if (expiresAt <= now + 60) return null
+      return token
+    },
     getServerHeaders,
     getCloudFrontRequestId,
     logger: {

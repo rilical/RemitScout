@@ -88,6 +88,7 @@
 
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 	const { ensureHydrated, isConfigured } = useAuth()
 	const route = useRoute()
@@ -125,7 +126,20 @@ onMounted(async () => {
     = (typeof route.query.token_hash === 'string' && route.query.token_hash)
       || (typeof route.query.token === 'string' && route.query.token)
 
-  const type = typeof route.query.type === 'string' ? route.query.type : 'signup'
+  const rawType = typeof route.query.type === 'string' ? route.query.type : 'signup'
+  const otpTypeAllowlist = new Set<EmailOtpType>([
+    'signup',
+    'recovery',
+    'invite',
+    'magiclink',
+    'email',
+    'email_change',
+  ])
+  if (!otpTypeAllowlist.has(rawType as EmailOtpType)) {
+    status.value = 'error'
+    errorMessage.value = 'Invalid confirmation type.'
+    return
+  }
 
   if (!tokenHash) {
     status.value = 'error'
@@ -135,7 +149,7 @@ onMounted(async () => {
 
   const { error } = await supabase.auth.verifyOtp({
     token_hash: tokenHash,
-    type: type as any,
+    type: rawType as EmailOtpType,
   })
 
   if (error) {

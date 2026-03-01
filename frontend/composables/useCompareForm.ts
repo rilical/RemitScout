@@ -24,19 +24,16 @@ export const DELIVERY_METHODS = [
   { value: 'card', label: 'Card Delivery', icon: '💳' },
 ] as const
 
-const globalForm = ref<CompareFormState>({
-  from: 'US',
-  to: '',
-  amount: 500,
-  method: 'bank',
-  fromCurrency: 'USD',
-  toCurrency: '',
-})
-
-let geoDefaultPromise: Promise<void> | null = null
-
 export function useCompareForm() {
-  const form = globalForm
+  const form = useState<CompareFormState>('compare:form', () => ({
+    from: 'US',
+    to: '',
+    amount: 500,
+    method: 'bank',
+    fromCurrency: 'USD',
+    toCurrency: '',
+  }))
+  const geoDefaultPromise = useState<Promise<void> | null>('compare:geo-default-promise', () => null)
   const validationError = ref<string>('')
   const statusMessage = ref<string>('')
   const isWaitingForQuotes = ref(false)
@@ -45,9 +42,9 @@ export function useCompareForm() {
 
   const ensureGeoDefault = () => {
     if (!import.meta.client) return
-    if (geoDefaultPromise) return
+    if (geoDefaultPromise.value) return
 
-    geoDefaultPromise = (async () => {
+    geoDefaultPromise.value = (async () => {
       const current = form.value
       const isDefaultFrom
         = !current.from || (current.from === 'US' && current.fromCurrency === 'USD')

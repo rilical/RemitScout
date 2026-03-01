@@ -51,7 +51,7 @@
             {{ amountDisplay }}
           </p>
           <p class="text-body-sm text-neutral-400">
-            {{ store.corridor.fromCode }} → {{ store.corridor.toCode }}
+            {{ store.corridor?.fromCode }} → {{ store.corridor?.toCode }}
           </p>
         </div>
 
@@ -149,7 +149,7 @@ const store = usePulseStore()
 const loading = ref(true)
 const data = ref<BankComparisonData | null>(null)
 
-const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
+const sendCurrency = computed(() => store.corridor?.fromCode || 'USD')
 
 const money = (value: number | null | undefined) => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return 'n/a'

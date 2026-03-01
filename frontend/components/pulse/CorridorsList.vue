@@ -18,7 +18,7 @@
         All Corridors
       </h2>
       <p class="text-neutral-400">
-        View quote snapshots for {{ corridors.length }} corridors
+        View quote snapshots for {{ props.corridors.length }} corridors
       </p>
     </div>
 
@@ -51,163 +51,209 @@
         class="h-12 rounded-xl border border-white/10 bg-surface/5 px-4 text-neutral-300 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer"
       >
         <option
-          value="popular"
+          value="dataPoints"
           class="bg-neutral-800"
         >
-          Most popular
+          Most data
         </option>
         <option
-          value="change"
+          value="recent"
           class="bg-neutral-800"
         >
-          Biggest change
+          Recently updated
         </option>
         <option
-          value="value"
+          value="name"
           class="bg-neutral-800"
         >
-          Best value
+          Alphabetical
         </option>
       </select>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <button
-        v-for="corridor in filteredCorridors"
-        :key="`${corridor.from}-${corridor.to}`"
-        type="button"
-        class="group w-full cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 p-5 text-left transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
-        :aria-label="`View corridor ${corridor.from} to ${corridor.to}`"
-        @click="$emit('corridor-click', { from: corridor.from, to: corridor.to })"
-      >
-        <div class="mb-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 text-h3">
-              <span>{{ corridor.fromFlag }}</span>
-              <svg
-                class="h-4 w-4 text-rs-muted"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-              <span>{{ corridor.toFlag }}</span>
-            </div>
-            <span class="font-semibold text-white group-hover:text-primary-400 transition-colors">{{ corridor.name }}</span>
-          </div>
-          <span
-            class="flex items-center gap-1 text-body-sm font-semibold"
-            :class="corridor.changeType === 'up' ? 'text-success-600' : 'text-danger-600'"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                v-if="corridor.changeType === 'up'"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
-              <path
-                v-else
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
-            {{ corridor.change24h }}
-          </span>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4">
-          <div class="rounded-xl bg-surface/5 p-3">
-            <div class="text-body-sm text-rs-muted mb-1">
-              Best provider
-            </div>
-            <div class="font-semibold text-white">
-              {{ corridor.bestProvider }}
-            </div>
-          </div>
-          <div class="rounded-xl bg-surface/5 p-3">
-            <div class="text-body-sm text-rs-muted mb-1">
-              Recipient gets
-            </div>
-            <div class="font-semibold text-success-600">
-              {{ corridor.recipientGets }}
-            </div>
-          </div>
-          <div class="rounded-xl bg-surface/5 p-3">
-            <div class="text-body-sm text-rs-muted mb-1">
-              Updated
-            </div>
-            <div class="font-semibold text-white flex items-center gap-1">
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-600 opacity-75" />
-                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-success-600" />
-              </span>
-              {{ corridor.updated }}
-            </div>
-          </div>
-        </div>
-      </button>
+    <div
+      v-if="groupedCorridors.length === 0"
+      class="py-12 text-center text-neutral-400"
+    >
+      No corridors match your search.
     </div>
 
-    <div class="mt-8 text-center">
-      <button class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/5 px-6 py-3 text-body-sm font-medium text-neutral-300 transition-all hover:bg-surface/10 hover:text-white">
-        Load more corridors
-        <svg
-          class="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <div
+      v-for="[country, items] in groupedCorridors"
+      :key="country"
+      class="mb-8"
+    >
+      <h3 class="mb-3 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
+        {{ country }}
+      </h3>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <button
+          v-for="c in items"
+          :key="c.corridorId || c.value"
+          type="button"
+          class="group w-full cursor-pointer rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-800/80 to-neutral-800/40 p-5 text-left transition-all duration-300 hover:border-white/20 hover:scale-[1.01]"
+          :aria-label="`View corridor ${c.label}`"
+          @click="$emit('corridor-click', c)"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
+          <div class="mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-h3">
+                <span>{{ c.fromFlag }}</span>
+                <svg
+                  class="h-4 w-4 text-rs-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+                <span>{{ c.toFlag }}</span>
+              </div>
+              <span class="font-semibold text-white group-hover:text-primary-400 transition-colors">{{ c.label }}</span>
+            </div>
+            <span
+              class="relative flex h-2.5 w-2.5 shrink-0"
+              :title="freshnessTitle(c)"
+            >
+              <span
+                v-if="freshnessColor(c) === 'green'"
+                class="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-600 opacity-75"
+              />
+              <span
+                class="relative inline-flex h-2.5 w-2.5 rounded-full"
+                :class="freshnessClasses(c)"
+              />
+            </span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div class="rounded-xl bg-surface/5 p-3">
+              <div class="text-body-sm text-rs-muted mb-1">
+                Data points
+              </div>
+              <div class="font-semibold text-white tabular-nums">
+                {{ formatDataPoints(c.dataPoints) }}
+              </div>
+            </div>
+            <div class="rounded-xl bg-surface/5 p-3">
+              <div class="text-body-sm text-rs-muted mb-1">
+                Tier
+              </div>
+              <div class="font-semibold text-white">
+                {{ c.dataTier || c.collectionTier || '—' }}
+              </div>
+            </div>
+            <div class="rounded-xl bg-surface/5 p-3">
+              <div class="text-body-sm text-rs-muted mb-1">
+                Updated
+              </div>
+              <div class="font-semibold text-white">
+                {{ formatLastUpdated(c.lastUpdated || c.maxDate) }}
+              </div>
+            </div>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { CorridorOption } from '~/types/pulse'
+
+const props = defineProps<{ corridors: CorridorOption[] }>()
 
 defineEmits<{
-  'corridor-click': [corridor: { from: string, to: string }]
+  'corridor-click': [corridor: CorridorOption]
 }>()
 
 const search = ref('')
-const sortBy = ref('popular')
-
-const corridors = [
-  { from: 'US', to: 'Philippines', fromFlag: '🇺🇸', toFlag: '🇵🇭', name: 'US → PH', bestProvider: 'Wise', recipientGets: '₱56,234', change24h: '+₱142', changeType: 'up', updated: '5m ago' },
-  { from: 'US', to: 'Mexico', fromFlag: '🇺🇸', toFlag: '🇲🇽', name: 'US → MX', bestProvider: 'Remitly', recipientGets: 'MXN 18,342', change24h: '+MXN 120', changeType: 'up', updated: '12m ago' },
-  { from: 'GB', to: 'India', fromFlag: '🇬🇧', toFlag: '🇮🇳', name: 'GB → IN', bestProvider: 'Wise', recipientGets: '₹92,340', change24h: '-₹86', changeType: 'down', updated: '18m ago' },
-  { from: 'US', to: 'India', fromFlag: '🇺🇸', toFlag: '🇮🇳', name: 'US → IN', bestProvider: 'Remitly', recipientGets: '₹83,450', change24h: '+₹234', changeType: 'up', updated: '8m ago' },
-  { from: 'CA', to: 'India', fromFlag: '🇨🇦', toFlag: '🇮🇳', name: 'CA → IN', bestProvider: 'Wise', recipientGets: '₹62,780', change24h: '+₹156', changeType: 'up', updated: '22m ago' },
-  { from: 'US', to: 'Nigeria', fromFlag: '🇺🇸', toFlag: '🇳🇬', name: 'US → NG', bestProvider: 'Sendwave', recipientGets: '₦1,234,500', change24h: '+₦2,340', changeType: 'up', updated: '15m ago' },
-  { from: 'AU', to: 'Philippines', fromFlag: '🇦🇺', toFlag: '🇵🇭', name: 'AU → PH', bestProvider: 'Wise', recipientGets: '₱38,920', change24h: '+₱98', changeType: 'up', updated: '10m ago' },
-  { from: 'US', to: 'Vietnam', fromFlag: '🇺🇸', toFlag: '🇻🇳', name: 'US → VN', bestProvider: 'Remitly', recipientGets: '₫24,560,000', change24h: '+₫45,000', changeType: 'up', updated: '7m ago' },
-]
+const sortBy = ref('dataPoints')
 
 const filteredCorridors = computed(() => {
-  return corridors.filter(c =>
-    c.name.toLowerCase().includes(search.value.toLowerCase()),
-  )
+  const q = search.value.toLowerCase()
+  let items = props.corridors
+  if (q) {
+    items = items.filter(c =>
+      c.label.toLowerCase().includes(q)
+      || (c.sourceCountry ?? '').toLowerCase().includes(q)
+      || (c.destCountry ?? '').toLowerCase().includes(q)
+      || c.fromCode.toLowerCase().includes(q)
+      || c.toCode.toLowerCase().includes(q),
+    )
+  }
+  return [...items].sort((a, b) => {
+    if (sortBy.value === 'dataPoints') return (b.dataPoints ?? 0) - (a.dataPoints ?? 0)
+    if (sortBy.value === 'recent') {
+      const ta = a.lastUpdated || a.maxDate || ''
+      const tb = b.lastUpdated || b.maxDate || ''
+      return tb.localeCompare(ta)
+    }
+    return a.label.localeCompare(b.label)
+  })
 })
+
+const groupedCorridors = computed(() => {
+  const groups: Record<string, CorridorOption[]> = {}
+  for (const c of filteredCorridors.value) {
+    const country = c.sourceCountry ?? c.fromCode ?? 'Other'
+    if (!groups[country]) groups[country] = []
+    groups[country].push(c)
+  }
+  return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+})
+
+const MS_24H = 24 * 60 * 60 * 1000
+const MS_7D = 7 * 24 * 60 * 60 * 1000
+
+function freshnessColor(c: CorridorOption): 'green' | 'amber' | 'gray' {
+  const raw = c.maxDate || c.lastUpdated
+  if (!raw) return 'gray'
+  const ts = new Date(raw).getTime()
+  if (Number.isNaN(ts)) return 'gray'
+  const age = Date.now() - ts
+  if (age <= MS_24H) return 'green'
+  if (age <= MS_7D) return 'amber'
+  return 'gray'
+}
+
+function freshnessClasses(c: CorridorOption): string {
+  const color = freshnessColor(c)
+  if (color === 'green') return 'bg-success-600'
+  if (color === 'amber') return 'bg-amber-500'
+  return 'bg-neutral-500'
+}
+
+function freshnessTitle(c: CorridorOption): string {
+  const color = freshnessColor(c)
+  if (color === 'green') return 'Data updated within 24 hours'
+  if (color === 'amber') return 'Data updated within 7 days'
+  return 'Data older than 7 days'
+}
+
+function formatDataPoints(n?: number): string {
+  if (n == null) return '—'
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return String(n)
+}
+
+function formatLastUpdated(raw?: string | null): string {
+  if (!raw) return '—'
+  const ts = new Date(raw).getTime()
+  if (Number.isNaN(ts)) return '—'
+  const diff = Date.now() - ts
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 </script>

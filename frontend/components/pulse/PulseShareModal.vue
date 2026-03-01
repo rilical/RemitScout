@@ -473,13 +473,18 @@ async function generateEmbedSnapshot() {
   embedError.value = null
 
   try {
+    const payoutMethod: 'bank' | 'cash' | 'wallet' = props.filters.payoutMethod === 'cash'
+      ? 'cash'
+      : props.filters.payoutMethod === 'wallet'
+        ? 'wallet'
+        : 'bank'
     const response = await createPulseEmbedSnapshot({
       chart_id: props.chartId,
       corridor: props.filters.corridor,
       corridor_id: props.filters.corridorId || 'US-PH-USD-PHP',
       amount: props.filters.amount,
       funding_method: props.filters.fundingMethod,
-      payout_method: props.filters.payoutMethod,
+      payout_method: payoutMethod,
       range: '30d',
     })
     embedSnapshotId.value = response.snapshotId

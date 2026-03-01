@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { useApi } from '~/composables/useApi'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import type { DataTableColumn } from '~/ui'
 import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
 
 type ExportJobRecord = {
@@ -28,10 +28,10 @@ export function useEnterpriseExports() {
   const creating = ref(false)
 
   const columns: DataTableColumn[] = [
-    { key: 'jobType', header: 'Type' },
-    { key: 'status', header: 'Status' },
-    { key: 'createdAt', header: 'Created' },
-    { key: 'actions', header: '', align: 'right', widthClass: 'w-28' },
+    { key: 'jobType', label: 'Type' },
+    { key: 'status', label: 'Status' },
+    { key: 'createdAt', label: 'Created' },
+    { key: 'actions', label: '', align: 'right', widthClass: 'w-28' },
   ]
 
   const rowKey = (row: unknown, rowIndex: number) => {

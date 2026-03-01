@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useEntitlements } from '~/composables/useEntitlements'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { Icon } from '~/ui'
 import { CATEGORY_ACCENT, CHART_STYLE } from '~/lib/pulseChartStyle'
 import type { ChartCategory } from '~/types/pulse'
 
 const { isPlus } = useEntitlements()
+const { pulseEnabled } = useFeatureFlags()
 const ctaLabel = computed(() => (isPlus.value ? 'Open Pulse' : 'Preview Pulse'))
 
 interface TeaserCategory {
@@ -57,7 +59,7 @@ function accentFor(key: ChartCategory): string {
 </script>
 
 <template>
-  <section class="py-16 sm:py-20 bg-neutral-900">
+  <section v-if="pulseEnabled" class="py-16 sm:py-20 bg-neutral-900">
     <div class="container">
       <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
         <div class="lg:max-w-2xl">

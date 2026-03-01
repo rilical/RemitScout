@@ -17,6 +17,14 @@ const props = defineProps<{
 
 const katex = (katexImport as any).default ?? katexImport
 
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 const formulaClass = computed(() => {
   const classes: string[] = []
   if (props.size === 'small') {
@@ -37,7 +45,7 @@ const renderedFormula = computed(() => {
     })
   }
   catch {
-    return props.formula
+    return escapeHtml(props.formula)
   }
 })
 </script>

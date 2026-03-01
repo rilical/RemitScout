@@ -10,19 +10,39 @@ const MFA_EXEMPT_PATHS = [
 ]
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (import.meta.server) return
+  const { ensureHydrated, isAuthenticated, listMfaFactors } = useAuth()
+  const { request } = useApi()
 
-  const { ensureHydrated, isAuthenticated, isAdmin, listMfaFactors } = useAuth()
-  const { isEnterprise, hydrated: entHydrated } = useEntitlements()
-
-  await ensureHydrated()
-
-  if (!isAuthenticated.value) return
+  if (import.meta.client) {
+    await ensureHydrated()
+    if (!isAuthenticated.value) return
+  }
   if (MFA_EXEMPT_PATHS.some(p => to.path.startsWith(p))) return
 
-  const requiresMfa = isAdmin.value || (entHydrated.value && isEnterprise.value)
+  let me: {
+    user?: { is_admin?: boolean; mfa_verified?: boolean }
+    plan_effective?: { plan_code?: string; is_active?: boolean }
+  } | null = null
+  try {
+    me = await request('/me', { retries: 0 })
+  } catch {
+    if (import.meta.client && !isAuthenticated.value) return
+    return
+  }
+
+  if (!me?.user) return
+
+  const isAdmin = Boolean(me.user.is_admin)
+  const isEnterprise =
+    me.plan_effective?.plan_code === 'enterprise'
+    && (me.plan_effective?.is_active ?? true)
+
+  const requiresMfa = isAdmin || isEnterprise
   if (!requiresMfa) return
 
+  if (me.user.mfa_verified) return
+
+  // Client fallback: if backend is stale, confirm current factor state directly.
   const factors = await listMfaFactors()
   const hasVerifiedTotp = factors.totp?.some(f => f.status === 'verified') ?? false
   if (hasVerifiedTotp) return

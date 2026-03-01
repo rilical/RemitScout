@@ -23,7 +23,7 @@
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-body-sm font-mono text-neutral-500">{{ store.corridor.label }}</span>
+            <span class="text-body-sm font-mono text-neutral-500">{{ store.corridor?.label }}</span>
             <span class="inline-flex items-center rounded bg-neutral-700 px-2 py-0.5 text-body-sm font-semibold text-neutral-300">
               {{ executionSignalBadge }}
             </span>

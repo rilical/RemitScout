@@ -86,6 +86,28 @@
           </label>
         </div>
 
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+          <label class="text-body-sm text-rs-muted">
+            Methodology version
+            <input
+              v-model="filters.methodology"
+              type="text"
+              placeholder="e.g., indices_v2"
+              class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+              @keydown.enter="applyFilters"
+            >
+          </label>
+          <label class="text-body-sm text-rs-muted">
+            As-of date (point-in-time query)
+            <input
+              v-model="filters.as_of"
+              type="date"
+              class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+              @change="applyFilters"
+            >
+          </label>
+        </div>
+
         <div class="mt-4">
           <div class="text-body-sm text-rs-muted">Send currency</div>
           <div class="mt-2 flex flex-wrap gap-2">
@@ -122,6 +144,7 @@
                   <th class="py-2 text-right">RVI (bps)</th>
                   <th class="py-2 text-right">Providers</th>
                   <th class="py-2 text-right">Weight conf</th>
+                  <th class="py-2 text-center">Status</th>
                   <th class="py-2 text-left">Suppression</th>
                 </tr>
               </thead>
@@ -137,6 +160,9 @@
                   <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.rvi_bps, 1) }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ row.provider_count ?? 'n/a' }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.weight_confidence, 3) }}</td>
+                  <td class="py-2 text-center">
+                    <PublicationStatusBadge :status="(row as any).publication_status" />
+                  </td>
                   <td class="py-2 text-body-sm text-rs-muted">
                     <div class="font-medium text-neutral-700">{{ row.suppression_flag ? 'suppressed' : 'ok' }}</div>
                     <div class="text-[11px] text-neutral-400">{{ row.suppression_reason || '—' }}</div>
@@ -144,7 +170,7 @@
                 </tr>
                 <tr v-if="rows.length === 0">
                   <td
-                    colspan="7"
+                    colspan="8"
                     class="py-3 text-center text-body-sm text-neutral-400"
                   >
                     No rows for this snapshot.
@@ -203,6 +229,53 @@
           </div>
         </div>
 
+        <!-- Correction ledger -->
+        <div class="rounded-2xl bg-surface p-6 shadow-sm">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between text-body-lg font-semibold text-rs-fg"
+            @click="correctionsOpen = !correctionsOpen"
+          >
+            Correction Ledger
+            <svg
+              class="h-4 w-4 text-rs-muted transition-transform duration-200"
+              :class="correctionsOpen ? 'rotate-180' : ''"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <p class="mt-1 text-body-sm text-rs-muted">Historical corrections to published index values.</p>
+          <div v-if="correctionsOpen" class="mt-4 overflow-auto">
+            <div v-if="correctionsLoading" class="text-body-sm text-rs-muted">Loading corrections…</div>
+            <table v-else-if="corrections.length" class="min-w-full text-body-sm">
+              <thead class="text-body-sm uppercase text-neutral-400">
+                <tr>
+                  <th class="py-2 text-left">Corridor</th>
+                  <th class="py-2 text-left">Field</th>
+                  <th class="py-2 text-right">Old</th>
+                  <th class="py-2 text-right">New</th>
+                  <th class="py-2 text-left">Reason</th>
+                  <th class="py-2 text-left">Methodology</th>
+                  <th class="py-2 text-left">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="c in corrections" :key="c.correction_id" class="border-t border-neutral-100">
+                  <td class="py-2 text-neutral-700">{{ c.corridor_id }}</td>
+                  <td class="py-2 text-neutral-700">{{ c.field_name }}</td>
+                  <td class="py-2 text-right text-neutral-600">{{ c.old_value != null ? formatAdminNumber(c.old_value, 6) : '—' }}</td>
+                  <td class="py-2 text-right text-neutral-600">{{ c.new_value != null ? formatAdminNumber(c.new_value, 6) : '—' }}</td>
+                  <td class="py-2 text-rs-muted">{{ c.reason }}</td>
+                  <td class="py-2"><MethodologyVersionBadge :version="c.methodology_version" /></td>
+                  <td class="py-2 text-rs-muted">{{ formatTimestamp(c.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-else class="text-body-sm text-rs-muted">No corrections recorded.</p>
+          </div>
+        </div>
+
         <div class="rounded-2xl bg-surface p-6 shadow-sm">
           <h2 class="text-body-lg font-semibold text-rs-fg">Index trend</h2>
           <label class="mt-3 block text-body-sm text-rs-muted">
@@ -251,6 +324,13 @@
             </div>
           </div>
 
+          <div
+            v-if="chartDataWindow?.capped && chartSeries.length"
+            class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-body-sm text-amber-700"
+          >
+            Data limited to {{ chartDataWindow.returnedDays }} days — full requested range not yet available.
+          </div>
+
           <p class="mt-3 text-body-sm text-rs-muted">
             TEER = effective rate, RCI/RVI trend from `/indices/series`.
           </p>
@@ -262,7 +342,10 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { getIndexSeries } from '~/lib/indicesApi'
+import type { IndexSeriesResponse } from '~/types/indices'
 import type { ChartSeries } from '~/types/pulse'
+import type { CorrectionLedgerEntry } from '~/types/data-quality'
+import { getCorrectionLedger } from '~/lib/opsApi'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -368,6 +451,7 @@ const pagination = reactive({ total: 0, limit: 200, offset: 0 })
 const rows = ref<GoldExportRow[]>([])
 const selectedCorridor = ref('')
 const chartSeries = ref<ChartSeries[]>([])
+const chartDataWindow = ref<IndexSeriesResponse['dataWindow'] | null>(null)
 const chartLoading = ref(false)
 const chartError = ref<string | null>(null)
 
@@ -375,7 +459,13 @@ const filters = reactive({
   q: '',
   suppressed: '' as '' | '0' | '1',
   sendCurrencies: [] as string[],
+  methodology: '' as string,
+  as_of: '' as string,
 })
+
+const corrections = ref<CorrectionLedgerEntry[]>([])
+const correctionsOpen = ref(false)
+const correctionsLoading = ref(false)
 
 const corridorOptions = computed(() => [...new Set(rows.value.map(row => row.corridor_id))])
 
@@ -396,11 +486,13 @@ const buildIndexSeries = (value: number | null): number | null =>
 const loadChart = async () => {
   if (!selectedCorridor.value) {
     chartSeries.value = []
+    chartDataWindow.value = null
     chartError.value = null
     return
   }
   if (!meta.date) {
     chartSeries.value = []
+    chartDataWindow.value = null
     chartError.value = 'Select a date first.'
     return
   }
@@ -453,6 +545,7 @@ const loadChart = async () => {
     ]
 
     chartSeries.value = series.filter(item => item.points.length > 0)
+    chartDataWindow.value = data.dataWindow ?? null
     if (!chartSeries.value.length) {
       chartError.value = 'No index history is available for this corridor yet.'
     }
@@ -460,6 +553,7 @@ const loadChart = async () => {
   catch (err: unknown) {
     chartError.value = err instanceof Error ? err.message : 'Failed to load index chart.'
     chartSeries.value = []
+    chartDataWindow.value = null
   }
   finally {
     chartLoading.value = false
@@ -478,6 +572,8 @@ const buildQuery = (includePaging = true) => {
   if (q) query.q = q
   if (filters.suppressed) query.suppressed = filters.suppressed
   if (filters.sendCurrencies.length > 0) query.send_currencies = filters.sendCurrencies.join(',')
+  if (filters.methodology) query.methodology = filters.methodology
+  if (filters.as_of) query.as_of = filters.as_of
 
   if (includePaging) {
     query.limit = pagination.limit
@@ -634,9 +730,26 @@ const downloadPdf = async () => {
   }
 }
 
+const loadCorrections = async () => {
+  correctionsLoading.value = true
+  try {
+    const res = await getCorrectionLedger({ limit: 50 })
+    corrections.value = res.corrections
+  }
+  catch {
+    corrections.value = []
+  }
+  finally {
+    correctionsLoading.value = false
+  }
+}
+
 const formatPercentRatio = (value?: number | null) => {
   return formatPercent(value, 2)
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  void loadCorrections()
+})
 </script>

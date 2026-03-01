@@ -73,6 +73,27 @@ setSeo({
 
 const errorMessage = ref<string | null>(null)
 
+const normalizeRedirect = (value: string): string => {
+  const trimmed = value.trim()
+  if (!trimmed) return '/dashboard'
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return trimmed
+  }
+  if (!import.meta.client || typeof window === 'undefined') {
+    return '/dashboard'
+  }
+  try {
+    const parsed = new URL(trimmed, window.location.origin)
+    if (parsed.origin === window.location.origin) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`
+    }
+  }
+  catch {
+    // ignore parse errors and fall back
+  }
+  return '/dashboard'
+}
+
 onMounted(async () => {
   if (!isConfigured.value) {
     if (supabaseSuppressConfigError) {
@@ -101,12 +122,11 @@ onMounted(async () => {
 
   await ensureHydrated()
 
-  const redirect = import.meta.client
-    ? sessionStorage.getItem('auth:redirect') || '/dashboard'
-    : '/dashboard'
-
+  let redirect = '/dashboard'
   if (import.meta.client) {
+    const stored = sessionStorage.getItem('auth:redirect') || ''
     sessionStorage.removeItem('auth:redirect')
+    redirect = normalizeRedirect(stored)
   }
 
   await navigateTo(redirect)

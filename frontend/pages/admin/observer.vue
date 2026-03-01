@@ -253,6 +253,117 @@
         </div>
       </section>
 
+      <!-- Agent-native platform summary -->
+      <section class="rounded-2xl bg-surface p-6 shadow-sm">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Platform Health</h2>
+            <p class="text-body-sm text-rs-muted">Module registry, self-healing pipeline, and corridor stress overview.</p>
+          </div>
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <NuxtLink
+            to="/admin/modules"
+            class="rounded-xl border border-rs-border p-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
+          >
+            <div class="text-body-sm font-semibold text-rs-fg">Module Registry</div>
+            <div class="mt-1 text-caption text-rs-muted">
+              {{ platformModuleHealthy }}/{{ platformModuleTotal }} healthy
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/admin/agents"
+            class="rounded-xl border border-rs-border p-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
+          >
+            <div class="text-body-sm font-semibold text-rs-fg">Self-Healing Pipeline</div>
+            <div class="mt-1 text-caption text-rs-muted">
+              {{ platformPendingBundles }} pending bundles
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/admin/stress"
+            class="rounded-xl border border-rs-border p-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
+          >
+            <div class="text-body-sm font-semibold text-rs-fg">Corridor Stress</div>
+            <div class="mt-1 text-caption text-rs-muted">
+              {{ platformStressElevated }} corridors elevated+
+            </div>
+          </NuxtLink>
+          <NuxtLink
+            to="/admin/data-quality"
+            class="rounded-xl border border-rs-border p-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
+          >
+            <div class="text-body-sm font-semibold text-rs-fg">Data Quality</div>
+            <div class="mt-1 text-caption text-rs-muted">Total Collection Error dashboard</div>
+          </NuxtLink>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="mb-3 text-body-md font-semibold text-rs-fg">Service Health</h3>
+          <div
+            v-if="serviceHealthLoading"
+            class="flex flex-wrap gap-3"
+          >
+            <div
+              v-for="label in ['Brain Service', 'Slack Frontdesk', 'Export Worker']"
+              :key="label"
+              class="rounded-xl border border-rs-border p-4"
+            >
+              <div class="flex items-center gap-2">
+                <span class="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-neutral-300" />
+                <span class="text-body-sm font-semibold text-rs-fg">{{ label }}</span>
+              </div>
+              <div class="mt-1 text-caption text-rs-muted">Checking...</div>
+            </div>
+          </div>
+          <div
+            v-else-if="serviceHealthUnavailable"
+            class="rounded-xl border border-rs-border p-4 text-body-sm text-rs-muted"
+          >
+            Health check unavailable
+          </div>
+          <div
+            v-else
+            class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            <div
+              v-for="tile in serviceHealthTiles"
+              :key="tile.service_id"
+              class="rounded-xl border border-rs-border p-4"
+            >
+              <div class="flex items-center gap-2">
+                <span
+                  class="inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                  :class="serviceStatusDotClass(tile)"
+                />
+                <span class="text-body-sm font-semibold text-rs-fg">{{ tile.display_name }}</span>
+              </div>
+              <div class="mt-1 text-caption text-rs-muted">
+                {{ tile.last_active_at ? formatTimestamp(tile.last_active_at) : 'No activity' }}
+              </div>
+              <div
+                v-if="tile.message"
+                class="mt-1 text-caption text-rs-muted"
+              >
+                {{ tile.message }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Self-healing KPI tiles -->
+        <div v-if="platformMetrics" class="mt-4">
+          <SelfHealingKpiTiles :metrics="platformMetrics" />
+        </div>
+
+        <!-- Recent agent actions inline -->
+        <div v-if="platformActions.length" class="mt-4 rounded-xl border border-rs-border p-4">
+          <div class="mb-3 text-body-sm font-semibold text-rs-fg">Recent Agent Actions</div>
+          <AgentActionTimeline :actions="platformActions" />
+        </div>
+      </section>
+
       <section class="rounded-2xl bg-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">AWS click-paths</h2>
         <p class="text-body-sm text-rs-muted">
@@ -705,11 +816,22 @@ n/a
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
+import type { AgentActionEntry, SelfHealingMetrics } from '~/types/agents'
+import {
+  getModuleHealth,
+  getSelfHealingMetrics,
+  getAgentActions,
+  getCorridorStressOverview,
+  getServiceHealth,
+  type ServiceHealthEntry,
+} from '~/lib/opsApi'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
 const runtimeConfig = useRuntimeConfig()
 const { formatPercent, formatNumber: formatAdminNumber, formatTimestamp } = useAdminFormat()
+const env = () => String(runtimeConfig.public.remitScoutEnv ?? 'dev').toLowerCase()
+const region = () => String(runtimeConfig.public.awsRegion ?? 'us-east-1')
 
 const normalizeEnv = (value?: string) => {
   const raw = (value || '').toLowerCase().trim()
@@ -719,8 +841,8 @@ const normalizeEnv = (value?: string) => {
   return raw
 }
 
-const envName = normalizeEnv((runtimeConfig.public as any).remitScoutEnv as string | undefined)
-const awsRegion = String((runtimeConfig.public as any).awsRegion || 'us-east-1')
+const envName = normalizeEnv(env())
+const awsRegion = region()
 
 const stackName = `remit-scout-${envName}`
 const bronzeBucket = `remit-scout-bronze-${envName}`
@@ -882,6 +1004,15 @@ type MeResponse = {
   }
 }
 
+const platformModuleTotal = ref(0)
+const platformModuleHealthy = ref(0)
+const platformPendingBundles = ref(0)
+const platformStressElevated = ref(0)
+const platformMetrics = ref<SelfHealingMetrics | null>(null)
+const platformActions = ref<AgentActionEntry[]>([])
+const serviceHealthLoading = ref(false)
+const serviceHealthResponse = ref<Awaited<ReturnType<typeof getServiceHealth>> | null>(null)
+
 const loading = ref(false)
 const ensuring = ref(false)
 const evaluating = ref(false)
@@ -963,6 +1094,42 @@ const watchedProviders = [
 const selectedProvider = computed(() =>
   providerHealth.value.find((provider) => provider.provider_id === selectedProviderId.value) ?? null,
 )
+
+const EXPECTED_SERVICES = [
+  { ids: ['brain', 'brain-worker'], label: 'Brain Service' },
+  { ids: ['slack-frontdesk', 'frontdesk'], label: 'Slack Frontdesk' },
+  { ids: ['export-worker', 'export'], label: 'Export Worker' },
+] as const
+
+const serviceHealthUnavailable = computed(() =>
+  serviceHealthResponse.value?.unavailable === true,
+)
+
+const serviceHealthTiles = computed((): ServiceHealthEntry[] => {
+  const res = serviceHealthResponse.value
+  if (!res?.services?.length && !res?.unavailable) return []
+  const services = res.services ?? []
+  return EXPECTED_SERVICES.map(({ ids, label }) => {
+    const match = services.find((s) => {
+      const sid = s.service_id.toLowerCase()
+      return ids.some(id => sid.includes(id) || sid.replace(/-/g, '') === id.replace(/-/g, ''))
+    })
+    if (match) return match
+    return {
+      service_id: ids[0],
+      display_name: label,
+      status: 'unknown' as const,
+      last_active_at: null,
+      message: null,
+    }
+  })
+})
+
+const serviceStatusDotClass = (tile: ServiceHealthEntry) => {
+  if (tile.status === 'healthy') return 'bg-emerald-500'
+  if (tile.status === 'degraded') return 'bg-amber-500'
+  return 'bg-red-500'
+}
 
 const providerCardClass = (provider: ProviderHealthAggregateItem) => {
   if (provider.status === 'error') return 'border-l-red-500 border-red-300 bg-red-50 dark:bg-red-900/10 dark:border-red-800'
@@ -1155,6 +1322,8 @@ const loadObserver = async () => {
     }
 
     lastRefresh.value = new Date().toISOString()
+
+    void loadPlatformData()
   }
   catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Failed to load observer status.'
@@ -1162,6 +1331,46 @@ const loadObserver = async () => {
   finally {
     loading.value = false
   }
+}
+
+const loadServiceHealth = async () => {
+  serviceHealthLoading.value = true
+  serviceHealthResponse.value = null
+  try {
+    serviceHealthResponse.value = await getServiceHealth()
+  }
+  catch {
+    serviceHealthResponse.value = { services: [], updatedAt: null, unavailable: true }
+  }
+  finally {
+    serviceHealthLoading.value = false
+  }
+}
+
+const loadPlatformData = async () => {
+  const [modulesRes, metricsRes, actionsRes, stressRes] = await Promise.allSettled([
+    getModuleHealth(),
+    getSelfHealingMetrics(),
+    getAgentActions({ limit: 10 }),
+    getCorridorStressOverview(),
+  ])
+  if (modulesRes.status === 'fulfilled') {
+    platformModuleTotal.value = modulesRes.value.modules.length
+    platformModuleHealthy.value = modulesRes.value.modules.filter(m => m.status === 'production').length
+  }
+  if (metricsRes.status === 'fulfilled') {
+    platformMetrics.value = metricsRes.value
+    platformPendingBundles.value = metricsRes.value.pending_bundles
+  }
+  if (actionsRes.status === 'fulfilled') {
+    platformActions.value = actionsRes.value.actions
+  }
+  if (stressRes.status === 'fulfilled') {
+    platformStressElevated.value = stressRes.value.corridors.filter(
+      c => c.stress_level !== 'normal',
+    ).length
+  }
+  void loadServiceHealth()
 }
 
 const refresh = () => {

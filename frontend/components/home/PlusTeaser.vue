@@ -17,7 +17,7 @@
           <span class="text-brand-600">send money every month.</span>
         </h2>
         <p class="text-body-lg text-white/70 max-w-2xl mx-auto mb-2 leading-relaxed">
-          Pulse access, 16 smart alerts, 90-day history, CSV/PDF exports, and an ad-free dashboard.
+          {{ headerDescription }}
         </p>
         <p class="text-body text-white/40">
           <template v-if="monthlyPrice">
@@ -33,7 +33,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
 
         <!-- Pulse — flagship, full row -->
-        <div class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg">
+        <div v-if="pulseEnabled" class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg">
           <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
             <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
               <Icon name="signal" :size="24" class="text-white" />
@@ -204,6 +204,15 @@
 import { computed } from 'vue'
 import { Icon } from '~/ui'
 import { useApi } from '~/composables/useApi'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+
+const { pulseEnabled } = useFeatureFlags()
+
+const headerDescription = computed(() =>
+  pulseEnabled.value
+    ? 'Pulse access, 16 smart alerts, 90-day history, CSV/PDF exports, and an ad-free dashboard.'
+    : '16 smart alerts, 90-day history, CSV/PDF exports, and an ad-free dashboard.',
+)
 
 const { request } = useApi()
 

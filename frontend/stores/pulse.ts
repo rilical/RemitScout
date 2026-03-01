@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { PulseFilters, TimeRange } from '~/types/pulse'
+import type { CorridorOption, PulseFilters, TimeRange } from '~/types/pulse'
 
 export type PulseTimeframe = '24H' | '7D' | '30D' | '1Y' | 'MAX'
 export type PulseViewMode = 'sender' | 'analyst'
@@ -17,7 +17,7 @@ export interface PulseCorridor {
 }
 
 export interface PulseState {
-  corridor: PulseCorridor
+  corridor: PulseCorridor | null
   timeframe: PulseTimeframe
   viewMode: PulseViewMode
   amount: number
@@ -25,21 +25,9 @@ export interface PulseState {
   isLoading: boolean
 }
 
-const DEFAULT_CORRIDOR: PulseCorridor = {
-  from: 'United States',
-  to: 'Philippines',
-  fromCode: 'USD',
-  toCode: 'PHP',
-  fromFlag: '🇺🇸',
-  toFlag: '🇵🇭',
-  label: 'USD → PHP',
-  slug: 'usd-php',
-  corridorId: 'US-PH-USD-PHP',
-}
-
 export const usePulseStore = defineStore('pulse', {
   state: (): PulseState => ({
-    corridor: DEFAULT_CORRIDOR,
+    corridor: null,
     timeframe: '7D',
     viewMode: 'sender',
     amount: 1000,
@@ -48,9 +36,9 @@ export const usePulseStore = defineStore('pulse', {
   }),
 
   getters: {
-    corridorSlug: state => state.corridor.slug,
+    corridorSlug: state => state.corridor?.slug ?? '',
 
-    corridorLabel: state => state.corridor.label,
+    corridorLabel: state => state.corridor?.label ?? '',
 
     timeframeDays: (state): number => {
       const map: Record<PulseTimeframe, number> = {
@@ -91,8 +79,8 @@ export const usePulseStore = defineStore('pulse', {
     },
 
     filtersForApi: (state): PulseFilters => ({
-      corridor: state.corridor.slug,
-      corridorId: state.corridor.corridorId,
+      corridor: state.corridor?.slug ?? '',
+      corridorId: state.corridor?.corridorId,
       amount: state.amount as 100 | 200 | 500 | 1000,
       fundingMethod: 'bank',
       payoutMethod: 'bank',
@@ -102,6 +90,23 @@ export const usePulseStore = defineStore('pulse', {
   actions: {
     setCorridor(corridor: PulseCorridor) {
       this.corridor = corridor
+    },
+
+    initCorridor(corridors: CorridorOption[]) {
+      if (this.corridor) return
+      if (!corridors.length) return
+      const best = [...corridors].sort((a, b) => (b.dataPoints ?? 0) - (a.dataPoints ?? 0))[0]
+      this.corridor = {
+        from: best.sourceCountry ?? best.label?.split('→')[0]?.trim() ?? '',
+        to: best.destCountry ?? best.label?.split('→')[1]?.trim() ?? '',
+        fromCode: best.fromCode,
+        toCode: best.toCode,
+        fromFlag: best.fromFlag,
+        toFlag: best.toFlag,
+        label: best.label,
+        slug: best.slug ?? best.value,
+        corridorId: best.corridorId ?? best.value,
+      }
     },
 
     setTimeframe(timeframe: PulseTimeframe) {
@@ -145,7 +150,7 @@ export const usePulseStore = defineStore('pulse', {
 
     getQueryParams(): Record<string, string> {
       const params: Record<string, string> = {}
-      if (this.corridor.slug !== 'usd-php') {
+      if (this.corridor && this.corridor.slug) {
         params.corridor = this.corridor.slug
         if (this.corridor.corridorId) {
           params.corridor_id = this.corridor.corridorId

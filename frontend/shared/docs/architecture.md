@@ -172,5 +172,5 @@ To make boundaries real (not aspirational), add mechanical checks:
 
 - Frontend is Nuxt (Vue SFC), not React.
 - Existing shared primitives already exist:
-  - `frontend/components/shared/CenteredPage.vue`
-  - `frontend/components/shared/DataTable.vue` (`terminal` / `dashboard` variants)
+  - `frontend/ui/CenteredPage/CenteredPage.vue`
+  - `frontend/ui/DataTable/DataTable.vue` (`terminal` / `consumer` variants)

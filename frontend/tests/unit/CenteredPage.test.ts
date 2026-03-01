@@ -1,29 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
-import CenteredPage from '~/components/shared/CenteredPage.vue'
+import CenteredPage from '~/ui/CenteredPage/CenteredPage.vue'
 
 describe('CenteredPage', () => {
-  it('renders header, content, and footer slots when provided', () => {
+  it('renders title and default slot', () => {
     const wrapper = mount(CenteredPage, {
+      props: { title: 'Page Title' },
       slots: {
-        header: 'Header',
         default: 'Content',
-        footer: 'Footer',
       },
     })
 
-    expect(wrapper.find('header').text()).toContain('Header')
-    expect(wrapper.find('main').text()).toContain('Content')
-    expect(wrapper.find('footer').text()).toContain('Footer')
+    expect(wrapper.find('h1').text()).toContain('Page Title')
+    expect(wrapper.text()).toContain('Content')
 
-    const container = wrapper.find('.max-w-page')
+    const container = wrapper.find('.mx-auto')
     expect(container.exists()).toBe(true)
     expect(container.classes()).toEqual(
-      expect.arrayContaining(['mx-auto', 'w-full', 'max-w-page', 'px-page-x', 'py-page-y']),
+      expect.arrayContaining(['mx-auto', 'w-full', 'max-w-page', 'px-page-x']),
     )
   })
 
-  it('does not render header/footer wrappers when slots are absent', () => {
+  it('does not render header when no title/subtitle/actions provided', () => {
     const wrapper = mount(CenteredPage, {
       slots: {
         default: 'Only content',
@@ -31,7 +29,6 @@ describe('CenteredPage', () => {
     })
 
     expect(wrapper.find('header').exists()).toBe(false)
-    expect(wrapper.find('footer').exists()).toBe(false)
-    expect(wrapper.find('main').text()).toContain('Only content')
+    expect(wrapper.text()).toContain('Only content')
   })
 })

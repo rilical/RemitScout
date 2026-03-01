@@ -114,14 +114,13 @@
       </div>
 
       <DataTable
-        variant="dashboard"
+        variant="consumer"
         :columns="columns"
         :rows="tableRows"
-        row-key="event_id"
+        :row-key="(row: any) => row.event_id ?? String(row)"
         :loading="loading"
-        :error="error || undefined"
-        :on-retry="refresh"
-        empty-text="No audit events found."
+        :error="error ? { message: error } : null"
+        :empty="{ title: 'No audit events found.' }"
       />
 
       <div class="mt-4 flex items-center justify-between">
@@ -151,7 +150,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import { DataTable } from '~/ui'
+import type { DataTableColumn } from '~/ui'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -179,16 +179,33 @@ const filters = reactive({
   severity: '',
 })
 
-const logs = ref<any[]>([])
-const pagination = ref({ total: 0, limit: 100, offset: 0 })
+type AuditLogEntry = {
+  event_id: string
+  created_at: string
+  action: string
+  actor_id: string | null
+  entity_type: string | null
+  entity_id: string | null
+  category: string | null
+  severity: string | null
+}
+
+type AuditPagination = {
+  total: number
+  limit: number
+  offset: number
+}
+
+const logs = ref<AuditLogEntry[]>([])
+const pagination = ref<AuditPagination>({ total: 0, limit: 100, offset: 0 })
 
 const columns: DataTableColumn[] = [
-  { key: 'created_at', header: 'Time' },
-  { key: 'action', header: 'Action' },
-  { key: 'actor_id', header: 'Actor' },
-  { key: 'entity', header: 'Entity' },
-  { key: 'category', header: 'Category' },
-  { key: 'severity', header: 'Severity' },
+  { key: 'created_at', label: 'Time' },
+  { key: 'action', label: 'Action' },
+  { key: 'actor_id', label: 'Actor' },
+  { key: 'entity', label: 'Entity' },
+  { key: 'category', label: 'Category' },
+  { key: 'severity', label: 'Severity' },
 ]
 
 const tableRows = computed(() =>
@@ -200,21 +217,38 @@ const tableRows = computed(() =>
   })),
 )
 
-const buildQuery = () => ({
-  start_date: new Date(startDate.value).toISOString(),
-  end_date: new Date(endDate.value).toISOString(),
-  actor_id: filters.actor_id || undefined,
-  action: filters.action || undefined,
-  category: filters.category || undefined,
-  severity: filters.severity || undefined,
-  limit: pagination.value.limit,
-  offset: pagination.value.offset,
-})
+const toUtcIsoBoundary = (value: string, boundary: 'start' | 'end') => {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null
+  const suffix = boundary === 'start' ? 'T00:00:00.000Z' : 'T23:59:59.999Z'
+  const date = new Date(`${value}${suffix}`)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+const buildQuery = () => {
+  const defaultStart = toUtcIsoBoundary(toDateInput(weekAgo), 'start')!
+  const defaultEnd = toUtcIsoBoundary(toDateInput(today), 'end')!
+  return {
+    start_date: toUtcIsoBoundary(startDate.value, 'start') || defaultStart,
+    end_date: toUtcIsoBoundary(endDate.value, 'end') || defaultEnd,
+    actor_id: filters.actor_id || undefined,
+    action: filters.action || undefined,
+    category: filters.category || undefined,
+    severity: filters.severity || undefined,
+    limit: pagination.value.limit,
+    offset: pagination.value.offset,
+  }
+}
 
 const loadLogs = async () => {
   const response = await getLogs(buildQuery())
-  logs.value = response?.logs || []
-  pagination.value = response?.pagination || pagination.value
+  logs.value = (response?.logs || []) as unknown as AuditLogEntry[]
+  const nextPagination = (response?.pagination || pagination.value) as AuditPagination
+  const maxOffset = Math.max(0, nextPagination.total - nextPagination.limit)
+  pagination.value = {
+    total: nextPagination.total,
+    limit: nextPagination.limit,
+    offset: Math.min(Math.max(0, nextPagination.offset), maxOffset),
+  }
 }
 
 const refresh = () => {
@@ -245,7 +279,8 @@ const prevPage = () => {
 }
 
 const nextPage = () => {
-  pagination.value.offset = Math.min(pagination.value.total, pagination.value.offset + pagination.value.limit)
+  const maxOffset = Math.max(0, pagination.value.total - pagination.value.limit)
+  pagination.value.offset = Math.min(maxOffset, pagination.value.offset + pagination.value.limit)
   void loadLogs()
 }
 

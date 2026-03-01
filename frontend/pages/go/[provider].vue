@@ -149,14 +149,51 @@ const readAttribution = () => {
   }
 }
 
-const sanitizeTarget = (value?: string | null) => {
+const normalizeHost = (host: string) => host.replace(/^www\./i, '').toLowerCase()
+
+const extractHost = (value?: string | null): string | null => {
+  if (!value) return null
+  try {
+    const parsed = new URL(value)
+    return normalizeHost(parsed.hostname)
+  }
+  catch {
+    return null
+  }
+}
+
+const isAllowedHost = (host: string, allowlist: string[]) => {
+  const normalizedHost = normalizeHost(host)
+  return allowlist.some((allowed) => {
+    const normalizedAllowed = normalizeHost(allowed)
+    return (
+      normalizedHost === normalizedAllowed ||
+      normalizedHost.endsWith(`.${normalizedAllowed}`)
+    )
+  })
+}
+
+const allowedTargetHosts = computed(() => {
+  const hosts = new Set<string>()
+  const providerUrlHost = extractHost(provider.value?.url)
+  const affiliateUrlHost = extractHost(provider.value?.affiliateUrl ?? null)
+  if (providerUrlHost) hosts.add(providerUrlHost)
+  if (affiliateUrlHost) hosts.add(affiliateUrlHost)
+  return [...hosts]
+})
+
+const sanitizeTarget = (value: string | null | undefined, allowlist: string[]) => {
   if (!value) return null
   const trimmed = value.trim()
   if (!trimmed) return null
   if (trimmed.startsWith('/')) return trimmed
   try {
     const parsed = new URL(trimmed)
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+    if (
+      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+      allowlist.length > 0 &&
+      isAllowedHost(parsed.hostname, allowlist)
+    ) {
       return parsed.toString()
     }
   }
@@ -182,9 +219,12 @@ const affiliateFlag = computed(() => {
 })
 
 const targetUrl = computed(() => {
-  const queryTarget = sanitizeTarget(getQueryValue('target'))
+  const queryTarget = sanitizeTarget(getQueryValue('target'), allowedTargetHosts.value)
   if (queryTarget) return queryTarget
-  const fallback = sanitizeTarget(provider.value?.affiliateUrl || provider.value?.url)
+  const fallback = sanitizeTarget(
+    provider.value?.affiliateUrl || provider.value?.url,
+    allowedTargetHosts.value,
+  )
   return fallback
 })
 

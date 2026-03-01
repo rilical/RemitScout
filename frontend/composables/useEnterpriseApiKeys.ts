@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useEntitlements } from '~/composables/useEntitlements'
-import type { DataTableColumn } from '~/components/shared/DataTable.vue'
+import type { DataTableColumn } from '~/ui'
 
 type ApiKeyRecord = {
   key_id: string
@@ -41,12 +41,12 @@ export function useEnterpriseApiKeys() {
   const apiKeyFromRow = (row: unknown): ApiKeyRecord => row as ApiKeyRecord
 
   const columns: DataTableColumn[] = [
-    { key: 'name', header: 'Name' },
-    { key: 'key_prefix', header: 'Prefix', widthClass: 'w-32' },
-    { key: 'scopes', header: 'Scopes' },
-    { key: 'last_used_at', header: 'Last Used' },
-    { key: 'revoked_at', header: 'Status' },
-    { key: 'actions', header: 'Actions', align: 'right', widthClass: 'w-40' },
+    { key: 'name', label: 'Name' },
+    { key: 'key_prefix', label: 'Prefix', widthClass: 'w-32' },
+    { key: 'scopes', label: 'Scopes' },
+    { key: 'last_used_at', label: 'Last Used' },
+    { key: 'revoked_at', label: 'Status' },
+    { key: 'actions', label: 'Actions', align: 'right', widthClass: 'w-40' },
   ]
 
   const rowKey = (row: unknown, rowIndex: number) => {

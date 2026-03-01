@@ -47,6 +47,7 @@
             :cta-to="isChartGated(chart) ? '/contact?type=enterprise&topic=pulse' : undefined"
             :cta-label="isChartGated(chart) ? 'Contact sales' : undefined"
             :disable-actions="isChartGated(chart)"
+            :days-available="props.daysAvailable"
             @view="handleView"
             @share="handleShare"
             @embed="handleEmbed"
@@ -77,11 +78,13 @@ interface Props {
   chartAvailability?: Record<string, ChartAvailabilityEntry>
   filters: PulseFilters
   pulseLevel?: PulseLevel
+  daysAvailable?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pulseLevel: 'none',
   chartAvailability: () => ({}),
+  daysAvailable: 0,
 })
 
 const emit = defineEmits<{

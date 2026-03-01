@@ -463,7 +463,7 @@ const chartMeta = computed(() => getChartById(chartId.value))
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
-  corridorId: (route.query.corridor_id as string) || store.corridor.corridorId,
+  corridorId: (route.query.corridor_id as string) || store.corridor?.corridorId,
   amount: (Number.parseInt(route.query.amount as string, 10) as AmountBucket) || 200,
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
@@ -482,7 +482,7 @@ const exportErrorMessage = ref<string | null>(null)
 let exportPollTimer: ReturnType<typeof setInterval> | null = null
 
 const exportCorridorId = computed(() => {
-  return filters.value.corridorId || store.corridor.corridorId || ''
+  return filters.value.corridorId || store.corridor?.corridorId || ''
 })
 
 const toIsoDate = (value: Date) => value.toISOString().split('T')[0]

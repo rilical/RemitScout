@@ -9,19 +9,19 @@
               class="flex items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-800 px-4 py-2.5 text-left transition-colors hover:border-brand-600"
               @click="showCorridorDropdown = !showCorridorDropdown"
             >
-              <span class="text-h3">{{ store.corridor.fromFlag }}</span>
+              <span class="text-h3">{{ store.corridor?.fromFlag }}</span>
               <Icon
                 name="arrow-right"
                 :size="16"
                 class="text-neutral-500"
               />
-              <span class="text-h3">{{ store.corridor.toFlag }}</span>
+              <span class="text-h3">{{ store.corridor?.toFlag }}</span>
               <div class="ml-2">
                 <div class="text-body-sm font-semibold text-white">
-                  {{ store.corridor.label }}
+                  {{ store.corridor?.label }}
                 </div>
                 <div class="text-body-sm text-neutral-400">
-                  {{ store.corridor.from }} to {{ store.corridor.to }}
+                  {{ store.corridor?.from }} to {{ store.corridor?.to }}
                 </div>
               </div>
               <Icon
@@ -41,35 +41,79 @@
                 <div class="mb-2 px-2 text-body-sm font-semibold uppercase tracking-wider text-neutral-500">
                   Tracked Corridors
                 </div>
-                <button
-                  v-for="corridor in corridors"
-                  :key="corridor.slug"
-                  class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-neutral-700"
-                  :class="{ 'bg-brand-600/20': corridor.slug === store.corridor.slug }"
-                  @click="selectCorridor(corridor)"
-                >
-                  <span class="text-h4">{{ corridor.fromFlag }}</span>
-                  <Icon
-                    name="arrow-right"
-                    :size="16"
-                    class="text-neutral-500"
-                  />
-                  <span class="text-h4">{{ corridor.toFlag }}</span>
-                  <div class="flex-1">
-                    <div class="text-body-sm font-medium text-white">
-                      {{ corridor.label }}
+                <input
+                  v-model="corridorSearch"
+                  type="text"
+                  placeholder="Search corridors..."
+                  class="mb-2 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm text-white placeholder-neutral-500 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+                />
+                <div class="max-h-80 overflow-y-auto">
+                  <template v-if="groupedCorridors.length > 0">
+                    <div
+                      v-for="group in groupedCorridors"
+                      :key="group.countryKey"
+                      class="mb-3"
+                    >
+                      <div class="mb-1 px-2 text-body-sm font-semibold text-neutral-400">
+                        {{ group.countryLabel }}
+                      </div>
+                      <button
+                        v-for="corridor in group.corridors"
+                        :key="corridor.slug ?? corridor.value"
+                        class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-neutral-700"
+                        :class="{ 'bg-brand-600/20': (corridor.slug ?? corridor.value) === store.corridor?.slug }"
+                        @click="selectCorridor(toPulseCorridor(corridor))"
+                      >
+                        <span
+                          class="relative flex h-2 w-2 shrink-0"
+                          :class="dataAvailabilityClass(corridor)"
+                        >
+                          <span
+                            v-if="isDataFresh(corridor)"
+                            class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                            :class="dataAvailabilityClass(corridor)"
+                          />
+                          <span class="relative inline-flex h-2 w-2 rounded-full" :class="dataAvailabilityClass(corridor)" />
+                        </span>
+                        <span class="text-h4">{{ corridor.fromFlag }}</span>
+                        <Icon
+                          name="arrow-right"
+                          :size="16"
+                          class="text-neutral-500"
+                        />
+                        <span class="text-h4">{{ corridor.toFlag }}</span>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-body-sm font-medium text-white">
+                            {{ corridor.label }}
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-body-sm text-neutral-400">
+                              {{ corridor.fromCode }} → {{ corridor.toCode }}
+                            </span>
+                            <span
+                              v-if="typeof corridor.dataPoints === 'number'"
+                              class="text-[11px] text-neutral-500"
+                            >
+                              {{ formatNumber(corridor.dataPoints) }} pts
+                            </span>
+                          </div>
+                        </div>
+                        <Icon
+                          v-if="(corridor.slug ?? corridor.value) === store.corridor?.slug"
+                          name="check"
+                          :size="16"
+                          class="shrink-0 text-brand-600"
+                        />
+                      </button>
                     </div>
-                    <div class="text-body-sm text-neutral-400">
-                      {{ corridor.from }}
-                    </div>
+                  </template>
+                  <div
+                    v-else
+                    class="py-8 text-center text-body-sm text-neutral-500"
+                  >
+                    No corridors available
                   </div>
-                  <Icon
-                    v-if="corridor.slug === store.corridor.slug"
-                    name="check"
-                    :size="16"
-                    class="text-brand-600"
-                  />
-                </button>
+                </div>
               </div>
             </div>
           </div>
@@ -113,7 +157,7 @@
         <!-- Center: Timeframe Toggle -->
         <div class="flex items-center gap-1 rounded-lg bg-neutral-800 p-1">
           <button
-            v-for="tf in timeframes"
+            v-for="tf in availableTimeframes"
             :key="tf"
             class="rounded-md px-4 py-2 text-body-sm font-semibold transition-colors"
             :class="store.timeframe === tf
@@ -153,7 +197,7 @@
     <div
       v-if="showCorridorDropdown"
       class="fixed inset-0 z-40"
-      @click="showCorridorDropdown = false"
+      @click="closeCorridorDropdown"
     />
   </div>
 </template>
@@ -166,16 +210,101 @@ import type { CorridorOption, PulseCoverageSummary } from '~/types/pulse'
 import { formatNumber as formatNumberValue, formatUpdatedLabel } from '~/shared/lib/format'
 import { Icon } from '~/ui'
 import { COUNTRIES } from '~/utils/countries-currencies'
+import { usePulseTimeframes } from '~/composables/usePulseTimeframes'
 
 const store = usePulseStore()
 
 const showCorridorDropdown = ref(false)
+const corridorSearch = ref('')
 
-const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
+const selectedCorridorOption = computed<CorridorOption | null>(() => {
+  const slug = store.corridor?.slug
+  const corridorId = store.corridor?.corridorId
+  if (!slug && !corridorId) return null
+  return rawCorridorOptions.value.find(
+    c => (c.slug ?? c.value) === slug || c.corridorId === corridorId,
+  ) ?? null
+})
+
+const daysAvailable = computed(() => {
+  const c = selectedCorridorOption.value
+  if (!c?.minDate || !c?.maxDate) return 0
+  const min = new Date(c.minDate).getTime()
+  const max = new Date(c.maxDate).getTime()
+  if (Number.isNaN(min) || Number.isNaN(max)) return 0
+  return Math.ceil((max - min) / 86400000)
+})
+
+const { availableTimeframes, isTimeframeSufficient } = usePulseTimeframes(daysAvailable)
 
 const summary = ref<PulseCoverageSummary | null>(null)
 
 const { data: corridorData } = await useAsyncData('pulse-corridors', () => getCorridors())
+
+const rawCorridorOptions = computed<CorridorOption[]>(() => corridorData.value ?? [])
+
+function matchesSearch(option: CorridorOption, q: string): boolean {
+  if (!q.trim()) return true
+  const lower = q.trim().toLowerCase()
+  const fields = [
+    option.label,
+    option.slug,
+    option.value,
+    option.fromCode,
+    option.toCode,
+    option.sourceCountry,
+    option.destCountry,
+    toCountryName(option.sourceCountry),
+    toCountryName(option.destCountry),
+  ].filter(Boolean).map(String)
+  return fields.some(f => f.toLowerCase().includes(lower))
+}
+
+const filteredCorridors = computed<CorridorOption[]>(() => {
+  const list = rawCorridorOptions.value
+  const q = corridorSearch.value
+  if (!q.trim()) return list
+  return list.filter(opt => matchesSearch(opt, q))
+})
+
+const groupedCorridors = computed(() => {
+  const list = filteredCorridors.value
+  const groups = new Map<string, { countryKey: string; countryLabel: string; corridors: CorridorOption[] }>()
+  for (const opt of list) {
+    const parts = opt.corridorId ? opt.corridorId.split('-') : []
+    const countryKey = (opt.sourceCountry || parts[0] || opt.fromCode || 'XX').toUpperCase()
+    const countryLabel = toCountryName(countryKey) || countryKey
+    const existing = groups.get(countryKey)
+    const sorted = [...(existing?.corridors ?? []), opt].sort((a, b) => (b.dataPoints ?? 0) - (a.dataPoints ?? 0))
+    groups.set(countryKey, {
+      countryKey,
+      countryLabel,
+      corridors: sorted,
+    })
+  }
+  return Array.from(groups.values()).sort((a, b) => a.countryLabel.localeCompare(b.countryLabel))
+})
+
+function dataAvailabilityClass(option: CorridorOption): string {
+  const maxDate = option.maxDate || option.lastUpdated
+  if (!maxDate) return 'bg-neutral-500'
+  const ts = new Date(maxDate).getTime()
+  if (Number.isNaN(ts)) return 'bg-neutral-500'
+  const ageMs = Date.now() - ts
+  const ageHours = ageMs / (1000 * 60 * 60)
+  if (ageHours <= 24) return 'bg-green-500'
+  if (ageHours <= 24 * 7) return 'bg-amber-500'
+  return 'bg-neutral-500'
+}
+
+function isDataFresh(option: CorridorOption): boolean {
+  const maxDate = option.maxDate || option.lastUpdated
+  if (!maxDate) return false
+  const ts = new Date(maxDate).getTime()
+  if (Number.isNaN(ts)) return false
+  const ageMs = Date.now() - ts
+  return ageMs <= 24 * 60 * 60 * 1000
+}
 
 const toCountryName = (code?: string | null): string => {
   if (!code) return ''
@@ -209,10 +338,6 @@ const toPulseCorridor = (option: CorridorOption): PulseCorridor => {
   }
 }
 
-const corridors = computed<PulseCorridor[]>(() => {
-  return (corridorData.value || []).map(toPulseCorridor)
-})
-
 const hasLastUpdated = computed(() => {
   if (!store.lastUpdated) return false
   const time = new Date(store.lastUpdated).getTime()
@@ -224,9 +349,14 @@ const updatedLabel = computed(() => {
   return formatUpdatedLabel(hasLastUpdated.value ? store.lastUpdated : null)
 })
 
+function closeCorridorDropdown() {
+  showCorridorDropdown.value = false
+  corridorSearch.value = ''
+}
+
 function selectCorridor(corridor: PulseCorridor) {
   store.setCorridor(corridor)
-  showCorridorDropdown.value = false
+  closeCorridorDropdown()
 }
 
 function handleAmountChange(event: Event) {
@@ -236,7 +366,7 @@ function handleAmountChange(event: Event) {
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    showCorridorDropdown.value = false
+    closeCorridorDropdown()
   }
 }
 
@@ -273,5 +403,18 @@ watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => loadSummary(),
   { deep: true },
+)
+
+watch(
+  [availableTimeframes, () => store.timeframe],
+  () => {
+    if (!isTimeframeSufficient(store.timeframe)) {
+      const tfs = availableTimeframes.value
+      if (tfs.length > 0) {
+        store.setTimeframe(tfs[tfs.length - 1])
+      }
+    }
+  },
+  { immediate: true },
 )
 </script>

@@ -5,7 +5,7 @@
         Provider Leaderboard
       </h2>
       <p class="text-body-sm text-neutral-400">
-        Ranked by delivered amount for {{ store.corridor.label }} | {{ amountDisplay }}
+        Ranked by delivered amount for {{ store.corridor?.label }} | {{ amountDisplay }}
       </p>
     </div>
 
@@ -123,8 +123,8 @@ const store = usePulseStore()
 const loading = ref(true)
 const rows = ref<PulseProviderBenchmarkRow[]>([])
 
-const sendCurrency = computed(() => store.corridor.fromCode || 'USD')
-const recvCurrency = computed(() => store.corridor.toCode || 'USD')
+const sendCurrency = computed(() => store.corridor?.fromCode || 'USD')
+const recvCurrency = computed(() => store.corridor?.toCode || 'USD')
 
 const amountDisplay = computed(() => formatMoney(store.amount, { currency: sendCurrency.value, maximumFractionDigits: 0 }))
 const sendMoney = (amount: number) => formatMoney(amount, { currency: sendCurrency.value })

@@ -171,7 +171,7 @@
                 </svg>
                 <span class="text-body-sm text-neutral-300">16 smart alerts + 16 watchlist corridors</span>
               </div>
-              <div class="flex items-start gap-2">
+              <div v-if="pulseEnabled" class="flex items-start gap-2">
                 <svg
                   class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"
@@ -253,7 +253,10 @@
 import { computed, ref } from 'vue'
 import { CenteredPage } from '~/ui'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { formatMoney as formatMoneyValue } from '~/shared/lib/format'
+
+const { pulseEnabled } = useFeatureFlags()
 
 const processing = ref(false)
 const { isAuthenticated, user } = useAuth()

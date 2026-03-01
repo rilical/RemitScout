@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) return
 
-  const { ensureHydrated, isAuthenticated, user, isAdmin } = useAuth()
+  const { ensureHydrated, isAuthenticated } = useAuth()
   const { request } = useApi()
 
   await ensureHydrated()
@@ -9,10 +9,7 @@ export default defineNuxtRouteMiddleware(async () => {
     return navigateTo('/sign-in')
   }
 
-  if (isAdmin.value || user.value?.isAdmin) {
-    return
-  }
-
+  // Always verify admin status server-side; never trust client-state alone.
   try {
     const me = await request<{ user?: { is_admin?: boolean } }>('/me', { retries: 0 })
     if (!me?.user?.is_admin) {

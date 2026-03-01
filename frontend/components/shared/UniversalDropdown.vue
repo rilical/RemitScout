@@ -60,49 +60,67 @@
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="fixed z-modal mt-1 max-h-60 w-full overflow-auto rounded-lg border border-rs-border bg-surface py-1 shadow-xl"
+          class="fixed z-modal mt-1 max-h-60 w-full overflow-hidden rounded-lg border border-rs-border bg-surface shadow-xl"
           :style="dropdownStyle"
           role="listbox"
           :aria-labelledby="labelId"
         >
-          <button
-            v-for="(option, index) in normalizedOptions"
-            :key="getOptionValue(option, index)"
-            type="button"
-            :class="[
-              'w-full px-3 py-2 text-body-sm text-left flex items-center transition-all',
-              isOptionDisabled(option)
-                ? 'text-neutral-400 cursor-not-allowed'
-                : isSelected(option, index)
-                  ? getOptionValue(option, index) === 'sendScore'
-                    ? 'bg-gradient-to-r from-accent-600 to-primary-50 border-l-4 border-accent-600 text-accent-600 font-semibold'
-                    : 'bg-primary-50 text-brand-600 font-medium'
-                  : 'text-rs-fg hover:bg-neutral-50',
-              index === highlightedIndex && !isSelected(option, index) && !isOptionDisabled(option) ? 'bg-neutral-50' : '',
-              getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) && !isOptionDisabled(option)
-                ? 'hover:bg-gradient-to-r hover:from-accent-600/50 hover:to-primary-50/50'
-                : '',
-            ]"
-            role="option"
-            :aria-selected="isSelected(option, index)"
-            :aria-disabled="isOptionDisabled(option)"
-            @mousedown.prevent="handleOptionClick(option, index)"
-            @touchstart.prevent="handleOptionClick(option, index)"
-            @mouseenter="highlightedIndex = index"
-          >
-            <slot
-              name="option"
-              :option="option"
-              :index="index"
-            >
-              {{ getOptionLabel(option, index) }}
-            </slot>
-          </button>
           <div
-            v-if="normalizedOptions.length === 0"
-            class="px-3 py-2 text-body-sm text-rs-muted text-center"
+            v-if="searchable"
+            class="sticky top-0 bg-surface border-b border-rs-border px-3 py-2"
           >
-            No options available
+            <input
+              ref="searchInputRef"
+              v-model="searchQuery"
+              type="text"
+              class="w-full rounded-md border border-neutral-300 bg-surface px-2.5 py-1.5 text-body-sm text-rs-fg placeholder:text-rs-muted focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+              placeholder="Search…"
+              @keydown.escape.stop="close"
+              @keydown.arrow-down.prevent="handleArrowDown"
+              @keydown.arrow-up.prevent="handleArrowUp"
+              @keydown.enter.prevent="selectHighlightedOrFirst"
+            >
+          </div>
+          <div class="max-h-52 overflow-auto py-1">
+            <button
+              v-for="(option, index) in filteredOptions"
+              :key="getOptionValue(option, index)"
+              type="button"
+              :class="[
+                'w-full px-3 py-2 text-body-sm text-left flex items-center transition-all',
+                isOptionDisabled(option)
+                  ? 'text-neutral-400 cursor-not-allowed'
+                  : isSelected(option, index)
+                    ? getOptionValue(option, index) === 'sendScore'
+                      ? 'bg-gradient-to-r from-accent-600 to-primary-50 border-l-4 border-accent-600 text-accent-600 font-semibold'
+                      : 'bg-primary-50 text-brand-600 font-medium'
+                    : 'text-rs-fg hover:bg-neutral-50',
+                index === highlightedIndex && !isSelected(option, index) && !isOptionDisabled(option) ? 'bg-neutral-50' : '',
+                getOptionValue(option, index) === 'sendScore' && !isSelected(option, index) && !isOptionDisabled(option)
+                  ? 'hover:bg-gradient-to-r hover:from-accent-600/50 hover:to-primary-50/50'
+                  : '',
+              ]"
+              role="option"
+              :aria-selected="isSelected(option, index)"
+              :aria-disabled="isOptionDisabled(option)"
+              @mousedown.prevent="handleOptionClick(option, index)"
+              @touchstart.prevent="handleOptionClick(option, index)"
+              @mouseenter="highlightedIndex = index"
+            >
+              <slot
+                name="option"
+                :option="option"
+                :index="index"
+              >
+                {{ getOptionLabel(option, index) }}
+              </slot>
+            </button>
+            <div
+              v-if="filteredOptions.length === 0"
+              class="px-3 py-2 text-body-sm text-rs-muted text-center"
+            >
+              {{ searchable && searchQuery ? 'No matches' : 'No options available' }}
+            </div>
           </div>
         </div>
       </Transition>
@@ -128,6 +146,7 @@ interface Props {
   disabled?: boolean
   placeholder?: string
   buttonClass?: string
+  searchable?: boolean
   getOptionLabel?: (option: DropdownOption | string, index: number) => string
   getOptionValue?: (option: DropdownOption | string, index: number) => string | number
 }
@@ -137,6 +156,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   placeholder: 'Select an option',
   buttonClass: '',
+  searchable: false,
   getOptionLabel: undefined,
   getOptionValue: undefined,
 })
@@ -147,9 +167,11 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLElement | null>(null)
 const dropdownRef = ref<HTMLElement | null>(null)
+const searchInputRef = ref<HTMLInputElement | null>(null)
 const isOpen = ref(false)
 const highlightedIndex = ref(-1)
 const isMounted = ref(false)
+const searchQuery = ref('')
 const dropdownStyle = ref<{ top: string, left: string, width: string }>({
   top: '0px',
   left: '0px',
@@ -164,6 +186,15 @@ const normalizedOptions = computed<NormalizedOption[]>(() => {
       return { label: option, value: option, __raw: option }
     }
     return option
+  })
+})
+
+const filteredOptions = computed<NormalizedOption[]>(() => {
+  if (!props.searchable || !searchQuery.value) return normalizedOptions.value
+  const q = searchQuery.value.toLowerCase()
+  return normalizedOptions.value.filter((opt) => {
+    const label = opt.label || String(opt.value)
+    return label.toLowerCase().includes(q)
   })
 })
 
@@ -248,15 +279,18 @@ function toggle() {
 
 function open() {
   isOpen.value = true
-  highlightedIndex.value = normalizedOptions.value.findIndex((opt, idx) => isSelected(opt, idx))
+  searchQuery.value = ''
+  highlightedIndex.value = filteredOptions.value.findIndex((opt, idx) => isSelected(opt, idx))
   nextTick(() => {
     updateDropdownPosition()
+    if (props.searchable) searchInputRef.value?.focus()
   })
 }
 
 function close() {
   isOpen.value = false
   highlightedIndex.value = -1
+  searchQuery.value = ''
 }
 
 function selectOption(option: NormalizedOption, index: number) {
@@ -270,13 +304,23 @@ function handleOptionClick(option: NormalizedOption, index: number) {
   selectOption(option, index)
 }
 
+function selectHighlightedOrFirst() {
+  const opts = filteredOptions.value
+  if (opts.length === 0) return
+  const idx = highlightedIndex.value >= 0 && highlightedIndex.value < opts.length
+    ? highlightedIndex.value
+    : 0
+  const option = opts[idx]
+  if (!isOptionDisabled(option)) selectOption(option, idx)
+}
+
 function handleArrowDown() {
   if (!isOpen.value) {
     open()
     return
   }
 
-  if (highlightedIndex.value < normalizedOptions.value.length - 1) {
+  if (highlightedIndex.value < filteredOptions.value.length - 1) {
     highlightedIndex.value++
   }
   else {
@@ -298,7 +342,7 @@ function handleArrowUp() {
     highlightedIndex.value--
   }
   else {
-    highlightedIndex.value = normalizedOptions.value.length - 1
+    highlightedIndex.value = filteredOptions.value.length - 1
   }
 
   nextTick(() => {
@@ -342,6 +386,10 @@ function handleScroll(event: Event) {
 
   updateDropdownPosition()
 }
+
+watch(searchQuery, () => {
+  highlightedIndex.value = 0
+})
 
 watch(isOpen, (open) => {
   if (open) {

@@ -470,8 +470,11 @@ const getCircuit = (key: string): BackendCircuit => {
 }
 
 const logCircuit = (payload: Record<string, unknown>) => {
-  // Use structured logs for ops correlation.
   console.warn(JSON.stringify({ ...payload, scope: 'backend_proxy_circuit' }))
+}
+
+const logBackendError = (event: string, context: Record<string, unknown>) => {
+  console.error(JSON.stringify({ ...context, scope: 'backend_proxy', event }))
 }
 
 const openCircuit = (key: string, requestId: string, reason: string) => {
@@ -598,7 +601,7 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
   if (isE2eMockEnabled()) {
     if (isProdLikeEnvironment() && !hasLoggedCriticalE2eMockWarning) {
       hasLoggedCriticalE2eMockWarning = true
-      console.error('[CRITICAL] E2E_MOCK_API is enabled in staging/production-like runtime — API responses are mocked', {
+      logBackendError('e2e_mock_enabled_in_prod_like', {
         nodeEnv: process.env.NODE_ENV || null,
         environment: process.env.ENVIRONMENT || null,
       })
@@ -767,8 +770,7 @@ export const proxyToBackend = async (event: any, path: string, options: ProxyOpt
     }
 
     if (statusCode && statusCode >= 500) {
-      // Log full backend error details server-side (sanitized client response).
-      console.error(JSON.stringify({ requestId, target: path, statusCode, backendError: error?.data }))
+      logBackendError('backend_5xx', { requestId, target: path, statusCode, backendError: error?.data })
 
       setResponseStatus(event, 503)
       return {
