@@ -1,6 +1,7 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
 import { createLogger } from '../../../shared/logger'
+import { parseCorridorId } from '../../../shared/corridor'
 
 const logger = createLogger('plane-b.triangulation.engine')
 
@@ -167,8 +168,14 @@ export class TriangulationEngine {
   private validateSignal(
     raw: Partial<StressSignal> & Pick<StressSignal, 'corridorId' | 'signalType' | 'intensity' | 'source'>,
   ): StressSignal | null {
-    // Corridor ID must be a non-empty string matching "XXX-YYY" pattern
-    if (!raw.corridorId || !/^[A-Z]{3}-[A-Z]{3}$/.test(raw.corridorId)) {
+    // Corridor ID must be a non-empty string matching either:
+    // - 4-part format: "XX-YY-XXX-YYY" (sourceCountry-destCountry-sourceCurrency-destCurrency)
+    // - 2-part format: "XXX-YYY" (currency pair, used for triangulation legs)
+    if (
+      !raw.corridorId ||
+      (!/^[A-Z]{2,3}-[A-Z]{2,3}-[A-Z]{3}-[A-Z]{3}$/.test(raw.corridorId) &&
+       !/^[A-Z]{3}-[A-Z]{3}$/.test(raw.corridorId))
+    ) {
       logger.warn('stress_signal_invalid_corridor', { corridorId: raw.corridorId })
       return null
     }
@@ -346,8 +353,11 @@ export class TriangulationEngine {
     methodProfile: string,
     date: string,
   ): Promise<TriangulatedResult | null> {
-    const [sendCurrency, receiveCurrency] = corridorId.split('-')
-    if (!sendCurrency || !receiveCurrency) return null
+    // Corridor ID is 4-part: sourceCountry-destCountry-sourceCurrency-destCurrency
+    // e.g. "US-PH-USD-PHP" — extract currency codes at positions 2 and 3
+    const parsed = parseCorridorId(corridorId)
+    if (!parsed) return null
+    const { sourceCurrency: sendCurrency, destCurrency: receiveCurrency } = parsed
 
     let bestResult: TriangulatedResult | null = null
     let bestConfidenceScore = 0
@@ -402,9 +412,17 @@ export class TriangulationEngine {
   }
 
   /**
-   * Load index data for a single leg corridor.
+   * Load index data for a single leg identified by a currency pair.
+   *
+   * The legId is a 2-part string like "USD-EUR" (sourceCurrency-destCurrency).
+   * Since corridor_id in the database is 4-part ("US-GB-USD-GBP"), we join
+   * through silver.corridor to match by source_currency and dest_currency.
    */
-  private async loadLeg(corridorId: string, amountBucket: number, date: string): Promise<TriangulationLeg | null> {
+  private async loadLeg(legId: string, amountBucket: number, date: string): Promise<TriangulationLeg | null> {
+    const legParts = legId.split('-')
+    if (legParts.length !== 2 || !legParts[0] || !legParts[1]) return null
+    const [legSourceCurrency, legDestCurrency] = legParts
+
     const { rows } = await this.pool.query<{
       teer: string | null
       rci: string | null
@@ -415,13 +433,15 @@ export class TriangulationEngine {
          AVG(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END) as teer,
          STDDEV(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END)
            / NULLIF(AVG(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END), 0) as rci,
-         COUNT(DISTINCT provider_id) as provider_count,
-         MAX(observed_at) as max_observed
-       FROM silver.observation
-       WHERE corridor_id = $1 AND type = 'quote' AND amount_bucket = $2
-         AND observed_at >= $3::date - INTERVAL '1 day'
-         AND confidence IN ('high', 'medium')`,
-      [corridorId, amountBucket, date],
+         COUNT(DISTINCT o.provider_id) as provider_count,
+         MAX(o.observed_at) as max_observed
+       FROM silver.observation o
+       JOIN silver.corridor c ON c.corridor_id = o.corridor_id
+       WHERE c.source_currency = $1 AND c.dest_currency = $2
+         AND o.type = 'quote' AND o.amount_bucket = $3
+         AND o.observed_at >= $4::date - INTERVAL '1 day'
+         AND o.confidence IN ('high', 'medium')`,
+      [legSourceCurrency, legDestCurrency, amountBucket, date],
     )
 
     if (rows.length === 0 || !rows[0].provider_count || rows[0].provider_count === '0') {
@@ -432,7 +452,7 @@ export class TriangulationEngine {
     const freshness = maxObserved ? (Date.now() - maxObserved.getTime()) / 60_000 : Infinity
 
     return {
-      corridorId,
+      corridorId: legId,
       teer: rows[0].teer ? parseFloat(rows[0].teer) : null,
       rci: rows[0].rci ? parseFloat(rows[0].rci) : null,
       providerCount: parseInt(rows[0].provider_count, 10),
