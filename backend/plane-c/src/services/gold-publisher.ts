@@ -14,7 +14,10 @@ type QuoteRecord = {
 }
 
 export class GoldPublisher {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly silverPool: Pool,
+    private readonly goldPool: Pool = silverPool,
+  ) {}
 
   async aggregateCorridorData(corridorId: string): Promise<AggregatedData | null> {
     const timestampBucket = this.getCurrent4HourBucket()
@@ -49,7 +52,7 @@ export class GoldPublisher {
           AND qr.collected_at >= $5::timestamptz
           AND qr.collected_at < $6::timestamptz`,
       [corridorId, amountBucket, payoutMethod, payinMethods, timestampBucket, bucketEnd],
-      this.pool,
+      this.silverPool,
     )
 
     if (result.rows.length === 0) {
@@ -69,10 +72,10 @@ export class GoldPublisher {
       providerAverages.set(providerId, avg)
     }
 
-    const allRates = result.rows.map((row) => Number(row.implied_fx_rate))
-    const avgRate = allRates.reduce((sum, rate) => sum + rate, 0) / allRates.length
-    const minRate = Math.min(...allRates)
-    const maxRate = Math.max(...allRates)
+    const providerAverageRates = Array.from(providerAverages.values())
+    const avgRate = providerAverageRates.reduce((sum, rate) => sum + rate, 0) / providerAverageRates.length
+    const minRate = Math.min(...providerAverageRates)
+    const maxRate = Math.max(...providerAverageRates)
 
     const providerCount = providerAverages.size
     const contributorCount = providerCount
@@ -84,16 +87,9 @@ export class GoldPublisher {
     let topProviderShare = 0
     let topTwoShare = 0
 
-    if (providerCount > 0 && result.rows.length > 0) {
-      const topProviderQuotes = providerRates.get(sortedProviders[0])?.length || 0
-      topProviderShare = topProviderQuotes / result.rows.length
-
-      if (providerCount >= 2) {
-        const topTwoQuotes =
-          (providerRates.get(sortedProviders[0])?.length || 0) +
-          (providerRates.get(sortedProviders[1])?.length || 0)
-        topTwoShare = topTwoQuotes / result.rows.length
-      }
+    if (providerCount > 0) {
+      topProviderShare = 1 / providerCount
+      topTwoShare = providerCount >= 2 ? Math.min(1, 2 / providerCount) : topProviderShare
     }
 
     return {
@@ -108,6 +104,9 @@ export class GoldPublisher {
       contributorCount,
       metadata: {
         provider_ids: sortedProviders,
+        provider_quote_counts: Object.fromEntries(
+          sortedProviders.map((providerId) => [providerId, providerRates.get(providerId)?.length ?? 0]),
+        ),
       },
     }
   }
@@ -158,7 +157,7 @@ export class GoldPublisher {
         data.contributorCount,
         data.metadata ? JSON.stringify(data.metadata) : null,
       ],
-      this.pool,
+      this.goldPool,
     )
   }
 
@@ -168,7 +167,7 @@ export class GoldPublisher {
          FROM silver.corridor
         ORDER BY corridor_id`,
       [],
-      this.pool,
+      this.silverPool,
     )
 
     const corridors = corridorResult.rows.map((row) => row.corridor_id)
@@ -250,9 +249,9 @@ export class GoldPublisher {
       // Log connection pool stats periodically
       if (i % (batchSize * 5) === 0) {
         const poolStats = {
-          total: this.pool.totalCount,
-          idle: this.pool.idleCount,
-          waiting: this.pool.waitingCount,
+          total: this.silverPool.totalCount,
+          idle: this.silverPool.idleCount,
+          waiting: this.silverPool.waitingCount,
         }
         logger.debug('publisher_pool_stats', poolStats)
       }

@@ -1117,6 +1117,7 @@ export const runQueueWorker = async (options?: { once?: boolean }) => {
           await recordWorkerMetric('export-queue-worker', 'message_failed', 1)
           await sendToDLQ(queueUrl, message, err)
           await recordWorkerMetric('export-queue-worker', 'dlq_sent', 1)
+          deleteHandles.push(message.receiptHandle)
         } finally {
           activeExtenders.delete(extender)
           await extender()

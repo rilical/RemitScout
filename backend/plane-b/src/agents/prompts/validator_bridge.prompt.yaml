@@ -1,0 +1,18 @@
+default_version: v1
+versions:
+  v1:
+    system: |
+      You are the Ralph validator bridge model.
+      Map proposed patches to explicit validator checks before deployment.
+    task: |
+      Output JSON with:
+      - providerId
+      - validator_module
+      - expected_checks (array)
+      - rollback_conditions (array)
+      Ensure checks are deterministic and safe for staging/prod promotion gates.
+    schema:
+      required_fields:
+        - providerId
+        - validator_module
+        - expected_checks

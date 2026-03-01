@@ -6,6 +6,7 @@ import {
   DeleteEndpointCommand,
 } from '@aws-sdk/client-sns'
 import type { Pool } from 'pg'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { formatError } from '../../../shared/utils/error-handling'
 
@@ -47,20 +48,12 @@ type DeliveryResult = {
 let snsClient: SNSClient | null = null
 let webPushConfigured = false
 
-const toBoolean = (value: string | undefined) => value === '1' || value === 'true'
-
 const getWebPushConfig = () => {
-  const publicKey =
-    process.env.PUSH_WEB_VAPID_PUBLIC_KEY ||
-    process.env.PUSH_VAPID_PUBLIC_KEY ||
-    process.env.PUBLIC_PUSH_VAPID_KEY ||
-    ''
-  const privateKey =
-    process.env.PUSH_WEB_VAPID_PRIVATE_KEY ||
-    process.env.PUSH_VAPID_PRIVATE_KEY ||
-    ''
-  const enabled = toBoolean(process.env.PUSH_WEB_ENABLED) || Boolean(publicKey && privateKey)
-  const subject = process.env.PUSH_WEB_VAPID_SUBJECT || process.env.PUSH_VAPID_SUBJECT || 'mailto:no-reply@remit-scout.com'
+  const pushConfig = config.communications.push
+  const publicKey = pushConfig.webVapidPublicKey
+  const privateKey = pushConfig.webVapidPrivateKey
+  const enabled = pushConfig.webEnabled || Boolean(publicKey && privateKey)
+  const subject = pushConfig.webVapidSubject || 'mailto:no-reply@remit-scout.com'
   return { enabled, publicKey, privateKey, subject }
 }
 
@@ -76,11 +69,10 @@ const ensureWebPushConfigured = () => {
 }
 
 const getSnsClient = () => {
-  const enabled = toBoolean(process.env.PUSH_SNS_ENABLED)
-  if (!enabled) return null
+  if (!config.communications.push.snsEnabled) return null
   if (!snsClient) {
     snsClient = new SNSClient({
-      region: process.env.SNS_REGION || process.env.AWS_REGION || 'us-east-1',
+      region: config.communications.push.snsRegion || config.aws.snsRegion || 'us-east-1',
     })
   }
   return snsClient
@@ -88,16 +80,16 @@ const getSnsClient = () => {
 
 const getSnsPlatformArn = (platform: PushPlatform) => {
   if (platform === 'ios') {
-    return process.env.PUSH_SNS_IOS_PLATFORM_ARN || ''
+    return config.communications.push.snsIosPlatformArn
   }
   if (platform === 'android') {
-    return process.env.PUSH_SNS_ANDROID_PLATFORM_ARN || ''
+    return config.communications.push.snsAndroidPlatformArn
   }
   return ''
 }
 
 const getApnsMessageKey = () => {
-  return toBoolean(process.env.PUSH_SNS_APNS_SANDBOX) ? 'APNS_SANDBOX' : 'APNS'
+  return config.communications.push.snsApnsSandbox ? 'APNS_SANDBOX' : 'APNS'
 }
 
 const parseSubscription = (value: unknown) => {

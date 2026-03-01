@@ -107,7 +107,7 @@ const buildGoldIndicesRow = (overrides: Partial<Record<string, any>> = {}) => ({
   provider_count: 5,
   suppression_flag: false,
   suppression_reason: null,
-  weighting_model: 'synthetic_volume_v1',
+  weighting_model: 'synthetic_seed_v1',
   methodology_version: 'indices_v2',
   mid_market_rate: 1.25,
   weight_confidence: 0.8,

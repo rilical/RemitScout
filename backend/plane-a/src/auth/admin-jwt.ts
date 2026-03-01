@@ -29,6 +29,7 @@ export type IssueAdminAccessTokenInput = {
   appRole?: string | null
   refreshFamilyId: string
   jti?: string
+  mfaVerified?: boolean
 }
 
 export type IssuedAdminAccessToken = {
@@ -60,6 +61,7 @@ export const issuePlaneAAdminAccessToken = async (
     email: input.email ?? undefined,
     role: toSafeRole(input.role, input.appRole),
     app_role: input.appRole ?? undefined,
+    mfa_verified: input.mfaVerified === true ? true : undefined,
     token_type: ADMIN_TOKEN_TYPE,
     refresh_family_id: input.refreshFamilyId,
   })

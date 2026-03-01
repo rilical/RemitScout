@@ -111,7 +111,12 @@ describe('requireAdmin', () => {
 
     await handler(
       {
-        user: { user_id: 'u-1', email: 'other@remit-scout.com', role: 'super_admin' },
+        user: {
+          user_id: 'u-1',
+          email: 'other@remit-scout.com',
+          role: 'super_admin',
+          claims: { mfa_verified: true },
+        },
       } as any,
       reply as any,
     )
@@ -126,7 +131,12 @@ describe('requireAdmin', () => {
 
     await handler(
       {
-        user: { user_id: 'u-1', email: 'ops@remit-scout.com', role: 'admin' },
+        user: {
+          user_id: 'u-1',
+          email: 'ops@remit-scout.com',
+          role: 'admin',
+          claims: { mfa_verified: true },
+        },
       } as any,
       reply as any,
     )
@@ -144,7 +154,12 @@ describe('requireAdmin', () => {
 
     await handler(
       {
-        user: { user_id: 'u-1', email: 'ops@remit-scout.com', role: 'admin' },
+        user: {
+          user_id: 'u-1',
+          email: 'ops@remit-scout.com',
+          role: 'admin',
+          claims: { mfa_verified: true },
+        },
       } as any,
       reply as any,
     )
@@ -163,7 +178,12 @@ describe('requireAdmin', () => {
 
     await handler(
       {
-        user: { user_id: 'u-1', email: 'ops@remit-scout.com', role: 'user' },
+        user: {
+          user_id: 'u-1',
+          email: 'ops@remit-scout.com',
+          role: 'user',
+          claims: { mfa_verified: true },
+        },
       } as any,
       reply as any,
     )
@@ -185,7 +205,7 @@ describe('requireAdmin', () => {
           user_id: 'u-1',
           email: 'ops@remit-scout.com',
           role: 'admin',
-          claims: { jti: 'jti-revoked' },
+          claims: { jti: 'jti-revoked', mfa_verified: true },
         },
       } as any,
       reply as any,

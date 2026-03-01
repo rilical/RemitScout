@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify'
 import { z } from 'zod'
-import { NotFoundError, ValidationError } from '../../../shared/errors'
+import { NotFoundError, RateLimitError, ValidationError } from '../../../shared/errors'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { requireAuth } from '../plugins/auth-plugin'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
@@ -24,23 +25,34 @@ import {
   getLocationFromHeaders,
 } from '../services/session-utils'
 import { anonymizeIpAddress, extractBrowserFamily } from '../services/privacy-utils'
+import { buildRateLimitKey, checkRateLimit } from '../utils/rate-limit'
 
 const logger = createLogger('plane-a.sessions')
+const ADMIN_EXCHANGE_RATE_LIMIT = 5
+const ADMIN_EXCHANGE_RATE_TTL_SECONDS = 60
+const SESSION_TRACK_RATE_LIMIT = 120
+const SESSION_TRACK_RATE_TTL_SECONDS = 60
+const SESSION_TRACK_METADATA_MAX_BYTES = 4096
+const adminMfaRequired = (() => {
+  const envName = (config.envName || config.env || '').trim().toLowerCase()
+  const protectedEnv =
+    envName === 'prod' || envName === 'production' || envName === 'staging'
+  const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
+  if (protectedEnv) return true
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+  return true
+})()
 
 const trackSessionSchema = z.object({
-  session_id: z.string().min(8),
-  anon_id: z.string().optional(),
-  device_type: z.string().optional(),
-  location: z.string().optional(),
+  session_id: z.string().min(16).max(256),
+  anon_id: z.string().min(6).max(128).optional(),
+  device_type: z.string().max(64).optional(),
+  location: z.string().max(128).optional(),
   metadata: z.record(z.unknown()).optional(),
 })
 
 const revokeAllSchema = z.object({
   except_session_id: z.string().optional(),
-})
-
-const exchangeSessionSchema = z.object({
-  supabase_token: z.string().min(16).optional(),
 })
 
 const refreshSessionSchema = z.object({
@@ -56,17 +68,38 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
   const repository = app.container.repositories.session
 
   app.post('/sessions/admin/exchange', async (request, reply) => {
-    const parsed = exchangeSessionSchema.safeParse(request.body ?? {})
-    if (!parsed.success) {
+    const userAgentForRateLimit =
+      typeof request.headers['user-agent'] === 'string'
+        ? request.headers['user-agent'].slice(0, 160)
+        : 'unknown'
+    const rateFingerprint = `${request.ip || 'unknown'}:${userAgentForRateLimit}`
+    const rateKey = buildRateLimitKey('admin:exchange', rateFingerprint)
+    if (await checkRateLimit({ logger, key: rateKey, limit: ADMIN_EXCHANGE_RATE_LIMIT, ttlSeconds: ADMIN_EXCHANGE_RATE_TTL_SECONDS, component: 'admin_exchange' })) {
+      throw new RateLimitError('Too many token exchange attempts. Please try again later.')
+    }
+
+    if (
+      request.body &&
+      typeof request.body === 'object' &&
+      !Array.isArray(request.body) &&
+      'supabase_token' in request.body
+    ) {
       throw new ValidationError('Invalid request', {
-        details: { error: 'bad_request', details: parsed.error.issues },
+        details: { error: 'header_auth_required' },
       })
     }
 
-    const bodyToken = parsed.data.supabase_token
-    const authorizationHeader = bodyToken
-      ? `Bearer ${bodyToken}`
-      : request.headers.authorization
+    const authorizationHeader = (() => {
+      const header = request.headers.authorization
+      if (typeof header === 'string') return header
+      if (Array.isArray(header)) return header[0]
+      return undefined
+    })()
+    if (!authorizationHeader) {
+      throw new ValidationError('Authorization header is required', {
+        details: { error: 'missing_authorization_header' },
+      })
+    }
 
     const authResult = await verifySupabaseJwt(authorizationHeader)
     if ('code' in authResult) {
@@ -75,6 +108,23 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
         error: 'unauthorized',
         code: authResult.code,
         message: authResult.message,
+      }
+    }
+
+    const claims = authResult.claims as Record<string, unknown> | undefined
+    const amr = Array.isArray(claims?.amr)
+      ? claims.amr as Array<{ method?: string; mfa?: boolean }>
+      : []
+    const hasTotpMfa = amr.some((entry) => {
+      if (!entry) return false
+      if (entry.mfa === true) return true
+      return entry.method === 'totp'
+    })
+    if (adminMfaRequired && !hasTotpMfa) {
+      reply.code(403)
+      return {
+        error: 'mfa_required',
+        message: 'Multi-factor authentication is required for admin access.',
       }
     }
 
@@ -105,10 +155,12 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       email: authResult.email ?? null,
       role: authResult.role ?? null,
       appRole: access.appRole,
+      mfaVerified: hasTotpMfa,
       ipHash: anonymizedIp.ipHash ?? null,
       userAgent,
       metadata: {
         auth_source: 'supabase_exchange',
+        mfa_verified: hasTotpMfa,
       },
     })
 
@@ -357,7 +409,24 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
 
   app.post('/sessions/track', async (request) => {
     try {
+      const rateKey = buildRateLimitKey('session:track', request.ip || 'unknown')
+      if (await checkRateLimit({
+        logger,
+        key: rateKey,
+        limit: SESSION_TRACK_RATE_LIMIT,
+        ttlSeconds: SESSION_TRACK_RATE_TTL_SECONDS,
+        component: 'session_track',
+      })) {
+        throw new RateLimitError('Too many tracking requests. Please try again later.')
+      }
+
       const body = trackSessionSchema.parse(request.body ?? {})
+      const metadataJson = JSON.stringify(body.metadata ?? {})
+      if (metadataJson.length > SESSION_TRACK_METADATA_MAX_BYTES) {
+        throw new ValidationError('Invalid session tracking request', {
+          details: [{ message: 'metadata_too_large' }],
+        })
+      }
       const sessionId = deriveRotatingSessionId(body.session_id)
       if (!sessionId) {
         throw new ValidationError('Invalid session id', {

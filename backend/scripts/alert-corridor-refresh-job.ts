@@ -27,9 +27,12 @@ import { parseCorridorId } from '../shared/corridor'
 import { FIXED_EXCHANGE_RATES } from '../shared/currency-limits'
 import { computeBucketSelection } from '../shared/amount-bucket'
 import { initTracing } from '../shared/tracing'
+import { recordBatchJobMetric } from '../shared/worker-metrics'
+import { initErrorTracking } from '../shared/error-tracker'
 
 const logger = createLogger('script.alert-corridor-refresh')
 initTracing('alert-corridor-refresh-job')
+initErrorTracking('alert-corridor-refresh-job')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -398,6 +401,7 @@ export type AlertCorridorRefreshResult = {
 
 export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefreshResult> => {
   const pool = createPool(config.db.planeAUrl)
+  const startedAt = Date.now()
 
   const result: AlertCorridorRefreshResult = {
     totalAlertCorridors: 0,
@@ -413,6 +417,7 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
   }
 
   try {
+    await recordBatchJobMetric('alert-corridor-refresh-job', 'job_start')
     logger.info('job_start', {
       global_budget: GLOBAL_CORRIDOR_BUDGET,
       free_user_budget: FREE_USER_BUDGET,
@@ -432,6 +437,10 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
 
     if (allCorridors.length === 0) {
       logger.info('no_corridors_to_refresh')
+      await recordBatchJobMetric('alert-corridor-refresh-job', 'job_complete', (Date.now() - startedAt) / 1000, {
+        eligible_corridors: '0',
+        refreshed_corridors: '0',
+      })
       return result
     }
 
@@ -441,6 +450,10 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
 
     if (nonMacroCorridors.length === 0) {
       logger.info('all_corridors_are_macro')
+      await recordBatchJobMetric('alert-corridor-refresh-job', 'job_complete', (Date.now() - startedAt) / 1000, {
+        eligible_corridors: String(uniqueCorridorIds.length),
+        refreshed_corridors: '0',
+      })
       return result
     }
 
@@ -453,6 +466,10 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
 
     if (staleCorridors.length === 0) {
       logger.info('all_corridors_are_fresh')
+      await recordBatchJobMetric('alert-corridor-refresh-job', 'job_complete', (Date.now() - startedAt) / 1000, {
+        eligible_corridors: String(nonMacroCorridors.length),
+        refreshed_corridors: '0',
+      })
       return result
     }
 
@@ -519,6 +536,10 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
 
     if (corridorsToRefresh.length === 0) {
       logger.info('no_corridors_within_budget')
+      await recordBatchJobMetric('alert-corridor-refresh-job', 'job_complete', (Date.now() - startedAt) / 1000, {
+        eligible_corridors: String(staleCorridors.length),
+        refreshed_corridors: '0',
+      })
       return result
     }
 
@@ -561,12 +582,18 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
     }
 
     logger.info('job_complete', result)
+    await recordBatchJobMetric('alert-corridor-refresh-job', 'job_complete', (Date.now() - startedAt) / 1000, {
+      eligible_corridors: String(staleCorridors.length),
+      refreshed_corridors: String(result.corridorsRefreshed),
+      requests_enqueued: String(result.requestsEnqueued),
+    })
     return result
   } catch (error) {
     logger.error('job_failed', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     })
+    await recordBatchJobMetric('alert-corridor-refresh-job', 'job_failure', (Date.now() - startedAt) / 1000)
     throw error
   } finally {
     await pool.end()
@@ -576,11 +603,13 @@ export const runAlertCorridorRefreshJob = async (): Promise<AlertCorridorRefresh
 if (require.main === module) {
   runAlertCorridorRefreshJob()
     .then(result => {
-      console.log('Alert corridor refresh complete:', result)
+      logger.info('alert_corridor_refresh_complete', result)
       process.exit(0)
     })
     .catch(error => {
-      console.error('Alert corridor refresh failed:', error)
+      logger.error('alert_corridor_refresh_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
       process.exit(1)
     })
 }

@@ -151,9 +151,10 @@ export const runNotificationsQueueWorkerLoop = async () => {
               })
               await recordWorkerMetric('notifications-queue-worker', 'message_failed', 1)
 
-              // Send to DLQ
+              // Send to DLQ and delete source message to prevent duplicate DLQ copies
               await sendToDLQ(queueUrl!, message, err)
               await recordWorkerMetric('notifications-queue-worker', 'dlq_sent', 1)
+              deleteHandles.push(message.receiptHandle)
             } finally {
               activeExtenders.delete(extender)
               await extender()

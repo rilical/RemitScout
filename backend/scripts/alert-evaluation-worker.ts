@@ -166,6 +166,7 @@ const runQueueWorker = async (options?: { once?: boolean }) => {
             await recordWorkerMetric('alert-evaluation-worker', 'message_failed', 1)
             await sendToDLQ(queueUrl, message, err)
             await recordWorkerMetric('alert-evaluation-worker', 'dlq_sent', 1)
+            deleteHandles.push(message.receiptHandle)
           }
         }
 

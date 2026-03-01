@@ -24,8 +24,15 @@ import {
 } from '../../../shared/normalize/canonical'
 import { deriveMethodProfile, MethodProfile } from './method-profile'
 import { qualityFlags, QualityFlag } from './quality-flags'
+import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 
 const logger = createLogger('plane-b.normalize.quote-normalizer')
+
+const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
+const agentMetricDimensions = (): Record<string, string> => ({
+  environment: process.env.ENVIRONMENT || process.env.NODE_ENV || 'development',
+  service: 'remit-scout',
+})
 
 /**
  * Input for quote normalization.
@@ -103,19 +110,30 @@ const isFiniteNumber = (value: unknown): value is number =>
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0
 
+const MAX_NUMERIC_VALUE = 1e12
+const STRICT_NUMERIC_PATTERN = /^[-+]?(?:\d+\.?\d*|\.\d+)$/
+
 const parseNumeric = (value: unknown): number | null => {
   if (value === null || value === undefined) return null
+  let result: number | null = null
   if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
-  if (typeof value === 'string') {
-    const cleaned = value.replace(/[^0-9.+-Ee]/g, '').trim()
-    if (!cleaned) return null
+    result = Number.isFinite(value) ? value : null
+  } else if (typeof value === 'string') {
+    const cleaned = value
+      .trim()
+      .replace(/[\s,_]/g, '')
+      .replace(/[$€£¥]/g, '')
+    if (!cleaned || !STRICT_NUMERIC_PATTERN.test(cleaned)) return null
     const parsed = Number(cleaned)
-    return Number.isFinite(parsed) ? parsed : null
+    result = Number.isFinite(parsed) ? parsed : null
+  } else {
+    const parsed = Number(value)
+    result = Number.isFinite(parsed) ? parsed : null
   }
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
+  if (result !== null && (result > MAX_NUMERIC_VALUE || result < -MAX_NUMERIC_VALUE)) {
+    return null
+  }
+  return result
 }
 
 /**
@@ -161,14 +179,17 @@ const normalizeCollectedAt = (value: string | Date, fallback: string): string =>
 const calculateTotalDebit = (
   totalDebitAmount: number | null | undefined,
   sendAmount: number,
-  feeAmount: number,
+  feeAmount: number | null,
   promotionalFeeAmount: number | null,
 ): number => {
   if (Number.isFinite(totalDebitAmount ?? Number.NaN)) {
     return Number(totalDebitAmount)
   }
   if (isFiniteNumber(sendAmount) && isFiniteNumber(feeAmount)) {
-    return sendAmount + (promotionalFeeAmount ?? feeAmount)
+    return sendAmount + feeAmount
+  }
+  if (isFiniteNumber(sendAmount) && isFiniteNumber(promotionalFeeAmount)) {
+    return sendAmount + promotionalFeeAmount
   }
   return 0
 }
@@ -252,7 +273,10 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   if (feeAmountParsed === null && totalDebitParsed !== null && sendAmountParsed !== null) {
     const derivedFee = totalDebitParsed - sendAmountParsed
     if (Number.isFinite(derivedFee)) {
-      feeAmountParsed = Math.max(derivedFee, 0)
+      if (derivedFee < 0) {
+        flags.add(qualityFlags.negative_fee)
+      }
+      feeAmountParsed = derivedFee
     }
   }
 
@@ -305,7 +329,7 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
   const totalDebit = calculateTotalDebit(
     totalDebitParsed,
     sendAmount,
-    feeAmount,
+    feeAmountParsed,
     promotionalFeeAmount,
   )
 
@@ -375,6 +399,23 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
 
   if (hasRequiredFields && hasCoreAmounts && hasCost && hasMethods && methodProfile !== null) {
     flags.delete(qualityFlags.partial_data)
+  }
+
+  recordCloudWatchMetric({
+    name: 'normalization_success_total',
+    value: 1,
+    unit: 'Count',
+    namespace: AGENT_METRIC_NAMESPACE,
+    dimensions: agentMetricDimensions(),
+  })
+  for (const flag of flags) {
+    recordCloudWatchMetric({
+      name: 'normalization_quality_flag_total',
+      value: 1,
+      unit: 'Count',
+      namespace: AGENT_METRIC_NAMESPACE,
+      dimensions: { ...agentMetricDimensions(), flag_type: flag },
+    })
   }
 
   return {

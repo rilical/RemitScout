@@ -544,7 +544,7 @@ export const persistNormalizedQuote = async (
       ingestedAt: normalized.ingested_at,
       ingestionRunId: normalized.ingestion_run_id,
       bronzeObjectKey: normalized.bronze_object_key,
-      parserVersion: normalized.parser_version ?? null,
+      parserVersion: normalized.parser_version ?? 'unknown',
       qualityFlags,
     },
     latest: {

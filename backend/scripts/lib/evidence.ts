@@ -1,5 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { createLogger } from '../../shared/logger'
+
+const logger = createLogger('script.evidence')
 
 export type CaseEnv = 'dev' | 'staging' | 'prod'
 export type Severity = 'sev0' | 'sev1' | 'sev2' | 'sev3'
@@ -154,7 +157,21 @@ export const writeEvidenceResult = (input: EvidenceResult): EvidenceResult => {
   const outFile = String(process.env.EVIDENCE_OUTPUT_FILE || '').trim()
   if (outFile) {
     const resolved = path.isAbsolute(outFile) ? outFile : path.join(process.cwd(), outFile)
+    const targetDir = path.dirname(resolved)
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true })
+      logger.info('evidence_output_directory_created', {
+        directory: targetDir,
+      })
+    }
     fs.writeFileSync(resolved, json + '\n', 'utf8')
+    logger.info('evidence_output_written', {
+      path: resolved,
+    })
+  } else {
+    logger.warn('evidence_output_file_unset', {
+      message: 'EVIDENCE_OUTPUT_FILE is unset; evidence is emitted to stdout only.',
+    })
   }
 
   process.stdout.write(json + '\n')

@@ -157,8 +157,16 @@ export const runGoldFxRatesJob = async (
       const baseCurrency = row.base_currency?.toUpperCase()
       const quoteCurrency = row.quote_currency?.toUpperCase()
       const rate = toNumber(row.rate, null)
-      const providerCount = toNumber(row.provider_count, null)
-      const sampleCount = toNumber(row.sample_count, null)
+      const providerCountParsed = toNumber(row.provider_count, null)
+      const providerCount =
+        providerCountParsed !== null && providerCountParsed >= 0
+          ? Math.floor(providerCountParsed)
+          : null
+      const sampleCountParsed = toNumber(row.sample_count, null)
+      const sampleCount =
+        sampleCountParsed !== null && sampleCountParsed >= 0
+          ? Math.floor(sampleCountParsed)
+          : null
 
       if (!baseCurrency || !quoteCurrency || !isValidCurrency(baseCurrency) || !isValidCurrency(quoteCurrency)) {
         logger.warn('rate_invalid_currency', {

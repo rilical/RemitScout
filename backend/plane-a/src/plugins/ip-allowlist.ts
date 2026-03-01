@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import ipaddr from 'ipaddr.js'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 
 const logger = createLogger('plane-a.ip-allowlist')
@@ -38,13 +39,10 @@ const isIpInCidr = (ip: string, cidr: string): boolean => {
   }
 }
 
-export const registerAdminIpAllowlist = (app: FastifyInstance) => {
-  const allowlist = splitCsv(
-    process.env.ADMIN_IP_ALLOWLIST ||
-      process.env.WAF_ADMIN_ALLOWLIST_IPS ||
-      process.env.WAF_ALLOWLIST_IPS ||
-      '',
-  )
+export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: string[]) => {
+  const allowlist = Array.isArray(cidrAllowlist)
+    ? cidrAllowlist.filter(Boolean)
+    : splitCsv(config.planeA.adminIpAllowlistRaw)
   if (allowlist.length === 0) {
     return
   }

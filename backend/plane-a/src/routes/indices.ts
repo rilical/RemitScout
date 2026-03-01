@@ -36,6 +36,8 @@ const querySchema = z.object({
   amount_bucket: z.coerce.number().int().positive().optional(),
   method_profile: z.enum(METHOD_PROFILES).optional(),
   days: z.coerce.number().int().positive().optional(),
+  as_of: z.string().optional(),
+  methodology: z.string().optional(),
 })
 
 const embedSnapshotBodySchema = z.object({
@@ -950,6 +952,72 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  app.get('/indices/triangulated/:corridorId', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+    const { corridorId } = request.params as { corridorId: string }
+    const qs = request.query as {
+      amount_bucket?: string
+      method_profile?: string
+      as_of?: string
+      methodology?: string
+    }
+
+    const amountBucket = Number(qs.amount_bucket ?? DEFAULT_AMOUNT_BUCKET)
+    if (!Number.isFinite(amountBucket) || amountBucket <= 0) {
+      throw new ValidationError('Invalid amount_bucket', { details: { error: 'bad_request' } })
+    }
+
+    const methodProfile = qs.method_profile ?? 'bank_transfer:bank_deposit'
+    const asOf = qs.as_of ?? new Date().toISOString().slice(0, 10)
+    const methodology = qs.methodology ?? 'triangulation_v1'
+
+    const result = await query<{
+      corridor_id: string
+      amount_bucket: number
+      method_profile: string
+      date: string
+      leg1_corridor: string
+      leg2_corridor: string
+      leg1_teer: number | null
+      leg2_teer: number | null
+      triangulated_teer: number | null
+      triangulated_rci: number | null
+      stress_score: number | null
+      confidence: string
+      methodology_version: string
+      created_at: Date
+    }>(
+      `SELECT * FROM gold_export.triangulated_index
+       WHERE corridor_id = $1
+         AND amount_bucket = $2
+         AND method_profile = $3
+         AND date <= $4
+         AND methodology_version = $5
+       ORDER BY date DESC
+       LIMIT 30`,
+      [corridorId, amountBucket, methodProfile, asOf, methodology],
+      planeAPool,
+    )
+
+    return {
+      corridorId,
+      amountBucket,
+      methodProfile,
+      methodology,
+      asOf,
+      series: result.rows.map((r) => ({
+        date: r.date,
+        leg1Corridor: r.leg1_corridor,
+        leg2Corridor: r.leg2_corridor,
+        leg1Teer: r.leg1_teer,
+        leg2Teer: r.leg2_teer,
+        triangulatedTeer: r.triangulated_teer,
+        triangulatedRci: r.triangulated_rci,
+        stressScore: r.stress_score,
+        confidence: r.confidence,
+      })),
+    }
+  })
+
   app.get('/indices/health', async (_request, reply) => {
     try {
       const result = await query<{ count: number; latest: Date | null }>(
@@ -984,4 +1052,5 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       }
     }
   })
+
 }

@@ -84,7 +84,7 @@ describe('Cache TTL End-to-End', () => {
         await pool.query(
           `INSERT INTO silver.quote_record
            (provider_id, corridor_id, amount_bucket, payin, payout, send_amount, fee_amount, total_debit_amount, receive_amount, implied_fx_rate, status, collected_at, ingested_at, ingestion_run_id, bronze_object_key)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - INTERVAL '${i} hours', NOW(), $12, $13)`,
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW() - make_interval(hours => $12::int), NOW(), $13, $14)`,
           [
             providerId,
             corridorId,
@@ -97,6 +97,7 @@ describe('Cache TTL End-to-End', () => {
             rate * 100,
             rate,
             'ok',
+            i,
             ingestionRunId,
             `bronze:${i}`,
           ],

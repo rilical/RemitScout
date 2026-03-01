@@ -67,7 +67,7 @@ const validateDevRuntimeConfig = () => {
 
 const run = () => {
   const envName = (process.env.ENVIRONMENT || process.env.NODE_ENV || 'dev').toLowerCase()
-  const isProdLikeEnv = envName === 'prod' || envName === 'staging'
+  const isProdLikeEnv = envName === 'prod' || envName === 'production' || envName === 'staging'
   const requireQuoteRefreshQueue = config.queues.quoteRefreshMode !== 'off'
   const requireFxRateRefreshQueue = config.queues.fxRateRefreshMode !== 'off'
   const requireExportJobQueue = config.queues.exports.mode !== 'off'
@@ -76,6 +76,7 @@ const run = () => {
   const requireOpsAlertsQueue = config.queues.opsAlerts.mode !== 'off'
   const requireGoldLiveQueue = config.queues.goldLive.mode !== 'off'
   const requireAlertEvaluationQueue = config.alerts.evaluation.enabled
+  const requireAgentLlm = isProdLikeEnv && (config.agent.enabled || config.agent.orchestratorEnabled)
   const requirements: RuntimeConfigRequirements = {
     requirePlaneA: true,
     requirePlaneB: true,
@@ -104,9 +105,10 @@ const run = () => {
     requireAlerts: isProdLikeEnv,
     requireSupabase: isProdLikeEnv,
     requireStripe: isProdLikeEnv,
-    // Plane A auth is Supabase JWT verification (JWKS/remote), not an HMAC secret.
-    // Keep PLANE_A_JWT_SECRET optional to avoid requiring legacy/unused config.
-    requireJwtSecret: false,
+    requireJwtSecret: isProdLikeEnv,
+    requirePrivacySalts: isProdLikeEnv,
+    requireAdminIpAllowlist: isProdLikeEnv,
+    requireAgentLlm,
   }
 
   // Schema-driven validation (includes paths and env var names).

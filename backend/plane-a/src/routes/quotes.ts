@@ -573,7 +573,16 @@ export const quotesRoutes = async (app: FastifyInstance) => {
         request.user?.role === 'super_admin' ||
         (request.user?.email &&
           config.planeA.adminEmails.includes(request.user.email.toLowerCase()))
-      const availableMethods = Array.from(new Set(expectedProviders)).sort()
+      // Derive availableMethods from actual payout methods in quote rows, not provider IDs
+      const methodSet = new Set<string>()
+      for (const row of result.rows) {
+        if (row.payout) methodSet.add(row.payout)
+      }
+      // If no rows returned, fall back to the requested payout method
+      if (methodSet.size === 0 && payout) {
+        methodSet.add(payout)
+      }
+      const availableMethods = Array.from(methodSet).sort()
       const quotesWithAffiliate = result.rows.map((row) => ({
         ...row,
         ...buildAffiliateInfo(row.provider_id),

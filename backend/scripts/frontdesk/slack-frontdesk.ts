@@ -5,19 +5,15 @@ import { randomUUID } from 'node:crypto'
 import dotenv from 'dotenv'
 import { App } from '@slack/bolt'
 
+import {
+  classifyIssueOpsDomain,
+  ISSUEOPS_DOMAINS,
+  type IssueOpsDomain,
+} from '../lib/issueops-domain'
+
 type CaseEnv = 'dev' | 'staging' | 'prod'
 type Severity = 'sev0' | 'sev1' | 'sev2' | 'sev3'
-type Domain =
-  | 'provider_health'
-  | 'queue'
-  | 'api_latency'
-  | 'freshness'
-  | 'indices'
-  | 'pulse'
-  | 'exports'
-  | 'infra_drift'
-  | 'security'
-  | 'other'
+type Domain = IssueOpsDomain
 
 type CaseAction = 'dispatch_evidence' | 'acknowledge' | 'suppress'
 
@@ -55,6 +51,22 @@ type SignalEvent = {
 }
 
 const nowIso = () => new Date().toISOString()
+
+const toSortableTimestampToken = (value: unknown): string => {
+  const raw = String(value ?? '').trim()
+  const parsed = raw ? new Date(raw) : new Date()
+  const resolved = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  return resolved.toISOString().replace(/[^\d]/g, '').slice(0, 17)
+}
+
+const sanitizeFilenameToken = (value: unknown, fallback: string): string => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return normalized || fallback
+}
 
 const findRepoRoot = (): string => {
   const override = String(process.env.REMIT_SCOUT_REPO_ROOT || '').trim()
@@ -101,25 +113,24 @@ const normalizeSeverity = (raw: string): Severity => {
 }
 
 const normalizeDomain = (raw: string): Domain => {
-  const token = String(raw || '').trim().toLowerCase()
-  if (
-    token === 'provider_health'
-    || token === 'queue'
-    || token === 'api_latency'
-    || token === 'freshness'
-    || token === 'indices'
-    || token === 'pulse'
-    || token === 'exports'
-    || token === 'infra_drift'
-    || token === 'security'
-  ) return token
-  return 'other'
+  return classifyIssueOpsDomain({ domain: raw })
 }
+
+const domainSelectOptions = ISSUEOPS_DOMAINS.map((value) => ({
+  text: { type: 'plain_text' as const, text: value },
+  value,
+}))
 
 const writeInboxEvent = (repoRoot: string, prefix: string, payload: unknown): string => {
   const inboxDir = path.join(repoRoot, 'ops', 'brain', 'inbox')
   fs.mkdirSync(inboxDir, { recursive: true })
-  const filename = `${prefix}-${Date.now()}-${randomUUID()}.json`
+  const payloadRecord = (payload && typeof payload === 'object' && !Array.isArray(payload))
+    ? payload as Record<string, unknown>
+    : null
+  const eventTimestamp = String(payloadRecord?.requested_at || payloadRecord?.observed_at || nowIso()).trim()
+  const timestampToken = toSortableTimestampToken(eventTimestamp)
+  const prefixToken = sanitizeFilenameToken(prefix, 'event')
+  const filename = `inbox-${timestampToken}-${prefixToken}-${randomUUID()}.json`
   const full = path.join(inboxDir, filename)
   fs.writeFileSync(full, JSON.stringify(payload, null, 2) + '\n', 'utf8')
   return full
@@ -292,18 +303,7 @@ const main = async () => {
             element: {
               type: 'static_select',
               action_id: 'domain',
-              options: [
-                { text: { type: 'plain_text', text: 'provider_health' }, value: 'provider_health' },
-                { text: { type: 'plain_text', text: 'queue' }, value: 'queue' },
-                { text: { type: 'plain_text', text: 'api_latency' }, value: 'api_latency' },
-                { text: { type: 'plain_text', text: 'freshness' }, value: 'freshness' },
-                { text: { type: 'plain_text', text: 'indices' }, value: 'indices' },
-                { text: { type: 'plain_text', text: 'pulse' }, value: 'pulse' },
-                { text: { type: 'plain_text', text: 'exports' }, value: 'exports' },
-                { text: { type: 'plain_text', text: 'infra_drift' }, value: 'infra_drift' },
-                { text: { type: 'plain_text', text: 'security' }, value: 'security' },
-                { text: { type: 'plain_text', text: 'other' }, value: 'other' },
-              ],
+              options: domainSelectOptions,
               initial_option: { text: { type: 'plain_text', text: 'provider_health' }, value: 'provider_health' },
             },
           },
@@ -451,12 +451,12 @@ const main = async () => {
   })
 
   await app.start()
-  // eslint-disable-next-line no-console
+   
   console.log(JSON.stringify({ ok: true, event: 'slack_frontdesk_started', repo_root: repoRoot, started_at: nowIso() }))
 }
 
 main().catch((error) => {
-  // eslint-disable-next-line no-console
+   
   console.error(JSON.stringify({ ok: false, event: 'slack_frontdesk_failed', error: error instanceof Error ? error.message : String(error) }))
   process.exit(1)
 })

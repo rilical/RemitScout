@@ -2,7 +2,6 @@ import { Counter, Gauge } from 'prom-client'
 import {
   CloudWatchClient,
   PutMetricAlarmCommand,
-  type ComparisonOperator,
   type Statistic,
 } from '@aws-sdk/client-cloudwatch'
 
@@ -96,6 +95,33 @@ const getCloudWatchDimensions = (sloName: string, timeWindow: string) => {
   }
 }
 
+const complianceWindows = new Map<string, boolean[]>()
+const complianceWindowSize = Math.max(10, toNumber(process.env.SLO_COMPLIANCE_WINDOW_SIZE, 120))
+const defaultComplianceTarget = (() => {
+  const parsed = Number(process.env.SLO_COMPLIANCE_TARGET || '')
+  if (!Number.isFinite(parsed)) return 0.95
+  return Math.min(1, Math.max(0, parsed))
+})()
+
+const getComplianceTarget = (sloName: string): number => {
+  const envKey = `SLO_${sloName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}_COMPLIANCE_TARGET`
+  const parsed = Number(process.env[envKey] || '')
+  if (!Number.isFinite(parsed)) return defaultComplianceTarget
+  return Math.min(1, Math.max(0, parsed))
+}
+
+const recordComplianceOutcome = (sloName: string, timeWindow: string, compliant: boolean): number => {
+  const key = `${sloName}:${timeWindow}`
+  const history = complianceWindows.get(key) ?? []
+  history.push(compliant)
+  if (history.length > complianceWindowSize) {
+    history.shift()
+  }
+  complianceWindows.set(key, history)
+  const compliantSamples = history.reduce((count, current) => count + (current ? 1 : 0), 0)
+  return compliantSamples / history.length
+}
+
 export const calculateSLOCompliance = (
   sloName: string,
   timeWindow: string,
@@ -119,7 +145,7 @@ export const calculateSLOCompliance = (
     compliant = actualValue >= target.threshold
   }
 
-  const complianceRatio = compliant ? 1.0 : 0.0
+  const complianceRatio = recordComplianceOutcome(sloName, timeWindow, compliant)
 
   sloComplianceRatio.set({ slo_name: sloName, time_window: timeWindow }, complianceRatio)
   sloActualValue.set({ slo_name: sloName, time_window: timeWindow }, actualValue)
@@ -197,23 +223,25 @@ export const aggregateSLOValue = (
   percentile: Percentile = 'p95',
 ): number => {
   if (values.length === 0) return 0
+  if (values.length === 1) return values[0]
 
   const sorted = [...values].sort((a, b) => a - b)
 
-  let index: number
+  let p: number
   switch (percentile) {
     case 'p50':
-      index = Math.floor(sorted.length * 0.5)
+      p = 0.5
       break
     case 'p95':
-      index = Math.floor(sorted.length * 0.95)
+      p = 0.95
       break
     case 'p99':
-      index = Math.floor(sorted.length * 0.99)
+      p = 0.99
       break
   }
 
-  return sorted[Math.min(index, sorted.length - 1)]
+  const index = Math.ceil(sorted.length * p) - 1
+  return sorted[Math.min(Math.max(index, 0), sorted.length - 1)]
 }
 
 export type CloudWatchAlarmOptions = {
@@ -255,10 +283,7 @@ export const createSLOCloudWatchAlarm = async (
     Value: String(Value),
   }))
 
-  const comparisonOperator: ComparisonOperator =
-    target.direction === 'lower_is_better' ? 'GreaterThanThreshold' : 'LessThanThreshold'
-
-  const threshold = target.direction === 'lower_is_better' ? target.threshold : target.threshold
+  const threshold = getComplianceTarget(sloName)
 
   const alarmConfig: any = {
     AlarmName: options.alarmName,
@@ -270,7 +295,7 @@ export const createSLOCloudWatchAlarm = async (
     EvaluationPeriods: options.evaluationPeriods || 2,
     DatapointsToAlarm: options.datapointsToAlarm || 1,
     Threshold: threshold,
-    ComparisonOperator: comparisonOperator,
+    ComparisonOperator: 'LessThanThreshold',
     TreatMissingData: options.treatMissingData || 'breaching',
   }
 

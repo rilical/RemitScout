@@ -6,19 +6,27 @@ import { spawnSync } from 'node:child_process'
 
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
+import { classifyIssueOpsDomain, type IssueOpsDomain } from '../lib/issueops-domain'
+import {
+  buildHumanInLoopEscalationContract,
+  buildReasonCodeRules,
+  judgeIssueOpsDecision,
+  type JudgeReasonCodeRule,
+} from '../lib/issueops-judge'
+
 type CaseEnv = 'dev' | 'staging' | 'prod'
 type Severity = 'sev0' | 'sev1' | 'sev2' | 'sev3'
-type Domain =
-  | 'provider_health'
-  | 'queue'
-  | 'api_latency'
-  | 'freshness'
-  | 'indices'
-  | 'pulse'
-  | 'exports'
-  | 'infra_drift'
-  | 'security'
-  | 'other'
+type Domain = IssueOpsDomain
+type PlaneHint = 'plane_a' | 'plane_b' | 'plane_c'
+
+type SignalCaseHints = {
+  suspected_components?: {
+    planes?: PlaneHint[]
+    services?: string[]
+    providers?: string[]
+    queues?: string[]
+  }
+}
 
 type Signal = {
   signal_id?: string
@@ -32,11 +40,14 @@ type Signal = {
   corridor_id?: string
   queue_kind?: string
   target_url?: string
-  planes?: Array<'plane_a' | 'plane_b' | 'plane_c'>
+  planes?: PlaneHint[]
   services?: string[]
   queues?: string[]
   risk_tier?: number
+  case_hints?: SignalCaseHints
 }
+
+type IssueOpsTriageMode = 'live' | 'dry_run'
 
 type CaseAction = 'dispatch_evidence' | 'acknowledge' | 'suppress'
 
@@ -105,6 +116,45 @@ type BrainState = {
   seen: Record<string, { processed_at: string; case_id: string }>
 }
 
+type CaseLifecycleStatus = 'open' | 'blocked' | 'closed'
+
+type CaseIndexEntry = {
+  case_id: string
+  env: CaseEnv
+  status: CaseLifecycleStatus
+  updated_at: string
+}
+
+type CaseIndex = {
+  version: number
+  cases: CaseIndexEntry[]
+}
+
+const severityRank: Record<Severity, number> = {
+  sev0: 0,
+  sev1: 1,
+  sev2: 2,
+  sev3: 3,
+}
+
+const severityToPriority: Record<Severity, number> = {
+  sev3: 0,
+  sev2: 1,
+  sev1: 2,
+  sev0: 3,
+}
+
+const severityRequiresManualTriage = (severity: Severity): boolean => {
+  return severityRank[severity] >= severityRank.sev2
+}
+
+const riskLevelFromTier = (riskTier: number): 'low' | 'medium' | 'high' | 'critical' => {
+  if (riskTier <= 0) return 'low'
+  if (riskTier === 1) return 'medium'
+  if (riskTier === 2) return 'high'
+  return 'critical'
+}
+
 type DispatchIngestionState = {
   version: number
   dispatches: Record<string, { run_id: number; artifact_id?: number; ingested_at: string }>
@@ -113,20 +163,242 @@ type DispatchIngestionState = {
 const repoRoot = path.resolve(__dirname, '..', '..', '..')
 const remitScoutDir = path.join(repoRoot, '.remit-scout')
 const casesDir = path.join(remitScoutDir, 'cases')
+const caseIndexPath = path.join(casesDir, 'index.json')
 const skillsCatalogPath = path.join(remitScoutDir, 'skills', 'catalog.yaml')
+const reasonCodeCatalogPath = path.join(remitScoutDir, 'reason-codes', 'catalog.yaml')
 const inboxDir = path.join(repoRoot, 'ops', 'brain', 'inbox')
 const outboxDir = path.join(repoRoot, 'ops', 'brain', 'outbox')
 const statePath = path.join(repoRoot, 'ops', 'brain', 'state', 'brain-state.json')
 const dispatchIngestionPath = path.join(repoRoot, 'ops', 'brain', 'state', 'dispatch-ingestion.json')
+const providerCatalogPath = path.join(remitScoutDir, 'providers', 'catalog.json')
 
 const frontdeskStateDir = path.join(repoRoot, 'ops', 'frontdesk', 'state')
 const slackMapPath = path.join(frontdeskStateDir, 'case-slack-map.json')
 const suppressionsPath = path.join(frontdeskStateDir, 'suppressions.json')
 
+const triageDryRunBoundedEvidenceNote =
+  'Dry-run triage mode simulates dispatches without external workflow execution; use outbox payload pointers as bounded evidence.'
+const triageDryRunRollbackEvidenceNote =
+  'Replay in live mode by rerunning the same case/skills after setting BRAIN_TRIAGE_MODE=live and preserving dispatch request payloads.'
+
 const nowIso = () => new Date().toISOString()
+
+const toSortableTimestampToken = (value: unknown): string => {
+  const raw = String(value ?? '').trim()
+  const parsed = raw ? new Date(raw) : new Date()
+  const resolved = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  return resolved.toISOString().replace(/[^\d]/g, '').slice(0, 17)
+}
+
+const sanitizeFilenameToken = (value: unknown, fallback: string): string => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return normalized || fallback
+}
+
+const toRouteOrderToken = (value: unknown): string => {
+  const numeric = Number(value)
+  const normalized = Number.isFinite(numeric) ? Math.max(0, Math.trunc(numeric)) : 0
+  return String(normalized).padStart(4, '0')
+}
+
+const toRequestedAtSortKey = (value: unknown): string => {
+  const raw = String(value ?? '').trim()
+  if (!raw) return '9999-12-31T23:59:59.999Z'
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) return '9999-12-31T23:59:59.999Z'
+  return parsed.toISOString()
+}
+
+const resolveIssueOpsTriageMode = (value: unknown): IssueOpsTriageMode => {
+  const normalized = String(value ?? '').trim().toLowerCase()
+  if (
+    normalized === 'dry_run'
+    || normalized === 'dry-run'
+    || normalized === 'dryrun'
+    || normalized === 'simulation'
+    || normalized === 'simulate'
+  ) {
+    return 'dry_run'
+  }
+  return 'live'
+}
+
+const getIssueOpsTriageMode = (): IssueOpsTriageMode => {
+  return resolveIssueOpsTriageMode(process.env.BRAIN_TRIAGE_MODE)
+}
+
+const isIssueOpsTriageDryRun = (): boolean => {
+  return getIssueOpsTriageMode() === 'dry_run'
+}
+
+const queueHintTokens = [
+  'ingest_fanout_tier2',
+  'ingest_fanout',
+  'quote_refresh',
+  'fx_rate_refresh',
+  'ops_alerts',
+  'gold_live',
+  'notifications',
+  'exports',
+]
+
+let providerHintTokensCache: string[] | null = null
+let reasonCodeRulesCache: Map<string, JudgeReasonCodeRule> | null = null
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value, 'utf8').digest('hex')
+
+const buildDispatchOutboxFilename = (args: {
+  caseId: string
+  skillId: string
+  requestedAt: string
+  routeOrder: number
+  dispatchId?: string
+}): string => {
+  const caseToken = sanitizeFilenameToken(args.caseId, 'case')
+  const skillToken = sanitizeFilenameToken(args.skillId, 'skill')
+  const routeOrderToken = toRouteOrderToken(args.routeOrder)
+  const timestampToken = toSortableTimestampToken(args.requestedAt)
+  const fallbackDispatchToken = sha256(
+    `${args.caseId}|${args.skillId}|${args.requestedAt}|${routeOrderToken}`,
+  ).slice(0, 12)
+  const dispatchToken = sanitizeFilenameToken(args.dispatchId, fallbackDispatchToken)
+  return `dispatch-${timestampToken}-${routeOrderToken}-${caseToken}-${skillToken}-${dispatchToken}.json`
+}
+
+const buildRunOutputFilename = (args: { dispatchId: string; finishedAt: string }): string => {
+  const dispatchToken = sanitizeFilenameToken(args.dispatchId, 'dispatch')
+  const timestampToken = toSortableTimestampToken(args.finishedAt)
+  return `run-${timestampToken}-${dispatchToken}.json`
+}
+
+const escapeRegExp = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const toHintText = (...values: unknown[]): string => {
+  return values
+    .flatMap((value) => {
+      if (Array.isArray(value)) {
+        return value.map((entry) => String(entry ?? '').trim())
+      }
+      return String(value ?? '').trim()
+    })
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
+const coerceStringList = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => String(entry ?? '').trim())
+    .filter(Boolean)
+}
+
+const coercePlaneHints = (value: unknown): PlaneHint[] => {
+  return coerceStringList(value)
+    .filter((entry): entry is PlaneHint =>
+      entry === 'plane_a' || entry === 'plane_b' || entry === 'plane_c')
+}
+
+const parseSignalCaseHints = (value: unknown): SignalCaseHints | undefined => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const raw = value as Record<string, unknown>
+  const components = raw.suspected_components
+  if (!components || typeof components !== 'object' || Array.isArray(components)) return undefined
+
+  const parsed = components as Record<string, unknown>
+  const planes = coercePlaneHints(parsed.planes)
+  const services = coerceStringList(parsed.services)
+  const providers = coerceStringList(parsed.providers)
+  const queues = coerceStringList(parsed.queues)
+
+  if (planes.length === 0 && services.length === 0 && providers.length === 0 && queues.length === 0) {
+    return undefined
+  }
+
+  return {
+    suspected_components: {
+      ...(planes.length > 0 ? { planes } : {}),
+      ...(services.length > 0 ? { services } : {}),
+      ...(providers.length > 0 ? { providers } : {}),
+      ...(queues.length > 0 ? { queues } : {}),
+    },
+  }
+}
+
+const getProviderHintTokens = (): string[] => {
+  if (providerHintTokensCache) return providerHintTokensCache
+  if (!fs.existsSync(providerCatalogPath)) {
+    providerHintTokensCache = []
+    return providerHintTokensCache
+  }
+
+  try {
+    const parsed = JSON.parse(readUtf8(providerCatalogPath)) as any
+    const providers = Array.isArray(parsed?.providers) ? parsed.providers : []
+    const providerIds = providers
+      .map((entry: any) => String(entry?.provider_id || '').trim().toLowerCase())
+      .filter(Boolean)
+    providerHintTokensCache = Array.from(new Set<string>(providerIds))
+      .sort((left, right) => right.length - left.length)
+  } catch {
+    providerHintTokensCache = []
+  }
+
+  return providerHintTokensCache ?? []
+}
+
+const matchHintTokens = (haystack: string, tokens: string[]): string[] => {
+  if (!haystack) return []
+
+  const matches: string[] = []
+  for (const token of tokens) {
+    const normalized = String(token || '').trim().toLowerCase()
+    if (!normalized) continue
+    const pattern = new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(normalized)}(?:[^a-z0-9]|$)`)
+    if (pattern.test(haystack) && !matches.includes(normalized)) {
+      matches.push(normalized)
+    }
+  }
+
+  return matches
+}
+
+const resolveCaseHintComponents = (signal: Signal) => {
+  const explicitHints = signal.case_hints?.suspected_components
+  const hintText = toHintText(signal.signal_id, signal.signal_sources, signal.symptoms)
+  const hintedProviders = matchHintTokens(hintText, getProviderHintTokens())
+  const hintedQueues = matchHintTokens(hintText, queueHintTokens)
+  const hintedPlanes: PlaneHint[] = []
+
+  if (
+    signal.domain === 'provider_health'
+    || signal.domain === 'queue'
+    || Boolean(signal.provider_id)
+    || Boolean(signal.queue_kind)
+    || hintedProviders.length > 0
+    || hintedQueues.length > 0
+  ) {
+    hintedPlanes.push('plane_b')
+  }
+  if (signal.domain === 'api_latency' || Boolean(signal.target_url)) {
+    hintedPlanes.push('plane_a')
+  }
+
+  return {
+    planes: mergeUniqueStrings(explicitHints?.planes, hintedPlanes).filter((plane): plane is PlaneHint =>
+      plane === 'plane_a' || plane === 'plane_b' || plane === 'plane_c'),
+    services: mergeUniqueStrings(explicitHints?.services),
+    providers: mergeUniqueStrings(explicitHints?.providers, hintedProviders),
+    queues: mergeUniqueStrings(explicitHints?.queues, hintedQueues),
+  }
+}
 
 const safeCaseId = (prefix: string) => {
   const base = prefix
@@ -137,14 +409,519 @@ const safeCaseId = (prefix: string) => {
   return base || `case-${Date.now()}`
 }
 
+const toSlugToken = (value: string, fallback = 'signal') => {
+  const base = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return base || fallback
+}
+
+const normalizeSignalText = (value: unknown, maxLength = 160): string => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+  if (!normalized) return ''
+  return normalized.length > maxLength ? normalized.slice(0, maxLength) : normalized
+}
+
+const signalIdentityFingerprint = (signal: Signal): string => {
+  const payload = {
+    env: signal.env,
+    domain: signal.domain,
+    provider_id: normalizeSignalText(signal.provider_id, 80),
+    corridor_id: normalizeSignalText(signal.corridor_id, 80),
+    queue_kind: normalizeSignalText(signal.queue_kind, 80),
+    target_url: normalizeSignalText(signal.target_url, 160),
+    symptoms: normalizeSignalText(signal.symptoms, 200),
+    signal_sources: (signal.signal_sources ?? [])
+      .map((entry) => normalizeSignalText(entry, 80))
+      .filter(Boolean)
+      .sort(),
+  }
+  return sha256(JSON.stringify(payload))
+}
+
+const deterministicCaseIdFromSignal = (signal: Signal): string => {
+  const subject = [signal.provider_id, signal.queue_kind, signal.corridor_id, signal.domain]
+    .map((entry) => toSlugToken(String(entry || '')))
+    .find((entry) => entry && entry !== 'other')
+    || 'signal'
+  const fingerprint = signalIdentityFingerprint(signal).slice(0, 10)
+  return safeCaseId(`case-${signal.env}-${signal.domain}-${subject}-${fingerprint}`)
+}
+
+const parseCaseEnv = (value: unknown): CaseEnv => {
+  if (value === 'prod' || value === 'staging' || value === 'dev') return value
+  return 'dev'
+}
+
+const parseCaseLifecycleStatus = (value: unknown): CaseLifecycleStatus => {
+  if (value === 'open' || value === 'blocked' || value === 'closed') return value
+  return 'open'
+}
+
+const loadCaseIndex = (): CaseIndex => {
+  if (!fs.existsSync(caseIndexPath)) return { version: 1, cases: [] }
+  const parsed = safeJson(readUtf8(caseIndexPath)) as any
+  const casesRaw: Record<string, unknown>[] = Array.isArray(parsed?.cases)
+    ? parsed.cases as Record<string, unknown>[]
+    : []
+  const cases = casesRaw
+    .map((entry: Record<string, unknown>): CaseIndexEntry | null => {
+      const caseId = String(entry?.case_id || '').trim()
+      const updatedAt = String(entry?.updated_at || '').trim() || nowIso()
+      if (!caseId) return null
+      return {
+        case_id: caseId,
+        env: parseCaseEnv(entry?.env),
+        status: parseCaseLifecycleStatus(entry?.status),
+        updated_at: updatedAt,
+      }
+    })
+    .filter((entry: CaseIndexEntry | null): entry is CaseIndexEntry => Boolean(entry))
+
+  return {
+    version: Number(parsed?.version) || 1,
+    cases,
+  }
+}
+
+const saveCaseIndex = (value: CaseIndex) => {
+  fs.mkdirSync(path.dirname(caseIndexPath), { recursive: true })
+  writeUtf8(caseIndexPath, JSON.stringify(value, null, 2) + '\n')
+}
+
+const upsertCaseLifecycle = (caseId: string, env: CaseEnv, status: CaseLifecycleStatus) => {
+  const nextUpdatedAt = nowIso()
+  const index = loadCaseIndex()
+  const existing = index.cases.find((entry) => entry.case_id === caseId)
+  if (existing) {
+    existing.env = env
+    existing.status = status
+    existing.updated_at = nextUpdatedAt
+  } else {
+    index.cases.push({
+      case_id: caseId,
+      env,
+      status,
+      updated_at: nextUpdatedAt,
+    })
+  }
+  index.cases.sort((left, right) => left.case_id.localeCompare(right.case_id))
+  saveCaseIndex(index)
+}
+
+const lifecycleStatusFromRecommendation = (recommendation: string): CaseLifecycleStatus => {
+  if (recommendation === 'close_case') return 'closed'
+  if (recommendation === 'escalate') return 'blocked'
+  return 'open'
+}
+
 const readUtf8 = (p: string) => fs.readFileSync(p, 'utf8')
 const writeUtf8 = (p: string, value: string) => fs.writeFileSync(p, value, 'utf8')
+
+const loadReasonCodeRules = (): Map<string, JudgeReasonCodeRule> => {
+  if (reasonCodeRulesCache) return reasonCodeRulesCache
+  if (!fs.existsSync(reasonCodeCatalogPath)) {
+    reasonCodeRulesCache = new Map()
+    return reasonCodeRulesCache
+  }
+
+  try {
+    const parsed = parseYaml(readUtf8(reasonCodeCatalogPath))
+    reasonCodeRulesCache = buildReasonCodeRules(parsed)
+  } catch {
+    reasonCodeRulesCache = new Map()
+  }
+
+  return reasonCodeRulesCache
+}
+
+const defaultIssueopsSpecRefs = [
+  'SPECS/schema.prd.json',
+  'SPECS/schema.plan.json',
+  'docs/architecture/issueops.md',
+  'docs/architecture/triangulation-roadmap.md',
+  'SPECS/agents-bundle/agents/rag/issueops-operator.md',
+  'SPECS/agents-bundle/agents/rag/agent-orchestration.md',
+  'SPECS/agent-match.md',
+  'SPECS/agents.md',
+  'SPECS/remit-scout.agents.md',
+]
+
+const defaultPlanSnapshotSpecRefs = [
+  'SPECS/schema.plan.json',
+  'docs/architecture/issueops.md',
+]
+
+const toBoundedNote = (value: string, maxLength: number): string => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (trimmed.length <= maxLength) return trimmed
+  return trimmed.slice(0, maxLength)
+}
+
+const toBoundedInteger = (value: unknown, fallback: number, min: number, max: number): number => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  const rounded = Math.floor(parsed)
+  if (rounded < min) return min
+  if (rounded > max) return max
+  return rounded
+}
+
+const toTimestampMs = (value: unknown): number | null => {
+  const token = String(value || '').trim()
+  if (!token) return null
+  const parsed = Date.parse(token)
+  if (!Number.isFinite(parsed)) return null
+  return parsed
+}
+
+const appendBounded = (target: string[], value: string, maxItems = 10) => {
+  if (target.length >= maxItems) return
+  target.push(value)
+}
+
+const emitCaseIndexRetentionObservability = () => {
+  const measuredAt = nowIso()
+  const nowMs = Date.parse(measuredAt)
+  const msPerDay = 24 * 60 * 60 * 1000
+
+  const closedCaseRetentionDays = toBoundedInteger(
+    process.env.BRAIN_CASE_INDEX_RETENTION_DAYS,
+    90,
+    1,
+    3650,
+  )
+  const runFileRetentionDays = toBoundedInteger(
+    process.env.BRAIN_CASE_RUN_RETENTION_DAYS,
+    90,
+    1,
+    3650,
+  )
+
+  const index = loadCaseIndex()
+  const indexedCaseIds = new Set(
+    index.cases
+      .map((entry) => String(entry.case_id || '').trim())
+      .filter(Boolean),
+  )
+
+  let openCount = 0
+  let blockedCount = 0
+  let closedCount = 0
+  let closedCasesOverRetention = 0
+  const closedCasesOverRetentionRefs: string[] = []
+  let oldestIndexedAgeDays = 0
+  const indexedMissingCaseDirs: string[] = []
+
+  for (const entry of index.cases) {
+    if (entry.status === 'open') openCount += 1
+    else if (entry.status === 'blocked') blockedCount += 1
+    else if (entry.status === 'closed') closedCount += 1
+
+    const caseId = String(entry.case_id || '').trim()
+    if (!caseId) continue
+    const caseDir = path.join(casesDir, caseId)
+    if (!fs.existsSync(caseDir) || !fs.statSync(caseDir).isDirectory()) {
+      appendBounded(indexedMissingCaseDirs, caseId)
+    }
+
+    const updatedAtMs = toTimestampMs(entry.updated_at)
+    if (updatedAtMs === null || nowMs < updatedAtMs) continue
+
+    const ageDays = Math.floor((nowMs - updatedAtMs) / msPerDay)
+    if (ageDays > oldestIndexedAgeDays) {
+      oldestIndexedAgeDays = ageDays
+    }
+    if (entry.status === 'closed' && ageDays > closedCaseRetentionDays) {
+      closedCasesOverRetention += 1
+      appendBounded(closedCasesOverRetentionRefs, `${caseId}@${ageDays}d`)
+    }
+  }
+
+  const caseDirNames = fs.existsSync(casesDir)
+    ? fs.readdirSync(casesDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort((left, right) => left.localeCompare(right))
+    : []
+
+  const unindexedCaseDirs: string[] = []
+  let runFilesTotal = 0
+  let runFilesOverRetention = 0
+  const staleRunRefs: string[] = []
+
+  for (const caseDirName of caseDirNames) {
+    if (!indexedCaseIds.has(caseDirName)) {
+      appendBounded(unindexedCaseDirs, caseDirName)
+    }
+
+    const runsDir = path.join(casesDir, caseDirName, 'runs')
+    if (!fs.existsSync(runsDir) || !fs.statSync(runsDir).isDirectory()) continue
+
+    const runFiles = fs.readdirSync(runsDir)
+      .filter((fileName) => fileName.endsWith('.json'))
+      .sort((left, right) => left.localeCompare(right))
+
+    for (const runFile of runFiles) {
+      const runPath = path.join(runsDir, runFile)
+      let stats: fs.Stats
+      try {
+        stats = fs.statSync(runPath)
+      } catch {
+        continue
+      }
+
+      runFilesTotal += 1
+      if (nowMs < stats.mtimeMs) continue
+
+      const ageDays = Math.floor((nowMs - stats.mtimeMs) / msPerDay)
+      if (ageDays > runFileRetentionDays) {
+        runFilesOverRetention += 1
+        appendBounded(staleRunRefs, `${caseDirName}/runs/${runFile}@${ageDays}d`)
+      }
+    }
+  }
+
+  const policyViolations =
+    indexedMissingCaseDirs.length
+    + unindexedCaseDirs.length
+    + closedCasesOverRetention
+    + runFilesOverRetention
+
+  console.log(JSON.stringify({
+    event: 'issueops_case_index_retention@v1',
+    measured_at: measuredAt,
+    status: policyViolations > 0 ? 'drift' : 'ok',
+    case_index: {
+      version: index.version,
+      total_cases: index.cases.length,
+      status_counts: {
+        open: openCount,
+        blocked: blockedCount,
+        closed: closedCount,
+      },
+      indexed_missing_case_dirs: {
+        count: indexedMissingCaseDirs.length,
+        refs: indexedMissingCaseDirs,
+      },
+      unindexed_case_dirs: {
+        count: unindexedCaseDirs.length,
+        refs: unindexedCaseDirs,
+      },
+      oldest_indexed_case_age_days: oldestIndexedAgeDays,
+    },
+    retention_policy: {
+      closed_case_retention_days: closedCaseRetentionDays,
+      run_file_retention_days: runFileRetentionDays,
+    },
+    retention_measurement: {
+      total_run_files: runFilesTotal,
+      closed_cases_over_retention: {
+        count: closedCasesOverRetention,
+        refs: closedCasesOverRetentionRefs,
+      },
+      run_files_over_retention: {
+        count: runFilesOverRetention,
+        refs: staleRunRefs,
+      },
+    },
+    bounded_evidence_note: 'Measurements use bounded counts and max-10 refs from case index + run file metadata only.',
+    rollback_evidence_note: 'No files were deleted; use listed refs to replay, verify, or manually roll back retention actions.',
+  }))
+}
+
+const buildTriageTimeboxContext = (caseId: string, decisionAt: string) => {
+  const maxIterateCount = toBoundedInteger(
+    process.env.BRAIN_TRIAGE_TIMEBOX_MAX_ITERATE_LOOPS,
+    3,
+    1,
+    1000,
+  )
+  const maxElapsedMinutes = toBoundedInteger(
+    process.env.BRAIN_TRIAGE_TIMEBOX_MAX_MINUTES,
+    90,
+    5,
+    24 * 60,
+  )
+
+  const runsDir = path.join(casesDir, caseId, 'runs')
+  if (!fs.existsSync(runsDir)) {
+    return {
+      previousIterateCount: 0,
+      maxIterateCount,
+      maxElapsedMinutes,
+      decisionAt,
+    }
+  }
+
+  const runFiles = fs.readdirSync(runsDir)
+    .filter((fileName) => fileName.endsWith('.json'))
+    .sort((left, right) => left.localeCompare(right))
+
+  let previousIterateCount = 0
+  let streakStartedAt: string | undefined
+  for (let idx = runFiles.length - 1; idx >= 0; idx -= 1) {
+    const runPath = path.join(runsDir, runFiles[idx])
+    const run = safeJson(readUtf8(runPath)) as Record<string, unknown> | null
+    if (!run) continue
+
+    const recommendation = String(
+      run.next_recommendation
+      || ((run.decision_record && typeof run.decision_record === 'object')
+        ? (run.decision_record as Record<string, unknown>).decision
+        : ''),
+    ).trim()
+    if (recommendation !== 'iterate') break
+
+    previousIterateCount += 1
+    const finishedAt = String(run.finished_at || '').trim()
+    if (finishedAt) streakStartedAt = finishedAt
+  }
+
+  return {
+    previousIterateCount,
+    maxIterateCount,
+    maxElapsedMinutes,
+    streakStartedAt,
+    decisionAt,
+  }
+}
+
+const buildTraceability = () => {
+  return {
+    version: 'v1',
+    task_lifecycle_version: 'v1',
+    runtime_stage_gates: {
+      'cluster.issueops.contract@v1': [
+        'gate.intake_ready@v1',
+        'gate.spec_refs_resolved@v1',
+      ],
+      'cluster.issueops.execution@v1': [
+        'gate.incident_task_conversion_stable@v1',
+        'gate.bounded_evidence_captured@v1',
+        'gate.rollback_evidence_captured@v1',
+      ],
+    },
+    parallelizable_tag: 'parallel.serial_only@v1',
+    spec_refs: defaultIssueopsSpecRefs,
+    bounded_evidence: true,
+    rollback_evidence: true,
+  }
+}
+
+const buildAcceptanceProof = (sourceNote: string, acceptanceNote: string) => {
+  return {
+    source_note: toBoundedNote(sourceNote, 300),
+    acceptance_note: toBoundedNote(acceptanceNote, 500),
+    bounded_evidence_note: 'Use bounded evidence summaries and artifact pointers only.',
+    rollback_evidence_note: 'Document rollback path and proof reference before promote/close decisions.',
+  }
+}
+
+const buildInitialPlanSnapshots = () => {
+  return [
+    {
+      snapshot_id: 'snapshot.plan_created@v1',
+      captured_at: nowIso(),
+      trigger: 'plan_created',
+      summary: 'Initial plan snapshot captured for historical audit replay.',
+      spec_refs: defaultPlanSnapshotSpecRefs,
+      bounded_evidence_note: 'Store bounded evidence pointers only; never paste unbounded logs.',
+      rollback_evidence_note: 'Capture rollback evidence pointers before execution handoff.',
+    },
+  ]
+}
+
+const appendPlanSnapshot = (existing: unknown, trigger: string, summary: string) => {
+  const snapshots = Array.isArray(existing) ? existing : []
+  const capturedAt = nowIso()
+  const snapshot = {
+    snapshot_id: `snapshot.${trigger}@v1.${capturedAt.replace(/[^\d]/g, '').slice(0, 14)}`,
+    captured_at: capturedAt,
+    trigger,
+    summary,
+    spec_refs: defaultPlanSnapshotSpecRefs,
+    bounded_evidence_note: 'Store bounded evidence pointers only; never paste unbounded logs.',
+    rollback_evidence_note: 'Capture rollback evidence pointers before execution handoff.',
+  }
+  return [...snapshots, snapshot].slice(-25)
+}
+
+const mergeUniqueStrings = (...lists: unknown[]): string[] => {
+  const merged: string[] = []
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue
+    for (const item of list) {
+      const value = String(item || '').trim()
+      if (!value) continue
+      if (!merged.includes(value)) merged.push(value)
+    }
+  }
+  return merged
+}
+
+const mergeSeverity = (left: unknown, right: Severity): Severity => {
+  const normalizedLeft = (left === 'sev0' || left === 'sev1' || left === 'sev2' || left === 'sev3')
+    ? left
+    : 'sev0'
+  return severityRank[normalizedLeft] >= severityRank[right] ? normalizedLeft : right
+}
 
 const safeJson = (raw: string): any => {
   try {
     return JSON.parse(raw)
   } catch {
     return null
+  }
+}
+
+const failureBundleArchivePlaceholder = '[redacted:failure_bundle_archive]'
+
+const redactFailureBundleArchiveRefs = (raw: string): { text: string; redacted: boolean } => {
+  const input = String(raw || '')
+  const normalized = input.toLowerCase()
+  const mentionsFailureBundle = normalized.includes('failure bundle')
+    || normalized.includes('failure_bundle')
+    || normalized.includes('failure-bundle')
+
+  let redacted = false
+  const shouldRedactToken = (token: string): boolean => {
+    const normalizedToken = token.toLowerCase()
+    const tokenLooksArchive = normalizedToken.includes('archive')
+      || normalizedToken.includes('.zip')
+      || normalizedToken.includes('.tar.gz')
+      || normalizedToken.includes('.tgz')
+    const tokenMentionsBundle = normalizedToken.includes('bundle')
+      || normalizedToken.includes('failure_bundle')
+      || normalizedToken.includes('failure-bundle')
+    return tokenLooksArchive && (tokenMentionsBundle || mentionsFailureBundle)
+  }
+
+  const redactTokenMatch = (value: string): string => {
+    if (!shouldRedactToken(value)) return value
+    redacted = true
+    return failureBundleArchivePlaceholder
+  }
+
+  const redactedLinks = input.replace(/\bhttps?:\/\/[^\s<>()"'`]+/gi, (value) => redactTokenMatch(value))
+  const redactedS3 = redactedLinks.replace(/\bs3:\/\/[^\s<>()"'`]+/gi, (value) => redactTokenMatch(value))
+  const redactedPaths = redactedS3.replace(/(?:\/[\w./:@-]*\.(?:zip|tar\.gz|tgz)|[A-Za-z]:\\[\w.\\:@-]*\.(?:zip|tar\.gz|tgz))/gi, (value) => redactTokenMatch(value))
+
+  return { text: redactedPaths, redacted }
+}
+
+const toSlackSafeFindingMessage = (raw: unknown): { text: string; redacted: boolean } => {
+  const compact = String(raw || '').replace(/\s+/g, ' ').trim()
+  const redacted = redactFailureBundleArchiveRefs(compact)
+  return {
+    text: redacted.text.slice(0, 500),
+    redacted: redacted.redacted,
   }
 }
 
@@ -189,7 +966,16 @@ const saveDispatchIngestionState = (state: DispatchIngestionState) => {
 const dispatchGithubWorkflow = async (
   workflowPath: string,
   inputs: Record<string, unknown>,
-): Promise<{ dispatched: boolean; status: number; message?: string }> => {
+): Promise<{ dispatched: boolean; simulated: boolean; status: number; message?: string }> => {
+  if (isIssueOpsTriageDryRun()) {
+    return {
+      dispatched: true,
+      simulated: true,
+      status: 0,
+      message: 'BRAIN_TRIAGE_MODE=dry_run (simulation: no external workflow dispatch)',
+    }
+  }
+
   const enabled = String(process.env.BRAIN_DISPATCH_GITHUB_ACTIONS || '').trim() === '1'
   const repo = String(process.env.GITHUB_REPOSITORY || '').trim() // "owner/name"
   const token = String(process.env.GITHUB_TOKEN || '').trim()
@@ -197,8 +983,8 @@ const dispatchGithubWorkflow = async (
     .trim()
     .replace(/^refs\/heads\//, '') || 'main'
 
-  if (!enabled) return { dispatched: false, status: 0, message: 'BRAIN_DISPATCH_GITHUB_ACTIONS!=1' }
-  if (!repo || !token) return { dispatched: false, status: 0, message: 'Missing GITHUB_REPOSITORY or GITHUB_TOKEN' }
+  if (!enabled) return { dispatched: false, simulated: false, status: 0, message: 'BRAIN_DISPATCH_GITHUB_ACTIONS!=1' }
+  if (!repo || !token) return { dispatched: false, simulated: false, status: 0, message: 'Missing GITHUB_REPOSITORY or GITHUB_TOKEN' }
 
   const workflowFile = path.basename(workflowPath)
   const url = `https://api.github.com/repos/${repo}/actions/workflows/${encodeURIComponent(workflowFile)}/dispatches`
@@ -221,9 +1007,9 @@ const dispatchGithubWorkflow = async (
     body: JSON.stringify({ ref, inputs: stringInputs }),
   })
 
-  if (res.status === 204) return { dispatched: true, status: res.status }
+  if (res.status === 204) return { dispatched: true, simulated: false, status: res.status }
   const text = await res.text().catch(() => '')
-  return { dispatched: false, status: res.status, message: text.slice(0, 1000) }
+  return { dispatched: false, simulated: false, status: res.status, message: text.slice(0, 1000) }
 }
 
 const createGithubIssue = async (args: {
@@ -307,11 +1093,12 @@ const updateCasePrdLinks = (caseId: string, patch: { github_issue?: string; gith
   writeUtf8(prdPath, stringifyYaml(prd))
 }
 
-const updateCasePrd = (caseId: string, patch: { human_owner?: string }) => {
+const updateCasePrd = (caseId: string, patch: { human_owner?: string; owner_assignment?: Record<string, unknown> }) => {
   const prdPath = path.join(casesDir, caseId, 'prd.yaml')
   if (!fs.existsSync(prdPath)) return
   const prd = parseYaml(readUtf8(prdPath)) as any
   if (patch.human_owner !== undefined) prd.human_owner = patch.human_owner
+  if (patch.owner_assignment !== undefined) prd.owner_assignment = patch.owner_assignment
   writeUtf8(prdPath, stringifyYaml(prd))
 }
 
@@ -321,6 +1108,7 @@ const listSignalFiles = (): string[] => {
     .readdirSync(inboxDir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => path.join(inboxDir, f))
+    .sort((left, right) => left.localeCompare(right))
 }
 
 const parseSignalFile = (p: string): Signal[] => {
@@ -341,9 +1129,8 @@ const isCaseActionEvent = (raw: any): raw is CaseActionEvent => {
 const isValidSignal = (signal: any): signal is Signal => {
   const envOk = signal?.env === 'dev' || signal?.env === 'staging' || signal?.env === 'prod'
   const sevOk = signal?.severity === 'sev0' || signal?.severity === 'sev1' || signal?.severity === 'sev2' || signal?.severity === 'sev3'
-  const domainOk = typeof signal?.domain === 'string' && signal.domain.length > 0
   const symptomsOk = typeof signal?.symptoms === 'string' && signal.symptoms.trim().length > 0
-  return Boolean(envOk && sevOk && domainOk && symptomsOk)
+  return Boolean(envOk && sevOk && symptomsOk)
 }
 
 type SlackCaseMap = {
@@ -492,87 +1279,150 @@ const maybePostSlackCaseCard = async (args: {
   }
 }
 
+type DomainEvidenceMatrixRule = {
+  skill_id: string
+  params: (signal: Signal) => Record<string, unknown>
+  when?: (signal: Signal) => boolean
+  missing_note?: string
+  missing_note_when?: (signal: Signal) => boolean
+}
+
+const toTrimmed = (value: unknown): string => String(value || '').trim()
+
+const extractUrlOrigin = (value: string): string => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  try {
+    return new URL(trimmed).origin
+  } catch {
+    return ''
+  }
+}
+
+const looksLikeNoQuotesSignal = (signal: Signal): boolean => {
+  const hintText = toHintText(signal.signal_id, signal.signal_sources, signal.symptoms)
+  return hintText.includes('no_quotes') || hintText.includes('no quotes') || hintText.includes('no-quote')
+}
+
+const resolveNoQuotesPlaneABaseUrl = (signal: Signal): string => {
+  const explicit = [
+    process.env.ISSUEOPS_NO_QUOTES_PLANE_A_BASE_URL,
+    process.env.PLANE_A_BASE_URL,
+    process.env.API_BASE_URL,
+  ]
+    .map((candidate) => toTrimmed(candidate))
+    .find(Boolean)
+  if (explicit) return explicit
+
+  return extractUrlOrigin(toTrimmed(signal.target_url))
+}
+
+const domainEvidenceMatrix: Partial<Record<Domain, DomainEvidenceMatrixRule[]>> = {
+  provider_health: [
+    {
+      skill_id: 'evidence.provider_health.github_actions',
+      when: (signal) => Boolean(toTrimmed(signal.provider_id)),
+      missing_note: 'provider_id required for provider health evidence.',
+      params: (signal) => ({ env: signal.env, provider_id: toTrimmed(signal.provider_id), window_hours: 6 }),
+    },
+  ],
+  queue: [
+    {
+      skill_id: 'evidence.queue_backlog.github_actions',
+      when: (signal) => Boolean(toTrimmed(signal.queue_kind)),
+      missing_note: 'queue_kind required for queue backlog evidence.',
+      params: (signal) => ({ env: signal.env, queue_kind: toTrimmed(signal.queue_kind) }),
+    },
+  ],
+  api_latency: [
+    {
+      skill_id: 'evidence.http_latency.github_actions',
+      when: (signal) => Boolean(toTrimmed(signal.target_url)),
+      missing_note: 'target_url required for HTTP latency evidence.',
+      params: (signal) => ({ env: signal.env, target_url: toTrimmed(signal.target_url), requests: 20, timeout_ms: 5000 }),
+    },
+  ],
+  freshness: [
+    {
+      skill_id: 'evidence.freshness_slo.github_actions',
+      params: (signal) => ({ env: signal.env, window_hours: 24 }),
+    },
+  ],
+  indices: [
+    {
+      skill_id: 'evidence.indices_readiness.github_actions',
+      params: (signal) => ({ env: signal.env, amount_bucket: 500, method_profile: 'standard_bank' }),
+    },
+  ],
+  pulse: [
+    {
+      skill_id: 'evidence.pulse_cache_health.github_actions',
+      params: (signal) => ({ env: signal.env }),
+    },
+  ],
+  exports: [
+    {
+      skill_id: 'evidence.exports_health.github_actions',
+      params: (signal) => ({ env: signal.env, window_hours: 24 }),
+    },
+  ],
+  infra_drift: [
+    {
+      skill_id: 'evidence.db_health.github_actions',
+      params: (signal) => ({ env: signal.env }),
+    },
+  ],
+  security: [
+    {
+      skill_id: 'evidence.security_dast.github_actions',
+      when: (signal) => Boolean(toTrimmed(signal.target_url)),
+      missing_note: 'target_url required for security DAST evidence.',
+      params: (signal) => ({
+        env: signal.env,
+        target_url: toTrimmed(signal.target_url),
+        run_authenticated: 'true',
+        run_full_scan: 'false',
+      }),
+    },
+  ],
+  other: [
+    {
+      skill_id: 'evidence.no_quotes_audit.github_actions',
+      when: (signal) => looksLikeNoQuotesSignal(signal) && Boolean(resolveNoQuotesPlaneABaseUrl(signal)),
+      missing_note: 'plane_a_base_url required for no-quotes audit evidence when no-quotes symptoms are present.',
+      missing_note_when: (signal) => looksLikeNoQuotesSignal(signal),
+      params: (signal) => ({
+        env: signal.env,
+        plane_a_base_url: resolveNoQuotesPlaneABaseUrl(signal),
+        send_currencies: 'USD,AED,GBP,EUR',
+        method: 'bank',
+        amount: 100,
+        refresh: 0,
+        max_corridors: 200,
+        providers: '',
+      }),
+    },
+  ],
+}
+
 const deterministicDecider = (input: BrainInput): BrainDecision => {
   const signals = input.signals
   const primary = signals[0]
   if (!primary) return { selected_skills: [], priority: 5, why: 'No signals provided', human_attention_required: true }
 
   const selected: SelectedSkill[] = []
+  const matrixMissingNotes: string[] = []
 
-  // Provider evidence
-  if (primary.domain === 'provider_health' && primary.provider_id) {
-    const providerId = primary.provider_id
+  const matrixRules = domainEvidenceMatrix[primary.domain] ?? []
+  for (const rule of matrixRules) {
+    if (rule.when && !rule.when(primary)) {
+      const shouldAttachMissingNote = rule.missing_note_when ? rule.missing_note_when(primary) : true
+      if (rule.missing_note && shouldAttachMissingNote) matrixMissingNotes.push(rule.missing_note)
+      continue
+    }
     selected.push({
-      skill_id: 'evidence.provider_health.github_actions',
-      params: { env: primary.env, provider_id: providerId, window_hours: 6 },
-      stop_on_failure: false,
-    })
-  }
-
-  // Queue evidence
-  if (primary.domain === 'queue' && primary.queue_kind) {
-    selected.push({
-      skill_id: 'evidence.queue_backlog.github_actions',
-      params: { env: primary.env, queue_kind: primary.queue_kind },
-      stop_on_failure: false,
-    })
-  }
-
-  // API latency evidence
-  if (primary.domain === 'api_latency' && primary.target_url) {
-    selected.push({
-      skill_id: 'evidence.http_latency.github_actions',
-      params: { env: primary.env, target_url: primary.target_url, requests: 20, timeout_ms: 5000 },
-      stop_on_failure: false,
-    })
-  }
-
-  // Indices readiness evidence (Gold export snapshot)
-  if (primary.domain === 'indices') {
-    selected.push({
-      skill_id: 'evidence.indices_readiness.github_actions',
-      params: { env: primary.env, amount_bucket: 500, method_profile: 'standard_bank' },
-      stop_on_failure: false,
-    })
-  }
-
-  // Pulse cache evidence (Gold pulse cache freshness)
-  if (primary.domain === 'pulse') {
-    selected.push({
-      skill_id: 'evidence.pulse_cache_health.github_actions',
-      params: { env: primary.env },
-      stop_on_failure: false,
-    })
-  }
-
-  // Exports health evidence (export_job + queue + S3)
-  if (primary.domain === 'exports') {
-    selected.push({
-      skill_id: 'evidence.exports_health.github_actions',
-      params: { env: primary.env, window_hours: 24 },
-      stop_on_failure: false,
-    })
-  }
-
-  // Freshness SLO evidence
-  if (primary.domain === 'freshness') {
-    selected.push({
-      skill_id: 'evidence.freshness_slo.github_actions',
-      params: { env: primary.env, window_hours: 24 },
-      stop_on_failure: false,
-    })
-  }
-
-  // Security DAST evidence
-  if (primary.domain === 'security' && primary.target_url) {
-    selected.push({
-      skill_id: 'evidence.security_dast.github_actions',
-      params: {
-        env: primary.env,
-        target_url: primary.target_url,
-        run_authenticated: 'true',
-        run_full_scan: 'false',
-      },
+      skill_id: rule.skill_id,
+      params: rule.params(primary),
       stop_on_failure: false,
     })
   }
@@ -595,6 +1445,15 @@ const deterministicDecider = (input: BrainInput): BrainDecision => {
     })
   }
 
+  const requiresManualTriage = severityRequiresManualTriage(primary.severity) || matrixMissingNotes.length > 0
+  if (requiresManualTriage) {
+    selected.push({
+      skill_id: 'manual.human_triage',
+      params: {},
+      stop_on_failure: false,
+    })
+  }
+
   // Ensure every Plan is schema-valid (Plan requires at least one skill).
   if (selected.length === 0) {
     selected.push({
@@ -606,9 +1465,12 @@ const deterministicDecider = (input: BrainInput): BrainDecision => {
 
   return {
     selected_skills: selected,
-    priority: primary.severity === 'sev0' ? 0 : primary.severity === 'sev1' ? 1 : primary.severity === 'sev2' ? 2 : 3,
-    why: 'Deterministic routing based on signal kind/domain and safe evidence skills.',
-    human_attention_required: primary.severity === 'sev0' || primary.severity === 'sev1',
+    priority: severityToPriority[primary.severity],
+    why: [
+      'Deterministic routing based on domain evidence matrix, safe evidence skills, and severity-gated triage.',
+      matrixMissingNotes.length > 0 ? `Missing domain evidence inputs: ${matrixMissingNotes.join(' ')}` : '',
+    ].filter(Boolean).join(' '),
+    human_attention_required: requiresManualTriage,
   }
 }
 
@@ -625,7 +1487,7 @@ const openClawDecider = (input: BrainInput): BrainDecision | null => {
   })
 
   if (res.status !== 0) {
-    // eslint-disable-next-line no-console
+     
     console.error('openclaw_decider_failed', { status: res.status, stderr: (res.stderr || '').slice(0, 4000) })
     return null
   }
@@ -633,7 +1495,7 @@ const openClawDecider = (input: BrainInput): BrainDecision | null => {
   try {
     return JSON.parse(String(res.stdout || '')) as BrainDecision
   } catch {
-    // eslint-disable-next-line no-console
+     
     console.error('openclaw_decider_invalid_json', { stdout: String(res.stdout || '').slice(0, 4000) })
     return null
   }
@@ -645,91 +1507,281 @@ const enforceDecision = (decision: BrainDecision, input: BrainInput): BrainDecis
   const env = primary?.env || 'dev'
   const maxRisk = Math.max(0, Math.min(3, Number(primary?.risk_tier ?? 1)))
 
+  const unknownSkillIds: string[] = []
+  const policyFilteredSkillIds: string[] = []
   const filtered: SelectedSkill[] = []
   for (const s of decision.selected_skills || []) {
-    const def = catalogById.get(s.skill_id)
-    if (!def) continue
+    const selectedSkillId = String(s?.skill_id || '').trim()
+    if (!selectedSkillId) continue
+
+    const def = catalogById.get(selectedSkillId)
+    if (!def) {
+      if (!unknownSkillIds.includes(selectedSkillId)) unknownSkillIds.push(selectedSkillId)
+      continue
+    }
 
     // Hard safety: prod defaults to non-local executors only.
-    if (env === 'prod' && def.executor === 'local_codex') continue
+    if (env === 'prod' && def.executor === 'local_codex') {
+      if (!policyFilteredSkillIds.includes(selectedSkillId)) policyFilteredSkillIds.push(selectedSkillId)
+      continue
+    }
 
     // Risk tier gating.
-    if (def.risk_tier > maxRisk) continue
+    if (def.risk_tier > maxRisk) {
+      if (!policyFilteredSkillIds.includes(selectedSkillId)) policyFilteredSkillIds.push(selectedSkillId)
+      continue
+    }
 
     filtered.push(s)
+  }
+
+  const catalogEscalationRequired = unknownSkillIds.length > 0
+  if (catalogEscalationRequired &&
+    catalogById.has('manual.human_triage') &&
+    !filtered.some((selectedSkill) => selectedSkill.skill_id === 'manual.human_triage')) {
+    filtered.push({ skill_id: 'manual.human_triage', params: {}, stop_on_failure: false })
+  }
+
+  const whyParts = [String(decision.why || '').trim()]
+  if (catalogEscalationRequired) {
+    const unknownList = unknownSkillIds.slice(0, 5).map((id) => `\`${id}\``).join(', ')
+    const suffix = unknownSkillIds.length > 5 ? ` (+${unknownSkillIds.length - 5} more)` : ''
+    whyParts.push(
+      `Escalated to manual triage: decider selected skills not found in .remit-scout/skills/catalog.yaml (${unknownList}${suffix}).`,
+    )
+  }
+  if (policyFilteredSkillIds.length > 0) {
+    const filteredList = policyFilteredSkillIds.slice(0, 5).map((id) => `\`${id}\``).join(', ')
+    const suffix = policyFilteredSkillIds.length > 5 ? ` (+${policyFilteredSkillIds.length - 5} more)` : ''
+    whyParts.push(`Policy-filtered skills were removed (${filteredList}${suffix}).`)
   }
 
   return {
     ...decision,
     selected_skills: filtered,
+    human_attention_required: Boolean(decision.human_attention_required || catalogEscalationRequired),
+    why: whyParts.filter(Boolean).join(' '),
   }
 }
 
 const writeCaseArtifacts = (signal: Signal, decision: BrainDecision) => {
-  const observedAt = signal.observed_at ? new Date(signal.observed_at) : new Date()
   const dedupe = signal.signal_id ? sha256(signal.signal_id) : sha256(JSON.stringify(signal))
   const short = dedupe.slice(0, 8)
-  const date = observedAt.toISOString().slice(0, 10).replace(/-/g, '')
-  const caseId = safeCaseId(`case-${date}-${signal.env}-${signal.domain}-${signal.provider_id || 'signal'}-${short}`)
+  const caseId = deterministicCaseIdFromSignal(signal)
 
   const caseDir = path.join(casesDir, caseId)
   const runsDir = path.join(caseDir, 'runs')
   fs.mkdirSync(runsDir, { recursive: true })
+  const prdPath = path.join(caseDir, 'prd.yaml')
+  const planPath = path.join(caseDir, 'plan.yaml')
+
+  const existingPrd = fs.existsSync(prdPath)
+    ? parseYaml(readUtf8(prdPath)) as Record<string, unknown>
+    : null
+  const existingPlan = fs.existsSync(planPath)
+    ? parseYaml(readUtf8(planPath)) as Record<string, unknown>
+    : null
+  const hadExistingArtifacts = Boolean(existingPrd && existingPlan)
+
+  const normalizedRiskTier = Math.max(0, Math.min(3, Number(signal.risk_tier ?? 1)))
+  const existingRiskTier = Math.max(0, Math.min(3, Number(existingPrd?.risk_tier ?? normalizedRiskTier)))
+  const mergedRiskTier = Math.max(normalizedRiskTier, existingRiskTier)
+  const sourceSignalId = String(signal.signal_id || '').trim() || `signal_hash:${short}`
+  const sourceList = (signal.signal_sources ?? [])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+  const mergedSignalSources = mergeUniqueStrings(existingPrd?.signal_sources, sourceList)
+  const sourceLabel = sourceList.length ? sourceList.join(',') : 'unknown'
+  const caseHintComponents = resolveCaseHintComponents(signal)
+  const caseHintSummaryParts = [
+    caseHintComponents.providers.length ? `providers=${caseHintComponents.providers.join('|')}` : '',
+    caseHintComponents.queues.length ? `queues=${caseHintComponents.queues.join('|')}` : '',
+    caseHintComponents.planes.length ? `planes=${caseHintComponents.planes.join('|')}` : '',
+  ].filter(Boolean)
+  const caseHintLabel = caseHintSummaryParts.length ? caseHintSummaryParts.join(',') : 'none'
+  const sourceNote = `Source: ${sourceSignalId}; signal_sources=${sourceLabel}; case_hints=${caseHintLabel}; workflow=incident_to_task@v1`
+  const prdAcceptanceNote =
+    'Incident-to-task conversion is accepted when PRD preserves schema-compliant risk/owner metadata and sharded evidence notes.'
+  const planAcceptanceNote =
+    'Incident-to-task conversion is accepted when the Plan captures executable skills with bounded and rollback evidence requirements.'
+
+  const existingOwnerAssignment = (existingPrd?.owner_assignment && typeof existingPrd.owner_assignment === 'object')
+    ? existingPrd.owner_assignment as Record<string, unknown>
+    : null
+  const existingPrdTraceability = (existingPrd?.traceability && typeof existingPrd.traceability === 'object')
+    ? existingPrd.traceability
+    : null
+  const existingPrdAcceptanceProof = (existingPrd?.acceptance_proof && typeof existingPrd.acceptance_proof === 'object')
+    ? existingPrd.acceptance_proof as Record<string, unknown>
+    : null
+  const existingLinks = (existingPrd?.links && typeof existingPrd.links === 'object')
+    ? existingPrd.links as Record<string, unknown>
+    : null
+
+  const mergedQueues = mergeUniqueStrings(
+    existingPrd?.suspected_components && typeof existingPrd.suspected_components === 'object'
+      ? (existingPrd.suspected_components as Record<string, unknown>).queues
+      : [],
+    signal.queues,
+    signal.queue_kind ? [String(signal.queue_kind).trim()] : [],
+    caseHintComponents.queues,
+  )
+
+  const mergedPlanes = mergeUniqueStrings(
+    existingPrd?.suspected_components && typeof existingPrd.suspected_components === 'object'
+      ? (existingPrd.suspected_components as Record<string, unknown>).planes
+      : [],
+    signal.planes,
+    caseHintComponents.planes,
+  ).filter((plane): plane is PlaneHint =>
+    plane === 'plane_a' || plane === 'plane_b' || plane === 'plane_c')
+
+  const mergedServices = mergeUniqueStrings(
+    existingPrd?.suspected_components && typeof existingPrd.suspected_components === 'object'
+      ? (existingPrd.suspected_components as Record<string, unknown>).services
+      : [],
+    signal.services,
+    caseHintComponents.services,
+  )
+
+  const mergedProviders = mergeUniqueStrings(
+    existingPrd?.suspected_components && typeof existingPrd.suspected_components === 'object'
+      ? (existingPrd.suspected_components as Record<string, unknown>).providers
+      : [],
+    signal.provider_id ? [signal.provider_id] : [],
+    caseHintComponents.providers,
+  )
+
+  const prdAcceptance = existingPrdAcceptanceProof
+    ? {
+      source_note: toBoundedNote(sourceNote, 300),
+      acceptance_note: toBoundedNote(String(existingPrdAcceptanceProof.acceptance_note || prdAcceptanceNote), 500) || prdAcceptanceNote,
+      bounded_evidence_note: toBoundedNote(
+        String(existingPrdAcceptanceProof.bounded_evidence_note || 'Use bounded evidence summaries and artifact pointers only.'),
+        500,
+      ) || 'Use bounded evidence summaries and artifact pointers only.',
+      rollback_evidence_note: toBoundedNote(
+        String(existingPrdAcceptanceProof.rollback_evidence_note || 'Document rollback path and proof reference before promote/close decisions.'),
+        500,
+      ) || 'Document rollback path and proof reference before promote/close decisions.',
+    }
+    : buildAcceptanceProof(sourceNote, prdAcceptanceNote)
 
   const prd = {
     case_id: caseId,
-    created_at: nowIso(),
+    created_at: String(existingPrd?.created_at || '').trim() || nowIso(),
     env: signal.env,
-    severity: signal.severity,
-    signal_sources: (signal.signal_sources && signal.signal_sources.length)
-      ? signal.signal_sources
-      : ['unknown'],
+    severity: mergeSeverity(existingPrd?.severity, signal.severity),
+    signal_sources: mergedSignalSources.length ? mergedSignalSources : ['unknown'],
     domain: signal.domain,
     symptoms: signal.symptoms,
     suspected_components: {
-      planes: signal.planes ?? [],
-      services: signal.services ?? [],
-      providers: signal.provider_id ? [signal.provider_id] : [],
-      queues: Array.from(new Set([
-        ...((signal.queues ?? []).map((q) => String(q).trim()).filter(Boolean)),
-        ...(signal.queue_kind ? [String(signal.queue_kind).trim()] : []),
-      ])).filter(Boolean),
+      planes: mergedPlanes,
+      services: mergedServices,
+      providers: mergedProviders,
+      queues: mergedQueues,
     },
-    risk_tier: Math.max(0, Math.min(3, Number(signal.risk_tier ?? 1))),
-    human_owner: '',
+    risk_tier: mergedRiskTier,
+    risk_level: riskLevelFromTier(mergedRiskTier),
+    owner_assignment: existingOwnerAssignment ?? {
+      status: 'unassigned',
+      ownership_tag: 'owner.unassigned@v1',
+    },
+    traceability: existingPrdTraceability ?? buildTraceability(),
+    acceptance_proof: prdAcceptance,
+    human_owner: String(existingPrd?.human_owner || ''),
     links: {
-      github_issue: '',
-      github_pr: '',
-      cloudwatch_alarms: [],
-      dashboards: [],
+      github_issue: String(existingLinks?.github_issue || ''),
+      github_pr: String(existingLinks?.github_pr || ''),
+      cloudwatch_alarms: mergeUniqueStrings(existingLinks?.cloudwatch_alarms),
+      dashboards: mergeUniqueStrings(existingLinks?.dashboards),
     },
   }
 
   const guardProd = signal.env === 'prod'
-  const plan = {
-    case_id: caseId,
-    goal: 'Collect evidence, pinpoint root cause, and recommend next steps.',
-    constraints: [
-      `prod_read_only=${guardProd ? 'true' : 'false'}`,
-      'no secrets in artifacts',
-    ],
-    skills: decision.selected_skills.map((s) => {
-      const def = inputCatalogById.get(s.skill_id)!
+  const resolvedSkills = decision.selected_skills
+    .map((selectedSkill) => {
+      const skillDef = inputCatalogById.get(selectedSkill.skill_id)
+      if (!skillDef) return null
+
       const expectedArtifacts =
-        def.executor === 'github_actions'
-          ? [`github:workflow:${def.workflow}`]
-          : def.executor === 'local_codex'
+        skillDef.executor === 'github_actions'
+          ? [`github:workflow:${skillDef.workflow}`]
+          : skillDef.executor === 'local_codex'
             ? ['stdout:json']
             : []
 
       return {
-        skill_id: s.skill_id,
-        executor: def.executor,
-        params: s.params ?? {},
+        skill_id: selectedSkill.skill_id,
+        executor: skillDef.executor,
+        params: selectedSkill.params ?? {},
         expected_artifacts: expectedArtifacts,
-        stop_on_failure: Boolean(s.stop_on_failure),
+        stop_on_failure: Boolean(selectedSkill.stop_on_failure),
       }
-    }),
+    })
+    .filter((skill): skill is {
+      skill_id: string
+      executor: SkillExecutor
+      params: Record<string, unknown>
+      expected_artifacts: string[]
+      stop_on_failure: boolean
+    } => Boolean(skill))
+
+  if (resolvedSkills.length === 0) {
+    const fallbackSkill = inputCatalogById.get('manual.human_triage')
+    if (!fallbackSkill) {
+      throw new Error('incident_to_task_conversion_failed: missing fallback skill manual.human_triage in skill catalog')
+    }
+
+    resolvedSkills.push({
+      skill_id: fallbackSkill.skill_id,
+      executor: fallbackSkill.executor,
+      params: {},
+      expected_artifacts: [],
+      stop_on_failure: false,
+    })
+  }
+
+  const existingPlanTraceability = (existingPlan?.traceability && typeof existingPlan.traceability === 'object')
+    ? existingPlan.traceability
+    : null
+  const existingPlanAcceptanceProof = (existingPlan?.acceptance_proof && typeof existingPlan.acceptance_proof === 'object')
+    ? existingPlan.acceptance_proof as Record<string, unknown>
+    : null
+  const planAcceptance = existingPlanAcceptanceProof
+    ? {
+      source_note: toBoundedNote(sourceNote, 300),
+      acceptance_note: toBoundedNote(String(existingPlanAcceptanceProof.acceptance_note || planAcceptanceNote), 500) || planAcceptanceNote,
+      bounded_evidence_note: toBoundedNote(
+        String(existingPlanAcceptanceProof.bounded_evidence_note || 'Store bounded evidence pointers only; never paste unbounded logs.'),
+        500,
+      ) || 'Store bounded evidence pointers only; never paste unbounded logs.',
+      rollback_evidence_note: toBoundedNote(
+        String(existingPlanAcceptanceProof.rollback_evidence_note || 'Capture rollback evidence pointers before execution handoff.'),
+        500,
+      ) || 'Capture rollback evidence pointers before execution handoff.',
+    }
+    : buildAcceptanceProof(sourceNote, planAcceptanceNote)
+
+  const planSnapshots = hadExistingArtifacts
+    ? appendPlanSnapshot(
+      existingPlan?.plan_snapshots,
+      'plan_refreshed',
+      'Plan refreshed from repeat signal while preserving deterministic case identity.',
+    )
+    : buildInitialPlanSnapshots()
+
+  const plan = {
+    case_id: caseId,
+    goal: String(existingPlan?.goal || '').trim() || 'Collect evidence, pinpoint root cause, and recommend next steps.',
+    traceability: existingPlanTraceability ?? buildTraceability(),
+    acceptance_proof: planAcceptance,
+    plan_snapshots: planSnapshots,
+    constraints: [
+      `prod_read_only=${guardProd ? 'true' : 'false'}`,
+      'no secrets in artifacts',
+    ],
+    skills: resolvedSkills,
     guardrails: {
       max_runtime_minutes: 30,
       max_diff_lines: 0,
@@ -737,10 +1789,15 @@ const writeCaseArtifacts = (signal: Signal, decision: BrainDecision) => {
     },
   }
 
-  writeUtf8(path.join(caseDir, 'prd.yaml'), stringifyYaml(prd))
-  writeUtf8(path.join(caseDir, 'plan.yaml'), stringifyYaml(plan))
+  writeUtf8(prdPath, stringifyYaml(prd))
+  writeUtf8(planPath, stringifyYaml(plan))
+  upsertCaseLifecycle(caseId, signal.env, 'open')
 
-  return { caseId }
+  return {
+    caseId,
+    hadExistingArtifacts,
+    githubIssueUrl: String(existingLinks?.github_issue || '').trim(),
+  }
 }
 
 let inputCatalogById = new Map<string, SkillDef>()
@@ -763,7 +1820,17 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
   if (event.action === 'acknowledge') {
     const userId = String(event?.requested_by?.slack_user_id || '').trim()
     const owner = userId ? `slack:${userId}` : `slack:unknown`
-    updateCasePrd(caseId, { human_owner: owner })
+    updateCasePrd(caseId, {
+      human_owner: owner,
+      owner_assignment: {
+        status: 'assigned',
+        owner,
+        ownership_tag: 'owner.human.slack@v1',
+        assigned_at: nowIso(),
+        assignment_note: 'Assigned from Slack acknowledge action.',
+      },
+    })
+    upsertCaseLifecycle(caseId, env, 'open')
     await postSlackThreadReply(caseId, userId ? `Acknowledged by <@${userId}>.` : 'Acknowledged.')
     return
   }
@@ -779,7 +1846,9 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
   }
 
   if (event.action === 'dispatch_evidence') {
+    upsertCaseLifecycle(caseId, env, 'open')
     const evidenceOnly = Boolean(event?.params?.evidence_only)
+    const triageMode = getIssueOpsTriageMode()
     const skills = Array.isArray(plan?.skills) ? plan.skills : []
     const selected = skills.filter((s: any) => {
       const skillId = String(s?.skill_id || '').trim()
@@ -795,12 +1864,15 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
     }
 
     const dispatched: string[] = []
+    const simulated: string[] = []
     const failed: string[] = []
 
-    for (const s of selected) {
+    for (const [selectedIndex, s] of selected.entries()) {
       const skillId = String(s?.skill_id || '').trim()
       const def = catalogById.get(skillId)
       if (!def?.workflow) continue
+      const routeOrder = selectedIndex + 1
+      const requestedAt = nowIso()
 
       const rawParams = (s?.params && typeof s.params === 'object') ? (s.params as Record<string, unknown>) : {}
       const wantsDispatchId = Boolean(def?.required_inputs &&
@@ -816,24 +1888,44 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
 
       const request = {
         kind: 'github_workflow_dispatch',
-        requested_at: nowIso(),
+        requested_at: requestedAt,
+        route_order: routeOrder,
         case_id: caseId,
+        triage_mode: triageMode,
         ...(wantsDispatchId ? { dispatch_id: dispatchId } : {}),
         skill_id: skillId,
         workflow: def.workflow,
         inputs,
+        ...(triageMode === 'dry_run'
+          ? {
+            simulation: {
+              enabled: true,
+              bounded_evidence_note: triageDryRunBoundedEvidenceNote,
+              rollback_evidence_note: triageDryRunRollbackEvidenceNote,
+            },
+          }
+          : {}),
       }
 
-      const filename = wantsDispatchId
-        ? `dispatch-${caseId}-${dispatchId}-${skillId.replace(/[^a-zA-Z0-9]+/g, '_')}-${Date.now()}.json`
-        : `dispatch-${caseId}-${skillId.replace(/[^a-zA-Z0-9]+/g, '_')}-${Date.now()}-${randomUUID()}.json`
+      const filename = buildDispatchOutboxFilename({
+        caseId,
+        skillId,
+        requestedAt,
+        routeOrder,
+        ...(wantsDispatchId ? { dispatchId } : {}),
+      })
       const requestPath = path.join(outboxDir, filename)
       writeUtf8(requestPath, JSON.stringify({ ...request, status: 'pending' }, null, 2) + '\n')
 
       const dispatch = await dispatchGithubWorkflow(def.workflow, request.inputs)
       if (dispatch.dispatched) {
-        dispatched.push(skillId)
-        writeUtf8(requestPath, JSON.stringify({ ...request, status: 'dispatched', dispatched_at: nowIso() }, null, 2) + '\n')
+        if (dispatch.simulated) {
+          simulated.push(skillId)
+          writeUtf8(requestPath, JSON.stringify({ ...request, status: 'simulated', simulated_at: nowIso() }, null, 2) + '\n')
+        } else {
+          dispatched.push(skillId)
+          writeUtf8(requestPath, JSON.stringify({ ...request, status: 'dispatched', dispatched_at: nowIso() }, null, 2) + '\n')
+        }
       } else {
         failed.push(skillId)
         writeUtf8(requestPath, JSON.stringify({ ...request, status: 'failed', failed_at: nowIso(), error: dispatch }, null, 2) + '\n')
@@ -841,8 +1933,11 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
     }
 
     const msg = [
-      `Run Evidence requested (evidence_only=${evidenceOnly ? 'true' : 'false'}).`,
+      `Run Evidence requested (evidence_only=${evidenceOnly ? 'true' : 'false'}, triage_mode=${triageMode}).`,
       dispatched.length ? `Dispatched: ${dispatched.map((s) => `\`${s}\``).join(', ')}` : null,
+      simulated.length
+        ? `Simulated (dry-run): ${simulated.map((s) => `\`${s}\``).join(', ')}. Bounded evidence: ${triageDryRunBoundedEvidenceNote} Rollback evidence: ${triageDryRunRollbackEvidenceNote}`
+        : null,
       failed.length ? `Failed: ${failed.map((s) => `\`${s}\``).join(', ')}` : null,
     ].filter(Boolean).join('\n')
 
@@ -853,19 +1948,32 @@ const handleCaseAction = async (catalog: SkillCatalog, event: CaseActionEvent) =
 type GithubWorkflowDispatchOutbox = {
   kind: 'github_workflow_dispatch'
   requested_at: string
+  route_order?: number
   case_id: string
+  triage_mode?: IssueOpsTriageMode
   dispatch_id?: string
   skill_id: string
   workflow: string
   inputs: Record<string, unknown>
-  status?: 'pending' | 'dispatched' | 'failed'
+  simulation?: {
+    enabled: boolean
+    bounded_evidence_note: string
+    rollback_evidence_note: string
+  }
+  status?: 'pending' | 'dispatched' | 'simulated' | 'failed'
   dispatched_at?: string
+  simulated_at?: string
   failed_at?: string
   ingested_at?: string
   github_run_id?: number
   github_actions_run_url?: string
   github_artifact_id?: number
   github_actions_artifact_url?: string
+}
+
+type RunEvidenceRef = {
+  kind: 'github_artifact' | 's3' | 'cloudwatch' | 'link' | 'log'
+  ref: string
 }
 
 const isGithubWorkflowDispatchOutbox = (value: unknown): value is GithubWorkflowDispatchOutbox => {
@@ -876,6 +1984,144 @@ const isGithubWorkflowDispatchOutbox = (value: unknown): value is GithubWorkflow
     typeof v.skill_id === 'string' &&
     typeof v.workflow === 'string' &&
     v.inputs && typeof v.inputs === 'object'
+}
+
+const dedupeEvidenceRefs = (refs: RunEvidenceRef[], maxItems: number): RunEvidenceRef[] => {
+  const deduped: RunEvidenceRef[] = []
+  for (const ref of refs) {
+    const kind = ref?.kind
+    const value = String(ref?.ref || '').trim()
+    if (!kind || !value) continue
+    if (deduped.some((existing) => existing.kind === kind && existing.ref === value)) continue
+    deduped.push({ kind, ref: value })
+    if (deduped.length >= maxItems) break
+  }
+  return deduped
+}
+
+const reconstructIncidentTimelineFromEvents = (args: {
+  caseId: string
+  dispatchId: string
+  outboxPath: string
+  outboxRecord: GithubWorkflowDispatchOutbox
+  startedAt: string
+  finishedAt: string
+}): {
+  ok: boolean
+  reasonCode: 'triage.timeline_reconstruction_failed'
+  summary: string
+  rollbackEvidenceRefs: RunEvidenceRef[]
+} => {
+  const boundedRefs: string[] = []
+  const timelineEvents: Array<{ ts: number; at: string }> = []
+  const reconstructionIssues: string[] = []
+
+  const outboxRef = path.relative(repoRoot, args.outboxPath).split(path.sep).join('/')
+  appendBounded(boundedRefs, outboxRef)
+
+  const appendTimelineEvent = (timestamp: unknown, issueLabel: string) => {
+    const raw = String(timestamp || '').trim()
+    const parsed = toTimestampMs(raw)
+    if (parsed === null) {
+      appendBounded(reconstructionIssues, `${issueLabel}=missing_or_invalid`)
+      return
+    }
+    timelineEvents.push({ ts: parsed, at: new Date(parsed).toISOString() })
+  }
+
+  appendTimelineEvent(args.outboxRecord.requested_at, 'outbox.requested_at')
+  if (args.outboxRecord.dispatched_at) appendTimelineEvent(args.outboxRecord.dispatched_at, 'outbox.dispatched_at')
+  if (args.outboxRecord.simulated_at) appendTimelineEvent(args.outboxRecord.simulated_at, 'outbox.simulated_at')
+  appendTimelineEvent(args.startedAt, 'run.started_at')
+  appendTimelineEvent(args.finishedAt, 'run.finished_at')
+
+  const runsDir = path.join(casesDir, args.caseId, 'runs')
+  if (fs.existsSync(runsDir) && fs.statSync(runsDir).isDirectory()) {
+    const runFiles = fs.readdirSync(runsDir)
+      .filter((fileName) => fileName.endsWith('.json'))
+      .sort((left, right) => left.localeCompare(right))
+      .slice(-5)
+
+    for (const runFile of runFiles) {
+      const runPath = path.join(runsDir, runFile)
+      const runRef = path.relative(repoRoot, runPath).split(path.sep).join('/')
+      appendBounded(boundedRefs, runRef)
+      let run: Record<string, unknown> | null = null
+      try {
+        run = safeJson(readUtf8(runPath)) as Record<string, unknown> | null
+      } catch {
+        run = null
+      }
+      if (!run) {
+        appendBounded(reconstructionIssues, `run_record_invalid=${runRef}`)
+        continue
+      }
+      appendTimelineEvent(run.finished_at, `run.finished_at:${runRef}`)
+    }
+  }
+
+  const inboxFiles = listSignalFiles().slice(-50)
+  for (const inboxFile of inboxFiles) {
+    let payload: unknown
+    try {
+      payload = safeJson(readUtf8(inboxFile))
+    } catch {
+      payload = null
+    }
+    if (!payload) continue
+    const envelopes = Array.isArray(payload)
+      ? payload
+      : (Array.isArray((payload as Record<string, unknown>)?.signals)
+        ? (payload as Record<string, unknown>).signals as unknown[]
+        : [payload])
+
+    for (const envelope of envelopes) {
+      if (!envelope || typeof envelope !== 'object') continue
+      const record = envelope as Record<string, unknown>
+      if (String(record.kind || '').trim() !== 'case_action') continue
+      if (String(record.case_id || '').trim() !== args.caseId) continue
+
+      const inboxRef = path.relative(repoRoot, inboxFile).split(path.sep).join('/')
+      appendBounded(boundedRefs, inboxRef)
+      appendTimelineEvent(record.requested_at, `inbox.case_action.requested_at:${inboxRef}`)
+    }
+  }
+
+  timelineEvents.sort((left, right) => left.ts - right.ts)
+  const firstEvent = timelineEvents[0]
+  const lastEvent = timelineEvents[timelineEvents.length - 1]
+
+  if (timelineEvents.length < 2) {
+    appendBounded(reconstructionIssues, 'timeline_events_insufficient')
+  }
+
+  const requestedAtMs = toTimestampMs(args.outboxRecord.requested_at)
+  const finishedAtMs = toTimestampMs(args.finishedAt)
+  if (requestedAtMs !== null && finishedAtMs !== null && requestedAtMs > finishedAtMs) {
+    appendBounded(reconstructionIssues, 'timeline_out_of_order=dispatch_requested_after_run_finished')
+  }
+
+  const rollbackEvidenceRefs = boundedRefs.map((ref) => ({ kind: 'log' as const, ref }))
+  if (reconstructionIssues.length > 0) {
+    const issueSummary = reconstructionIssues.slice(0, 5).join(', ')
+    return {
+      ok: false,
+      reasonCode: 'triage.timeline_reconstruction_failed',
+      summary:
+        `Incident timeline reconstruction from events failed for dispatch ${args.dispatchId}: ${issueSummary}; `
+        + 'escalating for manual triage with bounded and rollback evidence refs.',
+      rollbackEvidenceRefs,
+    }
+  }
+
+  return {
+    ok: true,
+    reasonCode: 'triage.timeline_reconstruction_failed',
+    summary:
+      `Incident timeline reconstructed from ${timelineEvents.length} bounded events `
+      + `(${firstEvent.at} -> ${lastEvent.at}); rollback via listed event refs.`,
+    rollbackEvidenceRefs,
+  }
 }
 
 const listOutboxFiles = (): string[] => {
@@ -995,27 +2241,43 @@ const buildRunRecordFromEvidence = (args: {
   runUrl: string
   artifactUrl: string
   artifactName: string
+  outboxPath: string
+  outboxRecord: GithubWorkflowDispatchOutbox
   evidence: any
 }) => {
   const findings = Array.isArray(args.evidence?.findings) ? args.evidence.findings : []
-  const sev3 = findings.some((f: any) => String(f?.severity || '') === 'sev3')
-  const sev2or3 = findings.some((f: any) => {
-    const s = String(f?.severity || '')
-    return s === 'sev2' || s === 'sev3'
-  })
-
   const evidenceSuccess = Boolean(args.evidence?.success)
-  const resultsSuccess = evidenceSuccess && !sev3
 
   const recommended = Array.isArray(args.evidence?.recommended_next_skill_ids)
     ? args.evidence.recommended_next_skill_ids.map((x: any) => String(x || '').trim()).filter(Boolean)
     : []
 
-  const nextRecommendation =
-    (!evidenceSuccess || sev3) ? 'escalate'
-      : (findings.length === 0) ? 'close_case'
-        : (sev2or3 && recommended.length > 0) ? 'iterate'
-          : 'iterate'
+  const timelineReconstruction = reconstructIncidentTimelineFromEvents({
+    caseId: args.caseId,
+    dispatchId: args.dispatchId,
+    outboxPath: args.outboxPath,
+    outboxRecord: args.outboxRecord,
+    startedAt: args.startedAt,
+    finishedAt: args.finishedAt,
+  })
+
+  const triageTimebox = buildTriageTimeboxContext(args.caseId, args.finishedAt)
+
+  const judgedDecision = judgeIssueOpsDecision({
+    evidenceSuccess,
+    findings,
+    recommendedNextSkillIds: recommended,
+    reasonCodeRules: loadReasonCodeRules(),
+    timelineReconstruction: {
+      ok: timelineReconstruction.ok,
+      reasonCode: timelineReconstruction.reasonCode,
+      summary: timelineReconstruction.summary,
+    },
+    triageTimebox,
+  })
+
+  const nextRecommendation = judgedDecision.recommendation
+  const resultsSuccess = evidenceSuccess && nextRecommendation !== 'escalate'
 
   const normalizedFindings = findings.slice(0, 25).map((f: any) => {
     const details = (f?.details && typeof f.details === 'object') ? f.details : undefined
@@ -1028,6 +2290,28 @@ const buildRunRecordFromEvidence = (args: {
       },
     }
   })
+
+  const evidenceRefs = dedupeEvidenceRefs([
+    { kind: 'link', ref: args.runUrl },
+    { kind: 'github_artifact', ref: args.artifactName },
+    { kind: 'link', ref: args.artifactUrl },
+    ...timelineReconstruction.rollbackEvidenceRefs,
+  ], 20)
+
+  const decisionSummary = [
+    String(args.evidence?.summary || '').trim(),
+    judgedDecision.summary,
+  ].filter(Boolean).join(' | ')
+    || `Decision ${nextRecommendation} based on evidence findings.`
+  const reasonCodes = judgedDecision.reasonCodes.slice(0, 25)
+  const humanInLoop = buildHumanInLoopEscalationContract({
+    recommendation: nextRecommendation,
+    reasonCodes,
+    summary: decisionSummary,
+  })
+
+  const maxFindings = Math.max(1, Math.min(200, Number(args.evidence?.budgets?.max_findings ?? 25)))
+  const maxEvidenceRefs = Math.max(0, Math.min(200, Number(args.evidence?.budgets?.max_pointer_items ?? 20)))
 
   return {
     case_id: args.caseId,
@@ -1050,11 +2334,26 @@ const buildRunRecordFromEvidence = (args: {
       success: resultsSuccess,
       findings: normalizedFindings,
     },
-    evidence_refs: [
-      { kind: 'link', ref: args.runUrl },
-      { kind: 'github_artifact', ref: args.artifactName },
-      { kind: 'link', ref: args.artifactUrl },
-    ],
+    evidence_refs: evidenceRefs,
+    decision_record: {
+      template_version: 'v1',
+      decision: nextRecommendation,
+      summary: decisionSummary.slice(0, 500),
+      reason_codes: reasonCodes,
+      human_in_loop: humanInLoop,
+      bounded_evidence: {
+        findings_considered: normalizedFindings.length,
+        max_findings: maxFindings,
+        evidence_refs_considered: evidenceRefs.length,
+        max_evidence_refs: maxEvidenceRefs,
+      },
+      rollback_evidence: {
+        required: true,
+        available: evidenceRefs.length > 0,
+        refs: evidenceRefs,
+        note: 'Use linked run and artifact refs to replay or roll back this decision.',
+      },
+    },
     next_recommendation: nextRecommendation,
   }
 }
@@ -1082,10 +2381,23 @@ const ingestDispatchedRunsOnce = async (): Promise<void> => {
     if (record.ingested_at) continue
     if (ingestion.dispatches[dispatchId]) continue
     candidates.push({ filePath, record })
-    if (candidates.length >= maxPerLoop) break
   }
 
-  for (const c of candidates) {
+  const orderedCandidates = candidates
+    .sort((left, right) => {
+      const requestedAtCompare = toRequestedAtSortKey(left.record.requested_at)
+        .localeCompare(toRequestedAtSortKey(right.record.requested_at))
+      if (requestedAtCompare !== 0) return requestedAtCompare
+
+      const routeOrderCompare = Number(left.record.route_order ?? Number.MAX_SAFE_INTEGER)
+        - Number(right.record.route_order ?? Number.MAX_SAFE_INTEGER)
+      if (routeOrderCompare !== 0) return routeOrderCompare
+
+      return left.filePath.localeCompare(right.filePath)
+    })
+    .slice(0, maxPerLoop)
+
+  for (const c of orderedCandidates) {
     const dispatchId = String(c.record.dispatch_id || '').trim()
     const caseId = String(c.record.case_id || '').trim()
     const skillId = String(c.record.skill_id || '').trim()
@@ -1164,14 +2476,26 @@ const ingestDispatchedRunsOnce = async (): Promise<void> => {
         runUrl,
         artifactUrl,
         artifactName,
+        outboxPath: c.filePath,
+        outboxRecord: c.record,
         evidence: extracted.evidence,
       })
 
       const runsDir = path.join(casesDir, caseId, 'runs')
       fs.mkdirSync(runsDir, { recursive: true })
-      const stamp = new Date().toISOString().replace(/[^\d]/g, '').slice(0, 14)
-      const runPath = path.join(runsDir, `run-${stamp}-${dispatchId}.json`)
+      const runPath = path.join(
+        runsDir,
+        buildRunOutputFilename({ dispatchId, finishedAt }),
+      )
       writeUtf8(runPath, JSON.stringify(runRecord, null, 2) + '\n')
+
+      const casePrdPath = path.join(casesDir, caseId, 'prd.yaml')
+      const casePrd = fs.existsSync(casePrdPath)
+        ? parseYaml(readUtf8(casePrdPath)) as Record<string, unknown>
+        : null
+      const caseEnv = parseCaseEnv(casePrd?.env)
+      const caseStatus = lifecycleStatusFromRecommendation(String(runRecord.next_recommendation || 'iterate'))
+      upsertCaseLifecycle(caseId, caseEnv, caseStatus)
 
       // Update outbox + ingestion state for idempotency.
       const updatedOutbox: GithubWorkflowDispatchOutbox = {
@@ -1187,20 +2511,35 @@ const ingestDispatchedRunsOnce = async (): Promise<void> => {
       saveDispatchIngestionState(ingestion)
 
       const findings = Array.isArray(extracted.evidence?.findings) ? extracted.evidence.findings : []
-      const top = findings.slice(0, 8).map((f: any) => {
+      let redactedSlackFindings = 0
+      const topForSlack = findings.slice(0, 8).map((f: any) => {
+        const sev = String(f?.severity || '').trim()
+        const code = String(f?.reason_code || '').trim()
+        const msg = toSlackSafeFindingMessage(f?.message)
+        if (msg.redacted) redactedSlackFindings += 1
+        return `- (${sev || 'sev?'}) \`${code || 'unknown'}\`: ${msg.text || 'unknown'}`
+      }).join('\n')
+
+      const topForGithub = findings.slice(0, 8).map((f: any) => {
         const sev = String(f?.severity || '').trim()
         const code = String(f?.reason_code || '').trim()
         const msg = String(f?.message || '').trim()
         return `- (${sev || 'sev?'}) \`${code || 'unknown'}\`: ${msg || 'unknown'}`
       }).join('\n')
 
+      const runRecordRef = path.relative(repoRoot, runPath)
+      const slackRedactionNote = redactedSlackFindings > 0
+        ? `Failure-bundle archive refs were redacted in ${redactedSlackFindings} finding(s); use \`${runRecordRef}\` decision_record.rollback_evidence.refs for replay pointers.`
+        : null
+
       await postSlackThreadReply(
         caseId,
         [
           `Evidence ingested: \`${skillId}\` dispatch=\`${dispatchId}\`.`,
           `Run: ${runUrl}`,
-          top ? `Findings:\n${top}` : `No findings.`,
-        ].join('\n'),
+          topForSlack ? `Findings:\n${topForSlack}` : `No findings.`,
+          slackRedactionNote,
+        ].filter(Boolean).join('\n'),
       )
 
       const prdPath = path.join(casesDir, caseId, 'prd.yaml')
@@ -1218,13 +2557,13 @@ const ingestDispatchedRunsOnce = async (): Promise<void> => {
               `- Run: ${runUrl}`,
               `- Artifact: ${artifactName}`,
               ``,
-              top ? `Findings:\n${top}` : `No findings.`,
+              topForGithub ? `Findings:\n${topForGithub}` : `No findings.`,
             ].join('\n'),
           )
         }
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('brain_ingest_dispatch_failed', {
         case_id: caseId,
         dispatch_id: dispatchId,
@@ -1250,7 +2589,7 @@ const processInboxOnce = async () => {
     try {
       signals = parseSignalFile(file)
     } catch (error) {
-      // eslint-disable-next-line no-console
+       
       console.error('brain_signal_parse_failed', { file, error: error instanceof Error ? error.message : String(error) })
       continue
     }
@@ -1264,19 +2603,32 @@ const processInboxOnce = async () => {
           await handleCaseAction(catalog, raw)
           state.seen[dedupeKey] = { processed_at: nowIso(), case_id: raw.case_id }
         } catch (error) {
-          // eslint-disable-next-line no-console
+           
           console.error('brain_case_action_failed', { file, error: error instanceof Error ? error.message : String(error) })
         }
         continue
       }
 
       if (!isValidSignal(raw)) {
-        // eslint-disable-next-line no-console
+         
         console.error('brain_signal_invalid', { file, signal: raw })
         continue
       }
 
-      const signal = raw
+      const parsedCaseHints = parseSignalCaseHints((raw as any)?.case_hints)
+      const signal: Signal = {
+        ...(raw as Signal),
+        ...(parsedCaseHints ? { case_hints: parsedCaseHints } : {}),
+        domain: classifyIssueOpsDomain({
+          domain: (raw as any)?.domain,
+          signal_id: (raw as any)?.signal_id,
+          signal_sources: (raw as any)?.signal_sources,
+          symptoms: (raw as any)?.symptoms,
+          queue_kind: (raw as any)?.queue_kind,
+          target_url: (raw as any)?.target_url,
+          provider_id: (raw as any)?.provider_id,
+        }),
+      }
       const dedupeKey = String(signal.signal_id || sha256(JSON.stringify(signal))).trim()
       if (!dedupeKey) continue
       if (state.seen[dedupeKey]) continue
@@ -1300,20 +2652,27 @@ const processInboxOnce = async () => {
           }
         }
 
-        const { caseId } = writeCaseArtifacts(signal, decision)
+        const { caseId, githubIssueUrl: existingGithubIssueUrl } = writeCaseArtifacts(signal, decision)
         state.seen[dedupeKey] = { processed_at: nowIso(), case_id: caseId }
 
-        const issue = await createGithubIssue({ caseId, signal, decision })
-        if (issue.ok && issue.url) {
-          updateCasePrdLinks(caseId, { github_issue: issue.url })
+        let githubIssueUrl = existingGithubIssueUrl
+        if (!githubIssueUrl) {
+          const issue = await createGithubIssue({ caseId, signal, decision })
+          if (issue.ok && issue.url) {
+            updateCasePrdLinks(caseId, { github_issue: issue.url })
+            githubIssueUrl = issue.url
+          }
         }
 
-        await maybePostSlackCaseCard({ caseId, signal, decision, githubIssueUrl: issue.ok ? issue.url : undefined })
+        await maybePostSlackCaseCard({ caseId, signal, decision, githubIssueUrl: githubIssueUrl || undefined })
 
         // Emit GitHub workflow dispatch requests for executors.
-        for (const selected of decision.selected_skills || []) {
+        const triageMode = getIssueOpsTriageMode()
+        for (const [selectedIndex, selected] of (decision.selected_skills || []).entries()) {
           const def = inputCatalogById.get(selected.skill_id)
           if (!def || def.executor !== 'github_actions' || !def.workflow) continue
+          const routeOrder = selectedIndex + 1
+          const requestedAt = nowIso()
 
           const rawParams = ((selected.params ?? {}) as Record<string, unknown>)
           const wantsDispatchId = Boolean(def?.required_inputs &&
@@ -1329,38 +2688,58 @@ const processInboxOnce = async () => {
 
           const request = {
             kind: 'github_workflow_dispatch',
-            requested_at: nowIso(),
+            requested_at: requestedAt,
+            route_order: routeOrder,
             case_id: caseId,
+            triage_mode: triageMode,
             ...(wantsDispatchId ? { dispatch_id: dispatchId } : {}),
             skill_id: selected.skill_id,
             workflow: def.workflow,
             inputs,
+            ...(triageMode === 'dry_run'
+              ? {
+                simulation: {
+                  enabled: true,
+                  bounded_evidence_note: triageDryRunBoundedEvidenceNote,
+                  rollback_evidence_note: triageDryRunRollbackEvidenceNote,
+                },
+              }
+              : {}),
           }
 
-          const filename = wantsDispatchId
-            ? `dispatch-${caseId}-${dispatchId}-${selected.skill_id.replace(/[^a-zA-Z0-9]+/g, '_')}-${Date.now()}.json`
-            : `dispatch-${caseId}-${selected.skill_id.replace(/[^a-zA-Z0-9]+/g, '_')}-${Date.now()}-${randomUUID()}.json`
+          const filename = buildDispatchOutboxFilename({
+            caseId,
+            skillId: selected.skill_id,
+            requestedAt,
+            routeOrder,
+            ...(wantsDispatchId ? { dispatchId } : {}),
+          })
           const requestPath = path.join(outboxDir, filename)
           writeUtf8(requestPath, JSON.stringify({ ...request, status: 'pending' }, null, 2) + '\n')
 
           const dispatch = await dispatchGithubWorkflow(def.workflow, request.inputs)
           if (dispatch.dispatched) {
-            writeUtf8(requestPath, JSON.stringify({ ...request, status: 'dispatched', dispatched_at: nowIso() }, null, 2) + '\n')
+            if (dispatch.simulated) {
+              writeUtf8(requestPath, JSON.stringify({ ...request, status: 'simulated', simulated_at: nowIso() }, null, 2) + '\n')
+            } else {
+              writeUtf8(requestPath, JSON.stringify({ ...request, status: 'dispatched', dispatched_at: nowIso() }, null, 2) + '\n')
+            }
           } else {
             writeUtf8(requestPath, JSON.stringify({ ...request, status: 'failed', failed_at: nowIso(), error: dispatch }, null, 2) + '\n')
           }
         }
 
-        // eslint-disable-next-line no-console
+         
         console.log(JSON.stringify({ ok: true, case_id: caseId, decision }, null, 2))
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.error('brain_signal_processing_failed', { file, error: error instanceof Error ? error.message : String(error) })
       }
     }
   }
 
   await ingestDispatchedRunsOnce()
+  emitCaseIndexRetentionObservability()
   saveState(state)
 }
 
@@ -1377,6 +2756,8 @@ const parseArgs = () => {
 
 const main = async () => {
   const { once, loop, intervalSeconds } = parseArgs()
+  const triageMode = getIssueOpsTriageMode()
+  console.log(`brain_triage_mode mode=${triageMode}`)
   if (!once && !loop) {
     // Default to --once for safety.
     await processInboxOnce()
@@ -1386,7 +2767,7 @@ const main = async () => {
     await processInboxOnce()
     return
   }
-  // eslint-disable-next-line no-console
+   
   console.log(`brain_loop_start interval_seconds=${intervalSeconds}`)
   for (;;) {
     await processInboxOnce()
@@ -1395,7 +2776,7 @@ const main = async () => {
 }
 
 main().catch((error) => {
-  // eslint-disable-next-line no-console
+   
   console.error('brain_failed', { error: error instanceof Error ? error.message : String(error) })
   process.exit(1)
 })

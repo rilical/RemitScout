@@ -510,17 +510,28 @@ export const sendBatchJsonMessages = async <T>(
   const retryDelayMs = options?.retryDelayMs ?? 100
   const queueName = getQueueName(queueUrl)
 
-  const sendBatchAttempt = async (): Promise<void> => {
+  // Track which message IDs ultimately failed and their error messages.
+  // This map is updated by each send attempt (including partial-failure retries).
+  const finalFailedErrors = new Map<string, string>()
+
+  // Send one batch of entries (potentially a retry subset) and return the IDs
+  // of entries that SQS reported as failed in its response.Failed array.
+  const sendEntries = async (
+    entries: Array<{ id: string; payload: T }>,
+  ): Promise<Array<{ id: string; senderFault: boolean; errorCode: string; errorMessage: string }>> => {
     const sqs = getClient()
     const traceAttributes = buildTraceMessageAttributes(options?.correlationId)
+
+    let partialFailures: Array<{ id: string; senderFault: boolean; errorCode: string; errorMessage: string }> = []
+
     await startSpan(
       'sqs.send_batch_json_messages',
       async () => {
-        await withAbortTimeout(
+        const result = await withAbortTimeout(
           (signal) => sqs.send(
             new SendMessageBatchCommand({
               QueueUrl: queueUrl,
-              Entries: messages.map((msg) => ({
+              Entries: entries.map((msg) => ({
                 Id: msg.id,
                 MessageBody: JSON.stringify(msg.payload),
                 ...(traceAttributes ? { MessageAttributes: traceAttributes } : {}),
@@ -531,6 +542,23 @@ export const sendBatchJsonMessages = async <T>(
           DEFAULT_AWS_OP_TIMEOUT_MS,
           'sqs_send_message_batch',
         )
+
+        if (result?.Failed && result.Failed.length > 0) {
+          partialFailures = result.Failed.map((entry) => ({
+            id: entry.Id ?? '',
+            senderFault: entry.SenderFault ?? false,
+            errorCode: entry.Code ?? 'UnknownError',
+            errorMessage: entry.Message ?? 'unknown_batch_failure',
+          })).filter((e) => e.id !== '')
+
+          logger.warn('batch_send_partial_failure', {
+            queue_url: queueUrl,
+            total: entries.length,
+            failed: partialFailures.length,
+            failed_ids: partialFailures.map((e) => e.id),
+            failed_codes: partialFailures.map((e) => e.errorCode),
+          })
+        }
       },
       {
         attributes: {
@@ -540,10 +568,18 @@ export const sendBatchJsonMessages = async <T>(
         },
       },
     )
+
+    return partialFailures
   }
 
+  // Build an id-keyed lookup for fast access during retry resolution.
+  const messageById = new Map(messages.map((m) => [m.id, m]))
+
   try {
-    await retry(sendBatchAttempt, {
+    // First attempt: send all messages via the retry wrapper to handle transient
+    // SQS transport errors (throttling, network blips). The retry wrapper only
+    // fires on thrown errors, not on partial failures recorded in result.Failed.
+    let partialFailures = await retry(() => sendEntries(messages), {
       maxRetries,
       initialDelayMs: retryDelayMs,
       backoffMultiplier: 2,
@@ -556,8 +592,94 @@ export const sendBatchJsonMessages = async <T>(
       },
     })
 
-    trackMessageSent(queueUrl, messages.length)
-    return messages.map((msg) => ({ id: msg.id, success: true }))
+    // Retry the subset of messages that SQS reported as failed in result.Failed.
+    // Only retry entries whose failure is not a sender fault (sender faults are
+    // permanent errors such as invalid message body and should not be retried).
+    const MAX_PARTIAL_RETRIES = maxRetries
+    let partialAttempt = 0
+
+    while (partialFailures.length > 0 && partialAttempt < MAX_PARTIAL_RETRIES) {
+      partialAttempt++
+
+      const retryableFailures = partialFailures.filter((f) => !f.senderFault)
+      const permanentFailures = partialFailures.filter((f) => f.senderFault)
+
+      // Permanently failed entries (sender fault) will not be retried.
+      for (const failure of permanentFailures) {
+        finalFailedErrors.set(failure.id, `${failure.errorCode}: ${failure.errorMessage} (sender_fault)`)
+        logger.error('batch_send_entry_permanent_failure', {
+          queue_url: queueUrl,
+          message_id: failure.id,
+          error_code: failure.errorCode,
+          error_message: failure.errorMessage,
+        })
+      }
+
+      if (retryableFailures.length === 0) break
+
+      const retryEntries = retryableFailures
+        .map((f) => messageById.get(f.id))
+        .filter((m): m is { id: string; payload: T } => m !== undefined)
+
+      if (retryEntries.length === 0) break
+
+      const delayMs = Math.min(retryDelayMs * Math.pow(2, partialAttempt - 1), 10000)
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+
+      logger.info('batch_send_partial_retry', {
+        queue_url: queueUrl,
+        retry_attempt: partialAttempt,
+        retry_count: retryEntries.length,
+        message_ids: retryEntries.map((e) => e.id),
+      })
+
+      try {
+        partialFailures = await sendEntries(retryEntries)
+      } catch (retryError) {
+        // If the retry attempt itself throws a transport error, record all
+        // retry-attempted entries as failed and stop retrying.
+        const errorMsg = retryError instanceof Error ? retryError.message : String(retryError)
+        for (const entry of retryEntries) {
+          finalFailedErrors.set(entry.id, `transport_error_on_retry: ${errorMsg}`)
+        }
+        logger.error('batch_send_partial_retry_transport_error', {
+          queue_url: queueUrl,
+          retry_attempt: partialAttempt,
+          error: errorMsg,
+        })
+        partialFailures = []
+        break
+      }
+    }
+
+    // Any failures remaining after all retry rounds are terminal.
+    for (const failure of partialFailures) {
+      finalFailedErrors.set(
+        failure.id,
+        `${failure.errorCode}: ${failure.errorMessage} (exhausted_retries)`,
+      )
+      logger.error('batch_send_entry_exhausted_retries', {
+        queue_url: queueUrl,
+        message_id: failure.id,
+        error_code: failure.errorCode,
+        error_message: failure.errorMessage,
+        attempts: partialAttempt + 1,
+      })
+    }
+
+    const successCount = messages.length - finalFailedErrors.size
+    if (successCount > 0) {
+      trackMessageSent(queueUrl, successCount)
+    }
+    if (finalFailedErrors.size > 0) {
+      trackMessageFailed(queueUrl, 'batch_send_partial')
+    }
+
+    return messages.map((msg) => ({
+      id: msg.id,
+      success: !finalFailedErrors.has(msg.id),
+      ...(finalFailedErrors.has(msg.id) ? { error: finalFailedErrors.get(msg.id) } : {}),
+    }))
   } catch (error) {
     trackMessageFailed(queueUrl, 'batch_send')
     logger.error('batch_send_failed', {

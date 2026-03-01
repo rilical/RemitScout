@@ -16,9 +16,22 @@ const isEmptyString = (value: unknown): boolean =>
   typeof value === 'string' && value.trim().length === 0
 
 const placeholderAlertWebhookPatterns = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+const placeholderSecretPatterns = [
+  /^change[-_]?me$/i,
+  /^placeholder$/i,
+  /^example(?:[-_].*)?$/i,
+  /^staging[-_]?key$/i,
+  /^test[-_]?key$/i,
+  /^your[-_].*/i,
+]
 
 const looksLikePlaceholder = (value: unknown) =>
   typeof value === 'string' && placeholderAlertWebhookPatterns.some((pattern) => pattern.test(value))
+
+const looksLikeSecretPlaceholder = (value: unknown) =>
+  typeof value === 'string' &&
+  value.trim().length > 0 &&
+  placeholderSecretPatterns.some((pattern) => pattern.test(value.trim()))
 
 const shouldRequire = (
   overrideValue: boolean | undefined,
@@ -121,6 +134,29 @@ export const auditConfig = (
 
   if (requirements.requireJwtSecret) {
     add('PLANE_A_JWT_SECRET', config.planeA.jwtSecret, true)
+    if (looksLikeSecretPlaceholder(config.planeA.jwtSecret)) {
+      missing.push('PLANE_A_JWT_SECRET')
+    }
+  }
+
+  if (requirements.requirePrivacySalts) {
+    add('PRIVACY_HASH_SALT', config.privacy.hashSalt, true)
+    add('PRIVACY_SESSION_SALT', config.privacy.sessionSalt, true)
+    if (looksLikeSecretPlaceholder(config.privacy.hashSalt)) {
+      missing.push('PRIVACY_HASH_SALT')
+    }
+    if (looksLikeSecretPlaceholder(config.privacy.sessionSalt)) {
+      missing.push('PRIVACY_SESSION_SALT')
+    }
+  }
+
+  if (requirements.requireAdminIpAllowlist) {
+    const hasAllowlist = config.planeA.adminIpAllowlist.length > 0
+    add(
+      'ADMIN_IP_ALLOWLIST',
+      hasAllowlist ? config.planeA.adminIpAllowlist.join(',') : '',
+      true,
+    )
   }
 
   for (const item of items) {

@@ -47,18 +47,19 @@ const init = async () => {
       ]),
     })
 
+    // Plane B DB: use plane-specific env vars when available, fall back to Plane A
     await resolveDatabaseUrl({
       envVar: 'DATABASE_URL_PLANE_B',
-      secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
-      ssmNameEnv: 'PLANE_A_DB_SSM_NAME',
-      hostEnv: 'PLANE_A_DB_HOST',
-      portEnv: 'PLANE_A_DB_PORT',
-      nameEnv: 'PLANE_A_DB_NAME',
-      usernameEnv: 'PLANE_A_DB_USERNAME',
-      passwordEnv: 'PLANE_A_DB_PASSWORD',
+      secretArnEnv: process.env.PLANE_B_DB_SECRET_ARN ? 'PLANE_B_DB_SECRET_ARN' : 'PLANE_A_DB_SECRET_ARN',
+      ssmNameEnv: process.env.PLANE_B_DB_SSM_NAME ? 'PLANE_B_DB_SSM_NAME' : 'PLANE_A_DB_SSM_NAME',
+      hostEnv: process.env.PLANE_B_DB_HOST ? 'PLANE_B_DB_HOST' : 'PLANE_A_DB_HOST',
+      portEnv: process.env.PLANE_B_DB_PORT ? 'PLANE_B_DB_PORT' : 'PLANE_A_DB_PORT',
+      nameEnv: process.env.PLANE_B_DB_NAME ? 'PLANE_B_DB_NAME' : 'PLANE_A_DB_NAME',
+      usernameEnv: process.env.PLANE_B_DB_USERNAME ? 'PLANE_B_DB_USERNAME' : 'PLANE_A_DB_USERNAME',
+      passwordEnv: process.env.PLANE_B_DB_PASSWORD ? 'PLANE_B_DB_PASSWORD' : 'PLANE_A_DB_PASSWORD',
       requireJson: true,
       sslModeEnv: 'PGSSLMODE',
-      jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
+      jsonKeys: withOptionalKey(process.env.PLANE_B_DB_SECRET_JSON_KEY ?? process.env.PLANE_A_DB_SECRET_JSON_KEY, [
         'url',
         'DATABASE_URL_PLANE_B',
         'database_url',
@@ -66,18 +67,19 @@ const init = async () => {
       required: false,
     })
 
+    // Plane C DB: use plane-specific env vars when available, fall back to Plane A
     await resolveDatabaseUrl({
       envVar: 'DATABASE_URL_PLANE_C',
-      secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
-      ssmNameEnv: 'PLANE_A_DB_SSM_NAME',
-      hostEnv: 'PLANE_A_DB_HOST',
-      portEnv: 'PLANE_A_DB_PORT',
-      nameEnv: 'PLANE_A_DB_NAME',
-      usernameEnv: 'PLANE_A_DB_USERNAME',
-      passwordEnv: 'PLANE_A_DB_PASSWORD',
+      secretArnEnv: process.env.PLANE_C_DB_SECRET_ARN ? 'PLANE_C_DB_SECRET_ARN' : 'PLANE_A_DB_SECRET_ARN',
+      ssmNameEnv: process.env.PLANE_C_DB_SSM_NAME ? 'PLANE_C_DB_SSM_NAME' : 'PLANE_A_DB_SSM_NAME',
+      hostEnv: process.env.PLANE_C_DB_HOST ? 'PLANE_C_DB_HOST' : 'PLANE_A_DB_HOST',
+      portEnv: process.env.PLANE_C_DB_PORT ? 'PLANE_C_DB_PORT' : 'PLANE_A_DB_PORT',
+      nameEnv: process.env.PLANE_C_DB_NAME ? 'PLANE_C_DB_NAME' : 'PLANE_A_DB_NAME',
+      usernameEnv: process.env.PLANE_C_DB_USERNAME ? 'PLANE_C_DB_USERNAME' : 'PLANE_A_DB_USERNAME',
+      passwordEnv: process.env.PLANE_C_DB_PASSWORD ? 'PLANE_C_DB_PASSWORD' : 'PLANE_A_DB_PASSWORD',
       requireJson: true,
       sslModeEnv: 'PGSSLMODE',
-      jsonKeys: withOptionalKey(process.env.PLANE_A_DB_SECRET_JSON_KEY, [
+      jsonKeys: withOptionalKey(process.env.PLANE_C_DB_SECRET_JSON_KEY ?? process.env.PLANE_A_DB_SECRET_JSON_KEY, [
         'url',
         'DATABASE_URL_PLANE_C',
         'database_url',
@@ -190,34 +192,22 @@ const init = async () => {
       },
     ])
 
-	    console.log(
-	      'Lambda init env snapshot',
-	      {
-	        DATABASE_URL_PLANE_A: process.env.DATABASE_URL_PLANE_A ? 'set' : 'missing',
-	        DATABASE_URL_PLANE_B: process.env.DATABASE_URL_PLANE_B ? 'set' : 'missing',
-	        DATABASE_URL_PLANE_C: process.env.DATABASE_URL_PLANE_C ? 'set' : 'missing',
-	        PLANE_A_DB_HOST: process.env.PLANE_A_DB_HOST ? 'set' : 'missing',
-	        PLANE_A_DB_PORT: process.env.PLANE_A_DB_PORT ? 'set' : 'missing',
-	        PLANE_A_DB_NAME: process.env.PLANE_A_DB_NAME ? 'set' : 'missing',
-	      },
-	    )
+    // IMPORTANT: `shared/config` snapshots env at import time. For Lambda, we must resolve
+    // SSM/Secrets-backed env vars (DATABASE_URL_*) first, then import config.
+    const { config } = await import('../../shared/config')
 
-	    // IMPORTANT: `shared/config` snapshots env at import time. For Lambda, we must resolve
-	    // SSM/Secrets-backed env vars (DATABASE_URL_*) first, then import config.
-	    const { config } = await import('../../shared/config')
-
-	    const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
-	    const requirePlaneC = Boolean(config.planeA.planeCBaseUrl)
-	    if (!requirePlaneC) {
-	      const loggerInstance = await getLogger()
-	      loggerInstance.warn('plane_c_base_url_not_set', {
-	        reason: 'PLANE_C_BASE_URL is not configured; Plane C-specific features may be unavailable.',
-	      })
-	    }
-	    const { runStartupChecks } = await import('../../shared/startup')
-	    const { initErrorTracking } = await import('../../shared/error-tracker')
-	    const { initTracing } = await import('../../shared/tracing')
-	    const { buildApp } = await import('./app')
+    const isProdLikeEnv = config.envName === 'prod' || config.envName === 'staging'
+    const requirePlaneC = Boolean(config.planeA.planeCBaseUrl)
+    if (!requirePlaneC) {
+      const loggerInstance = await getLogger()
+      loggerInstance.warn('plane_c_base_url_not_set', {
+        reason: 'PLANE_C_BASE_URL is not configured; Plane C-specific features may be unavailable.',
+      })
+    }
+    const { runStartupChecks } = await import('../../shared/startup')
+    const { initErrorTracking } = await import('../../shared/error-tracker')
+    const { initTracing } = await import('../../shared/tracing')
+    const { buildApp } = await import('./app')
 
     const requireQuoteRefreshQueue =
       config.queues.quoteRefreshMode !== 'off' && Boolean(config.queues.quoteRefreshUrl)
@@ -237,11 +227,11 @@ const init = async () => {
       config.alerts.evaluation.enabled && Boolean(config.alerts.evaluation.queueUrl)
     const requireStorage = requireExportJobQueue
 
-	    await runStartupChecks({
-	      requirements: {
-	        requirePlaneA: true,
-	        requirePlaneC,
-	        requireRedis: true,
+    await runStartupChecks({
+      requirements: {
+        requirePlaneA: true,
+        requirePlaneC,
+        requireRedis: true,
         requireQueues:
           requireQuoteRefreshQueue ||
           requireFxRateRefreshQueue ||
@@ -263,6 +253,9 @@ const init = async () => {
         requireExportsBucket: requireStorage,
         requireSupabase: isProdLikeEnv,
         requireStripe: isProdLikeEnv,
+        requireJwtSecret: isProdLikeEnv,
+        requirePrivacySalts: isProdLikeEnv,
+        requireAdminIpAllowlist: isProdLikeEnv,
       },
     })
 

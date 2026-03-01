@@ -248,7 +248,7 @@ export const runNoQuotesEvidence = async () => {
 
 if (require.main === module) {
   runNoQuotesEvidence().catch((error) => {
-    // eslint-disable-next-line no-console
+     
     console.error('no_quotes_evidence_fatal', { error: error instanceof Error ? error.message : String(error) })
     process.exit(1)
   })

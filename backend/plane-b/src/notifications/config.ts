@@ -8,6 +8,7 @@
  */
 
 import { getEmailConfig, getSmsConfig, getWebhookConfig, getNotificationConfig } from './config-aws'
+import { config } from '../../../shared/config'
 
 /**
  * Webhook channel configuration.
@@ -33,9 +34,9 @@ export const SMS_CONFIG = getSmsConfig()
  * @sprint Sprint 4: Implement push notifications
  */
 export const PUSH_CONFIG = {
-  PROVIDER: process.env.PUSH_PROVIDER || 'firebase',
-  API_KEY: process.env.FIREBASE_SERVER_KEY || '',
-  MAX_RETRIES: Number(process.env.PUSH_MAX_RETRIES) || 2,
+  PROVIDER: config.communications.push.provider,
+  API_KEY: config.communications.push.firebaseServerKey,
+  MAX_RETRIES: config.communications.push.maxRetries,
 } as const
 
 /**
@@ -54,5 +55,4 @@ export const SIGNAL_TYPES = {
 } as const
 
 export type SignalType = typeof SIGNAL_TYPES[keyof typeof SIGNAL_TYPES]
-
 

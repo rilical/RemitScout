@@ -156,14 +156,13 @@ describe('sessions route', () => {
     expect(mockRepo.createSession).toHaveBeenCalledWith(
       expect.objectContaining({
         sessionId: expect.stringMatching(/^[a-f0-9]{64}$/),
-        ipAddress: '198.51.100.0',
         ipHash: expect.stringMatching(/^[a-f0-9]{64}$/),
         userAgent: 'chrome',
       }),
     )
   })
 
-  it('exchanges supabase token for Plane A admin session and sets refresh cookie', async () => {
+  it('exchanges authorization header token for Plane A admin session and sets refresh cookie', async () => {
     const app = makeApp()
     const { sessionsRoutes } = await import('../plane-a/src/routes/sessions')
     await sessionsRoutes(app)
@@ -172,6 +171,9 @@ describe('sessions route', () => {
       user_id: '00000000-0000-4000-8000-000000000111',
       email: 'ops@remit-scout.com',
       role: 'admin',
+      claims: {
+        amr: [{ method: 'totp', mfa: true }],
+      },
     })
     mockResolveAdminAccess.mockResolvedValue({ allowed: true, appRole: 'admin' })
     mockIssueAdminSession.mockResolvedValue({
@@ -188,8 +190,8 @@ describe('sessions route', () => {
     const reply = makeReply()
     const response = await handler(
       {
-        body: { supabase_token: 'supabase.jwt.token' },
-        headers: {},
+        body: {},
+        headers: { authorization: 'Bearer supabase.jwt.token' },
         ip: '127.0.0.1',
       },
       reply as any,
@@ -201,8 +203,27 @@ describe('sessions route', () => {
       token_type: 'Bearer',
     })
     expect(mockResolveAdminAccess).toHaveBeenCalled()
+    expect(mockVerifySupabaseJwt).toHaveBeenCalledWith('Bearer supabase.jwt.token')
     expect(mockIssueAdminSession).toHaveBeenCalled()
     expect(reply.header).toHaveBeenCalledWith('set-cookie', 'plane_a_admin_refresh=token; Path=/api/v1/sessions')
+  })
+
+  it('rejects deprecated body supabase token exchange path', async () => {
+    const app = makeApp()
+    const { sessionsRoutes } = await import('../plane-a/src/routes/sessions')
+    await sessionsRoutes(app)
+
+    const handler = getHandler(app, 'post', '/sessions/admin/exchange')
+    await expect(
+      handler(
+        {
+          body: { supabase_token: 'deprecated-token' },
+          headers: {},
+          ip: '127.0.0.1',
+        },
+        makeReply() as any,
+      ),
+    ).rejects.toBeInstanceOf(ValidationError)
   })
 
   it('refreshes admin session from refresh cookie when body token is absent', async () => {

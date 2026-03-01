@@ -96,6 +96,7 @@
     "scheduled-report": "tsx scripts/scheduled-report-job.ts",
     "gold:indices": "tsx scripts/gold-indices-job.ts",
     "weights:providers": "tsx scripts/provider-weighting-job.ts",
+    "weights:backfill-seeds": "tsx scripts/module-volume-seed-backfill.ts",
     "gold:publisher": "tsx scripts/gold-publisher-job.ts",
     "gold:live": "tsx scripts/gold-live-worker.ts",
     "gold:reconciliation": "tsx scripts/gold-reconciliation-job.ts",
@@ -135,6 +136,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.981.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.995.0",
     "@aws-sdk/client-ecs": "^3.981.0",
     "@aws-sdk/client-elasticache": "^3.981.0",
     "@aws-sdk/client-eventbridge": "^3.981.0",

@@ -238,16 +238,14 @@ export const startSpan = async <T>(
 
   addAWSContextAttributes()
 
-  totalSpans++
-
   try {
     const result = await context.with(trace.setSpan(context.active(), span), () =>
       fn(span),
     )
     span.setStatus({ code: SpanStatusCode.OK })
+    recordSpanOutcome(false)
     return result
   } catch (error) {
-    errorSpans++
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: error instanceof Error ? error.message : String(error),
@@ -255,6 +253,7 @@ export const startSpan = async <T>(
     if (error instanceof Error) {
       span.recordException(error)
     }
+    recordSpanOutcome(true)
     throw error
   } finally {
     span.end()
@@ -286,16 +285,14 @@ export const startChildSpan = async <T>(
 
   addAWSContextAttributes()
 
-  totalSpans++
-
   try {
     const result = await context.with(trace.setSpan(context.active(), span), () =>
       fn(span),
     )
     span.setStatus({ code: SpanStatusCode.OK })
+    recordSpanOutcome(false)
     return result
   } catch (error) {
-    errorSpans++
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: error instanceof Error ? error.message : String(error),
@@ -303,6 +300,7 @@ export const startChildSpan = async <T>(
     if (error instanceof Error) {
       span.recordException(error)
     }
+    recordSpanOutcome(true)
     throw error
   } finally {
     span.end()
@@ -385,16 +383,28 @@ export const addAWSContextAttributes = (): void => {
 }
 
 let errorRate = 0
-let totalSpans = 0
-let errorSpans = 0
+const spanOutcomes: boolean[] = []
 const ERROR_RATE_WINDOW = 100
+const MIN_DYNAMIC_SAMPLE_SIZE = 20
 
 export const resetTracingState = (): void => {
   initialized = false
   provider = null
   errorRate = 0
-  totalSpans = 0
-  errorSpans = 0
+  spanOutcomes.length = 0
+}
+
+const recordSpanOutcome = (isError: boolean): void => {
+  spanOutcomes.push(isError)
+  if (spanOutcomes.length > ERROR_RATE_WINDOW) {
+    spanOutcomes.shift()
+  }
+  if (spanOutcomes.length === 0) {
+    errorRate = 0
+    return
+  }
+  const errorCount = spanOutcomes.reduce((count, current) => count + (current ? 1 : 0), 0)
+  errorRate = errorCount / spanOutcomes.length
 }
 
 const shouldSampleTrace = (): boolean => {
@@ -403,10 +413,8 @@ const shouldSampleTrace = (): boolean => {
     return Math.random() < sampleRate
   }
 
-  if (totalSpans > ERROR_RATE_WINDOW) {
-    errorRate = errorSpans / totalSpans
-    totalSpans = 0
-    errorSpans = 0
+  if (spanOutcomes.length < MIN_DYNAMIC_SAMPLE_SIZE) {
+    return Math.random() < 0.1
   }
 
   if (errorRate > 0.1) {

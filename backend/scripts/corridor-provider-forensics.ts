@@ -441,7 +441,7 @@ export const runCorridorProviderForensics = async () => {
 
     // Print to stdout for quick copy/paste into incident reports.
     // (Artifacts can be added later if needed.)
-    // eslint-disable-next-line no-console
+     
     console.log(JSON.stringify(payload, null, 2))
   } finally {
     await pool.end()

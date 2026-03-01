@@ -28,6 +28,7 @@ import {
   deleteMessages,
   receiveJsonMessages,
   sendToDLQ,
+  type SqsMessage,
   type VisibilityTimeoutExtender,
 } from '../shared/sqs'
 import { isStale, resolveMessageAgeMs, unwrapEnvelopeOrLegacy } from '../shared/queue-staleness'
@@ -40,6 +41,7 @@ import { initErrorTracking } from '../shared/error-tracker'
 import { createShutdownHandler } from '../shared/shutdown'
 import { initTracing, startSpan } from '../shared/tracing'
 import { applyJitter, resolveJitterMs } from '../shared/worker-jitter'
+import { recordCrossPlaneMetrics } from '../shared/cross-plane-fetch'
 
 const logger = createLogger('script.gold-live-worker')
 const queueUrl = config.queues.goldLive.url
@@ -217,6 +219,7 @@ const processBatch = async (
   goldPool: Pool,
   publisher: GoldPublisherLive,
 ): Promise<{ success: boolean; publisherSuccess: boolean; indicesSuccess: boolean }> => {
+  const startedAt = Date.now()
   const { corridorIds, lagSamples } = batch
   const uniqueCorridors = normalizeCorridorIds(corridorIds)
 
@@ -268,6 +271,14 @@ const processBatch = async (
     recordSLOValue('gold_export_lag', 'live_p95', p95)
     recordSLOValue('gold_export_lag', 'live_max', max)
   }
+
+  // Emit cross-plane tracing metrics for B->C live publish hops.
+  void recordCrossPlaneMetrics({
+    sourcePlane: 'plane-b',
+    targetPlane: 'plane-c',
+    durationMs: Date.now() - startedAt,
+    errorAmplification: publisherSuccess && indicesSuccess ? 1 : 2,
+  })
 
   return {
     success: publisherSuccess && indicesSuccess,
@@ -478,13 +489,50 @@ export const runGoldLiveWorker = async (): Promise<number> => {
                 : 'Both publisher and indices updates failed',
           )
 
-          for (const message of messages.filter((m) => batch.receiptHandles.includes(m.receiptHandle))) {
-            await sendToDLQ(queueUrl, message, err, {
-              reason: 'processing_failure',
-              queueClass: 'gold-live',
-            })
-            await recordWorkerMetric('gold-live-worker', 'dlq_sent', 1)
+          // Build a receipt-handle-keyed lookup from the current poll's messages so
+          // we can match debounced handles that originated in this poll cycle.
+          const messageByHandle = new Map(messages.map((m) => [m.receiptHandle, m]))
+
+          // DLQ sends MUST complete before the source queue delete so that a DLQ
+          // send failure causes the messages to become visible again (via visibility
+          // timeout expiry) rather than being silently lost.
+          //
+          // For receipt handles that came from earlier poll cycles (not in
+          // messageByHandle), we send a synthetic DLQ payload that carries the
+          // corridor context from the batch so the failure is still observable.
+          let dlqSentCount = 0
+          for (const handle of batch.receiptHandles) {
+            const originalMessage = messageByHandle.get(handle)
+            if (originalMessage) {
+              // This handle came from the current poll — send the full original message.
+              await sendToDLQ(queueUrl, originalMessage, err, {
+                reason: 'processing_failure',
+                queueClass: 'gold-live',
+              })
+            } else {
+              // This handle was buffered from a prior poll cycle. Build a synthetic
+              // SqsMessage wrapper so sendToDLQ has enough context to write to the DLQ.
+              const syntheticMessage = {
+                messageId: `synthetic-${handle.slice(0, 16)}`,
+                receiptHandle: handle,
+                payload: {
+                  corridorIds: batch.corridorIds,
+                  batchTraceIdSample: batch.traceIdSample,
+                } as unknown as GoldLiveMessage,
+                attributes: {},
+                messageAttributes: {},
+                raw: {} as SqsMessage<GoldLiveMessage>['raw'],
+              }
+              await sendToDLQ(queueUrl, syntheticMessage, err, {
+                reason: 'processing_failure',
+                queueClass: 'gold-live',
+              })
+            }
+            dlqSentCount++
           }
+          await recordWorkerMetric('gold-live-worker', 'dlq_sent', dlqSentCount)
+
+          // Delete from the source queue only after all DLQ sends have settled.
           const { failed } = await deleteMessages(queueUrl, batch.receiptHandles)
           if (failed.length > 0) {
             logger.warn('sqs_delete_failed', { queue_url: queueUrl, failed_count: failed.length })
@@ -494,7 +542,7 @@ export const runGoldLiveWorker = async (): Promise<number> => {
             publisher_success: result.publisherSuccess,
             indices_success: result.indicesSuccess,
             corridor_count: batch.corridorIds.length,
-            dlq_count: batch.receiptHandles.length,
+            dlq_count: dlqSentCount,
             trace_id_sample: batch.traceIdSample.length > 0 ? batch.traceIdSample : null,
           })
         }

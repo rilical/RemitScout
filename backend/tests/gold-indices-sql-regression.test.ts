@@ -1,14 +1,45 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { upsertGoldIndices } from '../scripts/gold-indices-job'
+const queryMock = vi.fn()
+
+vi.mock('../shared/db', () => ({
+  createPool: () => ({ end: async () => undefined }),
+  query: queryMock,
+}))
+
+vi.mock('../shared/tracing', () => ({
+  initTracing: () => undefined,
+}))
 
 describe('Gold indices SQL regression', () => {
-  it('does not reference prev_teer_rate alias in same SELECT', async () => {
-    // Ensure the module (and its SQL) loads without throwing and contains
-    // the expected regression guard CTE name.
-    //
-    // We deliberately avoid executing against a real DB in unit tests.
-    expect(String(upsertGoldIndices)).toContain('indicesUpsertQuery')
+  beforeEach(() => {
+    queryMock.mockReset()
+    queryMock.mockResolvedValue({ rows: [{ upserted: 1 }] })
+  })
+
+  it('builds parameterized upsert query and avoids template interpolation', async () => {
+    const { upsertGoldIndices } = await import('../scripts/gold-indices-job')
+
+    const upserted = await upsertGoldIndices({} as never, {
+      amountBucket: 500,
+      lookbackDays: 7,
+      corridorIds: ['US-MX-USD-MXN'],
+    })
+
+    expect(upserted).toBe(1)
+    expect(queryMock).toHaveBeenCalledTimes(1)
+
+    const [sql, params] = queryMock.mock.calls[0] as [string, unknown[]]
+
+    expect(typeof sql).toBe('string')
+    expect(sql).toContain('WITH weight_snapshot AS')
+    expect(sql).toContain('AS prev_teer_rate')
+    expect(sql).toContain('abs(teer_rate - prev_teer_rate) / prev_teer_rate > $5')
+    expect(sql).not.toContain('${')
+
+    expect(Array.isArray(params)).toBe(true)
+    expect(params).toHaveLength(10)
+    expect(params[0]).toBe(500)
+    expect(params[1]).toBe(7)
   })
 })
-

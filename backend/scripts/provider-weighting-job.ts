@@ -6,6 +6,13 @@ import { createShutdownHandler } from '../shared/shutdown'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
 import { recordBatchJobMetric } from '../shared/worker-metrics'
 import { config } from '../shared/config'
+import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
+import {
+  loadModuleCatalog,
+  type ModuleCatalogEntry,
+  type ModuleVolumePolicy,
+  type ModuleVolumeStrategy,
+} from '../shared/module-catalog'
 import {
   DEFAULT_WEIGHT_MODEL,
   GLOBAL_WEIGHT_CORRIDOR_ID,
@@ -28,8 +35,22 @@ const alpha = Math.max(0, toNumber(process.env.PROVIDER_WEIGHT_ALPHA, 0.4))
 const beta = Math.max(0, toNumber(process.env.PROVIDER_WEIGHT_BETA, 0.4))
 const gamma = Math.max(0, toNumber(process.env.PROVIDER_WEIGHT_GAMMA, 0.2))
 const halfLifeMinutes = Math.max(1, toNumber(process.env.PROVIDER_WEIGHT_DECAY_HALF_LIFE_MINUTES, 180))
-const weightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
+const defaultWeightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 const decayLambda = Math.log(2) / halfLifeMinutes
+
+const DEFAULT_FALLBACK_CHAIN: ModuleVolumeStrategy[] = [
+  'reported',
+  'inferred_proxy',
+  'synthetic_seed',
+  'equal_weight',
+]
+
+const STRATEGY_MODEL_VERSION_DEFAULTS: Record<ModuleVolumeStrategy, string> = {
+  synthetic_seed: 'synthetic_seed_v1',
+  reported: 'reported_v1',
+  inferred_proxy: 'inferred_proxy_v1',
+  equal_weight: 'equal_weight_v1',
+}
 
 const providerStatsQuery = `
 WITH base AS (
@@ -165,6 +186,34 @@ FROM global_provider gp
 CROSS JOIN global_stats gs
 `
 
+const eligibleProvidersByCorridorQuery = `
+SELECT
+  pcc.corridor_id,
+  lower(pcc.provider_id) AS provider_id
+FROM silver.provider_corridor_capability pcc
+JOIN silver.rights_matrix rm
+  ON rm.provider_id = pcc.provider_id
+WHERE pcc.is_supported = true
+  AND rm.allowed_collect = true
+  AND rm.allowed_b2b = true
+  AND rm.allowed_resell_b2b = true
+  AND rm.status = 'production'
+  AND rm.stoplist_status = 'active'
+  AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
+`
+
+const eligibleGlobalProvidersQuery = `
+SELECT DISTINCT
+  lower(rm.provider_id) AS provider_id
+FROM silver.rights_matrix rm
+WHERE rm.allowed_collect = true
+  AND rm.allowed_b2b = true
+  AND rm.allowed_resell_b2b = true
+  AND rm.status = 'production'
+  AND rm.stoplist_status = 'active'
+  AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
+`
+
 type ProviderStatRow = {
   corridor_id: string
   provider_id: string
@@ -194,12 +243,56 @@ type GlobalStatRow = {
   max_ts: Date | string | null
 }
 
+type EligibleCorridorRow = {
+  corridor_id: string
+  provider_id: string
+}
+
+type EligibleGlobalRow = {
+  provider_id: string
+}
+
 type CorridorMeta = {
   quoteCount: number
   providerCount: number
   windowDays: number
   weightConfidence: number
   availableHours: number
+}
+
+type ResolvedWeight = {
+  providerId: string
+  rawScore: number
+  confidence: number
+  modelVersion: string
+  strategy: ModuleVolumeStrategy
+}
+
+type StrategyAttemptResult =
+  | {
+      ok: true
+      rawScore: number
+      confidence: number
+      modelVersion: string
+    }
+  | {
+      ok: false
+      reason: 'disabled' | 'input_missing' | 'input_stale' | 'invalid_input'
+    }
+
+type StrategyContext = {
+  policy: ModuleVolumePolicy
+  providerId: string
+  corridorId: string
+  liveScore: number | null
+  liveConfidence: number
+  equalWeightRaw: number
+}
+
+type StrategyResolutionCounters = {
+  resolved: Map<string, number>
+  fallback: Map<string, number>
+  missing: Map<string, number>
 }
 
 const toDate = (value: Date | string | null): Date | null => {
@@ -271,10 +364,240 @@ const computeWeightRaw = (options: {
     tierMultiplier
 }
 
+const clamp01 = (value: number, fallback = 0) => {
+  if (!Number.isFinite(value)) return fallback
+  return Math.max(0, Math.min(1, value))
+}
+
+const dedupeStrategies = (strategies: ModuleVolumeStrategy[]) => {
+  const seen = new Set<ModuleVolumeStrategy>()
+  const out: ModuleVolumeStrategy[] = []
+  for (const strategy of strategies) {
+    if (seen.has(strategy)) continue
+    seen.add(strategy)
+    out.push(strategy)
+  }
+  return out
+}
+
+const modelVersionForStrategy = (
+  strategy: ModuleVolumeStrategy,
+  policy: ModuleVolumePolicy,
+) => {
+  if (policy.strategy === strategy && typeof policy.model_version === 'string' && policy.model_version.trim()) {
+    return policy.model_version.trim()
+  }
+  return STRATEGY_MODEL_VERSION_DEFAULTS[strategy]
+}
+
+const resolveSeed = (
+  policy: ModuleVolumePolicy,
+  corridorId: string,
+  equalWeightRaw: number,
+) => {
+  const overrides = policy.synthetic_seed.corridor_overrides || []
+  const override = overrides.find((entry) => entry.corridor_id === corridorId)
+  const rawWeight = override ? Number(override.weight) : Number(policy.synthetic_seed.default_weight)
+  const rawConfidence = override
+    ? Number(override.confidence)
+    : Number(policy.synthetic_seed.default_confidence)
+  const seedWeight = clamp01(rawWeight, equalWeightRaw)
+  const seedConfidence = clamp01(rawConfidence, 0.5)
+  if (!Number.isFinite(seedWeight)) {
+    return null
+  }
+  return {
+    seedWeight,
+    seedConfidence,
+  }
+}
+
+const attemptStrategy = (
+  strategy: ModuleVolumeStrategy,
+  context: StrategyContext,
+): StrategyAttemptResult => {
+  if (strategy === 'synthetic_seed') {
+    const resolvedSeed = resolveSeed(context.policy, context.corridorId, context.equalWeightRaw)
+    if (!resolvedSeed) {
+      return { ok: false, reason: 'invalid_input' }
+    }
+    const { seedWeight, seedConfidence } = resolvedSeed
+    if (context.liveScore !== null) {
+      const liveConfidence = clamp01(context.liveConfidence, 0)
+      const blended = (liveConfidence * context.liveScore) + ((1 - liveConfidence) * seedWeight)
+      return {
+        ok: true,
+        rawScore: Math.max(1e-9, blended),
+        confidence: clamp01((liveConfidence + seedConfidence) / 2, seedConfidence),
+        modelVersion: modelVersionForStrategy('synthetic_seed', context.policy),
+      }
+    }
+    return {
+      ok: true,
+      rawScore: Math.max(1e-9, seedWeight),
+      confidence: seedConfidence,
+      modelVersion: modelVersionForStrategy('synthetic_seed', context.policy),
+    }
+  }
+
+  if (strategy === 'reported') {
+    if (!context.policy.reported.enabled) {
+      return { ok: false, reason: 'disabled' }
+    }
+    // Scaffold only in this release cut.
+    return { ok: false, reason: 'input_missing' }
+  }
+
+  if (strategy === 'inferred_proxy') {
+    if (!context.policy.inferred_proxy.enabled) {
+      return { ok: false, reason: 'disabled' }
+    }
+    // Scaffold only in this release cut.
+    return { ok: false, reason: 'input_missing' }
+  }
+
+  if (strategy === 'equal_weight') {
+    return {
+      ok: true,
+      rawScore: Math.max(1e-9, context.equalWeightRaw),
+      confidence: 0.5,
+      modelVersion: modelVersionForStrategy('equal_weight', context.policy),
+    }
+  }
+
+  return { ok: false, reason: 'invalid_input' }
+}
+
+const incrementCounter = (map: Map<string, number>, key: string) => {
+  map.set(key, (map.get(key) ?? 0) + 1)
+}
+
+const resolveStrategyAwareWeight = (
+  context: StrategyContext,
+  counters: StrategyResolutionCounters,
+): ResolvedWeight => {
+  const fallbackChain = Array.isArray(context.policy.fallback_chain) && context.policy.fallback_chain.length > 0
+    ? context.policy.fallback_chain
+    : DEFAULT_FALLBACK_CHAIN
+  const chain = dedupeStrategies([context.policy.strategy, ...fallbackChain])
+
+  for (let i = 0; i < chain.length; i += 1) {
+    const strategy = chain[i]
+    const result = attemptStrategy(strategy, context)
+    if (result.ok) {
+      incrementCounter(counters.resolved, strategy)
+      return {
+        providerId: context.providerId,
+        rawScore: result.rawScore,
+        confidence: result.confidence,
+        modelVersion: result.modelVersion,
+        strategy,
+      }
+    }
+
+    incrementCounter(counters.missing, strategy)
+    const next = chain[i + 1]
+    if (next) {
+      incrementCounter(counters.fallback, `${strategy}|${next}|${result.reason}`)
+    }
+  }
+
+  // Hard fallback should never be needed, but keeps output deterministic if catalog is malformed.
+  incrementCounter(counters.fallback, 'unknown|equal_weight|invalid_input')
+  const hardFallback = attemptStrategy('equal_weight', context)
+  return {
+    providerId: context.providerId,
+    rawScore: hardFallback.ok ? hardFallback.rawScore : 1,
+    confidence: hardFallback.ok ? hardFallback.confidence : 0.5,
+    modelVersion: hardFallback.ok ? hardFallback.modelVersion : STRATEGY_MODEL_VERSION_DEFAULTS.equal_weight,
+    strategy: 'equal_weight',
+  }
+}
+
+const emitStrategyMetrics = (counters: StrategyResolutionCounters) => {
+  for (const [strategy, count] of counters.resolved.entries()) {
+    recordCloudWatchMetric({
+      name: 'volume_strategy_resolved_total',
+      value: count,
+      unit: 'Count',
+      dimensions: { strategy },
+    })
+  }
+
+  for (const [tuple, count] of counters.fallback.entries()) {
+    const [from, to, reason] = tuple.split('|')
+    recordCloudWatchMetric({
+      name: 'volume_strategy_fallback_total',
+      value: count,
+      unit: 'Count',
+      dimensions: {
+        from: from || 'unknown',
+        to: to || 'unknown',
+        reason: reason || 'unknown',
+      },
+    })
+  }
+
+  for (const [strategy, count] of counters.missing.entries()) {
+    recordCloudWatchMetric({
+      name: 'volume_strategy_input_missing_total',
+      value: count,
+      unit: 'Count',
+      dimensions: { strategy },
+    })
+  }
+}
+
+const defaultVolumePolicy = (
+  providerCount: number,
+): ModuleVolumePolicy => ({
+  strategy: 'synthetic_seed',
+  model_version: defaultWeightModel,
+  fallback_chain: [...DEFAULT_FALLBACK_CHAIN],
+  synthetic_seed: {
+    default_weight: providerCount > 0 ? 1 / providerCount : 1,
+    default_confidence: 0.5,
+    source_note: 'weighting_job_default_seed',
+    corridor_overrides: [],
+  },
+  reported: {
+    enabled: false,
+    source_ref: null,
+    freshness_slo_hours: 24,
+  },
+  inferred_proxy: {
+    enabled: false,
+    factor_name: 'volume_proxy',
+    lookback_days: 30,
+  },
+})
+
+const buildModulePolicyMap = () => {
+  const catalog = loadModuleCatalog()
+  const productionModules = catalog.modules.filter((module) => module.status === 'production')
+  const byProvider = new Map<string, ModuleCatalogEntry>()
+  for (const module of productionModules) {
+    if (!byProvider.has(module.provider_id)) {
+      byProvider.set(module.provider_id, module)
+    }
+  }
+  return {
+    byProvider,
+    productionProviderCount: byProvider.size,
+  }
+}
+
+export const providerWeightingInternals = {
+  attemptStrategy,
+  resolveStrategyAwareWeight,
+  defaultVolumePolicy,
+}
+
 const buildUpsertPayload = (rows: {
   corridorId: string
   providerId: string
   weight: number
+  modelVersion: string
   windowDays: number
   quoteCount: number
   providerCount: number
@@ -295,7 +618,7 @@ const buildUpsertPayload = (rows: {
     corridorIds.push(row.corridorId)
     providerIds.push(row.providerId)
     weights.push(row.weight)
-    modelVersions.push(weightModel)
+    modelVersions.push(row.modelVersion)
     windowDays.push(row.windowDays)
     quoteCounts.push(row.quoteCount)
     providerCounts.push(row.providerCount)
@@ -320,6 +643,7 @@ const upsertWeights = async (pool: Pool, rows: {
   corridorId: string
   providerId: string
   weight: number
+  modelVersion: string
   windowDays: number
   quoteCount: number
   providerCount: number
@@ -427,24 +751,40 @@ export const runProviderWeightingJob = async (): Promise<void> => {
   try {
     const providerResult = await query<ProviderStatRow>(providerStatsQuery, [lookbackDays], pool)
     const globalResult = await query<GlobalStatRow>(globalStatsQuery, [lookbackDays], pool)
+    const eligibleCorridorResult = await query<EligibleCorridorRow>(eligibleProvidersByCorridorQuery, [], pool)
+    const eligibleGlobalResult = await query<EligibleGlobalRow>(eligibleGlobalProvidersQuery, [], pool)
     const providerRows = providerResult.rows
     const globalRows = globalResult.rows
+    const eligibleCorridorRows = eligibleCorridorResult.rows
+    const eligibleGlobalRows = eligibleGlobalResult.rows
 
-    if (providerRows.length === 0 || globalRows.length === 0) {
+    if (eligibleCorridorRows.length === 0 && eligibleGlobalRows.length === 0) {
       logger.warn('no_weight_data', {
+        reason: 'no_eligible_provider_rows',
         provider_rows: providerRows.length,
         global_rows: globalRows.length,
       })
       return
     }
 
-    const globalMetaRow = globalRows[0]
-    const globalMin = toDate(globalMetaRow.min_ts)
-    const globalMax = toDate(globalMetaRow.max_ts)
-    const globalWindowDays = computeWindowDays(globalMin, globalMax)
-    const globalAvailableHours = computeAvailableHours(globalMin, globalMax)
-    const globalQuoteCount = globalMetaRow.quote_count
-    const globalProviderCount = globalMetaRow.provider_count
+    const { byProvider: moduleByProvider, productionProviderCount } = buildModulePolicyMap()
+    const strategyCounters: StrategyResolutionCounters = {
+      resolved: new Map<string, number>(),
+      fallback: new Map<string, number>(),
+      missing: new Map<string, number>(),
+    }
+
+    const globalMetaRow = globalRows[0] ?? null
+    const globalMin = toDate(globalMetaRow?.min_ts ?? null)
+    const globalMax = toDate(globalMetaRow?.max_ts ?? null)
+    const globalWindowDays = globalMetaRow
+      ? computeWindowDays(globalMin, globalMax)
+      : 0
+    const globalAvailableHours = globalMetaRow
+      ? computeAvailableHours(globalMin, globalMax)
+      : 1
+    const globalQuoteCount = globalMetaRow?.quote_count ?? 0
+    const globalProviderCount = globalMetaRow?.provider_count ?? 0
     const globalConfidence = computeConfidence(globalWindowDays, globalQuoteCount, globalProviderCount)
 
     const tierMultiplierByProvider = new Map<string, number>()
@@ -453,7 +793,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       tierMultiplierByProvider.set(row.provider_id, computeTierMultiplier(persistence))
     }
 
-    const globalWeightsRaw = new Map<string, number>()
+    const globalLiveRaw = new Map<string, number>()
     for (const row of globalRows) {
       const lastCollected = toDate(row.last_collected)
       const ageMinutes = lastCollected ? (Date.now() - lastCollected.getTime()) / 60000 : halfLifeMinutes
@@ -467,16 +807,42 @@ export const runProviderWeightingJob = async (): Promise<void> => {
         ageMinutes,
         tierMultiplier,
       })
-      globalWeightsRaw.set(row.provider_id, raw)
+      globalLiveRaw.set(row.provider_id, raw)
     }
-    const globalRawSum = Array.from(globalWeightsRaw.values()).reduce((a, b) => a + b, 0)
-    const globalWeights = new Map<string, number>()
-    for (const [providerId, raw] of globalWeightsRaw.entries()) {
-      const normalized = globalRawSum > 0 ? raw / globalRawSum : 1 / globalWeightsRaw.size
-      globalWeights.set(providerId, normalized)
+    const globalLiveRawSum = Array.from(globalLiveRaw.values()).reduce((a, b) => a + b, 0)
+    const globalLiveScores = new Map<string, number>()
+    for (const [providerId, raw] of globalLiveRaw.entries()) {
+      const normalized = globalLiveRawSum > 0
+        ? raw / globalLiveRawSum
+        : (globalLiveRaw.size > 0 ? 1 / globalLiveRaw.size : 0)
+      globalLiveScores.set(providerId, normalized)
     }
 
-    const corridors = new Map<string, { meta: CorridorMeta; rows: ProviderStatRow[] }>()
+    const corridors = new Map<string, {
+      meta: CorridorMeta
+      eligibleProviders: Set<string>
+      liveRows: Map<string, ProviderStatRow>
+    }>()
+
+    for (const row of eligibleCorridorRows) {
+      const existing = corridors.get(row.corridor_id)
+      if (existing) {
+        existing.eligibleProviders.add(row.provider_id)
+        continue
+      }
+      corridors.set(row.corridor_id, {
+        meta: {
+          quoteCount: 0,
+          providerCount: 0,
+          windowDays: 0,
+          weightConfidence: 0,
+          availableHours: 1,
+        },
+        eligibleProviders: new Set([row.provider_id]),
+        liveRows: new Map(),
+      })
+    }
+
     for (const row of providerRows) {
       const minTs = toDate(row.min_ts)
       const maxTs = toDate(row.max_ts)
@@ -491,9 +857,15 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       }
       const entry = corridors.get(row.corridor_id)
       if (!entry) {
-        corridors.set(row.corridor_id, { meta, rows: [row] })
+        corridors.set(row.corridor_id, {
+          meta,
+          eligibleProviders: new Set([row.provider_id]),
+          liveRows: new Map([[row.provider_id, row]]),
+        })
       } else {
-        entry.rows.push(row)
+        entry.liveRows.set(row.provider_id, row)
+        entry.eligibleProviders.add(row.provider_id)
+        entry.meta = meta
       }
     }
 
@@ -501,6 +873,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       corridorId: string
       providerId: string
       weight: number
+      modelVersion: string
       windowDays: number
       quoteCount: number
       providerCount: number
@@ -509,9 +882,15 @@ export const runProviderWeightingJob = async (): Promise<void> => {
 
     for (const [corridorId, entry] of corridors.entries()) {
       if (isShutdownRequested()) break
-      const { meta, rows } = entry
-      const rawWeights = new Map<string, number>()
-      for (const row of rows) {
+      const { meta } = entry
+      const providerIds = Array.from(entry.eligibleProviders)
+      if (providerIds.length === 0) continue
+
+      const equalWeightRaw = providerIds.length > 0 ? 1 / providerIds.length : 1
+      const liveRawByProvider = new Map<string, number>()
+      for (const providerId of providerIds) {
+        const row = entry.liveRows.get(providerId)
+        if (!row) continue
         const lastCollected = toDate(row.last_collected)
         const ageMinutes = lastCollected ? (Date.now() - lastCollected.getTime()) / 60000 : halfLifeMinutes
         const tierMultiplier = tierMultiplierByProvider.get(row.provider_id) ?? 1
@@ -524,43 +903,110 @@ export const runProviderWeightingJob = async (): Promise<void> => {
           ageMinutes,
           tierMultiplier,
         })
-        rawWeights.set(row.provider_id, raw)
+        liveRawByProvider.set(providerId, raw)
       }
-      const rawSum = Array.from(rawWeights.values()).reduce((a, b) => a + b, 0)
-      const normalizedFallback = rawWeights.size > 0 ? 1 / rawWeights.size : 1
-      for (const [providerId, raw] of rawWeights.entries()) {
-        const normalized = rawSum > 0 ? raw / rawSum : normalizedFallback
+
+      const liveRawSum = Array.from(liveRawByProvider.values()).reduce((a, b) => a + b, 0)
+      const liveScores = new Map<string, number>()
+      for (const [providerId, raw] of liveRawByProvider.entries()) {
+        const normalized = liveRawSum > 0
+          ? raw / liveRawSum
+          : (liveRawByProvider.size > 0 ? 1 / liveRawByProvider.size : 0)
+        liveScores.set(providerId, normalized)
+      }
+
+      const resolved = providerIds.map((providerId) => {
+        const module = moduleByProvider.get(providerId)
+        const policy = module?.volume ?? defaultVolumePolicy(providerIds.length)
+        return resolveStrategyAwareWeight(
+          {
+            policy,
+            providerId,
+            corridorId,
+            liveScore: liveScores.get(providerId) ?? null,
+            liveConfidence: meta.weightConfidence,
+            equalWeightRaw,
+          },
+          strategyCounters,
+        )
+      })
+
+      const resolvedRawSum = resolved.reduce((sum, row) => sum + row.rawScore, 0)
+      const normalizedFallback = resolved.length > 0 ? 1 / resolved.length : 1
+
+      for (const row of resolved) {
+        const normalized = resolvedRawSum > 0 ? row.rawScore / resolvedRawSum : normalizedFallback
         rowsToUpsert.push({
           corridorId,
-          providerId,
+          providerId: row.providerId,
           weight: normalized,
+          modelVersion: row.modelVersion,
           windowDays: meta.windowDays,
           quoteCount: meta.quoteCount,
-          providerCount: meta.providerCount,
-          weightConfidence: meta.weightConfidence,
+          providerCount: providerIds.length,
+          weightConfidence: clamp01(row.confidence, meta.weightConfidence),
         })
       }
     }
 
-    for (const [providerId, weight] of globalWeights.entries()) {
-      rowsToUpsert.push({
-        corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
-        providerId,
-        weight,
-        windowDays: Math.min(lookbackDays, globalWindowDays),
-        quoteCount: globalQuoteCount,
-        providerCount: globalProviderCount,
-        weightConfidence: globalConfidence,
+    const globalProviderSet = new Set<string>(eligibleGlobalRows.map((row) => row.provider_id))
+    if (globalProviderSet.size === 0) {
+      for (const providerId of moduleByProvider.keys()) {
+        globalProviderSet.add(providerId)
+      }
+    }
+    for (const providerId of globalLiveScores.keys()) {
+      globalProviderSet.add(providerId)
+    }
+
+    const globalProviderIds = Array.from(globalProviderSet)
+    if (globalProviderIds.length > 0) {
+      const equalWeightRaw = 1 / globalProviderIds.length
+      const resolvedGlobal = globalProviderIds.map((providerId) => {
+        const module = moduleByProvider.get(providerId)
+        const policy = module?.volume ?? defaultVolumePolicy(globalProviderIds.length)
+        return resolveStrategyAwareWeight(
+          {
+            policy,
+            providerId,
+            corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
+            liveScore: globalLiveScores.get(providerId) ?? null,
+            liveConfidence: globalConfidence,
+            equalWeightRaw,
+          },
+          strategyCounters,
+        )
       })
+      const globalResolvedRawSum = resolvedGlobal.reduce((sum, row) => sum + row.rawScore, 0)
+      const normalizedFallback = resolvedGlobal.length > 0 ? 1 / resolvedGlobal.length : 1
+      for (const row of resolvedGlobal) {
+        rowsToUpsert.push({
+          corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
+          providerId: row.providerId,
+          weight: globalResolvedRawSum > 0 ? row.rawScore / globalResolvedRawSum : normalizedFallback,
+          modelVersion: row.modelVersion,
+          windowDays: Math.min(lookbackDays, globalWindowDays),
+          quoteCount: globalQuoteCount,
+          providerCount: globalProviderIds.length,
+          weightConfidence: clamp01(row.confidence, globalConfidence),
+        })
+      }
     }
 
     upserted = await upsertWeights(pool, rowsToUpsert)
+    emitStrategyMetrics(strategyCounters)
+
+    const mapToObject = (map: Map<string, number>) => Object.fromEntries([...map.entries()].sort())
     success = true
     logger.info('provider_weights_upserted', {
-      model_version: weightModel,
+      default_model_version: defaultWeightModel,
       corridors: corridors.size,
       rows: rowsToUpsert.length,
       upserted,
+      production_modules: productionProviderCount,
+      strategy_resolved: mapToObject(strategyCounters.resolved),
+      strategy_fallback: mapToObject(strategyCounters.fallback),
+      strategy_input_missing: mapToObject(strategyCounters.missing),
     })
   } catch (error) {
     logger.error('provider_weighting_job_failed', {
@@ -570,7 +1016,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
   } finally {
     const durationSeconds = (Date.now() - start) / 1000
     await recordBatchJobMetric('provider-weighting-job', success ? 'job_complete' : 'job_failure', durationSeconds, {
-      model_version: weightModel,
+      model_version: defaultWeightModel,
       rows_upserted: String(upserted),
     })
     await lock.release().catch((releaseError) => {

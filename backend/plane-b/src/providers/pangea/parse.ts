@@ -97,6 +97,7 @@ export const parsePangeaPayload = (
 
   if (!Number.isFinite(sendAmount) || !Number.isFinite(receiveAmount)) {
     flags.push(qualityFlags.parse_error)
+    return null
   }
 
   if (!Number.isFinite(baseRateRaw) && !Number.isFinite(promotionalRateRaw)) {
@@ -118,11 +119,11 @@ export const parsePangeaPayload = (
   const payoutMethod = mapPayout('bank_deposit')
 
   const feeAmount = 0
-  const totalDebitAmount = Number.isFinite(sendAmount) ? sendAmount + feeAmount : 0
+  const totalDebitAmount = sendAmount + feeAmount
 
   return {
-    send_amount: Number.isFinite(sendAmount) ? sendAmount : 0,
-    receive_amount: Number.isFinite(receiveAmount) ? receiveAmount : 0,
+    send_amount: sendAmount,
+    receive_amount: receiveAmount,
     fee_amount: feeAmount,
     total_debit_amount: totalDebitAmount,
     payin_method: payinMethod,

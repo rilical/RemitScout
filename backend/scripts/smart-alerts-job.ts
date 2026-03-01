@@ -4,9 +4,12 @@ import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
 import { initTracing } from '../shared/tracing'
 import { WorkerLock } from '../plane-b/src/lib/worker-lock'
+import { recordBatchJobMetric } from '../shared/worker-metrics'
+import { initErrorTracking } from '../shared/error-tracker'
 
 const logger = createLogger('script.smart-alerts-job')
 initTracing('smart-alerts-job')
+initErrorTracking('smart-alerts-job')
 
 const toNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value)
@@ -411,7 +414,9 @@ export const runSmartAlertsJob = async () => {
   }, lockRefreshMs)
 
   const pool = createPool(config.db.planeBUrl)
+  const jobStartTime = Date.now()
   try {
+    await recordBatchJobMetric('smart-alerts-job', 'job_start')
     logger.info('job_start', {
       lookback_days: lookbackDays,
       min_providers: minProviders,
@@ -424,13 +429,20 @@ export const runSmartAlertsJob = async () => {
     const ratesInserted = await insertRates(pool)
     const signalsUpserted = await upsertSignals(pool)
 
+    const durationSeconds = (Date.now() - jobStartTime) / 1000
+    await recordBatchJobMetric('smart-alerts-job', 'job_complete', durationSeconds)
     logger.info('job_complete', {
       snapshots_inserted: snapshotsInserted,
       rates_inserted: ratesInserted,
       signals_upserted: signalsUpserted,
+      duration_seconds: durationSeconds,
     })
 
     return { snapshotsInserted, ratesInserted, signalsUpserted }
+  } catch (error: unknown) {
+    const durationSeconds = (Date.now() - jobStartTime) / 1000
+    await recordBatchJobMetric('smart-alerts-job', 'job_failure', durationSeconds)
+    throw error
   } finally {
     if (lockRefreshTimer) {
       clearInterval(lockRefreshTimer)

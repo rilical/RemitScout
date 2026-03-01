@@ -342,7 +342,7 @@ export const runGoldPulseCacheJob = async (
       }
     })
 
-    let filtersProcessed = 0
+    const filtersProcessed = filterContexts.length
 
     // Batch aggregation with a concurrency cap to avoid sequential corridor×filters latency.
     await runConcurrent(filterContexts, jobConcurrency, async (filters) => {
@@ -379,10 +379,10 @@ export const runGoldPulseCacheJob = async (
         entries.set(narrativeKey, narrativePayload)
       }
 
-      filtersProcessed += 1
     })
 
     let upserted = 0
+    let upsertFailed = 0
     const upsertEntries = [...entries.entries()]
     await runConcurrent(upsertEntries, jobConcurrency, async ([key, payload]) => {
       try {
@@ -406,6 +406,7 @@ export const runGoldPulseCacheJob = async (
         )
         upserted += 1
       } catch (error) {
+        upsertFailed += 1
         logger.error('pulse_cache_upsert_failed', {
           key,
           error: error instanceof Error ? error.message : String(error),
@@ -418,6 +419,7 @@ export const runGoldPulseCacheJob = async (
     logger.info('job_complete', {
       entries_processed: entries.size,
       entries_upserted: upserted,
+      entries_upsert_failed: upsertFailed,
       filters_processed: filtersProcessed,
       corridors_processed: corridors.length,
       duration_ms: durationMs,
@@ -426,6 +428,7 @@ export const runGoldPulseCacheJob = async (
     await recordBatchJobMetric('gold-pulse-cache-job', 'job_complete', durationSeconds, {
       entries_processed: String(entries.size),
       entries_upserted: String(upserted),
+      entries_upsert_failed: String(upsertFailed),
       filters_processed: String(filtersProcessed),
       corridors_processed: String(corridors.length),
     })

@@ -44,8 +44,8 @@ const DELIVERY_TO_CANONICAL: Record<string, string> = {
   WALLET_ACCOUNT: 'mobile_wallet',
   CASH_HOME_DELIVERY: 'home_delivery',
   UPI: 'bank_deposit',
-  PREPAID_CARD: 'other',
-  DIRECT_TO_CARD: 'other',
+  PREPAID_CARD: 'debit_card',
+  DIRECT_TO_CARD: 'debit_card',
 }
 
 const PAYMENT_TO_CANONICAL: Record<string, string> = {

@@ -36,18 +36,21 @@ const enforceMaxTokenAge = (token: string): AuthError | null => {
     const payload = decodeJwt(token)
     const iat = payload.iat
     if (typeof iat !== 'number' || !Number.isFinite(iat)) {
-      return null
+      return makeError('invalid_token', 'Token is missing a valid iat claim.')
     }
     const nowSeconds = Math.floor(Date.now() / 1000)
+    if (iat > nowSeconds + 60) {
+      return makeError('invalid_token', 'Token iat is in the future.')
+    }
     if (nowSeconds - iat > maxTokenAgeSeconds) {
       return makeError('token_too_old', 'Token is too old. Please sign in again.')
     }
     return null
   } catch (error) {
-    logger.debug('supabase_token_age_parse_failed', {
+    logger.warn('supabase_token_age_parse_failed', {
       error: error instanceof Error ? error.message : String(error),
     })
-    return null
+    return makeError('invalid_token', 'Token age verification failed.')
   }
 }
 
@@ -77,6 +80,11 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
         if (ageError) return ageError
         return user
       }
+
+      logger.warn('supabase_jwt_signature_verification_failed', {
+        mode,
+      })
+      return makeError('invalid_token', 'JWT signature verification failed')
     }
 
     if (!allowRemote) {

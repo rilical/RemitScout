@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { config } from '../../../shared/config'
+import { requireAuth } from '../plugins/auth-plugin'
 
 export const complianceRoutes = async (app: FastifyInstance) => {
-  app.get('/compliance/status', async () => ({
+  app.get('/compliance/status', { preHandler: requireAuth() }, async () => ({
     updated_at: new Date().toISOString(),
     certifications: {
       gdpr: config.compliance.certifications.gdpr,

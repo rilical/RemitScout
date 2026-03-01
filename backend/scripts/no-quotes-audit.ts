@@ -129,7 +129,7 @@ export const runNoQuotesAudit = async () => {
   const failures: Array<Record<string, unknown>> = []
 
   if (process.env.VERBOSE === '1') {
-    // eslint-disable-next-line no-console
+     
     console.error(JSON.stringify({
       event: 'no_quotes_audit_start',
       base_url: base.toString(),
@@ -198,13 +198,13 @@ export const runNoQuotesAudit = async () => {
   }
 
   const pretty = process.env.PRETTY === '1'
-  // eslint-disable-next-line no-console
+   
   console.log(pretty ? JSON.stringify(payload, null, 2) : JSON.stringify(payload))
 }
 
 if (require.main === module) {
   runNoQuotesAudit().catch((error) => {
-    // eslint-disable-next-line no-console
+     
     console.error(JSON.stringify({
       event: 'no_quotes_audit_failed',
       error: error instanceof Error ? error.message : String(error),

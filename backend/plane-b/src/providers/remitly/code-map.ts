@@ -281,6 +281,6 @@ export const payoutMethodMap: Record<string, string> = {
   DIRECT_TO_PHONE: 'mobile_wallet',
   HOME_DELIVERY: 'home_delivery',
   MOBILE_WALLET: 'mobile_wallet',
-  PUSH_TO_CARD: 'other',
+  PUSH_TO_CARD: 'debit_card',
   UPI: 'bank_deposit',
 }

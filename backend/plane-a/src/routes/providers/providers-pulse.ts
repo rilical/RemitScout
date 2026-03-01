@@ -16,7 +16,13 @@ export const providersPulseRoutes = async (app: FastifyInstance) => {
       amount_bucket?: string | number
       method_profile?: string
     }
-    const amountBucket = Number(query.amount_bucket ?? DEFAULT_AMOUNT_BUCKET)
+    const amountBucketRaw = Number(query.amount_bucket ?? DEFAULT_AMOUNT_BUCKET)
+    if (!Number.isFinite(amountBucketRaw) || amountBucketRaw <= 0) {
+      throw new ValidationError('Invalid amount_bucket', {
+        details: [{ message: 'amount_bucket must be a positive number' }],
+      })
+    }
+    const amountBucket = amountBucketRaw
     const methodProfile =
       typeof query.method_profile === 'string' && query.method_profile.trim()
         ? query.method_profile.trim()

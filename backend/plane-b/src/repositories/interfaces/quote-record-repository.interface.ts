@@ -28,7 +28,7 @@ export type QuoteRecordInsertInput = {
 
 export type QuoteRecordPersistInput = QuoteRecordInsertInput & {
   feeCurrency: string | null
-  parserVersion: string | null
+  parserVersion: string
   qualityFlags: string
 }
 

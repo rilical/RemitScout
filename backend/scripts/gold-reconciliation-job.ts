@@ -78,8 +78,8 @@ type StaleCorridorRow = {
   silver_updated_at: Date
   gold_rates_updated_at: Date | null
   gold_indices_updated_at: Date | null
-  rates_lag_minutes: number
-  indices_lag_minutes: number
+  rates_lag_minutes: number | null
+  indices_lag_minutes: number | null
 }
 
 const findStaleCorridors = async (pool: Pool, thresholdMinutes: number, limit: number): Promise<string[]> => {
@@ -117,16 +117,24 @@ const findStaleCorridors = async (pool: Pool, thresholdMinutes: number, limit: n
       s.silver_updated_at,
       gr.gold_updated_at AS gold_rates_updated_at,
       gi.gold_updated_at AS gold_indices_updated_at,
-      EXTRACT(EPOCH FROM (s.silver_updated_at - COALESCE(gr.gold_updated_at, '1970-01-01'::timestamptz))) / 60 AS rates_lag_minutes,
-      EXTRACT(EPOCH FROM (s.silver_updated_at - COALESCE(gi.gold_updated_at, '1970-01-01'::timestamptz))) / 60 AS indices_lag_minutes
+      CASE
+        WHEN gr.gold_updated_at IS NULL THEN NULL
+        ELSE EXTRACT(EPOCH FROM (s.silver_updated_at - gr.gold_updated_at)) / 60
+      END AS rates_lag_minutes,
+      CASE
+        WHEN gi.gold_updated_at IS NULL THEN NULL
+        ELSE EXTRACT(EPOCH FROM (s.silver_updated_at - gi.gold_updated_at)) / 60
+      END AS indices_lag_minutes
     FROM silver_latest s
     LEFT JOIN gold_rates_latest gr ON gr.corridor_id = s.corridor_id
     LEFT JOIN gold_indices_latest gi ON gi.corridor_id = s.corridor_id
-    WHERE COALESCE(gr.gold_updated_at, '1970-01-01'::timestamptz) < s.silver_updated_at - ($1 * INTERVAL '1 minute')
-       OR COALESCE(gi.gold_updated_at, '1970-01-01'::timestamptz) < s.silver_updated_at - ($1 * INTERVAL '1 minute')
+    WHERE gr.gold_updated_at IS NULL
+       OR gi.gold_updated_at IS NULL
+       OR gr.gold_updated_at < s.silver_updated_at - ($1 * INTERVAL '1 minute')
+       OR gi.gold_updated_at < s.silver_updated_at - ($1 * INTERVAL '1 minute')
     ORDER BY GREATEST(
-      EXTRACT(EPOCH FROM (s.silver_updated_at - COALESCE(gr.gold_updated_at, '1970-01-01'::timestamptz))),
-      EXTRACT(EPOCH FROM (s.silver_updated_at - COALESCE(gi.gold_updated_at, '1970-01-01'::timestamptz)))
+      COALESCE(EXTRACT(EPOCH FROM (s.silver_updated_at - gr.gold_updated_at)), -1),
+      COALESCE(EXTRACT(EPOCH FROM (s.silver_updated_at - gi.gold_updated_at)), -1)
     ) DESC
     LIMIT $2`,
     [thresholdMinutes, limit],

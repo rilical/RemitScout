@@ -257,7 +257,7 @@ export const runProviderCapabilityProbeEvidence = async () => {
 
 if (require.main === module) {
   runProviderCapabilityProbeEvidence().catch((error) => {
-    // eslint-disable-next-line no-console
+     
     console.error('provider_capability_probe_evidence_fatal', { error: error instanceof Error ? error.message : String(error) })
     process.exit(1)
   })

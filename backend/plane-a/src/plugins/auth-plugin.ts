@@ -28,6 +28,7 @@ type RateLimitEntry = {
 
 const apiKeyRateLimitStore = new Map<string, RateLimitEntry>()
 const institutionalDailyRateLimitStore = new Map<string, RateLimitEntry>()
+const API_KEY_RATE_LIMIT_MAX_ENTRIES = 10_000
 
 const normalizeScope = (value: string) => value.trim().toLowerCase()
 
@@ -417,9 +418,9 @@ export const requireAdmin = () => {
     }
 
     if (adminMfaRequired) {
-      const amr = Array.isArray(claims?.amr) ? claims.amr as Array<{ method?: string }> : []
-      const hasTotpAmr = amr.some(entry => entry && entry.method === 'totp')
-      if (!hasTotpAmr) {
+      const mfaVerifiedClaim = claims?.mfa_verified === true
+      const hasTotpAmr = hasTotpMfaAmr(claims)
+      if (!mfaVerifiedClaim && !hasTotpAmr) {
         logger.warn('admin_mfa_required', {
           user_id: request.user.user_id,
         })
@@ -447,6 +448,22 @@ export const requireSuperAdmin = () => {
     if (!request.user) {
       reply.code(401)
       return reply.send({ error: 'unauthorized' })
+    }
+
+    const claims = request.user.claims as Record<string, unknown> | undefined
+    if (adminMfaRequired) {
+      const mfaVerifiedClaim = claims?.mfa_verified === true
+      const hasTotpAmr = hasTotpMfaAmr(claims)
+      if (!mfaVerifiedClaim && !hasTotpAmr) {
+        logger.warn('super_admin_mfa_required', {
+          user_id: request.user.user_id,
+        })
+        reply.code(403)
+        return reply.send({
+          error: 'mfa_required',
+          message: 'Multi-factor authentication is required for admin access.',
+        })
+      }
     }
 
     const supabaseRole = request.user.role
@@ -481,8 +498,25 @@ export const requireSuperAdmin = () => {
 const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.auth-plugin')
 
+const hasTotpMfaAmr = (claims: Record<string, unknown> | undefined): boolean => {
+  const amr = Array.isArray(claims?.amr)
+    ? claims.amr as Array<{ method?: string; mfa?: boolean }>
+    : []
+  return amr.some((entry) => {
+    if (!entry) return false
+    if (entry.mfa === true) return true
+    return entry.method === 'totp'
+  })
+}
+
 const adminMfaRequired = (() => {
+  const envName = (config.envName || config.env || '').trim().toLowerCase()
+  const protectedEnv =
+    envName === 'prod' || envName === 'production' || envName === 'staging'
   const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
+  if (protectedEnv) {
+    return true
+  }
   if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
   return true
 })()
@@ -541,6 +575,16 @@ const applyApiKeyRateLimit = async (
   }
 
   const now = Date.now()
+
+  // Best-effort in-memory eviction for local fallback mode.
+  if (apiKeyRateLimitStore.size > API_KEY_RATE_LIMIT_MAX_ENTRIES) {
+    for (const [entryKey, entry] of apiKeyRateLimitStore.entries()) {
+      if (entry.resetAt <= now) {
+        apiKeyRateLimitStore.delete(entryKey)
+      }
+    }
+  }
+
   const redis = await getRedisClient()
   if (redis) {
     const redisKey = `plane-a:enterprise-api:${keyId}`

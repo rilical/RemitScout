@@ -5,14 +5,29 @@ const nonEmptyString = z.string()
 const booleanSchema = z.boolean()
 const numberSchema = z.number()
 const placeholderAlertWebhookPatterns = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+const placeholderSecretPatterns = [
+  /^change[-_]?me$/i,
+  /^placeholder$/i,
+  /^example(?:[-_].*)?$/i,
+  /^staging[-_]?key$/i,
+  /^test[-_]?key$/i,
+  /^your[-_].*/i,
+]
 
 const looksLikePlaceholder = (value: string) =>
   placeholderAlertWebhookPatterns.some((pattern) => pattern.test(value))
+
+const looksLikeSecretPlaceholder = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  return placeholderSecretPatterns.some((pattern) => pattern.test(trimmed))
+}
 
 // This schema intentionally validates only the stable surface area we treat as "startup critical".
 // It is still a schema for the full config object: unknown keys are allowed via passthrough.
 const baseConfigSchema = z.object({
   env: nonEmptyString,
+  envName: z.string().optional(),
   runtime: z.object({
     isAwsRuntime: booleanSchema,
     isStrictConfig: booleanSchema,
@@ -51,6 +66,15 @@ const baseConfigSchema = z.object({
     goldLive: z.object({
       url: z.string(),
     }).passthrough(),
+    agentFailure: z.object({
+      url: z.string(),
+    }).passthrough(),
+    agentStress: z.object({
+      url: z.string(),
+    }).passthrough(),
+    toolRequest: z.object({
+      url: z.string(),
+    }).passthrough(),
   }).passthrough(),
   storage: z.object({
     bronze: z.object({ bucket: z.string() }).passthrough(),
@@ -60,6 +84,27 @@ const baseConfigSchema = z.object({
     jwtSecret: z.string(),
     planeCBaseUrl: z.string(),
     requireJwt: booleanSchema,
+    adminIpAllowlist: z.array(z.string()).default([]),
+  }).passthrough(),
+  agent: z.object({
+    enabled: booleanSchema,
+    orchestratorEnabled: booleanSchema,
+    llmConnector: z.enum(['anthropic', 'bedrock']),
+    llmModel: z.string(),
+    llmMaxTokens: numberSchema,
+    llmTemperature: numberSchema,
+    anthropicApiKey: z.string().optional(),
+    anthropicApiKeySecretArn: z.string().optional(),
+    bedrockRegion: z.string().optional(),
+    bedrockModelId: z.string().optional(),
+    bedrockMaxTokens: numberSchema.optional(),
+    bedrockSecretArn: z.string().optional(),
+    llmPromptVersion: z.string().optional(),
+    telemetryDims: z.array(z.string()).optional(),
+  }).passthrough(),
+  privacy: z.object({
+    hashSalt: z.string(),
+    sessionSalt: z.string(),
   }).passthrough(),
   planeC: z.object({
     internalApiToken: z.string(),
@@ -114,6 +159,10 @@ const shouldRequire = (
 
 const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
   baseConfigSchema.superRefine((cfg, ctx) => {
+    const runtimeEnv = (cfg.envName || cfg.env || '').trim().toLowerCase()
+    const isProdLike = runtimeEnv === 'staging' || runtimeEnv === 'prod' || runtimeEnv === 'production'
+    const agentLlmEnabled = cfg.agent.enabled || cfg.agent.orchestratorEnabled || requirements.requireAgentLlm === true
+
     if (requirements.requirePlaneA && !cfg.db.planeAUrl) {
       addMissing(ctx, 'DATABASE_URL_PLANE_A', ['db', 'planeAUrl'])
     }
@@ -232,6 +281,132 @@ const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
     }
     if (requirements.requireJwtSecret && !cfg.planeA.jwtSecret) {
       addMissing(ctx, 'PLANE_A_JWT_SECRET', ['planeA', 'jwtSecret'])
+    } else if (requirements.requireJwtSecret && looksLikeSecretPlaceholder(cfg.planeA.jwtSecret)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['planeA', 'jwtSecret'],
+        message: 'PLANE_A_JWT_SECRET cannot be a placeholder value',
+      })
+    }
+    if (requirements.requirePrivacySalts) {
+      if (!cfg.privacy.hashSalt) {
+        addMissing(ctx, 'PRIVACY_HASH_SALT', ['privacy', 'hashSalt'])
+      } else if (looksLikeSecretPlaceholder(cfg.privacy.hashSalt)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['privacy', 'hashSalt'],
+          message: 'PRIVACY_HASH_SALT cannot be a placeholder value',
+        })
+      }
+      if (!cfg.privacy.sessionSalt) {
+        addMissing(ctx, 'PRIVACY_SESSION_SALT', ['privacy', 'sessionSalt'])
+      } else if (looksLikeSecretPlaceholder(cfg.privacy.sessionSalt)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['privacy', 'sessionSalt'],
+          message: 'PRIVACY_SESSION_SALT cannot be a placeholder value',
+        })
+      }
+    }
+    if (requirements.requireAdminIpAllowlist && cfg.planeA.adminIpAllowlist.length === 0) {
+      addMissing(
+        ctx,
+        'ADMIN_IP_ALLOWLIST (or WAF_ADMIN_ALLOWLIST_IPS / WAF_ALLOWLIST_IPS)',
+        ['planeA', 'adminIpAllowlist'],
+      )
+    }
+
+    if (agentLlmEnabled) {
+      const connector = cfg.agent.llmConnector
+      const llmModel = cfg.agent.llmModel?.trim() ?? ''
+      if (!llmModel) {
+        addMissing(ctx, 'AGENT_LLM_MODEL', ['agent', 'llmModel'])
+      }
+
+      const promptVersion = cfg.agent.llmPromptVersion?.trim() ?? ''
+      if (!promptVersion) {
+        addMissing(ctx, 'AGENT_LLM_PROMPT_VERSION', ['agent', 'llmPromptVersion'])
+      }
+
+      if (!Number.isFinite(cfg.agent.llmMaxTokens) || cfg.agent.llmMaxTokens <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['agent', 'llmMaxTokens'],
+          message: 'AGENT_LLM_MAX_TOKENS must be a positive number',
+        })
+      }
+
+      if (!Number.isFinite(cfg.agent.llmTemperature) || cfg.agent.llmTemperature < 0 || cfg.agent.llmTemperature > 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['agent', 'llmTemperature'],
+          message: 'AGENT_LLM_TEMPERATURE must be within [0, 1]',
+        })
+      }
+
+      if (connector === 'anthropic') {
+        const apiKey = cfg.agent.anthropicApiKey?.trim() ?? ''
+        const secretArn = cfg.agent.anthropicApiKeySecretArn?.trim() ?? ''
+        const hasKey = Boolean(apiKey)
+        const hasSecretArn = Boolean(secretArn)
+        if (isProdLike && !hasSecretArn) {
+          addMissing(
+            ctx,
+            'AGENT_ANTHROPIC_API_KEY_SECRET_ARN',
+            ['agent', 'anthropicApiKeySecretArn'],
+          )
+        } else if (!isProdLike && !hasKey && !hasSecretArn) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['agent', 'anthropicApiKey'],
+            message:
+              'Anthropic connector requires AGENT_ANTHROPIC_API_KEY (local/dev) or AGENT_ANTHROPIC_API_KEY_SECRET_ARN.',
+          })
+        }
+        if (hasKey && looksLikeSecretPlaceholder(apiKey)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['agent', 'anthropicApiKey'],
+            message: 'AGENT_ANTHROPIC_API_KEY cannot be a placeholder value',
+          })
+        }
+      }
+
+      if (connector === 'bedrock') {
+        const region = cfg.agent.bedrockRegion?.trim() ?? ''
+        const modelId = (cfg.agent.bedrockModelId?.trim() || llmModel).trim()
+        if (cfg.agent.bedrockModelId?.trim() && llmModel && cfg.agent.bedrockModelId.trim() !== llmModel) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['agent', 'bedrockModelId'],
+            message: 'AGENT_BEDROCK_MODEL_ID must match AGENT_LLM_MODEL when both are set.',
+          })
+        }
+        if (!region) {
+          addMissing(ctx, 'AGENT_BEDROCK_REGION', ['agent', 'bedrockRegion'])
+        }
+        if (!modelId) {
+          addMissing(ctx, 'AGENT_BEDROCK_MODEL_ID', ['agent', 'bedrockModelId'])
+        }
+        const bedrockAllowlistByRegion: Record<string, string[]> = {
+          'us-east-1': [
+            'anthropic.claude-sonnet-4-20250514-v1:0',
+          ],
+          'us-west-2': [
+            'anthropic.claude-sonnet-4-20250514-v1:0',
+          ],
+        }
+        if (region && modelId) {
+          const allowed = bedrockAllowlistByRegion[region]
+          if (allowed && !allowed.includes(modelId)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['agent', 'bedrockModelId'],
+              message: `AGENT_BEDROCK_MODEL_ID '${modelId}' is not in allowlist for region '${region}'`,
+            })
+          }
+        }
+      }
     }
   })
 

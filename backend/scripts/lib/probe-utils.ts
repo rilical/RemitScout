@@ -110,8 +110,7 @@ const publishProbeMetrics = async (
       }),
     )
   } catch (error: unknown) {
-    // Silently fail metrics - don't break probe execution
-    logger.debug('probe_metrics_failed', {
+    logger.warn('probe_metrics_failed', {
       provider_id: providerId,
       error: formatError(error).message,
     })

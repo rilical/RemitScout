@@ -18,10 +18,11 @@ import {
   sendToDLQ,
   createVisibilityTimeoutExtender,
   drainAndStop,
+  getQueueDepth,
   type VisibilityTimeoutExtender,
 } from '../shared/sqs'
 import { notifyBlockAlert } from '../plane-b/src/collectors/alert-routing'
-import { recordWorkerMetric } from '../shared/worker-metrics'
+import { recordQueueDepthMetric, recordWorkerMetric } from '../shared/worker-metrics'
 import { withWorkerRetry } from '../shared/worker-retry'
 import { initErrorTracking } from '../shared/error-tracker'
 import { createShutdownHandler } from '../shared/shutdown'
@@ -74,6 +75,11 @@ const validatePayload = (payload: OpsAlertsQueueMessage | null): payload is OpsA
   return true
 }
 
+const getQueueNameFromUrl = (url: string): string => {
+  const parts = url.split('/').filter(Boolean)
+  return parts[parts.length - 1] || 'ops-alerts'
+}
+
 export const runOpsAlertsQueueWorkerLoop = async () => {
   if (queueMode !== 'queue') {
     logger.warn('ops_alerts_worker_disabled', { mode: queueMode })
@@ -113,6 +119,8 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
       if (receiveError) {
         logger.error('sqs_receive_failed', { queue_url: queueUrl, error: receiveError.message })
       }
+      const queueDepth = await getQueueDepth(queueUrl)
+      await recordQueueDepthMetric(getQueueNameFromUrl(queueUrl), queueDepth)
       if (messages.length === 0) {
         await sleep(idleSleepMs)
         continue
@@ -161,9 +169,10 @@ export const runOpsAlertsQueueWorkerLoop = async () => {
               })
               await recordWorkerMetric('ops-alerts-queue-worker', 'message_failed', 1)
 
-              // Send to DLQ
+              // Send to DLQ and delete source message to prevent duplicate DLQ copies
               await sendToDLQ(queueUrl!, message, err)
               await recordWorkerMetric('ops-alerts-queue-worker', 'dlq_sent', 1)
+              deleteHandles.push(message.receiptHandle)
             } finally {
               activeExtenders.delete(extender)
               await extender()

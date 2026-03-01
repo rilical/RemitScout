@@ -17,7 +17,6 @@ type RotatingTokenOptions = {
   salt?: string
 }
 
-const DEFAULT_HASH_SALT = 'remit-scout-privacy'
 const DEFAULT_ROTATION_HOURS = 24
 
 const sanitizeIpCandidate = (value?: string | null) => {
@@ -92,9 +91,19 @@ const truncateIpv6 = (value: string): string | null => {
   return `${groups.slice(0, 4).join(':')}:0000:0000:0000:0000`
 }
 
+const resolveSalt = (explicit?: string): string => {
+  const resolved = explicit ?? config.privacy?.hashSalt ?? ''
+  if (!resolved) {
+    throw new Error(
+      'Privacy hash salt is not configured. Set PRIVACY_HASH_SALT environment variable.',
+    )
+  }
+  return resolved
+}
+
 const hashValue = (value: string, salt?: string) =>
   createHash('sha256')
-    .update(`${salt || config.privacy?.hashSalt || DEFAULT_HASH_SALT}:${value}`)
+    .update(`${resolveSalt(salt)}:${value}`)
     .digest('hex')
 
 export const normalizeIpAddress = (value?: string | null): string | null => {
@@ -185,7 +194,7 @@ export const deriveRotatingToken = (
     ?? DEFAULT_ROTATION_HOURS
   const bucketStart = toBucketStart(now, intervalHours)
   const bucketKey = bucketStart.toISOString()
-  const salt = options.salt ?? config.privacy?.sessionSalt ?? DEFAULT_HASH_SALT
+  const salt = options.salt ?? config.privacy?.sessionSalt ?? ''
   const token = hashValue(`${trimmed}:${bucketKey}`, salt)
 
   return {

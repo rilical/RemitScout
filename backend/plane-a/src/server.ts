@@ -83,6 +83,9 @@ const start = async () => {
         requireExportsBucket: requireStorage,
         requireSupabase: isProdLikeEnv,
         requireStripe: isProdLikeEnv,
+        requireJwtSecret: isProdLikeEnv,
+        requirePrivacySalts: isProdLikeEnv,
+        requireAdminIpAllowlist: isProdLikeEnv,
       },
     })
 

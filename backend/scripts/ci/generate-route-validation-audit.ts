@@ -104,12 +104,12 @@ const main = async () => {
 
   const markdown = renderMarkdown(rows)
   await writeFile(outPath, markdown, 'utf8')
-  // eslint-disable-next-line no-console
+   
   console.log(`Wrote ${path.relative(backendRoot, outPath)}`)
 }
 
 main().catch((error) => {
-  // eslint-disable-next-line no-console
+   
   console.error(error)
   process.exit(1)
 })

@@ -394,8 +394,16 @@ const buildIndicesChartSeries = (
     suppression_flag: boolean
     suppression_reason?: string | null
   }>,
-): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number }> }> => {
-  const points: Array<{ t: number; v: number }> = []
+): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number; confidence?: number }> }> => {
+  const points: Array<{ t: number; v: number; confidence?: number }> = []
+
+  const addConfidence = (p: { t: number; v: number }, conf: number | null) => {
+    if (conf != null && conf >= 0 && conf <= 1) {
+      points.push({ ...p, confidence: conf })
+    } else {
+      points.push(p)
+    }
+  }
 
   for (const row of rows) {
     const date = row.date instanceof Date ? row.date : new Date(row.date)
@@ -410,7 +418,7 @@ const buildIndicesChartSeries = (
       if (row.weight_confidence === null) continue
       const value = row.weight_confidence * 100
       if (!Number.isFinite(value)) continue
-      points.push({ t: timestamp, v: value })
+      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
       continue
     }
 
@@ -418,7 +426,7 @@ const buildIndicesChartSeries = (
       if (row.provider_count === null) continue
       const value = row.provider_count
       if (!Number.isFinite(value)) continue
-      points.push({ t: timestamp, v: value })
+      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
       continue
     }
 
@@ -428,7 +436,7 @@ const buildIndicesChartSeries = (
     if (chartId === 'all-in-cost') {
       const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
       if (value === null) continue
-      points.push({ t: timestamp, v: value })
+      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
       continue
     }
 
@@ -436,14 +444,14 @@ const buildIndicesChartSeries = (
       if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) continue
       const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
       if (!Number.isFinite(value)) continue
-      points.push({ t: timestamp, v: value })
+      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
       continue
     }
 
     if (chartId === 'volatility-pulse') {
       const value = row.rvi_bps
       if (value === null) continue
-      points.push({ t: timestamp, v: value })
+      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
     }
   }
 
@@ -689,6 +697,9 @@ const mapCorridors = (payload: unknown) => {
         const destCountry = typeof row.to_country === 'string' ? row.to_country.toUpperCase() : ''
         const lastUpdated = toIsoString(row.last_updated) || null
 
+        const minDate = typeof row.min_date === 'string' ? row.min_date : null
+        const maxDate = typeof row.max_date === 'string' ? row.max_date : null
+        const dataAvailability = buildDataAvailability({ minDate, maxDate })
         return {
           corridorId,
           slug: value,
@@ -703,6 +714,11 @@ const mapCorridors = (payload: unknown) => {
           fromCode: sendCurrency,
           toCode: recvCurrency,
           lastUpdated,
+          minDate,
+          maxDate,
+          dataAvailability,
+          daysAvailable: dataAvailability.daysAvailable,
+          sufficient: dataAvailability.sufficient,
         }
       })
       .filter(Boolean)
@@ -1056,6 +1072,59 @@ const mapOverview = (
 
 const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
 
+interface DataAvailability {
+  daysAvailable: number
+  minDate: string | null
+  maxDate: string | null
+  sufficient: boolean
+}
+
+const buildDataAvailability = (metadata: {
+  minDate?: string | null
+  maxDate?: string | null
+}): DataAvailability => {
+  const minDate = metadata.minDate ?? null
+  const maxDate = metadata.maxDate ?? null
+  if (!minDate || !maxDate) {
+    return { daysAvailable: 0, minDate, maxDate, sufficient: false }
+  }
+  const minMs = new Date(minDate).getTime()
+  const maxMs = new Date(maxDate).getTime()
+  if (Number.isNaN(minMs) || Number.isNaN(maxMs) || maxMs < minMs) {
+    return { daysAvailable: 0, minDate, maxDate, sufficient: false }
+  }
+  const daysAvailable = Math.max(0, Math.round((maxMs - minMs) / 86400000) + 1)
+  return {
+    daysAvailable,
+    minDate,
+    maxDate,
+    sufficient: daysAvailable >= 7,
+  }
+}
+
+type CorridorWithDates = { slug?: string; minDate?: string | null; maxDate?: string | null }
+
+const getDataAvailabilityFromCorridors = (
+  corridors: CorridorWithDates[],
+  corridorSlug: string | null | undefined,
+): DataAvailability => {
+  if (corridorSlug) {
+    const corridor = corridors.find((c) => c.slug === corridorSlug)
+    if (corridor) return buildDataAvailability({ minDate: corridor.minDate, maxDate: corridor.maxDate })
+  }
+  const withDates = corridors.filter((c) => c.minDate && c.maxDate)
+  if (withDates.length === 0) return buildDataAvailability({})
+  const minDate = withDates.reduce<string | null>(
+    (a, c) => (c.minDate && (!a || c.minDate < a) ? c.minDate : a),
+    null,
+  )
+  const maxDate = withDates.reduce<string | null>(
+    (a, c) => (c.maxDate && (!a || c.maxDate > a) ? c.maxDate : a),
+    null,
+  )
+  return buildDataAvailability({ minDate, maxDate })
+}
+
 type GoldTrackedCorridorRow = {
   corridor_id: string
   source_country: string
@@ -1102,6 +1171,9 @@ const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool'])
         : TIER_2_CADENCE_SECONDS) / 60,
     )
 
+    const minDate = row.min_date ? toDateOnly(row.min_date) : null
+    const maxDate = row.max_date ? toDateOnly(row.max_date) : null
+    const dataAvailability = buildDataAvailability({ minDate, maxDate })
     return {
       corridorId: row.corridor_id,
       slug,
@@ -1115,8 +1187,8 @@ const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool'])
       toFlag: toFlagEmoji(destCountry),
       fromCode: sourceCurrency,
       toCode: destCurrency,
-      minDate: row.min_date ? toDateOnly(row.min_date) : null,
-      maxDate: row.max_date ? toDateOnly(row.max_date) : null,
+      minDate,
+      maxDate,
       lastUpdated: row.last_updated ? row.last_updated.toISOString() : null,
       dataPoints: row.data_points ?? 0,
       dataTier: tierInfo.exportTier,
@@ -1124,6 +1196,9 @@ const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool'])
       collectionCadenceMinutes,
       exportCadenceMinutes: tierInfo.cadenceMinutes,
       isUsdOrigin: sourceCurrency === 'USD',
+      dataAvailability,
+      daysAvailable: dataAvailability.daysAvailable,
+      sufficient: dataAvailability.sufficient,
     }
   })
 
@@ -1222,6 +1297,28 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const date = new Date(`${dateInput}T00:00:00.000Z`)
     if (Number.isNaN(date.getTime())) return dateInput
     return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+  }
+
+  const loadCorridorsList = async (): Promise<CorridorWithDates[]> => {
+    const cacheKey = [
+      'bucket',
+      INDICES_AMOUNT_BUCKET,
+      config.planeB?.disableTier1 ? 'tier1_off' : 'tier1_on',
+    ].join(':')
+    const cached = await pulseCorridorsCache.get(cacheKey)
+    if (cached && Array.isArray(cached)) return cached
+    try {
+      const tracked = await loadTrackedCorridorsFromGold(planeAPool)
+      if (tracked.length > 0) {
+        await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
+        return tracked
+      }
+    } catch {
+      /* fall through */
+    }
+    const { payload } = await loadPulse('corridors', {}, pulseDefaults.corridors)
+    const fallback = mapCorridors(payload)
+    return Array.isArray(fallback) ? fallback : []
   }
 
   app.get('/pulse/corridors', guardLite, async () => {
@@ -1409,6 +1506,33 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       const entries = await pulseCacheRepository.getEntries(allKeys)
       const entryByKey = new Map(entries.map((entry) => [entry.key, entry]))
 
+      const stressByCorridor = new Map<string, { stressScore: number | null; stressLevel: string }>()
+      try {
+        const stressResult = await query<{
+          corridor_id: string
+          stress_score: number | null
+        }>(
+          `SELECT DISTINCT ON (corridor_id)
+                  corridor_id, stress_score::double precision
+             FROM gold_export.triangulated_index
+            WHERE corridor_id = ANY($1)
+            ORDER BY corridor_id, date DESC`,
+          [corridorIds],
+          planeAPool,
+        )
+        for (const row of stressResult.rows) {
+          const score = row.stress_score
+          const level = score == null ? 'normal'
+            : score < 0.3 ? 'normal'
+            : score < 0.6 ? 'elevated'
+            : score < 0.8 ? 'high'
+            : 'critical'
+          stressByCorridor.set(row.corridor_id, { stressScore: score, stressLevel: level })
+        }
+      } catch {
+        // Stress data is optional; degrade gracefully.
+      }
+
       const rows: PulseScreenerRow[] = corridorIds.map((corridorId) => {
         const parsed = parseCorridorFromId(corridorId)
         const slug = parsed
@@ -1422,6 +1546,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         const toFlag = toFlagEmoji(metaTo)
 
         const keys = keyMap.get(corridorId)
+        const stress = stressByCorridor.get(corridorId)
+
         if (!keys) {
           return {
             corridorId,
@@ -1444,6 +1570,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             bankSavingsPercent: null,
             moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
             moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+            stressScore: stress?.stressScore ?? null,
+            stressLevel: stress?.stressLevel ?? null,
           }
         }
 
@@ -1474,6 +1602,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             bankSavingsPercent: null,
             moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
             moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+            stressScore: stress?.stressScore ?? null,
+            stressLevel: stress?.stressLevel ?? null,
           }
         }
 
@@ -1531,6 +1661,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
           bankSavingsPercent,
           moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
           moverTimestampBucket: moversByCorridor.get(corridorId)?.timestampBucket ?? null,
+          stressScore: stress?.stressScore ?? null,
+          stressLevel: stress?.stressLevel ?? null,
         }
       })
 
@@ -1675,8 +1807,10 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       }
 
       const filters = buildRequestFilters(request, queryParams)
-
-      const charts = await Promise.all(chartIds.map(async (chartId) => {
+      const corridorSlug = normalizePulseCorridor(filters.corridor) ?? null
+      const [corridors, chartsResult] = await Promise.all([
+        loadCorridorsList(),
+        Promise.all(chartIds.map(async (chartId) => {
         const isTeaserChart = !isFullAccess && PULSE_TEASER_CHART_IDS.has(chartId)
         const chartFilters = isTeaserChart
           ? { ...filters, timeframe: '7d', range: '7d' }
@@ -1721,8 +1855,11 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             source: updatedAt ? ('gold_cache' as const) : ('none' as const),
           },
         }
-      }))
+      })),
+      ])
 
+      const charts = chartsResult
+      const dataAvailability = getDataAvailabilityFromCorridors(corridors, corridorSlug)
       const updatedAt = charts.reduce<string | null>((latest, entry) => {
         if (!entry.updatedAt) return latest
         if (!latest) return entry.updatedAt
@@ -1736,6 +1873,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         success: true as const,
         updatedAt,
         dataAvailable: charts.some((entry) => entry.dataAvailable),
+        dataAvailability,
         charts,
       }
     } catch (error) {
@@ -1768,23 +1906,35 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     const indicesQuery = isTeaserChart
       ? { ...((request.query ?? {}) as Record<string, unknown>), range: '7d' }
       : ((request.query ?? {}) as Record<string, unknown>)
+    const corridorSlug = normalizePulseCorridor(filters.corridor) ?? null
+    const corridorsPromise = loadCorridorsList()
     if (INDEX_CHART_IDS.has(chartId)) {
-      const indices = await loadIndices(chartId, filters, indicesQuery)
+      const [indices, corridors] = await Promise.all([
+        loadIndices(chartId, filters, indicesQuery),
+        corridorsPromise,
+      ])
+      const dataAvailability = getDataAvailabilityFromCorridors(corridors, corridorSlug)
       return {
         ...indices,
         dataAvailable: Array.isArray(indices.series) && indices.series.length > 0,
         updatedAt: indices.metadata?.lastUpdated || null,
         source: 'gold_export',
         previewLocked: isTeaserChart,
+        dataAvailability,
       }
     }
-    const { payload, updatedAt } = await loadPulse(`chart:${chartId}`, filters, null)
+    const [{ payload, updatedAt }, corridors] = await Promise.all([
+      loadPulse(`chart:${chartId}`, filters, null),
+      corridorsPromise,
+    ])
+    const dataAvailability = getDataAvailabilityFromCorridors(corridors, corridorSlug)
     return {
       ...normalizeChartPayload(chartId, payload, updatedAt),
       dataAvailable: Boolean(updatedAt),
       updatedAt: updatedAt || null,
       source: updatedAt ? 'gold_cache' : 'none',
       previewLocked: isTeaserChart,
+      dataAvailability,
     }
   })
 
@@ -1946,6 +2096,116 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
     reply.header('Cache-Control', 'public, max-age=300')
     return snapshot
+  })
+
+  const publicRateLimitMap = new Map<string, { count: number; resetAt: number }>()
+  const PUBLIC_RATE_LIMIT = 30
+  const PUBLIC_RATE_WINDOW_MS = 60_000
+
+  const checkPublicRateLimit = (request: { headers: Record<string, string | string[] | undefined>; ip: string }): boolean => {
+    const forwarded = request.headers['x-forwarded-for']
+    const ip = (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : request.ip) || 'unknown'
+    const now = Date.now()
+    const entry = publicRateLimitMap.get(ip)
+    if (!entry || now >= entry.resetAt) {
+      publicRateLimitMap.set(ip, { count: 1, resetAt: now + PUBLIC_RATE_WINDOW_MS })
+      return true
+    }
+    if (entry.count >= PUBLIC_RATE_LIMIT) return false
+    entry.count++
+    return true
+  }
+
+  const ALLOWED_PUBLIC_TIMEFRAMES = new Set(['24h', '7d', '30d'])
+
+  const buildPublicFilters = (query: Record<string, unknown>): PulseCacheFilters => {
+    const filters = buildPulseFilters(query)
+    const tf = normalizePulseTimeframe(filters.timeframe) ?? '30d'
+    return {
+      ...filters,
+      timeframe: ALLOWED_PUBLIC_TIMEFRAMES.has(tf) ? tf : '30d',
+      range: clampLiteRange(filters.range),
+    }
+  }
+
+  app.get('/public/pulse/hero', async (request, reply) => {
+    if (!checkPublicRateLimit(request)) {
+      reply.code(429)
+      return { error: 'rate_limit_exceeded', message: 'Too many requests. Try again later.' }
+    }
+
+    const query = (request.query ?? {}) as Record<string, unknown>
+    const rawTf = typeof query.timeframe === 'string' ? query.timeframe.trim().toLowerCase() : ''
+    if (['1y', 'max', '365d'].includes(rawTf)) {
+      reply.code(400)
+      return { error: 'invalid_timeframe', message: 'Public API supports up to 30d timeframe.' }
+    }
+
+    reply.header('X-Frame-Options', 'ALLOWALL')
+    reply.header('Content-Security-Policy', 'frame-ancestors *')
+    reply.header('Cache-Control', 'public, max-age=120')
+
+    const filters = buildPublicFilters(query)
+    const [{ payload, updatedAt }, corridors] = await Promise.all([
+      loadPulse('hero', filters, pulseDefaults.hero),
+      loadCorridorsList(),
+    ])
+    const corridorSlug = normalizePulseCorridor(filters.corridor) ?? null
+    const dataAvailability = getDataAvailabilityFromCorridors(corridors, corridorSlug)
+    if (isObject(payload)) {
+      return {
+        ...payload,
+        lastUpdated: (payload as any).lastUpdated || updatedAt,
+        dataAvailable: Boolean(updatedAt),
+        updatedAt: updatedAt || null,
+        source: updatedAt ? 'gold_cache' : 'none',
+        dataAvailability,
+      }
+    }
+    return {
+      ...pulseDefaults.hero,
+      dataAvailable: false,
+      updatedAt: null,
+      source: 'none',
+      dataAvailability,
+    }
+  })
+
+  app.get('/public/pulse/corridors', async (request, reply) => {
+    if (!checkPublicRateLimit(request)) {
+      reply.code(429)
+      return { error: 'rate_limit_exceeded', message: 'Too many requests. Try again later.' }
+    }
+
+    reply.header('X-Frame-Options', 'ALLOWALL')
+    reply.header('Content-Security-Policy', 'frame-ancestors *')
+    reply.header('Cache-Control', 'public, max-age=300')
+
+    const cacheKey = [
+      'bucket',
+      INDICES_AMOUNT_BUCKET,
+      config.planeB?.disableTier1 ? 'tier1_off' : 'tier1_on',
+    ].join(':')
+
+    const cached = await pulseCorridorsCache.get(cacheKey)
+    if (cached) return cached
+
+    try {
+      const tracked = await loadTrackedCorridorsFromGold(planeAPool)
+      if (tracked.length > 0) {
+        await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
+        return tracked
+      }
+      throw new Error('no_gold_corridors')
+    } catch (error) {
+      logger.warn('public_pulse_corridors_gold_load_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      const { payload } = await loadPulse('corridors', {}, pulseDefaults.corridors)
+      const fallback = mapCorridors(payload)
+      await pulseCorridorsCache.set(cacheKey, fallback, 10 * 60 * 1000)
+      return fallback
+    }
   })
 
   app.get('/pulse/coverage-by-currency', guardPro, async (request) => {
@@ -2463,7 +2723,12 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
   app.get('/pulse/hero', guardLite, async (request) => {
     const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
-    const { payload, updatedAt } = await loadPulse('hero', filters, pulseDefaults.hero)
+    const [{ payload, updatedAt }, corridors] = await Promise.all([
+      loadPulse('hero', filters, pulseDefaults.hero),
+      loadCorridorsList(),
+    ])
+    const corridorSlug = normalizePulseCorridor(filters.corridor) ?? null
+    const dataAvailability = getDataAvailabilityFromCorridors(corridors, corridorSlug)
     if (isObject(payload)) {
       return {
         ...payload,
@@ -2471,6 +2736,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         dataAvailable: Boolean(updatedAt),
         updatedAt: updatedAt || null,
         source: updatedAt ? 'gold_cache' : 'none',
+        dataAvailability,
       }
     }
     return {
@@ -2478,6 +2744,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       dataAvailable: false,
       updatedAt: null,
       source: 'none',
+      dataAvailability,
     }
   })
 

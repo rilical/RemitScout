@@ -169,59 +169,68 @@ export const runGoldPopularCorridorsJob = async (
       return
     }
 
+    const valid = rows.filter((row) => {
+      if (isValidRoute(row.route)) return true
+      logger.warn('invalid_route_format', { route: row.route })
+      return false
+    })
+
+    if (valid.length === 0) {
+      logger.warn('job_no_valid_rows', {
+        message: 'All popular corridor rows were invalid; preserving existing dataset.',
+        rows_seen: rows.length,
+      })
+      const durationMs = Date.now() - startTime
+      const durationSeconds = durationMs / 1000
+      recordJobComplete(durationSeconds, rows.length, 0)
+      return
+    }
+
     client = await pool.connect()
     const txRepo = new PopularCorridorRepository(client)
     await client.query('BEGIN')
     try {
       await txRepo.clearAll()
 
-      const valid = rows.filter((row) => {
-        if (isValidRoute(row.route)) return true
-        logger.warn('invalid_route_format', { route: row.route })
-        return false
-      })
-
-      if (valid.length > 0) {
-        // Bulk insert to avoid N+1 inserts (pattern: freshness-report-repository.ts).
-        await retry(
-          () => query(
-            `INSERT INTO gold.popular_corridors
-             (route, count_24h, top_provider, fee_range, speed_range, best_for)
-             SELECT * FROM UNNEST(
-               $1::text[],
-               $2::int[],
-               $3::text[],
-               $4::text[],
-               $5::text[],
-               $6::text[]
-             )`,
-            [
-              valid.map((r) => r.route),
-              valid.map((r) => toNumber(r.count_24h, 0)),
-              valid.map((r) => r.top_provider ?? null),
-              valid.map((r) => r.fee_range ?? null),
-              valid.map((r) => r.speed_range ?? null),
-              valid.map((r) => r.best_for ?? null),
-            ],
-            client!,
-          ),
-          {
-            maxRetries: 2,
-            initialDelayMs: 200,
-            maxDelayMs: 10000,
-            timeoutMs: 60000,
-            operation: 'gold-popular-corridors.insert_bulk',
-            signal: shutdownSignal,
-            retryable: (error) => {
-              const errorMessage = error instanceof Error ? error.message : String(error)
-              return errorMessage.includes('connection')
-                || errorMessage.includes('timeout')
-                || errorMessage.includes('ECONNREFUSED')
-            },
+      // Bulk insert to avoid N+1 inserts (pattern: freshness-report-repository.ts).
+      await retry(
+        () => query(
+          `INSERT INTO gold.popular_corridors
+           (route, count_24h, top_provider, fee_range, speed_range, best_for)
+           SELECT * FROM UNNEST(
+             $1::text[],
+             $2::int[],
+             $3::text[],
+             $4::text[],
+             $5::text[],
+             $6::text[]
+           )`,
+          [
+            valid.map((r) => r.route),
+            valid.map((r) => toNumber(r.count_24h, 0)),
+            valid.map((r) => r.top_provider ?? null),
+            valid.map((r) => r.fee_range ?? null),
+            valid.map((r) => r.speed_range ?? null),
+            valid.map((r) => r.best_for ?? null),
+          ],
+          client!,
+        ),
+        {
+          maxRetries: 2,
+          initialDelayMs: 200,
+          maxDelayMs: 10000,
+          timeoutMs: 60000,
+          operation: 'gold-popular-corridors.insert_bulk',
+          signal: shutdownSignal,
+          retryable: (error) => {
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            return errorMessage.includes('connection')
+              || errorMessage.includes('timeout')
+              || errorMessage.includes('ECONNREFUSED')
           },
-        )
-        inserted = valid.length
-      }
+        },
+      )
+      inserted = valid.length
 
       await client.query('COMMIT')
     } catch (error) {

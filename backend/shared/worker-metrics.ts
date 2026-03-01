@@ -60,8 +60,7 @@ export const recordWorkerMetric = async (
       }),
     )
   } catch (error: unknown) {
-    // Silently fail metrics - don't break worker operations
-    logger.debug('worker_metric_failed', {
+    logger.warn('worker_metric_failed', {
       worker_name: workerName,
       operation,
       error: formatError(error).message,
@@ -128,7 +127,7 @@ export const recordBatchJobMetric = async (
       }),
     )
   } catch (error: unknown) {
-    logger.debug('batch_job_metric_failed', {
+    logger.warn('batch_job_metric_failed', {
       job_name: jobName,
       operation,
       error: formatError(error).message,
@@ -163,7 +162,7 @@ export const recordQueueDepthMetric = async (
       }),
     )
   } catch (error: unknown) {
-    logger.debug('queue_depth_metric_failed', {
+    logger.warn('queue_depth_metric_failed', {
       queue_name: queueName,
       error: formatError(error).message,
     })
@@ -201,7 +200,7 @@ export const recordDLQMessageCount = async (
       }),
     )
   } catch (error: unknown) {
-    logger.debug('dlq_message_count_metric_failed', {
+    logger.warn('dlq_message_count_metric_failed', {
       queue_name: queueName,
       error: formatError(error).message,
     })

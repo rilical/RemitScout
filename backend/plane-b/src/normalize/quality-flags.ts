@@ -65,6 +65,13 @@ export const qualityFlags = {
 
   /** Method profile could not be derived from payin/payout combination */
   invalid_method_profile: 'invalid_method_profile',
+
+  /**
+   * Fee Issues
+   */
+
+  /** Derived fee was negative (total_debit < send_amount) */
+  negative_fee: 'negative_fee',
 } as const
 
 /**

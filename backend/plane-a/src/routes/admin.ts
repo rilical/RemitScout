@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
-import { requireAdmin } from '../plugins/auth-plugin'
+import { requireAdmin, requireSuperAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { sendAdminWebhook } from '../services/admin-webhooks'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
@@ -160,7 +160,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/admin/plans/grant', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/plans/grant', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = planGrantSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
@@ -277,7 +277,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/admin/plans/revoke', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/plans/revoke', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = z.object({
       user_id: z.string().uuid().optional(),
       email: z.string().email().optional(),
@@ -386,7 +386,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.patch('/admin/users/role', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.patch('/admin/users/role', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = roleSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })

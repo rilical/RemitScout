@@ -246,6 +246,16 @@ export const meRoutes = async (app: FastifyInstance) => {
         planeAPool,
       )
       const appRole = appRoleResult.rows[0]?.app_role ?? null
+      const claims = user.claims as Record<string, unknown> | undefined
+      const amr = Array.isArray(claims?.amr)
+        ? claims.amr as Array<{ method?: string; mfa?: boolean }>
+        : []
+      const hasTotpMfa = amr.some((entry) => {
+        if (!entry) return false
+        if (entry.mfa === true) return true
+        return entry.method === 'totp'
+      })
+      const mfaVerified = claims?.mfa_verified === true || hasTotpMfa
 
       const email = user.email?.toLowerCase() ?? null
       const adminAllowlist = config.planeA.adminEmails
@@ -286,6 +296,7 @@ export const meRoutes = async (app: FastifyInstance) => {
           role: supabaseRole,
           app_role: appRole,
           is_admin: Boolean(isAdmin),
+          mfa_verified: Boolean(mfaVerified),
         },
         plan: {
           plan_code: plan.plan_code,

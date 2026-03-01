@@ -66,7 +66,7 @@ describe('GET /api/indices/series', () => {
           provider_count_binned: 5,
           suppression_flag: false,
           suppression_reason: null,
-          weighting_model: 'synthetic_volume_v1',
+          weighting_model: 'synthetic_seed_v1',
           methodology_version: 'indices_v2',
           weight_confidence: 0.8,
           weight_window_days: 30,

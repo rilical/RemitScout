@@ -48,7 +48,8 @@ initTracing('gold-publisher-job')
 let lock: WorkerLock | null = null
 let lockRefreshTimer: ReturnType<typeof setInterval> | null = null
 let healthServer: { close: () => Promise<void> } | null = null
-let pool: ReturnType<typeof createPool> | null = null
+let silverPool: ReturnType<typeof createPool> | null = null
+let goldPool: ReturnType<typeof createPool> | null = null
 
 const isLambdaRuntime = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
 
@@ -73,8 +74,13 @@ const { isShutdownRequested, signal: shutdownSignal } = createShutdownHandler({
         })
       })
     }
-    if (pool) {
-      await pool.end()
+    if (silverPool) {
+      await silverPool.end()
+      silverPool = null
+    }
+    if (goldPool) {
+      await goldPool.end()
+      goldPool = null
     }
   },
 })
@@ -125,8 +131,9 @@ export const runGoldPublisherJob = async (
       })
   }, lockRefreshMs)
 
-  pool = createPool(config.db.planeCUrl)
-  const publisher = new GoldPublisher(pool)
+  silverPool = createPool(config.db.planeBUrl)
+  goldPool = createPool(config.db.planeCUrl)
+  const publisher = new GoldPublisher(silverPool, goldPool)
 
   const startTime = Date.now()
   try {
@@ -204,9 +211,13 @@ export const runGoldPublisherJob = async (
     if (lock) {
       await lock.release()
     }
-    if (pool && !isShutdownRequested()) {
-      await pool.end()
-      pool = null
+    if (silverPool && !isShutdownRequested()) {
+      await silverPool.end()
+      silverPool = null
+    }
+    if (goldPool && !isShutdownRequested()) {
+      await goldPool.end()
+      goldPool = null
     }
   }
 }

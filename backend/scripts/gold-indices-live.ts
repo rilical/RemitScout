@@ -44,7 +44,7 @@ WITH weight_snapshot AS (
     window_days,
     weight_confidence
   FROM gold.provider_weight_snapshot
-  WHERE model_version = '${weightModel}'
+  WHERE model_version = $8
 ),
 corridor_weights AS (
   SELECT
@@ -54,14 +54,14 @@ corridor_weights AS (
     window_days,
     weight_confidence
   FROM weight_snapshot
-  WHERE corridor_id <> '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+  WHERE corridor_id <> $9
 ),
 global_weights AS (
   SELECT
     provider_id,
     weight
   FROM weight_snapshot
-  WHERE corridor_id = '${GLOBAL_WEIGHT_CORRIDOR_ID}'
+  WHERE corridor_id = $9
 ),
 weight_meta AS (
   SELECT
@@ -127,6 +127,7 @@ base_raw AS (
     AND qr.amount_bucket = $1
     AND ($2::int = 0 OR qr.collected_at >= NOW() - ($2 * INTERVAL '1 day'))
     AND ($3::text[] IS NULL OR qr.corridor_id = ANY($3))
+    AND qr.collected_at <= $11::timestamptz
     AND ir.collector_type LIKE 'b2b_%'
     AND ir.status = 'success'
     AND pcc.is_supported = true
@@ -360,7 +361,7 @@ weighted_metrics AS (
       COALESCE(provider_count_rci, 0),
       COALESCE(provider_count_rvi, 0)
     )::int AS provider_count,
-    '${weightModel}'::text AS weighting_model
+    $8::text AS weighting_model
   FROM weighted_agg
 ),
 prepared_base AS (
@@ -388,7 +389,7 @@ prepared_base AS (
     wm.weighting_model,
     wmeta.weight_confidence,
     wmeta.window_days,
-    '${methodologyVersion}'::text AS methodology_version
+    $10::text AS methodology_version
   FROM with_volatility wv
   LEFT JOIN weighted_metrics wm
     ON wm.corridor_id = wv.corridor_id
@@ -634,11 +635,13 @@ export const upsertGoldIndicesLive = async (
     amountBucket?: number
     lookbackDays?: number
     corridorIds?: string[]
+    snapshotUpperBound?: Date
   } = {},
 ): Promise<number> => {
   const corridorFilter = normalizeCorridorFilter(options.corridorIds)
   const targetBucket = options.amountBucket ?? amountBucket
   const targetLookbackDays = options.lookbackDays ?? lookbackDays
+  const snapshotUpperBound = options.snapshotUpperBound ?? new Date()
 
   const selectQuery = buildIndicesQuery()
   const params = [
@@ -649,6 +652,10 @@ export const upsertGoldIndicesLive = async (
     maxDailyChangeRatio,
     rateRatioMin,
     rateRatioMax,
+    weightModel,
+    GLOBAL_WEIGHT_CORRIDOR_ID,
+    methodologyVersion,
+    snapshotUpperBound,
   ]
 
   const selectResult = await query<IndicesRow>(selectQuery, params, silverPool)
@@ -738,6 +745,7 @@ export const upsertGoldIndicesLive = async (
   logger.debug('gold_indices_live_upserted', {
     upserted,
     corridor_count: corridorFilter?.length ?? 0,
+    snapshot_upper_bound: snapshotUpperBound.toISOString(),
   })
 
   return upserted

@@ -549,6 +549,15 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
     const input = parsed.data
+    const privacyContextForRateLimit = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
+    const rateSeed = `${privacyContextForRateLimit.clientIpHash || privacyContextForRateLimit.clientIp || 'unknown'}:${input.event_name}`
+    const rateKey = buildRateLimitKey('marketing:linkedin', rateSeed)
+    if (await checkRateLimit({ logger, key: rateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
+      throw new RateLimitError()
+    }
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
     const privacyContext = getClientPrivacyContext({
@@ -596,6 +605,15 @@ export const marketingRoutes = async (app: FastifyInstance) => {
       throw new ValidationError('Invalid request body', { details: parsed.error.issues })
     }
     const input = parsed.data
+    const privacyContextForGoogleRateLimit = getClientPrivacyContext({
+      ip: request.ip,
+      headers: request.headers as Record<string, unknown>,
+    })
+    const googleRateSeed = `${privacyContextForGoogleRateLimit.clientIpHash || privacyContextForGoogleRateLimit.clientIp || 'unknown'}:${input.event_name}`
+    const googleRateKey = buildRateLimitKey('marketing:google', googleRateSeed)
+    if (await checkRateLimit({ logger, key: googleRateKey, limit: 60, ttlSeconds: 60, component: 'marketing' })) {
+      throw new RateLimitError()
+    }
     const eventId = input.event_id || randomUUID()
     const eventTime = toTimestamp(input.event_time)
     const privacyContext = getClientPrivacyContext({

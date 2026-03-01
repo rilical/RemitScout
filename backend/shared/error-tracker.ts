@@ -98,16 +98,32 @@ const filterSensitiveData = (event: Sentry.ErrorEvent): Sentry.ErrorEvent | null
 
 export const initErrorTracking = async (serviceName?: string): Promise<void> => {
   const dsn = process.env.SENTRY_DSN
-  const environment = process.env.NODE_ENV || 'development'
+  const environment = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
   const release = process.env.SENTRY_RELEASE || process.env.npm_package_version || 'unknown'
   const serverName = process.env.SENTRY_SERVER_NAME || hostname() || 'remit-scout'
+  const normalizedEnvironment = environment.trim().toLowerCase()
+  const protectedEnv =
+    normalizedEnvironment === 'prod'
+    || normalizedEnvironment === 'production'
+    || normalizedEnvironment === 'staging'
+  const allowMissingInProtectedEnv = process.env.SENTRY_ALLOW_MISSING_IN_PROTECTED_ENV === '1'
 
   if (!dsn) {
-    logger.warn('error_tracking_disabled', {
+    const details = {
       reason: 'SENTRY_DSN not set',
-    })
+      service: serviceName || 'remit-scout',
+      environment: normalizedEnvironment,
+    }
+    if (protectedEnv && !allowMissingInProtectedEnv) {
+      logger.error('error_tracking_required_but_missing', details)
+      throw new Error(
+        `SENTRY_DSN is required in ${normalizedEnvironment} runtime for service ${details.service}.`,
+      )
+    }
+
+    logger.warn('error_tracking_disabled', details)
     return
- }
+  }
 
   try {
     // Get AWS context for tags

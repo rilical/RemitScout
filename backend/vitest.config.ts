@@ -1,8 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import path from 'node:path'
 
-const includeProviderFixtures = process.env.RUN_PROVIDER_FIXTURES === '1'
-const enforceCoverage = process.env.ENFORCE_COVERAGE === '1'
+const includeProviderFixtures = process.env.RUN_PROVIDER_FIXTURES !== '0'
 
 // Coverage enforcement policy:
 // - Global gate: 80%+ in CI.
@@ -48,19 +47,12 @@ export default defineConfig({
         'plane-c/src/**/*.ts',
         'shared/**/*.ts',
       ],
-      thresholds: enforceCoverage
-        ? {
-            statements: 80,
-            branches: 80,
-            functions: 80,
-            lines: 80,
-          }
-        : {
-            statements: 0,
-            branches: 0,
-            functions: 0,
-            lines: 0,
-          },
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+      },
     },
   },
   resolve: {

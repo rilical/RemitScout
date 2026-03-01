@@ -12,6 +12,7 @@ import {
   registerProviderHealthRoutes,
   registerProvidersHealthAggregateRoute,
 } from './provider-health'
+import { platformOpsRoutes } from './platform'
 
 export const opsRoutes = async (app: FastifyInstance) => {
   for (const provider of providerHealthRegistry) {
@@ -27,4 +28,5 @@ export const opsRoutes = async (app: FastifyInstance) => {
   apiKeysAdminRoutes(app)
   providersExplainRoutes(app)
   goldExportsRoutes(app)
+  platformOpsRoutes(app)
 }

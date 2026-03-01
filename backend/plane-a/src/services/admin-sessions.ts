@@ -123,6 +123,7 @@ export type IssueAdminSessionInput = {
   email?: string | null
   role?: string | null
   appRole?: string | null
+  mfaVerified?: boolean
   ipHash?: string | null
   userAgent?: string | null
   metadata?: Record<string, unknown>
@@ -149,6 +150,7 @@ export const issueAdminSession = async (input: IssueAdminSessionInput): Promise<
     role: input.role,
     appRole: input.appRole,
     refreshFamilyId,
+    mfaVerified: input.mfaVerified,
   })
 
   const expiresAt = new Date(Date.now() + refreshTtlSeconds() * 1000)
@@ -195,6 +197,14 @@ type RefreshTokenRow = {
   expires_at: string | Date
   revoked_at: string | Date | null
   rotated_at: string | Date | null
+  metadata: unknown
+}
+
+const toObject = (value: unknown): Record<string, unknown> => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+  return {}
 }
 
 const revokeRefreshFamily = async (
@@ -236,7 +246,7 @@ export const refreshAdminSession = async (
     await client.query('BEGIN')
 
     const rowResult = await client.query<RefreshTokenRow>(
-      `SELECT id, user_id, token_family_id, expires_at, revoked_at, rotated_at
+      `SELECT id, user_id, token_family_id, expires_at, revoked_at, rotated_at, metadata
          FROM public.admin_refresh_token
         WHERE token_hash = $1
         LIMIT 1
@@ -270,6 +280,8 @@ export const refreshAdminSession = async (
     }
 
     const profile = await selectUserProfile(client, row.user_id)
+    const metadata = toObject(row.metadata)
+    const mfaVerified = metadata.mfa_verified === true
     const refreshToken = generateToken(48)
     const newRefreshHash = hashToken(refreshToken)
     const nextExpiresAt = new Date(Date.now() + refreshTtlSeconds() * 1000)
@@ -280,6 +292,7 @@ export const refreshAdminSession = async (
       role: profile.appRole,
       appRole: profile.appRole,
       refreshFamilyId: row.token_family_id,
+      mfaVerified,
     })
 
     await client.query(
@@ -313,7 +326,11 @@ export const refreshAdminSession = async (
         issuedAccess.jti,
         input.ipHash ?? null,
         input.userAgent ?? null,
-        addJsonMetadata(input.metadata),
+        addJsonMetadata({
+          ...metadata,
+          ...(input.metadata ?? {}),
+          mfa_verified: mfaVerified,
+        }),
       ],
     )
 

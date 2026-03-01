@@ -840,6 +840,37 @@ const processCorridorPayload = async (
         sweep_run_ids: sweepRunIds.size > 0 ? Array.from(sweepRunIds) : null,
         ...traceContext,
       })
+
+      // Send exhausted-retry messages to DLQ for controlled replay
+      try {
+        const dlqMessage: SqsMessage<typeof payload> = {
+          messageId: `dropped-${payload.corridorId}-${Date.now()}`,
+          receiptHandle: '',
+          attributes: {},
+          messageAttributes: {},
+          raw: {} as import('@aws-sdk/client-sqs').Message,
+          payload: {
+            ...payload,
+            providers: failedProviders,
+            attempt,
+          },
+        }
+        await sendToDLQ(queueUrl!, dlqMessage, new Error('retry_ceiling_exceeded'), {
+          reason: 'fanout_corridor_retry_exhausted',
+          queueClass: expectedQueueClass,
+        })
+        logger.info('fanout_corridor_dlq_sent', {
+          corridor_id: payload.corridorId,
+          failed_providers: failedProviders.length,
+          ...traceContext,
+        })
+      } catch (dlqError) {
+        logger.error('fanout_corridor_dlq_failed', {
+          corridor_id: payload.corridorId,
+          error: dlqError instanceof Error ? dlqError.message : String(dlqError),
+          ...traceContext,
+        })
+      }
     }
   }
 

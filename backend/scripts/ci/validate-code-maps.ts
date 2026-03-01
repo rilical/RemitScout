@@ -10,7 +10,7 @@ const MAX_LINES_WITHOUT_MAP = 400
 const HEADER_SCAN_LINES = 80
 
 const fail = (message: string) => {
-  // eslint-disable-next-line no-console
+   
   console.error(`validate-code-maps failed: ${message}`)
   process.exitCode = 1
 }
@@ -77,7 +77,7 @@ const main = () => {
   }
 
   if (process.exitCode && process.exitCode !== 0) process.exit(process.exitCode)
-  // eslint-disable-next-line no-console
+   
   console.log(`validate-code-maps ok (changed_only=${changedOnly ? 'true' : 'false'} scanned=${candidates.length})`)
 }
 

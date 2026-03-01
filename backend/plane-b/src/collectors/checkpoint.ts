@@ -68,12 +68,16 @@ export const saveCheckpoint = async (
 
 /**
  * Loads checkpoint state for resuming a collector sweep.
+ *
+ * Finds the most recent checkpoint for the given provider/collector pair,
+ * regardless of ingestion_run_id, so that interrupted runs can be resumed
+ * by a new run with a fresh ingestionRunId.
  */
 export const loadCheckpoint = async (
   pool: Pool,
   providerId: string,
   collectorType: string,
-  ingestionRunId: string,
+  _ingestionRunId?: string,
 ): Promise<CheckpointState | null> => {
   try {
     const result = await query<{
@@ -95,8 +99,10 @@ export const loadCheckpoint = async (
               started_at,
               last_updated_at
          FROM collector_checkpoints
-        WHERE provider_id = $1 AND collector_type = $2 AND ingestion_run_id = $3`,
-      [providerId, collectorType, ingestionRunId],
+        WHERE provider_id = $1 AND collector_type = $2
+        ORDER BY last_updated_at DESC
+        LIMIT 1`,
+      [providerId, collectorType],
       pool,
     )
 

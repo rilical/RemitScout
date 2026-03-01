@@ -433,7 +433,7 @@ export const runProviderScaffold = async () => {
   patchProviderIndexRegistry(repoRoot, providerId, displayName)
   updateProviderOnboardingDoc(repoRoot)
 
-  // eslint-disable-next-line no-console
+   
   console.log(JSON.stringify({
     ok: true,
     provider_id: providerId,
@@ -449,7 +449,7 @@ export const runProviderScaffold = async () => {
 
 if (require.main === module) {
   runProviderScaffold().catch((error) => {
-    // eslint-disable-next-line no-console
+     
     console.error(JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) }))
     process.exit(1)
   })

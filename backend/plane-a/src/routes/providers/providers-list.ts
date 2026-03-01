@@ -61,14 +61,18 @@ const toAbsoluteUrl = (value: string, baseUrl: string) => {
   return `${baseUrl}${value.startsWith('/') ? '' : '/'}${value}`
 }
 
-const METHOD_ORDER: Array<'bank' | 'cash' | 'wallet' | 'airtime'> = [
+type AvailableMethod = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
+
+const METHOD_ORDER: AvailableMethod[] = [
   'bank',
   'cash',
   'wallet',
   'airtime',
+  'home',
+  'card',
 ]
 
-const toAvailableMethod = (value?: string | null): 'bank' | 'cash' | 'wallet' | 'airtime' | null => {
+const toAvailableMethod = (value?: string | null): AvailableMethod | null => {
   if (!value) return null
   const token = normalizeToken(value)
   if (!token) return null
@@ -87,26 +91,33 @@ const toAvailableMethod = (value?: string | null): 'bank' | 'cash' | 'wallet' | 
   if (token === 'cash_pickup' || token === 'cash' || token.includes('cash')) {
     return 'cash'
   }
+  if (token === 'home_delivery' || token === 'home' || token.includes('home_delivery')) {
+    return 'home'
+  }
+  if (
+    token === 'debit_card'
+    || token === 'card_delivery'
+    || token === 'card_deposit'
+    || token === 'card'
+    || token === 'credit_card'
+  ) {
+    return 'card'
+  }
   if (
     token === 'bank_deposit'
     || token === 'bank_transfer'
     || token === 'bank_account'
     || token === 'bank'
     || token === 'account'
-    || token === 'card'
-    || token === 'card_deposit'
-    || token === 'debit_card'
-    || token === 'credit_card'
     || token.includes('bank')
     || token.includes('account')
-    || token.includes('card')
   ) {
     return 'bank'
   }
   return null
 }
 
-const orderMethods = (methods: Iterable<'bank' | 'cash' | 'wallet' | 'airtime'>) => {
+const orderMethods = (methods: Iterable<AvailableMethod>) => {
   const set = new Set(methods)
   return METHOD_ORDER.filter((method) => set.has(method))
 }
@@ -319,7 +330,7 @@ type FrontendProviderQuote = {
   recipientGets: number
   delivery: string
   reliability: number
-  methods: ('bank' | 'cash' | 'wallet' | 'airtime')[]
+  methods: AvailableMethod[]
   bestFor: string
   whyThisRanking?: string
   limits?: string
@@ -378,8 +389,8 @@ type ProvidersResponseBase = {
     age_seconds: number | null
     fresh: boolean
   }
-  availableMethods?: Array<'bank' | 'cash' | 'wallet' | 'airtime'>
-  availableMethodsByProvider?: Record<string, Array<'bank' | 'cash' | 'wallet' | 'airtime'>>
+  availableMethods?: AvailableMethod[]
+  availableMethodsByProvider?: Record<string, AvailableMethod[]>
   excludedProviders?: Array<{ provider: string; reason: ExcludedProviderReason }>
   excludedProvidersDetailed?: ExcludedProviderDetailed[]
   refresh?: ProvidersRefreshInfo
@@ -426,7 +437,7 @@ const querySchema = z.object({
   fromCurrency: z.string().min(3).max(3).optional(),
   toCurrency: z.string().min(3).max(3).optional(),
   amount: z.coerce.number().optional(),
-  method: z.enum(['bank', 'cash', 'wallet', 'airtime']).optional(),
+  method: z.enum(['bank', 'cash', 'wallet', 'airtime', 'home', 'card']).optional(),
   corridor_id: z.string().optional(),
   amount_bucket: z.coerce.number().int().optional(),
   payin: z.string().optional(),
@@ -719,21 +730,24 @@ const mapPayoutMethod = (payout: string): string => {
     'cash_pickup': 'CASH',
     'mobile_wallet': 'WALLET',
     'airtime': 'AIRTIME',
+    'home_delivery': 'HOME',
+    'debit_card': 'CARD',
+    'card_delivery': 'CARD',
     'other': 'BANK',
   }
   return mapping[payout.toLowerCase()] || 'BANK'
 }
 
-const resolveRequestedMethod = (method?: string | null, payout?: string | null) => {
-  if (method && METHOD_ORDER.includes(method as 'bank' | 'cash' | 'wallet' | 'airtime')) {
-    return method as 'bank' | 'cash' | 'wallet' | 'airtime'
+const resolveRequestedMethod = (method?: string | null, payout?: string | null): AvailableMethod => {
+  if (method && METHOD_ORDER.includes(method as AvailableMethod)) {
+    return method as AvailableMethod
   }
   const fallback = toAvailableMethod(payout)
   return fallback ?? 'bank'
 }
 
 const resolveIndicesMethodProfile = (
-  method: 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card',
+  method: AvailableMethod,
 ): string | null => {
   if (method === 'bank') return 'standard_bank'
   if (method === 'cash') return 'cash_pickup'
@@ -1172,8 +1186,8 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
     const amountKey = requestedAmount ?? amountBucket
     const requestedMethod = resolveRequestedMethod(method, payout)
-    const availableMethods = new Set<'bank' | 'cash' | 'wallet' | 'airtime'>()
-    const methodsByProvider = new Map<string, Set<'bank' | 'cash' | 'wallet' | 'airtime'>>()
+    const availableMethods = new Set<AvailableMethod>()
+    const methodsByProvider = new Map<string, Set<AvailableMethod>>()
 
     try {
       const maxAgeSeconds = await getCorridorMaxAgeSeconds(corridorId)
@@ -1230,7 +1244,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
       const supportedProviderSet = new Set(
         supportedProviderIds.map(id => normalizeProviderId(id)).filter(Boolean),
       )
-      const capabilityMethods = new Set<'bank' | 'cash' | 'wallet' | 'airtime'>()
+      const capabilityMethods = new Set<AvailableMethod>()
       const capabilityProviderSet = new Set<string>()
 
       try {
@@ -1343,7 +1357,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
         methodsByProvider.get(key)!.add(methodValue)
       }
 
-      const availableMethodsByProvider: Record<string, Array<'bank' | 'cash' | 'wallet' | 'airtime'>> = {}
+      const availableMethodsByProvider: Record<string, AvailableMethod[]> = {}
       for (const [providerKey, methods] of methodsByProvider.entries()) {
         availableMethodsByProvider[providerKey] = orderMethods(methods)
       }
@@ -2006,6 +2020,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
           ? details.message
           : 'No providers currently support this corridor.'
 
+        reply.code(404)
         return {
           comparisonId,
           start,

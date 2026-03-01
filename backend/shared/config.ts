@@ -75,6 +75,36 @@ const toRateLimitFallbackMode = (value: string | undefined): 'memory' | 'reject'
   return prodLike ? 'reject' : 'memory'
 }
 
+const toAgentLlmConnector = (
+  value: string | undefined,
+): 'anthropic' | 'bedrock' => {
+  const normalized = (value || '').trim().toLowerCase()
+  if (normalized === 'bedrock' || normalized === 'anthropic') {
+    return normalized
+  }
+  return isProdLikeEnvironment ? 'bedrock' : 'anthropic'
+}
+
+const toOptionalTrimmedString = (value: string | undefined): string | undefined => {
+  const trimmed = (value || '').trim()
+  return trimmed ? trimmed : undefined
+}
+
+const secretPlaceholderPatterns = [
+  /^change[-_]?me$/i,
+  /^placeholder$/i,
+  /^example(?:[-_].*)?$/i,
+  /^staging[-_]?key$/i,
+  /^test[-_]?key$/i,
+  /^your[-_].*/i,
+]
+
+const looksLikePlaceholderSecret = (value: string): boolean => {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  return secretPlaceholderPatterns.some((pattern) => pattern.test(trimmed))
+}
+
 const isAwsRuntime = Boolean(
   process.env.AWS_EXECUTION_ENV ||
   process.env.AWS_LAMBDA_FUNCTION_NAME ||
@@ -93,6 +123,13 @@ const defaultAdminAllowlistStrict = envName ? isProdLikeEnvironment : isStrictCo
 const planeCIamAuthEnabled = toBoolean(process.env.PLANE_C_ENABLE_IAM_AUTH)
 const defaultPlaneCInternalAuthStrict =
   (envName ? isProdLikeEnvironment : isStrictConfig) && !planeCIamAuthEnabled
+const resolvedAgentLlmConnector = toAgentLlmConnector(
+  process.env.AGENT_LLM_CONNECTOR || process.env.AGENT_LLM_PROVIDER,
+)
+const defaultAgentLlmModel =
+  resolvedAgentLlmConnector === 'bedrock'
+    ? 'anthropic.claude-sonnet-4-20250514-v1:0'
+    : 'claude-sonnet-4-20250514'
 const allowDbFallback = (() => {
   if (isStrictConfig || isProdLikeEnvironment || isAwsRuntime) {
     return false
@@ -103,9 +140,45 @@ const allowDbFallback = (() => {
   return true
 })()
 
+const resolveAdminIpAllowlist = () => {
+  const direct = (process.env.ADMIN_IP_ALLOWLIST || '').trim()
+  if (direct) {
+    return {
+      raw: direct,
+      source: 'ADMIN_IP_ALLOWLIST',
+      values: toList(direct),
+    } as const
+  }
+
+  const wafScoped = (process.env.WAF_ADMIN_ALLOWLIST_IPS || '').trim()
+  if (wafScoped) {
+    return {
+      raw: wafScoped,
+      source: 'WAF_ADMIN_ALLOWLIST_IPS',
+      values: toList(wafScoped),
+    } as const
+  }
+
+  const wafLegacy = (process.env.WAF_ALLOWLIST_IPS || '').trim()
+  if (wafLegacy) {
+    return {
+      raw: wafLegacy,
+      source: 'WAF_ALLOWLIST_IPS',
+      values: toList(wafLegacy),
+    } as const
+  }
+
+  return {
+    raw: '',
+    source: '',
+    values: [],
+  } as const
+}
+
 const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
 const b2bLegacyMaxQueueAgeSeconds = toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS, 0)
+const adminIpAllowlist = resolveAdminIpAllowlist()
 const resolvedOtlpEndpoint =
   process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
   process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
@@ -259,7 +332,15 @@ const rawConfig = {
     requireApiKey: toBoolean(process.env.PLANE_A_REQUIRE_API_KEY),
     requireJwt: toBoolean(process.env.PLANE_A_REQUIRE_JWT),
     apiKeys: (process.env.PLANE_A_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
-    jwtSecret: process.env.PLANE_A_JWT_SECRET || '',
+    jwtSecret: (() => {
+      const secret = process.env.PLANE_A_JWT_SECRET || ''
+      if (isProdLikeEnvironment && !secret.trim()) {
+        throw new Error(
+          'PLANE_A_JWT_SECRET must be set to a non-empty value in production/staging environments',
+        )
+      }
+      return secret
+    })(),
     adminTokenIssuer: process.env.PLANE_A_ADMIN_TOKEN_ISSUER || 'remit-scout-plane-a',
     adminAccessTokenTtlSeconds: toPositiveInt(
       process.env.PLANE_A_ADMIN_ACCESS_TOKEN_TTL_SECONDS,
@@ -302,6 +383,9 @@ const rawConfig = {
       process.env.PLANE_A_ADMIN_ALLOWLIST_STRICT,
       defaultAdminAllowlistStrict,
     ),
+    adminIpAllowlist: adminIpAllowlist.values,
+    adminIpAllowlistRaw: adminIpAllowlist.raw,
+    adminIpAllowlistSource: adminIpAllowlist.source,
     // Optional: internal admin users can be treated as enterprise for feature access even without Stripe.
     // Default: enabled for dev/staging; disabled for production unless explicitly enabled.
     internalUsersGetEnterprise: toBoolean(
@@ -976,6 +1060,22 @@ const rawConfig = {
       url: process.env.GOLD_LIVE_QUEUE_URL || '',
       mode: toQueueMode(process.env.GOLD_LIVE_QUEUE_MODE),
     },
+    agentFailure: {
+      url: process.env.AGENT_FAILURE_QUEUE_URL || '',
+      mode: toQueueMode(process.env.AGENT_FAILURE_QUEUE_MODE),
+    },
+    agentStress: {
+      url: process.env.AGENT_STRESS_QUEUE_URL || '',
+      mode: toQueueMode(process.env.AGENT_STRESS_QUEUE_MODE),
+    },
+    toolRequest: {
+      url: process.env.TOOL_REQUEST_QUEUE_URL || '',
+      mode: toQueueMode(process.env.TOOL_REQUEST_QUEUE_MODE),
+    },
+    normalization: {
+      url: process.env.NORMALIZATION_QUEUE_URL || '',
+      mode: toQueueMode(process.env.NORMALIZATION_QUEUE_MODE),
+    },
   },
   queueStaleness: {
     enforcementEnabled: toBoolean(process.env.QUEUE_STALENESS_ENFORCEMENT_ENABLED),
@@ -1016,6 +1116,8 @@ const rawConfig = {
       process.env.ALERT_SLACK_WEBHOOK_URL ||
       process.env.SLACK_WEBHOOK_URL ||
       '',
+    agentSlackWebhookUrl:
+      process.env.AGENT_SLACK_WEBHOOK_URL || '',
     smart: {
       minConfidence: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_CONFIDENCE, 70), 1, 100),
       minSampleDays: clampInt(toPositiveInt(process.env.SMART_ALERTS_MIN_SAMPLE_DAYS, 21), 1, 365),
@@ -1237,6 +1339,34 @@ const rawConfig = {
           : true,
       maxConcurrentDispatches: clampInt(toNumber(process.env.MAX_CONCURRENT_DISPATCHES, 10), 1, 100),
     },
+    push: {
+      provider: (process.env.PUSH_PROVIDER || 'firebase').toLowerCase(),
+      firebaseServerKey: process.env.FIREBASE_SERVER_KEY || '',
+      maxRetries: toNumber(process.env.PUSH_MAX_RETRIES, 2),
+      webEnabled: toBoolean(process.env.PUSH_WEB_ENABLED),
+      webVapidPublicKey:
+        process.env.PUSH_WEB_VAPID_PUBLIC_KEY ||
+        process.env.PUSH_VAPID_PUBLIC_KEY ||
+        process.env.PUBLIC_PUSH_VAPID_KEY ||
+        '',
+      webVapidPrivateKey:
+        process.env.PUSH_WEB_VAPID_PRIVATE_KEY ||
+        process.env.PUSH_VAPID_PRIVATE_KEY ||
+        '',
+      webVapidSubject:
+        process.env.PUSH_WEB_VAPID_SUBJECT ||
+        process.env.PUSH_VAPID_SUBJECT ||
+        'mailto:no-reply@remit-scout.com',
+      snsEnabled: toBoolean(process.env.PUSH_SNS_ENABLED),
+      snsRegion:
+        process.env.SNS_REGION ||
+        process.env.AWS_REGION ||
+        process.env.AWS_DEFAULT_REGION ||
+        'us-east-1',
+      snsIosPlatformArn: process.env.PUSH_SNS_IOS_PLATFORM_ARN || '',
+      snsAndroidPlatformArn: process.env.PUSH_SNS_ANDROID_PLATFORM_ARN || '',
+      snsApnsSandbox: toBoolean(process.env.PUSH_SNS_APNS_SANDBOX),
+    },
   },
   workers: {
     health: {
@@ -1306,6 +1436,76 @@ const rawConfig = {
     amountBucket: toNumber(process.env.GOLD_INDICES_AMOUNT_BUCKET, 500),
     providerWeightModel: process.env.PROVIDER_WEIGHT_MODEL || '',
   },
+  agent: {
+    enabled: toBoolean(process.env.AGENT_ENABLED),
+    orchestratorEnabled: toBoolean(process.env.AGENT_ORCHESTRATOR_ENABLED),
+    pollIntervalMs: toNumber(process.env.AGENT_POLL_INTERVAL_MS, 30000),
+    maxConcurrentJobs: toPositiveInt(process.env.AGENT_MAX_CONCURRENT_JOBS, 2),
+    jobTimeoutMs: toNumber(process.env.AGENT_JOB_TIMEOUT_MS, 120000),
+    requiresApproval: toBoolean(process.env.AGENT_REQUIRES_APPROVAL, true),
+    directDeploy: toBoolean(process.env.AGENT_DIRECT_DEPLOY),
+    llmProvider: process.env.AGENT_LLM_PROVIDER || resolvedAgentLlmConnector,
+    llmConnector: resolvedAgentLlmConnector,
+    llmModel:
+      process.env.AGENT_LLM_MODEL ||
+      process.env.AGENT_BEDROCK_MODEL_ID ||
+      defaultAgentLlmModel,
+    llmMaxTokens: toPositiveInt(process.env.AGENT_LLM_MAX_TOKENS, 2048),
+    llmTemperature: toNumber(process.env.AGENT_LLM_TEMPERATURE, 0.2),
+    anthropicApiKey:
+      toOptionalTrimmedString(process.env.AGENT_ANTHROPIC_API_KEY) ||
+      toOptionalTrimmedString(process.env.ANTHROPIC_API_KEY),
+    anthropicApiKeySecretArn: toOptionalTrimmedString(
+      process.env.AGENT_ANTHROPIC_API_KEY_SECRET_ARN,
+    ),
+    bedrockRegion:
+      toOptionalTrimmedString(process.env.AGENT_BEDROCK_REGION) ||
+      toOptionalTrimmedString(process.env.AWS_REGION) ||
+      toOptionalTrimmedString(process.env.AWS_DEFAULT_REGION),
+    bedrockModelId:
+      toOptionalTrimmedString(process.env.AGENT_BEDROCK_MODEL_ID) ||
+      (resolvedAgentLlmConnector === 'bedrock'
+        ? toOptionalTrimmedString(process.env.AGENT_LLM_MODEL) || defaultAgentLlmModel
+        : undefined),
+    bedrockMaxTokens: toPositiveInt(
+      process.env.AGENT_BEDROCK_MAX_TOKENS,
+      toPositiveInt(process.env.AGENT_LLM_MAX_TOKENS, 2048),
+    ),
+    bedrockSecretArn: toOptionalTrimmedString(process.env.AGENT_BEDROCK_SECRET_ARN),
+    llmPromptVersion: toOptionalTrimmedString(process.env.AGENT_LLM_PROMPT_VERSION) || 'v1',
+    telemetryDims: toList(process.env.AGENT_TELEMETRY_DIMS ?? ''),
+    emitObservations: toBoolean(process.env.EMIT_OBSERVATIONS),
+  },
+  knowledgePlane: {
+    embeddingModel: process.env.KNOWLEDGE_PLANE_EMBEDDING_MODEL || 'text-embedding-3-small',
+    chunkRefreshCron: process.env.KNOWLEDGE_PLANE_CHUNK_REFRESH_CRON || '0 3 * * *',
+    maxChunksPerQuery: toPositiveInt(process.env.KNOWLEDGE_PLANE_MAX_CHUNKS, 10),
+    similarityThreshold: toNumber(process.env.KNOWLEDGE_PLANE_SIMILARITY_THRESHOLD, 0.7),
+  },
+  triangulation: {
+    enabled: toBoolean(process.env.TRIANGULATION_ENABLED),
+    amountBuckets: toList(process.env.TRIANGULATION_AMOUNT_BUCKETS ?? '500').map(Number).filter(Number.isFinite),
+    methodProfile: process.env.TRIANGULATION_METHOD_PROFILE || 'bank_transfer:bank_deposit',
+    intermediaries: toList(process.env.TRIANGULATION_INTERMEDIARIES ?? 'USD,EUR,GBP'),
+    minProvidersPerLeg: toPositiveInt(process.env.TRIANGULATION_MIN_PROVIDERS_PER_LEG, 2),
+    maxFreshnessMinutes: toNumber(process.env.TRIANGULATION_MAX_FRESHNESS_MINUTES, 120),
+    stressDetectionEnabled: toBoolean(process.env.STRESS_DETECTION_ENABLED),
+  },
+  modules: {
+    catalogPath: process.env.MODULE_CATALOG_PATH || '.remit-scout/modules/catalog.json',
+    autoHealDefault: toBoolean(process.env.MODULE_AUTO_HEAL_DEFAULT),
+    emitObservationsDefault: toBoolean(process.env.MODULE_EMIT_OBSERVATIONS_DEFAULT),
+    maxConsecutiveFailures: toPositiveInt(process.env.MODULE_MAX_CONSECUTIVE_FAILURES, 5),
+    maxParseErrorRate: toNumber(process.env.MODULE_MAX_PARSE_ERROR_RATE, 0.3),
+    quarantineCooldownMs: toNumber(process.env.MODULE_QUARANTINE_COOLDOWN_MS, 300000),
+  },
+  toolGateway: {
+    writeEnabled: toBoolean(process.env.TOOL_GATEWAY_WRITE_ENABLED),
+    maxConcurrentRequests: toPositiveInt(process.env.TOOL_GATEWAY_MAX_CONCURRENT_REQUESTS, 3),
+    rateLimitMaxRequests: toPositiveInt(process.env.TOOL_GATEWAY_RATE_LIMIT_MAX, 60),
+    rateLimitWindowMs: toNumber(process.env.TOOL_GATEWAY_RATE_LIMIT_WINDOW_MS, 60000),
+    domainAllowlist: toList(process.env.TOOL_GATEWAY_DOMAIN_ALLOWLIST ?? ''),
+  },
   dbPool: {
     disablePoolSignalCleanup: toBoolean(process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP),
     maxOverride: toNumber(process.env.DB_POOL_MAX, NaN),
@@ -1343,6 +1543,8 @@ export type RuntimeConfigRequirements = {
   requireSupabase?: boolean
   requireStripe?: boolean
   requireJwtSecret?: boolean
+  requirePrivacySalts?: boolean
+  requireAdminIpAllowlist?: boolean
   requireQueues?: boolean
   requireQuoteRefreshQueue?: boolean
   requireFxRateRefreshQueue?: boolean
@@ -1356,6 +1558,7 @@ export type RuntimeConfigRequirements = {
   requireBronzeBucket?: boolean
   requireExportsBucket?: boolean
   requireAlerts?: boolean
+  requireAgentLlm?: boolean
 }
 
 const shouldRequire = (
@@ -1477,8 +1680,55 @@ export const assertRuntimeConfig = (
       missing.push('STRIPE_PRICE_ID_PLUS_ANNUAL')
     }
   }
-  if (requirements.requireJwtSecret && !config.planeA.jwtSecret) {
-    missing.push('PLANE_A_JWT_SECRET')
+  if (requirements.requireJwtSecret) {
+    const jwtSecret = config.planeA.jwtSecret.trim()
+    if (!jwtSecret) {
+      missing.push('PLANE_A_JWT_SECRET')
+    } else if (looksLikePlaceholderSecret(jwtSecret)) {
+      missing.push('PLANE_A_JWT_SECRET (placeholder values are not allowed)')
+    }
+  }
+  if (requirements.requirePrivacySalts) {
+    const hashSalt = config.privacy.hashSalt.trim()
+    const sessionSalt = config.privacy.sessionSalt.trim()
+    if (!hashSalt) {
+      missing.push('PRIVACY_HASH_SALT')
+    } else if (looksLikePlaceholderSecret(hashSalt)) {
+      missing.push('PRIVACY_HASH_SALT (placeholder values are not allowed)')
+    }
+    if (!sessionSalt) {
+      missing.push('PRIVACY_SESSION_SALT')
+    } else if (looksLikePlaceholderSecret(sessionSalt)) {
+      missing.push('PRIVACY_SESSION_SALT (placeholder values are not allowed)')
+    }
+  }
+  if (requirements.requireAdminIpAllowlist && config.planeA.adminIpAllowlist.length === 0) {
+    missing.push('ADMIN_IP_ALLOWLIST (or WAF_ADMIN_ALLOWLIST_IPS / WAF_ALLOWLIST_IPS)')
+  }
+  if (requirements.requireAgentLlm) {
+    if (!config.agent.llmModel) {
+      missing.push('AGENT_LLM_MODEL')
+    }
+    if (!config.agent.llmPromptVersion) {
+      missing.push('AGENT_LLM_PROMPT_VERSION')
+    }
+    if (config.agent.llmConnector === 'anthropic') {
+      const hasAnthropicDirect = Boolean(config.agent.anthropicApiKey?.trim())
+      const hasAnthropicSecret = Boolean(config.agent.anthropicApiKeySecretArn?.trim())
+      if (isProdLikeEnvironment && !hasAnthropicSecret) {
+        missing.push('AGENT_ANTHROPIC_API_KEY_SECRET_ARN')
+      } else if (!isProdLikeEnvironment && !hasAnthropicDirect && !hasAnthropicSecret) {
+        missing.push('AGENT_ANTHROPIC_API_KEY (or AGENT_ANTHROPIC_API_KEY_SECRET_ARN)')
+      }
+    }
+    if (config.agent.llmConnector === 'bedrock') {
+      if (!config.agent.bedrockRegion) {
+        missing.push('AGENT_BEDROCK_REGION')
+      }
+      if (!config.agent.bedrockModelId && !config.agent.llmModel) {
+        missing.push('AGENT_BEDROCK_MODEL_ID')
+      }
+    }
   }
 
   if (missing.length > 0) {

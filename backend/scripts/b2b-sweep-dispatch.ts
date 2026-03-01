@@ -139,7 +139,7 @@ const ingestFanoutTiered = Boolean(ingestFanoutQueueTier1Url && ingestFanoutQueu
 const ingestFanoutTierMisconfigured =
   (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
   && !ingestFanoutTiered
-const ingestFanoutEnabled = ingestFanoutMode === 'queue' && Boolean(ingestFanoutQueueUrl)
+const ingestFanoutEnabled = ingestFanoutMode === 'queue' && (Boolean(ingestFanoutQueueUrl) || ingestFanoutTiered)
 
 const b2bAmountByProvider: Record<string, number> = {
   remitly: config.planeB.remitly.b2bAmount,

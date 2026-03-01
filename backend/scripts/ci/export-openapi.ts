@@ -79,14 +79,14 @@ const main = async () => {
 
   await app.close()
 
-  // eslint-disable-next-line no-console
+   
   console.log(`Wrote OpenAPI spec to ${absOut}`)
-  // eslint-disable-next-line no-console
+   
   console.log(`Paths: ${Object.keys(next.paths || {}).length}`)
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
+   
   console.error(err)
   process.exit(1)
 })

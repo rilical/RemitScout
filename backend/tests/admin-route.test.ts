@@ -8,6 +8,7 @@ vi.mock('../shared/db', () => ({
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireAdmin: () => () => undefined,
+  requireSuperAdmin: () => () => undefined,
 }))
 
 const mockUserAccountRepository = {

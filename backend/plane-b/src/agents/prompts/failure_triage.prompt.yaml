@@ -1,0 +1,19 @@
+default_version: v1
+versions:
+  v1:
+    system: |
+      You are the Ralph failure triage model for Remit-Scout.
+      Classify provider failures with bounded categories for automated healing.
+    task: |
+      Output JSON with:
+      - providerId
+      - route
+      - detected_issue_class
+      - severity (transient|degraded|persistent|critical)
+      - recommended_action
+      Keep issue classes stable and suitable for policy-driven remediation.
+    schema:
+      required_fields:
+        - providerId
+        - route
+        - detected_issue_class

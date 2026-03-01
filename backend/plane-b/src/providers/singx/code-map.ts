@@ -29,7 +29,7 @@ export const mapPayinMethod = (value?: string | null) => {
 export const mapPayoutMethod = (value?: string | null) => {
   if (!value) return 'bank_deposit'
   const token = normalizeToken(value)
-  return payoutMethodMap[value] ?? payoutMethodMap[token] ?? 'bank_deposit'
+  return payoutMethodMap[value] ?? payoutMethodMap[token] ?? 'other'
 }
 
 export const normalizeMethodToken = normalizeToken

@@ -65,6 +65,7 @@ import { notificationsRoutes } from './routes/notifications'
 import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
 import { complianceRoutes } from './routes/compliance'
+import { indexCorrectionRoutes } from './routes/index-corrections'
 
 const logger = createLogger('plane-a.app')
 
@@ -250,34 +251,27 @@ export const buildApp = async (options?: {
   setupPayloadSizeMonitor(app)
   setupLambdaOptimizations(app)
   setupRdsProxyMonitor(app)
-  const resolvedAdminIpAllowlistRaw = (
-    process.env.ADMIN_IP_ALLOWLIST ||
-    process.env.WAF_ADMIN_ALLOWLIST_IPS ||
-    process.env.WAF_ALLOWLIST_IPS ||
-    ''
-  ).trim()
-  if (process.env.WAF_ADMIN_ALLOWLIST_IPS && !process.env.ADMIN_IP_ALLOWLIST) {
+  const resolvedAdminIpAllowlistRaw = config.planeA.adminIpAllowlistRaw.trim()
+  if (config.planeA.adminIpAllowlistSource === 'WAF_ADMIN_ALLOWLIST_IPS') {
     logger.warn('admin_ip_allowlist_source_fallback', {
       message: 'Using WAF_ADMIN_ALLOWLIST_IPS as ADMIN_IP_ALLOWLIST fallback for startup checks.',
       source: 'WAF_ADMIN_ALLOWLIST_IPS',
     })
-    process.env.ADMIN_IP_ALLOWLIST = resolvedAdminIpAllowlistRaw
-  } else if (process.env.WAF_ALLOWLIST_IPS && !process.env.ADMIN_IP_ALLOWLIST) {
+  } else if (config.planeA.adminIpAllowlistSource === 'WAF_ALLOWLIST_IPS') {
     logger.warn('admin_ip_allowlist_source_fallback', {
       message: 'Using WAF_ALLOWLIST_IPS as ADMIN_IP_ALLOWLIST fallback for startup checks.',
       source: 'WAF_ALLOWLIST_IPS',
     })
-    process.env.ADMIN_IP_ALLOWLIST = resolvedAdminIpAllowlistRaw
   }
   if (isProdLike && !resolvedAdminIpAllowlistRaw) {
     logger.error('admin_ip_allowlist_missing', {
       message: 'ADMIN_IP_ALLOWLIST must be configured for production/staging runtime.',
       env: config.env,
-      environment: process.env.ENVIRONMENT || '',
+      environment: config.envName,
     })
     throw new Error('ADMIN_IP_ALLOWLIST is required in production/staging runtime.')
   }
-  registerAdminIpAllowlist(app)
+  registerAdminIpAllowlist(app, [...config.planeA.adminIpAllowlist])
 
   // Security headers (API responses).
   app.addHook('onSend', async (request, reply, payload) => {
@@ -580,6 +574,7 @@ export const buildApp = async (options?: {
   app.register(adsRoutes, { prefix: '/api/v1' })
   app.register(marketingRoutes, { prefix: '/api/v1' })
   app.register(complianceRoutes, { prefix: '/api/v1' })
+  app.register(indexCorrectionRoutes, { prefix: '/api/v1' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api/v1' })
   app.register(geoRoutes, { prefix: '/api/v1' })
 
