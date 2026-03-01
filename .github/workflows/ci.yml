@@ -234,6 +234,8 @@ jobs:
         run: pnpm -C backend exec tsx scripts/ci/validate-ralph-contracts.ts
       - name: Migration lint
         run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
+      - name: Migration numbering guardrail
+        run: pnpm -C backend guardrail:migrations
       - name: SQL interpolation guardrail (changed files)
         run: |
           pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-a

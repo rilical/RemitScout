@@ -433,6 +433,7 @@ const rawConfig = {
       apiId: process.env.API_ID || '',
     },
     maxTokenAgeSeconds: toNumber(process.env.PLANE_A_MAX_TOKEN_AGE_SECONDS, 24 * 60 * 60),
+    requireEmailConfirmation: toBoolean(process.env.PLANE_A_REQUIRE_EMAIL_CONFIRMATION, true),
     adminMfaRequired: (() => {
       const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
       if (isProdLikeEnvironment) return true

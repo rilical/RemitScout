@@ -53,6 +53,22 @@ const enforceMaxTokenAge = (token: string): AuthError | null => {
   }
 }
 
+const enforceEmailConfirmation = (token: string): AuthError | null => {
+  if (!config.planeA.requireEmailConfirmation) return null
+  try {
+    const payload = decodeJwt(token)
+    if (!payload.email_confirmed_at) {
+      return makeError('email_not_confirmed', 'Email not confirmed. Please check your inbox.')
+    }
+    return null
+  } catch (error) {
+    logger.warn('supabase_email_confirmation_check_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return makeError('invalid_token', 'Email confirmation check failed.')
+  }
+}
+
 export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<AuthResult> => {
   const token = parseBearerToken(authorizationHeader)
   if (!token) {
@@ -77,6 +93,8 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
       if (user) {
         const ageError = enforceMaxTokenAge(token)
         if (ageError) return ageError
+        const emailError = enforceEmailConfirmation(token)
+        if (emailError) return emailError
         return user
       }
 
@@ -96,6 +114,8 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
     if (user) {
       const ageError = enforceMaxTokenAge(token)
       if (ageError) return ageError
+      const emailError = enforceEmailConfirmation(token)
+      if (emailError) return emailError
       return user
     }
   }

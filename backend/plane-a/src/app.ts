@@ -66,6 +66,7 @@ import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
 import { complianceRoutes } from './routes/compliance'
 import { indexCorrectionRoutes } from './routes/index-corrections'
+import { authRoutes } from './routes/auth'
 
 const logger = createLogger('plane-a.app')
 
@@ -101,6 +102,11 @@ export const PLANE_A_AUTH_BYPASS_ROUTE_POLICIES = {
   '/api/v1/account/deletion/cancel': {
     reason: 'Account deletion cancel link must work without authentication',
     owner: 'account',
+    envScope: 'all',
+  },
+  '/api/v1/auth/forgot-password': {
+    reason: 'Password reset must work without authentication',
+    owner: 'auth',
     envScope: 'all',
   },
 } as const
@@ -571,6 +577,7 @@ export const buildApp = async (options?: {
   app.register(marketingRoutes, { prefix: '/api/v1' })
   app.register(complianceRoutes, { prefix: '/api/v1' })
   app.register(indexCorrectionRoutes, { prefix: '/api/v1' })
+  app.register(authRoutes, { prefix: '/api/v1' })
   app.register(bankVsSpecialistRoutes, { prefix: '/api/v1' })
   app.register(geoRoutes, { prefix: '/api/v1' })
 
