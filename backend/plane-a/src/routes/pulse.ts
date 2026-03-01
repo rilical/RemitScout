@@ -37,7 +37,7 @@ import {
 import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../../../shared/corridor-tiers'
 import { recordRequest } from '../../../shared/api-metrics'
 import { requireEntitlement } from '../plugins/auth-plugin'
-import { ValidationError } from '../../../shared/errors'
+import { ValidationError, NotFoundError } from '../../../shared/errors'
 import type { PlaneAContainer } from '../container'
 import { getCountryByCode } from '../../../shared/countries-currencies'
 
@@ -1339,7 +1339,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
         return tracked
       }
-      throw new Error('no_gold_corridors')
+      throw new NotFoundError('No gold corridors available')
     } catch (error) {
       logger.warn('pulse_corridors_gold_load_failed', {
         error: error instanceof Error ? error.message : String(error),
@@ -2196,7 +2196,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         await pulseCorridorsCache.set(cacheKey, tracked, 60 * 60 * 1000)
         return tracked
       }
-      throw new Error('no_gold_corridors')
+      throw new NotFoundError('No gold corridors available')
     } catch (error) {
       logger.warn('public_pulse_corridors_gold_load_failed', {
         error: error instanceof Error ? error.message : String(error),

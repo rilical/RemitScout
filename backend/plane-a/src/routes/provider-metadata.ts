@@ -37,7 +37,7 @@ type ProviderMetadataResponse = {
 
 const serializeProvider = (provider: ReturnType<typeof getProviderMetadata>): ProviderMetadataResponse => {
   if (!provider) {
-    throw new Error('provider_metadata_missing')
+    throw new NotFoundError('Provider metadata not found')
   }
 
   return {

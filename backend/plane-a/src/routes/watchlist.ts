@@ -15,7 +15,7 @@ import { recordRequest } from '../../../shared/api-metrics'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
 import type { PlaneAContainer } from '../container'
-import { ValidationError, NotFoundError } from '../../../shared/errors'
+import { AppError, ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.watchlist')
 const USD_EQUIVALENT_AMOUNT = DEFAULT_AMOUNT_BUCKET
@@ -307,7 +307,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
         const beforeLabel = existing.label
         const updated = await watchlistRepository.update(existing.id, user.user_id, { label: body.label })
         if (!updated) {
-          throw new Error('Failed to update watchlist item')
+          throw new AppError('Failed to update watchlist item', { statusCode: 500, code: 'update_failed' })
         }
 
         const durationSeconds = (Date.now() - startTime) / 1000

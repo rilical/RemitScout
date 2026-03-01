@@ -24,7 +24,7 @@ import { VolatilityService } from '../../services/volatility-service'
 import { DEFAULT_WEIGHT_MODEL, GLOBAL_WEIGHT_CORRIDOR_ID } from '../../../../shared/weighting-model'
 import type { LatestQuoteByCorridorRecord } from '../../repositories/interfaces/latest-quote-repository.interface'
 import type { PlaneAContainer } from '../../container'
-import { ValidationError, NotFoundError } from '../../../../shared/errors'
+import { AppError, ValidationError, NotFoundError } from '../../../../shared/errors'
 const normalizeToken = (value: string): string => {
   if (!value || typeof value !== 'string') return ''
   return value
@@ -1311,7 +1311,7 @@ export const providersListRoutes = async (app: FastifyInstance) => {
 
       if (!Array.isArray(quotes)) {
         logger.error('providers_invalid_response', { type: typeof quotes })
-        throw new Error('Invalid response from database')
+        throw new AppError('Invalid response from database', { statusCode: 500, code: 'database_error' })
       }
 
       if (!quotes.length && requestedAmount) {
