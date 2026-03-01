@@ -13,7 +13,7 @@ export const getStripeClient = () => {
   }
   if (!client) {
     client = new Stripe(config.billing.stripe.secretKey, {
-      apiVersion: '2026-01-28.clover',
+      apiVersion: '2026-02-25.clover',
     })
   }
   return client

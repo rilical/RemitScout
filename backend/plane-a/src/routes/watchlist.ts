@@ -447,7 +447,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
-          details: error.errors,
+          details: error.issues,
         } })
       }
 
@@ -552,7 +552,7 @@ export const watchlistRoutes = async (app: FastifyInstance) => {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
-          details: error.errors,
+          details: error.issues,
         } })
       }
 

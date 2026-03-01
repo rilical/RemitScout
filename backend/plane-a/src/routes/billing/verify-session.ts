@@ -32,7 +32,7 @@ export const verifySessionRoutes = async (app: FastifyInstance) => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new ValidationError('Invalid request data', {
-          details: error.errors,
+          details: error.issues,
           cause: error,
         })
       }

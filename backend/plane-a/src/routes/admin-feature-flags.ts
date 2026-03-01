@@ -19,14 +19,14 @@ const flagKeySchema = z
 const createFlagSchema = z.object({
   key: flagKeySchema,
   enabled: z.boolean().default(false),
-  audience_rules: z.record(z.unknown()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  audience_rules: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 const updateFlagSchema = z.object({
   enabled: z.boolean().optional(),
-  audience_rules: z.record(z.unknown()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  audience_rules: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 }).refine((value) => value.enabled !== undefined || value.audience_rules !== undefined || value.metadata !== undefined, {
   message: 'at_least_one_field_required',
 })
