@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 
 const logger = createLogger('plane-a.lambda-optimization')
@@ -7,13 +8,7 @@ const logger = createLogger('plane-a.lambda-optimization')
  * Lambda-specific optimizations
  */
 export const setupLambdaOptimizations = (app: FastifyInstance): void => {
-  const isAwsRuntime = Boolean(
-    process.env.AWS_EXECUTION_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.AWS_REGION,
-  )
-
-  if (!isAwsRuntime) {
+  if (!config.runtime.isAwsRuntime) {
     return
   }
 
@@ -33,8 +28,8 @@ export const setupLambdaOptimizations = (app: FastifyInstance): void => {
   if (!(global as { lambdaWarmed?: boolean }).lambdaWarmed) {
     logger.info('lambda_cold_start', {
       message: 'Lambda cold start detected',
-      region: process.env.AWS_REGION,
-      function_name: process.env.AWS_LAMBDA_FUNCTION_NAME,
+      region: config.aws.region,
+      function_name: config.runtime.lambdaFunctionName,
     })
     ;(global as { lambdaWarmed?: boolean }).lambdaWarmed = true
   } else {

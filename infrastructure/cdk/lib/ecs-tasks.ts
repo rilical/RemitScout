@@ -142,7 +142,7 @@ export const createEcsTasks = (
   const minimalMode = options.minimalMode === true
   const appLogRetentionDays = process.env.APP_LOG_RETENTION_DAYS
     ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
-    : (isProd ? 3 : 1)
+    : (isProd ? 90 : (isDev ? 1 : 7))
   const logRetention = appLogRetentionDays
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingEnv = resolveTracingEnv({
@@ -472,7 +472,7 @@ export const createEcsTasks = (
     STRICT_CONFIG: '1',
     ALLOW_DB_FALLBACK: '0',
     NODE_OPTIONS: '--require /app/backend/shared/node-polyfills.js',
-    PGSSLMODE: 'require',
+    PGSSLMODE: isProd ? 'verify-full' : 'require',
     DB_DISABLE_STATEMENT_TIMEOUT: '0',
     DB_CONNECTION_ROUTE: planeBDbRoute,
     DB_STATEMENT_TIMEOUT_POLICY:
@@ -832,7 +832,7 @@ export const createEcsTasks = (
     })
     const planeBIngestOtelCollector = planeBIngestTask.addContainer('PlaneBIngestOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -924,7 +924,7 @@ export const createEcsTasks = (
     )
     const b2bSweepSchedulerOtelCollector = b2bSweepSchedulerTask.addContainer('B2bSweepSchedulerOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -991,7 +991,7 @@ export const createEcsTasks = (
     })
     const b2cRefreshOtelCollector = b2cRefreshTask.addContainer('B2cRefreshOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1052,7 +1052,7 @@ export const createEcsTasks = (
     })
     const fxRateRefreshOtelCollector = fxRateRefreshTask.addContainer('FxRateRefreshOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1168,7 +1168,7 @@ export const createEcsTasks = (
       )
       const ingestFanoutOtelCollector = task.addContainer('IngestFanoutOtelCollector', {
         image: ContainerImage.fromRegistry(
-          'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+          'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
         ),
         readonlyRootFilesystem: true,
         cpu: 32,
@@ -1258,7 +1258,7 @@ export const createEcsTasks = (
     })
     const goldLiveOtelCollector = goldLiveTask.addContainer('GoldLiveOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1352,7 +1352,7 @@ export const createEcsTasks = (
     )
     const notificationsQueueOtelCollector = notificationsQueueTask.addContainer('NotificationsQueueOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1442,7 +1442,7 @@ export const createEcsTasks = (
     })
     const opsAlertsQueueOtelCollector = opsAlertsQueueTask.addContainer('OpsAlertsQueueOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1543,7 +1543,7 @@ export const createEcsTasks = (
     )
     const alertEvaluationOtelCollector = alertEvaluationTask.addContainer('AlertEvaluationOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1623,7 +1623,7 @@ export const createEcsTasks = (
     )
     const exportWorkerOtelCollector = exportWorkerTask.addContainer('ExportWorkerOtelCollector', {
       image: ContainerImage.fromRegistry(
-        'public.ecr.aws/aws-observability/aws-otel-collector:latest',
+        'public.ecr.aws/aws-observability/aws-otel-collector:v0.40.0',
       ),
       readonlyRootFilesystem: true,
       cpu: 32,
@@ -1762,6 +1762,7 @@ export const createEcsTasks = (
   addTmpVolume(dbMigrateTask)
 
   const dbMigrateLogGroup = new LogGroup(scope, 'DbMigrateLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/db-migrate`,
     retention: logRetention,
     removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })

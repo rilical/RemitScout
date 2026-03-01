@@ -206,6 +206,7 @@ const metrics = computed(() => [
   },
 ])
 
-const openModal = (metric: typeof metrics.value[0]) => {
+const openModal = (_metric: typeof metrics.value[0]) => {
+  // TODO: Implement metric detail modal
 }
 </script>

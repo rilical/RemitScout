@@ -59,7 +59,7 @@ export const dbAdminRoutes = (app: FastifyInstance) => {
       }
 
       const requestedMode = parsed.data.mode
-      const environment = (process.env.ENVIRONMENT || config.env || '').toLowerCase()
+      const environment = (config.envName || config.env || '').toLowerCase()
       const prodLike = environment === 'prod'
         || environment === 'production'
         || environment === 'staging'

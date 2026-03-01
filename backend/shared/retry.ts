@@ -25,7 +25,7 @@ const defaultOptions: Required<Omit<RetryOptions, 'timeoutMs' | 'signal'>> & {
   maxDelayMs: 10000,
   backoffMultiplier: 2,
   jitter: true,
-  retryable: (error) => isRetryableError(error) || error instanceof Error,
+  retryable: (error) => isRetryableError(error),
   operation: 'unknown',
 }
 

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node'
 import { hostname } from 'os'
 
+import { config } from './config'
 import { createLogger } from './logger'
 import { getAwsContext } from './utils/aws-context'
 
@@ -97,16 +98,16 @@ const filterSensitiveData = (event: Sentry.ErrorEvent): Sentry.ErrorEvent | null
 }
 
 export const initErrorTracking = async (serviceName?: string): Promise<void> => {
-  const dsn = process.env.SENTRY_DSN
-  const environment = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
-  const release = process.env.SENTRY_RELEASE || process.env.npm_package_version || 'unknown'
-  const serverName = process.env.SENTRY_SERVER_NAME || hostname() || 'remit-scout'
+  const dsn = config.sentry.dsn
+  const environment = config.envName || config.env || 'development'
+  const release = config.sentry.release
+  const serverName = config.sentry.serverName || hostname() || 'remit-scout'
   const normalizedEnvironment = environment.trim().toLowerCase()
   const protectedEnv =
     normalizedEnvironment === 'prod'
     || normalizedEnvironment === 'production'
     || normalizedEnvironment === 'staging'
-  const allowMissingInProtectedEnv = process.env.SENTRY_ALLOW_MISSING_IN_PROTECTED_ENV === '1'
+  const allowMissingInProtectedEnv = config.sentry.allowMissingInProtectedEnv
 
   if (!dsn) {
     const details = {
@@ -234,7 +235,7 @@ export const captureExceptionWithContext = async (
     // Add AWS context to tags
     const awsContext = await getAwsContext(lambdaContext)
     const allTags: Record<string, string> = {
-      environment: process.env.NODE_ENV || 'development',
+      environment: config.envName || config.env || 'development',
       ...tags,
     }
 

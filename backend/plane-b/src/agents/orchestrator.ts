@@ -13,6 +13,33 @@ import { captureExceptionWithContext, addBreadcrumb } from '../../../shared/erro
 const logger = createLogger('plane-b.agents.orchestrator')
 
 /**
+ * Maximum number of failure bundles processed per detection cycle.
+ *
+ * Bundles are sorted by severity descending before the cap is applied,
+ * so the most critical issues are always handled first. This prevents a
+ * large correlated failure event from overwhelming the self-healing pipeline
+ * and consuming runaway LLM budget.
+ */
+const MAX_BUNDLES_PER_CYCLE = 6
+
+/**
+ * Threshold for correlated failure detection.
+ *
+ * When >= CORRELATED_FAILURE_THRESHOLD bundles appear in the same detection
+ * cycle the system treats the event as a platform-wide incident rather than
+ * individual module regressions, escalates via CloudWatch, and skips
+ * autonomous repair (which would be ineffective during a mass outage).
+ */
+const CORRELATED_FAILURE_THRESHOLD = 10
+
+/**
+ * PostgreSQL advisory lock key used to prevent duplicate detection scans
+ * when multiple orchestrator instances are running concurrently (e.g., during
+ * a rolling ECS deployment or a failover).
+ */
+const DETECTION_ADVISORY_LOCK_KEY = 999001
+
+/**
  * Dispatch item — a work unit in the dispatch queue.
  */
 type DispatchItem = {
@@ -304,8 +331,26 @@ export class AgentOrchestrator {
 
   /**
    * Run failure detection cycle and route bundles to appropriate agents.
+   *
+   * Safety controls applied in order:
+   *   1. Advisory lock — skips if another orchestrator instance is already scanning
+   *   2. Correlated failure guard — escalates instead of repairing when >= 10 bundles detected
+   *   3. Blast radius cap — processes only the top MAX_BUNDLES_PER_CYCLE by severity
    */
   private async runFailureDetection(): Promise<void> {
+    // --- Advisory lock: prevent duplicate detection scans across orchestrator instances ---
+    const { rows: lockRows } = await this.pool.query<{ acquired: boolean }>(
+      'SELECT pg_try_advisory_lock($1) AS acquired',
+      [DETECTION_ADVISORY_LOCK_KEY],
+    )
+    if (!lockRows[0]?.acquired) {
+      logger.info('detection_cycle_skipped_lock_held', {
+        reason: 'another_orchestrator_holds_detection_lock',
+        lockKey: DETECTION_ADVISORY_LOCK_KEY,
+      })
+      return
+    }
+
     try {
       const runId = randomUUID()
       const bundles = await this.failureDetector.detectFailures()
@@ -334,27 +379,81 @@ export class AgentOrchestrator {
           runId,
         })
 
-        // Route each bundle to the appropriate agent based on failure category
-        for (const bundle of bundles) {
-          await this.routeFailureBundle(bundle, runId)
-
-          // Emit failure bundle created metric
+        // --- Correlated failure guard: escalate instead of repairing mass outages ---
+        if (bundles.length >= CORRELATED_FAILURE_THRESHOLD) {
+          logger.warn('correlated_failure_detected', {
+            bundleCount: bundles.length,
+            threshold: CORRELATED_FAILURE_THRESHOLD,
+            runId,
+            action: 'escalating_not_repairing',
+          })
           recordCloudWatchMetric({
-            name: 'failure_bundle_created',
-            value: 1,
+            name: 'correlated_failure_escalation',
+            value: bundles.length,
             unit: 'Count',
             namespace: AGENT_METRIC_NAMESPACE,
             dimensions: agentMetricDimensions({
-              provider_id: bundle.providerId,
-              route: bundle.affectedCorridors[0] ?? 'unknown',
-              fetcher_source: bundle.fetcherSource,
-              failure_layer: bundle.failureLayer,
-              category: bundle.category,
               run_id: runId,
-              correlation_id: bundle.bundleId,
+              correlation_id: runId,
             }),
             highCardinality: true,
           })
+          // Skip individual repairs — fall through to coverage telemetry only.
+        } else {
+          // --- Blast radius cap: sort by severity, take top MAX_BUNDLES_PER_CYCLE ---
+          const severityOrder: Record<string, number> = {
+            critical: 10,
+            persistent: 7,
+            degraded: 4,
+            transient: 1,
+          }
+          const capped = bundles
+            .sort((a, b) => (severityOrder[b.severity] ?? 0) - (severityOrder[a.severity] ?? 0))
+            .slice(0, MAX_BUNDLES_PER_CYCLE)
+
+          if (bundles.length > MAX_BUNDLES_PER_CYCLE) {
+            logger.info('failure_bundles_capped', {
+              total: bundles.length,
+              dispatching: capped.length,
+              deferred: bundles.length - capped.length,
+              maxPerCycle: MAX_BUNDLES_PER_CYCLE,
+              runId,
+            })
+            recordCloudWatchMetric({
+              name: 'failure_bundles_deferred',
+              value: bundles.length - capped.length,
+              unit: 'Count',
+              namespace: AGENT_METRIC_NAMESPACE,
+              dimensions: agentMetricDimensions({
+                run_id: runId,
+                correlation_id: runId,
+              }),
+              highCardinality: true,
+            })
+          }
+
+          // Route each capped bundle to the appropriate agent based on failure category
+          for (const bundle of capped) {
+            await this.routeFailureBundle(bundle, runId)
+
+            // Emit failure bundle created metric
+            recordCloudWatchMetric({
+              name: 'failure_bundle_created',
+              value: 1,
+              unit: 'Count',
+              namespace: AGENT_METRIC_NAMESPACE,
+              dimensions: agentMetricDimensions({
+                provider_id: bundle.providerId,
+                route: bundle.affectedCorridors[0] ?? 'unknown',
+                fetcher_source: bundle.fetcherSource,
+                failure_layer: bundle.failureLayer,
+                category: bundle.category,
+                run_id: runId,
+                correlation_id: bundle.bundleId,
+              }),
+              highCardinality: true,
+            })
+          }
         }
       }
 
@@ -389,6 +488,8 @@ export class AgentOrchestrator {
       const error = err instanceof Error ? err : new Error(String(err))
       captureExceptionWithContext(error, { component: 'orchestrator.failureDetection', cycle: this.detectionCycleCount }, { agent: 'orchestrator' })
       logger.error('failure_detection_error', { error: error.message })
+    } finally {
+      await this.pool.query('SELECT pg_advisory_unlock($1)', [DETECTION_ADVISORY_LOCK_KEY])
     }
   }
 

@@ -10,13 +10,7 @@ const logger = createLogger('plane-a.rds-proxy-monitor')
  * Helps verify RDS Proxy is being used correctly
  */
 export const setupRdsProxyMonitor = (app: FastifyInstance): void => {
-  const isAwsRuntime = Boolean(
-    process.env.AWS_EXECUTION_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.AWS_REGION,
-  )
-
-  if (!isAwsRuntime) {
+  if (!config.runtime.isAwsRuntime) {
     return
   }
 

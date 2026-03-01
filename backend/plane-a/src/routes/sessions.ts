@@ -33,22 +33,14 @@ const ADMIN_EXCHANGE_RATE_TTL_SECONDS = 60
 const SESSION_TRACK_RATE_LIMIT = 120
 const SESSION_TRACK_RATE_TTL_SECONDS = 60
 const SESSION_TRACK_METADATA_MAX_BYTES = 4096
-const adminMfaRequired = (() => {
-  const envName = (config.envName || config.env || '').trim().toLowerCase()
-  const protectedEnv =
-    envName === 'prod' || envName === 'production' || envName === 'staging'
-  const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
-  if (protectedEnv) return true
-  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
-  return true
-})()
+const adminMfaRequired = config.planeA.adminMfaRequired
 
 const trackSessionSchema = z.object({
   session_id: z.string().min(16).max(256),
   anon_id: z.string().min(6).max(128).optional(),
   device_type: z.string().max(64).optional(),
   location: z.string().max(128).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 const revokeAllSchema = z.object({

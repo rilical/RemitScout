@@ -17,6 +17,7 @@ import {
   DEFAULT_WEIGHT_MODEL,
   GLOBAL_WEIGHT_CORRIDOR_ID,
 } from '../shared/weighting-model'
+import { buildB2bEffectiveRateSql } from '../shared/quote-rate'
 
 const logger = createLogger('script.provider-weighting-job')
 initTracing('provider-weighting-job')
@@ -52,12 +53,14 @@ const STRATEGY_MODEL_VERSION_DEFAULTS: Record<ModuleVolumeStrategy, string> = {
   equal_weight: 'equal_weight_v1',
 }
 
+const b2bEffectiveRateSql = buildB2bEffectiveRateSql('qr')
+
 const providerStatsQuery = `
 WITH base AS (
   SELECT
     qr.corridor_id,
     lower(qr.provider_id) AS provider_id,
-    qr.implied_fx_rate::double precision AS rate,
+    ${b2bEffectiveRateSql} AS rate,
     qr.collected_at
   FROM silver.quote_record qr
   JOIN silver.ingestion_run ir
@@ -68,8 +71,8 @@ WITH base AS (
     ON pcc.provider_id = qr.provider_id
    AND pcc.corridor_id = qr.corridor_id
   WHERE qr.status = 'ok'
-    AND qr.implied_fx_rate IS NOT NULL
-    AND qr.implied_fx_rate > 0
+    AND (${b2bEffectiveRateSql}) IS NOT NULL
+    AND (${b2bEffectiveRateSql}) > 0
     AND qr.collected_at >= NOW() - ($1 * INTERVAL '1 day')
     AND ir.collector_type LIKE 'b2b_%'
     AND ir.status = 'success'
@@ -126,7 +129,7 @@ const globalStatsQuery = `
 WITH base AS (
   SELECT
     lower(qr.provider_id) AS provider_id,
-    qr.implied_fx_rate::double precision AS rate,
+    ${b2bEffectiveRateSql} AS rate,
     qr.collected_at
   FROM silver.quote_record qr
   JOIN silver.ingestion_run ir
@@ -137,8 +140,8 @@ WITH base AS (
     ON pcc.provider_id = qr.provider_id
    AND pcc.corridor_id = qr.corridor_id
   WHERE qr.status = 'ok'
-    AND qr.implied_fx_rate IS NOT NULL
-    AND qr.implied_fx_rate > 0
+    AND (${b2bEffectiveRateSql}) IS NOT NULL
+    AND (${b2bEffectiveRateSql}) > 0
     AND qr.collected_at >= NOW() - ($1 * INTERVAL '1 day')
     AND ir.collector_type LIKE 'b2b_%'
     AND ir.status = 'success'
@@ -591,6 +594,11 @@ export const providerWeightingInternals = {
   attemptStrategy,
   resolveStrategyAwareWeight,
   defaultVolumePolicy,
+}
+
+export const providerWeightingSql = {
+  providerStatsQuery,
+  globalStatsQuery,
 }
 
 const buildUpsertPayload = (rows: {

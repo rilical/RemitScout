@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto'
 import type { Pool } from 'pg'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { query } from '../../../shared/db'
 import { getRedisClient } from '../../../shared/redis'
@@ -34,7 +35,7 @@ export type ApiKeyRotateResult = {
 const logger = createLogger('plane-a.api-keys')
 const API_KEY_ROTATION_GRACE_SECONDS = Math.max(
   0,
-  Math.floor(Number(process.env.API_KEY_ROTATION_GRACE_SECONDS ?? '300')),
+  config.planeA.apiKeyRotationGraceSeconds,
 )
 
 const toBase64Url = (buffer: Buffer) => {

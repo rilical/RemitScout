@@ -1,6 +1,8 @@
 import type { Pool } from 'pg'
 
+import { config } from '../../../shared/config'
 import { query } from '../../../shared/db'
+import { buildB2bEffectiveRateSql } from '../../../shared/quote-rate'
 import {
   VolatilityService as SharedVolatilityService,
   type CacheTtlResult,
@@ -45,26 +47,28 @@ class PlaneAVolatilityRepository implements VolatilityRepository {
   }
 
   async calculateVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {
-    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    const allowOnDemand = config.volatility.cacheOnDemand
     if (!allowOnDemand) {
       return null
     }
 
+    const effectiveRateSql = buildB2bEffectiveRateSql('qr')
     const result = await query<{
       mean_rate: number | null
       stddev_rate: number | null
       sample_count: number
     }>(
       `SELECT
-        AVG(implied_fx_rate) AS mean_rate,
-        STDDEV(implied_fx_rate) AS stddev_rate,
+        AVG(${effectiveRateSql}) AS mean_rate,
+        STDDEV(${effectiveRateSql}) AS stddev_rate,
         COUNT(*) AS sample_count
        FROM silver.quote_record qr
        JOIN silver.ingestion_run ir ON ir.run_id = qr.ingestion_run_id
        WHERE qr.corridor_id = $1
          AND qr.collected_at >= NOW() - INTERVAL '7 days'
          AND qr.status = 'ok'
-         AND qr.implied_fx_rate > 0
+         AND (${effectiveRateSql}) IS NOT NULL
+         AND (${effectiveRateSql}) > 0
          AND ir.collector_type LIKE 'b2b_%'`,
       [corridorId],
       this.pool,
