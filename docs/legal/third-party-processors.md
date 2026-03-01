@@ -22,7 +22,7 @@ authoritative registry.
 | **Supabase** | Authentication and user identity management | Email, auth tokens, user profile | Supabase DPA signed | US (AWS-hosted) | Launch |
 | **Stripe** | Payment processing and billing | Name, email, payment method, billing address | Stripe DPA (incorporated into service terms) | US/EU | Launch |
 | **Sentry** | Error monitoring and application performance | IP address (anonymized), device info, error stack traces | Sentry DPA signed | US | Launch |
-| **Ezoic** | Ad serving and revenue optimization | IP address, cookies, browsing behavior | Ezoic DPA signed | US/EU | Launch |
+| **Ad network (TBD)** | Ad serving and revenue optimization | IP address, cookies, browsing behavior | DPA to be signed with selected provider | US/EU | Post-launch |
 | **Google Analytics (GA4)** | Website analytics and user behavior | IP address (anonymized), cookies, page views, events | Google DPA (Data Processing Amendment) | US/EU | Launch |
 | **Cloudflare** | DNS and DDoS protection (if used) | IP address, request metadata | Cloudflare DPA signed | Global edge | Launch |
 

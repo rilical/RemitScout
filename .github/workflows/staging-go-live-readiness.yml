@@ -59,17 +59,30 @@ jobs:
           COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
           COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
           PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+          PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
           PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
           PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
-          PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
+          PUBLIC_ENABLE_ADS: ${{ vars.PUBLIC_ENABLE_ADS }}
+          PUBLIC_AD_COMPARE_INLINE_IDS: ${{ vars.PUBLIC_AD_COMPARE_INLINE_IDS }}
+          PUBLIC_AD_COMPARE_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_COMPARE_SIDEBAR_IDS }}
+          PUBLIC_AD_HOME_INLINE_IDS: ${{ vars.PUBLIC_AD_HOME_INLINE_IDS }}
+          PUBLIC_AD_DASHBOARD_INLINE_IDS: ${{ vars.PUBLIC_AD_DASHBOARD_INLINE_IDS }}
+          PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS }}
+          PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS }}
+          PUBLIC_AD_CORRIDOR_FOOTER_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_FOOTER_IDS }}
+          PUBLIC_AD_BLOG_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_BLOG_SIDEBAR_IDS }}
+          PUBLIC_AD_BLOG_INLINE_IDS: ${{ vars.PUBLIC_AD_BLOG_INLINE_IDS }}
+          PUBLIC_AD_BLOG_BANNER_IDS: ${{ vars.PUBLIC_AD_BLOG_BANNER_IDS }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CASES_CHANNEL_ID: ${{ vars.SLACK_CASES_CHANNEL_ID }}
           WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
           ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
-          ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          ALERT_SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           TRACING_EXPORTER: ${{ vars.TRACING_EXPORTER || 'otlp' }}
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
@@ -87,6 +100,17 @@ jobs:
           BRAIN_INGEST_GITHUB_ACTIONS: ${{ vars.BRAIN_INGEST_GITHUB_ACTIONS }}
           BRAIN_SLACK_POST_CASE_CARDS: ${{ vars.BRAIN_SLACK_POST_CASE_CARDS }}
         run: pnpm -C backend ci:staging-go-live-readiness
+
+      - name: Sentry release scope check
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          set -euo pipefail
+          release="readiness-scope-check-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          pnpm -C frontend exec sentry-cli releases new "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
+          pnpm -C frontend exec sentry-cli releases delete "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
 
       - name: Observability prereq gate (staging hard gate)
         if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
@@ -143,7 +167,7 @@ jobs:
           BRONZE_S3_BUCKET: ${{ vars.BRONZE_S3_BUCKET }}
           EXPORTS_S3_BUCKET: ${{ vars.EXPORTS_S3_BUCKET }}
           ALERT_EVALUATION_QUEUE_URL: ${{ vars.ALERT_EVALUATION_QUEUE_URL }}
-          ALERT_SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          ALERT_SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

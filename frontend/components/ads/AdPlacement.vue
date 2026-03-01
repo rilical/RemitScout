@@ -2,7 +2,7 @@
   <ClientOnly>
     <div v-if="shouldRender">
       <AdSlot
-        v-if="allowEzoic"
+        v-if="allowAds"
         :placement="placement"
         :layout="resolvedLayout"
         :corridor-id="corridorId"
@@ -82,7 +82,7 @@ const { pulseEnabled } = useFeatureFlags()
 const { marketingConsent } = usePrivacySettings()
 const { fetchAdForPlacement, trackAdClick } = useAds()
 
-const allowEzoic = computed(() => runtimeConfig.public?.adsEnabled === true && marketingConsent.value)
+const allowAds = computed(() => runtimeConfig.public?.adsEnabled === true && marketingConsent.value)
 
 const placementConfig = computed(() => getPlacementConfig(props.placement))
 const resolvedLayout = computed<AdLayout>(() => props.layout || placementConfig.value.layout)
@@ -117,7 +117,7 @@ const creativeLayout = computed<AdLayout>(() => {
 const loadCreative = async () => {
   if (!import.meta.client) return
   if (!shouldRender.value) return
-  if (allowEzoic.value) return
+  if (allowAds.value) return
 
   const seed = `${route.fullPath}:${props.corridorId || ''}`
   try {
@@ -187,7 +187,7 @@ onMounted(() => {
 })
 
 watch(
-  () => [props.placement, props.corridorId, props.allowHouseAds, shouldRender.value, allowEzoic.value, route.fullPath] as const,
+  () => [props.placement, props.corridorId, props.allowHouseAds, shouldRender.value, allowAds.value, route.fullPath] as const,
   () => {
     void loadCreative()
   },

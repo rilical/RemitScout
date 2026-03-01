@@ -550,7 +550,7 @@ jobs:
         if: always()
         shell: bash
         env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           TARGET_URL: ${{ needs.resolve-target.outputs.target_url }}
         run: |
           set -euo pipefail

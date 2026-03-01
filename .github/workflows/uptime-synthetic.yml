@@ -62,7 +62,7 @@ jobs:
         if: failure() && steps.target.outputs.should_run == 'true'
         shell: bash
         env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           TARGET_URL: ${{ steps.target.outputs.target }}
         run: |
           set -euo pipefail

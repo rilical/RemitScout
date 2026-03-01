@@ -14,7 +14,7 @@ Use this runbook to connect staging end-to-end across AWS, Stripe, Supabase, ana
 - Supabase staging project credentials (URL, anon key, service role key).
 - Stripe test-mode credentials (secret key, webhook secret, monthly/annual price IDs).
 - Slack app credentials for Socket Mode (`xoxb`, `xapp`, signing secret) + ops channel id.
-- GA/Ads/Ezoic IDs and confirmation staging tracking is intentional.
+- GA/Ads IDs and confirmation staging tracking is intentional.
 - DNS/TLS control for staging hosts.
 
 ## 2) GitHub Environment `staging` contract
@@ -31,7 +31,7 @@ Use this runbook to connect staging end-to-end across AWS, Stripe, Supabase, ana
 - `PUBLIC_SUPABASE_ANON_KEY`
 - `PUBLIC_GA4_MEASUREMENT_ID`
 - `PUBLIC_GOOGLE_ADS_CONVERSION_ID`
-- `PUBLIC_ENABLE_EZOIC=1`
+- Optional: `PUBLIC_ENABLE_ADS` (default `0` for initial launch)
 - `SLACK_CASES_CHANNEL_ID`
 - `BRAIN_DISPATCH_GITHUB_ACTIONS=1`
 - `BRAIN_INGEST_GITHUB_ACTIONS=1`
