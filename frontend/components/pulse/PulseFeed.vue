@@ -358,6 +358,7 @@ const toggleDetails = (cardId: string) => {
   }
 }
 
-const setAlert = (card: typeof feedCards.value[0]) => {
+const setAlert = (_card: typeof feedCards.value[0]) => {
+  // TODO: Implement alert creation via useSaveAlertModal composable
 }
 </script>

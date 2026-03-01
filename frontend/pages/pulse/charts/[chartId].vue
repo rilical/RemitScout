@@ -571,6 +571,7 @@ const actionableInsight = computed(() => {
 })
 
 function handleDownload() {
+  // TODO: Implement chart download
 }
 
 const triggerExportDownload = (url: string) => {

@@ -626,7 +626,7 @@ export default defineNuxtConfig({
 
   // TypeScript
   typescript: {
-    typeCheck: false,
+    typeCheck: 'build',
   },
   hooks: {
     'build:before': async () => {
