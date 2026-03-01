@@ -11,15 +11,12 @@ const logger = createLogger('plane-a.billing-email')
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  const enabled = process.env.BILLING_EMAIL_ENABLED !== '0' && process.env.BILLING_EMAIL_ENABLED !== 'false'
-  const fromAddress = process.env.BILLING_EMAIL_FROM || process.env.SES_FROM_ADDRESS
-  if (!enabled || !fromAddress) {
+  if (!config.email.billingEmail.enabled || !config.email.billingEmail.from) {
     return null
   }
 
   if (!sesClient) {
-    const region = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
-    sesClient = new SESClient({ region })
+    sesClient = new SESClient({ region: config.aws.sesRegion })
   }
 
   return sesClient
@@ -50,8 +47,8 @@ const getUserEmail = async (pool: Pool, userId: string): Promise<string | null> 
 }
 
 const getFrom = () => {
-  const fromAddress = process.env.BILLING_EMAIL_FROM || process.env.SES_FROM_ADDRESS || ''
-  const fromName = process.env.BILLING_EMAIL_FROM_NAME || 'Remit-Scout Billing'
+  const fromAddress = config.email.billingEmail.from
+  const fromName = config.email.billingEmail.fromName
   return { fromAddress, fromName }
 }
 

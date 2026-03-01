@@ -24,7 +24,7 @@ import {
 export const registerAlertsSmartRoutes = async (app: FastifyInstance) => {
   const { pool, repositories } = app.container
   const rightsMatrixRepository = repositories.rightsMatrix
-  const environmentName = (process.env.ENVIRONMENT || '').toLowerCase()
+  const environmentName = config.envName.toLowerCase()
   const exposePublicInRuntime = environmentName === 'dev'
     || config.env === 'development'
     || config.env === 'test'

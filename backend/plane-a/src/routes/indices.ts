@@ -23,8 +23,9 @@ const indicesEmbedSnapshotCache = createTtlCache<IndicesEmbedSnapshotResponse>({
   namespace: 'plane_a:indices_embed_snapshot',
 })
 const INDICES_EMBED_SNAPSHOT_TTL_MS = 30 * 24 * 60 * 60 * 1000
-const envName = (process.env.ENVIRONMENT || '').toLowerCase()
+const envName = config.envName.toLowerCase()
 const isVitestRuntime = Boolean(process.env.VITEST_WORKER_ID || process.env.VITEST)
+// Note: VITEST_WORKER_ID and VITEST are test-runner vars, not app config. They must remain as process.env reads.
 const allowUnauthedIndices =
   !isVitestRuntime && (envName === 'dev' || config.env === 'development')
 const apiAccessGuard = allowUnauthedIndices ? undefined : requireEntitlement('api_access')

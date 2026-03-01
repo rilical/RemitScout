@@ -149,7 +149,7 @@ export const buildApp = async (options?: {
   // This reduces cold start time
   const getPlaneAPool = () => getPool(config.db.planeAUrl)
   app.decorate('container', planeAContainer)
-  const environmentName = (process.env.ENVIRONMENT ?? '').toLowerCase()
+  const environmentName = config.envName.toLowerCase()
   const isProdLike = environmentName
     ? ['prod', 'production', 'staging'].includes(environmentName)
     : config.env === 'production' || config.env === 'staging'
@@ -296,11 +296,7 @@ export const buildApp = async (options?: {
   // Use Redis-based rate limiting for Lambda (distributed) or fallback to memory
   // In Lambda, in-memory rate limiting only works within a single invocation
   // For production, use Redis/ElastiCache or API Gateway throttling
-  const isAwsRuntime = Boolean(
-    process.env.AWS_EXECUTION_ENV ||
-    process.env.AWS_LAMBDA_FUNCTION_NAME ||
-    process.env.AWS_REGION,
-  )
+  const isAwsRuntime = config.runtime.isAwsRuntime
 
   const toPerWindow = (perMinute: number) => {
     const windowMs = Math.max(1000, config.planeA.rateLimitWindowMs)

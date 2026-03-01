@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 
+import { config } from '../../../shared/config'
 import { query } from '../../../shared/db'
 import {
   VolatilityService as SharedVolatilityService,
@@ -45,7 +46,7 @@ class PlaneAVolatilityRepository implements VolatilityRepository {
   }
 
   async calculateVolatilityScore(corridorId: string): Promise<VolatilityRecord | null> {
-    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    const allowOnDemand = config.volatility.cacheOnDemand
     if (!allowOnDemand) {
       return null
     }

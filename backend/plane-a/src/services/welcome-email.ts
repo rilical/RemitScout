@@ -10,15 +10,12 @@ const logger = createLogger('plane-a.welcome-email')
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  const enabled = process.env.WELCOME_EMAIL_ENABLED !== '0' && process.env.WELCOME_EMAIL_ENABLED !== 'false'
-  const fromAddress = process.env.WELCOME_EMAIL_FROM || process.env.SES_FROM_ADDRESS
-  if (!enabled || !fromAddress) {
+  if (!config.email.welcomeEmail.enabled || !config.email.welcomeEmail.from) {
     return null
   }
 
   if (!sesClient) {
-    const region = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
-    sesClient = new SESClient({ region })
+    sesClient = new SESClient({ region: config.aws.sesRegion })
   }
 
   return sesClient
@@ -37,8 +34,8 @@ export const sendWelcomeEmail = async (params: {
   name?: string | null
 }): Promise<boolean> => {
   const client = getSesClient()
-  const fromAddress = process.env.WELCOME_EMAIL_FROM || process.env.SES_FROM_ADDRESS || ''
-  const fromName = process.env.WELCOME_EMAIL_FROM_NAME || 'Remit-Scout'
+  const fromAddress = config.email.welcomeEmail.from
+  const fromName = config.email.welcomeEmail.fromName
 
   if (!client || !fromAddress) {
     logger.info('welcome_email_disabled_or_missing_from', { user_id: params.userId })
