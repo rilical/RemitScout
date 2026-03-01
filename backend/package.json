@@ -32,6 +32,8 @@
     "seed:launch-users": "tsx scripts/seed-launch-users.ts",
     "ingest:run": "tsx scripts/ingest-run.ts",
     "guardrail:test": "node scripts/bronze-access-check.js",
+    "guardrail:migrations": "tsx scripts/guardrail-migration-numbering.ts",
+    "guardrail:migrations:strict": "tsx scripts/guardrail-migration-numbering.ts --strict",
     "guardrail:sql": "tsx scripts/sql-guardrail.ts",
     "guardrail:sql:unsafe-interpolation": "tsx scripts/sql-guardrail.ts --unsafe-interpolation",
     "guardrail:sql:plane-a": "tsx scripts/sql-guardrail.ts --plane-a",
