@@ -48,7 +48,7 @@ const pulseEmbedSnapshotCache = createTtlCache<PulseEmbedSnapshot>({
   namespace: 'plane_a:pulse_embed_snapshot',
 })
 const PULSE_EMBED_SNAPSHOT_TTL_MS = 30 * 24 * 60 * 60 * 1000
-const INDICES_AMOUNT_BUCKET = Number(process.env.GOLD_INDICES_AMOUNT_BUCKET || 500)
+const INDICES_AMOUNT_BUCKET = config.indices.amountBucket
 const INDEX_CHART_IDS = new Set([
   'all-in-cost',
   'fx-markup',

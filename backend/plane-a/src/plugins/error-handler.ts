@@ -22,9 +22,9 @@ const toNumberOrNull = (value: unknown): number | null => {
 }
 
 const getSentry4xxSampleRate = (): number => {
-  const explicit = toNumberOrNull(process.env.SENTRY_CAPTURE_4XX_SAMPLE_RATE)
+  const explicit = config.planeA.sentryCaptureRate4xx
   if (explicit !== null) {
-    return Math.max(0, Math.min(1, explicit))
+    return explicit
   }
   // Capturing every 4xx can get noisy; default to a lower rate in prod.
   return config.env === 'production' ? 0.25 : 1

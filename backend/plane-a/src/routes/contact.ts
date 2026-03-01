@@ -23,10 +23,9 @@ const contactFormSchema = z.object({
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  const sesRegion = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
-  const contactEmailEnabled = process.env.CONTACT_EMAIL_ENABLED === '1' || process.env.CONTACT_EMAIL_ENABLED === 'true'
-  const contactEmailTo = process.env.CONTACT_EMAIL_TO
-  const contactEmailFrom = process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS
+  const contactEmailEnabled = config.email.contactEmail.enabled
+  const contactEmailTo = config.email.contactEmail.to
+  const contactEmailFrom = config.email.contactEmail.from
 
   if (!contactEmailEnabled || !contactEmailTo || !contactEmailFrom) {
     logger.debug('contact_email_not_configured', {
@@ -38,7 +37,7 @@ const getSesClient = (): SESClient | null => {
   }
 
   if (!sesClient) {
-    sesClient = new SESClient({ region: sesRegion })
+    sesClient = new SESClient({ region: config.aws.sesRegion })
   }
 
   return sesClient
@@ -67,9 +66,9 @@ const sendContactEmail = async (
     return { success: false, error: 'email_not_configured' }
   }
 
-  const contactEmailTo = process.env.CONTACT_EMAIL_TO!
-  const contactEmailFrom = process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS || 'no-reply@remit-scout.com'
-  const contactEmailFromName = process.env.CONTACT_EMAIL_FROM_NAME || 'Remit-Scout Contact Form'
+  const contactEmailTo = config.email.contactEmail.to
+  const contactEmailFrom = config.email.contactEmail.from || 'no-reply@remit-scout.com'
+  const contactEmailFromName = config.email.contactEmail.fromName
 
   // Escape HTML for XSS prevention
   const escapedName = escapeHtml(name)

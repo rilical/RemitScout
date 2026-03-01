@@ -25,8 +25,7 @@ const parseBearerToken = (header?: string) => {
 const makeError = (code: AuthError['code'], message: string): AuthError => ({ code, message })
 
 const maxTokenAgeSeconds = (() => {
-  const raw = process.env.PLANE_A_MAX_TOKEN_AGE_SECONDS
-  const parsed = raw ? Number(raw) : 24 * 60 * 60
+  const parsed = config.planeA.maxTokenAgeSeconds
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 })()
 

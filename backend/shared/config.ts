@@ -432,6 +432,72 @@ const rawConfig = {
           : ''),
       apiId: process.env.API_ID || '',
     },
+    maxTokenAgeSeconds: toNumber(process.env.PLANE_A_MAX_TOKEN_AGE_SECONDS, 24 * 60 * 60),
+    adminMfaRequired: (() => {
+      const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
+      if (isProdLikeEnvironment) return true
+      if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+      return true
+    })(),
+    apiKeyRotationGraceSeconds: toNumber(process.env.API_KEY_ROTATION_GRACE_SECONDS, 300),
+    sentryCaptureRate4xx: (() => {
+      const raw = process.env.SENTRY_CAPTURE_4XX_SAMPLE_RATE
+      if (raw !== undefined && raw.trim()) {
+        const parsed = Number(raw)
+        if (Number.isFinite(parsed)) return Math.max(0, Math.min(1, parsed))
+      }
+      return null
+    })(),
+  },
+  email: {
+    billingEmail: {
+      enabled: (() => {
+        const raw = process.env.BILLING_EMAIL_ENABLED
+        if (raw === '0' || raw === 'false') return false
+        return true
+      })(),
+      from: process.env.BILLING_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+      fromName: process.env.BILLING_EMAIL_FROM_NAME || 'Remit-Scout Billing',
+    },
+    securityEmail: {
+      enabled: (() => {
+        const raw = process.env.SECURITY_EMAIL_ENABLED
+        if (raw === '0' || raw === 'false') return false
+        return true
+      })(),
+      from: process.env.SECURITY_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+      fromName: process.env.SECURITY_EMAIL_FROM_NAME || 'Remit-Scout Security',
+    },
+    welcomeEmail: {
+      enabled: (() => {
+        const raw = process.env.WELCOME_EMAIL_ENABLED
+        if (raw === '0' || raw === 'false') return false
+        return true
+      })(),
+      from: process.env.WELCOME_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+      fromName: process.env.WELCOME_EMAIL_FROM_NAME || 'Remit-Scout',
+    },
+    contactEmail: {
+      enabled: toBoolean(process.env.CONTACT_EMAIL_ENABLED),
+      to: process.env.CONTACT_EMAIL_TO || '',
+      from: process.env.CONTACT_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+      fromName: process.env.CONTACT_EMAIL_FROM_NAME || 'Remit-Scout Contact Form',
+    },
+    accountDeletion: {
+      graceDays: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_GRACE_DAYS, 7)),
+      tokenTtlHours: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_TOKEN_TTL_HOURS, 168)),
+      emailEnabled: (() => {
+        const raw = process.env.ACCOUNT_DELETION_EMAIL_ENABLED
+        if (raw == null) return true
+        return ['1', 'true', 'yes', 'on'].includes((raw || '').toLowerCase())
+      })(),
+      emailFrom: (process.env.ACCOUNT_DELETION_EMAIL_FROM || '').trim(),
+      emailFromName: (process.env.ACCOUNT_DELETION_EMAIL_FROM_NAME || 'Remit-Scout Security').trim(),
+      baseUrl: (process.env.ACCOUNT_DELETION_BASE_URL || '').trim(),
+    },
+  },
+  volatility: {
+    cacheOnDemand: toBoolean(process.env.VOLATILITY_CACHE_ON_DEMAND),
   },
   planeC: {
     port: toNumber(process.env.PLANE_C_PORT, 4100),

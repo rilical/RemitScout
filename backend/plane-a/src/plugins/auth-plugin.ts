@@ -509,17 +509,7 @@ const hasTotpMfaAmr = (claims: Record<string, unknown> | undefined): boolean => 
   })
 }
 
-const adminMfaRequired = (() => {
-  const envName = (config.envName || config.env || '').trim().toLowerCase()
-  const protectedEnv =
-    envName === 'prod' || envName === 'production' || envName === 'staging'
-  const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
-  if (protectedEnv) {
-    return true
-  }
-  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
-  return true
-})()
+const adminMfaRequired = config.planeA.adminMfaRequired
 
 const isEntitled = (entitlement: EntitlementType, entitlements: ReturnType<typeof getEntitlementsForPlan>) => {
   if (entitlement === 'pulse') {
