@@ -59,7 +59,6 @@ jobs:
 
       - name: Run ZAP baseline (unauth)
         id: zap_baseline
-        continue-on-error: true
         env:
           TARGET_URL: ${{ inputs.target_url }}
         run: |
@@ -77,7 +76,6 @@ jobs:
       - name: Enforce ZAP baseline policy
         id: zap_baseline_policy
         if: always()
-        continue-on-error: true
         run: |
           node scripts/ci/check-zap-findings.mjs \
             --input zap-baseline.json \
@@ -87,7 +85,6 @@ jobs:
 
       - name: Run Nuclei (unauth)
         id: nuclei_unauth
-        continue-on-error: true
         env:
           TARGET_URL: ${{ inputs.target_url }}
         run: |
@@ -107,7 +104,6 @@ jobs:
       - name: Enforce Nuclei unauth policy
         id: nuclei_unauth_policy
         if: always()
-        continue-on-error: true
         run: |
           node scripts/ci/check-nuclei-findings.mjs \
             --input nuclei-unauth.jsonl \
@@ -117,7 +113,6 @@ jobs:
       - name: Validate auth token secret is configured
         id: auth_secret_check
         if: inputs.run_authenticated == 'true'
-        continue-on-error: true
         env:
           DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
         run: |
@@ -130,7 +125,6 @@ jobs:
       - name: Generate staging OpenAPI for auth scan
         id: auth_openapi
         if: inputs.run_authenticated == 'true' && steps.auth_secret_check.outcome == 'success'
-        continue-on-error: true
         env:
           TARGET_URL: ${{ inputs.target_url }}
         run: |
@@ -153,7 +147,6 @@ jobs:
       - name: Run ZAP API scan (auth)
         id: zap_auth
         if: inputs.run_authenticated == 'true' && steps.auth_secret_check.outcome == 'success' && steps.auth_openapi.outcome == 'success'
-        continue-on-error: true
         env:
           AUTH_HEADER_NAME: ${{ vars.DAST_AUTH_HEADER_NAME || 'Authorization' }}
           DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
@@ -174,7 +167,6 @@ jobs:
       - name: Enforce ZAP auth policy
         id: zap_auth_policy
         if: always() && inputs.run_authenticated == 'true'
-        continue-on-error: true
         run: |
           node scripts/ci/check-zap-findings.mjs \
             --input zap-api-auth.json \
@@ -185,7 +177,6 @@ jobs:
       - name: Run Nuclei (auth)
         id: nuclei_auth
         if: inputs.run_authenticated == 'true' && steps.auth_secret_check.outcome == 'success'
-        continue-on-error: true
         env:
           TARGET_URL: ${{ inputs.target_url }}
           DAST_AUTH_BEARER_TOKEN: ${{ secrets.DAST_AUTH_BEARER_TOKEN }}
@@ -207,7 +198,6 @@ jobs:
       - name: Enforce Nuclei auth policy
         id: nuclei_auth_policy
         if: always() && inputs.run_authenticated == 'true'
-        continue-on-error: true
         run: |
           node scripts/ci/check-nuclei-findings.mjs \
             --input nuclei-auth.jsonl \
@@ -217,7 +207,6 @@ jobs:
       - name: Run ZAP full scan (auth)
         id: zap_full
         if: inputs.run_authenticated == 'true' && inputs.run_full_scan == 'true' && steps.auth_secret_check.outcome == 'success'
-        continue-on-error: true
         env:
           TARGET_URL: ${{ inputs.target_url }}
           AUTH_HEADER_NAME: ${{ vars.DAST_AUTH_HEADER_NAME || 'Authorization' }}
@@ -238,7 +227,6 @@ jobs:
       - name: Enforce ZAP full auth policy
         id: zap_full_policy
         if: always() && inputs.run_authenticated == 'true' && inputs.run_full_scan == 'true'
-        continue-on-error: true
         run: |
           node scripts/ci/check-zap-findings.mjs \
             --input zap-full-auth.json \

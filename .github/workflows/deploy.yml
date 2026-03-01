@@ -6,7 +6,7 @@ on:
     types: [completed]
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
   workflow_dispatch:
     inputs:
       env:
@@ -89,6 +89,22 @@ jobs:
           echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
           echo "requested_ref=${requested}" >> "$GITHUB_OUTPUT"
           echo "Resolved deploy ref '${requested}' -> ${resolved}"
+
+      - name: Verify ci/main gate for dispatch SHA (dev)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
+          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          if [ -z "$run_id" ]; then
+            echo "No successful ci/main run found for commit ${deploy_sha}."
+            echo "Manual deploys must reference a tested SHA."
+            exit 1
+          fi
+          echo "Found successful ci/main run: ${run_id}"
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.resolve_ref.outputs.sha }}
@@ -619,6 +635,22 @@ jobs:
           echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
           echo "requested_ref=${requested}" >> "$GITHUB_OUTPUT"
           echo "Resolved deploy ref '${requested}' -> ${resolved}"
+
+      - name: Verify ci/main gate for dispatch SHA (staging)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
+          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          if [ -z "$run_id" ]; then
+            echo "No successful ci/main run found for commit ${deploy_sha}."
+            echo "Manual deploys must reference a tested SHA."
+            exit 1
+          fi
+          echo "Found successful ci/main run: ${run_id}"
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.resolve_ref.outputs.sha }}
@@ -632,7 +664,7 @@ jobs:
         shell: bash
         env:
           SECURITY_ENV: staging
-          AUDIT_BLOCKING: '0'
+          AUDIT_BLOCKING: '1'
         run: |
           set -euo pipefail
           mkdir -p .security
@@ -1357,7 +1389,7 @@ jobs:
 
   deploy-prod:
     if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '.'))
     concurrency:
       group: deploy-prod
       cancel-in-progress: false
@@ -1492,6 +1524,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.resolve_ref.outputs.sha }}
+
+      - name: Validate production tag format
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME:-}"
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Production tag must be strict semver (vMAJOR.MINOR.PATCH). Got: ${tag}"
+            exit 1
+          fi
+
+      - name: Verify ci/main gate for production SHA
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
+          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          if [ -z "$run_id" ]; then
+            echo "No successful ci/main run found for commit ${deploy_sha}."
+            echo "Block prod deploy until ci/main succeeds on this exact commit."
+            exit 1
+          fi
+          echo "Found successful ci/main run: ${run_id}"
 
       - name: Verify staging readiness gate for this commit
         shell: bash
@@ -1937,7 +1994,7 @@ jobs:
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
-            --require-approval never
+            --require-approval broadening
 
       - name: Deploy Frontend (prod)
         shell: bash

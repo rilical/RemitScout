@@ -79,10 +79,14 @@ jobs:
           ROLLBACK_TAG: ${{ steps.tags.outputs.ROLLBACK_TAG }}
         run: |
           set -euo pipefail
+          approval_mode="never"
+          if [ "${ENV_NAME}" = "prod" ]; then
+            approval_mode="broadening"
+          fi
           pnpm -C infrastructure/cdk cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${ROLLBACK_TAG}" \
-            --require-approval never
+            --require-approval "${approval_mode}"
 
       - name: Run Migrations (rollback tag)
         shell: bash
@@ -157,10 +161,14 @@ jobs:
             echo "No CURRENT_TAG available; skipping restore."
             exit 0
           fi
+          approval_mode="never"
+          if [ "${ENV_NAME}" = "prod" ]; then
+            approval_mode="broadening"
+          fi
           pnpm -C infrastructure/cdk cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${CURRENT_TAG}" \
-            --require-approval never
+            --require-approval "${approval_mode}"
 
       - name: Run Migrations (restored tag)
         if: always()

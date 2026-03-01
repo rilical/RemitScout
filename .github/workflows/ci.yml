@@ -153,8 +153,6 @@ jobs:
 
       - name: Dependency audit (high/critical)
         shell: bash
-        env:
-          MODE: ${{ inputs.mode || github.event.inputs.mode }}
         run: |
           set -euo pipefail
           mkdir -p .security
@@ -162,8 +160,12 @@ jobs:
           pnpm -w audit --audit-level=high --json > .security/pnpm-audit.json || audit_exit=$?
 
           if [ "$audit_exit" -ne 0 ]; then
-            echo "Dependency audit failed with exit code $audit_exit"
-            echo "Non-blocking in mode=${MODE}. Continuing."
+            echo "::error::Dependency audit found HIGH/CRITICAL vulnerabilities (exit code $audit_exit)"
+            # Extract summary from audit output
+            if [ -f .security/pnpm-audit.json ]; then
+              jq -r '.advisories // {} | to_entries[] | "\(.value.severity): \(.value.module_name) - \(.value.title)"' .security/pnpm-audit.json 2>/dev/null || true
+            fi
+            exit "$audit_exit"
           fi
 
       - name: Upload security evidence
@@ -186,6 +188,10 @@ jobs:
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
+      - name: Runtime secret placeholder guard
+        run: pnpm -C backend exec tsx scripts/ci/guard-secret-placeholders.ts
+      - name: Generated artifact hygiene guard
+        run: pnpm -C backend exec tsx scripts/ci/guard-generated-artifacts.ts
       - name: Guardrail - forbid hardcoded pnpm/action-setup version in workflows
         shell: bash
         run: |
@@ -211,6 +217,8 @@ jobs:
         run: pnpm -C backend exec tsx scripts/ci/check-sdk-versions.ts
       - name: Agent surfaces lint (AGENTS.md + provider registry)
         run: pnpm -C backend exec tsx scripts/ci/validate-agent-surfaces.ts
+      - name: Source-of-truth matrix validation
+        run: pnpm -C backend exec tsx scripts/ci/validate-source-of-truth-matrix.ts
       - name: Reason code registry lint (EvidenceResult reason_code)
         run: pnpm -C backend exec tsx scripts/ci/validate-reason-codes.ts
       - name: Skill catalog lint (skills <-> workflows)
@@ -357,6 +365,7 @@ jobs:
       DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
       PLANE_A_ADMIN_EMAILS: admin@example.com
       ENFORCE_COVERAGE: '1'
+      RUN_PROVIDER_FIXTURES: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -569,7 +578,10 @@ jobs:
       STRIPE_PRICE_ID_PLUS: price_example
       ALERT_EVALUATION_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123456789012/alerts
       PLANE_A_REQUIRE_JWT: "1"
-      PLANE_A_JWT_SECRET: jwt_secret_example
+      PLANE_A_JWT_SECRET: ci_runtime_jwt_secret_4fca8d0e6aab4a7d8f5b2eb0
+      PRIVACY_HASH_SALT: ci_runtime_privacy_hash_salt_8f3c2d1a7b4e9f6c
+      PRIVACY_SESSION_SALT: ci_runtime_privacy_session_salt_5e7a9c2d4b6f8a1e
+      ADMIN_IP_ALLOWLIST: 203.0.113.0/24
       SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
       TRACING_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.example.com/v1/traces

@@ -64,11 +64,15 @@ jobs:
           STACK_NAME: ${{ vars.STACK_NAME }}
         run: |
           set -euo pipefail
+          approval_mode="never"
+          if [ "${ENV_NAME}" = "prod" ]; then
+            approval_mode="broadening"
+          fi
           pnpm -C infrastructure/cdk build
           pnpm -C infrastructure/cdk cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            --require-approval never
+            --require-approval "${approval_mode}"
 
           # Run migrations again (forward-only posture). This is idempotent and ensures schema is up to date.
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
