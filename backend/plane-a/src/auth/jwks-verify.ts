@@ -3,12 +3,15 @@ import type { JWTVerifyOptions } from 'jose'
 import { config } from '../../../shared/config'
 import { AuthUser } from './types'
 
-const resolveIssuer = () => {
+const resolveIssuer = (): string => {
   if (config.auth.supabase.jwtIssuer) {
     return config.auth.supabase.jwtIssuer
   }
   if (!config.auth.supabase.url) {
-    return undefined
+    // Fail-closed: if neither SUPABASE_JWT_ISSUER nor SUPABASE_URL is configured,
+    // use a sentinel value that will never match any real issuer. This ensures
+    // all tokens are rejected rather than silently skipping issuer validation.
+    return '__issuer_not_configured__'
   }
   return `${config.auth.supabase.url.replace(/\/$/, '')}/auth/v1`
 }
@@ -34,10 +37,8 @@ const resolveAudience = (): string | string[] | undefined => {
 
 const buildVerifyOptions = (): JWTVerifyOptions => {
   const options: JWTVerifyOptions = {}
-  const issuer = resolveIssuer()
-  if (issuer) {
-    options.issuer = issuer
-  }
+  // Always set issuer — resolveIssuer() now never returns undefined (fail-closed)
+  options.issuer = resolveIssuer()
   const audience = resolveAudience()
   if (audience) {
     options.audience = audience

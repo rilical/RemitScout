@@ -110,6 +110,8 @@ codex-aarch64-apple-darwin.dmg
 # Ralph orchestrator artifacts are local-only
 .ralph/
 .worktrees/
+.claude/worktrees/
 
 # Ralph orchestrator config is tracked (project source-of-truth).
 # If you need local overrides, use a separate local file.
+.worktrees/

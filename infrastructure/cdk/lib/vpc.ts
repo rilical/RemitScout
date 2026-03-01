@@ -48,7 +48,7 @@ export const createNetworking = (
   const natGateways =
     typeof options.natGateways === 'number' && Number.isFinite(options.natGateways)
       ? options.natGateways
-      : (isProd ? 2 : 1)
+      : 1
 
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
     maxAzs: 2,
@@ -69,11 +69,11 @@ export const createNetworking = (
     destination: FlowLogDestination.toCloudWatchLogs(
       new LogGroup(scope, 'VpcFlowLogGroup', {
         logGroupName: `/remit-scout/${options.envName}/vpc-flow-logs`,
-        retention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+        retention: isProd ? RetentionDays.TWO_WEEKS : RetentionDays.THREE_DAYS,
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       }),
     ),
-    trafficType: FlowLogTrafficType.ALL,
+    trafficType: FlowLogTrafficType.REJECT,
   })
 
   vpc.addGatewayEndpoint('S3GatewayEndpoint', {

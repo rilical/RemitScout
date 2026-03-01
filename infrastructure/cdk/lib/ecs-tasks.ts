@@ -17,7 +17,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
-import { getNewRelicTraceEndpoint, resolveTracingEnv } from './newrelic-observability'
+import { resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
   planeBIngestTask: FargateTaskDefinition
@@ -140,9 +140,10 @@ export const createEcsTasks = (
   const isStaging = options.envName === 'staging'
   const isConservativeWorkerDefaults = isDev || isStaging
   const minimalMode = options.minimalMode === true
-  const logRetention = isProd
-    ? RetentionDays.ONE_MONTH
-    : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
+  const appLogRetentionDays = process.env.APP_LOG_RETENTION_DAYS
+    ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
+    : (isProd ? 3 : 1)
+  const logRetention = appLogRetentionDays
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
@@ -161,11 +162,7 @@ export const createEcsTasks = (
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
-  const newRelicIngestKey = tracingEnv.NEW_RELIC_INGEST_KEY || ''
-  const newRelicTraceEndpoint = getNewRelicTraceEndpoint(options.envName)
-  const enableTelemetry = process.env.ENABLE_TELEMETRY
-    ? process.env.ENABLE_TELEMETRY !== '0'
-    : true
+  const enableTelemetry = process.env.ENABLE_TELEMETRY === '1'
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'
   const resolveCommand = (distEntry: string, tsEntry: string): string[] => {
@@ -182,19 +179,11 @@ export const createEcsTasks = (
     '        endpoint: 0.0.0.0:4318',
     'exporters:',
     '  awsxray:',
-    ...(newRelicIngestKey && newRelicTraceEndpoint
-      ? [
-          '  otlphttp/newrelic:',
-          `    endpoint: ${newRelicTraceEndpoint}`,
-          '    headers:',
-          `      api-key: ${newRelicIngestKey}`,
-        ]
-      : []),
     'service:',
     '  pipelines:',
     '    traces:',
     '      receivers: [otlp]',
-    `      exporters: [awsxray${newRelicIngestKey && newRelicTraceEndpoint ? ', otlphttp/newrelic' : ''}]`,
+    '      exporters: [awsxray]',
   ].join('\n')
 
   const workerHealthCheck: HealthCheck = {

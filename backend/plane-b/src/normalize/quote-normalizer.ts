@@ -342,6 +342,15 @@ export const normalizeQuote = (input: NormalizeQuoteInput): NormalizedQuote => {
     return Math.abs(rate - derivedRate) <= tolerance
   }
 
+  // Executability check (IA1): flag promotional teasers that diverge from derived rate
+  const PROMOTIONAL_DIVERGENCE_THRESHOLD = 0.02 // 2%
+  if (promotionalRate !== null && derivedRate !== null && derivedRate > 0) {
+    const divergence = Math.abs(promotionalRate - derivedRate) / derivedRate
+    if (divergence > PROMOTIONAL_DIVERGENCE_THRESHOLD) {
+      flags.add(qualityFlags.promotional_teaser)
+    }
+  }
+
   // Prefer the rate that matches the actual receive amount when available.
   let impliedFxRate = 0
   if (derivedRate !== null && derivedRate > 0) {

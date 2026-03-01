@@ -224,11 +224,16 @@ export class ToolGateway {
       return this.deny(requestId, request, startedAt, 'Write operations disabled by gateway policy')
     }
 
-    // Policy check 4: Domain allowlist for HTTP tools
-    if ((request.toolType === 'http_fetch' || request.toolType === 'browser_navigate')
-        && this.policy.domainAllowlist.length > 0) {
+    // Policy check 4: Domain allowlist for HTTP tools (fail-closed)
+    if (request.toolType === 'http_fetch' || request.toolType === 'browser_navigate') {
       const url = request.params.url as string | undefined
-      if (url && !this.isDomainAllowed(url)) {
+      if (!url) {
+        return this.deny(requestId, request, startedAt, 'Missing required param: url')
+      }
+      if (this.policy.domainAllowlist.length === 0) {
+        return this.deny(requestId, request, startedAt, 'Domain allowlist is empty — all HTTP requests denied (fail-closed)')
+      }
+      if (!this.isDomainAllowed(url)) {
         return this.deny(requestId, request, startedAt, `Domain not in allowlist: ${url}`)
       }
     }
@@ -464,10 +469,21 @@ export class ToolGateway {
     const sql = params.sql as string
     if (!sql) throw new Error('Missing required param: sql')
 
-    // Safety: only allow SELECT queries
-    const trimmed = sql.trim().toUpperCase()
-    if (!trimmed.startsWith('SELECT') && !trimmed.startsWith('WITH')) {
+    // Safety: strip SQL block comments (/* ... */) and line comments (-- ...)
+    // before validating the query type, to prevent bypass via comment-prefixed DML.
+    const stripped = sql
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/--[^\n]*/g, '')
+      .trim()
+      .toUpperCase()
+
+    if (!stripped.startsWith('SELECT') && !stripped.startsWith('WITH')) {
       throw new Error('Only SELECT/WITH queries allowed through tool gateway')
+    }
+
+    // Block stacked queries (semicolons) to prevent appended DML
+    if (stripped.includes(';')) {
+      throw new Error('Semicolons are not allowed in tool gateway queries')
     }
 
     const values = (params.values as unknown[]) ?? []
