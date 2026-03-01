@@ -117,7 +117,7 @@ export default defineNuxtConfig({
 
   // TypeScript
   typescript: {
-    typeCheck: false,
+    typeCheck: 'build',
   },
 
   // i18n Configuration (temporarily disabled)

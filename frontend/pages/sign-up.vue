@@ -247,7 +247,7 @@ function handleSignUp() {
   //   },
   // })
   
-  console.log('Sign up:', { name: name.value, email: email.value })
+  // TODO: Implement Supabase signUp call
   success.value = true
 }
 
@@ -256,7 +256,7 @@ function handleSocialSignUp(provider: 'google' | 'apple') {
   // const supabase = useSupabaseClient()
   // await supabase.auth.signInWithOAuth({ provider })
   
-  console.log(`Sign up with ${provider} - Supabase integration pending`)
+  // TODO: Implement Supabase OAuth signInWithOAuth
   alert(`${provider} sign-up coming soon! Connect Supabase to enable social authentication.`)
 }
 

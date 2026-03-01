@@ -8,14 +8,15 @@ export default defineEventHandler(async (event) => {
     || event.node.req.socket.remoteAddress
     || 'unknown'
 
-  // Track affiliate click
-  console.log('Affiliate click tracked:', {
+  // TODO: Persist affiliate click to database or analytics service
+  // Track affiliate click metadata (available for future implementation)
+  const _clickData = {
     providerId: body?.providerId,
     offerId: body?.offerId,
     userAgent: getHeader(event, 'user-agent'),
     ip,
     timestamp: new Date().toISOString(),
-  })
+  }
 
   // In a real application, you would:
   // 1. Store click data in database

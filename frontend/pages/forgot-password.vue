@@ -129,7 +129,7 @@ function handleReset() {
   // const supabase = useSupabaseClient()
   // const { error } = await supabase.auth.resetPasswordForEmail(email.value)
   
-  console.log('Password reset requested for:', email.value)
+  // TODO: Implement Supabase resetPasswordForEmail call
   sent.value = true
 }
 

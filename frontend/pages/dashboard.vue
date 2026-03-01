@@ -3039,7 +3039,7 @@ async function handleExport() {
   
   // In production, this would trigger actual file download
   const filename = `remitscout-${exportSettings.value.dataType}-${exportSettings.value.dateFrom}-to-${exportSettings.value.dateTo}.${exportSettings.value.format}`
-  console.log('Exporting:', filename, exportSettings.value)
+  // TODO: Trigger actual file download in production
   
   isExporting.value = false
   showExportModal.value = false

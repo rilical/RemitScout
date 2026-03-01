@@ -141,25 +141,20 @@ const dropdownStyle = ref({})
 
 const availableCurrencyCodes = computed(() => {
   if (props.currencies) {
-    console.log('Using provided currencies:', props.currencies)
     return props.currencies
   }
 
   if (props.countryCode) {
     const codes = getAvailableCurrencies(props.countryCode)
-    console.log('Country code:', props.countryCode, 'Available currencies:', codes)
     return codes
   }
 
-  console.log('Using base currencies:', BASE_CURRENCIES)
   return BASE_CURRENCIES
 })
 
 const allCurrencies = computed(() => {
   const codes = availableCurrencyCodes.value
   const currencies: CurrencyOption[] = []
-
-  console.log('Building currency list from codes:', codes)
 
   codes.forEach((code) => {
     const currencyInfo = CURRENCIES[code]
@@ -172,7 +167,6 @@ const allCurrencies = computed(() => {
       })
     }
     else {
-      console.warn('Currency not found in CURRENCIES:', code)
       currencies.push({
         code,
         label: code,
@@ -196,7 +190,6 @@ const allCurrencies = computed(() => {
     return a.name.localeCompare(b.name)
   })
 
-  console.log('Final currency list:', sorted.map(c => c.code))
   return sorted
 })
 
@@ -221,16 +214,11 @@ watch(allCurrencies, () => {
 })
 
 const selectCurrency = (currency: CurrencyOption) => {
-  console.log('=== Select Currency ===')
-  console.log('Selected:', currency.code, currency.name)
-
   emit('update:modelValue', currency.code)
   emit('currency-selected', currency.code)
   // Show just the code, not the full label
   searchQuery.value = currency.code
   isOpen.value = false
-
-  console.log('searchQuery set to:', searchQuery.value)
 }
 
 const handleSearch = (event: Event) => {
@@ -241,20 +229,12 @@ const handleSearch = (event: Event) => {
 }
 
 const handleFocus = async () => {
-  console.log('=== Currency Focus ===')
-  console.log('Current searchQuery:', searchQuery.value)
-  console.log('Current modelValue:', props.modelValue)
-  console.log('All currencies count:', allCurrencies.value.length)
-
   isOpen.value = true
 
   // Clear and force update
   searchQuery.value = ''
   await nextTick()
   filteredCurrencies.value = [...allCurrencies.value]
-
-  console.log('After clear - searchQuery:', searchQuery.value)
-  console.log('Filtered currencies count:', filteredCurrencies.value.length)
 
   updateDropdownPosition()
 }
@@ -286,23 +266,14 @@ const updateDropdownPosition = async () => {
 
 watch(
   () => props.modelValue,
-  (newValue, oldValue) => {
-    console.log('=== ModelValue Watch ===')
-    console.log('Old:', oldValue, 'New:', newValue)
-    console.log('isOpen:', isOpen.value)
-
+  (newValue) => {
     if (newValue && !isOpen.value) {
       // Only update searchQuery when dropdown is closed
       // Show just the code for brevity
-      console.log('Setting searchQuery to:', newValue)
       searchQuery.value = newValue
     }
     else if (!newValue) {
-      console.log('Clearing searchQuery')
       searchQuery.value = ''
-    }
-    else {
-      console.log('Skipping update because dropdown is open')
     }
   },
   { immediate: true },

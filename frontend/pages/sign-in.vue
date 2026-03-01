@@ -202,7 +202,7 @@ function handleSocialSignIn(provider: 'google' | 'apple') {
   // const supabase = useSupabaseClient()
   // await supabase.auth.signInWithOAuth({ provider })
 
-  console.log(`Sign in with ${provider} - Supabase integration pending`)
+  // TODO: Implement Supabase OAuth signInWithOAuth
   // Placeholder: For now, just show an alert
   alert(`${provider} sign-in coming soon! Connect Supabase to enable social authentication.`)
 }

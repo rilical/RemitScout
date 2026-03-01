@@ -149,16 +149,11 @@ const filterCountries = () => {
 watch(searchQuery, filterCountries)
 
 const selectCountry = (country: typeof allCountries[0]) => {
-  console.log('=== Select Country ===')
-  console.log('Selected:', country.value, country.label)
-
   emit('update:modelValue', country.value)
   emit('country-selected', country.value, country.currency)
   // Show the full label
   searchQuery.value = country.label
   isOpen.value = false
-
-  console.log('searchQuery set to:', searchQuery.value)
 }
 
 const handleSearch = (event: Event) => {
@@ -169,20 +164,12 @@ const handleSearch = (event: Event) => {
 }
 
 const handleFocus = async () => {
-  console.log('=== Country Focus ===')
-  console.log('Current searchQuery:', searchQuery.value)
-  console.log('Current modelValue:', props.modelValue)
-  console.log('All countries count:', allCountries.length)
-
   isOpen.value = true
 
   // Clear and force update
   searchQuery.value = ''
   await nextTick()
   filteredCountries.value = [...allCountries]
-
-  console.log('After clear - searchQuery:', searchQuery.value)
-  console.log('Filtered countries count:', filteredCountries.value.length)
 
   updateDropdownPosition()
 }
@@ -212,31 +199,21 @@ const updateDropdownPosition = async () => {
       left: `${rect.left}px`,
       width: `${rect.width}px`,
     }
-    console.log('Dropdown position updated:', dropdownStyle.value, 'Total countries:', filteredCountries.value.length)
   }
 }
 
 watch(
   () => props.modelValue,
-  (newValue, oldValue) => {
-    console.log('=== Country ModelValue Watch ===')
-    console.log('Old:', oldValue, 'New:', newValue)
-    console.log('isOpen:', isOpen.value)
-
+  (newValue) => {
     if (newValue && !isOpen.value) {
       // Only update searchQuery when dropdown is closed
       const country = allCountries.find(c => c.value === newValue)
       if (country) {
-        console.log('Setting searchQuery to:', country.label)
         searchQuery.value = country.label
       }
     }
     else if (!newValue) {
-      console.log('Clearing searchQuery')
       searchQuery.value = ''
-    }
-    else {
-      console.log('Skipping update because dropdown is open')
     }
   },
   { immediate: true },

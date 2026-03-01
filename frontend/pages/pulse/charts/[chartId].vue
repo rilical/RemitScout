@@ -357,7 +357,7 @@ const actionableInsight = computed(() => {
 })
 
 function handleDownload() {
-  console.log('Download requested')
+  // TODO: Implement chart download
 }
 
 function handleExportCSV() {
@@ -376,7 +376,7 @@ function handleExportPDF() {
 }
 
 function addToWatchlist() {
-  console.log('Add to watchlist')
+  // TODO: Implement watchlist addition via useWatchlist composable
 }
 
 onMounted(async () => {

@@ -1205,15 +1205,15 @@ function handleSort(newSort: string) {
 }
 
 function handleSave() {
-  console.log('Save corridor')
+  // TODO: Implement save corridor via useWatchlist composable
 }
 
 function handleAlert() {
-  console.log('Set alert')
+  // TODO: Implement alert creation via useSaveAlertModal composable
 }
 
 function handleShare() {
-  console.log('Share corridor')
+  // TODO: Implement share via Web Share API or clipboard
 }
 
 const corridorFaqs = computed(() => [

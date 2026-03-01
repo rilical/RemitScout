@@ -1,12 +1,10 @@
 export const useAffiliate = () => {
-  const trackClick = (providerId: string, offerId?: string) => {
-    // Track affiliate click
-    console.log(`Affiliate click tracked: ${providerId}`, offerId ? `, offer: ${offerId}` : '')
+  const trackClick = (_providerId: string, _offerId?: string) => {
+    // TODO: Implement affiliate click tracking via server API
   }
 
-  const trackConversion = (providerId: string, amount?: number) => {
-    // Track affiliate conversion
-    console.log(`Affiliate conversion tracked: ${providerId}`, amount ? `, amount: ${amount}` : '')
+  const trackConversion = (_providerId: string, _amount?: number) => {
+    // TODO: Implement affiliate conversion tracking via server API
   }
 
   return {
