@@ -76,18 +76,36 @@ export const renderPdf = async (title: string, sections: CsvSection[]): Promise<
     const BORDER_COLOR = '#E5E7EB'
     const CELL_PAD_X = 4
     const CELL_PAD_Y = 4
-    const FONT_SIZE = 8
-    const HEADER_FONT_SIZE = 8
+    const BASE_FONT_SIZE = 8
+    const BASE_HEADER_FONT_SIZE = 8
     const ROW_HEIGHT = 18
     const HEADER_HEIGHT = 22
-    const MIN_COL_WIDTH = 50
+    const MIN_COL_WIDTH = 30
 
     for (let si = 0; si < sections.length; si++) {
       const section = sections[si]
       const colCount = section.headers.length
-      const rawColWidth = Math.max(MIN_COL_WIDTH, pageWidth / colCount)
-      const colWidths = section.headers.map(() => rawColWidth)
+
+      // Adaptive font sizing for wide tables
+      const FONT_SIZE = colCount > 10 ? 6 : BASE_FONT_SIZE
+      const HEADER_FONT_SIZE = colCount > 10 ? 6 : BASE_HEADER_FONT_SIZE
+
+      // Proportional column widths based on max content length per column
+      const colMaxLengths = section.headers.map((header, ci) => {
+        let maxLen = header.length
+        for (const row of section.rows) {
+          const val = String(row[header] ?? '')
+          if (val.length > maxLen) maxLen = val.length
+        }
+        return Math.max(maxLen, 2) // minimum 2 chars
+      })
+      const totalContentLength = colMaxLengths.reduce((a, b) => a + b, 0)
+      const colWidths = colMaxLengths.map((len) => {
+        const proportional = (len / totalContentLength) * pageWidth
+        return Math.max(MIN_COL_WIDTH, proportional)
+      })
       const totalTableWidth = colWidths.reduce((a, b) => a + b, 0)
+      // Apply scale factor AFTER the min-width floor
       const scale = totalTableWidth > pageWidth ? pageWidth / totalTableWidth : 1
       const scaledWidths = colWidths.map((w) => w * scale)
 
