@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeAblationImpact, type IndexSnapshot } from '../scripts/ablation-study'
+import { computeAblationImpact, summarizeAblationStudy, type IndexSnapshot, type AblationStudySummary } from '../scripts/ablation-study'
 
 describe('computeAblationImpact', () => {
   const baseline: IndexSnapshot = {
@@ -72,5 +72,42 @@ describe('computeAblationImpact', () => {
     expect(result.teerDeltaPct).toBe(0)
     expect(result.rciDeltaBps).toBe(150)
     expect(result.marginalContribution).toBe('high') // RCI delta > 50
+  })
+})
+
+describe('summarizeAblationStudy', () => {
+  it('sorts results by marginal contribution descending', () => {
+    const results = [
+      computeAblationImpact('low_layer', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 83.4, rci_median_bps: 153, rvi_bps: 20 }),
+      computeAblationImpact('high_layer', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 80.0, rci_median_bps: 300, rvi_bps: 50 }),
+      computeAblationImpact('none_layer', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }),
+    ]
+
+    const summary = summarizeAblationStudy(results)
+
+    expect(summary.results[0].layerName).toBe('high_layer')
+    expect(summary.results[1].layerName).toBe('low_layer')
+    expect(summary.results[2].layerName).toBe('none_layer')
+  })
+
+  it('identifies redundant layers (contribution = none)', () => {
+    const results = [
+      computeAblationImpact('useful', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 80.0, rci_median_bps: 300, rvi_bps: 50 }),
+      computeAblationImpact('redundant_a', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }),
+      computeAblationImpact('redundant_b', { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }, { teer: 83.5, rci_median_bps: 150, rvi_bps: 20 }),
+    ]
+
+    const summary = summarizeAblationStudy(results)
+
+    expect(summary.redundantLayers).toEqual(['redundant_a', 'redundant_b'])
+    expect(summary.criticalLayers).toEqual(['useful'])
+  })
+
+  it('handles empty results', () => {
+    const summary = summarizeAblationStudy([])
+
+    expect(summary.results).toEqual([])
+    expect(summary.redundantLayers).toEqual([])
+    expect(summary.criticalLayers).toEqual([])
   })
 })

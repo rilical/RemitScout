@@ -73,3 +73,78 @@ export function computeAblationImpact(
 
   return { layerName, teerDeltaPct, rciDeltaBps, rviDeltaBps, marginalContribution }
 }
+
+/**
+ * Summary of a full ablation study across all layers.
+ */
+export interface AblationStudySummary {
+  /** All results, sorted by marginal contribution (highest first) */
+  results: AblationResult[]
+  /** Layer names with 'none' contribution — candidates for removal */
+  redundantLayers: string[]
+  /** Layer names with 'high' contribution — critical dependencies */
+  criticalLayers: string[]
+}
+
+const CONTRIBUTION_RANK: Record<AblationResult['marginalContribution'], number> = {
+  high: 3,
+  moderate: 2,
+  low: 1,
+  none: 0,
+}
+
+/**
+ * Summarize ablation results: sort by impact, identify redundant and critical layers.
+ */
+export function summarizeAblationStudy(results: AblationResult[]): AblationStudySummary {
+  const sorted = [...results].sort((a, b) =>
+    CONTRIBUTION_RANK[b.marginalContribution] - CONTRIBUTION_RANK[a.marginalContribution]
+    || b.teerDeltaPct - a.teerDeltaPct
+  )
+
+  const redundantLayers = sorted
+    .filter((r) => r.marginalContribution === 'none')
+    .map((r) => r.layerName)
+
+  const criticalLayers = sorted
+    .filter((r) => r.marginalContribution === 'high')
+    .map((r) => r.layerName)
+
+  if (redundantLayers.length > 0) {
+    logger.warn('ablation_redundant_layers_detected', {
+      count: redundantLayers.length,
+      layers: redundantLayers,
+    })
+  }
+
+  return { results: sorted, redundantLayers, criticalLayers }
+}
+
+/**
+ * Signal layers available for ablation.
+ *
+ * Source weights (from SignalCombiner):
+ * - direct: 0.5 — Direct TEER from gold indices
+ * - triangulated: 0.2 — Synthetic triangulated TEER via intermediary currencies
+ * - factor: 0.3 — External factor signals (FX, economic, regulatory)
+ *
+ * Stress signal types (from TriangulationEngine):
+ * - rate_deviation (0.25), provider_dropout (0.18), failure_surge (0.15),
+ *   rci_spike (0.12), freshness_breach (0.10), volume_drop (0.08),
+ *   external_fx (0.07), volume_spike (0.05)
+ */
+export const ABLATION_LAYERS = [
+  'direct',
+  'triangulated',
+  'factor',
+  'rate_deviation',
+  'provider_dropout',
+  'failure_surge',
+  'rci_spike',
+  'freshness_breach',
+  'volume_drop',
+  'external_fx',
+  'volume_spike',
+] as const
+
+export type AblationLayer = typeof ABLATION_LAYERS[number]
