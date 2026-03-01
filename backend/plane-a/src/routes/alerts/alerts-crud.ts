@@ -4,7 +4,7 @@ import { recordRequest } from '../../../../shared/api-metrics'
 import { config } from '../../../../shared/config'
 import { isMacroCorridor } from '../../../../shared/macro-corridors'
 import { SMART_ALERT_MIN_CONFIDENCE, SMART_ALERT_MIN_SAMPLE_DAYS } from '../../../../shared/constants'
-import { ValidationError, NotFoundError } from '../../../../shared/errors'
+import { AppError, ValidationError, NotFoundError } from '../../../../shared/errors'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getUserPlan } from '../../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../../services/audit-log'
@@ -705,7 +705,7 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       const row = await alertRepository.update(id, user.user_id, updates)
 
       if (!row) {
-        throw new Error('Failed to update alert')
+        throw new AppError('Failed to update alert', { statusCode: 500, code: 'update_failed' })
       }
       const durationSeconds = (Date.now() - startTime) / 1000
       recordRequest('PATCH', '/alerts/:id', 200, durationSeconds)

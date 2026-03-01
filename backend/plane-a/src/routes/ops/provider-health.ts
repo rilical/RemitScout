@@ -8,6 +8,7 @@ import { requireAdmin } from '../../plugins/auth-plugin'
 import { getProviderMetadata } from '../../services/provider-metadata'
 import { sendAdminWebhook } from '../../services/admin-webhooks'
 import { getErrorMessage } from '../../types/errors'
+import { NotFoundError } from '../../../../shared/errors'
 
 type ProviderHealthOptions = {
   providerId: ProviderId
@@ -117,7 +118,7 @@ const fetchProviderHealth = async (
 
   const healthCorridors = getHealthCorridors(options.providerId)
   if (!healthCorridors || healthCorridors.length === 0) {
-    throw new Error('No health corridors configured')
+    throw new NotFoundError('No health corridors configured')
   }
 
   const attempts = await quoteAttemptRepository.listLatestAttemptsByProvider(

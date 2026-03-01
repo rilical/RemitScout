@@ -357,7 +357,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
               corridor_id,
               type: typeof rows,
             })
-            throw new Error('Invalid response from database')
+            throw new AppError('Invalid response from database', { statusCode: 500, code: 'database_error' })
           }
           return { rows, rowCount: rows.length, fromCache: false }
         }
@@ -386,7 +386,7 @@ export const quotesRoutes = async (app: FastifyInstance) => {
             corridor_id,
             type: typeof rows,
           })
-          throw new Error('Invalid response from database')
+          throw new AppError('Invalid response from database', { statusCode: 500, code: 'database_error' })
         }
 
         const result = { rows, rowCount: rows.length, fromCache: false }

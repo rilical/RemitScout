@@ -13,7 +13,7 @@ import { getStripeClient, isStripeConfigured } from '../services/stripe-client'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
-import { ValidationError, NotFoundError } from '../../../shared/errors'
+import { AuthenticationError, ValidationError, NotFoundError } from '../../../shared/errors'
 import {
   enqueueExportJob,
   getExportPipelineStatus,
@@ -186,7 +186,7 @@ const verifySupabasePassword = async (email: string, password: string): Promise<
   }
 
   const payload = await response.text()
-  throw new Error(payload || `Supabase auth failed with status ${response.status}`)
+  throw new AuthenticationError(payload || `Supabase auth failed with status ${response.status}`)
 }
 
 const updateSupabasePassword = async (accessToken: string, newPassword: string): Promise<void> => {
@@ -206,7 +206,7 @@ const updateSupabasePassword = async (accessToken: string, newPassword: string):
 
   if (!response.ok) {
     const payload = await response.text()
-    throw new Error(payload || `Supabase password update failed with status ${response.status}`)
+    throw new AuthenticationError(payload || `Supabase password update failed with status ${response.status}`)
   }
 }
 
