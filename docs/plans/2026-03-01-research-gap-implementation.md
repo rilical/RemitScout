@@ -2,9 +2,11 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Close the 4 actionable gaps between Remit-Scout research docs and the production codebase (P2-P5 from the gap analysis).
+**Goal:** Close the 3 actionable gaps between Remit-Scout research docs and the production codebase (P2, P4, P5 from the gap analysis).
 
-**Architecture:** Each feature is a standalone addition that plugs into existing pipelines. P2 extends quote normalization, P3 adds a validation job alongside the weighting job, P4 adds an ablation mode to gold indices, P5 adds residual tracking to the gold export pipeline. All follow existing patterns (vitest, TypeScript, SQL migrations, gold_export schema).
+**Architecture:** Each feature is a standalone addition that plugs into existing pipelines. P2 extends quote normalization, P4 adds an ablation mode to gold indices, P5 adds residual tracking to the gold export pipeline. All follow existing patterns (vitest, TypeScript, SQL migrations, gold_export schema).
+
+**Excluded:** P1 (SmartSend already covers it), P3 (synthetic weights are safe from circularity), P6 (architecture ready, will onboard crypto data sources later).
 
 **Tech Stack:** TypeScript, vitest, Aurora Postgres (SQL migrations), existing shared utilities
 
@@ -150,178 +152,7 @@ git commit -m "feat: add promotional_teaser quality flag for quote executability
 
 ---
 
-## Task 2: Anti-Circularity Weight Validation (P3)
-
-**Context:** The EDV research doc (RQ2.5-2.6) warns that volume-weighted indices are endogenous: EDV affects volume, volume affects observed prices. We need a sensitivity check that compares TEER under current weights vs equal weights to detect circularity.
-
-**Files:**
-- Create: `backend/scripts/weight-sensitivity-check.ts`
-- Test: `backend/tests/weight-sensitivity-check.test.ts`
-
-### Step 1: Write failing test for weight sensitivity computation
-
-**File:** `backend/tests/weight-sensitivity-check.test.ts`
-
-```typescript
-import { describe, it, expect } from 'vitest'
-import { computeWeightSensitivity } from '../scripts/weight-sensitivity-check'
-
-describe('weight sensitivity check', () => {
-  it('returns low divergence when current and equal weights produce similar TEER', () => {
-    const corridorData = [
-      { provider_id: 'wise', implied_fx_rate: 83.1, current_weight: 0.5 },
-      { provider_id: 'remitly', implied_fx_rate: 83.0, current_weight: 0.3 },
-      { provider_id: 'xe', implied_fx_rate: 82.9, current_weight: 0.2 },
-    ]
-    const result = computeWeightSensitivity(corridorData)
-    expect(result.divergencePct).toBeLessThan(1.0) // Less than 1% divergence
-    expect(result.circularity_risk).toBe('low')
-  })
-
-  it('returns high divergence when one provider dominates and skews TEER', () => {
-    const corridorData = [
-      { provider_id: 'wise', implied_fx_rate: 85.0, current_weight: 0.9 },
-      { provider_id: 'remitly', implied_fx_rate: 80.0, current_weight: 0.05 },
-      { provider_id: 'xe', implied_fx_rate: 80.0, current_weight: 0.05 },
-    ]
-    const result = computeWeightSensitivity(corridorData)
-    expect(result.divergencePct).toBeGreaterThan(1.0)
-    expect(result.circularity_risk).toBe('high')
-  })
-
-  it('returns medium risk for moderate divergence', () => {
-    const corridorData = [
-      { provider_id: 'wise', implied_fx_rate: 84.0, current_weight: 0.7 },
-      { provider_id: 'remitly', implied_fx_rate: 82.0, current_weight: 0.2 },
-      { provider_id: 'xe', implied_fx_rate: 82.0, current_weight: 0.1 },
-    ]
-    const result = computeWeightSensitivity(corridorData)
-    expect(result.circularity_risk).toBe('medium')
-  })
-})
-```
-
-### Step 2: Run test to verify it fails
-
-```bash
-cd backend && npx vitest run tests/weight-sensitivity-check.test.ts
-```
-Expected: FAIL - module not found
-
-### Step 3: Implement weight sensitivity computation
-
-**File:** `backend/scripts/weight-sensitivity-check.ts`
-
-```typescript
-export interface ProviderWeightRow {
-  provider_id: string
-  implied_fx_rate: number
-  current_weight: number
-}
-
-export interface SensitivityResult {
-  corridorId: string
-  teerCurrentWeights: number
-  teerEqualWeights: number
-  divergencePct: number
-  circularity_risk: 'low' | 'medium' | 'high'
-  providerCount: number
-}
-
-const DIVERGENCE_LOW = 0.5   // Below 0.5% = low risk
-const DIVERGENCE_HIGH = 2.0  // Above 2.0% = high risk
-
-export function computeWeightSensitivity(
-  data: ProviderWeightRow[],
-  corridorId = 'unknown',
-): SensitivityResult {
-  if (data.length === 0) {
-    return {
-      corridorId,
-      teerCurrentWeights: 0,
-      teerEqualWeights: 0,
-      divergencePct: 0,
-      circularity_risk: 'low',
-      providerCount: 0,
-    }
-  }
-
-  // TEER with current weights
-  const totalCurrentWeight = data.reduce((s, d) => s + d.current_weight, 0)
-  const teerCurrent = totalCurrentWeight > 0
-    ? data.reduce((s, d) => s + d.implied_fx_rate * d.current_weight, 0) / totalCurrentWeight
-    : 0
-
-  // TEER with equal weights (1/N)
-  const equalWeight = 1 / data.length
-  const teerEqual = data.reduce((s, d) => s + d.implied_fx_rate * equalWeight, 0)
-
-  // Divergence
-  const divergencePct = teerEqual > 0
-    ? Math.abs(teerCurrent - teerEqual) / teerEqual * 100
-    : 0
-
-  let circularity_risk: 'low' | 'medium' | 'high' = 'medium'
-  if (divergencePct < DIVERGENCE_LOW) circularity_risk = 'low'
-  else if (divergencePct > DIVERGENCE_HIGH) circularity_risk = 'high'
-
-  return {
-    corridorId,
-    teerCurrentWeights: teerCurrent,
-    teerEqualWeights: teerEqual,
-    divergencePct,
-    circularity_risk,
-    providerCount: data.length,
-  }
-}
-```
-
-### Step 4: Run test to verify it passes
-
-```bash
-cd backend && npx vitest run tests/weight-sensitivity-check.test.ts
-```
-Expected: PASS
-
-### Step 5: Add database integration to run as a batch job
-
-Extend the file with a `runWeightSensitivityCheck` function that:
-1. Queries `gold.provider_weight_snapshot` joined with recent quotes from `silver.quote_record`
-2. Groups by corridor_id
-3. Calls `computeWeightSensitivity` per corridor
-4. Logs results and flags corridors with `high` circularity risk
-5. Optionally writes results to a `gold.weight_sensitivity_log` table
-
-**SQL for data:**
-```sql
-SELECT
-  ws.corridor_id,
-  ws.provider_id,
-  ws.weight AS current_weight,
-  AVG(qr.implied_fx_rate) AS implied_fx_rate
-FROM gold.provider_weight_snapshot ws
-JOIN silver.quote_record qr
-  ON ws.corridor_id = qr.corridor_id
-  AND ws.provider_id = qr.provider_id
-  AND qr.collected_at >= NOW() - INTERVAL '7 days'
-  AND qr.status = 'ok'
-  AND qr.implied_fx_rate > 0
-WHERE ws.model_version = 'synthetic_seed_v1'
-GROUP BY ws.corridor_id, ws.provider_id, ws.weight
-HAVING COUNT(*) >= 3
-```
-
-### Step 6: Commit
-
-```bash
-git add backend/scripts/weight-sensitivity-check.ts \
-       backend/tests/weight-sensitivity-check.test.ts
-git commit -m "feat: add anti-circularity weight sensitivity check (P3)"
-```
-
----
-
-## Task 3: Signal Layer Ablation Tooling (P4)
+## Task 2: Signal Layer Ablation Tooling (P4)
 
 **Context:** The Validation Agenda (E2) requires ablation testing: remove each signal layer and measure TEER/RVI/RCI stability. This reveals redundancy, circular dependencies, and marginal contribution of each layer.
 
@@ -451,7 +282,7 @@ git commit -m "feat: add signal layer ablation study tooling (P4)"
 
 ---
 
-## Task 4: EDV Residual Monitoring (P5)
+## Task 3: EDV Residual Monitoring (P5)
 
 **Context:** The EDV research doc and Validation Agenda (E1) require tracking systematic residuals between TEER and reference anchors. Persistent residuals indicate unknown mechanisms. Transitory residuals indicate microstructure noise.
 
@@ -635,13 +466,12 @@ git commit -m "feat: add EDV residual monitoring for unknown-unknown detection (
 | Task | Feature | Effort | Dependencies |
 |---|---|---|---|
 | 1 | Quote Executability (P2) | Small | None |
-| 2 | Anti-Circularity Weights (P3) | Medium | P2 (cleaner data helps) |
-| 3 | Signal Ablation Tooling (P4) | Medium | None |
-| 4 | EDV Residual Monitor (P5) | Medium | None |
+| 2 | Signal Ablation Tooling (P4) | Medium | None |
+| 3 | EDV Residual Monitor (P5) | Medium | None |
 
-Tasks 1-4 are independent and can be parallelized. Task 1 should go first since it improves data quality for everything downstream.
+All 3 tasks are independent and can be parallelized. Task 1 should go first since it improves data quality for everything downstream.
 
-**Not included (deferred):**
-- P6 (ISER Full Methodology) - Large strategic effort, requires D3 (stablecoin signal role decision) first
-- E1-E10 (Validation experiments) - Require P4/P5 tooling to be built first
-- D1-D4 (Methodological decisions) - Inform by Phase 2 validation results
+**Excluded from plan:**
+- P1 (Pulse Opportunity) - SmartSend already covers this (`pulse-cache-repository.ts:1099-1123`)
+- P3 (Anti-Circularity Weights) - Synthetic seed weighting is safe from circularity risk
+- P6 (ISER Full Methodology) - Architecture is ready; will onboard crypto data sources when needed
