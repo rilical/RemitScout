@@ -6,6 +6,10 @@ const mockConfig = vi.hoisted(() => ({
       remoteVerifyCacheTtlSeconds: 60,
     },
   },
+  planeA: {
+    maxTokenAgeSeconds: 0,
+    requireEmailConfirmation: false,
+  },
 }))
 
 vi.mock('../shared/config', () => ({ config: mockConfig }))

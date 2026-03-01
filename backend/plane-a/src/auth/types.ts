@@ -53,6 +53,7 @@ export type AuthErrorCode =
   | 'expired_token'
   | 'token_too_old'
   | 'revoked_token'
+  | 'email_not_confirmed'
   | 'verification_failed'
 
 /**
@@ -150,7 +151,7 @@ export const isAuthError = (value: unknown): value is AuthError => {
 
   return (
     typeof error.code === 'string' &&
-    ['missing_token', 'invalid_token', 'expired_token', 'token_too_old', 'revoked_token', 'verification_failed'].includes(
+    ['missing_token', 'invalid_token', 'expired_token', 'token_too_old', 'revoked_token', 'email_not_confirmed', 'verification_failed'].includes(
       error.code,
     ) &&
     typeof error.message === 'string'

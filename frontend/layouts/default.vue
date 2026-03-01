@@ -19,6 +19,20 @@
 
     <SaveAlertModal v-if="saveAlertModal.context" />
     <WelcomeBackCorridorPrompt />
+
+    <div
+      v-if="sessionTimeout.showWarning.value"
+      class="fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-yellow-50 px-4 py-3 text-sm text-yellow-800 shadow-md"
+      role="alert"
+    >
+      <span>Your session is about to expire due to inactivity.</span>
+      <button
+        class="ml-4 rounded bg-yellow-600 px-3 py-1 text-xs font-medium text-white hover:bg-yellow-700"
+        @click="sessionTimeout.refresh()"
+      >
+        Continue session
+      </button>
+    </div>
   </div>
 </template>
 
@@ -34,4 +48,5 @@ const SaveAlertModal = defineAsyncComponent(() => import('~/components/shared/Sa
 
 const footerModalOpen = ref(false)
 const saveAlertModal = useSaveAlertModal()
+const sessionTimeout = useSessionTimeout()
 </script>
