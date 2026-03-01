@@ -69,14 +69,14 @@ Tag versioning conventions (all tags use pattern `[a-z0-9._:+-]+@v[0-9]+`):
 
 Human-in-the-loop boundaries for agent self-healing (v1):
 - **Invariant** (`agent-self-healing-approval`): Agent self-healing (parser patches) requires human approval via GitHub PR in propose-only mode. Auto-deploy requires explicit `AGENT_AUTO_DEPLOY=true` flag.
-- **Propose-only mode (v1, current)**: All agent-proposed patches are deployed via GitHub PR. The patch-deployer creates a branch (`agent/repair-{bundleId}`), commits the proposed changes, opens a PR, and notifies Slack. A human must review and merge the PR before changes reach production.
+- **Propose-only mode (v1, current)**: All agent-proposed patches are deployed via GitHub PR. The patch-deployer creates a branch (`agent/repair-<bundleId>`), commits the proposed changes, opens a PR, and notifies Slack. A human must review and merge the PR before changes reach production.
 - **Auto-deploy mode (v2, future, behind `AGENT_DIRECT_DEPLOY=true`)**: Direct application is gated behind `AGENT_DIRECT_DEPLOY=true` AND `autoHealEnabled=true` in the module's policy AND `confidence=high` on the proposal. Auto-deploy uses canary rollout (10% -> 50% -> 100% over 90 min) with auto-rollback if error rate > 2x baseline.
 - **Safe edit scope policy (propose-only v1)**: Agents can ONLY modify files in the safe edit scope. Enforced at three layers:
-  - **Directory allowlist**: `backend/plane-b/src/providers/`, `backend/plane-b/src/modules/`. Files outside these directories are rejected.
-  - **File allowlist**: Only `parse.ts` and `fetch.ts` are editable. Other files (e.g., `collector.ts`, `catalog.ts`) are rejected even within allowed directories.
+  - **Directory allowlist**: `backend/plane-b/src/providers/`, `backend/plane-b/src/agents/`. Files outside these directories are rejected.
+  - **File allowlist**: Only `backend/plane-b/src/providers/<provider>/parse.ts` and `backend/plane-b/src/providers/<provider>/fetch.ts` are editable. Other files (for example `backend/plane-b/src/providers/<provider>/collector.ts`, `backend/plane-b/src/providers/<provider>/catalog.ts`) are rejected even within allowed directories.
   - **Path traversal protection**: Any path containing `..` segments is rejected.
   - **Enforcement points**: patch-validator `checkAffectedFilesExist()` (compile-time validation), tool-gateway `executeFileRead()` (runtime read-scope), ARCHITECTURE.md invariant (design-time constraint).
-- **Agent config default**: `requiresApproval` defaults to `true` for all agents (`agent-config.ts`). Set via `AGENT_{ID}_REQUIRES_APPROVAL=false` to override (not recommended for production).
+- **Agent config default**: `requiresApproval` defaults to `true` for all agents (`backend/plane-b/src/agents/agent-config.ts`). Set via `AGENT_{ID}_REQUIRES_APPROVAL=false` to override (not recommended for production).
 - **Escalation triggers (human required)**: (1) Evidence execution failure. (2) `sev3` or `evidence.error` findings. (3) Actionable findings with no non-manual next skills. (4) Triage timebox exceeded (`triage.timebox_exceeded`). (5) Incident timeline reconstruction failure (`triage.timeline_reconstruction_failed`). (6) Close-case rationale missing (`triage.close_case_rationale_missing`).
 - **Escalation handoff contract** (`decision_record.human_in_loop` v1): When `decision=escalate`, set `required=true`, `status=pending_human_triage`. When decision is not escalation, set `required=false`, `status=not_required`. Escalation routing is deterministic: `escalation_channel=slack_frontdesk`, `route_skill_id=manual.human_triage`, `escalation_owner_tag=owner.issueops.oncall@v1`, default SLA=30 minutes.
 - **Privileged action routing**: PRs, deploys, Slack notifications, and GitHub issue creation route through Brain/executor pipeline only, never through the untrusted agent runtime.
@@ -90,7 +90,7 @@ Manual override and emergency stop policy:
   - `AGENT_DIRECT_DEPLOY=false` (default): Blocks all auto-deploy; forces PR-only flow.
 - **Collection kill switches**:
   - `PLANE_B_DISABLE_TIER1=true`: Stops all Tier 1 collector runs.
-  - Provider stoplist (`silver.rights_matrix.stoplisted=true`): Halts collection for a specific provider. Resume via `stoplist-auto-resume.ts` or manual `UPDATE silver.rights_matrix SET stoplisted=false`.
+  - Provider stoplist (`silver.rights_matrix.stoplisted=true`): Halts collection for a specific provider. Resume via `backend/scripts/stoplist-auto-resume.ts` or manual `UPDATE silver.rights_matrix SET stoplisted=false`.
   - Circuit breaker (`silver.circuit_breaker`): Automatically trips after sustained failure threshold; resets after cooldown or manual reset.
 - **Platform emergency stop**:
   - `make ops-pause-dev` / `make ops-pause-staging` / `make ops-pause-prod`: Fast emergency stop via OpsPause Lambda. Stops ECS services and disables EventBridge rules without a full CDK deploy.
@@ -109,7 +109,7 @@ Manual override and emergency stop policy:
 Documentation-to-SPECS sync contract:
 - **Sync mechanism**: `plan.mjs build` calls `buildSpecCatalog()` which copies canonical files into `SPECS/` for loop-facing consumption. SPECS is regenerated from scratch on every build (agents-bundle and skills-bundle are `rm -rf`'d first).
 - **Three sync strategies** (defined in `SPECS/source-of-truth-matrix.json`):
-  - `single-source`: No derived copies. The canonical file IS the only source of truth (e.g., `agent-config.ts`, `tool-gateway.ts`, `modules/catalog.json`).
+  - `single-source`: No derived copies. The canonical file IS the only source of truth (e.g., `backend/plane-b/src/agents/agent-config.ts`, `backend/plane-b/src/agents/tool-gateway.ts`, `.remit-scout/providers/catalog.json`).
   - `derived-copy`: Canonical file is replicated verbatim into `SPECS/`. CI validates that derived copies exist AND content matches the canonical source. Run `node scripts/ralph/plan.mjs build` to re-sync after editing a canonical file.
   - `manual-review`: Copies exist in SPECS but are not automatically validated for content match (e.g., operational runbooks that may diverge intentionally).
 - **Static copy mapping** (canonical -> SPECS):
@@ -120,11 +120,13 @@ Documentation-to-SPECS sync contract:
   - `.remit-scout/skills/catalog.yaml` -> `SPECS/skills.catalog.yaml`
   - `.remit-scout/reason-codes/catalog.yaml` -> `SPECS/reason-codes.catalog.yaml`
   - `.remit-scout/providers/catalog.json` -> `SPECS/providers.catalog.json`
-  - `.remit-scout/schema/*.schema.json` -> `SPECS/schema.*.json`
+  - `.remit-scout/schema/prd.schema.json` -> `SPECS/schema.prd.json`
+  - `.remit-scout/schema/plan.schema.json` -> `SPECS/schema.plan.json`
+  - `.remit-scout/schema/run.schema.json` -> `SPECS/schema.run.json`
   - `docs/runbooks/agent-deploy-promotion-checklist.md` -> `SPECS/agent-deploy-promotion-checklist.md`
   - `docs/runbooks/ralph-codex-loop.md` -> `SPECS/ralph-codex-loop.md`
-- **Bundle copies**: All `AGENTS.md` files (excluding `.remit-scout/`) -> `SPECS/agents-bundle/`. All `agents/rag/*.md` files -> `SPECS/agents-bundle/agents/rag/`. Codex skills -> `SPECS/skills-bundle/`.
-- **CI enforcement** (`validate-source-of-truth-matrix.ts`): Validates canonical_path exists, derived_copies exist, content matches for `derived-copy` strategy, owner_tag pattern, bounded/rollback evidence notes present, SPECS/README.md manifest count consistency.
+- **Bundle copies**: All `AGENTS.md` files (excluding `.remit-scout/`) -> `SPECS/agents-bundle/`. All files under `agents/rag/` -> `SPECS/agents-bundle/agents/rag/`. Codex skills -> `SPECS/skills-bundle/`.
+- **CI enforcement** (`backend/scripts/ci/validate-source-of-truth-matrix.ts`): Validates canonical_path exists, derived_copies exist, content matches for `derived-copy` strategy, owner_tag pattern, bounded/rollback evidence notes present, SPECS/README.md manifest count consistency.
 - **Max file size**: Files > 1MB (`MAX_SYNC_BYTES`) are skipped during sync and listed in `SPECS/README.md` under "Skipped due to file-size limit".
 - **SPECS/README.md governance manifest**: Auto-generated by `plan.mjs build`. Includes: generation timestamp, total synced count, governance references (`.remit-scout/AGENTS.md`, `SPECS/source-of-truth-matrix.json`), non-manifest files list, and per-source-group artifact mappings. CI validates the `Total synced` header matches the actual manifest entry count.
 
