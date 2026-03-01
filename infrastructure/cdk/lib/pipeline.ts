@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib'
+import { Duration, Stack } from 'aws-cdk-lib'
 import { Pipeline, Artifact } from 'aws-cdk-lib/aws-codepipeline'
 import {
   CodeBuildAction,
@@ -292,7 +292,8 @@ export const createPipeline = (
               'aws ecr describe-images --repository-name $ECR_REPO_NAME --image-ids imageTag=$IMAGE_TAG >/dev/null',
               "ESBUILD_PLATFORM=$(node -p \"process.platform + '-' + process.arch\")",
               'export ESBUILD_BINARY_PATH="$SOURCE_DIR/infrastructure/cdk/node_modules/@esbuild/$ESBUILD_PLATFORM/bin/esbuild"',
-              'cd "$SOURCE_DIR/infrastructure/cdk" && pnpm exec -- cdk deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval never',
+              'if [ "$ENV_NAME" = "prod" ]; then CDK_APPROVAL_MODE=broadening; else CDK_APPROVAL_MODE=never; fi',
+              'cd "$SOURCE_DIR/infrastructure/cdk" && pnpm exec -- cdk deploy -c env=$ENV_NAME -c backendImageTag=$IMAGE_TAG --require-approval $CDK_APPROVAL_MODE',
               [
                 'if [ -n "$FRONTEND_BUCKET_NAME" ] && [ -n "$FRONTEND_DISTRIBUTION_ID" ]; then',
                 '  echo "Deploying frontend to S3..."',
@@ -310,10 +311,18 @@ export const createPipeline = (
       timeout: Duration.minutes(45),
     })
 
+    const cdkQualifier = 'hnb659fds'
+    const { account, region } = Stack.of(scope)
     deployProject.addToRolePolicy(
       new PolicyStatement({
         actions: ['sts:AssumeRole'],
-        resources: ['*'],
+        resources: [
+          `arn:aws:iam::${account}:role/cdk-${cdkQualifier}-deploy-role-${account}-${region}`,
+          `arn:aws:iam::${account}:role/cdk-${cdkQualifier}-file-publishing-role-${account}-${region}`,
+          `arn:aws:iam::${account}:role/cdk-${cdkQualifier}-image-publishing-role-${account}-${region}`,
+          `arn:aws:iam::${account}:role/cdk-${cdkQualifier}-lookup-role-${account}-${region}`,
+          `arn:aws:iam::${account}:role/cdk-${cdkQualifier}-cfn-exec-role-${account}-${region}`,
+        ],
       }),
     )
 

@@ -83,6 +83,8 @@ export type ScheduledJobsResources = {
   b2bSweepSchedulerRule: Rule
   oandaSyncFunction?: IFunction
   oandaSyncRule?: Rule
+  triangulationJobRule?: Rule
+  knowledgeChunkIndexingRule?: Rule
 }
 
 export type ScheduledJobsOptions = {
@@ -150,6 +152,8 @@ export type ScheduledJobsOptions = {
   institutionalExportFormat?: string
   institutionalExportWriteManifest?: boolean
   providerProbeMode?: ProviderProbeMode
+  agentOrchestratorTask?: FargateTaskDefinition
+  stressResponderTask?: FargateTaskDefinition
 }
 
 const tagManagedRule = (rule: Rule, envName: string): void => {
@@ -2160,6 +2164,58 @@ export const createScheduledJobs = (
     }
   }
 
+  const triangulationJobRule = options.stressResponderTask
+    ? (() => {
+        const rule = new Rule(scope, 'TriangulationJobSchedule', {
+          ruleName: ruleName('triangulation-job'),
+          schedule: Schedule.rate(Duration.minutes(15)),
+          description: 'Runs corridor stress triangulation every 15 minutes.',
+          enabled: rulesEnabled,
+        })
+        tagManagedRule(rule, options.envName)
+        rule.addTarget(new EcsTask({
+          cluster: options.cluster,
+          taskDefinition: options.stressResponderTask,
+          subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
+          securityGroups: [options.planeBSecurityGroup],
+          taskCount: 1,
+          platformVersion: FargatePlatformVersion.LATEST,
+          assignPublicIp: isDev,
+          containerOverrides: [{
+            containerName: options.stressResponderTask.defaultContainer!.containerName,
+            command: ['node', 'dist/scripts/triangulation-job.js'],
+          }],
+        }))
+        return rule
+      })()
+    : undefined
+
+  const knowledgeChunkIndexingRule = options.agentOrchestratorTask
+    ? (() => {
+        const rule = new Rule(scope, 'KnowledgeChunkIndexingSchedule', {
+          ruleName: ruleName('knowledge-chunk-indexing'),
+          schedule: Schedule.cron({ hour: '3', minute: '0' }),
+          description: 'Runs knowledge plane chunk indexing daily at 03:00 UTC.',
+          enabled: rulesEnabled,
+        })
+        tagManagedRule(rule, options.envName)
+        rule.addTarget(new EcsTask({
+          cluster: options.cluster,
+          taskDefinition: options.agentOrchestratorTask,
+          subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
+          securityGroups: [options.planeBSecurityGroup],
+          taskCount: 1,
+          platformVersion: FargatePlatformVersion.LATEST,
+          assignPublicIp: isDev,
+          containerOverrides: [{
+            containerName: options.agentOrchestratorTask.defaultContainer!.containerName,
+            command: ['node', 'dist/scripts/knowledge-chunk-indexing-job.js'],
+          }],
+        }))
+        return rule
+      })()
+    : undefined
+
   return {
     goldFxRatesFunction,
     goldFxRatesRule,
@@ -2199,6 +2255,8 @@ export const createScheduledJobs = (
     b2bSweepSchedulerRule,
     oandaSyncFunction,
     oandaSyncRule,
+    triangulationJobRule,
+    knowledgeChunkIndexingRule,
   }
 }
 

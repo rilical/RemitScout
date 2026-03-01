@@ -25,6 +25,8 @@ export type StorageOptions = {
 
 export const createStorage = (scope: Construct, options: StorageOptions): StorageResources => {
   const isProd = options.envName === 'prod'
+  const isStaging = options.envName === 'staging'
+  const isProtectedEnv = isProd || isStaging
   const exportsLifecyclePrefix = (() => {
     const normalized = (options.exportsPrefix ?? 'exports').replace(/^\/+|\/+$/g, '')
     return normalized ? `${normalized}/` : 'exports/'
@@ -65,14 +67,14 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     encryption: BucketEncryption.S3_MANAGED,
     objectOwnership: ObjectOwnership.OBJECT_WRITER,
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         expiration: Duration.days(isProd ? 365 : 30),
         abortIncompleteMultipartUploadAfter: Duration.days(7),
       },
     ],
-    autoDeleteObjects: !isProd,
+    autoDeleteObjects: !isProtectedEnv,
   })
 
   // KMS CMK with automatic annual rotation for bronze and audit-logs buckets.
@@ -81,7 +83,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     alias: `remit-scout-${options.envName}-data`,
     description: `RemitScout ${options.envName} data encryption key (bronze + audit-logs)`,
     enableKeyRotation: true,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
 
   const bronzeBucket = new Bucket(scope, 'BronzeBucket', {
@@ -93,7 +95,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('bronze'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         transitions: [
@@ -122,7 +124,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
       { id: 'ExportsIndicesMetrics', prefix: 'indices/' },
       { id: 'ExportsParquetMetrics', prefix: 'parquet/' },
     ],
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         prefix: exportsLifecyclePrefix,
@@ -171,7 +173,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('user-assets'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         expiration: Duration.days(365),
@@ -189,7 +191,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('audit-logs'),
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     lifecycleRules: [
       {
         transitions: [

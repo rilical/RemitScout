@@ -35,6 +35,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
   const isProd = options.envName === 'prod'
   const isDev = options.envName === 'dev'
   const isStaging = options.envName === 'staging'
+  const isProtectedEnv = isProd || isStaging
   const enableProxy = options.enableProxy ?? true
   const sensitiveSqlLoggingEnabled =
     isDev && (process.env.DB_SENSITIVE_SQL_LOGGING_ENABLED || '').trim() === '1'
@@ -46,7 +47,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
   const encryptionKey = new Key(scope, 'DatabaseEncryptionKey', {
     description: `RemitScout ${options.envName} Aurora encryption key`,
     enableKeyRotation: true,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
     alias: `alias/remit-scout-${options.envName}-rds`,
   })
 
@@ -75,7 +76,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
       generateStringKey: 'password',
       excludePunctuation: true,
     },
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
 
   const clusterBaseProps = {
@@ -87,11 +88,11 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     backup: { retention: Duration.days(isProd ? 30 : (isDev ? 3 : 14)) },
     storageEncrypted: true,
     storageEncryptionKey: encryptionKey,
-    deletionProtection: isProd || isStaging,
+    deletionProtection: isProtectedEnv,
     parameterGroup,
     cloudwatchLogsExports: ['postgresql'],
     cloudwatchLogsRetention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
-    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   }
 
   const dbSubnetType = SubnetType.PRIVATE_WITH_EGRESS

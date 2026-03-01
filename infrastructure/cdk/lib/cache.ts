@@ -1,4 +1,4 @@
-import { SecretValue } from 'aws-cdk-lib'
+import { RemovalPolicy, SecretValue } from 'aws-cdk-lib'
 import {
   CfnReplicationGroup,
   CfnSubnetGroup,
@@ -18,11 +18,16 @@ export type CacheOptions = {
   envName: string
   vpc: Vpc
   redisSecurityGroup: SecurityGroup
+  redisAuthMode?: 'legacy' | 'required'
 }
 
 export const createCache = (scope: Construct, options: CacheOptions): CacheResources => {
   const isProd = options.envName === 'prod'
+  const isStaging = options.envName === 'staging'
+  const isProtectedEnv = isProd || isStaging
   const subnets = options.vpc.privateSubnets
+  const redisAuthMode = options.redisAuthMode ?? (isProtectedEnv ? 'required' : 'legacy')
+  const authEnabled = redisAuthMode === 'required'
 
   const redisAuthSecret = new Secret(scope, 'RedisAuthSecret', {
     secretName: `remit-scout/${options.envName}/redis-auth`,
@@ -44,7 +49,10 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     subnetIds: subnets.map((subnet) => subnet.subnetId),
   })
 
-  const replicationGroup = new CfnReplicationGroup(scope, 'RedisReplicationGroup', {
+  const replicationGroup = new CfnReplicationGroup(
+    scope,
+    authEnabled ? 'RedisReplicationGroupAuth' : 'RedisReplicationGroup',
+    {
     replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
     cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
     engine: 'redis',
@@ -58,10 +66,15 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     cacheSubnetGroupName: subnetGroup.ref,
     securityGroupIds: [options.redisSecurityGroup.securityGroupId],
     autoMinorVersionUpgrade: true,
-    // Do not set AuthToken in-place on existing replication groups.
-    // CloudFormation treats this path as immutable for our existing stacks and enters
-    // UPDATE_ROLLBACK_FAILED. Auth enablement must be handled as an explicit replacement migration.
+    // Auth token must be enabled for protected environments. We use a distinct
+    // logical ID when auth is enabled so upgrades can migrate by replacement.
+    authToken: authEnabled ? redisAuthToken.toString() : undefined,
   })
+
+  const removalPolicy = isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY
+  redisAuthSecret.applyRemovalPolicy(removalPolicy)
+  subnetGroup.applyRemovalPolicy(removalPolicy)
+  replicationGroup.applyRemovalPolicy(removalPolicy)
 
   return {
     subnetGroup,

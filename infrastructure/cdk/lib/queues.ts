@@ -21,6 +21,14 @@ export type QueueResources = {
   notificationsDlq: Queue
   opsAlertsQueue: Queue
   opsAlertsDlq: Queue
+  agentFailureQueue: Queue
+  agentFailureDlq: Queue
+  agentStressQueue: Queue
+  agentStressDlq: Queue
+  toolRequestQueue: Queue
+  toolRequestDlq: Queue
+  normalizationQueue: Queue
+  normalizationDlq: Queue
 }
 
 export type QueueOptions = {
@@ -227,6 +235,91 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   })
   attachRedriveAllowPolicy(opsAlertsDlq, opsAlertsQueueName)
 
+  // Agent failure queue: receives structured failure bundles from the agent
+  // orchestrator when an agent run terminates abnormally. Retention is long
+  // (14 days) so on-call engineers can inspect failures after the fact.
+  const agentFailureDlq = new Queue(scope, 'AgentFailureDlq', {
+    queueName: `remit-scout-${options.envName}-agent-failure-dlq`,
+    retentionPeriod: Duration.days(14),
+    encryption: QueueEncryption.KMS_MANAGED,
+  })
+
+  const agentFailureQueueName = `remit-scout-${options.envName}-agent-failure`
+  const agentFailureQueue = new Queue(scope, 'AgentFailureQueue', {
+    queueName: agentFailureQueueName,
+    // Agent failure processing can be slow: allow time to page on-call and
+    // correlate traces before the message becomes visible again.
+    visibilityTimeout: Duration.minutes(10),
+    retentionPeriod: Duration.days(7),
+    encryption: QueueEncryption.KMS_MANAGED,
+    deadLetterQueue: {
+      queue: agentFailureDlq,
+      // Low maxReceiveCount: if we cannot process a failure bundle after 3
+      // attempts, send it to the DLQ rather than retrying indefinitely.
+      maxReceiveCount: 3,
+    },
+  })
+  attachRedriveAllowPolicy(agentFailureDlq, agentFailureQueueName)
+
+  const agentStressDlq = new Queue(scope, 'AgentStressDlq', {
+    queueName: `remit-scout-${options.envName}-agent-stress-dlq`,
+    retentionPeriod: Duration.days(14),
+    encryption: QueueEncryption.KMS_MANAGED,
+  })
+
+  const agentStressQueueName = `remit-scout-${options.envName}-agent-stress`
+  const agentStressQueue = new Queue(scope, 'AgentStressQueue', {
+    queueName: agentStressQueueName,
+    visibilityTimeout: Duration.minutes(5),
+    retentionPeriod: Duration.days(4),
+    encryption: QueueEncryption.KMS_MANAGED,
+    deadLetterQueue: {
+      queue: agentStressDlq,
+      maxReceiveCount: 3,
+    },
+  })
+  attachRedriveAllowPolicy(agentStressDlq, agentStressQueueName)
+
+  const toolRequestDlq = new Queue(scope, 'ToolRequestDlq', {
+    queueName: `remit-scout-${options.envName}-tool-request-dlq`,
+    retentionPeriod: Duration.days(14),
+    encryption: QueueEncryption.KMS_MANAGED,
+  })
+
+  const toolRequestQueueName = `remit-scout-${options.envName}-tool-request`
+  const toolRequestQueue = new Queue(scope, 'ToolRequestQueue', {
+    queueName: toolRequestQueueName,
+    visibilityTimeout: Duration.minutes(10),
+    retentionPeriod: Duration.days(4),
+    encryption: QueueEncryption.KMS_MANAGED,
+    deadLetterQueue: {
+      queue: toolRequestDlq,
+      maxReceiveCount: 3,
+    },
+  })
+  attachRedriveAllowPolicy(toolRequestDlq, toolRequestQueueName)
+
+  // Normalization queue: carries raw provider payloads that need to be
+  // normalized into the canonical rate schema before being written to Silver.
+  const normalizationDlq = new Queue(scope, 'NormalizationDlq', {
+    queueName: `remit-scout-${options.envName}-normalization-dlq`,
+    retentionPeriod: Duration.days(14),
+    encryption: QueueEncryption.KMS_MANAGED,
+  })
+
+  const normalizationQueueName = `remit-scout-${options.envName}-normalization`
+  const normalizationQueue = new Queue(scope, 'NormalizationQueue', {
+    queueName: normalizationQueueName,
+    visibilityTimeout: Duration.minutes(5),
+    retentionPeriod: Duration.days(4),
+    encryption: QueueEncryption.KMS_MANAGED,
+    deadLetterQueue: {
+      queue: normalizationDlq,
+      maxReceiveCount: 5,
+    },
+  })
+  attachRedriveAllowPolicy(normalizationDlq, normalizationQueueName)
+
   return {
     quoteRefreshQueue,
     quoteRefreshDlq,
@@ -246,5 +339,13 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     notificationsDlq,
     opsAlertsQueue,
     opsAlertsDlq,
+    agentFailureQueue,
+    agentFailureDlq,
+    agentStressQueue,
+    agentStressDlq,
+    toolRequestQueue,
+    toolRequestDlq,
+    normalizationQueue,
+    normalizationDlq,
   }
 }

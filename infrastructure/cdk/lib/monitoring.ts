@@ -838,6 +838,10 @@ export const createMonitoring = (
     'stoplist-auto-resume',
     'quote-refresh-queue-cleanup',
     'audit-log-cleanup',
+    // smart-alerts-job computes corridor signals and rate snapshots on a scheduled cadence
+    'smart-alerts-job',
+    // refreshes alert/watchlist corridors before evaluation runs
+    'alert-corridor-refresh-job',
   ]
   batchJobNames.forEach((jobName) => {
     const alarm = new Alarm(scope, `BatchJobFailure-${jobName}`, {
@@ -1602,6 +1606,214 @@ export const createMonitoring = (
     period: Duration.minutes(5),
   })
 
+  // ── Agent Infrastructure Alarms ──────────────────────────────────────
+
+  const agentNamespace = 'RemitScout/Agents'
+  const agentPeriod = Duration.minutes(5)
+
+  // Orchestrator health: alarm if no detection cycles run in 10 minutes
+  const orchestratorStallAlarm = new Alarm(scope, 'OrchestratorDetectionStall', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-orchestrator-detection-stall` } : {}),
+    alarmDescription: 'Agent orchestrator has not completed a detection cycle in 10 minutes',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'detection_cycle_count',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: Duration.minutes(10),
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.BREACHING,
+  })
+  orchestratorStallAlarm.addAlarmAction(new SnsAction(options.criticalTopic))
+
+  // Failure bundle creation rate: alarm if > 20 bundles in 15 minutes (burst)
+  const failureBundleBurstAlarm = new Alarm(scope, 'FailureBundleBurst', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-failure-bundle-burst` } : {}),
+    alarmDescription: 'High rate of failure bundle creation indicates widespread provider issues',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'failure_bundle_created',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: Duration.minutes(15),
+    }),
+    threshold: 20,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  failureBundleBurstAlarm.addAlarmAction(new SnsAction(options.warningTopic))
+
+  // Repair pipeline throughput: alarm if proposals queue stalls (0 proposals in 30 min when bundles exist)
+  const repairPipelineStallAlarm = new Alarm(scope, 'RepairPipelineStall', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-repair-pipeline-stall` } : {}),
+    alarmDescription: 'Repair pipeline has pending bundles but no proposals generated in 30 minutes',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'repair_proposal_generated',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: Duration.minutes(30),
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  repairPipelineStallAlarm.addAlarmAction(new SnsAction(options.warningTopic))
+
+  // Tool gateway policy violations: alarm if > 10 blocked requests in 5 min
+  const toolGatewayViolationsAlarm = new Alarm(scope, 'ToolGatewayPolicyViolations', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-tool-gateway-violations` } : {}),
+    alarmDescription: 'Agent tool requests blocked by policy — possible misconfiguration or escalation attempt',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'tool_request_blocked',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: agentPeriod,
+    }),
+    threshold: 10,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  toolGatewayViolationsAlarm.addAlarmAction(new SnsAction(options.criticalTopic))
+
+  // Knowledge plane retrieval quality: alarm if retrieval insufficient > 50% of searches
+  const knowledgeQualityAlarm = new Alarm(scope, 'KnowledgePlaneRetrievalQuality', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-knowledge-retrieval-quality` } : {}),
+    alarmDescription: 'Knowledge plane retrieval quality is insufficient for agent decision-making',
+    metric: new MathExpression({
+      expression: 'IF(total > 0, insufficient / total, 0)',
+      usingMetrics: {
+        insufficient: new Metric({
+          namespace: agentNamespace,
+          metricName: 'knowledge_retrieval_insufficient',
+          dimensionsMap: { environment: options.envName, service: serviceDimension },
+          statistic: 'Sum',
+          period: Duration.minutes(15),
+        }),
+        total: new Metric({
+          namespace: agentNamespace,
+          metricName: 'knowledge_retrieval_total',
+          dimensionsMap: { environment: options.envName, service: serviceDimension },
+          statistic: 'Sum',
+          period: Duration.minutes(15),
+        }),
+      },
+      period: Duration.minutes(15),
+    }),
+    threshold: 0.5,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  knowledgeQualityAlarm.addAlarmAction(new SnsAction(options.warningTopic))
+
+  // Stress responder escalation: alarm when any corridor reaches "incident" level
+  const stressEscalationAlarm = new Alarm(scope, 'CorridorStressIncident', {
+    ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-corridor-stress-incident` } : {}),
+    alarmDescription: 'A corridor has escalated to incident-level stress — sustained high failure rate',
+    metric: new Metric({
+      namespace: agentNamespace,
+      metricName: 'stress_escalation_incident',
+      dimensionsMap: { environment: options.envName, service: serviceDimension },
+      statistic: 'Sum',
+      period: agentPeriod,
+    }),
+    threshold: 1,
+    evaluationPeriods: 1,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+  })
+  stressEscalationAlarm.addAlarmAction(new SnsAction(options.criticalTopic))
+
+  // Agent DLQ depth: alarm if agent-failure DLQ has messages
+  if (options.queues.agentFailureDlq) {
+    const agentDlqAlarm = new Alarm(scope, 'AgentFailureDlqDepth', {
+      ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-agent-failure-dlq-depth` } : {}),
+      alarmDescription: 'Agent failure DLQ has unprocessed messages — agent jobs are failing',
+      metric: options.queues.agentFailureDlq.metricApproximateNumberOfMessagesVisible({
+        period: agentPeriod,
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+    })
+    agentDlqAlarm.addAlarmAction(new SnsAction(options.warningTopic))
+  }
+
+  // Normalization DLQ depth: alarm if normalization DLQ has messages
+  if (options.queues.normalizationDlq) {
+    const normDlqAlarm = new Alarm(scope, 'NormalizationDlqDepth', {
+      ...(useExplicitAlarmNames ? { alarmName: `${options.envName}-normalization-dlq-depth` } : {}),
+      alarmDescription: 'Normalization DLQ has unprocessed messages — factor extraction failing',
+      metric: options.queues.normalizationDlq.metricApproximateNumberOfMessagesVisible({
+        period: agentPeriod,
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+    })
+    normDlqAlarm.addAlarmAction(new SnsAction(options.warningTopic))
+  }
+
+  // Agent infrastructure dashboard widgets
+  const agentHealthWidget = new GraphWidget({
+    title: 'Agent Orchestrator Health',
+    left: [
+      new Metric({
+        namespace: agentNamespace,
+        metricName: 'detection_cycle_count',
+        dimensionsMap: { environment: options.envName, service: serviceDimension },
+        statistic: 'Sum',
+        period: agentPeriod,
+      }),
+      new Metric({
+        namespace: agentNamespace,
+        metricName: 'failure_bundle_created',
+        dimensionsMap: { environment: options.envName, service: serviceDimension },
+        statistic: 'Sum',
+        period: agentPeriod,
+      }),
+      new Metric({
+        namespace: agentNamespace,
+        metricName: 'repair_proposal_generated',
+        dimensionsMap: { environment: options.envName, service: serviceDimension },
+        statistic: 'Sum',
+        period: agentPeriod,
+      }),
+    ],
+    period: agentPeriod,
+  })
+
+  const toolGatewayWidget = new GraphWidget({
+    title: 'Tool Gateway Activity',
+    left: [
+      new Metric({
+        namespace: agentNamespace,
+        metricName: 'tool_request_total',
+        dimensionsMap: { environment: options.envName, service: serviceDimension },
+        statistic: 'Sum',
+        period: agentPeriod,
+      }),
+      new Metric({
+        namespace: agentNamespace,
+        metricName: 'tool_request_blocked',
+        dimensionsMap: { environment: options.envName, service: serviceDimension },
+        statistic: 'Sum',
+        period: agentPeriod,
+      }),
+    ],
+    period: agentPeriod,
+  })
+
   dashboard.addWidgets(
     dataFreshnessWidget,
     quoteSuccessRateWidget,
@@ -1611,6 +1823,8 @@ export const createMonitoring = (
     probeHeartbeatWidget,
     collectorBlocksWidget,
     collectorAvgAttemptWidget,
+    agentHealthWidget,
+    toolGatewayWidget,
   )
 
   return {

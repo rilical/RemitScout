@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from 'aws-cdk-lib'
+import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib'
 import {
   Alarm,
   ComparisonOperator,
@@ -24,12 +24,14 @@ export type SyntheticsOptions = {
 }
 
 const createCanaryCode = (testName: string, url: string): string => {
+  const safeTestName = JSON.stringify(testName)
+  const safeUrl = JSON.stringify(url)
   return `
 const synthetics = require('Synthetics');
 const log = require('SyntheticsLogger');
 
 const apiCanaryBlueprint = async function () {
-  const targetUrl = '${url}';
+  const targetUrl = ${safeUrl};
   const parsedUrl = new URL(targetUrl);
   const requestOptions = {
     hostname: parsedUrl.hostname,
@@ -53,7 +55,7 @@ const apiCanaryBlueprint = async function () {
     restrictedUrlParameters: [],
   };
 
-  await synthetics.executeHttpStep('${testName}', requestOptions, stepConfig);
+  await synthetics.executeHttpStep(${safeTestName}, requestOptions, stepConfig);
 };
 
 exports.handler = async () => {
@@ -63,12 +65,14 @@ exports.handler = async () => {
 }
 
 const createIndicesCanaryCode = (testName: string, url: string): string => {
+  const safeTestName = JSON.stringify(testName)
+  const safeUrl = JSON.stringify(url)
   return `
 const synthetics = require('Synthetics');
 const log = require('SyntheticsLogger');
 
 const apiCanaryBlueprint = async function () {
-  const targetUrl = '${url}';
+  const targetUrl = ${safeUrl};
   const parsedUrl = new URL(targetUrl);
   const requestOptions = {
     hostname: parsedUrl.hostname,
@@ -92,7 +96,7 @@ const apiCanaryBlueprint = async function () {
     restrictedUrlParameters: [],
   };
 
-  await synthetics.executeHttpStep('${testName}', requestOptions, stepConfig, async (response) => {
+  await synthetics.executeHttpStep(${safeTestName}, requestOptions, stepConfig, async (response) => {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw new Error('Non-200 status: ' + response.statusCode);
     }
@@ -148,17 +152,20 @@ export const createSynthetics = (
     description: 'Role for CloudWatch Synthetics canaries',
   })
 
+  const region = Stack.of(scope).region
+  const account = Stack.of(scope).account
+  const canaryLogGroupArn = `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/cwsyn-remit-scout-${options.envName}-*`
+
   syntheticsRole.addToPolicy(
     new PolicyStatement({
-      actions: [
-        's3:PutObject',
-        's3:GetBucketLocation',
-        's3:ListAllMyBuckets',
-        'xray:PutTraceSegments',
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-      ],
+      actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+      resources: [canaryLogGroupArn, `${canaryLogGroupArn}:*`],
+    }),
+  )
+
+  syntheticsRole.addToPolicy(
+    new PolicyStatement({
+      actions: ['xray:PutTraceSegments'],
       resources: ['*'],
     }),
   )

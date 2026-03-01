@@ -3,10 +3,9 @@
   "context": {
     "@aws-cdk/core:newStyleStackSynthesis": true,
     "planeAAdminEmails": [
-      "omar@remit-scout.com",
-      "admin@remit-scout.com"
+      "admin@example.com"
     ],
-    "sharedSecretArn": "arn:aws:secretsmanager:us-east-1:716156543157:secret:remit-scout/dev/communications-aUNMJZ",
+    "sharedSecretArn": "arn:aws:secretsmanager:us-east-1:111111111111:secret:remit-scout/dev/communications-example",
     "devPaused": false,
     "devMinimalInfra": false,
     "planeBB2bMaxQueueDepth": 5000,

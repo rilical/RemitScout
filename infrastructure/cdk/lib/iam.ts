@@ -23,6 +23,25 @@ export type IamOptions = {
   sesIdentityArns?: string[]
   snsTopicArns?: string[]
   pinpointAppId?: string
+  /**
+   * Specific ARN of the RDS cluster that OpsPause is allowed to start/stop.
+   * When provided, the RDS policy resource is scoped to this ARN instead of
+   * the broad wildcard. Recommended for production and staging environments.
+   */
+  opsPauseDbClusterArn?: string
+  /**
+   * Specific ARN of the ElastiCache replication group that OpsPause is allowed
+   * to create/delete/describe. When provided, the ElastiCache policy resource
+   * is scoped to this ARN instead of the broad wildcard.
+   */
+  opsPauseRedisReplicationGroupArn?: string
+  /**
+   * ARN prefix for EventBridge rules that OpsPause is allowed to
+   * enable/disable (e.g. "arn:aws:events:us-east-1:123456789012:rule/remit-scout-staging-*").
+   * When provided, the Events policy resource is scoped to this pattern instead
+   * of the broad wildcard.
+   */
+  opsPauseEventRuleArnPrefix?: string
 }
 
 export const createIam = (scope: Construct, options: IamOptions): IamResources => {
@@ -185,29 +204,62 @@ export const createIam = (scope: Construct, options: IamOptions): IamResources =
       `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
     ],
   }))
+  // ecs:ListTasks and ecs:DescribeTasks require Resource: '*' when using the
+  // plain (non-ARN-filtered) API variants. ecs:StopTask accepts a task ARN but
+  // cannot be predicted at synth time.  We scope to the cluster ARN where
+  // possible; the task-level actions still need '*' at the resource level but
+  // the cluster constraint limits blast radius via a condition key.
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['ecs:ListTasks', 'ecs:DescribeTasks', 'ecs:StopTask'],
-    resources: ['*'],
+    resources: [
+      `arn:aws:ecs:*:*:task/${remitScoutClusterName}/*`,
+      `arn:aws:ecs:*:*:cluster/${remitScoutClusterName}`,
+    ],
   }))
+  // EventBridge rule actions: scope to the remit-scout rule name prefix so
+  // OpsPause cannot touch rules belonging to other services. If an explicit
+  // ARN prefix is supplied (e.g. at synth time with full account/region), use
+  // that; otherwise fall back to the naming-convention-scoped pattern.
+  const eventRuleResources = options.opsPauseEventRuleArnPrefix
+    ? [options.opsPauseEventRuleArnPrefix]
+    : [`arn:aws:events:*:*:rule/remit-scout-${options.envName}-*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['events:DisableRule', 'events:EnableRule', 'events:ListRules'],
-    resources: ['*'],
+    resources: eventRuleResources,
   }))
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['sqs:PurgeQueue', 'sqs:GetQueueAttributes'],
     resources: [`arn:aws:sqs:*:*:remit-scout-${options.envName}-*`],
   }))
+  // RDS cluster actions: scope to the specific cluster ARN when available.
+  // DescribeDBClusters is a list API that AWS allows on '*'; StartDBCluster and
+  // StopDBCluster accept the cluster ARN as the resource.
+  const rdsResources = options.opsPauseDbClusterArn
+    ? [options.opsPauseDbClusterArn]
+    : [`arn:aws:rds:*:*:cluster:remit-scout-${options.envName}*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: ['rds:StartDBCluster', 'rds:StopDBCluster', 'rds:DescribeDBClusters'],
-    resources: ['*'],
+    resources: rdsResources,
   }))
+  // ElastiCache replication group actions: scope to the specific replication
+  // group ARN when available. DescribeCacheSubnetGroups is a list API and
+  // requires '*' per AWS docs; CreateReplicationGroup and DeleteReplicationGroup
+  // accept the replication group ARN.
+  const elastiCacheReplicationGroupResources = options.opsPauseRedisReplicationGroupArn
+    ? [options.opsPauseRedisReplicationGroupArn]
+    : [`arn:aws:elasticache:*:*:replicationgroup:remit-scout-${options.envName}*`]
   opsPauseLambdaRole.addToPolicy(new PolicyStatement({
     actions: [
       'elasticache:CreateReplicationGroup',
       'elasticache:DeleteReplicationGroup',
       'elasticache:DescribeReplicationGroups',
-      'elasticache:DescribeCacheSubnetGroups',
     ],
+    resources: elastiCacheReplicationGroupResources,
+  }))
+  // DescribeCacheSubnetGroups is a list/read API that AWS requires Resource: '*'
+  // for — there is no resource-level permission support for this action.
+  opsPauseLambdaRole.addToPolicy(new PolicyStatement({
+    actions: ['elasticache:DescribeCacheSubnetGroups'],
     resources: ['*'],
   }))
 

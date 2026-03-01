@@ -136,8 +136,8 @@ export const validateContext = (
     for (const key of prodRequired) {
       const value = construct.node.tryGetContext(key)
       if (value === undefined) {
-        warnings.push(
-          `Production environment should have '${key}' set for custom domain support`,
+        errors.push(
+          `Production environment requires '${key}' for custom domain support`,
         )
       }
     }

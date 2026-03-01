@@ -48,6 +48,7 @@ const toList = (value: string | string[] | undefined): string[] => {
 
 type ProviderProbeMode = 'per_provider' | 'fan_in'
 type InterfaceEndpointMode = 'all' | 'minimal' | 'none'
+type RedisAuthMode = 'legacy' | 'required'
 
 const toProviderProbeMode = (value: unknown): ProviderProbeMode | undefined => {
   if (typeof value !== 'string') return undefined
@@ -62,6 +63,15 @@ const toInterfaceEndpointMode = (value: unknown): InterfaceEndpointMode | undefi
   if (typeof value !== 'string') return undefined
   const normalized = value.trim().toLowerCase()
   if (normalized === 'all' || normalized === 'minimal' || normalized === 'none') {
+    return normalized
+  }
+  return undefined
+}
+
+const toRedisAuthMode = (value: unknown): RedisAuthMode | undefined => {
+  if (typeof value !== 'string') return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'legacy' || normalized === 'required') {
     return normalized
   }
   return undefined
@@ -156,6 +166,16 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('enableDbProxy') ??
           process.env.ENABLE_DB_PROXY,
       ) ?? envName !== 'dev'
+    const redisAuthMode =
+      toRedisAuthMode(
+        this.node.tryGetContext('redisAuthMode') ??
+          process.env.REDIS_AUTH_MODE,
+      ) ?? (envName === 'dev' ? 'legacy' : 'required')
+    if ((envName === 'staging' || envName === 'prod') && redisAuthMode !== 'required') {
+      throw new Error(
+        `redisAuthMode must be "required" in ${envName}. Enable Redis AUTH token before deploy.`,
+      )
+    }
     const enableBackup =
       toOptionalBool(
         this.node.tryGetContext('enableBackup') ??
@@ -361,6 +381,7 @@ export class RemitScoutStack extends Stack {
       envName,
       networking,
       importExistingBackendRepository,
+      redisAuthMode,
       sharedSecretArn,
       sesIdentityArns,
       snsTopicArns,
@@ -543,6 +564,69 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('exportJobQueueMode') ??
       process.env.EXPORT_JOB_QUEUE_MODE ??
       (envName === 'prod' || envName === 'staging' || envName === 'dev' ? 'queue' : 'off')
+    const agentFailureQueueMode =
+      this.node.tryGetContext('agentFailureQueueMode') ??
+      process.env.AGENT_FAILURE_QUEUE_MODE ??
+      (envName === 'prod' || envName === 'staging' || envName === 'dev' ? 'queue' : 'off')
+    const agentStressQueueMode =
+      this.node.tryGetContext('agentStressQueueMode') ??
+      process.env.AGENT_STRESS_QUEUE_MODE ??
+      (envName === 'prod' || envName === 'staging' || envName === 'dev' ? 'queue' : 'off')
+    const toolRequestQueueMode =
+      this.node.tryGetContext('toolRequestQueueMode') ??
+      process.env.TOOL_REQUEST_QUEUE_MODE ??
+      (envName === 'prod' || envName === 'staging' || envName === 'dev' ? 'queue' : 'off')
+    const normalizationQueueMode =
+      this.node.tryGetContext('normalizationQueueMode') ??
+      process.env.NORMALIZATION_QUEUE_MODE ??
+      (envName === 'prod' || envName === 'staging' || envName === 'dev' ? 'queue' : 'off')
+    const agentLlmConnectorRaw =
+      this.node.tryGetContext('agentLlmConnector') ??
+      process.env.AGENT_LLM_CONNECTOR ??
+      process.env.AGENT_LLM_PROVIDER
+    const agentLlmConnector =
+      String(agentLlmConnectorRaw || '').trim().toLowerCase() === 'anthropic'
+        ? 'anthropic'
+        : 'bedrock'
+    const agentLlmModel =
+      this.node.tryGetContext('agentLlmModel') ??
+      process.env.AGENT_LLM_MODEL ??
+      process.env.AGENT_BEDROCK_MODEL_ID ??
+      (agentLlmConnector === 'bedrock'
+        ? 'anthropic.claude-sonnet-4-20250514-v1:0'
+        : 'claude-sonnet-4-20250514')
+    const agentLlmMaxTokens =
+      this.node.tryGetContext('agentLlmMaxTokens') ??
+      process.env.AGENT_LLM_MAX_TOKENS ??
+      '2048'
+    const agentLlmTemperature =
+      this.node.tryGetContext('agentLlmTemperature') ??
+      process.env.AGENT_LLM_TEMPERATURE ??
+      '0.2'
+    const agentLlmPromptVersion =
+      this.node.tryGetContext('agentLlmPromptVersion') ??
+      process.env.AGENT_LLM_PROMPT_VERSION ??
+      'v1'
+    const agentTelemetryDims =
+      this.node.tryGetContext('agentTelemetryDims') ??
+      process.env.AGENT_TELEMETRY_DIMS
+    const agentAnthropicApiKeySecretArn =
+      this.node.tryGetContext('agentAnthropicApiKeySecretArn') ??
+      process.env.AGENT_ANTHROPIC_API_KEY_SECRET_ARN
+    const agentBedrockRegion =
+      this.node.tryGetContext('agentBedrockRegion') ??
+      process.env.AGENT_BEDROCK_REGION ??
+      process.env.AWS_REGION
+    const agentBedrockModelId =
+      this.node.tryGetContext('agentBedrockModelId') ??
+      process.env.AGENT_BEDROCK_MODEL_ID ??
+      process.env.AGENT_LLM_MODEL
+    const agentBedrockMaxTokens =
+      this.node.tryGetContext('agentBedrockMaxTokens') ??
+      process.env.AGENT_BEDROCK_MAX_TOKENS
+    const agentBedrockSecretArn =
+      this.node.tryGetContext('agentBedrockSecretArn') ??
+      process.env.AGENT_BEDROCK_SECRET_ARN
     const planeBIngestDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBIngestDesiredCount') ??
         process.env.PLANE_B_INGEST_DESIRED_COUNT,
@@ -680,6 +764,30 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('exportWorkerDesiredCount') ??
         process.env.EXPORT_WORKER_DESIRED_COUNT,
     ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
+    const agentOrchestratorServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('agentOrchestratorServiceEnabled') ??
+        process.env.AGENT_ORCHESTRATOR_SERVICE_ENABLED,
+    ) ?? (envName === 'prod' || envName === 'staging')
+    const stressResponderServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('stressResponderServiceEnabled') ??
+        process.env.STRESS_RESPONDER_SERVICE_ENABLED,
+    ) ?? (envName === 'prod' || envName === 'staging')
+    const normalizationServiceEnabled = toOptionalBool(
+      this.node.tryGetContext('normalizationServiceEnabled') ??
+        process.env.NORMALIZATION_SERVICE_ENABLED,
+    ) ?? (envName === 'prod' || envName === 'staging')
+    const agentOrchestratorDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('agentOrchestratorDesiredCount') ??
+        process.env.AGENT_ORCHESTRATOR_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
+    const stressResponderDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('stressResponderDesiredCount') ??
+        process.env.STRESS_RESPONDER_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
+    const normalizationWorkerDesiredCount = toOptionalNumber(
+      this.node.tryGetContext('normalizationWorkerDesiredCount') ??
+        process.env.NORMALIZATION_WORKER_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
     const rawPlaneBQueueWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,
@@ -715,6 +823,10 @@ export class RemitScoutStack extends Stack {
     const shouldRequireOpsAlertsQueue = opsAlertsMode !== 'off'
     const shouldRequireGoldLiveQueue = goldLiveQueueMode !== 'off'
     const shouldRequireAlertEvaluationQueue = alertEvaluationServiceEnabled
+    const shouldRequireAgentFailureQueue = agentOrchestratorServiceEnabled && agentFailureQueueMode !== 'off'
+    const shouldRequireAgentStressQueue = stressResponderServiceEnabled && agentStressQueueMode !== 'off'
+    const shouldRequireToolRequestQueue = agentOrchestratorServiceEnabled && toolRequestQueueMode !== 'off'
+    const shouldRequireNormalizationQueue = normalizationServiceEnabled && normalizationQueueMode !== 'off'
 
     const queueWorkerRequiredConfig: Array<[string, string | undefined]> = []
     if (shouldRequireQuoteRefreshQueue) {
@@ -758,6 +870,30 @@ export class RemitScoutStack extends Stack {
         queues.alertEvaluationQueue?.queueUrl,
       ])
     }
+    if (shouldRequireAgentFailureQueue) {
+      queueWorkerRequiredConfig.push([
+        'AGENT_FAILURE_QUEUE_URL',
+        queues.agentFailureQueue?.queueUrl,
+      ])
+    }
+    if (shouldRequireAgentStressQueue) {
+      queueWorkerRequiredConfig.push([
+        'AGENT_STRESS_QUEUE_URL',
+        queues.agentStressQueue?.queueUrl,
+      ])
+    }
+    if (shouldRequireToolRequestQueue) {
+      queueWorkerRequiredConfig.push([
+        'TOOL_REQUEST_QUEUE_URL',
+        queues.toolRequestQueue?.queueUrl,
+      ])
+    }
+    if (shouldRequireNormalizationQueue) {
+      queueWorkerRequiredConfig.push([
+        'NORMALIZATION_QUEUE_URL',
+        queues.normalizationQueue?.queueUrl,
+      ])
+    }
     const missingQueueWorkerConfig = queueWorkerRequiredConfig
       .filter(([, value]) => !value || !value.trim())
       .map(([name]) => name)
@@ -766,6 +902,39 @@ export class RemitScoutStack extends Stack {
         `Missing required worker runtime configuration: ${missingQueueWorkerConfig.join(', ')}.`
           + ' Ensure required queues/buckets/secrets are in place before deploy.',
       )
+    }
+    const requiresAgentLlmConfig = agentOrchestratorServiceEnabled || stressResponderServiceEnabled
+    if (requiresAgentLlmConfig) {
+      const missingAgentLlmConfig: string[] = []
+      if (!agentLlmConnector) {
+        missingAgentLlmConfig.push('AGENT_LLM_CONNECTOR')
+      }
+      if (!agentLlmModel) {
+        missingAgentLlmConfig.push('AGENT_LLM_MODEL')
+      }
+      if (!agentLlmPromptVersion) {
+        missingAgentLlmConfig.push('AGENT_LLM_PROMPT_VERSION')
+      }
+      if (agentLlmConnector === 'bedrock') {
+        if (!agentBedrockRegion) {
+          missingAgentLlmConfig.push('AGENT_BEDROCK_REGION')
+        }
+        if (!agentBedrockModelId && !agentLlmModel) {
+          missingAgentLlmConfig.push('AGENT_BEDROCK_MODEL_ID')
+        }
+      }
+      if (
+        agentLlmConnector === 'anthropic'
+        && (envName === 'staging' || envName === 'prod')
+        && !agentAnthropicApiKeySecretArn
+      ) {
+        missingAgentLlmConfig.push('AGENT_ANTHROPIC_API_KEY_SECRET_ARN')
+      }
+      if (missingAgentLlmConfig.length > 0) {
+        throw new Error(
+          `Missing required agent LLM runtime configuration: ${missingAgentLlmConfig.join(', ')}.`,
+        )
+      }
     }
     const planeBQueueWorkerMaxCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerMaxCount') ??
@@ -819,7 +988,7 @@ export class RemitScoutStack extends Stack {
       planeAAdminEmailsRaw.length > 0
         ? planeAAdminEmailsRaw
         : envName === 'dev'
-          ? ['omar@remit-scout.com']
+          ? ['admin@example.com']
           : []
     if ((envName === 'staging' || envName === 'prod') && planeAAdminEmails.length === 0) {
       throw new Error('PLANE_A_ADMIN_EMAILS is required in staging and production.')
@@ -1246,6 +1415,25 @@ export class RemitScoutStack extends Stack {
         planeADbPort,
         planeADbName,
         alertEvaluationQueueUrl: queues.alertEvaluationQueue.queueUrl,
+        agentFailureQueueUrl: queues.agentFailureQueue.queueUrl,
+        agentStressQueueUrl: queues.agentStressQueue.queueUrl,
+        toolRequestQueueUrl: queues.toolRequestQueue.queueUrl,
+        normalizationQueueUrl: queues.normalizationQueue.queueUrl,
+        agentFailureQueueMode,
+        agentStressQueueMode,
+        toolRequestQueueMode,
+        normalizationQueueMode,
+        agentLlmConnector,
+        agentLlmModel,
+        agentLlmMaxTokens,
+        agentLlmTemperature,
+        agentLlmPromptVersion,
+        agentTelemetryDims,
+        agentAnthropicApiKeySecretArn,
+        agentBedrockRegion,
+        agentBedrockModelId,
+        agentBedrockMaxTokens,
+        agentBedrockSecretArn,
         exportJobQueueUrl: queues.exportJobQueue.queueUrl,
         exportJobQueueMode,
         exportsBucketName: storage.exportsBucket.bucketName,
@@ -1275,10 +1463,17 @@ export class RemitScoutStack extends Stack {
         opsAlertsMode,
         alertEvaluationMode: alertEvaluationServiceEnabled ? 'queue' : 'off',
         exportJobMode: exportJobQueueMode,
+        agentFailureMode: agentFailureQueueMode,
+        agentStressMode: agentStressQueueMode,
+        toolRequestMode: toolRequestQueueMode,
+        normalizationMode: normalizationQueueMode,
         b2cRefreshServiceEnabled,
         fxRateRefreshServiceEnabled,
         alertEvaluationServiceEnabled,
         exportServiceEnabled,
+        agentOrchestratorServiceEnabled,
+        stressResponderServiceEnabled,
+        normalizationServiceEnabled,
         b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0,
         fxRateRefreshDesiredCount: fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0,
         planeBIngestDesiredCount,
@@ -1291,6 +1486,9 @@ export class RemitScoutStack extends Stack {
         opsAlertsDesiredCount,
         alertEvaluationDesiredCount: alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0,
         exportWorkerDesiredCount: exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0,
+        agentOrchestratorDesiredCount: agentOrchestratorServiceEnabled ? (agentOrchestratorDesiredCount ?? 0) : 0,
+        stressResponderDesiredCount: stressResponderServiceEnabled ? (stressResponderDesiredCount ?? 0) : 0,
+        normalizationWorkerDesiredCount: normalizationServiceEnabled ? (normalizationWorkerDesiredCount ?? 0) : 0,
         queueWorkerSpotOnly: planeBQueueWorkerSpotOnly,
       },
     })
@@ -1451,6 +1649,19 @@ export class RemitScoutStack extends Stack {
     const fxRateRefreshBaseline = fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0
     const alertEvaluationBaseline = alertEvaluationServiceEnabled ? (alertEvaluationDesiredCount ?? 0) : 0
     const exportWorkerBaseline = exportServiceEnabled ? (exportWorkerDesiredCount ?? 0) : 0
+    const agentOrchestratorBaseline =
+      agentOrchestratorServiceEnabled
+      && (agentFailureQueueMode === 'queue' || toolRequestQueueMode === 'queue')
+        ? (agentOrchestratorDesiredCount ?? 0)
+        : 0
+    const stressResponderBaseline =
+      stressResponderServiceEnabled && agentStressQueueMode === 'queue'
+        ? (stressResponderDesiredCount ?? 0)
+        : 0
+    const normalizationWorkerBaseline =
+      normalizationServiceEnabled && normalizationQueueMode === 'queue'
+        ? (normalizationWorkerDesiredCount ?? 0)
+        : 0
     const planeBIngestBaseline = planeBIngestDesiredCount ?? 0
 
     const managedEcsServiceNames: string[] = []
@@ -1472,6 +1683,9 @@ export class RemitScoutStack extends Stack {
     addManagedService(ecsServices.opsAlertsQueueService, opsAlertsBaseline)
     addManagedService(ecsServices.alertEvaluationService, alertEvaluationBaseline)
     addManagedService(ecsServices.exportWorkerService, exportWorkerBaseline)
+    addManagedService(ecsServices.agentOrchestratorService, agentOrchestratorBaseline)
+    addManagedService(ecsServices.stressResponderService, stressResponderBaseline)
+    addManagedService(ecsServices.normalizationWorkerService, normalizationWorkerBaseline)
 
     const opsStack = new OpsNestedStack(this, 'Ops', {
       envName,

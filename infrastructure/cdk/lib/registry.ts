@@ -16,6 +16,8 @@ export const createRegistry = (
   options: RegistryOptions,
 ): RegistryResources => {
   const isProd = options.envName === 'prod'
+  const isStaging = options.envName === 'staging'
+  const isProtectedEnv = isProd || isStaging
   const repositoryName = `remit-scout-backend-${options.envName}`
   const importExisting = options.importExistingBackendRepository === true
 
@@ -24,8 +26,8 @@ export const createRegistry = (
     : new Repository(scope, 'BackendRepository', {
         repositoryName,
         imageScanOnPush: true,
-        imageTagMutability: isProd ? TagMutability.IMMUTABLE : undefined,
-        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+        imageTagMutability: isProtectedEnv ? TagMutability.IMMUTABLE : undefined,
+        removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
         lifecycleRules: [
           {
             maxImageAge: Duration.days(90),

@@ -151,13 +151,17 @@ export const createNetworking = (
   const dbSecurityGroup = new SecurityGroup(scope, 'DatabaseSecurityGroup', {
     vpc,
     description: 'Database security group (Aurora/RDS).',
-    allowAllOutbound: true,
+    allowAllOutbound: false,
   })
   const redisSecurityGroup = new SecurityGroup(scope, 'RedisSecurityGroup', {
     vpc,
     description: 'Redis security group (ElastiCache).',
-    allowAllOutbound: true,
+    allowAllOutbound: false,
   })
+
+  // Restrict data-store egress to VPC-internal destinations only.
+  dbSecurityGroup.addEgressRule(Peer.ipv4(vpc.vpcCidrBlock), Port.allTraffic(), 'DB egress limited to VPC')
+  redisSecurityGroup.addEgressRule(Peer.ipv4(vpc.vpcCidrBlock), Port.allTraffic(), 'Redis egress limited to VPC')
 
   // Allow Plane A/B/C to reach the database.
   dbSecurityGroup.addIngressRule(planeASecurityGroup, Port.tcp(5432), 'Plane A to DB')

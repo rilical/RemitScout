@@ -40,6 +40,7 @@ export type FoundationNestedStackProps = NestedStackProps & {
   envName: string
   networking: NetworkingResources
   importExistingBackendRepository?: boolean
+  redisAuthMode?: 'legacy' | 'required'
   sharedSecretArn: string
   sesIdentityArns: string[]
   snsTopicArns: string[]
@@ -79,6 +80,9 @@ export type RuntimeNestedStackProps = NestedStackProps & {
     | 'opsAlertsQueueTask'
     | 'alertEvaluationTask'
     | 'exportWorkerTask'
+    | 'agentOrchestratorTask'
+    | 'stressResponderTask'
+    | 'normalizationWorkerTask'
     | 'queues'
     | 'paused'
     | 'minimalMode'
@@ -135,6 +139,9 @@ export type OpsNestedStackProps = NestedStackProps & {
     | 'b2cRefreshTask'
     | 'fxRateRefreshTask'
     | 'b2bSweepSchedulerTask'
+    | 'agentOrchestratorTask'
+    | 'stressResponderTask'
+    | 'normalizationWorkerTask'
     | 'planeASecurityGroup'
     | 'planeBSecurityGroup'
     | 'planeCSecurityGroup'

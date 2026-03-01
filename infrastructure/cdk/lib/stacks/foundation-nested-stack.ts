@@ -59,6 +59,7 @@ export class FoundationNestedStack extends NestedStack {
       envName: props.envName,
       vpc: networking.vpc,
       redisSecurityGroup: networking.redisSecurityGroup,
+      redisAuthMode: props.redisAuthMode,
     })
 
     const storage = createStorage(this, {

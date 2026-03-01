@@ -31,6 +31,9 @@ export type EcsTaskResources = {
   opsAlertsQueueTask: FargateTaskDefinition
   alertEvaluationTask: FargateTaskDefinition
   exportWorkerTask: FargateTaskDefinition
+  agentOrchestratorTask: FargateTaskDefinition
+  stressResponderTask: FargateTaskDefinition
+  normalizationWorkerTask: FargateTaskDefinition
   dbMigrateTask: FargateTaskDefinition
 }
 
@@ -91,6 +94,25 @@ export type EcsTaskOptions = {
   goldLiveQueueMode?: string
   notificationsQueueUrl?: string
   opsAlertsQueueUrl?: string
+  agentFailureQueueUrl?: string
+  agentStressQueueUrl?: string
+  toolRequestQueueUrl?: string
+  normalizationQueueUrl?: string
+  agentFailureQueueMode?: string
+  agentStressQueueMode?: string
+  toolRequestQueueMode?: string
+  normalizationQueueMode?: string
+  agentLlmConnector?: 'anthropic' | 'bedrock'
+  agentLlmModel?: string
+  agentLlmMaxTokens?: string
+  agentLlmTemperature?: string
+  agentLlmPromptVersion?: string
+  agentTelemetryDims?: string
+  agentAnthropicApiKeySecretArn?: string
+  agentBedrockRegion?: string
+  agentBedrockModelId?: string
+  agentBedrockMaxTokens?: string
+  agentBedrockSecretArn?: string
   bronzeBucketName?: string
   bronzePrefix?: string
   b2cQueueInSweep?: string
@@ -271,6 +293,27 @@ export const createEcsTasks = (
   const ingestFanoutMode = options.ingestFanoutMode
   const notificationsMode = options.notificationsMode
   const opsAlertsMode = options.opsAlertsMode
+  const agentFailureQueueMode = options.agentFailureQueueMode
+  const agentStressQueueMode = options.agentStressQueueMode
+  const toolRequestQueueMode = options.toolRequestQueueMode
+  const normalizationQueueMode = options.normalizationQueueMode
+  const agentLlmConnector = options.agentLlmConnector
+    ?? ((isProd || isStaging) ? 'bedrock' : 'anthropic')
+  const agentLlmModel = options.agentLlmModel
+    ?? process.env.AGENT_LLM_MODEL
+    ?? process.env.AGENT_BEDROCK_MODEL_ID
+    ?? (agentLlmConnector === 'bedrock'
+      ? 'anthropic.claude-sonnet-4-20250514-v1:0'
+      : 'claude-sonnet-4-20250514')
+  const agentLlmMaxTokens = options.agentLlmMaxTokens ?? process.env.AGENT_LLM_MAX_TOKENS ?? '2048'
+  const agentLlmTemperature = options.agentLlmTemperature ?? process.env.AGENT_LLM_TEMPERATURE ?? '0.2'
+  const agentLlmPromptVersion = options.agentLlmPromptVersion ?? process.env.AGENT_LLM_PROMPT_VERSION ?? 'v1'
+  const agentTelemetryDims = options.agentTelemetryDims ?? process.env.AGENT_TELEMETRY_DIMS
+  const agentAnthropicApiKeySecretArn = options.agentAnthropicApiKeySecretArn
+  const agentBedrockRegion = options.agentBedrockRegion ?? process.env.AGENT_BEDROCK_REGION
+  const agentBedrockModelId = options.agentBedrockModelId ?? process.env.AGENT_BEDROCK_MODEL_ID
+  const agentBedrockMaxTokens = options.agentBedrockMaxTokens ?? process.env.AGENT_BEDROCK_MAX_TOKENS
+  const agentBedrockSecretArn = options.agentBedrockSecretArn
 
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
@@ -351,6 +394,29 @@ export const createEcsTasks = (
         : EcsSecret.fromSecretsManager(secret)
     }
 
+    if (agentAnthropicApiKeySecretArn) {
+      const secret = Secret.fromSecretCompleteArn(
+        scope,
+        'PlaneBAgentAnthropicApiKeySecret',
+        agentAnthropicApiKeySecretArn,
+      )
+      secrets.AGENT_ANTHROPIC_API_KEY = EcsSecret.fromSecretsManager(secret, 'apiKey')
+    }
+
+    if (agentBedrockSecretArn) {
+      const secret = Secret.fromSecretCompleteArn(
+        scope,
+        'PlaneBAgentBedrockSecret',
+        agentBedrockSecretArn,
+      )
+      if (!agentBedrockRegion) {
+        secrets.AGENT_BEDROCK_REGION = EcsSecret.fromSecretsManager(secret, 'region')
+      }
+      if (!agentBedrockModelId) {
+        secrets.AGENT_BEDROCK_MODEL_ID = EcsSecret.fromSecretsManager(secret, 'modelId')
+      }
+    }
+
     return secrets
   }
 
@@ -429,6 +495,12 @@ export const createEcsTasks = (
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: isProd ? '1' : '0',
+    AGENT_LLM_CONNECTOR: agentLlmConnector,
+    AGENT_LLM_PROVIDER: agentLlmConnector,
+    AGENT_LLM_MODEL: agentLlmModel,
+    AGENT_LLM_MAX_TOKENS: agentLlmMaxTokens,
+    AGENT_LLM_TEMPERATURE: agentLlmTemperature,
+    AGENT_LLM_PROMPT_VERSION: agentLlmPromptVersion,
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
@@ -555,6 +627,48 @@ export const createEcsTasks = (
   }
   if (options.alertEvaluationQueueUrl) {
     sharedEnv.ALERT_EVALUATION_QUEUE_URL = options.alertEvaluationQueueUrl
+  }
+  if (options.agentFailureQueueUrl) {
+    sharedEnv.AGENT_FAILURE_QUEUE_URL = options.agentFailureQueueUrl
+  }
+  if (agentFailureQueueMode) {
+    sharedEnv.AGENT_FAILURE_QUEUE_MODE = agentFailureQueueMode
+  }
+  if (options.agentStressQueueUrl) {
+    sharedEnv.AGENT_STRESS_QUEUE_URL = options.agentStressQueueUrl
+  }
+  if (agentStressQueueMode) {
+    sharedEnv.AGENT_STRESS_QUEUE_MODE = agentStressQueueMode
+  }
+  if (options.toolRequestQueueUrl) {
+    sharedEnv.TOOL_REQUEST_QUEUE_URL = options.toolRequestQueueUrl
+  }
+  if (toolRequestQueueMode) {
+    sharedEnv.TOOL_REQUEST_QUEUE_MODE = toolRequestQueueMode
+  }
+  if (agentAnthropicApiKeySecretArn) {
+    sharedEnv.AGENT_ANTHROPIC_API_KEY_SECRET_ARN = agentAnthropicApiKeySecretArn
+  }
+  if (agentBedrockSecretArn) {
+    sharedEnv.AGENT_BEDROCK_SECRET_ARN = agentBedrockSecretArn
+  }
+  if (agentBedrockRegion && !sharedSecrets.AGENT_BEDROCK_REGION) {
+    sharedEnv.AGENT_BEDROCK_REGION = agentBedrockRegion
+  }
+  if (agentBedrockModelId && !sharedSecrets.AGENT_BEDROCK_MODEL_ID) {
+    sharedEnv.AGENT_BEDROCK_MODEL_ID = agentBedrockModelId
+  }
+  if (agentBedrockMaxTokens) {
+    sharedEnv.AGENT_BEDROCK_MAX_TOKENS = agentBedrockMaxTokens
+  }
+  if (agentTelemetryDims) {
+    sharedEnv.AGENT_TELEMETRY_DIMS = agentTelemetryDims
+  }
+  if (options.normalizationQueueUrl) {
+    sharedEnv.NORMALIZATION_QUEUE_URL = options.normalizationQueueUrl
+  }
+  if (normalizationQueueMode) {
+    sharedEnv.NORMALIZATION_QUEUE_MODE = normalizationQueueMode
   }
   if (options.exportsBucketName) {
     sharedEnv.EXPORTS_S3_BUCKET = options.exportsBucketName
@@ -1538,6 +1652,117 @@ export const createEcsTasks = (
     exportWorkerOtelCollector.addMountPoints(tmpMountPoint)
   }
 
+  const agentOrchestratorTask = new FargateTaskDefinition(scope, 'AgentOrchestratorTask', {
+    cpu: 512,
+    memoryLimitMiB: 1024,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+  addTmpVolume(agentOrchestratorTask)
+
+  const agentOrchestratorLogGroup = new LogGroup(scope, 'AgentOrchestratorLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/agent-orchestrator`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
+  const agentOrchestratorContainer = agentOrchestratorTask.addContainer('AgentOrchestratorContainer', {
+    image,
+    readonlyRootFilesystem: true,
+    command: resolveCommand(
+      'scripts/aws/agent-orchestrator-ecs.js',
+      'scripts/aws/agent-orchestrator-ecs.ts',
+    ),
+    environment: {
+      ...sharedEnv,
+      HEALTH_PORT: '8080',
+    },
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'agent-orchestrator',
+      logGroup: agentOrchestratorLogGroup,
+    }),
+    healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(60),
+  })
+  agentOrchestratorContainer.addMountPoints(tmpMountPoint)
+
+  const stressResponderTask = new FargateTaskDefinition(scope, 'StressResponderTask', {
+    cpu: 256,
+    memoryLimitMiB: 512,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+  addTmpVolume(stressResponderTask)
+
+  const stressResponderLogGroup = new LogGroup(scope, 'StressResponderLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/stress-responder`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
+  const stressResponderContainer = stressResponderTask.addContainer('StressResponderContainer', {
+    image,
+    readonlyRootFilesystem: true,
+    command: resolveCommand(
+      'scripts/aws/stress-responder-ecs.js',
+      'scripts/aws/stress-responder-ecs.ts',
+    ),
+    environment: {
+      ...sharedEnv,
+      HEALTH_PORT: '8080',
+    },
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'stress-responder',
+      logGroup: stressResponderLogGroup,
+    }),
+    healthCheck: workerHealthCheck,
+    stopTimeout: Duration.seconds(30),
+  })
+  stressResponderContainer.addMountPoints(tmpMountPoint)
+
+  const normalizationWorkerTask = new FargateTaskDefinition(scope, 'NormalizationWorkerTask', {
+    cpu: 256,
+    memoryLimitMiB: 512,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+  addTmpVolume(normalizationWorkerTask)
+
+  const normalizationWorkerLogGroup = new LogGroup(scope, 'NormalizationWorkerLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/normalization-worker`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+
+  const normalizationWorkerContainer = normalizationWorkerTask.addContainer(
+    'NormalizationWorkerContainer',
+    {
+      image,
+      readonlyRootFilesystem: true,
+      command: resolveCommand(
+        'scripts/aws/normalization-worker-ecs.js',
+        'scripts/aws/normalization-worker-ecs.ts',
+      ),
+      environment: {
+        ...sharedEnv,
+        HEALTH_PORT: '8080',
+      },
+      ...secretsConfig,
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'normalization-worker',
+        logGroup: normalizationWorkerLogGroup,
+      }),
+      healthCheck: workerHealthCheck,
+      stopTimeout: Duration.seconds(30),
+    },
+  )
+  normalizationWorkerContainer.addMountPoints(tmpMountPoint)
+
   const dbMigrateTask = new FargateTaskDefinition(scope, 'DbMigrateTask', {
     cpu: 256,
     memoryLimitMiB: 512,
@@ -1589,6 +1814,9 @@ export const createEcsTasks = (
     opsAlertsQueueTask,
     alertEvaluationTask,
     exportWorkerTask,
+    agentOrchestratorTask,
+    stressResponderTask,
+    normalizationWorkerTask,
     dbMigrateTask,
   }
 }

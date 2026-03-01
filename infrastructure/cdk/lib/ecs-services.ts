@@ -16,6 +16,9 @@ export type EcsServiceResources = {
   opsAlertsQueueService?: FargateService
   alertEvaluationService?: FargateService
   exportWorkerService?: FargateService
+  agentOrchestratorService?: FargateService
+  stressResponderService?: FargateService
+  normalizationWorkerService?: FargateService
 }
 
 export type EcsServiceOptions = {
@@ -32,6 +35,9 @@ export type EcsServiceOptions = {
   opsAlertsQueueTask: FargateTaskDefinition
   alertEvaluationTask: FargateTaskDefinition
   exportWorkerTask: FargateTaskDefinition
+  agentOrchestratorTask: FargateTaskDefinition
+  stressResponderTask: FargateTaskDefinition
+  normalizationWorkerTask: FargateTaskDefinition
   queues: QueueResources
   ingestFanoutMode?: string
   quoteRefreshMode?: string
@@ -41,10 +47,17 @@ export type EcsServiceOptions = {
   opsAlertsMode?: string
   alertEvaluationMode?: string
   exportJobMode?: string
+  agentFailureMode?: string
+  agentStressMode?: string
+  toolRequestMode?: string
+  normalizationMode?: string
   b2cRefreshServiceEnabled?: boolean
   fxRateRefreshServiceEnabled?: boolean
   alertEvaluationServiceEnabled?: boolean
   exportServiceEnabled?: boolean
+  agentOrchestratorServiceEnabled?: boolean
+  stressResponderServiceEnabled?: boolean
+  normalizationServiceEnabled?: boolean
   planeBIngestDesiredCount?: number
   queueWorkerDesiredCount?: number
   queueWorkerMaxCount?: number
@@ -57,6 +70,9 @@ export type EcsServiceOptions = {
   opsAlertsDesiredCount?: number
   alertEvaluationDesiredCount?: number
   exportWorkerDesiredCount?: number
+  agentOrchestratorDesiredCount?: number
+  stressResponderDesiredCount?: number
+  normalizationWorkerDesiredCount?: number
   queueWorkerSpotOnly?: boolean
   paused?: boolean
   minimalMode?: boolean
@@ -73,6 +89,16 @@ export const createEcsServices = (
   const fxRateRefreshServiceEnabled = options.fxRateRefreshServiceEnabled ?? true
   const alertEvaluationServiceEnabled = options.alertEvaluationServiceEnabled ?? false
   const exportServiceEnabled = options.exportServiceEnabled ?? false
+  const agentOrchestratorServiceEnabled = options.agentOrchestratorServiceEnabled ?? false
+  const stressResponderServiceEnabled = options.stressResponderServiceEnabled ?? false
+  const normalizationServiceEnabled = options.normalizationServiceEnabled ?? false
+  const agentFailureMode = options.agentFailureMode ?? 'off'
+  const agentStressMode = options.agentStressMode ?? 'off'
+  const toolRequestMode = options.toolRequestMode ?? 'off'
+  const normalizationMode = options.normalizationMode ?? 'off'
+  const agentOrchestratorQueueActive = agentFailureMode === 'queue' || toolRequestMode === 'queue'
+  const stressResponderQueueActive = agentStressMode === 'queue'
+  const normalizationQueueActive = normalizationMode === 'queue'
   const minimalMode = options.minimalMode === true
 
   const baseIngestDesired = isProd ? 1 : 0
@@ -113,6 +139,15 @@ export const createEcsServices = (
   const exportWorkerDesired = isPaused
     ? 0
     : (options.exportWorkerDesiredCount ?? (isProd ? 1 : 0))
+  const agentOrchestratorDesired = isPaused
+    ? 0
+    : (options.agentOrchestratorDesiredCount ?? (isProd ? 1 : 0))
+  const stressResponderDesired = isPaused
+    ? 0
+    : (options.stressResponderDesiredCount ?? (isProd ? 1 : 0))
+  const normalizationWorkerDesired = isPaused
+    ? 0
+    : (options.normalizationWorkerDesiredCount ?? (isProd ? 1 : 0))
   const minimalIngestFanoutTier2Desired = isPaused
     ? 0
     : (options.ingestFanoutTier2DesiredCount ?? 1)
@@ -375,6 +410,57 @@ export const createEcsServices = (
   })
   tagManaged(exportWorkerService)
 
+  const agentOrchestratorService = agentOrchestratorServiceEnabled
+    ? new FargateService(scope, 'AgentOrchestratorService', {
+        cluster: options.cluster,
+        taskDefinition: options.agentOrchestratorTask,
+        desiredCount: !isPaused && agentOrchestratorQueueActive ? agentOrchestratorDesired : 0,
+        assignPublicIp: usePublicSubnets,
+        vpcSubnets: { subnetType },
+        securityGroups: [options.planeBSecurityGroup],
+        capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+        enableExecuteCommand,
+        circuitBreaker,
+        minHealthyPercent,
+        maxHealthyPercent,
+      })
+    : undefined
+  if (agentOrchestratorService) tagManaged(agentOrchestratorService)
+
+  const stressResponderService = stressResponderServiceEnabled
+    ? new FargateService(scope, 'StressResponderService', {
+        cluster: options.cluster,
+        taskDefinition: options.stressResponderTask,
+        desiredCount: !isPaused && stressResponderQueueActive ? stressResponderDesired : 0,
+        assignPublicIp: usePublicSubnets,
+        vpcSubnets: { subnetType },
+        securityGroups: [options.planeBSecurityGroup],
+        capacityProviderStrategies: spotCapacityProviderStrategies,
+        enableExecuteCommand,
+        circuitBreaker,
+        minHealthyPercent,
+        maxHealthyPercent,
+      })
+    : undefined
+  if (stressResponderService) tagManaged(stressResponderService)
+
+  const normalizationWorkerService = normalizationServiceEnabled
+    ? new FargateService(scope, 'NormalizationWorkerService', {
+        cluster: options.cluster,
+        taskDefinition: options.normalizationWorkerTask,
+        desiredCount: !isPaused && normalizationQueueActive ? normalizationWorkerDesired : 0,
+        assignPublicIp: usePublicSubnets,
+        vpcSubnets: { subnetType },
+        securityGroups: [options.planeBSecurityGroup],
+        capacityProviderStrategies: spotCapacityProviderStrategies,
+        enableExecuteCommand,
+        circuitBreaker,
+        minHealthyPercent,
+        maxHealthyPercent,
+      })
+    : undefined
+  if (normalizationWorkerService) tagManaged(normalizationWorkerService)
+
   const scaleMax = options.queueWorkerMaxCount ?? (isDev ? 5 : 10)
   const targetValue = isProd ? 25 : 20
   const resolveScaleBounds = (desired: number) => {
@@ -570,6 +656,54 @@ export const createEcsServices = (
     })
   }
 
+  if (!isPaused && agentOrchestratorServiceEnabled && agentOrchestratorQueueActive && agentOrchestratorService) {
+    const bounds = resolveScaleBounds(agentOrchestratorDesired)
+    const scaling = agentOrchestratorService.autoScaleTaskCount({
+      minCapacity: bounds.min,
+      maxCapacity: Math.max(agentOrchestratorDesired, 3),
+    })
+    scaling.scaleToTrackCustomMetric('AgentFailureQueueDepth', {
+      metric: options.queues.agentFailureQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue: 10,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+  }
+
+  if (!isPaused && stressResponderServiceEnabled && stressResponderQueueActive && stressResponderService) {
+    const bounds = resolveScaleBounds(stressResponderDesired)
+    const scaling = stressResponderService.autoScaleTaskCount({
+      minCapacity: bounds.min,
+      maxCapacity: Math.max(stressResponderDesired, 3),
+    })
+    scaling.scaleToTrackCustomMetric('AgentStressQueueDepth', {
+      metric: options.queues.agentStressQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue: 10,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+  }
+
+  if (!isPaused && normalizationServiceEnabled && normalizationQueueActive && normalizationWorkerService) {
+    const bounds = resolveScaleBounds(normalizationWorkerDesired)
+    const scaling = normalizationWorkerService.autoScaleTaskCount({
+      minCapacity: bounds.min,
+      maxCapacity: Math.max(normalizationWorkerDesired, scaleMax),
+    })
+    scaling.scaleToTrackCustomMetric('NormalizationQueueDepth', {
+      metric: options.queues.normalizationQueue.metricApproximateNumberOfMessagesVisible(),
+      targetValue,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+    scaling.scaleToTrackCustomMetric('NormalizationQueueAge', {
+      metric: options.queues.normalizationQueue.metricApproximateAgeOfOldestMessage(),
+      targetValue: defaultQueueAgeTargetSeconds,
+      scaleInCooldown,
+      scaleOutCooldown,
+    })
+  }
+
   return {
     planeBIngestService,
     b2cRefreshService,
@@ -581,5 +715,8 @@ export const createEcsServices = (
     opsAlertsQueueService,
     alertEvaluationService,
     exportWorkerService,
+    agentOrchestratorService,
+    stressResponderService,
+    normalizationWorkerService,
   }
 }

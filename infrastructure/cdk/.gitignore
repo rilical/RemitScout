@@ -1,5 +1,7 @@
 # CDK Build Output
 cdk.out/
+cdk.out*/
+cdk.out.*/
 *.js
 *.d.ts
 !*.config.js
@@ -39,4 +41,3 @@ pnpm-debug.log*
 
 # Keep cdk.context.json (needed for reproducible builds)
 !cdk.context.json
-
