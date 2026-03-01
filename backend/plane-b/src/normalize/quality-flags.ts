@@ -72,6 +72,13 @@ export const qualityFlags = {
 
   /** Derived fee was negative (total_debit < send_amount) */
   negative_fee: 'negative_fee',
+
+  /**
+   * Executability Issues
+   */
+
+  /** Quote uses a promotional rate that diverges >2% from derived rate (non-executable teaser) */
+  promotional_teaser: 'promotional_teaser',
 } as const
 
 /**
