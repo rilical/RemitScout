@@ -126,7 +126,7 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
     }
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      throw new ValidationError('Invalid request data', { details: error.errors, cause: error })
+      throw new ValidationError('Invalid request data', { details: error.issues, cause: error })
     }
     throw error
   } finally {

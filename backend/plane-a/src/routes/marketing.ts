@@ -21,7 +21,7 @@ const eventSchema = z.object({
   corridor_id: z.string().optional(),
   source: z.string().optional(),
   page_path: z.string().optional(),
-  utm: z.record(z.string()).optional(),
+  utm: z.record(z.string(), z.string()).optional(),
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
@@ -33,7 +33,7 @@ const eventSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string().optional(),
   external_id: z.string().optional(),
-  custom_data: z.record(z.unknown()).optional(),
+  custom_data: z.record(z.string(), z.unknown()).optional(),
 })
 
 const hashValue = (value?: string | null) => {
