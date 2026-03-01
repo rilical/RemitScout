@@ -153,7 +153,7 @@
     "@fastify/aws-lambda": "^6.4.0",
     "@fastify/compress": "8.3.1",
     "@fastify/cors": "^10.0.0",
-    "@fastify/jwt": "^9.0.2",
+    "@fastify/jwt": "^10.0.0",
     "@fastify/multipart": "^9.0.0",
     "@fastify/rate-limit": "^10.0.0",
     "@fastify/swagger": "^9.2.0",
