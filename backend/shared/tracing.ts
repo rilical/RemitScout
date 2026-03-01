@@ -155,9 +155,8 @@ export const initTracing = (serviceName: string): void => {
       'deployment.environment': environment,
     })
 
-    provider = new NodeTracerProvider({ resource })
-
     const Processor = isProdNodeEnv || isProdEnvName ? BatchSpanProcessor : SimpleSpanProcessor
+    const spanProcessors: InstanceType<typeof Processor>[] = []
 
     if (exporterModes.includes('jaeger')) {
       logger.warn('tracing_exporter_unsupported', {
@@ -177,8 +176,13 @@ export const initTracing = (serviceName: string): void => {
         url: otlpEndpoint,
         ...(Object.keys(otlpHeaders).length > 0 ? { headers: otlpHeaders } : {}),
       })
-      provider.addSpanProcessor(new Processor(exporter))
+      spanProcessors.push(new Processor(exporter))
     }
+
+    provider = new NodeTracerProvider({
+      resource: resource as any,
+      spanProcessors: spanProcessors as any[],
+    })
 
     if (!useOtlp) {
       logger.warn('tracing_no_exporters', { service_name: serviceName, exporters: exporterModes })
