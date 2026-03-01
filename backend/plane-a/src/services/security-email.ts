@@ -10,14 +10,12 @@ const logger = createLogger('plane-a.security-email')
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  const enabled = process.env.SECURITY_EMAIL_ENABLED !== '0' && process.env.SECURITY_EMAIL_ENABLED !== 'false'
-  const fromAddress = process.env.SECURITY_EMAIL_FROM || process.env.SES_FROM_ADDRESS
-  if (!enabled || !fromAddress) {
+  if (!config.securityEmail.enabled || !config.securityEmail.from) {
     return null
   }
 
   if (!sesClient) {
-    const region = process.env.SES_REGION || process.env.AWS_REGION || 'us-east-1'
+    const region = config.communications.email.sesRegion || config.aws.sesRegion
     sesClient = new SESClient({ region })
   }
 
@@ -40,8 +38,8 @@ export const sendNewSignInEmail = async (params: {
   }
 }): Promise<boolean> => {
   const client = getSesClient()
-  const fromAddress = process.env.SECURITY_EMAIL_FROM || process.env.SES_FROM_ADDRESS || ''
-  const fromName = process.env.SECURITY_EMAIL_FROM_NAME || 'Remit-Scout Security'
+  const fromAddress = config.securityEmail.from
+  const fromName = config.securityEmail.fromName
 
   if (!client || !fromAddress) {
     logger.info('security_email_disabled_or_missing_from', { user_id: params.userId })

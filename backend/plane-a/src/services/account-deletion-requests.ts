@@ -11,26 +11,15 @@ import { buildEmailHtml } from './email-layout'
 
 const logger = createLogger('plane-a.account-deletion-requests')
 
-const ACCOUNT_DELETION_GRACE_DAYS = Math.max(
-  1,
-  Number.parseInt(process.env.ACCOUNT_DELETION_GRACE_DAYS || '7', 10) || 7,
-)
-const ACCOUNT_DELETION_TOKEN_TTL_HOURS = Math.max(
-  1,
-  Number.parseInt(process.env.ACCOUNT_DELETION_TOKEN_TTL_HOURS || '168', 10) || 168,
-)
-const ACCOUNT_DELETION_EMAIL_ENABLED = (() => {
-  const raw = process.env.ACCOUNT_DELETION_EMAIL_ENABLED
-  if (raw == null) return true
-  return ['1', 'true', 'yes', 'on'].includes(raw.toLowerCase())
-})()
+const ACCOUNT_DELETION_GRACE_DAYS = config.accountDeletion.graceDays
+const ACCOUNT_DELETION_TOKEN_TTL_HOURS = config.accountDeletion.tokenTtlHours
+const ACCOUNT_DELETION_EMAIL_ENABLED = config.accountDeletion.emailEnabled
 
-const ACCOUNT_DELETION_EMAIL_FROM = (process.env.ACCOUNT_DELETION_EMAIL_FROM || '').trim()
-const ACCOUNT_DELETION_EMAIL_FROM_NAME = (process.env.ACCOUNT_DELETION_EMAIL_FROM_NAME || 'Remit-Scout Security').trim()
+const ACCOUNT_DELETION_EMAIL_FROM = config.accountDeletion.emailFrom
+const ACCOUNT_DELETION_EMAIL_FROM_NAME = config.accountDeletion.emailFromName
 
 const resolveAccountDeletionBaseUrl = () => {
-  const fromEnv = (process.env.ACCOUNT_DELETION_BASE_URL || '').trim()
-  if (fromEnv) return fromEnv
+  if (config.accountDeletion.baseUrl) return config.accountDeletion.baseUrl
   if (config.alerts.unsubscribe.baseUrl) return config.alerts.unsubscribe.baseUrl
   if (config.billing.stripe.frontendBaseUrl) return config.billing.stripe.frontendBaseUrl
   if (config.newsletter.baseUrl) return config.newsletter.baseUrl
@@ -50,7 +39,7 @@ const resolveEmailFrom = () => {
       : ACCOUNT_DELETION_EMAIL_FROM
   }
   const alertsFrom = config.alerts.notifications.email.from
-    || (process.env.SES_FROM_ADDRESS || '').trim()
+    || config.communications.email.sesFromAddress
     || ''
   if (!alertsFrom) return ''
   return ACCOUNT_DELETION_EMAIL_FROM_NAME

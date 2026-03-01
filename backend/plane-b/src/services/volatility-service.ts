@@ -28,7 +28,8 @@ export class VolatilityService {
     corridorIds: string[],
   ): Promise<Map<string, CacheTtlResult>> {
     const volatilityMap = await this.repo.getVolatilityScores(corridorIds)
-    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    const { config } = await import('../../../shared/config')
+    const allowOnDemand = config.volatility.cacheOnDemand
     const missingCorridorIds = allowOnDemand
       ? corridorIds.filter(id => !volatilityMap.has(id))
       : []

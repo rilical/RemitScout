@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 
+import { config } from '../../../../shared/config'
 import { query } from '../../../../shared/db'
 import { computeVolatilityScore } from '../../../../shared/volatility-service'
 import type {
@@ -96,7 +97,7 @@ export class CorridorVolatilityRepository implements ICorridorVolatilityReposito
   async calculateVolatilityScore(
     corridorId: string,
   ): Promise<CorridorVolatilityRecord | null> {
-    const allowOnDemand = process.env.VOLATILITY_CACHE_ON_DEMAND === '1'
+    const allowOnDemand = config.volatility.cacheOnDemand
     if (!allowOnDemand) {
       return null
     }
