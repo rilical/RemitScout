@@ -48,7 +48,7 @@ export const createNetworking = (
   const natGateways =
     typeof options.natGateways === 'number' && Number.isFinite(options.natGateways)
       ? options.natGateways
-      : (isProd ? 2 : 1)
+      : 1
 
   const vpc = new Vpc(scope, 'RemitScoutVpc', {
     maxAzs: 2,
