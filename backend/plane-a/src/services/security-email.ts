@@ -10,12 +10,13 @@ const logger = createLogger('plane-a.security-email')
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  if (!config.email.securityEmail.enabled || !config.email.securityEmail.from) {
+  if (!config.securityEmail.enabled || !config.securityEmail.from) {
     return null
   }
 
   if (!sesClient) {
-    sesClient = new SESClient({ region: config.aws.sesRegion })
+    const region = config.communications.email.sesRegion || config.aws.sesRegion
+    sesClient = new SESClient({ region })
   }
 
   return sesClient
@@ -37,8 +38,8 @@ export const sendNewSignInEmail = async (params: {
   }
 }): Promise<boolean> => {
   const client = getSesClient()
-  const fromAddress = config.email.securityEmail.from
-  const fromName = config.email.securityEmail.fromName
+  const fromAddress = config.securityEmail.from
+  const fromName = config.securityEmail.fromName
 
   if (!client || !fromAddress) {
     logger.info('security_email_disabled_or_missing_from', { user_id: params.userId })

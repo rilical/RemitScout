@@ -11,16 +11,15 @@ import { buildEmailHtml } from './email-layout'
 
 const logger = createLogger('plane-a.account-deletion-requests')
 
-const ACCOUNT_DELETION_GRACE_DAYS = config.email.accountDeletion.graceDays
-const ACCOUNT_DELETION_TOKEN_TTL_HOURS = config.email.accountDeletion.tokenTtlHours
-const ACCOUNT_DELETION_EMAIL_ENABLED = config.email.accountDeletion.emailEnabled
+const ACCOUNT_DELETION_GRACE_DAYS = config.accountDeletion.graceDays
+const ACCOUNT_DELETION_TOKEN_TTL_HOURS = config.accountDeletion.tokenTtlHours
+const ACCOUNT_DELETION_EMAIL_ENABLED = config.accountDeletion.emailEnabled
 
-const ACCOUNT_DELETION_EMAIL_FROM = config.email.accountDeletion.emailFrom
-const ACCOUNT_DELETION_EMAIL_FROM_NAME = config.email.accountDeletion.emailFromName
+const ACCOUNT_DELETION_EMAIL_FROM = config.accountDeletion.emailFrom
+const ACCOUNT_DELETION_EMAIL_FROM_NAME = config.accountDeletion.emailFromName
 
 const resolveAccountDeletionBaseUrl = () => {
-  const fromConfig = config.email.accountDeletion.baseUrl
-  if (fromConfig) return fromConfig
+  if (config.accountDeletion.baseUrl) return config.accountDeletion.baseUrl
   if (config.alerts.unsubscribe.baseUrl) return config.alerts.unsubscribe.baseUrl
   if (config.billing.stripe.frontendBaseUrl) return config.billing.stripe.frontendBaseUrl
   if (config.newsletter.baseUrl) return config.newsletter.baseUrl

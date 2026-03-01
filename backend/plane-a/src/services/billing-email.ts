@@ -11,12 +11,13 @@ const logger = createLogger('plane-a.billing-email')
 let sesClient: SESClient | null = null
 
 const getSesClient = (): SESClient | null => {
-  if (!config.email.billingEmail.enabled || !config.email.billingEmail.from) {
+  if (!config.billingEmail.enabled || !config.billingEmail.from) {
     return null
   }
 
   if (!sesClient) {
-    sesClient = new SESClient({ region: config.aws.sesRegion })
+    const region = config.communications.email.sesRegion || config.aws.sesRegion
+    sesClient = new SESClient({ region })
   }
 
   return sesClient
@@ -47,8 +48,8 @@ const getUserEmail = async (pool: Pool, userId: string): Promise<string | null> 
 }
 
 const getFrom = () => {
-  const fromAddress = config.email.billingEmail.from
-  const fromName = config.email.billingEmail.fromName
+  const fromAddress = config.billingEmail.from
+  const fromName = config.billingEmail.fromName
   return { fromAddress, fromName }
 }
 

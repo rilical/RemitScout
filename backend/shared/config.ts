@@ -1572,6 +1572,50 @@ const rawConfig = {
     rateLimitWindowMs: toNumber(process.env.TOOL_GATEWAY_RATE_LIMIT_WINDOW_MS, 60000),
     domainAllowlist: toList(process.env.TOOL_GATEWAY_DOMAIN_ALLOWLIST ?? ''),
   },
+  volatility: {
+    cacheOnDemand: toBoolean(process.env.VOLATILITY_CACHE_ON_DEMAND),
+  },
+  anomaly: {
+    zScoreThreshold: toNumber(process.env.ANOMALY_Z_SCORE_THRESHOLD, 2.0),
+    minSampleCount: toNumber(process.env.ANOMALY_MIN_SAMPLES, 10),
+    baselineWindowHours: toNumber(process.env.ANOMALY_BASELINE_HOURS, 24),
+  },
+  sentry: {
+    dsn: process.env.SENTRY_DSN || '',
+    release: process.env.SENTRY_RELEASE || process.env.npm_package_version || 'unknown',
+    serverName: process.env.SENTRY_SERVER_NAME || '',
+    allowMissingInProtectedEnv: toBoolean(process.env.SENTRY_ALLOW_MISSING_IN_PROTECTED_ENV),
+  },
+  billingEmail: {
+    enabled: (() => {
+      const raw = process.env.BILLING_EMAIL_ENABLED
+      if (raw === undefined) return true
+      return raw !== '0' && raw.toLowerCase() !== 'false'
+    })(),
+    from: process.env.BILLING_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+    fromName: process.env.BILLING_EMAIL_FROM_NAME || 'Remit-Scout Billing',
+  },
+  securityEmail: {
+    enabled: (() => {
+      const raw = process.env.SECURITY_EMAIL_ENABLED
+      if (raw === undefined) return true
+      return raw !== '0' && raw.toLowerCase() !== 'false'
+    })(),
+    from: process.env.SECURITY_EMAIL_FROM || process.env.SES_FROM_ADDRESS || '',
+    fromName: process.env.SECURITY_EMAIL_FROM_NAME || 'Remit-Scout Security',
+  },
+  accountDeletion: {
+    graceDays: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_GRACE_DAYS, 7)),
+    tokenTtlHours: Math.max(1, toNumber(process.env.ACCOUNT_DELETION_TOKEN_TTL_HOURS, 168)),
+    emailEnabled: (() => {
+      const raw = process.env.ACCOUNT_DELETION_EMAIL_ENABLED
+      if (raw == null) return true
+      return ['1', 'true', 'yes', 'on'].includes(raw.toLowerCase())
+    })(),
+    emailFrom: (process.env.ACCOUNT_DELETION_EMAIL_FROM || '').trim(),
+    emailFromName: (process.env.ACCOUNT_DELETION_EMAIL_FROM_NAME || 'Remit-Scout Security').trim(),
+    baseUrl: (process.env.ACCOUNT_DELETION_BASE_URL || '').trim(),
+  },
   dbPool: {
     disablePoolSignalCleanup: toBoolean(process.env.DB_DISABLE_POOL_SIGNAL_CLEANUP),
     maxOverride: toNumber(process.env.DB_POOL_MAX, NaN),

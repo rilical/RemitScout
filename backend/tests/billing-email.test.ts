@@ -12,6 +12,24 @@ vi.mock('../shared/db', () => ({
   query: vi.fn(),
 }))
 
+const mockConfig = {
+  billingEmail: {
+    enabled: true,
+    from: 'billing@remitscout.test',
+    fromName: 'Billing',
+  },
+  communications: { email: { sesRegion: 'us-east-1', sesFromAddress: '' } },
+  aws: { sesRegion: 'us-east-1' },
+  billing: { stripe: { frontendBaseUrl: 'https://remitscout.test' } },
+  alerts: { unsubscribe: { baseUrl: '' } },
+  newsletter: { baseUrl: '' },
+  planeA: { adminEmails: [] },
+}
+
+vi.mock('../shared/config', () => ({
+  config: mockConfig,
+}))
+
 const loadModule = async () => {
   return await import('../plane-a/src/services/billing-email')
 }
@@ -19,9 +37,9 @@ const loadModule = async () => {
 describe('billing-email', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.BILLING_EMAIL_ENABLED = '1'
-    process.env.BILLING_EMAIL_FROM = 'billing@remitscout.test'
-    process.env.BILLING_EMAIL_FROM_NAME = 'Billing'
+    mockConfig.billingEmail.enabled = true
+    mockConfig.billingEmail.from = 'billing@remitscout.test'
+    mockConfig.billingEmail.fromName = 'Billing'
   })
 
   it('returns false when user has no email', async () => {
@@ -62,7 +80,7 @@ describe('billing-email', () => {
   })
 
   it('returns false when billing email is disabled', async () => {
-    process.env.BILLING_EMAIL_ENABLED = '0'
+    mockConfig.billingEmail.enabled = false
 
     const { query } = await import('../shared/db')
     vi.mocked(query).mockImplementation(async (sql: string) => {
