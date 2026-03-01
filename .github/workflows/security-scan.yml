@@ -172,7 +172,7 @@ jobs:
       - name: Comment PR with audit results
         if: github.event_name == 'pull_request' && always()
         continue-on-error: true
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -196,6 +196,7 @@ jobs:
                 });
               }
             }
+
 
   zap-baseline-unauth:
     name: ZAP Baseline Unauthenticated (Staging)
