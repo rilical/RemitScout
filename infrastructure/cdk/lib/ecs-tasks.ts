@@ -17,7 +17,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
-import { getNewRelicTraceEndpoint, resolveTracingEnv } from './newrelic-observability'
+import { resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
   planeBIngestTask: FargateTaskDefinition
@@ -162,8 +162,6 @@ export const createEcsTasks = (
   const tracingExporter = tracingEnv.TRACING_EXPORTER ?? 'xray'
   const newRelicLogsEnabled =
     process.env.NEW_RELIC_LOGS_ENABLED ?? (isStaging || isProd ? '1' : '0')
-  const newRelicIngestKey = tracingEnv.NEW_RELIC_INGEST_KEY || ''
-  const newRelicTraceEndpoint = getNewRelicTraceEndpoint(options.envName)
   const enableTelemetry = process.env.ENABLE_TELEMETRY === '1'
   const image = ContainerImage.fromEcrRepository(options.backendRepository, options.imageTag)
   const useTsxRuntime = options.envName === 'dev' && process.env.ECS_USE_TSX_RUNTIME === '1'
@@ -181,19 +179,11 @@ export const createEcsTasks = (
     '        endpoint: 0.0.0.0:4318',
     'exporters:',
     '  awsxray:',
-    ...(newRelicIngestKey && newRelicTraceEndpoint
-      ? [
-          '  otlphttp/newrelic:',
-          `    endpoint: ${newRelicTraceEndpoint}`,
-          '    headers:',
-          `      api-key: ${newRelicIngestKey}`,
-        ]
-      : []),
     'service:',
     '  pipelines:',
     '    traces:',
     '      receivers: [otlp]',
-    `      exporters: [awsxray${newRelicIngestKey && newRelicTraceEndpoint ? ', otlphttp/newrelic' : ''}]`,
+    '      exporters: [awsxray]',
   ].join('\n')
 
   const workerHealthCheck: HealthCheck = {
