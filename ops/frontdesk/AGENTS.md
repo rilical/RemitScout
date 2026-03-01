@@ -28,4 +28,7 @@ Evidence skills to run:
 
 Do-not-break rules:
 - Slack should never execute directly; it only writes inbox events.
-
+- Human escalation handoffs must follow Run `decision_record.human_in_loop` (`contract_version=v1`, `escalation_channel=slack_frontdesk`, `route_skill_id=manual.human_triage`, explicit `escalation_sla_minutes`, and versioned `escalation_owner_tag`).
+- Repeated triage-loop escalations must preserve `triage.timebox_exceeded` reason context for deterministic operator routing.
+- Closure-condition escalations must preserve `triage.close_case_rationale_missing` reason context so operators can audit bounded evidence and rollback pointers before closing.
+- Timeline reconstruction escalations must preserve `triage.timeline_reconstruction_failed` reason context so operators can audit bounded event refs and rollback pointers before closure.

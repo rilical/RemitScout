@@ -25,7 +25,7 @@ DEV_NIGHTLY_PAUSE_TIMEZONE ?= $(shell jq -r '.nightlyAutoPause.timezone // "Amer
 DEV_NIGHTLY_PAUSE_CRON ?= $(shell jq -r '.nightlyAutoPause.cron // "cron(0 0 * * ? *)"' "$(DEV_RUNTIME_CONFIG)" 2>/dev/null || echo "cron(0 0 * * ? *)")
 
 .PHONY: pause-dev resume-dev resume-dev-minimal status-dev status-staging status-env status-% ops-pause-dev ops-resume-dev ops-pause-staging ops-resume-staging ops-pause-env ops-resume-env ops-pause-% ops-resume-% dev-sanitize db-migrate-dev db-migrate-staging db-migrate-prod db-migrate-% rights-recovery-global rights-recovery-global-apply rights-validate-activation rights-recovery-macro rights-recovery-macro-apply
-.PHONY: status-ops-permissions db-migrate-staging-dry-run db-migrate-staging-local
+.PHONY: status-ops-permissions hotfix-ops-pause-status hotfix-ops-pause-status-% hotfix-ops-pause-cleanup hotfix-ops-pause-cleanup-% db-migrate-staging-dry-run db-migrate-staging-local
 
 pause-dev:
 	@echo "Pausing dev (CDK deploy with devPaused=true)"
@@ -305,6 +305,18 @@ status-ops-permissions:
 	TARGET_CLUSTER=$${TARGET_CLUSTER:-remit-scout-$$OPS_ENV}; \
 	TARGET_LOG_PREFIX=$${TARGET_LOG_PREFIX:-/remit-scout-$$OPS_ENV}; \
 	AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) OPS_ENV=$$OPS_ENV TARGET_CLUSTER=$$TARGET_CLUSTER TARGET_LOG_PREFIX=$$TARGET_LOG_PREFIX bash ops/check-aws-ops-permissions.sh
+
+hotfix-ops-pause-status:
+	@AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) OPS_ENV=$(OPS_AWS_ENV) bash ops/reconcile-ops-pause-hotfix.sh
+
+hotfix-ops-pause-status-%:
+	@$(MAKE) OPS_AWS_ENV=$* hotfix-ops-pause-status
+
+hotfix-ops-pause-cleanup:
+	@AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) OPS_ENV=$(OPS_AWS_ENV) APPLY=1 bash ops/reconcile-ops-pause-hotfix.sh
+
+hotfix-ops-pause-cleanup-%:
+	@$(MAKE) OPS_AWS_ENV=$* hotfix-ops-pause-cleanup
 
 status-dev-b2c:
 	@$(MAKE) status-dev

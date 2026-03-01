@@ -1,0 +1,322 @@
+{
+  "name": "Remit-Scout Deep Audit & Fix",
+  "description": "Autonomous audit loop: document findings, then implement fixes.",
+  "branchName": "main",
+  "userStories": [
+    {
+      "id": "AUDIT-RS-001",
+      "title": "Plane A API Routes Deep Audit",
+      "description": "Audit Plane A API routes and handlers for correctness, security, and contract stability.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/01-plane-a-api.md with all findings",
+        "Audited backend/plane-a/src/routes/** and backend/plane-a/src/lambda.ts",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Focus on auth/entitlements, validation, error handling, stale/incorrect responses, and contract drift with frontend/admin consumers."
+    },
+    {
+      "id": "AUDIT-RS-002",
+      "title": "Plane B Collectors and Providers Deep Audit",
+      "description": "Audit provider collectors/parsers in Plane B for broken logic, stubs, and data-integrity risks.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/02-plane-b-providers.md with all findings",
+        "Audited backend/plane-b/src/providers/** and backend/plane-b/src/collectors/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Look for parser fragility, partial-data flags misuse, retry/timeout issues, and corridor/method misclassification risks."
+    },
+    {
+      "id": "AUDIT-RS-003",
+      "title": "Queues and Workers Deep Audit",
+      "description": "Audit queue workers, schedulers, and fanout flow for stuck states, retries, DLQ handling, and idempotency gaps.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/03-queues-workers.md with all findings",
+        "Audited backend/scripts/*queue* backend/scripts/*worker* backend/shared/sqs.ts backend/scripts/b2b-sweep-dispatch.ts",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Focus on replay safety, duplicate processing, ack/delete behavior, circuit breakers, and queue growth controls."
+    },
+    {
+      "id": "AUDIT-RS-004",
+      "title": "Data Lineage and Gold Integrity Deep Audit",
+      "description": "Audit Bronze/Silver/Gold lineage and index computations for silent data loss and invariant violations.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/04-data-lineage-gold.md with all findings",
+        "Audited backend/plane-b/src/normalize/** backend/scripts/gold-* backend/shared/slo-tracker.ts backend/plane-c/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Check TEER/RVI/RCI boundaries, stale-data handling, export correctness, and reconciliation gaps."
+    },
+    {
+      "id": "AUDIT-RS-005",
+      "title": "Auth and Entitlements Deep Audit",
+      "description": "Audit auth and entitlement enforcement paths across backend and frontend edges.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/05-auth-entitlements.md with all findings",
+        "Audited backend/shared/**auth* backend/plane-a/src/routes/** frontend/middleware/** frontend/server/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Target bypass risks, missing checks, stale role assumptions, and inconsistent auth behavior between routes/pages."
+    },
+    {
+      "id": "AUDIT-RS-006",
+      "title": "Frontend-API Contract Deep Audit",
+      "description": "Audit frontend data calls and admin surfaces for contract mismatch and operational regressions.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/06-frontend-api-contract.md with all findings",
+        "Audited frontend/pages/** frontend/components/** frontend/layouts/admin.vue frontend/composables/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Validate loading/error states, stale assumptions about API shapes, observer/admin contract usage, and dead links/UI actions."
+    },
+    {
+      "id": "AUDIT-RS-007",
+      "title": "Observability and Alerts Deep Audit",
+      "description": "Audit observability plumbing, alert workers, and evidence contracts.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/07-observability-alerts.md with all findings",
+        "Audited backend/scripts/lib/evidence.ts backend/scripts/lib/executions.ts backend/scripts/*alert* ops/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Look for dropped evidence, weak reason-code handling, broken emit paths, and stale SLO/MTTR data chains."
+    },
+    {
+      "id": "AUDIT-RS-008",
+      "title": "Infrastructure and Deployment Wiring Deep Audit",
+      "description": "Audit infra/deploy wiring for drift risks, unsafe defaults, and missing production safeguards.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/08-infra-deploy.md with all findings",
+        "Audited infrastructure/** docs/runbooks/agent-deploy-promotion-checklist.md docker-compose.yml",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Focus on env-specific invariants, IAM/auth assumptions, schedule safety, and rollout/rollback coverage."
+    },
+    {
+      "id": "AUDIT-RS-009",
+      "title": "Configuration and Secrets Handling Deep Audit",
+      "description": "Audit env/config usage and schema contracts for breakage and leakage risks.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/09-config-secrets.md with all findings",
+        "Audited .env*.example .remit-scout/schema/*.json package.json backend/package.json frontend/package.json",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Check documented-vs-used env vars, insecure defaults, deprecated flags, and schema/contract drift."
+    },
+    {
+      "id": "AUDIT-RS-010",
+      "title": "Tests and Coverage Deep Audit",
+      "description": "Audit tests and test harness quality for false confidence and blind spots.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/10-tests-coverage.md with all findings",
+        "Audited backend/tests/** frontend/tests/** scripts/verifier/** .github/workflows/**",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Document skipped/flaky tests, weak assertions, untested critical paths, and contract-test gaps."
+    },
+    {
+      "id": "AUDIT-RS-011",
+      "title": "Dead Code and Local Artifacts Deep Audit",
+      "description": "Find dead/orphaned code, stale artifacts, and local-only leftovers.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/11-dead-code-artifacts.md with all findings",
+        "Audited repo for unused exports/files, commented blocks, generated leftovers, and stale temporary assets",
+        "Included path, line range, severity, category, description, and code snippet for each finding"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Highlight cleanup candidates with operational risk, not just style nits."
+    },
+    {
+      "id": "AUDIT-RS-012",
+      "title": "Final Consolidation Index",
+      "description": "Create a master audit index summarizing all findings and highest-risk items.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/audit/00-INDEX.md with summary across all audit files",
+        "Included totals by severity and category",
+        "Listed top critical findings with links back to source audit files"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "Read all generated .codex/ralph-audit/audit/*.md reports and produce executive-level index only."
+    },
+    {
+      "id": "FIX-RS-001",
+      "title": "Implement Plane A API Fixes",
+      "description": "Implement all fixes for findings in .codex/ralph-audit/audit/01-plane-a-api.md. Edit source files directly.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/01-plane-a-api.done",
+        "All CRITICAL and HIGH findings from 01-plane-a-api.md addressed in source code",
+        "Typecheck and lint pass after changes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Read audit/01-plane-a-api.md. Fix each finding. Start with CRITICAL, then HIGH. Preserve existing style."
+    },
+    {
+      "id": "FIX-RS-002",
+      "title": "Implement Plane B Providers Fixes",
+      "description": "Implement all fixes for findings in .codex/ralph-audit/audit/02-plane-b-providers.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/02-plane-b-providers.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Read audit/02-plane-b-providers.md. Fix each finding."
+    },
+    {
+      "id": "FIX-RS-003",
+      "title": "Implement Queues & Workers Fixes",
+      "description": "Implement all fixes for findings in .codex/ralph-audit/audit/03-queues-workers.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/03-queues-workers.done",
+        "All CRITICAL and HIGH findings addressed (DLQ/ack behavior, batch send, tiered queue)",
+        "Typecheck and lint pass"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Read audit/03-queues-workers.md. Critical: corridor fanout DLQ handoff, worker DLQ+delete. High: sendBatchJsonMessages partial failures, tiered ingest gate."
+    },
+    {
+      "id": "FIX-RS-004",
+      "title": "Implement Data Lineage & Gold Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/04-data-lineage-gold.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/04-data-lineage-gold.done",
+        "All findings addressed or documented as deferred",
+        "Typecheck and lint pass"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Read audit/04-data-lineage-gold.md. If file is stub, skip or document."
+    },
+    {
+      "id": "FIX-RS-005",
+      "title": "Implement Auth & Entitlements Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/05-auth-entitlements.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/05-auth-entitlements.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "Read audit/05-auth-entitlements.md."
+    },
+    {
+      "id": "FIX-RS-006",
+      "title": "Implement Frontend-API Contract Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/06-frontend-api-contract.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/06-frontend-api-contract.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Read audit/06-frontend-api-contract.md."
+    },
+    {
+      "id": "FIX-RS-007",
+      "title": "Implement Observability & Alerts Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/07-observability-alerts.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/07-observability-alerts.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "Read audit/07-observability-alerts.md."
+    },
+    {
+      "id": "FIX-RS-008",
+      "title": "Implement Infra & Deploy Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/08-infra-deploy.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/08-infra-deploy.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "Read audit/08-infra-deploy.md."
+    },
+    {
+      "id": "FIX-RS-009",
+      "title": "Implement Config & Secrets Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/09-config-secrets.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/09-config-secrets.done",
+        "All findings addressed or documented as deferred",
+        "Typecheck and lint pass"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "Read audit/09-config-secrets.md. If stub, skip or document."
+    },
+    {
+      "id": "FIX-RS-010",
+      "title": "Implement Tests & Coverage Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/10-tests-coverage.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/10-tests-coverage.done",
+        "All CRITICAL and HIGH findings addressed",
+        "Typecheck and lint pass"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Read audit/10-tests-coverage.md."
+    },
+    {
+      "id": "FIX-RS-011",
+      "title": "Implement Dead Code & Artifacts Fixes",
+      "description": "Implement fixes for findings in .codex/ralph-audit/audit/11-dead-code-artifacts.md.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/11-dead-code-artifacts.done",
+        "All findings addressed or documented as deferred",
+        "Typecheck and lint pass"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Read audit/11-dead-code-artifacts.md. If stub, skip or document."
+    },
+    {
+      "id": "FIX-RS-012",
+      "title": "Implement remaining critical items from audit index",
+      "description": "Address any remaining CRITICAL or HIGH items from .codex/ralph-audit/audit/00-INDEX.md that were not fully covered by FIX-RS-001 through FIX-RS-011.",
+      "acceptanceCriteria": [
+        "Created .codex/ralph-audit/fix-complete/00-index.done or documented as no remaining items",
+        "All CRITICAL items from 00-INDEX.md addressed or explicitly deferred with reason",
+        "Typecheck and lint pass"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Read audit/00-INDEX.md. If index lists top-priority cross-cutting items, implement or document deferral. If index is empty/stub, create 00-index.done with note 'No remaining items'."
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-02-28T19:48:34.607Z"
+  }
+}

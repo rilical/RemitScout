@@ -1,0 +1,799 @@
+{
+  "$schema": "../schema/module-catalog.schema.json",
+  "version": 1,
+  "description": "Module catalog — maps each provider + collector_type to a ModuleSpec entry",
+  "modules": [
+    {
+      "module_id": "alansari:http",
+      "provider_id": "alansari",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "bossmoney:http",
+      "provider_id": "bossmoney",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "dahabshiil:http",
+      "provider_id": "dahabshiil",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "instarem:http",
+      "provider_id": "instarem",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "intermex:http",
+      "provider_id": "intermex",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "koronapay:http",
+      "provider_id": "koronapay",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "mukuru:http",
+      "provider_id": "mukuru",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "orbitremit:http",
+      "provider_id": "orbitremit",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "pangea:http",
+      "provider_id": "pangea",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "paysend:http",
+      "provider_id": "paysend",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "placid:http",
+      "provider_id": "placid",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "remitbee:http",
+      "provider_id": "remitbee",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "remitly:http",
+      "provider_id": "remitly",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "ria:http",
+      "provider_id": "ria",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "sendwave:http",
+      "provider_id": "sendwave",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "singx:http",
+      "provider_id": "singx",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "transfergo:http",
+      "provider_id": "transfergo",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "wellsfargo:http",
+      "provider_id": "wellsfargo",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "westernunion:http",
+      "provider_id": "westernunion",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "wirebarley:http",
+      "provider_id": "wirebarley",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "wise:http",
+      "provider_id": "wise",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "worldremit:http",
+      "provider_id": "worldremit",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "xe:http",
+      "provider_id": "xe",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    },
+    {
+      "module_id": "xoom:http",
+      "provider_id": "xoom",
+      "collector_type": "http",
+      "status": "production",
+      "spec_version": 1,
+      "volume": {
+        "strategy": "synthetic_seed",
+        "model_version": "synthetic_seed_v1",
+        "fallback_chain": [
+          "reported",
+          "inferred_proxy",
+          "synthetic_seed",
+          "equal_weight"
+        ],
+        "synthetic_seed": {
+          "default_weight": 0.04166667,
+          "default_confidence": 0.7,
+          "source_note": "bootstrap_uniform_seed_v1",
+          "corridor_overrides": []
+        },
+        "reported": {
+          "enabled": false,
+          "source_ref": null,
+          "freshness_slo_hours": 24
+        },
+        "inferred_proxy": {
+          "enabled": false,
+          "factor_name": "volume_proxy",
+          "lookback_days": 30
+        }
+      }
+    }
+  ]
+}

@@ -321,6 +321,34 @@ reason_codes:
     description: "Aggregate security scan stats (informational)."
     domain: "security"
 
+  - code: "triage.timebox_exceeded"
+    default_severity: "sev2"
+    description: "IssueOps triage loop exceeded configured iterate timebox and needs manual handoff."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "other"
+
+  - code: "triage.close_case_rationale_missing"
+    default_severity: "sev2"
+    description: "Case closure conditions were met structurally, but informational rationale for close_case was missing."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "other"
+
+  - code: "triage.timeline_reconstruction_failed"
+    default_severity: "sev2"
+    description: "Incident timeline reconstruction from bounded events failed and requires manual triage."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "other"
+
+  - code: "triage.task_lifecycle_transition_invalid"
+    default_severity: "sev2"
+    description: "Task progress update attempted an invalid lifecycle transition for the active task_lifecycle_version contract."
+    suggested_next_skill_ids:
+      - "manual.human_triage"
+    domain: "other"
+
   - code: "evidence.error"
     default_severity: "sev2"
     description: "Evidence skill encountered an unexpected error."

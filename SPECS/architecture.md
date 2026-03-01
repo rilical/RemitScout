@@ -27,6 +27,7 @@ Detailed docs live under:
 14. Signal modules (non-quote data collectors): `agents/rag/signal-modules.md`
 15. Index governance (methodology versioning + Total Collection Error + audit protocol): `agents/rag/index-governance.md`
 16. Architecture roadmap: `docs/architecture/triangulation-roadmap.md`
+17. Source-of-truth matrix (canonical files, CI validators, ownership): `SPECS/source-of-truth-matrix.json`
 
 ## System invariants (must not break)
 - Plane A must never read Bronze data directly.
@@ -133,6 +134,7 @@ Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/archi
 - When diagnosing: prefer running a skill/evidence pack over reading raw logs.
 - Prefer bounded EvidenceResult JSON + pointers over copying multi-megabyte outputs into context.
 - When changing wiring: update the canonical catalogs (`.remit-scout/*`) first and derive other lists from them where possible.
+- IssueOps task progress lifecycle is versioned (`traceability.task_lifecycle_version`) and must enforce documented transitions with idempotent same-state updates.
 
 ## Security invariants (2026-02 hardening)
 - Plane C `/internal/*` routes must be protected by IAM authorizer and/or explicit internal auth token checks.

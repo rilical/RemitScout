@@ -1,0 +1,345 @@
+{
+  "$schema": "../.remit-scout/schema/source-of-truth-matrix.schema.json",
+  "version": 1,
+  "generated_at": "2026-02-28T00:00:00Z",
+  "concerns": [
+    {
+      "concern_id": "agent-registry",
+      "label": "Agent Registry",
+      "canonical_path": "AGENTS.md",
+      "governs": "Master list of all agents, their RAG docs, load order, and operational prompt template",
+      "owner_tag": "ops.agents@v1",
+      "ci_validator": "backend/scripts/ci/validate-agent-surfaces.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/agents.md", "note": "SPECS bundle copy" },
+          { "path": "SPECS/agents-bundle/AGENTS.md", "note": "SPECS agents-bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "agent-system-scoped",
+        "cross-plane-trace-continuity"
+      ],
+      "bounded_evidence_note": "Adding or removing an agent requires updating the registry table, AGENT-MATCH routing rules, and verifying the RAG doc exists",
+      "rollback_evidence_note": "Revert the AGENTS.md entry and confirm AGENT-MATCH no longer routes to the removed agent"
+    },
+    {
+      "concern_id": "agent-routing",
+      "label": "Agent Routing Rules",
+      "canonical_path": "agents/AGENT-MATCH.md",
+      "governs": "Domain-based routing rules that select which agent(s) handle a given task",
+      "owner_tag": "ops.agents@v1",
+      "ci_validator": "backend/scripts/ci/validate-agent-surfaces.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/agent-match.md", "note": "SPECS bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "agent-system-scoped"
+      ],
+      "bounded_evidence_note": "New routing rules must reference agents that exist in the agent registry and have valid RAG docs",
+      "rollback_evidence_note": "Revert the routing rule and verify no orphaned agent references remain"
+    },
+    {
+      "concern_id": "agent-runtime-config",
+      "label": "Agent Runtime Configuration",
+      "canonical_path": "backend/plane-b/src/agents/agent-config.ts",
+      "governs": "Runtime configuration for agent LLM parameters, retry policies, and feature flags",
+      "owner_tag": "ops.agents@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "agent-system-scoped",
+        "agent-self-healing-approval"
+      ],
+      "bounded_evidence_note": "Config changes must be validated by TypeScript compiler and tested against agent integration tests",
+      "rollback_evidence_note": "Revert the config file and redeploy affected agent ECS services"
+    },
+    {
+      "concern_id": "tool-gateway-policies",
+      "label": "Tool Gateway Policies",
+      "canonical_path": "backend/plane-b/src/agents/tool-gateway.ts",
+      "governs": "Per-agent least-privilege tool access policies, domain allowlists, PII redaction, rate limits",
+      "owner_tag": "ops.agents@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "agent-system-scoped",
+        "tool-gateway-enforcement"
+      ],
+      "bounded_evidence_note": "Policy changes must preserve least-privilege invariant; changes require TypeScript compilation and agent integration test pass",
+      "rollback_evidence_note": "Revert the tool-gateway.ts file and redeploy the agent orchestrator service"
+    },
+    {
+      "concern_id": "module-catalog",
+      "label": "Module Catalog",
+      "canonical_path": ".remit-scout/modules/catalog.json",
+      "governs": "Registry of non-quote signal modules with legal basis, policy profiles, and payload schemas",
+      "owner_tag": "ops.modules@v1",
+      "ci_validator": "backend/scripts/ci/validate-issueops-contracts.ts",
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "module-catalog-source-of-truth",
+        "module-onboarding-requirements"
+      ],
+      "bounded_evidence_note": "New modules require legal basis classification, ToS review, policy profile, payload schema, contract tests, and canary rollout evidence",
+      "rollback_evidence_note": "Remove the module entry and verify no downstream consumers reference it"
+    },
+    {
+      "concern_id": "reason-codes",
+      "label": "Reason Code Catalog",
+      "canonical_path": ".remit-scout/reason-codes/catalog.yaml",
+      "governs": "Canonical set of reason codes used in evidence results, run artifacts, and alert evaluations",
+      "owner_tag": "ops.issueops@v1",
+      "ci_validator": "backend/scripts/ci/validate-reason-codes.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/reason-codes.catalog.yaml", "note": "SPECS bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "cross-plane-trace-continuity"
+      ],
+      "bounded_evidence_note": "New reason codes must follow the naming pattern, have valid severity and domain, and be referenced in at least one evidence script or run artifact",
+      "rollback_evidence_note": "Remove the reason code entry and verify no evidence scripts or run artifacts reference it"
+    },
+    {
+      "concern_id": "schema-contracts",
+      "label": "IssueOps Schema Contracts",
+      "canonical_path": ".remit-scout/schema/",
+      "governs": "JSON Schema definitions for PRD, Plan, Run, Evidence, Skill, and other IssueOps artifacts",
+      "owner_tag": "ops.issueops@v1",
+      "ci_validator": "backend/scripts/ci/validate-issueops-contracts.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/schema.plan.json", "note": "Plan schema SPECS copy" },
+          { "path": "SPECS/schema.prd.json", "note": "PRD schema SPECS copy" },
+          { "path": "SPECS/schema.run.json", "note": "Run schema SPECS copy" }
+        ]
+      },
+      "related_invariants": [
+        "api-stable-schemas",
+        "cross-plane-trace-continuity"
+      ],
+      "bounded_evidence_note": "Schema changes must be backward-compatible or versioned; all existing artifacts must still validate against the updated schema",
+      "rollback_evidence_note": "Revert schema files and verify all IssueOps artifacts still validate"
+    },
+    {
+      "concern_id": "observation-payloads",
+      "label": "Observation Payload Types",
+      "canonical_path": "backend/shared/types/observation-payloads.ts",
+      "governs": "TypeScript type definitions for observation envelopes consumed by the triangulation engine and signal modules",
+      "owner_tag": "ops.data@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "observations-immutable",
+        "cross-plane-trace-continuity"
+      ],
+      "bounded_evidence_note": "Payload type changes must preserve backward compatibility with existing silver.observation records; TypeScript compiler must pass",
+      "rollback_evidence_note": "Revert the type definitions and verify all consumers compile cleanly"
+    },
+    {
+      "concern_id": "failure-bundle-types",
+      "label": "Failure Bundle Types",
+      "canonical_path": "backend/shared/types/failure-bundle.ts",
+      "governs": "TypeScript type definitions for failure bundles exchanged between agents during self-healing workflows",
+      "owner_tag": "ops.agents@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "agent-system-scoped",
+        "agent-self-healing-approval"
+      ],
+      "bounded_evidence_note": "Type changes must be compatible with all agent consumers; TypeScript compiler must pass across plane-b and shared",
+      "rollback_evidence_note": "Revert the type definitions and verify all agent consumers compile cleanly"
+    },
+    {
+      "concern_id": "system-invariants",
+      "label": "System Invariants",
+      "canonical_path": "ARCHITECTURE.md",
+      "governs": "Must-not-break rules for plane boundaries, data integrity, index semantics, agent scoping, and security",
+      "owner_tag": "ops.architecture@v1",
+      "ci_validator": "backend/scripts/ci/validate-agent-surfaces.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/architecture.md", "note": "SPECS bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "plane-a-no-bronze",
+        "api-stable-schemas",
+        "pulse-truthfulness",
+        "rights-matrix-authority",
+        "cross-plane-trace-continuity"
+      ],
+      "bounded_evidence_note": "Invariant changes require architectural review and must be reflected in all derived SPECS copies",
+      "rollback_evidence_note": "Revert ARCHITECTURE.md and verify SPECS/architecture.md is also reverted"
+    },
+    {
+      "concern_id": "skills-catalog",
+      "label": "Skills Catalog",
+      "canonical_path": ".remit-scout/skills/catalog.yaml",
+      "governs": "Registry of IssueOps skills with their workflow bindings, input schemas, and execution modes",
+      "owner_tag": "ops.issueops@v1",
+      "ci_validator": "backend/scripts/ci/validate-skill-catalog.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/skills.catalog.yaml", "note": "SPECS bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "agent-system-scoped"
+      ],
+      "bounded_evidence_note": "New skills require a matching workflow file, valid input schema, and catalog entry with correct skill_id format",
+      "rollback_evidence_note": "Remove the skill entry and verify no workflows or brain routing rules reference the removed skill"
+    },
+    {
+      "concern_id": "deploy-checklist",
+      "label": "Deploy Promotion Checklist",
+      "canonical_path": "docs/runbooks/agent-deploy-promotion-checklist.md",
+      "governs": "Step-by-step checklist for promoting agent changes from dev to staging to prod",
+      "owner_tag": "ops.deploy@v1",
+      "ci_validator": "backend/scripts/ci/validate-agent-surfaces.ts",
+      "sync_policy": {
+        "strategy": "derived-copy",
+        "derived_copies": [
+          { "path": "SPECS/agent-deploy-promotion-checklist.md", "note": "SPECS bundle copy" }
+        ]
+      },
+      "related_invariants": [
+        "agent-self-healing-approval"
+      ],
+      "bounded_evidence_note": "Checklist changes must be validated against current deploy pipeline and reflected in SPECS bundle",
+      "rollback_evidence_note": "Revert the checklist and verify SPECS copy is also reverted"
+    },
+    {
+      "concern_id": "operational-runbooks",
+      "label": "Operational Runbooks",
+      "canonical_path": "docs/runbooks/",
+      "governs": "Human-facing runbooks for incident response, provider outages, queue debugging, and operational procedures",
+      "owner_tag": "ops.runbooks@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "manual-review",
+        "derived_copies": [
+          { "path": "SPECS/ralph-codex-loop.md", "note": "Ralph loop runbook SPECS copy" }
+        ]
+      },
+      "related_invariants": [],
+      "bounded_evidence_note": "Runbook changes should be reviewed by on-call engineers and tested against current infrastructure",
+      "rollback_evidence_note": "Revert the runbook and notify on-call team of the change"
+    },
+    {
+      "concern_id": "priority-run-order-policy",
+      "label": "Priority and Run-Order Policy",
+      "canonical_path": "scripts/ralph/plan.mjs",
+      "governs": "Task sort algorithm (dependency_depth > priority > run_order > id), single in_progress constraint, and default values (priority=100, run_order=array index)",
+      "owner_tag": "ops.ralph@v1",
+      "ci_validator": "backend/scripts/ci/validate-ralph-contracts.ts",
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "task-lifecycle-idempotent",
+        "ralph-backward-compat"
+      ],
+      "bounded_evidence_note": "Changes to sort algorithm or single-threaded execution model require evidence that all existing PRD items are still scheduled in correct order",
+      "rollback_evidence_note": "Revert compareTaskOrder function in scripts/ralph/plan.mjs and rebuild IMPLEMENTATION_PLAN.md to restore previous ordering"
+    },
+    {
+      "concern_id": "tag-versioning-conventions",
+      "label": "Tag Versioning Conventions",
+      "canonical_path": ".remit-scout/AGENTS.md",
+      "governs": "Versioned tag namespaces (owner.*, trace.*, parallel.*, cluster.*, gate.*, snapshot.*, ops.*) and their immutability contract; all tags follow pattern [a-z0-9._:+-]+@v[0-9]+",
+      "owner_tag": "ops.issueops@v1",
+      "ci_validator": "backend/scripts/ci/validate-ralph-contracts.ts",
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "tag-immutability",
+        "bounded-rollback-evidence-required"
+      ],
+      "bounded_evidence_note": "New tag namespaces or version bumps must be documented in .remit-scout/AGENTS.md and validated by CI; all traceability_tags must include bounded_evidence and rollback_evidence markers",
+      "rollback_evidence_note": "Revert tag convention changes in .remit-scout/AGENTS.md and verify all existing artifacts still use valid tag versions"
+    },
+    {
+      "concern_id": "ralph-plan-versions",
+      "label": "Ralph Plan Version Pins",
+      "canonical_path": "scripts/ralph/plan.mjs",
+      "governs": "Pinned version constants for ralph loop protocol (v2), plan schema (v2), progress schema (v1), and task lifecycle (v1); any version bump must be backward-compatible or migration-gated",
+      "owner_tag": "ops.ralph@v1",
+      "ci_validator": "backend/scripts/ci/validate-ralph-contracts.ts",
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "ralph-backward-compat",
+        "task-lifecycle-idempotent"
+      ],
+      "bounded_evidence_note": "Version bumps require migration evidence showing all existing progress.txt and IMPLEMENTATION_PLAN.md files remain parseable; task lifecycle version bumps must document new transition rules",
+      "rollback_evidence_note": "Revert the version constants in scripts/ralph/plan.mjs and verify existing plan/progress artifacts still parse correctly"
+    },
+    {
+      "concern_id": "progress-state-semantics",
+      "label": "Progress State Semantics",
+      "canonical_path": "scripts/ralph/plan.mjs",
+      "governs": "Dual-write atomicity (plan + progress), idempotent same-state writes, note merging deduplication, single in_progress constraint, and reconcile-progress recovery behavior",
+      "owner_tag": "ops.ralph@v1",
+      "ci_validator": "backend/scripts/ci/validate-ralph-contracts.ts",
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "task-lifecycle-idempotent",
+        "ralph-backward-compat"
+      ],
+      "bounded_evidence_note": "Changes to idempotency or dual-write behavior require evidence that existing progress.txt files remain parseable and no state is lost during reconciliation",
+      "rollback_evidence_note": "Revert mark/reconcileProgress functions in scripts/ralph/plan.mjs and verify progress.txt is consistent with IMPLEMENTATION_PLAN.md"
+    },
+    {
+      "concern_id": "ralph-orchestrator-config",
+      "label": "Ralph Orchestrator Config",
+      "canonical_path": "ralph.yml",
+      "governs": "Project-level ralph orchestrator settings: CLI backend, event loop parameters, hat definitions (refactorer, verifier), and verification quality gates",
+      "owner_tag": "ops.ralph@v1",
+      "ci_validator": null,
+      "sync_policy": {
+        "strategy": "single-source",
+        "derived_copies": []
+      },
+      "related_invariants": [
+        "ralph-backward-compat"
+      ],
+      "bounded_evidence_note": "Config changes must preserve hat contract stability; verifier hat must always require quality.* keys in emitted payloads",
+      "rollback_evidence_note": "Revert ralph.yml and verify orchestrator loop still operates with previous settings"
+    }
+  ]
+}

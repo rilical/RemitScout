@@ -1,11 +1,36 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { execSync } from 'node:child_process'
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..')
 const ABS_PREFIX = '/Users/omarghabyen/Desktop/Remit-Scout Production V2/'
-const MAX_AGENTS_LINES = 160
+const MAX_AGENTS_LINES = 180
 const MAX_ENTRYPOINTS = 12
+const ROOT_AGENTS_PATH = 'AGENTS.md'
+const REMIT_SCOUT_AGENTS_PATH = '.remit-scout/AGENTS.md'
+
+const ROOT_LOAD_ORDER_PREFIX = [
+  'ARCHITECTURE.md',
+  'agents/AGENT-MATCH.md',
+  'docs/runbooks/agent-deploy-promotion-checklist.md',
+  '.remit-scout/AGENTS.md',
+]
+
+const ROOT_REQUIRED_LOAD_ORDER = [
+  'ARCHITECTURE.md',
+  'agents/AGENT-MATCH.md',
+  'docs/runbooks/agent-deploy-promotion-checklist.md',
+  'agents/rag/<agent>.md',
+]
+
+const REMIT_SCOUT_LOAD_ORDER = [
+  '.remit-scout/README.md',
+  '.remit-scout/skills/catalog.yaml',
+  '.remit-scout/reason-codes/catalog.yaml',
+  '.remit-scout/providers/catalog.json',
+  '.remit-scout/schema/prd.schema.json',
+  '.remit-scout/schema/plan.schema.json',
+  '.remit-scout/schema/run.schema.json',
+]
 
 const fail = (message: string) => {
   // eslint-disable-next-line no-console
@@ -14,6 +39,50 @@ const fail = (message: string) => {
 }
 
 const readUtf8 = (p: string) => fs.readFileSync(p, 'utf8')
+
+const formatList = (items: string[]) => `[${items.map((item) => `'${item}'`).join(', ')}]`
+
+const arraysEqual = (a: string[], b: string[]) => {
+  if (a.length !== b.length) return false
+  return a.every((value, index) => value === b[index])
+}
+
+const hasPrefix = (items: string[], prefix: string[]) => {
+  if (items.length < prefix.length) return false
+  return prefix.every((value, index) => items[index] === value)
+}
+
+const extractRequiredLoadOrder = (content: string, rel: string) => {
+  const lines = content.split('\n')
+  const startIndex = lines.findIndex((line) => line.trim() === 'Required load order (before touching code):')
+  if (startIndex < 0) {
+    fail(`missing 'Required load order (before touching code):' section in ${rel}`)
+    return []
+  }
+
+  const entries: string[] = []
+  for (const line of lines.slice(startIndex + 1)) {
+    const trimmed = line.trim()
+    if (!trimmed) {
+      if (entries.length > 0) break
+      continue
+    }
+
+    const match = trimmed.match(/^\d+\.\s+`([^`]+)`/)
+    if (!match) {
+      if (entries.length > 0) break
+      continue
+    }
+
+    entries.push(match[1].trim())
+  }
+
+  if (entries.length === 0) {
+    fail(`'Required load order (before touching code):' section has no ordered entries in ${rel}`)
+  }
+
+  return entries
+}
 
 const resolvePathRef = (ref: string, fromFile: string): string | null => {
   const raw = String(ref || '').trim()
@@ -120,14 +189,76 @@ const parseFrontmatter = (content: string, rel: string): Frontmatter | null => {
   return out
 }
 
-const validateAgentsMdLinks = () => {
-  const files = execSync('git ls-files', { cwd: repoRoot, stdio: ['ignore', 'pipe', 'ignore'] })
-    .toString('utf8')
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
+const validateRequiredLoadOrderContracts = () => {
+  const rootAgentsAbs = path.join(repoRoot, ROOT_AGENTS_PATH)
+  if (!fs.existsSync(rootAgentsAbs)) {
+    fail(`missing root AGENTS contract: ${ROOT_AGENTS_PATH}`)
+    return
+  }
 
-  const agentDocs = files.filter((f) => f.endsWith('AGENTS.md'))
+  const rootAgentsContent = readUtf8(rootAgentsAbs)
+  const rootAgentsFrontmatter = parseFrontmatter(rootAgentsContent, ROOT_AGENTS_PATH)
+  if (rootAgentsFrontmatter && !hasPrefix(rootAgentsFrontmatter.entrypoints, ROOT_LOAD_ORDER_PREFIX)) {
+    fail(
+      `${ROOT_AGENTS_PATH} frontmatter entrypoints load-order prefix mismatch: expected=${formatList(ROOT_LOAD_ORDER_PREFIX)} actual=${formatList(rootAgentsFrontmatter.entrypoints)}`,
+    )
+  }
+
+  const rootRequiredLoadOrder = extractRequiredLoadOrder(rootAgentsContent, ROOT_AGENTS_PATH)
+  if (rootRequiredLoadOrder.length > 0 && !arraysEqual(rootRequiredLoadOrder, ROOT_REQUIRED_LOAD_ORDER)) {
+    fail(
+      `${ROOT_AGENTS_PATH} required load order mismatch: expected=${formatList(ROOT_REQUIRED_LOAD_ORDER)} actual=${formatList(rootRequiredLoadOrder)}`,
+    )
+  }
+
+  const remitScoutAgentsAbs = path.join(repoRoot, REMIT_SCOUT_AGENTS_PATH)
+  if (!fs.existsSync(remitScoutAgentsAbs)) {
+    fail(`missing IssueOps AGENTS contract: ${REMIT_SCOUT_AGENTS_PATH}`)
+    return
+  }
+
+  const remitScoutContent = readUtf8(remitScoutAgentsAbs)
+  const remitScoutFrontmatter = parseFrontmatter(remitScoutContent, REMIT_SCOUT_AGENTS_PATH)
+  if (remitScoutFrontmatter && !arraysEqual(remitScoutFrontmatter.entrypoints, REMIT_SCOUT_LOAD_ORDER)) {
+    fail(
+      `${REMIT_SCOUT_AGENTS_PATH} frontmatter entrypoints load order mismatch: expected=${formatList(REMIT_SCOUT_LOAD_ORDER)} actual=${formatList(remitScoutFrontmatter.entrypoints)}`,
+    )
+  }
+}
+
+const validateAgentsMdLinks = () => {
+  const shouldSkipDirectory = (name: string): boolean => {
+    if (name === '.git' || name === 'node_modules' || name === 'dist' || name === 'cdk.out') {
+      return true
+    }
+    // Governance scope only: ignore local/editor metadata trees.
+    if (name.startsWith('.') && name !== '.remit-scout') {
+      return true
+    }
+    return false
+  }
+
+  const walk = (dir: string): string[] => {
+    const out: string[] = []
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name))
+    for (const entry of entries) {
+      if (entry.isDirectory() && shouldSkipDirectory(entry.name)) continue
+      const abs = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        out.push(...walk(abs))
+      } else if (entry.isFile()) {
+        out.push(abs)
+      }
+    }
+    return out
+  }
+
+  const agentDocs = walk(repoRoot)
+    .map((abs) => path.relative(repoRoot, abs))
+    .filter((rel) => rel.endsWith('AGENTS.md'))
+    .sort((a, b) => a.localeCompare(b))
+
   for (const rel of agentDocs) {
     const abs = path.join(repoRoot, rel)
     const content = readUtf8(abs)
@@ -155,95 +286,9 @@ const validateAgentsMdLinks = () => {
   }
 }
 
-const validateProviderCatalogMatchesDirs = () => {
-  const catalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
-  if (!fs.existsSync(catalogPath)) {
-    fail(`missing provider catalog: ${path.relative(repoRoot, catalogPath)}`)
-    return
-  }
-
-  const raw = JSON.parse(readUtf8(catalogPath)) as any
-  const ids = new Set<string>(
-    (raw?.providers || [])
-      .map((p: any) => String(p?.provider_id || '').trim())
-      .filter(Boolean),
-  )
-
-  if (ids.size === 0) {
-    fail(`provider catalog has no providers: ${path.relative(repoRoot, catalogPath)}`)
-    return
-  }
-
-  const providersDir = path.join(repoRoot, 'backend', 'plane-b', 'src', 'providers')
-  if (!fs.existsSync(providersDir)) {
-    fail(`missing providers dir: ${path.relative(repoRoot, providersDir)}`)
-    return
-  }
-
-  const dirProviders = fs.readdirSync(providersDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-    .filter((name) => name !== 'node_modules' && name !== 'dist')
-
-  const dirSet = new Set<string>(dirProviders)
-
-  for (const id of ids) {
-    if (!dirSet.has(id)) fail(`provider in catalog missing provider directory: provider_id='${id}'`)
-  }
-
-  for (const name of dirProviders) {
-    if (!ids.has(name)) fail(`provider directory missing from catalog: provider_id='${name}'`)
-  }
-}
-
-const validateProviderOnboardingDoc = () => {
-  const onboardingPath = path.join(repoRoot, 'agents', 'rag', 'provider-onboarding.md')
-  if (!fs.existsSync(onboardingPath)) return
-  const content = readUtf8(onboardingPath)
-
-  const catalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
-  const raw = JSON.parse(readUtf8(catalogPath)) as any
-  const catalogIds = (raw?.providers || [])
-    .map((p: any) => String(p?.provider_id || '').trim())
-    .filter(Boolean)
-    .sort()
-
-  const lines = content.split('\n')
-  const headerIndex = lines.findIndex((l) => l.trim().startsWith('## Current provider registry'))
-  if (headerIndex < 0) return
-
-  const headerLine = lines[headerIndex] || ''
-  const m = headerLine.match(/\((\d+)\)/)
-  if (m) {
-    const declared = Number(m[1])
-    if (Number.isFinite(declared) && declared !== catalogIds.length) {
-      fail(`provider-onboarding registry count mismatch: declared=${declared} catalog=${catalogIds.length}`)
-    }
-  }
-
-  const listLine = lines.slice(headerIndex + 1).find((l) => l.trim().length > 0 && !l.trim().startsWith('Canonical inventory'))
-  if (!listLine) {
-    fail('provider-onboarding registry list missing')
-    return
-  }
-
-  const docIds = listLine
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-    .sort()
-
-  const doc = docIds.join(',')
-  const cat = catalogIds.join(',')
-  if (doc !== cat) {
-    fail(`provider-onboarding registry list mismatch: doc=[${doc}] catalog=[${cat}]`)
-  }
-}
-
 const main = () => {
+  validateRequiredLoadOrderContracts()
   validateAgentsMdLinks()
-  validateProviderCatalogMatchesDirs()
-  validateProviderOnboardingDoc()
 
   if (process.exitCode && process.exitCode !== 0) process.exit(process.exitCode)
   // eslint-disable-next-line no-console

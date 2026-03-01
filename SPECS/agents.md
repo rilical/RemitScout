@@ -20,6 +20,7 @@ common_reason_codes:
 
 Primary source of truth:
 - System invariants and plane boundaries are in `ARCHITECTURE.md`.
+- Source-of-truth matrix (canonical files, CI validators, ownership): `SPECS/source-of-truth-matrix.json`.
 
 Required load order (before touching code):
 1. `ARCHITECTURE.md`
@@ -30,6 +31,14 @@ Required load order (before touching code):
 Run requirements:
 1. Confirm the feedback source (chat transcript or file path).
 1. Confirm the user goal (one phrase).
+1. For PRD/Plan contract work, preserve `acceptance_proof` note shards (`source_note`, `acceptance_note`, `bounded_evidence_note`, `rollback_evidence_note`).
+1. For PRD contract work, keep `risk_level` aligned with `risk_tier` and keep `owner_assignment` populated with status + versioned ownership tag.
+1. For PRD/Plan contract work, keep `traceability.parallelizable_tag` versioned (`parallel.serial_only@v1` default) for future runner compatibility.
+1. Preserve `traceability.task_lifecycle_version`, enforce only documented lifecycle transitions for that version, and treat repeated same-state progress writes as idempotent no-ops.
+1. For PRD/Plan contract work, segment `traceability.runtime_stage_gates` by versioned task-cluster tags and keep bounded/rollback evidence gates explicit for execution clusters.
+1. For Plan contract work, keep `plan_snapshots` bounded for historical audit replay (max 25 entries) and keep per-snapshot bounded/rollback evidence notes explicit.
+1. Keep PRD/Plan `traceability.spec_refs` as repo-relative links that resolve to existing files/directories.
+1. For Run contract work, keep `decision_record.human_in_loop` populated with the versioned escalation handoff envelope (`contract_version`, `required`, `status`, `escalation_channel`, `route_skill_id`, `escalation_sla_minutes`, `escalation_owner_tag`, `reason_codes`, `handoff_summary`, `bounded_evidence_note`, `rollback_evidence_note`).
 
 Agent match protocol:
 - Use `agents/AGENT-MATCH.md` to choose the correct agent doc.
@@ -74,6 +83,10 @@ Agent registry:
 | 13 | Infrastructure Sentinel | `agents/rag/infra-sentinel.md` |
 | 14 | Provider Onboarding | `agents/rag/provider-onboarding.md` |
 | 15 | Data Quality Sentinel | `agents/rag/data-quality-sentinel.md` |
+| 16 | Triangulation Engine | `agents/rag/triangulation-engine.md` |
+| 17 | Agent Orchestration | `agents/rag/agent-orchestration.md` |
+| 18 | Signal Modules | `agents/rag/signal-modules.md` |
+| 19 | Index Governance | `agents/rag/index-governance.md` |
 
 Environment handling:
 - Dev: speed > rigor; debug only.

@@ -102,12 +102,12 @@ const main = () => {
   }
 
   if (errors.length) {
-    // eslint-disable-next-line no-console
+     
     console.error('validate-skill-catalog failed:\n' + errors.map((e) => `- ${e}`).join('\n'))
     process.exit(1)
   }
 
-  // eslint-disable-next-line no-console
+   
   console.log(`validate-skill-catalog ok (skills=${catalog.skills.length})`)
 }
 

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.remit-scout.com/issueops/source-of-truth-matrix.schema.json",
+  "title": "Source of Truth Matrix",
+  "description": "Maps every agent-operational concern to its canonical file, CI validator, sync policy, and ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "generated_at", "concerns"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "minLength": 10 },
+    "concerns": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/concern" }
+    }
+  },
+  "$defs": {
+    "concern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "concern_id",
+        "label",
+        "canonical_path",
+        "governs",
+        "owner_tag",
+        "ci_validator",
+        "sync_policy",
+        "related_invariants",
+        "bounded_evidence_note",
+        "rollback_evidence_note"
+      ],
+      "properties": {
+        "concern_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "canonical_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 260,
+          "description": "Repo-relative path to the golden source file or directory"
+        },
+        "governs": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "What this source controls"
+        },
+        "owner_tag": {
+          "type": "string",
+          "pattern": "^[a-z0-9._:+-]+@v[0-9]+$",
+          "description": "Versioned ownership tag"
+        },
+        "ci_validator": {
+          "type": ["string", "null"],
+          "description": "Path to CI validator script, or null if validated manually"
+        },
+        "sync_policy": { "$ref": "#/$defs/sync_policy" },
+        "related_invariants": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Which system invariants apply to this concern"
+        },
+        "bounded_evidence_note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Evidence required when changing this concern"
+        },
+        "rollback_evidence_note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Evidence required to rollback changes to this concern"
+        }
+      }
+    },
+    "sync_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "derived_copies"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["single-source", "derived-copy", "manual-review"]
+        },
+        "derived_copies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/derived_copy" }
+        }
+      }
+    },
+    "derived_copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "note"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 260,
+          "description": "Repo-relative path to the derived copy"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Brief description of this derived copy"
+        }
+      }
+    }
+  }
+}

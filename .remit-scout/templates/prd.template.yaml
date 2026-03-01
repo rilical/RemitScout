@@ -1,4 +1,4 @@
-case_id: "case-20260218-example"
+case_id: "case-dev-provider_health-wise-20260218"
 created_at: "2026-02-18T00:00:00Z"
 env: dev
 severity: sev2
@@ -12,10 +12,35 @@ suspected_components:
   providers: ["wise"]
   queues: []
 risk_tier: 1
+risk_level: medium
+owner_assignment:
+  status: unassigned
+  ownership_tag: "owner.unassigned@v1"
+traceability:
+  version: "v1"
+  task_lifecycle_version: "v1"
+  runtime_stage_gates:
+    cluster.issueops.contract@v1:
+      - "gate.intake_ready@v1"
+      - "gate.spec_refs_resolved@v1"
+    cluster.issueops.execution@v1:
+      - "gate.bounded_evidence_captured@v1"
+      - "gate.rollback_evidence_captured@v1"
+      - "gate.change_reviewed@v1"
+  parallelizable_tag: "parallel.serial_only@v1"
+  spec_refs:
+    - "SPECS/schema.prd.json"
+    - "docs/architecture/issueops.md"
+  bounded_evidence: true
+  rollback_evidence: true
+acceptance_proof:
+  source_note: "Source: PLAN/5"
+  acceptance_note: "Capture acceptance proof in sharded notes fields for deterministic review."
+  bounded_evidence_note: "Use bounded evidence summaries and artifact pointers only."
+  rollback_evidence_note: "Document rollback path and proof reference before promote/close decisions."
 human_owner: ""
 links:
   github_issue: ""
   github_pr: ""
   cloudwatch_alarms: []
   dashboards: []
-

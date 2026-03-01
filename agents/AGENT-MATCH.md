@@ -17,6 +17,14 @@ Rules:
 - If it mentions release readiness, deploy gate, or pre-deploy validation, use release-readiness-gate skill.
 - If it mentions capacity, scaling projections, or growth limits, use capacity-planner skill.
 - If it mentions IssueOps cases, `.remit-scout/` contracts, the Brain loop, Slack front desk, or skill routing/dispatch, include IssueOps Operator.
+- If it mentions human-in-loop escalation contracts, escalation handoff payloads, or manual triage routing metadata, include IssueOps Operator.
+- If it mentions PRD/Plan acceptance proof, sharded notes fields, bounded evidence notes, or rollback evidence notes, include IssueOps Operator.
+- If it mentions PRD/Plan traceability, `spec_refs`, or contract link validation, include IssueOps Operator.
+- If it mentions PRD/Plan `parallelizable_tag` annotations or future runner task concurrency metadata, include IssueOps Operator.
+- If it mentions PRD/Plan task lifecycle versions, status transitions, convergence/terminal task states, or idempotent progress updates, include IssueOps Operator.
+- If it mentions PRD/Plan runtime stage gates, task-cluster gate segmentation, or stage-gate metadata, include IssueOps Operator.
+- If it mentions PRD risk-level modeling (`risk_level`/`risk_tier`) or owner assignment metadata (`owner_assignment`, ownership tags), include IssueOps Operator.
+- If it mentions Plan historical snapshots, snapshot bounds, or audit replay metadata (`plan_snapshots`), include IssueOps Operator.
 - If it mentions triangulation, corridor stress, composite indices, informal premium, capital control intensity, or multi-signal observation, include Triangulation Engine.
 - If it mentions agent self-healing, parser patches, failure bundles, LLM-driven fixes, adaptive probing, stress response, or canary rollout of parser changes, include Agent Orchestration.
 - If it mentions signal modules, observation envelopes, status page monitoring, app intelligence, search trends, sanctions diffs, on-chain flows, hawala observations, or adding a new non-quote data source, include Signal Modules.

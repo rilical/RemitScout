@@ -2,7 +2,12 @@
 
 This directory is the loop-facing copy of governance, skill catalogs, and AGENTS/RAG instruction files.
 
-Generated: 2026-02-28T02:09:05.187Z
+Generated: 2026-03-01T01:33:59.878Z
+Total synced: 133 files (0 skipped)
+
+Governance: sync contract documented in `.remit-scout/AGENTS.md` (Documentation-to-SPECS sync contract).
+Source-of-truth matrix: `SPECS/source-of-truth-matrix.json` (canonical ownership, CI validators, sync policies).
+Non-manifest files in SPECS: `README.md` (this file, auto-generated), `source-of-truth-matrix.json`, `contract-onboarding.md`.
 
 Copied artifact manifest:
 

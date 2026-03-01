@@ -1,5 +1,37 @@
-case_id: "case-20260218-example"
+case_id: "case-dev-provider_health-wise-20260218"
 goal: "Collect evidence, pinpoint root cause, and recommend next steps."
+traceability:
+  version: "v1"
+  task_lifecycle_version: "v1"
+  runtime_stage_gates:
+    cluster.issueops.contract@v1:
+      - "gate.intake_ready@v1"
+      - "gate.spec_refs_resolved@v1"
+    cluster.issueops.execution@v1:
+      - "gate.bounded_evidence_captured@v1"
+      - "gate.rollback_evidence_captured@v1"
+      - "gate.change_reviewed@v1"
+  parallelizable_tag: "parallel.serial_only@v1"
+  spec_refs:
+    - "SPECS/schema.plan.json"
+    - "docs/architecture/issueops.md"
+  bounded_evidence: true
+  rollback_evidence: true
+acceptance_proof:
+  source_note: "Source: PLAN/5"
+  acceptance_note: "Execution is accepted when PRD/Plan artifacts preserve sharded acceptance notes."
+  bounded_evidence_note: "Record bounded evidence references and avoid raw log pastes."
+  rollback_evidence_note: "Capture rollback evidence references for recovery and audit replay."
+plan_snapshots:
+  - snapshot_id: "snapshot.plan_created@v1"
+    captured_at: "2026-02-18T00:00:00Z"
+    trigger: "plan_created"
+    summary: "Initial plan snapshot for historical audit replay."
+    spec_refs:
+      - "SPECS/schema.plan.json"
+      - "docs/architecture/issueops.md"
+    bounded_evidence_note: "Snapshot stores bounded evidence pointers only."
+    rollback_evidence_note: "Snapshot references rollback evidence before execution."
 constraints:
   - "prod_read_only=true"
   - "no secrets in artifacts"
@@ -24,4 +56,3 @@ guardrails:
   max_runtime_minutes: 30
   max_diff_lines: 0
   prod_read_only: true
-

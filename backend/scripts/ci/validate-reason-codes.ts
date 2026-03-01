@@ -35,6 +35,14 @@ const repoRoot = path.resolve(backendDir, '..')
 
 const catalogPath = path.join(repoRoot, '.remit-scout', 'reason-codes', 'catalog.yaml')
 const reasonCodeRegex = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/
+const severityRank: Record<Severity, number> = { sev0: 0, sev1: 1, sev2: 2, sev3: 3 }
+const triageSeverityFloorBySkill: Partial<Record<string, Severity>> = {
+  'manual.human_triage': 'sev2',
+}
+
+const meetsSeverityFloor = (severity: Severity, floor: Severity): boolean => {
+  return severityRank[severity] >= severityRank[floor]
+}
 
 const gitLsFiles = (pattern: string): string[] => {
   const res = spawnSync('git', ['ls-files', pattern], {
@@ -47,6 +55,10 @@ const gitLsFiles = (pattern: string): string[] => {
     .map((x) => x.trim())
     .filter(Boolean)
     .map((x) => path.join(repoRoot, x))
+}
+
+const readJsonFile = (filePath: string): any => {
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'))
 }
 
 const loadCatalog = (): ReasonCodeCatalog => {
@@ -79,6 +91,61 @@ const scanReasonCodes = (files: string[]): Set<string> => {
   return used
 }
 
+const collectReasonCodesFromRunRecord = (record: any, label: string, errors: string[]): string[] => {
+  const collected: string[] = []
+
+  const pushCode = (value: unknown, scope: string) => {
+    const code = String(value || '').trim()
+    if (!code) return
+    collected.push(code)
+    if (!reasonCodeRegex.test(code)) {
+      errors.push(`${label}: invalid reason code format in ${scope}: ${code}`)
+    }
+  }
+
+  const findings = Array.isArray(record?.results?.findings) ? record.results.findings : []
+  for (const finding of findings) {
+    pushCode(finding?.reason_code, 'results.findings[].reason_code')
+  }
+
+  const decisionReasonCodes = Array.isArray(record?.decision_record?.reason_codes)
+    ? record.decision_record.reason_codes
+    : []
+  for (const code of decisionReasonCodes) {
+    pushCode(code, 'decision_record.reason_codes[]')
+  }
+
+  const humanInLoopReasonCodes = Array.isArray(record?.decision_record?.human_in_loop?.reason_codes)
+    ? record.decision_record.human_in_loop.reason_codes
+    : []
+  for (const code of humanInLoopReasonCodes) {
+    pushCode(code, 'decision_record.human_in_loop.reason_codes[]')
+  }
+
+  return collected
+}
+
+const scanRunArtifactReasonCodes = (files: string[], errors: string[]): Set<string> => {
+  const used = new Set<string>()
+
+  for (const filePath of files) {
+    let record: any
+    try {
+      record = readJsonFile(filePath)
+    } catch (error: any) {
+      errors.push(`Failed to parse JSON in ${path.relative(repoRoot, filePath)}: ${error?.message || 'parse error'}`)
+      continue
+    }
+
+    const codes = collectReasonCodesFromRunRecord(record, path.relative(repoRoot, filePath), errors)
+    for (const code of codes) {
+      used.add(code)
+    }
+  }
+
+  return used
+}
+
 const main = () => {
   const catalog = loadCatalog()
   const defs = catalog.reason_codes
@@ -91,6 +158,9 @@ const main = () => {
     const desc = String(d?.description || '').trim()
     const sev = String(d?.default_severity || '').trim()
     const domain = String(d?.domain || '').trim()
+    const suggested = Array.isArray(d?.suggested_next_skill_ids)
+      ? d.suggested_next_skill_ids.map((skillId) => String(skillId || '').trim()).filter(Boolean)
+      : []
 
     if (!code) errors.push(`Catalog entry missing code: ${JSON.stringify(d)}`)
     if (code && !reasonCodeRegex.test(code)) errors.push(`Invalid code format: ${code}`)
@@ -110,25 +180,43 @@ const main = () => {
       'other',
       'pulse',
     ].includes(domain)) errors.push(`Invalid domain for ${code}: ${domain}`)
+
+    if (sev === 'sev0' || sev === 'sev1' || sev === 'sev2' || sev === 'sev3') {
+      for (const skillId of suggested) {
+        const floor = triageSeverityFloorBySkill[skillId]
+        if (!floor) continue
+        if (!meetsSeverityFloor(sev, floor)) {
+          errors.push(`Invalid incident severity mapping for triage task ${skillId} on ${code}: default_severity=${sev} requires >=${floor}`)
+        }
+      }
+    }
   }
 
   const evidenceFiles = gitLsFiles('backend/scripts/evidence/*.ts')
-  const used = scanReasonCodes(evidenceFiles)
+  const usedInEvidenceScripts = scanReasonCodes(evidenceFiles)
+  const runArtifactFiles = [
+    ...gitLsFiles('.remit-scout/templates/run.template.json'),
+    ...gitLsFiles('.remit-scout/cases/*/runs/*.json'),
+  ]
+  const usedInRunArtifacts = scanRunArtifactReasonCodes(runArtifactFiles, errors)
+  const used = new Set<string>([...usedInEvidenceScripts, ...usedInRunArtifacts])
 
   for (const code of used) {
-    if (!reasonCodeRegex.test(code)) errors.push(`Invalid reason_code format in evidence scripts: ${code}`)
-    if (!known.has(code)) errors.push(`Unknown reason_code in evidence scripts (not in catalog): ${code}`)
+    if (!reasonCodeRegex.test(code)) errors.push(`Invalid reason_code format: ${code}`)
+    if (!known.has(code)) errors.push(`Unknown reason_code (not in catalog): ${code}`)
   }
 
   if (errors.length) {
-    // eslint-disable-next-line no-console
+     
     console.error('validate-reason-codes failed:\n' + errors.map((e) => `- ${e}`).join('\n'))
     process.exit(1)
   }
 
-  // eslint-disable-next-line no-console
-  console.log(`validate-reason-codes ok (catalog=${known.size} used=${used.size})`)
+   
+  console.log(
+    `validate-reason-codes ok (catalog=${known.size} used_total=${used.size} `
+    + `used_in_evidence=${usedInEvidenceScripts.size} used_in_run_artifacts=${usedInRunArtifacts.size})`,
+  )
 }
 
 main()
-

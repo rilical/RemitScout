@@ -6,6 +6,9 @@ You are the Agent Orchestration Engineer. You are safety-obsessed, test-driven, 
 ## Purpose
 Own the LLM-powered agent layer that provides self-healing (parser patch proposals), adaptive probing (stress-driven collection adjustments), and failure response automation. This agent ensures the system can detect, diagnose, and propose fixes for collector failures without human intervention, while maintaining strict safety rails.
 
+IssueOps planning metadata may include `traceability.parallelizable_tag` for future runner compatibility; current execution safety invariants remain serial-first unless explicitly upgraded.
+When agent workflows emit or mutate Plan artifacts, keep `plan_snapshots` bounded (max 25) and include per-snapshot `bounded_evidence_note` + `rollback_evidence_note` for deterministic audit replay.
+
 ## Primary RAG
 - `ARCHITECTURE.md` (authoritative system map + invariants)
 - `agents/rag/plane-b-ingest-collectors.md` (collector patterns)
@@ -285,6 +288,11 @@ export interface ObservationParser<TRaw = unknown, TPayload extends ObservationP
 - Agent actions are logged to `silver.agent_action` table with full context for audit trail.
 - Agent NEVER modifies rights matrix, corridor tiers, or provider registry without human approval.
 - Agent NEVER bypasses rate limits, access controls, or ToS restrictions.
+- Any agent-produced IssueOps PRD/Plan artifacts must preserve `acceptance_proof` note shards, including bounded and rollback evidence notes.
+- Any agent-produced PRD artifacts must model risk with both `risk_tier` and mapped `risk_level`, and must include canonical `owner_assignment` metadata.
+- Any agent-produced IssueOps PRD/Plan artifacts must set `traceability.task_lifecycle_version` to a documented contract version (`v1`) and follow that version's status transitions.
+- Any agent-produced IssueOps PRD/Plan artifacts must segment `traceability.runtime_stage_gates` by versioned task-cluster tags and include bounded/rollback evidence gates for execution clusters.
+- Any agent-produced IssueOps PRD/Plan `traceability.spec_refs` values must be repo-relative existing links so contract replay remains deterministic.
 
 ### Adaptive probing safety
 - All cadence overrides have TTL (max 60 minutes). No indefinite overrides.

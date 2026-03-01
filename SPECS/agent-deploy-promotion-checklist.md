@@ -34,6 +34,7 @@ Purpose:
 - [ ] Confirm required staging/prod env contracts exist (vars + secrets in GitHub Environment).
 - [ ] Confirm AWS caller identity and region are correct for target env.
 - [ ] Confirm no active critical alarms in current target env before changing anything.
+- [ ] Confirm latest successful rollback drill evidence for target env is fresh (completed within the last 14 days) and attach run URL + artifact ref.
 - [ ] If this is the first deploy after CDK stack split:
   - run nested-stack migration procedure from `docs/runbooks/cdk-nested-stack-migration.md`
   - require zero replacement before normal deploy
@@ -148,6 +149,7 @@ Exit criteria:
 - New Relic observability gate failure (dashboards/alerts/cloud links/verify-signals).
 - Auth/JWT validation broken on staging full.
 - Environment contract drift (missing required vars/secrets).
+- Rollback drill evidence for target env is older than 14 days.
 - Enterprise path is active (`PLANE_A_REQUIRE_API_KEY=1`) but `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` is not `audited`.
 
 ## Evidence bundle to attach in every promotion handoff

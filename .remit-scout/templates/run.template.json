@@ -1,6 +1,11 @@
 {
-  "case_id": "case-20260218-example",
+  "case_id": "case-dev-provider_health-wise-20260218",
   "run_id": "run-20260218T000000Z",
+  "feedback_source": {
+    "kind": "file_path",
+    "ref": "./IMPLEMENTATION_PLAN.md"
+  },
+  "user_goal": "Collect evidence, pinpoint root cause, and recommend next steps.",
   "dispatch_id": "dispatch-uuid",
   "started_at": "2026-02-18T00:00:00Z",
   "finished_at": "2026-02-18T00:01:00Z",
@@ -30,5 +35,41 @@
       "ref": "probe-wise-results"
     }
   ],
+  "decision_record": {
+    "template_version": "v1",
+    "decision": "close_case",
+    "summary": "Decision is based on bounded evidence findings and reproducible rollback pointers.",
+    "reason_codes": ["example_ok"],
+    "human_in_loop": {
+      "contract_version": "v1",
+      "required": false,
+      "status": "not_required",
+      "escalation_channel": "slack_frontdesk",
+      "route_skill_id": "manual.human_triage",
+      "escalation_sla_minutes": 0,
+      "escalation_owner_tag": "owner.none@v1",
+      "reason_codes": [],
+      "handoff_summary": "Escalation not required for this decision.",
+      "bounded_evidence_note": "Use decision_record.bounded_evidence counters and linked evidence_refs only.",
+      "rollback_evidence_note": "Use decision_record.rollback_evidence refs to replay or reverse escalation decisions."
+    },
+    "bounded_evidence": {
+      "findings_considered": 1,
+      "max_findings": 25,
+      "evidence_refs_considered": 1,
+      "max_evidence_refs": 20
+    },
+    "rollback_evidence": {
+      "required": true,
+      "available": true,
+      "refs": [
+        {
+          "kind": "github_artifact",
+          "ref": "probe-wise-results"
+        }
+      ],
+      "note": "Replay this artifact to verify or roll back the decision path."
+    }
+  },
   "next_recommendation": "close_case"
 }

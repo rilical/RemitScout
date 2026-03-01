@@ -146,3 +146,10 @@ Migration: `silver.partner_entitlement`, `silver.partner_api_key`
 2. **Feature flags**: Every capability independently toggleable via `backend/shared/config.ts`.
 3. **Agent safety**: Propose-only mode, contract tests, parse.ts-only scope, audit logging.
 4. **Legal compliance**: All modules require `policy_flags.tos_reviewed = true` before enabling.
+5. **IssueOps acceptance proof**: PRD/Plan artifacts must use sharded `acceptance_proof.*_note` fields so bounded evidence and rollback evidence remain explicit and reviewable.
+6. **IssueOps PRD risk and ownership model**: PRD artifacts must include canonical `risk_level` (aligned with `risk_tier`) and `owner_assignment` metadata so escalation paths remain deterministic.
+7. **IssueOps spec traceability**: PRD/Plan `traceability.spec_refs` must contain repo-relative existing links so audits can deterministically replay source context.
+8. **IssueOps task lifecycle contract**: PRD/Plan `traceability.task_lifecycle_version` must be set to the documented lifecycle contract version (`v1`) so task status transitions remain deterministic across retries and rollbacks.
+9. **IssueOps future-runner safety**: PRD/Plan `traceability.parallelizable_tag` should use versioned values (`parallel.serial_only@v1` default) to annotate concurrency intent without weakening current one-task-per-iteration safety.
+10. **IssueOps runtime stage-gate segmentation**: PRD/Plan `traceability.runtime_stage_gates` must partition gate expectations by versioned task cluster and include explicit bounded/rollback evidence gates for execution clusters.
+11. **IssueOps historical audit snapshots**: Plan artifacts should keep `plan_snapshots` bounded (maximum 25 entries) and include sharded bounded/rollback evidence notes per snapshot so audit replay remains deterministic without unbounded artifact growth.

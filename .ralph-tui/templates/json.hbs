@@ -1,0 +1,51 @@
+## Task: {{taskId}} - {{taskTitle}}
+
+{{#if taskDescription}}
+{{taskDescription}}
+{{/if}}
+
+{{#if acceptanceCriteria}}
+### Acceptance Criteria
+{{acceptanceCriteria}}
+{{/if}}
+
+{{#if notes}}
+### Notes
+{{notes}}
+{{/if}}
+
+---
+
+## Instructions
+
+**Mode: FIX** — implement fixes for real findings. Edit source files directly.
+
+### Step 1 — Read the audit file
+The audit file is referenced in the task description above (e.g. `audit/01-plane-a-api.md`).
+Read `.codex/ralph-audit/audit/<filename>.md` now.
+
+- If the file is empty or does not exist: create the `.done` file (Step 3) with `Deferred: audit file empty` and skip to Step 4.
+- If the file has findings: continue to Step 2.
+
+### Step 2 — Implement fixes
+For each CRITICAL and HIGH finding in the audit file:
+- Edit the referenced source file directly.
+- Fix the exact issue described. Preserve existing code style.
+- Do not refactor unrelated code. Do not add comments.
+
+After all edits, run: `cd backend && npx tsc --noEmit 2>&1 | tail -20`
+Fix any NEW type errors your changes introduced. Ignore pre-existing errors.
+
+### Step 3 — Create the completion marker
+```
+mkdir -p .codex/ralph-audit/fix-complete
+echo "Completed: N findings fixed" > .codex/ralph-audit/fix-complete/<filename>.done
+```
+Replace `N` with the number of findings you fixed. Use `Deferred: reason` if you skipped.
+
+### Step 4 — Signal completion (LAST step, required)
+After the `.done` file is confirmed written to disk, run this command:
+```
+cat .ralph-tui/done-signal.txt
+```
+Do NOT run this command before the `.done` file exists.

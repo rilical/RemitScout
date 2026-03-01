@@ -23,6 +23,7 @@ OpenClaw (or any model process) must be treated as untrusted:
 - Case outputs: `.remit-scout/cases/<case_id>/prd.yaml` and `plan.yaml`
 - Outbox (executor requests): `ops/brain/outbox/*.json` (GitHub workflow dispatch requests)
  - (Optional) Slack Case cards: posted to `SLACK_CASES_CHANNEL_ID` when `BRAIN_SLACK_POST_CASE_CARDS=1`
+- Triage mode: `BRAIN_TRIAGE_MODE=live|dry_run` (dry-run simulates dispatch, writes outbox status `simulated`, and preserves bounded/rollback evidence notes for replay)
 
 Run locally:
 ```bash
@@ -53,6 +54,18 @@ Create a file like `ops/brain/inbox/signal-<anything>.json`:
   "provider_id": "wise",
   "corridor_id": "US-PH-USD-PHP",
   "risk_tier": 1
+}
+```
+
+Optional case hints envelope (used to auto-seed PRD suspected components):
+```json
+"case_hints": {
+  "suspected_components": {
+    "planes": ["plane_b"],
+    "services": ["provider-probes"],
+    "providers": ["wise"],
+    "queues": ["ingest_fanout_tier2"]
+  }
 }
 ```
 
@@ -122,6 +135,7 @@ If you want OpenClaw to recommend skills, set:
     - `{ "selected_skills": [{"skill_id":"...", "params":{...}}], "why":"...", "priority": 1 }`
 
 The brain will still enforce allowlists and risk tiers.
+If a decider selects skill IDs not present in `.remit-scout/skills/catalog.yaml`, the brain escalates by adding `manual.human_triage` and records the catalog mismatch in the decision rationale.
 
 ## GitHub Actions dispatch (optional)
 If you want the brain to actually trigger evidence workflows:
@@ -132,6 +146,13 @@ If you want the brain to actually trigger evidence workflows:
 
 Every requested dispatch is always written to `ops/brain/outbox/` for auditability (even if dispatch is disabled).
 
+Dry-run simulation mode:
+- Set `BRAIN_TRIAGE_MODE=dry_run` to simulate triage dispatch without calling GitHub Actions APIs.
+- Dry-run writes deterministic outbox requests with `status=simulated` and includes bounded/rollback evidence notes to support replay in `live` mode.
+- Outbox filenames are timestamp-first (`dispatch-<utc_ts>-<route_order>-...json`) so lexicographic ordering follows request order.
+- Ingestion orders pending dispatch records by `requested_at` then `route_order` before applying per-loop limits.
+- Keep `BRAIN_TRIAGE_MODE=live` for normal execution.
+
 ## GitHub Actions ingestion (optional, closes the loop)
 If you want the brain to ingest GitHub Actions evidence artifacts and write durable Run records:
 - Set `BRAIN_INGEST_GITHUB_ACTIONS=1`
@@ -140,9 +161,25 @@ If you want the brain to ingest GitHub Actions evidence artifacts and write dura
 Behavior:
 - The brain correlates dispatched workflows using `dispatch_id` (uuid).
 - It downloads the evidence artifact, extracts `evidence.json`, and writes:
-  - `.remit-scout/cases/<case_id>/runs/run-<timestamp>-<dispatch_id>.json`
+  - `.remit-scout/cases/<case_id>/runs/run-<finished_at_utc_ts>-<dispatch_id>.json`
 - It posts a Slack thread reply on the Case card (if Slack is enabled).
+- Slack finding summaries redact failure-bundle archive URLs/paths; operators should use `decision_record.rollback_evidence.refs` in the Run record for replay pointers.
 - It comments on the linked GitHub Issue (if `links.github_issue` is populated and token has `issues:write`).
+
+## Case index + retention observability
+Brain emits one structured observability event per loop:
+- `event=issueops_case_index_retention@v1`
+
+The event measures:
+- case index health (`indexed_missing_case_dirs`, `unindexed_case_dirs`)
+- lifecycle distribution (`open|blocked|closed`)
+- retention drift for closed cases + run artifacts
+
+Policy knobs (observe-only; no automatic deletion):
+- `BRAIN_CASE_INDEX_RETENTION_DAYS` (default `90`)
+- `BRAIN_CASE_RUN_RETENTION_DAYS` (default `90`)
+
+The event always includes bounded evidence + rollback notes so operators can audit and manually execute cleanup safely.
 
 ## GitHub Issue creation (optional)
 If you want each new Case to open a GitHub Issue automatically:

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://remit-scout.local/schema/skill.schema.json",
+  "$id": "https://schemas.remit-scout.com/issueops/skill.schema.json",
   "title": "IssueOps Skill Catalog",
   "type": "object",
   "additionalProperties": false,

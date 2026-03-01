@@ -34,6 +34,11 @@ Purpose:
 - [ ] Confirm required staging/prod env contracts exist (vars + secrets in GitHub Environment).
 - [ ] Confirm AWS caller identity and region are correct for target env.
 - [ ] Confirm no active critical alarms in current target env before changing anything.
+- [ ] Confirm latest successful rollback drill evidence for target env is fresh (completed within the last 14 days) and attach run URL + artifact ref.
+- [ ] Confirm agent LLM connector contract is complete for target env:
+  - `AGENT_LLM_CONNECTOR`, `AGENT_LLM_MODEL`, `AGENT_LLM_PROMPT_VERSION`
+  - If `bedrock`: `AGENT_BEDROCK_REGION` + `AGENT_BEDROCK_MODEL_ID`
+  - If `anthropic`: `AGENT_ANTHROPIC_API_KEY_SECRET_ARN` (staging/prod)
 - [ ] If this is the first deploy after CDK stack split:
   - run nested-stack migration procedure from `docs/runbooks/cdk-nested-stack-migration.md`
   - require zero replacement before normal deploy
@@ -85,6 +90,10 @@ Execution:
 - [ ] Verify queue workers and refresh paths are operational:
   - corridor/provider data returns non-empty for known supported lanes
   - no sustained queue backlog or DLQ growth
+- [ ] Verify Ralph loop telemetry for provider healing:
+  - `agent_heal_attempt_count`, `agent_heal_success_count`, `agent_heal_blocked_count`
+  - `agent_llm_latency_ms`, `agent_prompt_schema_validation_failures`
+  - Per-provider evidence in the canary window (`agent_provider_healable_event`) covers all 24 canonical providers.
 - [ ] Verify frontend staging host + TLS + API base are correct.
 - [ ] Verify New Relic staging observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
@@ -126,6 +135,10 @@ Execution:
   - post-deploy smoke success
   - alarm rollback gate clear
   - `/remit-scout/prod/last-good-image` updated
+- [ ] Verify agent LLM startup checks passed in logs:
+  - connector config completeness
+  - secret-backed auth path validated
+  - no prompt schema validation failures in canary synthetic runs
 - [ ] Verify New Relic prod observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
   - `NEW_RELIC_STAGING_AWS_ROLE_ARN=<staging_role_arn> NEW_RELIC_PROD_AWS_ROLE_ARN=<prod_role_arn> node ops/newrelic/sync-cloud-links.mjs`
@@ -148,6 +161,9 @@ Exit criteria:
 - New Relic observability gate failure (dashboards/alerts/cloud links/verify-signals).
 - Auth/JWT validation broken on staging full.
 - Environment contract drift (missing required vars/secrets).
+- Agent LLM contract drift (`AGENT_*` connector/model/prompt/env mismatch).
+- Missing provider healing coverage evidence for any of the 24 canonical providers in the canary window.
+- Rollback drill evidence for target env is older than 14 days.
 - Enterprise path is active (`PLANE_A_REQUIRE_API_KEY=1`) but `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE` is not `audited`.
 
 ## Evidence bundle to attach in every promotion handoff

@@ -16,9 +16,9 @@ Design goals:
 - `cases/<case_id>/`:
   - `prd.yaml`
   - `plan.yaml`
-  - `runs/run-<timestamp>.json`
+  - `runs/run-<timestamp>.json` (must include `decision_record` with bounded + rollback evidence)
+  - lifecycle tracked in `cases/index.json`
 
 ## CI Rules
 - Case artifacts and registries must be schema-valid.
 - Missing required fields or invalid shapes fail the PR.
-

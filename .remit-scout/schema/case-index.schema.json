@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://remit-scout.local/schema/case-index.schema.json",
+  "$id": "https://schemas.remit-scout.com/issueops/case-index.schema.json",
   "title": "IssueOps Case Index",
   "type": "object",
   "additionalProperties": false,
@@ -14,10 +14,45 @@
         "additionalProperties": false,
         "required": ["case_id", "env", "status", "updated_at"],
         "properties": {
-          "case_id": { "type": "string" },
+          "case_id": {
+            "type": "string",
+            "minLength": 3,
+            "description": "Deterministic case identifier. Recommended shape: case-<env>-<domain>-<subject>-<fingerprint>"
+          },
           "env": { "type": "string", "enum": ["dev", "staging", "prod"] },
           "status": { "type": "string", "enum": ["open", "blocked", "closed"] },
-          "updated_at": { "type": "string" }
+          "updated_at": { "type": "string", "minLength": 10 },
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z0-9._:+-]+@v[0-9]+$",
+            "description": "Versioned ownership tag matching PRD owner_assignment.ownership_tag convention"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "provider_health",
+              "queue",
+              "api_latency",
+              "freshness",
+              "indices",
+              "pulse",
+              "exports",
+              "infra_drift",
+              "security",
+              "other"
+            ],
+            "description": "IssueOps domain classification matching PRD domain enum"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["sev0", "sev1", "sev2", "sev3"],
+            "description": "Case severity aligned with PRD severity enum"
+          },
+          "prd_refs": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "PRD item IDs linked to this case"
+          }
         }
       }
     }

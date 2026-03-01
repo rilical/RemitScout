@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://remit-scout.local/schema/plan.schema.json",
+  "$id": "https://schemas.remit-scout.com/issueops/plan.schema.json",
   "title": "IssueOps Case Plan",
   "type": "object",
   "additionalProperties": false,
-  "required": ["case_id", "goal", "constraints", "skills", "guardrails"],
+  "required": ["case_id", "goal", "constraints", "skills", "guardrails", "acceptance_proof"],
   "properties": {
     "case_id": { "type": "string", "minLength": 3 },
     "goal": { "type": "string", "minLength": 1 },
@@ -18,15 +18,119 @@
     "traceability": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "spec_refs", "bounded_evidence", "rollback_evidence"],
+      "required": [
+        "version",
+        "task_lifecycle_version",
+        "runtime_stage_gates",
+        "spec_refs",
+        "bounded_evidence",
+        "rollback_evidence"
+      ],
       "properties": {
         "version": { "type": "string", "enum": ["v1"] },
+        "task_lifecycle_version": {
+          "type": "string",
+          "enum": ["v1"],
+          "description": "Versioned task-progress lifecycle contract. v1 statuses: todo|in_progress|blocked|done. v1 transitions: todo->in_progress|blocked, in_progress->done|blocked|todo, blocked->todo|in_progress. Same-state updates are idempotent no-ops."
+        },
+        "parallelizable_tag": {
+          "type": "string",
+          "pattern": "^[a-z0-9._:+-]+@v[0-9]+$"
+        },
+        "runtime_stage_gates": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z0-9._:+-]+@v[0-9]+$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9._:+-]+@v[0-9]+$"
+            }
+          }
+        },
         "spec_refs": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+/?$"
+          }
         },
         "bounded_evidence": { "type": "boolean" },
         "rollback_evidence": { "type": "boolean" }
+      }
+    },
+    "acceptance_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_note",
+        "acceptance_note",
+        "bounded_evidence_note",
+        "rollback_evidence_note"
+      ],
+      "properties": {
+        "source_note": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "acceptance_note": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "bounded_evidence_note": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "rollback_evidence_note": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "plan_snapshots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 25,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "snapshot_id",
+          "captured_at",
+          "trigger",
+          "summary",
+          "bounded_evidence_note",
+          "rollback_evidence_note"
+        ],
+        "properties": {
+          "snapshot_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9._:+-]+@v[0-9]+$"
+          },
+          "captured_at": { "type": "string", "minLength": 20, "maxLength": 40 },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "plan_created",
+              "task_status_change",
+              "manual_review",
+              "execution_handoff",
+              "rollback_handoff"
+            ]
+          },
+          "summary": { "type": "string", "minLength": 1, "maxLength": 300 },
+          "spec_refs": {
+            "type": "array",
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 260,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+/?$"
+            }
+          },
+          "bounded_evidence_note": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "rollback_evidence_note": { "type": "string", "minLength": 1, "maxLength": 500 }
+        }
       }
     },
     "constraints": {

@@ -8,6 +8,9 @@ The Slack Front Desk is the operator UI for IssueOps:
 
 This keeps Slack as a UI surface only. The Brain remains the policy + execution router.
 
+Inbox filename contract:
+- Front desk writes timestamp-first inbox filenames (`inbox-<utc_ts>-<event_type>-<uuid>.json`) so Brain inbox scans can process events in deterministic lexical order.
+
 ## Components
 - Slack Front Desk runner (Socket Mode):
   - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/frontdesk/slack-frontdesk.ts`

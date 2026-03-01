@@ -1,23 +1,42 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://remit-scout.local/schema/run.schema.json",
+  "$id": "https://schemas.remit-scout.com/issueops/run.schema.json",
   "title": "IssueOps Case Run",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "case_id",
     "run_id",
+    "feedback_source",
+    "user_goal",
     "started_at",
     "finished_at",
     "executor",
     "skills_executed",
     "results",
     "evidence_refs",
+    "decision_record",
     "next_recommendation"
   ],
   "properties": {
     "case_id": { "type": "string", "minLength": 3 },
     "run_id": { "type": "string", "minLength": 3 },
+    "feedback_source": {
+      "type": "object",
+      "description": "AGENTS protocol: confirm feedback source (chat transcript or file path) per run.",
+      "additionalProperties": false,
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["chat_transcript", "file_path"] },
+        "ref": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "user_goal": {
+      "type": "string",
+      "description": "AGENTS protocol: confirm user goal in one phrase per run.",
+      "minLength": 1,
+      "maxLength": 300
+    },
     "dispatch_id": { "type": "string" },
     "started_at": { "type": "string", "minLength": 10 },
     "finished_at": { "type": "string", "minLength": 10 },
@@ -72,6 +91,128 @@
           "kind": { "type": "string", "enum": ["github_artifact", "s3", "cloudwatch", "link", "log"] },
           "ref": { "type": "string" },
           "checksum": { "type": "string" }
+        }
+      }
+    },
+    "decision_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template_version",
+        "decision",
+        "summary",
+        "reason_codes",
+        "human_in_loop",
+        "bounded_evidence",
+        "rollback_evidence"
+      ],
+      "properties": {
+        "template_version": { "type": "string", "enum": ["v1"] },
+        "decision": {
+          "type": "string",
+          "enum": ["iterate", "escalate", "open_pr", "close_case"]
+        },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "reason_codes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "maxItems": 25
+        },
+        "human_in_loop": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "contract_version",
+            "required",
+            "status",
+            "escalation_channel",
+            "route_skill_id",
+            "escalation_sla_minutes",
+            "escalation_owner_tag",
+            "reason_codes",
+            "handoff_summary",
+            "bounded_evidence_note",
+            "rollback_evidence_note"
+          ],
+          "properties": {
+            "contract_version": { "type": "string", "enum": ["v1"] },
+            "required": { "type": "boolean" },
+            "status": { "type": "string", "enum": ["not_required", "pending_human_triage"] },
+            "escalation_channel": { "type": "string", "enum": ["slack_frontdesk"] },
+            "route_skill_id": { "type": "string", "enum": ["manual.human_triage"] },
+            "escalation_sla_minutes": { "type": "integer", "minimum": 0, "maximum": 10080 },
+            "escalation_owner_tag": {
+              "type": "string",
+              "pattern": "^[a-z0-9._:+-]+@v[0-9]+$"
+            },
+            "reason_codes": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "maxItems": 10
+            },
+            "handoff_summary": { "type": "string", "minLength": 1, "maxLength": 300 },
+            "bounded_evidence_note": { "type": "string", "minLength": 1, "maxLength": 300 },
+            "rollback_evidence_note": { "type": "string", "minLength": 1, "maxLength": 300 }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": { "required": { "const": true } },
+                "required": ["required"]
+              },
+              "then": {
+                "properties": {
+                  "status": { "const": "pending_human_triage" },
+                  "escalation_sla_minutes": { "minimum": 1 }
+                }
+              },
+              "else": {
+                "properties": {
+                  "status": { "const": "not_required" },
+                  "escalation_sla_minutes": { "const": 0 }
+                }
+              }
+            }
+          ]
+        },
+        "bounded_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "findings_considered",
+            "max_findings",
+            "evidence_refs_considered",
+            "max_evidence_refs"
+          ],
+          "properties": {
+            "findings_considered": { "type": "integer", "minimum": 0, "maximum": 25 },
+            "max_findings": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "evidence_refs_considered": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "max_evidence_refs": { "type": "integer", "minimum": 0, "maximum": 200 }
+          }
+        },
+        "rollback_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "available", "refs", "note"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "available": { "type": "boolean" },
+            "refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "ref"],
+                "properties": {
+                  "kind": { "type": "string", "enum": ["github_artifact", "s3", "cloudwatch", "link", "log"] },
+                  "ref": { "type": "string" }
+                }
+              }
+            },
+            "note": { "type": "string", "minLength": 1, "maxLength": 300 }
+          }
         }
       }
     },

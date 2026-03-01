@@ -1,0 +1,33 @@
+# Ralph Audit & Fix Progress Log (Codex)
+Started: 2026-02-28
+Purpose: Remit-Scout audit then implement fixes.
+Output: .codex/ralph-audit/audit/*.md, .codex/ralph-audit/fix-complete/*.done
+---
+
+## Audit Checklist (complete)
+- [x] AUDIT-RS-001: Plane A API
+- [x] AUDIT-RS-002: Plane B Providers
+- [x] AUDIT-RS-003: Queues & Workers
+- [x] AUDIT-RS-004: Data Lineage & Gold Integrity
+- [x] AUDIT-RS-005: Auth & Entitlements
+- [x] AUDIT-RS-006: Frontend-API Contract
+- [x] AUDIT-RS-007: Observability & Alerts
+- [x] AUDIT-RS-008: Infrastructure & Deploy Wiring
+- [x] AUDIT-RS-009: Config & Secrets
+- [x] AUDIT-RS-010: Tests & Coverage
+- [x] AUDIT-RS-011: Dead Code & Artifacts
+- [x] AUDIT-RS-012: Final Index
+
+## Fix Checklist (pending)
+- [x] FIX-RS-001: Plane A API
+- [x] FIX-RS-002: Plane B Providers
+- [x] FIX-RS-003: Queues & Workers
+- [x] FIX-RS-004: Data Lineage & Gold
+- [x] FIX-RS-005: Auth & Entitlements
+- [x] FIX-RS-006: Frontend-API Contract
+- [x] FIX-RS-007: Observability & Alerts
+- [x] FIX-RS-008: Infra & Deploy
+- [x] FIX-RS-009: Config & Secrets
+- [x] FIX-RS-010: Tests & Coverage
+- [x] FIX-RS-011: Dead Code & Artifacts
+---

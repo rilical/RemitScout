@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://remit-scout.local/schema/reason-code.schema.json",
+  "$id": "https://schemas.remit-scout.com/issueops/reason-code.schema.json",
   "title": "IssueOps Reason Code Catalog",
   "type": "object",
   "additionalProperties": false,
