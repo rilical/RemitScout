@@ -53,3 +53,115 @@ describe('normalizeQuote promo fields', () => {
     expect(result.promotional_fee_amount).toBeNull()
   })
 })
+
+describe('executability detection (promotional_teaser flag)', () => {
+  it('flags quote when promotional_rate diverges > 2% from derived rate', () => {
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-IN-USD-INR',
+      send_amount: 1000,
+      fee_amount: 5,
+      receive_amount: 83000,
+      promotional_rate: 90.0, // derived = 83000/1000 = 83.0; divergence = 8.4%
+      base_rate: 83.0,
+      payin_method: 'bank_transfer',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000002',
+      bronze_object_key: 'bronze.provider_raw:2',
+    })
+    expect(result.quality_flags).toContain('promotional_teaser')
+  })
+
+  it('does NOT flag when promotional_rate is within 2% of derived rate', () => {
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-IN-USD-INR',
+      send_amount: 1000,
+      fee_amount: 5,
+      receive_amount: 83000,
+      promotional_rate: 83.5, // derived = 83.0; divergence = 0.6%
+      base_rate: 83.0,
+      payin_method: 'bank_transfer',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000003',
+      bronze_object_key: 'bronze.provider_raw:3',
+    })
+    expect(result.quality_flags).not.toContain('promotional_teaser')
+  })
+
+  it('does NOT flag when no promotional_rate is present', () => {
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-IN-USD-INR',
+      send_amount: 1000,
+      fee_amount: 5,
+      receive_amount: 83000,
+      payin_method: 'bank_transfer',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000004',
+      bronze_object_key: 'bronze.provider_raw:4',
+    })
+    expect(result.quality_flags).not.toContain('promotional_teaser')
+  })
+
+  it('does NOT flag when promotional_rate equals derived rate exactly', () => {
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-MX-USD-MXN',
+      send_amount: 100,
+      fee_amount: 2,
+      receive_amount: 1800,
+      promotional_rate: 18.0, // derived = 1800/100 = 18.0; divergence = 0%
+      base_rate: 17.5,
+      payin_method: 'debit_card',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000005',
+      bronze_object_key: 'bronze.provider_raw:5',
+    })
+    expect(result.quality_flags).not.toContain('promotional_teaser')
+  })
+
+  it('does NOT flag at exactly 2.0% divergence (at boundary, threshold is strictly >2%)', () => {
+    // derived = 1800/100 = 18.0; 2.0% of 18.0 = 0.36; promo = 18.36
+    // divergence = |18.36 - 18.0| / 18.0 = 0.02 = exactly 2.0%, NOT > 2%
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-MX-USD-MXN',
+      send_amount: 100,
+      fee_amount: 2,
+      receive_amount: 1800,
+      promotional_rate: 18.36,
+      base_rate: 17.5,
+      payin_method: 'debit_card',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000007',
+      bronze_object_key: 'bronze.provider_raw:7',
+    })
+    expect(result.quality_flags).not.toContain('promotional_teaser')
+  })
+
+  it('flags at boundary: promotional_rate diverges exactly 2.1% from derived rate', () => {
+    // derived = 1800/100 = 18.0
+    // 2.1% of 18.0 = 0.378 => promotional_rate = 18.378
+    const result = normalizeQuote({
+      provider_id: 'remitly',
+      corridor_id: 'US-MX-USD-MXN',
+      send_amount: 100,
+      fee_amount: 2,
+      receive_amount: 1800,
+      promotional_rate: 18.378,
+      base_rate: 17.5,
+      payin_method: 'debit_card',
+      payout_method: 'bank_deposit',
+      collected_at: new Date('2026-01-15T12:00:00.000Z'),
+      ingestion_run_id: '00000000-0000-0000-0000-000000000006',
+      bronze_object_key: 'bronze.provider_raw:6',
+    })
+    expect(result.quality_flags).toContain('promotional_teaser')
+  })
+})
