@@ -171,7 +171,7 @@ const requestWithCookies = async (
   })
 
   const bodyText = await response.text()
-  const setCookies = parseSetCookie(response.headers)
+  const setCookies = parseSetCookie(response.headers as unknown as Headers)
   cookieJar.updateFromSetCookie(setCookies)
 
   let json: unknown

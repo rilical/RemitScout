@@ -411,7 +411,7 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
-          details: error.errors,
+          details: error.issues,
         } })
       }
       if (error instanceof ValidationError || error instanceof NotFoundError) {
@@ -776,7 +776,7 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
           success: false,
           error: 'validation_error',
           message: 'Invalid request data',
-          details: error.errors,
+          details: error.issues,
         } })
       }
       if (error instanceof ValidationError || error instanceof NotFoundError) {

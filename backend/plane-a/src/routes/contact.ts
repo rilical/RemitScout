@@ -279,7 +279,7 @@ export const contactRoutes = async (app: FastifyInstance) => {
 
       if (isValidationError) {
         throw new ValidationError('Invalid form data. Please check your input.', {
-          details: error.errors,
+          details: error.issues,
           cause: error,
         })
       }

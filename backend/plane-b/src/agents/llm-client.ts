@@ -1,6 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { llmCircuitBreaker, LLM_CIRCUIT_OPEN_SENTINEL } from './llm-circuit-breaker'
 
 const logger = createLogger('plane-b.agents.llm-client')
 
@@ -84,21 +85,30 @@ class AnthropicConnector implements LLMConnector {
       throw new Error('Anthropic connector is not configured (missing API key).')
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: request.maxTokens ?? this.maxTokens,
-        temperature: request.temperature ?? this.temperature,
-        system: request.systemPrompt,
-        messages: [{ role: 'user', content: request.userPrompt }],
-      }),
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
+
+    let response: Response
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: request.maxTokens ?? this.maxTokens,
+          temperature: request.temperature ?? this.temperature,
+          system: request.systemPrompt,
+          messages: [{ role: 'user', content: request.userPrompt }],
+        }),
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -285,13 +295,28 @@ export class LLMClient {
       }
     }
 
-    return this.connector.sendMessage({
-      model: request.model || this.defaultModel,
-      systemPrompt: request.systemPrompt,
-      userPrompt: request.userPrompt,
-      maxTokens: request.maxTokens ?? this.defaultMaxTokens,
-      temperature: request.temperature ?? this.defaultTemperature,
-    })
+    if (!llmCircuitBreaker.canAttempt()) {
+      logger.warn('llm_circuit_open_short_circuit', {
+        connector: this.connector.connector,
+        model: request.model || this.defaultModel,
+      })
+      return { ...LLM_CIRCUIT_OPEN_SENTINEL, model: request.model || this.defaultModel }
+    }
+
+    try {
+      const response = await this.connector.sendMessage({
+        model: request.model || this.defaultModel,
+        systemPrompt: request.systemPrompt,
+        userPrompt: request.userPrompt,
+        maxTokens: request.maxTokens ?? this.defaultMaxTokens,
+        temperature: request.temperature ?? this.defaultTemperature,
+      })
+      llmCircuitBreaker.onSuccess()
+      return response
+    } catch (err) {
+      llmCircuitBreaker.onFailure(err)
+      throw err
+    }
   }
 
   async analyzeFailure(context: {

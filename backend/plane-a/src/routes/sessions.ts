@@ -40,7 +40,7 @@ const trackSessionSchema = z.object({
   anon_id: z.string().min(6).max(128).optional(),
   device_type: z.string().max(64).optional(),
   location: z.string().max(128).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 const revokeAllSchema = z.object({

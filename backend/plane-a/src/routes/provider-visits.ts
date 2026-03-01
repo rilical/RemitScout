@@ -13,7 +13,7 @@ const trackSchema = z.object({
   corridor_id: z.string().optional(),
   target_url: z.string().min(1),
   page_path: z.string().optional(),
-  utm: z.record(z.string()).optional(),
+  utm: z.record(z.string(), z.string()).optional(),
   gclid: z.string().optional(),
   fbclid: z.string().optional(),
   msclkid: z.string().optional(),
