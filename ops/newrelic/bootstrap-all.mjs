@@ -9,7 +9,7 @@
  *
  * Optional env:
  * - NEW_RELIC_REGION (US|EU, default US)
- * - NEW_RELIC_ALERT_EMAIL (default in notifications script)
+ * - NEW_RELIC_ALERT_EMAIL (required for notifications script)
  */
 
 import { spawn } from 'node:child_process'
@@ -32,7 +32,7 @@ if (process.env.NEW_RELIC_STAGING_AWS_ROLE_ARN && process.env.NEW_RELIC_PROD_AWS
   tasks.push({ label: 'Cloud links', script: 'sync-cloud-links.mjs' })
 } else {
   console.log(
-    'Skipping Cloud links (set NEW_RELIC_STAGING_AWS_ROLE_ARN and NEW_RELIC_PROD_AWS_ROLE_ARN to enable)',
+    '[skip] Cloud links (set NEW_RELIC_STAGING_AWS_ROLE_ARN and NEW_RELIC_PROD_AWS_ROLE_ARN to enable)',
   )
 }
 

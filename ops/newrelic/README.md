@@ -7,7 +7,7 @@ Use these scripts to manage Remit-Scout New Relic dashboards, mirrored alerts, a
 - `NEW_RELIC_USER_API_KEY` (NerdGraph user key)
 - `NEW_RELIC_ACCOUNT_ID`
 - `NEW_RELIC_REGION` (`US` or `EU`, default `US`)
-- `NEW_RELIC_ALERT_EMAIL` (optional, defaults to `austrilic@gmail.com` for notification routing)
+- `NEW_RELIC_ALERT_EMAIL` (required for email notification routing)
 - `NEW_RELIC_STAGING_AWS_ACCOUNT_ID` / `NEW_RELIC_PROD_AWS_ACCOUNT_ID` (optional, improves env scoping in verification)
 
 ## 0) Full bootstrap (recommended)
@@ -16,7 +16,7 @@ Use these scripts to manage Remit-Scout New Relic dashboards, mirrored alerts, a
 NEW_RELIC_USER_API_KEY=... \
 NEW_RELIC_ACCOUNT_ID=7756888 \
 NEW_RELIC_REGION=US \
-NEW_RELIC_ALERT_EMAIL=omar@remit-scout.com \
+NEW_RELIC_ALERT_EMAIL=alerts@remit-scout.com \
 node ops/newrelic/bootstrap-all.mjs
 ```
 
@@ -101,7 +101,7 @@ Workloads:
 NEW_RELIC_USER_API_KEY=... \
 NEW_RELIC_ACCOUNT_ID=7756888 \
 NEW_RELIC_REGION=US \
-NEW_RELIC_ALERT_EMAIL=omar@remit-scout.com \
+NEW_RELIC_ALERT_EMAIL=alerts@remit-scout.com \
 node ops/newrelic/sync-notifications-workflows.mjs
 ```
 

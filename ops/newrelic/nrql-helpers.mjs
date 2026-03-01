@@ -34,6 +34,27 @@ const METRIC_NAMESPACE_BY_NAME = Object.freeze({
   provider_collection_success_by_provider_total: 'RemitScout',
   http_request_duration_seconds: 'RemitScout',
   http_requests_total: 'RemitScout',
+
+  detection_cycle_count: 'RemitScout/Agents',
+  failure_bundle_created: 'RemitScout/Agents',
+  repair_proposal_generated: 'RemitScout/Agents',
+  tool_request_total: 'RemitScout/Agents',
+  tool_request_blocked: 'RemitScout/Agents',
+  knowledge_retrieval_total: 'RemitScout/Agents',
+  knowledge_retrieval_insufficient: 'RemitScout/Agents',
+  stress_escalation_incident: 'RemitScout/Agents',
+  detection_run_total: 'RemitScout/Agents',
+  detection_modules_scanned: 'RemitScout/Agents',
+  detection_bundles_by_category: 'RemitScout/Agents',
+  module_quarantined: 'RemitScout/Agents',
+  deploy_pr_created: 'RemitScout/Agents',
+  deploy_pr_deferred: 'RemitScout/Agents',
+  deploy_pr_failed: 'RemitScout/Agents',
+  stress_computation_total: 'RemitScout/Agents',
+  stress_signals_by_level: 'RemitScout/Agents',
+  stress_corridors_scanned: 'RemitScout/Agents',
+  normalization_success_total: 'RemitScout/Agents',
+  normalization_quality_flag_total: 'RemitScout/Agents',
 })
 
 const escapeNrqlValue = (value) => String(value).replace(/'/g, "\\'")

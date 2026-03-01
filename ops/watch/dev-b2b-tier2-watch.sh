@@ -85,15 +85,15 @@ plane_a_probe() {
   local label="$1"
   local url="$2"
   local resp status
-  resp="$(curl -sS --max-time 15 -w $'\\n__HTTP_STATUS:%{http_code}__\\n' \"$url\" 2>/dev/null || true)"
-  status="$(printf '%s' \"$resp\" | awk -F'__HTTP_STATUS:' 'NF>1{print $2}' | tr -d '_' | tr -d '\\n' | tail -n 1)"
-  if [[ -z \"${status}\" ]]; then
-    status=\"000\"
+  resp="$(curl -sS --max-time 15 -w $'\n__HTTP_STATUS:%{http_code}__\n' "$url" 2>/dev/null || true)"
+  status="$(printf '%s' "$resp" | awk -F'__HTTP_STATUS:' 'NF>1{print $2}' | tr -d '_' | tr -d '\n' | tail -n 1)"
+  if [[ -z "${status}" ]]; then
+    status="000"
   fi
-  if printf '%s' \"$resp\" | rg -q 'quotes_unavailable|collecting'; then
-    echo \"${label}=status_${status}_collecting\"
+  if printf '%s' "$resp" | rg -q 'quotes_unavailable|collecting'; then
+    echo "${label}=status_${status}_collecting"
   else
-    echo \"${label}=status_${status}_ok\"
+    echo "${label}=status_${status}_ok"
   fi
 }
 

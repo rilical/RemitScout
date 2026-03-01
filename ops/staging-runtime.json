@@ -1,0 +1,38 @@
+{
+  "opsPauseRuleAllowlist": [
+    "b2b-sweep-scheduler"
+  ],
+  "opsResumeRuleAllowlist": [
+    "b2b-sweep-scheduler",
+    "b2c-refresh-worker",
+    "b2c-retry-failed",
+    "fx-rate-refresh-worker",
+    "gold-fx-rates",
+    "oanda-sync",
+    "rights-matrix-sync-countries",
+    "bank-vs-specialist-refresh",
+    "export-worker",
+    "institutional-daily-export"
+  ],
+  "purgeQueuesOnResume": true,
+  "purgeQueueAllowlist": [
+    "ingest-fanout",
+    "ingest-fanout-tier2",
+    "gold-live",
+    "quote-refresh",
+    "fx-rate-refresh"
+  ],
+  "businessHours": {
+    "enabled": true,
+    "timezone": "America/New_York",
+    "resumeCron": "cron(0 8 ? * MON-FRI *)",
+    "pauseCron": "cron(0 20 ? * MON-FRI *)"
+  },
+  "interfaceEndpointAllowlist": [
+    "ecr.api",
+    "ecr.dkr",
+    "logs",
+    "secretsmanager",
+    "sqs"
+  ]
+}

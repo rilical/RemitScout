@@ -867,6 +867,187 @@ const buildDashboardInput = ({ environmentName, envName, nameToken, awsAccountId
           ),
         ],
       },
+      {
+        name: 'Agent Self-Healing',
+        widgets: [
+          widgetMarkdown(
+            'Agent Pipeline Overview',
+            `## Agent Self-Healing Pipeline\n\n` +
+              `**Detection** → **Failure Bundles** → **Patch Proposals** → **Validation** → **Deploy (PR)**\n\n` +
+              `Monitors: Orchestrator cycles, failure detection, tool gateway, knowledge plane, stress response.\n` +
+              `Namespace: \`RemitScout/Agents\` · Managed by \`ops/newrelic/bootstrap-dashboards.mjs\`.`,
+            1,
+            1,
+            12,
+            2,
+          ),
+          widgetBillboard(
+            'Detection Cycles (1h)',
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('detection_cycle_count')} AND ${runtimeEnvironmentFilter} SINCE 1 hour ago`,
+            3,
+            1,
+          ),
+          widgetBillboard(
+            'Failure Bundles (1h)',
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('failure_bundle_created')} AND ${runtimeEnvironmentFilter} SINCE 1 hour ago`,
+            3,
+            4,
+          ),
+          widgetBillboard(
+            'Repair Proposals (1h)',
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('repair_proposal_generated')} AND ${runtimeEnvironmentFilter} SINCE 1 hour ago`,
+            3,
+            7,
+          ),
+          widgetBillboard(
+            'Stress Incidents (1h)',
+            `FROM Metric SELECT sum(value) WHERE ${buildMetricNameFilter('stress_escalation_incident')} AND ${runtimeEnvironmentFilter} SINCE 1 hour ago`,
+            3,
+            10,
+          ),
+          widgetLine(
+            'Orchestrator Cycles + Bundles',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('detection_cycle_count')}) AS 'cycles', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('failure_bundle_created')}) AS 'bundles' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            6,
+            1,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Proposals + PRs Created + Deferred',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('repair_proposal_generated')}) AS 'proposals', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('deploy_pr_created')}) AS 'prs_created', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('deploy_pr_deferred')}) AS 'prs_deferred' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            6,
+            7,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Tool Gateway: Requests + Blocked',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('tool_request_total')}) AS 'requests', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('tool_request_blocked')}) AS 'blocked' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            10,
+            1,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Knowledge Retrievals + Insufficient',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('knowledge_retrieval_total')}) AS 'retrievals', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('knowledge_retrieval_insufficient')}) AS 'insufficient' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            10,
+            7,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Failure Detector: Modules Scanned + Quarantined',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('detection_modules_scanned')}) AS 'modules_scanned', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('module_quarantined')}) AS 'quarantined' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            14,
+            1,
+            6,
+            4,
+          ),
+          widgetTable(
+            'Agent Metric Inventory',
+            `FROM Metric SELECT count(*) ` +
+              `WHERE ${buildMetricNamesFilter([
+                'detection_cycle_count', 'failure_bundle_created', 'repair_proposal_generated',
+                'tool_request_total', 'tool_request_blocked',
+                'knowledge_retrieval_total', 'knowledge_retrieval_insufficient',
+                'stress_escalation_incident',
+                'detection_run_total', 'detection_modules_scanned', 'detection_bundles_by_category',
+                'module_quarantined',
+                'deploy_pr_created', 'deploy_pr_deferred', 'deploy_pr_failed',
+              ])} ` +
+              `AND ${runtimeEnvironmentFilter} FACET metricName SINCE 6 hours ago LIMIT 30`,
+            14,
+            7,
+          ),
+        ],
+      },
+      {
+        name: 'Normalization + Stress',
+        widgets: [
+          widgetLine(
+            'Normalization Success / Failure',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('normalization_success_total')}) AS 'success', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('normalization_quality_flag_total')}) AS 'quality_flags' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            1,
+            1,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Quality Flags by Type',
+            `FROM Metric SELECT sum(value) ` +
+              `WHERE ${buildMetricNameFilter('normalization_quality_flag_total')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET flag_type SINCE 6 hours ago TIMESERIES 10 minutes`,
+            1,
+            7,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Stress Signals by Level',
+            `FROM Metric SELECT sum(value) ` +
+              `WHERE ${buildMetricNameFilter('stress_signals_by_level')} ` +
+              `AND ${runtimeEnvironmentFilter} FACET stress_level SINCE 6 hours ago TIMESERIES 10 minutes`,
+            5,
+            1,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Stress Computation + Corridors Scanned',
+            `FROM Metric SELECT ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('stress_computation_total')}) AS 'computations', ` +
+              `filter(sum(value), WHERE ${buildMetricNameFilter('stress_corridors_scanned')}) AS 'corridors_scanned' ` +
+              `WHERE ${runtimeEnvironmentFilter} SINCE 6 hours ago TIMESERIES 10 minutes`,
+            5,
+            7,
+            6,
+            4,
+          ),
+          widgetLine(
+            'Stress Escalation Incidents (24h)',
+            `FROM Metric SELECT sum(value) ` +
+              `WHERE ${buildMetricNameFilter('stress_escalation_incident')} ` +
+              `AND ${runtimeEnvironmentFilter} SINCE 24 hours ago TIMESERIES 30 minutes`,
+            9,
+            1,
+            6,
+            4,
+          ),
+          widgetTable(
+            'Normalization + Stress Signal Inventory',
+            `FROM Metric SELECT count(*) ` +
+              `WHERE ${buildMetricNamesFilter([
+                'normalization_success_total', 'normalization_quality_flag_total',
+                'stress_computation_total', 'stress_signals_by_level', 'stress_corridors_scanned',
+                'stress_escalation_incident',
+              ])} ` +
+              `AND ${runtimeEnvironmentFilter} FACET metricName SINCE 6 hours ago LIMIT 20`,
+            9,
+            7,
+          ),
+        ],
+      },
     ],
   }
 }

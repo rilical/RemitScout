@@ -330,6 +330,58 @@ const buildConditionDefinitions = ({ envName, envLabel, token, awsAccountId }) =
       thresholdOccurrences: 'AT_LEAST_ONCE',
       runbookUrl: `${runbookBase}/provider-outage.md`,
     },
+    {
+      name: `[${envLabel}] orchestrator-detection-stall (mirror)`,
+      description: 'Mirror of CloudWatch agent alarm: no detection cycles in 10 minutes',
+      query:
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${buildMetricNameFilter('detection_cycle_count')} ` +
+        `AND ${runtimeScopedFilter}`,
+      operator: 'BELOW',
+      threshold: 1,
+      thresholdDuration: 600,
+      thresholdOccurrences: 'AT_LEAST_ONCE',
+      runbookUrl: `${runbookBase}/agent-operations.md`,
+    },
+    {
+      name: `[${envLabel}] tool-gateway-violations (mirror)`,
+      description: 'Mirror of CloudWatch agent alarm: >10 tool requests blocked in 5 minutes',
+      query:
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${buildMetricNameFilter('tool_request_blocked')} ` +
+        `AND ${runtimeScopedFilter}`,
+      operator: 'ABOVE_OR_EQUALS',
+      threshold: 10,
+      thresholdDuration: 300,
+      thresholdOccurrences: 'AT_LEAST_ONCE',
+      runbookUrl: `${runbookBase}/agent-operations.md`,
+    },
+    {
+      name: `[${envLabel}] corridor-stress-incident (mirror)`,
+      description: 'Mirror of CloudWatch agent alarm: any incident-level stress escalation',
+      query:
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${buildMetricNameFilter('stress_escalation_incident')} ` +
+        `AND ${runtimeScopedFilter}`,
+      operator: 'ABOVE_OR_EQUALS',
+      threshold: 1,
+      thresholdDuration: 300,
+      thresholdOccurrences: 'AT_LEAST_ONCE',
+      runbookUrl: `${runbookBase}/agent-operations.md`,
+    },
+    {
+      name: `[${envLabel}] failure-bundle-burst (mirror)`,
+      description: 'Mirror of CloudWatch agent alarm: >20 failure bundles in 15 minutes',
+      query:
+        `FROM Metric SELECT sum(value) ` +
+        `WHERE ${buildMetricNameFilter('failure_bundle_created')} ` +
+        `AND ${runtimeScopedFilter}`,
+      operator: 'ABOVE_OR_EQUALS',
+      threshold: 20,
+      thresholdDuration: 900,
+      thresholdOccurrences: 'AT_LEAST_ONCE',
+      runbookUrl: `${runbookBase}/agent-operations.md`,
+    },
   ]
 }
 

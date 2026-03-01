@@ -63,25 +63,48 @@ const ENDPOINT =
     ? 'https://api.eu.newrelic.com/graphql'
     : 'https://api.newrelic.com/graphql'
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const shouldRetryHttpStatus = (status) => status === 429 || status >= 500
+
 const gql = async (query, variables = {}) => {
-  const response = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'API-Key': NEW_RELIC_USER_API_KEY,
-    },
-    body: JSON.stringify({ query, variables }),
-  })
+  const maxAttempts = 4
+  let lastError = null
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'API-Key': NEW_RELIC_USER_API_KEY,
+        },
+        body: JSON.stringify({ query, variables }),
+      })
 
-  if (!response.ok) {
-    throw new Error(`NerdGraph request failed: HTTP ${response.status}`)
-  }
+      if (!response.ok) {
+        const error = new Error(`NerdGraph request failed: HTTP ${response.status}`)
+        if (attempt < maxAttempts && shouldRetryHttpStatus(response.status)) {
+          const backoff = 250 * 2 ** (attempt - 1) + Math.floor(Math.random() * 150)
+          await sleep(backoff)
+          lastError = error
+          continue
+        }
+        throw error
+      }
 
-  const payload = await response.json()
-  if (payload.errors?.length) {
-    throw new Error(`NerdGraph error: ${payload.errors.map((e) => e.message).join(' | ')}`)
+      const payload = await response.json()
+      if (payload.errors?.length) {
+        throw new Error(`NerdGraph error: ${payload.errors.map((e) => e.message).join(' | ')}`)
+      }
+      return payload.data
+    } catch (error) {
+      lastError = error
+      if (attempt >= maxAttempts) break
+      const backoff = 250 * 2 ** (attempt - 1) + Math.floor(Math.random() * 150)
+      await sleep(backoff)
+    }
   }
-  return payload.data
+  throw (lastError || new Error('NerdGraph request failed'))
 }
 
 const nrqlValue = async (query, key) => {
@@ -188,6 +211,20 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
         'telemetry_affiliate_conversion_value',
         'export_jobs_completed',
         'export_jobs_failed',
+      ],
+    },
+    {
+      name: 'agents',
+      required: false,
+      metricNames: [
+        'detection_cycle_count',
+        'failure_bundle_created',
+        'repair_proposal_generated',
+        'tool_request_total',
+        'tool_request_blocked',
+        'knowledge_retrieval_total',
+        'knowledge_retrieval_insufficient',
+        'stress_escalation_incident',
       ],
     },
   ]

@@ -8,13 +8,13 @@
  * - NEW_RELIC_ACCOUNT_ID
  * Optional:
  * - NEW_RELIC_REGION (US|EU, default US)
- * - NEW_RELIC_ALERT_EMAIL (default: austrilic@gmail.com)
+ * - NEW_RELIC_ALERT_EMAIL (required for email workflow destination)
  */
 
 const NEW_RELIC_USER_API_KEY = process.env.NEW_RELIC_USER_API_KEY || ''
 const NEW_RELIC_ACCOUNT_ID = Number.parseInt(process.env.NEW_RELIC_ACCOUNT_ID || '', 10)
 const NEW_RELIC_REGION = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
-const NEW_RELIC_ALERT_EMAIL = (process.env.NEW_RELIC_ALERT_EMAIL || 'austrilic@gmail.com').trim()
+const NEW_RELIC_ALERT_EMAIL = (process.env.NEW_RELIC_ALERT_EMAIL || '').trim()
 
 if (!NEW_RELIC_USER_API_KEY) {
   console.error('Missing NEW_RELIC_USER_API_KEY')
@@ -542,4 +542,3 @@ main().catch((error) => {
   console.error(error.message || String(error))
   process.exit(1)
 })
-

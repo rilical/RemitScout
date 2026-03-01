@@ -1,8 +1,118 @@
 # progress.txt
 # id|status|note
-AI-SH-0001|blocked|No <promise> token found in codex response
-AI-SH-0002|blocked|No <promise> token found in codex response
-AI-SH-0003|blocked|No <promise> token found in codex response
-AI-SH-0004|blocked|No <promise> token found in codex response
-AI-SH-0005|blocked|No <promise> token found in codex response
-AI-SH-0006|blocked|Unknown promise token:
+AI-SH-0001|blocked|rollback evidence: recovered from blocked (codex promise failure); ready for retry; iteration 1 started; Codex execution failed (classification=fatal, exit=1, attempts=1, retries=0)
+AI-SH-0002|done|DONE completed; added feedback_source and user_goal to Run schema and template
+AI-SH-0003|blocked|iteration 1 started; documenting project contract onboarding; rollback evidence: recovered stale in_progress during manual pre-loop (progress.txt reconciliation); Codex execution failed (classification=fatal, exit=1, attempts=1, retries=0)
+AI-SH-0004|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting execution; bounded evidence: case-index.schema.json now enforces case_id minLength:3, domain enum matching PRD, severity enum matching PRD, ownership_tag pattern matching PRD convention, updated_at minLength:10; template case_ids normalized to case-<env>-<domain>-<subject>-<fingerprint> format; execution cluster gates unified to gate.change_reviewed@v1 across PRD+Plan templates; CI validator adds case_id consistency check between directory name and prd/plan/run case_id fields; validate-issueops-contracts.ts passes clean; rollback evidence: revert case-index.schema.json to restore priority field and remove domain enum + ownership_tag pattern; revert template case_ids to case-20260218-example; revert plan template gate to gate.validation_passed@v1; revert CI validator case_id consistency checks
+AI-SH-0005|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting execution; bounded evidence: added validateEnvInvariants() to validate-issueops-contracts.ts enforcing prod/staging plans require prod_read_only=true, prod plans require max_diff_lines=0, prod/staging plan constraints must include prod_read_only=true, cross-validates case-index env with PRD env; documented env invariant rules in .remit-scout/AGENTS.md do-not-break section; validate-issueops-contracts.ts passes clean; rollback evidence: revert validateEnvInvariants function and indexedEnvs map from validate-issueops-contracts.ts; revert env invariant lines from .remit-scout/AGENTS.md
+AI-SH-0006|done|rollback evidence: recovered from blocked (unknown promise token); ready for retry; starting execution; bounded evidence: documented 7 tag namespaces (owner.*, trace.*, parallel.*, cluster.*, gate.*, snapshot.*, ops.*) with conventions and immutability rules in .remit-scout/AGENTS.md; added tag-versioning-conventions concern to source-of-truth-matrix (16 concerns total); added known namespace prefix validation to validate-ralph-contracts.ts for ownership_tag (owner.*, ops.*), traceability_tag (trace.*), and parallelizable_tag (parallel.*); all CI validators pass clean; rollback evidence: revert tag convention docs from .remit-scout/AGENTS.md; remove tag-versioning-conventions concern from SPECS/source-of-truth-matrix.json; revert namespace prefix validation from validate-ralph-contracts.ts
+AI-SH-0007|done|rollback evidence: recovered from blocked (quality gate failure); ready for retry; starting execution; bounded evidence: documented priority/run-order policy in .remit-scout/AGENTS.md (sort algorithm: dependency_depth > priority > run_order > id; single in_progress constraint; defaults priority=100, run_order=array index); added priority-run-order-policy concern to source-of-truth-matrix (17 concerns total); added priority tracking in validate-ralph-contracts.ts (seenPriorities map for audit trail); source-of-truth-matrix validates ok; issueops contracts validate ok; rollback evidence: revert priority/run-order policy section from .remit-scout/AGENTS.md; remove priority-run-order-policy concern from SPECS/source-of-truth-matrix.json; revert seenPriorities changes in validate-ralph-contracts.ts
+AI-SH-0008|done|rollback evidence: recovered from blocked (codex execution failure); ready for retry; starting execution; bounded evidence: documented blocked-state recovery semantics in .remit-scout/AGENTS.md covering blocked->todo (re-queue), blocked->in_progress (resume), reconcile behavior (does not auto-recover blocked tasks), mark note format, and done-is-terminal rule; schemas already document v1 lifecycle transitions; CI validators pass; rollback evidence: revert blocked-state recovery section from .remit-scout/AGENTS.md
+AI-SH-0009|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting: gate human-in-the-loop boundaries for self-healing; bounded evidence: documented human-in-the-loop boundaries in .remit-scout/AGENTS.md covering propose-only v1, auto-deploy v2 gating (AGENT_DIRECT_DEPLOY + autoHealEnabled + high confidence), 6 escalation triggers, escalation handoff contract, agent file scope, privileged action routing, audit trail, patch safety gates; all derived from run.schema.json human_in_loop allOf/if-then-else, agent-config.ts requiresApproval default, patch-deployer.ts deploy method, issueops-judge.ts escalation logic; validate-issueops-contracts passes; validate-source-of-truth-matrix passes; rollback evidence: revert human-in-the-loop boundaries section in .remit-scout/AGENTS.md
+AI-SH-0010|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting: map documentation-to-spec sync contract guarantees; bounded evidence: documented SPECS sync contract in .remit-scout/AGENTS.md covering three sync strategies (single-source, derived-copy, manual-review), static copy mapping (14 entries), bundle copy mechanism, CI enforcement, max file size; added content-match validation to validate-source-of-truth-matrix.ts for derived-copy strategy (compares canonical file content with derived copy); both validators pass; rollback evidence: revert documentation-to-SPECS sync contract section in .remit-scout/AGENTS.md and revert content-match validation in validate-source-of-truth-matrix.ts (remove strategy variable and content comparison block in check 6)
+AI-SH-0011|done|rollback evidence: recovered from blocked (codex execution failure); ready for retry; starting: anchor SPECS/README governance manifest auditability; bounded evidence: enhanced SPECS/README.md governance manifest with total synced count, governance references, and non-manifest files list (plan.mjs buildSpecCatalog); added manifest count consistency check to validate-source-of-truth-matrix.ts (check 8); added content-match validation for derived-copy strategy (check 6 enhanced in previous task); documented governance manifest auditability in .remit-scout/AGENTS.md; both validators pass (18 concerns); rollback evidence: revert SPECS/README.md header changes in scripts/ralph/plan.mjs readmeLines array and remove check 8 from validate-source-of-truth-matrix.ts
+AI-SH-0012|done|DONE completed
+AI-SH-0013|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting execution; bounded evidence: added ralph-plan-versions and ralph-orchestrator-config concerns to SPECS/source-of-truth-matrix.json (now 15 concerns); added validateVersionPins() to validate-ralph-contracts.ts that extracts and validates 4 version constants (RALPH_LOOP_PROTOCOL_VERSION=v2, RALPH_PLAN_SCHEMA_VERSION=v2, RALPH_PROGRESS_SCHEMA_VERSION=v1, TASK_LIFECYCLE_VERSION=v1) from scripts/ralph/plan.mjs and cross-references IMPLEMENTATION_PLAN.md header; validate-source-of-truth-matrix passes with 15 concerns; version-pins validation passes clean; rollback evidence: revert the 2 new concern entries from SPECS/source-of-truth-matrix.json; revert validateVersionPins function from validate-ralph-contracts.ts
+AI-SH-0014|done|DONE completed
+AI-SH-0015|done|DONE completed
+AI-SH-0016|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting: normalize safe edit scope policy for propose-only flows; bounded evidence: tightened patch-validator checkAffectedFilesExist to enforce directory allowlist (providers + modules), file allowlist (parse.ts + fetch.ts only), and path traversal protection; documented safe edit scope policy in .remit-scout/AGENTS.md with three enforcement layers (directory allowlist, file allowlist, path traversal); both CI validators pass; rollback evidence: revert checkAffectedFilesExist in patch-validator.ts to original validPrefixes check and revert safe edit scope section in .remit-scout/AGENTS.md
+AI-SH-0017|done|DONE completed
+AI-SH-0018|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting execution; bounded evidence: documented dual-write atomicity, same-state no-ops, note merging deduplication, single in_progress constraint, reconcile behavior in .remit-scout/AGENTS.md; added progress-state-semantics concern to SPECS/source-of-truth-matrix.json (18 concerns); validate-source-of-truth-matrix passes; validate-issueops-contracts passes; rollback evidence: revert .remit-scout/AGENTS.md progress state semantics section and remove progress-state-semantics entry from SPECS/source-of-truth-matrix.json
+AI-SH-0019|done|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting: index manual override and emergency stop policy; bounded evidence: documented manual override and emergency stop policy in .remit-scout/AGENTS.md covering agent kill switches (AGENT_{ID}_ENABLED, AGENT_DIRECT_DEPLOY), collection kill switches (PLANE_B_DISABLE_TIER1, provider stoplist, circuit breaker), platform emergency stop (OpsPause Lambda, make ops-pause-*), cadence override safety rails (60min TTL, 4x max), reconciliation procedure; derived from backend/shared/config.ts, agent-config.ts, docs/runbooks/dev-pause-resume.md, docs/runbooks/agent-operations.md; both CI validators pass; rollback evidence: revert manual override and emergency stop policy section in .remit-scout/AGENTS.md
+AI-SH-0020|done|DONE completed
+AI-SH-0021|done|DONE completed
+AI-SH-0022|in_progress|rollback evidence: recovered from blocked (codex promise failure); ready for retry; starting: map risk-tier tags on all task categories
+AI-SH-0023|done|DONE completed; dependency graph contract anchored
+AI-SH-0024|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0025|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0026|done|DONE completed
+AI-SH-0027|done|DONE completed
+AI-SH-0028|done|DONE completed
+AI-SH-0029|done|DONE completed
+AI-SH-0030|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0031|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0032|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0033|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0034|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0035|done|DONE completed
+AI-SH-0036|todo|rollback evidence: recovered from blocked (codex promise failure); ready for retry
+AI-SH-0037|done|DONE completed
+AI-SH-0038|done|DONE completed
+AI-SH-0039|todo|retry: prior run missing promise token
+AI-SH-0040|todo|retry: prior run missing promise token
+AI-SH-0041|todo|retry: prior run missing promise token
+AI-SH-0042|todo|retry: prior run missing promise token
+AI-SH-0043|todo|retry: prior run missing promise token
+AI-SH-0044|todo|retry: prior run missing promise token
+AI-SH-0045|todo|retry: prior run missing promise token
+AI-SH-0046|done|DONE completed
+AI-SH-0047|todo|retry: prior run missing promise token
+AI-SH-0048|todo|retry: prior run missing promise token
+AI-SH-0049|todo|retry: prior run missing promise token
+AI-SH-0050|todo|retry: prior run missing promise token
+AI-SH-0051|todo|retry: prior run missing promise token
+AI-SH-0052|todo|retry: prior run missing promise token
+AI-SH-0053|todo|retry: prior run missing promise token
+AI-SH-0054|todo|retry: prior run missing promise token
+AI-SH-0055|todo|retry: prior run missing promise token
+AI-SH-0056|todo|retry: prior run missing promise token
+AI-SH-0057|todo|retry: prior run missing promise token
+AI-SH-0058|todo|retry: prior run missing promise token
+AI-SH-0059|done|DONE completed
+AI-SH-0060|done|DONE completed
+AI-SH-0061|todo|retry: prior run missing promise token
+AI-SH-0062|done|DONE completed
+AI-SH-0063|todo|retry: prior run missing promise token
+AI-SH-0064|todo|retry: prior run missing promise token
+AI-SH-0065|todo|retry: prior run missing promise token
+AI-SH-0066|todo|retry: prior run missing promise token
+AI-SH-0067|todo|retry: prior run missing promise token
+AI-SH-0068|done|DONE completed
+AI-SH-0069|todo|retry: prior run missing promise token
+AI-SH-0070|todo|retry: prior run missing promise token
+AI-SH-0071|done|DONE completed
+AI-SH-0072|todo|retry: prior run missing promise token
+AI-SH-0073|todo|retry: prior run missing promise token
+AI-SH-0074|done|DONE completed
+AI-SH-0075|todo|retry: prior run missing promise token
+AI-SH-0076|done|DONE completed
+AI-SH-0077|done|DONE completed
+AI-SH-0078|todo|retry: prior run missing promise token
+AI-SH-0079|todo|retry: prior run missing promise token
+AI-SH-0080|todo|retry: prior run missing promise token
+AI-SH-0081|todo|retry: prior run missing promise token
+AI-SH-0082|done|DONE completed
+AI-SH-0083|todo|retry: prior run missing promise token
+AI-SH-0084|todo|retry: prior run missing promise token
+AI-SH-0085|todo|retry: prior run missing promise token
+AI-SH-0086|done|DONE completed
+AI-SH-0087|done|DONE completed
+AI-SH-0088|todo|retry: prior run missing promise token
+AI-SH-0089|todo|retry: prior run missing promise token
+AI-SH-0090|done|DONE completed
+AI-SH-0091|todo|retry: prior run missing promise token
+AI-SH-0092|done|DONE completed
+AI-SH-0093|done|DONE completed
+AI-SH-0094|done|DONE completed
+AI-SH-0095|todo|retry: prior run missing promise token
+AI-SH-0096|todo|retry: prior run missing promise token
+AI-SH-0097|done|DONE completed
+AI-SH-0098|todo|retry: prior run missing promise token
+AI-SH-0099|todo|retry: prior run missing promise token
+AI-SH-0100|done|DONE completed
+AI-SH-0101|done|DONE completed
+AI-SH-0102|todo|retry: prior run missing promise token
+AI-SH-0103|todo|retry: prior run missing promise token
+AI-SH-0104|todo|retry: prior run missing promise token
+AI-SH-0105|todo|retry: prior run missing promise token
+AI-SH-0106|todo|retry: prior run missing promise token
+AI-SH-0107|todo|retry: prior run missing promise token
+AI-SH-0108|done|DONE completed
+AI-SH-0109|todo|retry: prior run missing promise token
+AI-SH-0110|done|DONE completed
+AI-SH-0111|todo|retry: prior run missing promise token
+AI-SH-0112|todo|retry: prior run missing promise token
+AI-SH-0113|todo|retry: prior run missing promise token
+AI-SH-0114|todo|retry: prior run missing promise token
+AI-SH-0115|todo|retry: prior run missing promise token
+AI-SH-0116|todo|rollback evidence: recovered stale in_progress after manual stop

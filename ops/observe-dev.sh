@@ -26,10 +26,14 @@ if ! AWS_PROFILE="$AWS_PROFILE" AWS_REGION="$AWS_REGION" aws sts get-caller-iden
   exit 2
 fi
 
-BASE_URL="$(python3 - <<PY
+BASE_URL="$(
+  SESSION_FILE="$SESSION_FILE" python3 - <<'PY'
 import json
-with open("$SESSION_FILE","r") as f:
-  print(json.load(f).get("baseUrl","").strip())
+import os
+
+path = os.environ["SESSION_FILE"]
+with open(path, "r", encoding="utf-8") as f:
+  print(str(json.load(f).get("baseUrl", "")).strip())
 PY
 )"
 
@@ -102,23 +106,34 @@ if [[ -n "$BASE_URL" ]]; then
   echo
 fi
 
-PAUSE_AT_END="$(python3 - <<PY
+PAUSE_AT_END="$(
+  SESSION_FILE="$SESSION_FILE" python3 - <<'PY'
 import json
-with open("$SESSION_FILE","r") as f:
+import os
+
+path = os.environ["SESSION_FILE"]
+with open(path, "r", encoding="utf-8") as f:
   print('true' if json.load(f).get('pauseAtEnd', True) else 'false')
 PY
 )"
-DURATION_HOURS="$(python3 - <<PY
+DURATION_HOURS="$(
+  SESSION_FILE="$SESSION_FILE" python3 - <<'PY'
 import json
-with open("$SESSION_FILE","r") as f:
+import os
+
+path = os.environ["SESSION_FILE"]
+with open(path, "r", encoding="utf-8") as f:
   print(int(json.load(f).get('durationHours', 4)))
 PY
 )"
 
 # Best-effort: use the file mtime as session start (avoids persisting extra state).
-START_EPOCH="$(python3 - <<PY
+START_EPOCH="$(
+  SESSION_FILE="$SESSION_FILE" python3 - <<'PY'
 import os
-print(int(os.stat("$SESSION_FILE").st_mtime))
+
+path = os.environ["SESSION_FILE"]
+print(int(os.stat(path).st_mtime))
 PY
 )"
 NOW_EPOCH="$(date +%s)"
@@ -133,4 +148,3 @@ if [[ "$PAUSE_AT_END" == "true" && "$ELAPSED_SEC" -ge "$LIMIT_SEC" ]]; then
   echo "== Final status =="
   make status-dev || true
 fi
-

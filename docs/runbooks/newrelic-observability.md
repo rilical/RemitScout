@@ -71,7 +71,7 @@ New dedicated pages (kept alongside existing pages):
 If provisioning a fresh account or reconciling drift, run this once:
 
 ```bash
-NEW_RELIC_ALERT_EMAIL=omar@remit-scout.com node ops/newrelic/bootstrap-all.mjs
+NEW_RELIC_ALERT_EMAIL=alerts@remit-scout.com node ops/newrelic/bootstrap-all.mjs
 ```
 
 It upserts dashboards, mirrored alerts, workloads, and incident workflows in one pass.
@@ -179,8 +179,8 @@ The check fails if any required signal group is missing:
 If not using full bootstrap:
 
 ```bash
-NEW_RELIC_ALERT_EMAIL=omar@remit-scout.com node ops/newrelic/sync-workloads.mjs
-NEW_RELIC_ALERT_EMAIL=omar@remit-scout.com node ops/newrelic/sync-notifications-workflows.mjs
+NEW_RELIC_ALERT_EMAIL=alerts@remit-scout.com node ops/newrelic/sync-workloads.mjs
+NEW_RELIC_ALERT_EMAIL=alerts@remit-scout.com node ops/newrelic/sync-notifications-workflows.mjs
 ```
 
 Expected workloads:
