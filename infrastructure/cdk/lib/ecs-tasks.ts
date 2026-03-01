@@ -140,9 +140,10 @@ export const createEcsTasks = (
   const isStaging = options.envName === 'staging'
   const isConservativeWorkerDefaults = isDev || isStaging
   const minimalMode = options.minimalMode === true
-  const logRetention = isProd
-    ? RetentionDays.ONE_MONTH
-    : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
+  const appLogRetentionDays = process.env.APP_LOG_RETENTION_DAYS
+    ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
+    : (isProd ? 3 : 1)
+  const logRetention = appLogRetentionDays
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
