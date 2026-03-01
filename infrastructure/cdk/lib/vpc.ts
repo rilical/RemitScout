@@ -69,11 +69,11 @@ export const createNetworking = (
     destination: FlowLogDestination.toCloudWatchLogs(
       new LogGroup(scope, 'VpcFlowLogGroup', {
         logGroupName: `/remit-scout/${options.envName}/vpc-flow-logs`,
-        retention: isProd ? RetentionDays.ONE_YEAR : RetentionDays.ONE_MONTH,
+        retention: isProd ? RetentionDays.TWO_WEEKS : RetentionDays.THREE_DAYS,
         removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
       }),
     ),
-    trafficType: FlowLogTrafficType.ALL,
+    trafficType: FlowLogTrafficType.REJECT,
   })
 
   vpc.addGatewayEndpoint('S3GatewayEndpoint', {
