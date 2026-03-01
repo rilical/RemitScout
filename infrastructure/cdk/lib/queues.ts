@@ -188,7 +188,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const goldLiveQueue = new Queue(scope, 'GoldLiveQueue', {
     queueName: goldLiveQueueName,
     visibilityTimeout: Duration.minutes(2),
-    retentionPeriod: Duration.days(2),
+    retentionPeriod: Duration.days(4),
     encryption: QueueEncryption.KMS_MANAGED,
     deadLetterQueue: {
       queue: goldLiveDlq,
@@ -207,7 +207,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const notificationsQueue = new Queue(scope, 'NotificationsQueue', {
     queueName: notificationsQueueName,
     visibilityTimeout: Duration.minutes(2),
-    retentionPeriod: Duration.days(2),
+    retentionPeriod: Duration.days(4),
     encryption: QueueEncryption.KMS_MANAGED,
     deadLetterQueue: {
       queue: notificationsDlq,

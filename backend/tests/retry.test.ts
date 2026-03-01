@@ -1,6 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
 import { retry } from '../shared/retry'
 
+/**
+ * Helper: create an AWS-style retryable error (5xx HTTP status code).
+ * The default retryable predicate in retry.ts delegates to isRetryableError
+ * from aws-errors.ts, which only retries transient/AWS errors.
+ */
+const makeAwsRetryableError = (message: string): Error & { $metadata?: { httpStatusCode: number } } => {
+  const err = new Error(message) as Error & { $metadata?: { httpStatusCode: number } }
+  err.$metadata = { httpStatusCode: 503 }
+  return err
+}
+
 describe('retry', () => {
   it('returns result on first attempt', async () => {
     const fn = vi.fn().mockResolvedValue('success')
@@ -11,10 +22,10 @@ describe('retry', () => {
     expect(fn).toHaveBeenCalledTimes(1)
   })
 
-  it('retries on failure and succeeds', async () => {
+  it('retries on AWS-retryable failure and succeeds', async () => {
     const fn = vi
       .fn()
-      .mockRejectedValueOnce(new Error('fail'))
+      .mockRejectedValueOnce(makeAwsRetryableError('service_unavailable'))
       .mockResolvedValue('success')
 
     const result = await retry(fn, { maxRetries: 2, initialDelayMs: 10 })
@@ -23,8 +34,8 @@ describe('retry', () => {
     expect(fn).toHaveBeenCalledTimes(2)
   })
 
-  it('exhausts retries and throws last error', async () => {
-    const error = new Error('persistent error')
+  it('exhausts retries and throws last error for AWS-retryable errors', async () => {
+    const error = makeAwsRetryableError('persistent error')
     const fn = vi.fn().mockRejectedValue(error)
 
     await expect(
@@ -34,7 +45,7 @@ describe('retry', () => {
   })
 
   it('uses custom maxRetries', async () => {
-    const error = new Error('error')
+    const error = makeAwsRetryableError('error')
     const fn = vi.fn().mockRejectedValue(error)
 
     await expect(
@@ -47,8 +58,8 @@ describe('retry', () => {
     const startTime = Date.now()
     const fn = vi
       .fn()
-      .mockRejectedValueOnce(new Error('fail1'))
-      .mockRejectedValueOnce(new Error('fail2'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail1'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail2'))
       .mockResolvedValue('success')
 
     const result = await retry(fn, {
@@ -68,8 +79,8 @@ describe('retry', () => {
     const startTime = Date.now()
     const fn = vi
       .fn()
-      .mockRejectedValueOnce(new Error('fail1'))
-      .mockRejectedValueOnce(new Error('fail2'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail1'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail2'))
       .mockResolvedValue('success')
 
     const result = await retry(fn, {
@@ -88,7 +99,7 @@ describe('retry', () => {
   it('applies jitter when enabled', async () => {
     const fn = vi
       .fn()
-      .mockRejectedValueOnce(new Error('fail'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail'))
       .mockResolvedValue('success')
 
     const result = await retry(fn, {
@@ -162,12 +173,12 @@ describe('retry', () => {
     ).rejects.toThrow('error')
   })
 
-  it('handles multiple sequential failures with backoff', async () => {
+  it('handles multiple sequential failures with backoff for AWS-retryable errors', async () => {
     const fn = vi
       .fn()
-      .mockRejectedValueOnce(new Error('fail1'))
-      .mockRejectedValueOnce(new Error('fail2'))
-      .mockRejectedValueOnce(new Error('fail3'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail1'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail2'))
+      .mockRejectedValueOnce(makeAwsRetryableError('fail3'))
       .mockResolvedValue('success')
 
     const result = await retry(fn, {
@@ -180,5 +191,85 @@ describe('retry', () => {
     expect(result).toBe('success')
     expect(fn).toHaveBeenCalledTimes(4)
   })
-})
 
+  // --- Default predicate narrowing tests ---
+  // These tests verify the fix: the default retryable predicate must NOT retry
+  // generic Error instances (which would include permanent failures like
+  // validation errors, auth errors, not-found errors, etc.).
+
+  it('default predicate does NOT retry a plain new Error (permanent failure)', async () => {
+    // A plain Error with no AWS metadata should not be retried by the default predicate.
+    // Previously, `|| error instanceof Error` caused ALL errors to be retried.
+    const permanentError = new Error('not_found: resource does not exist')
+    const fn = vi.fn().mockRejectedValue(permanentError)
+
+    await expect(
+      retry(fn, { maxRetries: 3, initialDelayMs: 10 }),
+    ).rejects.toThrow('not_found: resource does not exist')
+
+    // Must only be called once — no retries for permanent errors.
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  it('default predicate does NOT retry a validation error (permanent failure)', async () => {
+    const validationError = new Error('validation_error: amount must be positive')
+    const fn = vi.fn().mockRejectedValue(validationError)
+
+    await expect(
+      retry(fn, { maxRetries: 3, initialDelayMs: 10 }),
+    ).rejects.toThrow('validation_error')
+
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  it('default predicate retries AWS throttling errors (transient, 429)', async () => {
+    const throttlingError = new Error('ThrottlingException') as Error & { code?: string }
+    throttlingError.code = 'ThrottlingException'
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(throttlingError)
+      .mockResolvedValue('success')
+
+    const result = await retry(fn, { maxRetries: 2, initialDelayMs: 10 })
+
+    expect(result).toBe('success')
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
+  it('default predicate retries AWS 503 ServiceUnavailable errors (transient)', async () => {
+    const serviceError = makeAwsRetryableError('ServiceUnavailable')
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(serviceError)
+      .mockResolvedValue('success')
+
+    const result = await retry(fn, { maxRetries: 2, initialDelayMs: 10 })
+
+    expect(result).toBe('success')
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
+
+  it('default predicate does NOT retry AWS 400 client errors (permanent)', async () => {
+    const clientError = new Error('BadRequest') as Error & { $metadata?: { httpStatusCode: number } }
+    clientError.$metadata = { httpStatusCode: 400 }
+    const fn = vi.fn().mockRejectedValue(clientError)
+
+    await expect(
+      retry(fn, { maxRetries: 3, initialDelayMs: 10 }),
+    ).rejects.toThrow('BadRequest')
+
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
+  it('default predicate does NOT retry AWS 403 Forbidden errors (permanent)', async () => {
+    const forbiddenError = new Error('AccessDeniedException') as Error & { code?: string }
+    forbiddenError.code = 'AccessDeniedException'
+    const fn = vi.fn().mockRejectedValue(forbiddenError)
+
+    await expect(
+      retry(fn, { maxRetries: 3, initialDelayMs: 10 }),
+    ).rejects.toThrow('AccessDeniedException')
+
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+})
