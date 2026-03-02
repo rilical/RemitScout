@@ -13,7 +13,7 @@ const logger = createLogger('plane-a.api-version')
 const API_VERSION = '2026-03-01'
 
 export const apiVersionPlugin = (app: FastifyInstance) => {
-  app.addHook('onSend', async (request, reply) => {
+  app.addHook('onSend', async (request, reply, payload) => {
     reply.header('X-API-Version', API_VERSION)
 
     const acceptVersion = request.headers['accept-version']
@@ -24,5 +24,6 @@ export const apiVersionPlugin = (app: FastifyInstance) => {
         path: request.url.split('?')[0],
       })
     }
+    return payload
   })
 }
