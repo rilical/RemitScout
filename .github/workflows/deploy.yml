@@ -152,6 +152,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -162,6 +163,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -335,6 +337,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: dev
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -354,8 +357,8 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
-          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          max_attempts=90
+          poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
@@ -365,6 +368,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
                 sleep "${poll_seconds}"
                 ;;
               *)
@@ -377,6 +393,41 @@ jobs:
           timeout_seconds=$((max_attempts * poll_seconds))
           echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (dev)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
+          retry-max-attempts: 3
 
       - name: CDK Deploy (dev, paused)
         shell: bash
@@ -703,6 +754,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -713,6 +765,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -962,6 +1015,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: staging
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -981,8 +1035,8 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
-          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          max_attempts=90
+          poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
@@ -992,6 +1046,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
                 sleep "${poll_seconds}"
                 ;;
               *)
@@ -1004,6 +1071,41 @@ jobs:
           timeout_seconds=$((max_attempts * poll_seconds))
           echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (staging)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
+          retry-max-attempts: 3
 
       - name: CDK Deploy (staging)
         shell: bash
@@ -1686,6 +1788,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -1696,6 +1799,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -1944,6 +2048,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: prod
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -1963,8 +2068,8 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
-          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          max_attempts=90
+          poll_seconds=10
           for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
@@ -1974,6 +2079,19 @@ jobs:
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
                 echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
                 sleep "${poll_seconds}"
                 ;;
               *)
@@ -1986,6 +2104,41 @@ jobs:
           timeout_seconds=$((max_attempts * poll_seconds))
           echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (prod)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
+          retry-max-attempts: 3
 
       - name: CDK Deploy (prod)
         shell: bash

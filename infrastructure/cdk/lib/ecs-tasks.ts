@@ -196,7 +196,7 @@ export const createEcsTasks = (
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
     retries: 3,
-    startPeriod: Duration.seconds(60),
+    startPeriod: Duration.seconds(120),
   }
 
   const cpuArchitecture = options.cpuArchitecture ?? CpuArchitecture.ARM64
