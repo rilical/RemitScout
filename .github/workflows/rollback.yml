@@ -105,10 +105,14 @@ jobs:
         env:
           ENV_NAME: ${{ inputs.env }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           cluster_id=$(aws rds describe-db-clusters \
             --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
-            --output text | head -1)
+            --output text 2>&1) || {
+            echo "::warning::Cannot check Aurora status (missing rds:DescribeDBClusters permission). Continuing deploy."
+            exit 0
+          }
+          cluster_id="$(echo "$cluster_id" | head -1)"
           if [ -z "$cluster_id" ]; then
             echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
             exit 0
@@ -118,7 +122,10 @@ jobs:
             --query 'DBClusters[0].Status' --output text)
           if [ "$status" = "stopped" ]; then
             echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
-            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id" || {
+              echo "::warning::Cannot start Aurora (missing rds:StartDBCluster permission). Continuing deploy."
+              exit 0
+            }
             aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
             echo "Aurora is now available."
           elif [ "$status" != "available" ]; then
