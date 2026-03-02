@@ -560,12 +560,21 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: dev
           STATUS: ${{ job.status }}
-          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+          COMMIT_SHA_IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          RESOLVE_REF_SHA: ${{ steps.resolve_ref.outputs.sha }}
+          DEFAULT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           if [ -z "${SLACK_WEBHOOK:-}" ]; then
             echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
             exit 0
+          fi
+          COMMIT_SHA="${COMMIT_SHA_IMAGE_TAG:-${RESOLVE_REF_SHA:-${DEFAULT_SHA:-unknown}}}"
+          if [ -z "${COMMIT_SHA}" ] || [ "${COMMIT_SHA}" = "null" ]; then
+            COMMIT_SHA="unknown"
+          fi
+          if [[ "${COMMIT_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            COMMIT_SHA="${COMMIT_SHA:0:7}"
           fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
@@ -1512,12 +1521,21 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: staging
           STATUS: ${{ job.status }}
-          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
-        run: |
+          COMMIT_SHA_IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          RESOLVE_REF_SHA: ${{ steps.resolve_ref.outputs.sha }}
+          DEFAULT_SHA: ${{ github.sha }}
+        run: | 
           set -euo pipefail
           if [ -z "${SLACK_WEBHOOK:-}" ]; then
             echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
             exit 0
+          fi
+          COMMIT_SHA="${COMMIT_SHA_IMAGE_TAG:-${RESOLVE_REF_SHA:-${DEFAULT_SHA:-unknown}}}"
+          if [ -z "${COMMIT_SHA}" ] || [ "${COMMIT_SHA}" = "null" ]; then
+            COMMIT_SHA="unknown"
+          fi
+          if [[ "${COMMIT_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            COMMIT_SHA="${COMMIT_SHA:0:7}"
           fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
 
@@ -2410,11 +2428,20 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: prod
           STATUS: ${{ job.status }}
-          COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
+          COMMIT_SHA_IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          RESOLVE_REF_SHA: ${{ steps.resolve_ref.outputs.sha }}
+          DEFAULT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           if [ -z "${SLACK_WEBHOOK:-}" ]; then
             echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
             exit 0
+          fi
+          COMMIT_SHA="${COMMIT_SHA_IMAGE_TAG:-${RESOLVE_REF_SHA:-${DEFAULT_SHA:-unknown}}}"
+          if [ -z "${COMMIT_SHA}" ] || [ "${COMMIT_SHA}" = "null" ]; then
+            COMMIT_SHA="unknown"
+          fi
+          if [[ "${COMMIT_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            COMMIT_SHA="${COMMIT_SHA:0:7}"
           fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
