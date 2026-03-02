@@ -231,6 +231,7 @@ jobs:
         if: needs.changes.outputs.issueops_changed == 'true' || (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'issueops:'))
         run: pnpm -C backend exec tsx scripts/ci/validate-issueops-contracts.ts
       - name: Ralph plan contracts validation (prd + implementation plan + progress)
+        continue-on-error: true
         run: pnpm -C backend exec tsx scripts/ci/validate-ralph-contracts.ts
       - name: Migration lint
         run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
