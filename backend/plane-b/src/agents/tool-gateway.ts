@@ -590,7 +590,10 @@ export class ToolGateway {
 
     // Check for Playwright availability at runtime
     try {
-      const { chromium } = await import('playwright-core')
+      // Use a non-static dynamic import so backend builds don't require
+      // playwright-core at compile time in minimal runtime images.
+      const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>
+      const { chromium } = await dynamicImport('playwright-core')
       const browser = await chromium.launch({ headless: true })
       try {
         const page = await browser.newPage()
