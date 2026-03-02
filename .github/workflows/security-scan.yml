@@ -2,9 +2,9 @@ name: Security Scanning
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   schedule:
     - cron: '10 4 * * *' # Daily at 04:10 UTC
   workflow_dispatch:
@@ -51,6 +51,13 @@ jobs:
     steps:
       - id: resolve
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TARGET_URL: ${{ inputs.target_url }}
+          INPUT_RUN_AUTHENTICATED: ${{ inputs.run_authenticated }}
+          INPUT_RUN_FULL_SCAN: ${{ inputs.run_full_scan }}
+          VAR_DAST_AUTH_HEADER_NAME: ${{ vars.DAST_AUTH_HEADER_NAME }}
+          VAR_ZAP_TARGET_URL: ${{ vars.ZAP_TARGET_URL }}
         run: |
           set -euo pipefail
 
@@ -58,18 +65,18 @@ jobs:
           target_url=""
           run_authenticated="false"
           run_full_scan="false"
-          auth_header_name="${{ vars.DAST_AUTH_HEADER_NAME }}"
+          auth_header_name="${VAR_DAST_AUTH_HEADER_NAME}"
 
           if [ -z "${auth_header_name}" ]; then
             auth_header_name="Authorization"
           fi
 
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "schedule" ] || [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             should_run_dast="true"
 
-            target_url="${{ inputs.target_url }}"
+            target_url="${INPUT_TARGET_URL}"
             if [ -z "${target_url}" ]; then
-              target_url="${{ vars.ZAP_TARGET_URL }}"
+              target_url="${VAR_ZAP_TARGET_URL}"
             fi
             target_url="$(echo "${target_url}" | tr -d '[:space:]')"
 
@@ -78,9 +85,9 @@ jobs:
               exit 1
             fi
 
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              run_authenticated="${{ inputs.run_authenticated }}"
-              run_full_scan="${{ inputs.run_full_scan }}"
+            if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              run_authenticated="${INPUT_RUN_AUTHENTICATED}"
+              run_full_scan="${INPUT_RUN_FULL_SCAN}"
             else
               run_authenticated="true"
               run_full_scan="false"

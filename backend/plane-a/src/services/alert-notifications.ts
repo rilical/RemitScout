@@ -815,6 +815,276 @@ export async function sendAlertPush(
   }
 }
 
+export async function sendAlertDegradationEmail(
+  pool: Pool,
+  userId: string,
+  alertId: string,
+  transition: 'paused' | 'resumed',
+  corridorId: string,
+  data: {
+    sampleDays: number | null
+    confidence: number | null
+    minSampleDays: number
+    minConfidence: number
+  },
+): Promise<boolean> {
+  try {
+    const settings = await getNotificationSettings(pool, userId)
+    if (!settings.rateAlertsEnabled || !isChannelEnabled(settings, 'email')) {
+      logger.debug('alert_degradation_email_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+        reason: !settings.rateAlertsEnabled ? 'rate_alerts_disabled' : 'email_disabled',
+      })
+      return false
+    }
+
+    const pref = await getNotificationPref(pool, userId, 'email')
+    if (pref.unsubscribed) {
+      logger.debug('alert_degradation_email_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+        reason: 'unsubscribed',
+      })
+      return false
+    }
+
+    const email = (await getUserEmail(pool, userId)) ?? undefined
+    if (!email) {
+      logger.debug('alert_degradation_email_skipped', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+        reason: 'no_email',
+      })
+      return false
+    }
+    if (await isEmailSuppressed(pool, email)) {
+      logger.debug('alert_degradation_email_suppressed', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+      })
+      return false
+    }
+
+    const client = getSesClient()
+    if (!client) {
+      logger.warn('alert_degradation_email_not_configured', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+      })
+      return false
+    }
+
+    const alertsEmailFrom = config.alerts.notifications.email.from || 'no-reply@remit-scout.com'
+    const alertsEmailFromName = config.alerts.notifications.email.fromName || 'Remit-Scout Alerts'
+    const siteUrl = resolveAlertBaseUrl()
+    if (!siteUrl) {
+      logger.warn('alert_degradation_email_site_url_missing', {
+        user_id: userId,
+        alert_id: alertId,
+        transition,
+      })
+      return false
+    }
+
+    const unsubscribeToken = generateAlertUnsubscribeToken(userId, alertId)
+    const unsubscribeLink = unsubscribeToken
+      ? `${siteUrl.replace(/\/$/, '')}/api/v1/alerts/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
+      : null
+
+    const corridorParts = corridorId.split('-')
+    const fromCountry = corridorParts[0] ?? ''
+    const toCountry = corridorParts[1] ?? ''
+    const fromFlag = countryCodeToFlagEmoji(fromCountry)
+    const toFlag = countryCodeToFlagEmoji(toCountry)
+    const corridorLabel = `${fromFlag} ${fromCountry} → ${toCountry} ${toFlag}`
+
+    const isPaused = transition === 'paused'
+    const subject = isPaused
+      ? `Smart alert paused: ${fromCountry} → ${toCountry}`
+      : `Smart alert active again: ${fromCountry} → ${toCountry}`
+
+    const managePrefsUrl = `${siteUrl.replace(/\/$/, '')}/dashboard?tab=account&section=notifications`
+
+    let textBody: string
+    let bodyHtml: string
+
+    if (isPaused) {
+      const sampleInfo = data.sampleDays !== null
+        ? `Current data: ${data.sampleDays} day${data.sampleDays === 1 ? '' : 's'} (${data.minSampleDays} required)`
+        : `Current data: unavailable (${data.minSampleDays} days required)`
+      const confInfo = data.confidence !== null
+        ? `Confidence: ${(data.confidence * 100).toFixed(0)}% (${(data.minConfidence * 100).toFixed(0)}% required)`
+        : `Confidence: unavailable (${(data.minConfidence * 100).toFixed(0)}% required)`
+
+      textBody = [
+        `Your smart alert for ${corridorLabel} has been paused due to insufficient data.`,
+        '',
+        'What happened:',
+        `The corridor no longer has enough recent data to calculate a reliable smart score.`,
+        '',
+        sampleInfo,
+        confInfo,
+        '',
+        'What this means:',
+        'Your alert is still saved and will automatically resume when enough data becomes available again. No action is needed on your part.',
+        '',
+        `Manage notification preferences: ${managePrefsUrl}`,
+        unsubscribeLink ? `Unsubscribe: ${unsubscribeLink}` : null,
+      ].filter(Boolean).join('\n')
+
+      bodyHtml = buildEmailHtml({
+        title: 'Smart Alert Paused',
+        subtitle: corridorLabel,
+        preheader: `Your smart alert for ${fromCountry} → ${toCountry} is paused due to insufficient data.`,
+        bodyHtml: `
+          <div style="background:#FFFBEB; border:1px solid #F59E0B40; border-radius:12px; padding:16px 18px; margin-bottom:18px;">
+            <div style="font-size:15px; font-weight:600; color:#92400E; margin-bottom:8px; font-family:'Inter',system-ui,sans-serif;">Alert Paused</div>
+            <div style="font-size:14px; color:#78350F; line-height:1.6; font-family:'Inter',system-ui,sans-serif;">
+              Your smart alert for <strong>${corridorLabel}</strong> has been paused because the corridor no longer has enough recent data to calculate a reliable smart score.
+            </div>
+          </div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px; font-size:13px; border-collapse:collapse;">
+            <tr>
+              <td style="padding:8px 12px; color:#64748B; width:40%; font-weight:600; font-size:13px; font-family:'Inter',system-ui,sans-serif; background:#F8FAFC; border-top-left-radius:8px;">Data coverage</td>
+              <td style="padding:8px 12px; color:#0F172A; font-size:13px; font-family:'Inter',system-ui,sans-serif; background:#F8FAFC; border-top-right-radius:8px;">${data.sampleDays !== null ? `${data.sampleDays} days` : 'unavailable'} (${data.minSampleDays} required)</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 12px; color:#64748B; width:40%; font-weight:600; font-size:13px; font-family:'Inter',system-ui,sans-serif; background:#FFFFFF; border-bottom-left-radius:8px;">Confidence</td>
+              <td style="padding:8px 12px; color:#0F172A; font-size:13px; font-family:'Inter',system-ui,sans-serif; background:#FFFFFF; border-bottom-right-radius:8px;">${data.confidence !== null ? `${(data.confidence * 100).toFixed(0)}%` : 'unavailable'} (${(data.minConfidence * 100).toFixed(0)}% required)</td>
+            </tr>
+          </table>
+          <div style="margin-top:18px; font-size:13px; color:#64748B; line-height:1.6; font-family:'Inter',system-ui,sans-serif;">
+            Your alert is still saved and will <strong>automatically resume</strong> when enough data becomes available. No action is needed.
+          </div>
+        `,
+        cta: {
+          text: 'View Alerts',
+          url: `${siteUrl}/dashboard?tab=alerts`,
+        },
+        footerHtml: [
+          `<div>Automated notification from Remit-Scout.</div>`,
+          `<div style="margin-top:10px;">`,
+          `  <a href="${managePrefsUrl}" style="color:#6b7785; text-decoration:underline;">Manage notification preferences</a>`,
+          unsubscribeLink ? `  | <a href="${unsubscribeLink}" style="color:#6b7785; text-decoration:underline;">Unsubscribe</a>` : '',
+          `</div>`,
+        ].join('\n'),
+        theme: 'default',
+        siteUrl,
+      })
+    } else {
+      textBody = [
+        `Good news! Your smart alert for ${corridorLabel} is active again.`,
+        '',
+        'The corridor now has enough data to evaluate your smart score alert. You will receive notifications when your alert conditions are met.',
+        '',
+        `Manage notification preferences: ${managePrefsUrl}`,
+        unsubscribeLink ? `Unsubscribe: ${unsubscribeLink}` : null,
+      ].filter(Boolean).join('\n')
+
+      bodyHtml = buildEmailHtml({
+        title: 'Smart Alert Active',
+        subtitle: corridorLabel,
+        preheader: `Your smart alert for ${fromCountry} → ${toCountry} is active again.`,
+        bodyHtml: `
+          <div style="background:#F0FDF4; border:1px solid #16A34A40; border-radius:12px; padding:16px 18px;">
+            <div style="font-size:15px; font-weight:600; color:#166534; margin-bottom:8px; font-family:'Inter',system-ui,sans-serif;">Alert Active Again</div>
+            <div style="font-size:14px; color:#14532D; line-height:1.6; font-family:'Inter',system-ui,sans-serif;">
+              Your smart alert for <strong>${corridorLabel}</strong> is active again. The corridor now has enough data to evaluate your smart score alert.
+            </div>
+          </div>
+        `,
+        cta: {
+          text: 'View Alerts',
+          url: `${siteUrl}/dashboard?tab=alerts`,
+        },
+        footerHtml: [
+          `<div>Automated notification from Remit-Scout.</div>`,
+          `<div style="margin-top:10px;">`,
+          `  <a href="${managePrefsUrl}" style="color:#6b7785; text-decoration:underline;">Manage notification preferences</a>`,
+          unsubscribeLink ? `  | <a href="${unsubscribeLink}" style="color:#6b7785; text-decoration:underline;">Unsubscribe</a>` : '',
+          `</div>`,
+        ].join('\n'),
+        theme: 'default',
+        siteUrl,
+      })
+    }
+
+    const fromHeader = `${alertsEmailFromName} <${alertsEmailFrom}>`
+    const rawEmail = buildRawEmail({
+      from: fromHeader,
+      to: email,
+      subject,
+      replyTo: alertsEmailFrom,
+      listUnsubscribe: unsubscribeLink,
+      text: textBody,
+      html: bodyHtml,
+    })
+
+    await client.send(
+      new SendRawEmailCommand({
+        Source: alertsEmailFrom,
+        Destinations: [email],
+        RawMessage: {
+          Data: Buffer.from(rawEmail),
+        },
+      }),
+    )
+
+    await recordAlertNotificationAttempt(pool, {
+      alertId,
+      userId,
+      channel: 'email',
+      provider: 'ses',
+      status: 'sent',
+      toEmail: email,
+      subject,
+      textBody,
+      htmlBody: bodyHtml,
+    })
+
+    logger.info('alert_degradation_email_sent', {
+      user_id: userId,
+      alert_id: alertId,
+      transition,
+      corridor_id: corridorId,
+    })
+
+    return true
+  } catch (error: unknown) {
+    const { message } = formatError(error)
+    try {
+      await recordAlertNotificationAttempt(pool, {
+        alertId,
+        userId,
+        channel: 'email',
+        provider: 'ses',
+        status: 'failed',
+        error: message,
+        subject: `Smart alert ${transition}: ${corridorId}`,
+      })
+    } catch (auditError) {
+      logger.warn('audit_log_write_failed', {
+        alert_id: alertId,
+        user_id: userId,
+        error: auditError instanceof Error ? auditError.message : String(auditError),
+      })
+    }
+    logger.error('alert_degradation_email_send_failed', {
+      user_id: userId,
+      alert_id: alertId,
+      transition,
+      error: message,
+    })
+    return false
+  }
+}
+
 export async function suppressEmail(pool: Pool, email: string, reason: 'bounce' | 'complaint' | 'manual'): Promise<void> {
   const emailHash = hashEmail(email)
   await pool.query(

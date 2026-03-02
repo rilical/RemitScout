@@ -25,11 +25,12 @@ jobs:
         id: find_pr
         env:
           GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.check_suite.head_branch }}
+          REPO: ${{ github.repository }}
         run: |
-          branch="${{ github.event.check_suite.head_branch }}"
-          pr_number=$(gh pr list --repo "${{ github.repository }}" --head "$branch" --state open --json number -q '.[0].number')
+          pr_number=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number -q '.[0].number')
           if [ -z "$pr_number" ]; then
-            echo "No open PR found for branch $branch"
+            echo "No open PR found for branch $BRANCH"
             exit 0
           fi
           echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
@@ -39,8 +40,10 @@ jobs:
         id: check_confidence
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find_pr.outputs.pr_number }}
+          REPO: ${{ github.repository }}
         run: |
-          pr_body=$(gh pr view "${{ steps.find_pr.outputs.pr_number }}" --repo "${{ github.repository }}" --json body -q '.body')
+          pr_body=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body -q '.body')
           if echo "$pr_body" | grep -q '**Confidence:** high'; then
             echo "confidence=high" >> "$GITHUB_OUTPUT"
           else
@@ -52,9 +55,11 @@ jobs:
         if: steps.check_confidence.outputs.confidence == 'high'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find_pr.outputs.pr_number }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr review "${{ steps.find_pr.outputs.pr_number }}" \
-            --repo "${{ github.repository }}" \
+          gh pr review "$PR_NUMBER" \
+            --repo "$REPO" \
             --approve \
             --body "Auto-approved: high-confidence agent repair with all checks passing."
 
@@ -62,9 +67,11 @@ jobs:
         if: steps.check_confidence.outputs.confidence == 'high'
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.find_pr.outputs.pr_number }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr merge "${{ steps.find_pr.outputs.pr_number }}" \
-            --repo "${{ github.repository }}" \
+          gh pr merge "$PR_NUMBER" \
+            --repo "$REPO" \
             --auto \
             --squash \
-            --subject "[Agent] Auto-merge repair PR #${{ steps.find_pr.outputs.pr_number }}"
+            --subject "[Agent] Auto-merge repair PR #${PR_NUMBER}"

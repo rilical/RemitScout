@@ -22,7 +22,27 @@
     "planeBDisableTier1": false,
     "enableFrontend": true,
     "cpuArchitecture": "arm64",
-    "enableGithubActionsOidc": false
+    "enableGithubActionsOidc": false,
+    "enableSynthetics": false,
+    "stagingBusinessHoursEnabled": true,
+    "stagingPauseCron": "0 22 * * *",
+    "stagingResumeCron": "0 8 * * MON-FRI",
+    "stagingTimezone": "America/New_York",
+    "providerProbeMode": "fan_in",
+    "stagingInterfaceEndpointsMode": "minimal",
+    "opsResumeRuleAllowlist": [
+      "b2c-retry-failed",
+      "alert-evaluation-worker",
+      "alert-evaluation-scheduler",
+      "gold-fx-rates",
+      "gold-reconciliation",
+      "data-health-slo",
+      "telemetry-analytics",
+      "session-cleanup",
+      "audit-log-cleanup",
+      "smart-alerts",
+      "alert-corridor-refresh"
+    ]
   },
   "watch": {
     "include": [

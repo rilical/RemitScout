@@ -1,0 +1,105 @@
+name: cd/promote-to-staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Preview the PR without creating it
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute promotion summary
+        id: summary
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # Count commits ahead of staging
+          git fetch origin staging --depth=500 2>/dev/null || {
+            echo "staging branch does not exist yet."
+            echo "commit_count=0" >> "$GITHUB_OUTPUT"
+            echo "body=staging branch does not exist. Create it first." >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          commit_count="$(git rev-list --count origin/staging..origin/develop)"
+          echo "commit_count=${commit_count}" >> "$GITHUB_OUTPUT"
+
+          if [ "$commit_count" -eq 0 ]; then
+            echo "body=No new commits to promote." >> "$GITHUB_OUTPUT"
+            echo "Nothing to promote: develop and staging are in sync."
+            exit 0
+          fi
+
+          # Build commit summary (last 20 max)
+          log="$(git log --oneline --no-merges origin/staging..origin/develop | head -20)"
+
+          body="$(cat <<BODY
+          ## Promotion: develop -> staging
+
+          **${commit_count} commits** to promote.
+
+          ### Recent commits
+          \`\`\`
+          ${log}
+          \`\`\`
+
+          ### Pre-merge checklist
+          - [ ] CI passes on develop
+          - [ ] No known regressions
+          - [ ] Changelog reviewed
+          BODY
+          )"
+
+          # Write body to file to avoid GITHUB_OUTPUT escaping issues
+          echo "$body" > /tmp/pr-body.md
+          echo "body_file=/tmp/pr-body.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create promotion PR
+        if: steps.summary.outputs.commit_count != '0' && inputs.dry_run != true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # Check if a promotion PR already exists
+          existing="$(gh pr list --base staging --head develop --state open --json number -q '.[0].number' 2>/dev/null || true)"
+          if [ -n "$existing" ]; then
+            echo "Promotion PR already exists: #${existing}"
+            echo "::notice::Existing promotion PR: #${existing}"
+            exit 0
+          fi
+
+          gh pr create \
+            --base staging \
+            --head develop \
+            --title "chore: promote develop to staging" \
+            --body-file /tmp/pr-body.md
+
+      - name: Dry run summary
+        if: inputs.dry_run == true
+        shell: bash
+        env:
+          COMMIT_COUNT: ${{ steps.summary.outputs.commit_count }}
+        run: |
+          echo "## Dry Run Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Would create PR with ${COMMIT_COUNT} commits from develop to staging." >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/pr-body.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true

@@ -89,7 +89,7 @@
                       : 'border-neutral-200 bg-surface text-neutral-700 hover:border-brand-300'"
                     @click="selectedMethod = method.value"
                   >
-                    <span class="text-h3 mb-1">{{ method.icon }}</span>
+                    <component :is="method.icon" class="h-6 w-6 mb-1" aria-hidden="true" />
                     <span class="text-body-sm font-semibold text-center">{{ method.label }}</span>
                   </button>
                 </div>

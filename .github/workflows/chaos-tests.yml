@@ -60,13 +60,14 @@ jobs:
           CHAOS_ALLOW: '1'
           CHAOS_DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
           ENVIRONMENT: ${{ inputs.env }}
+          CHAOS_SCENARIO: ${{ inputs.scenario }}
           CHAOS_TEMPLATE_REDIS_UNAVAILABLE: ${{ vars.CHAOS_TEMPLATE_REDIS_UNAVAILABLE }}
           CHAOS_TEMPLATE_SQS_FAILURE: ${{ vars.CHAOS_TEMPLATE_SQS_FAILURE }}
           CHAOS_TEMPLATE_PROVIDER_TIMEOUT: ${{ vars.CHAOS_TEMPLATE_PROVIDER_TIMEOUT }}
           CHAOS_SUMMARY_PATH: artifacts/chaos/chaos-summary.json
         run: |
           set -euo pipefail
-          pnpm -C backend chaos:run --scenario "${{ inputs.scenario }}" --env "${{ inputs.env }}"
+          pnpm -C backend chaos:run --scenario "$CHAOS_SCENARIO" --env "$ENVIRONMENT"
 
       - name: Post-chaos smoke
         shell: bash
@@ -85,9 +86,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          ROLLBACK_ENV: ${{ inputs.env }}
         run: |
           set -euo pipefail
-          gh workflow run rollback.yml -f env="${{ inputs.env }}" || true
+          gh workflow run rollback.yml -f env="$ROLLBACK_ENV" || true
 
       - name: Upload chaos artifacts
         if: always()

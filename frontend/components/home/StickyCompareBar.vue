@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
                   :aria-pressed="form.method === method.value"
                   @click="form.method = method.value"
                 >
-                  <span class="text-h4">{{ method.icon }}</span>
+                  <component :is="method.icon" class="h-5 w-5" aria-hidden="true" />
                   <span>{{ method.label }}</span>
                 </button>
               </div>
