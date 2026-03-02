@@ -15,7 +15,7 @@ Owner: Remit-Scout platform
   - NAT gateways: `1` per environment
 
 ### GitHub environment wiring
-- `staging` and `prod` have core deploy vars and secrets populated (AWS role, buckets, Supabase, Stripe, SES/SNS ARNs, Ezoic/GA/GTM public vars).
+- `staging` and `prod` have core deploy vars and secrets populated (AWS role, buckets, Supabase, Stripe, SES/SNS ARNs, GA/GTM public vars).
 - `SENTRY_SECRET_ARN` and `SENTRY_SECRET_JSON_KEY` are set in both `staging` and `prod` GitHub environment vars.
 
 ### AWS Secrets created for Sentry backend DSN
@@ -32,7 +32,7 @@ Owner: Remit-Scout platform
   - `SENTRY_PROJECT`
   - `NUXT_PUBLIC_SENTRY_DSN`
 - Deploy workflow now fails fast if `SENTRY_SECRET_ARN`/`SENTRY_SECRET_JSON_KEY` are missing for staging/prod.
-- Frontend Ezoic enablement now accepts `1`/`0` as expected (`PUBLIC_ENABLE_EZOIC=1` works).
+- Frontend ad enablement now accepts `1`/`0` as expected (`PUBLIC_ENABLE_ADS=1` works).
 
 ## 2) Values currently in use
 
@@ -80,18 +80,20 @@ You must confirm these repo secrets in GitHub:
 
 If `SENTRY_PROJECT` is wrong, sourcemap upload is skipped/failed.
 
-### D) Real Ezoic placement IDs
-Current placement vars still use fallback `101`. Replace with real IDs from Ezoic dashboard:
-- `PUBLIC_EZOIC_COMPARE_INLINE_IDS`
-- `PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS`
-- `PUBLIC_EZOIC_HOME_INLINE_IDS`
-- `PUBLIC_EZOIC_DASHBOARD_INLINE_IDS`
-- `PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS`
-- `PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS`
-- `PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS`
-- `PUBLIC_EZOIC_BLOG_SIDEBAR_IDS`
-- `PUBLIC_EZOIC_BLOG_INLINE_IDS`
-- `PUBLIC_EZOIC_BLOG_BANNER_IDS`
+### D) Ad placement IDs (deferred — not required for initial launch)
+Ads are disabled for initial launch (`PUBLIC_ENABLE_ADS=0`). When an ad provider is onboarded:
+1. Set `PUBLIC_ENABLE_ADS=1` in GitHub environment vars
+2. Replace fallback `101` IDs with real placement IDs from the provider dashboard:
+- `PUBLIC_AD_COMPARE_INLINE_IDS`
+- `PUBLIC_AD_COMPARE_SIDEBAR_IDS`
+- `PUBLIC_AD_HOME_INLINE_IDS`
+- `PUBLIC_AD_DASHBOARD_INLINE_IDS`
+- `PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS`
+- `PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS`
+- `PUBLIC_AD_CORRIDOR_FOOTER_IDS`
+- `PUBLIC_AD_BLOG_SIDEBAR_IDS`
+- `PUBLIC_AD_BLOG_INLINE_IDS`
+- `PUBLIC_AD_BLOG_BANNER_IDS`
 
 ## 4) GA4 UI actions you still need to do
 

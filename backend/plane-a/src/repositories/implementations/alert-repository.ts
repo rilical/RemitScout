@@ -17,7 +17,7 @@ export class AlertRepository implements IAlertRepository {
 
   async listByUserId(userId: string): Promise<AlertWithStateRow[]> {
     const result = await query<AlertWithStateRow>(
-      `SELECT 
+      `SELECT
          ar.id,
          ar.watchlist_item_id,
          ar.metric,
@@ -31,7 +31,10 @@ export class AlertRepository implements IAlertRepository {
          ar.updated_at,
          ast.last_triggered_at,
          ast.last_value,
-         ast.in_alarm
+         ast.in_alarm,
+         ast.data_available,
+         ast.data_unavailable_since,
+         ast.last_evaluated_at
        FROM silver.alert_rule ar
        JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
        LEFT JOIN silver.alert_state ast ON ar.id = ast.alert_id
@@ -211,7 +214,7 @@ export class AlertRepository implements IAlertRepository {
 
   async getAlertState(alertId: string): Promise<AlertStateRow | null> {
     const result = await query<AlertStateRow>(
-      `SELECT alert_id, last_evaluated_at, last_value, in_alarm, last_triggered_at, last_notified_at, snoozed_until, version
+      `SELECT alert_id, last_evaluated_at, last_value, in_alarm, last_triggered_at, last_notified_at, snoozed_until, version, data_available, data_unavailable_since
        FROM silver.alert_state
        WHERE alert_id = $1`,
       [alertId],
@@ -230,6 +233,8 @@ export class AlertRepository implements IAlertRepository {
       last_notified_at?: Date | null
       snoozed_until?: Date | null
       version?: number
+      data_available?: boolean | undefined
+      data_unavailable_since?: Date | null | undefined
     },
   ): Promise<void> {
     // Avoid read-modify-write races between concurrent evaluations by serializing per alert_id.
@@ -279,6 +284,14 @@ export class AlertRepository implements IAlertRepository {
       updateFields.push(`version = $${paramIndex++}`)
       values.push(updates.version)
     }
+    if (updates.data_available !== undefined) {
+      updateFields.push(`data_available = $${paramIndex++}`)
+      values.push(updates.data_available)
+    }
+    if (updates.data_unavailable_since !== undefined) {
+      updateFields.push(`data_unavailable_since = $${paramIndex++}`)
+      values.push(updates.data_unavailable_since)
+    }
 
     if (updateFields.length === 0) {
       await client.query('COMMIT')
@@ -287,7 +300,7 @@ export class AlertRepository implements IAlertRepository {
 
     // Get current state to use as defaults for INSERT
     const currentState = await query<AlertStateRow>(
-      `SELECT alert_id, last_evaluated_at, last_value, in_alarm, last_triggered_at, last_notified_at, snoozed_until, version
+      `SELECT alert_id, last_evaluated_at, last_value, in_alarm, last_triggered_at, last_notified_at, snoozed_until, version, data_available, data_unavailable_since
        FROM silver.alert_state
        WHERE alert_id = $1`,
       [alertId],
@@ -303,6 +316,8 @@ export class AlertRepository implements IAlertRepository {
       updates.last_notified_at ?? currentState?.last_notified_at ?? null,
       updates.snoozed_until ?? currentState?.snoozed_until ?? null,
       updates.version ?? (currentState?.version ?? 1) + 1,
+      updates.data_available !== undefined ? updates.data_available : (currentState?.data_available ?? null),
+      updates.data_unavailable_since !== undefined ? updates.data_unavailable_since : (currentState?.data_unavailable_since ?? null),
     ]
 
     const updateSet = updateFields
@@ -312,9 +327,10 @@ export class AlertRepository implements IAlertRepository {
     await query(
       `INSERT INTO silver.alert_state (
          alert_id, last_evaluated_at, last_value, in_alarm,
-         last_triggered_at, last_notified_at, snoozed_until, version
+         last_triggered_at, last_notified_at, snoozed_until, version,
+         data_available, data_unavailable_since
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        ON CONFLICT (alert_id) DO UPDATE SET
          ${updateSet}`,
       [...baseValues, ...values],
@@ -394,8 +410,10 @@ export class AlertRepository implements IAlertRepository {
       last_notified_at: Date | null
       snoozed_until: Date | null
       version: number
+      data_available: boolean | null
+      data_unavailable_since: Date | null
     }>(
-      `SELECT 
+      `SELECT
          ar.id as alert_id,
          ar.watchlist_item_id,
          ar.metric,
@@ -417,7 +435,9 @@ export class AlertRepository implements IAlertRepository {
          ast.last_triggered_at,
          ast.last_notified_at,
          ast.snoozed_until,
-         ast.version
+         ast.version,
+         ast.data_available,
+         ast.data_unavailable_since
        FROM silver.alert_rule ar
        JOIN silver.watchlist_item wi ON ar.watchlist_item_id = wi.id
        LEFT JOIN silver.alert_state ast ON ar.id = ast.alert_id
@@ -460,6 +480,8 @@ export class AlertRepository implements IAlertRepository {
             last_notified_at: row.last_notified_at,
             snoozed_until: row.snoozed_until,
             version: row.version,
+            data_available: row.data_available ?? null,
+            data_unavailable_since: row.data_unavailable_since ?? null,
           }
         : null,
     }

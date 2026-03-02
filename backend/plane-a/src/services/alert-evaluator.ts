@@ -11,7 +11,7 @@ import { isMetricSupportedForTarget } from '../routes/alerts/shared'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { recordBusinessMetric } from '../../../shared/business-metrics'
 import { AlertRepository, FxRateRepository, LatestQuoteRepository } from '../repositories'
-import { sendAlertEmail, sendAlertPush, sendAlertSms } from './alert-notifications'
+import { sendAlertEmail, sendAlertPush, sendAlertSms, sendAlertDegradationEmail } from './alert-notifications'
 import { getUserPlan } from './user-plan'
 
 const logger = createLogger('plane-a.alert-evaluator')
@@ -665,6 +665,68 @@ export async function evaluateAlert(
       shouldTrigger = false
     }
 
+    // Detect data-eligibility transition for sendScore alerts
+    if (alert.metric === 'sendScore' && !dryRun) {
+      const wasAvailable = state?.data_available ?? null
+      const isAvailable = alertEligible
+
+      // Transition: available → unavailable (data dried up)
+      if (wasAvailable === true && !isAvailable) {
+        logger.info('smart_alert_data_degraded', {
+          alert_id: alertId,
+          corridor_id: resolveCorridorId(targetPayload),
+        })
+
+        const corridorId = resolveCorridorId(targetPayload)
+        if (corridorId) {
+          const signalRow = await query<{ confidence: number | null; sample_days: number | null }>(
+            `SELECT confidence, sample_days FROM silver.corridor_signals WHERE corridor_id = $1`,
+            [corridorId],
+            pool,
+          )
+          const sigData = signalRow.rows[0]
+          await sendAlertDegradationEmail(
+            pool,
+            watchlist_item.user_id,
+            alertId,
+            'paused',
+            corridorId,
+            {
+              sampleDays: sigData?.sample_days ?? null,
+              confidence: sigData?.confidence ?? null,
+              minSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+              minConfidence: SMART_ALERT_MIN_CONFIDENCE,
+            },
+          )
+        }
+      }
+
+      // Transition: unavailable → available (data recovered)
+      if (wasAvailable === false && isAvailable) {
+        logger.info('smart_alert_data_recovered', {
+          alert_id: alertId,
+          corridor_id: resolveCorridorId(targetPayload),
+        })
+
+        const corridorId = resolveCorridorId(targetPayload)
+        if (corridorId) {
+          await sendAlertDegradationEmail(
+            pool,
+            watchlist_item.user_id,
+            alertId,
+            'resumed',
+            corridorId,
+            {
+              sampleDays: null,
+              confidence: null,
+              minSampleDays: SMART_ALERT_MIN_SAMPLE_DAYS,
+              minConfidence: SMART_ALERT_MIN_CONFIDENCE,
+            },
+          )
+        }
+      }
+    }
+
     if (alert.metric === 'sendScore' && shouldTrigger && smartWindowStart && state?.last_notified_at) {
       const lastNotified = new Date(state.last_notified_at)
       if (lastNotified >= smartWindowStart) {
@@ -699,6 +761,15 @@ export async function evaluateAlert(
     const newVersion = (state?.version || 1) + 1
 
     if (!dryRun) {
+      const dataAvailable = alert.metric === 'sendScore' ? alertEligible : undefined
+      const dataUnavailableSince = alert.metric === 'sendScore'
+        ? (!alertEligible && state?.data_available !== false
+          ? now
+          : alertEligible
+            ? null
+            : undefined)
+        : undefined
+
       await alertRepository.updateAlertState(alertId, {
         last_evaluated_at: now,
         last_value: currentValue,
@@ -706,6 +777,8 @@ export async function evaluateAlert(
         last_triggered_at: newInAlarm ? now : state?.last_triggered_at || null,
         last_notified_at: newInAlarm && !state?.last_notified_at ? now : state?.last_notified_at || null,
         version: newVersion,
+        data_available: dataAvailable,
+        data_unavailable_since: dataUnavailableSince,
       })
     }
 

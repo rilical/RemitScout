@@ -290,7 +290,27 @@ export class ToolGateway {
       if (request.toolType === 'llm_inference') {
         const estimatedCost = 0.01 // conservative per-call estimate
         const current = this.agentSpend.get(request.agentId) ?? 0
-        this.agentSpend.set(request.agentId, current + estimatedCost)
+        const updatedSpend = current + estimatedCost
+        this.agentSpend.set(request.agentId, updatedSpend)
+
+        // Warn at 80% of spend cap (fire once on first crossing)
+        const SPEND_WARNING_THRESHOLD = 0.8
+        const warningLimit = ToolGateway.MAX_SPEND_PER_AGENT_USD * SPEND_WARNING_THRESHOLD
+        if (updatedSpend >= warningLimit && current < warningLimit) {
+          recordCloudWatchMetric({
+            name: 'agent_spend_warning',
+            value: updatedSpend,
+            unit: 'None',
+            namespace: AGENT_METRIC_NAMESPACE,
+            dimensions: agentMetricDimensions({ agent_id: request.agentId }),
+          })
+          void notifyAgent({
+            type: 'spend_warning',
+            title: `Agent '${request.agentId}' reached ${Math.round((updatedSpend / ToolGateway.MAX_SPEND_PER_AGENT_USD) * 100)}% spend ($${updatedSpend.toFixed(2)}/$${ToolGateway.MAX_SPEND_PER_AGENT_USD}).`,
+            severity: 'warning',
+            details: { agentId: request.agentId, currentSpend: updatedSpend, limit: ToolGateway.MAX_SPEND_PER_AGENT_USD },
+          })
+        }
       }
 
       const toolResult: ToolResult = {
@@ -570,7 +590,10 @@ export class ToolGateway {
 
     // Check for Playwright availability at runtime
     try {
-      const { chromium } = await import('playwright-core')
+      // Use a non-static dynamic import so backend builds don't require
+      // playwright-core at compile time in minimal runtime images.
+      const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>
+      const { chromium } = await dynamicImport('playwright-core')
       const browser = await chromium.launch({ headless: true })
       try {
         const page = await browser.newPage()

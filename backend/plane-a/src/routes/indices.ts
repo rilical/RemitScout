@@ -57,6 +57,8 @@ type IndicesSeriesPoint = {
   providerCount: number | null
   suppressionFlag: boolean
   suppressionReason: string | null
+  suppressionReasonCode: SuppressionReasonCode | null
+  suppressionReasonDescription: string | null
   midMarketRate: number | null
   weightConfidence: number | null
   weightWindowDays: number | null
@@ -112,6 +114,8 @@ type IndicesLatestPoint = {
   providerCount: number | null
   suppressionFlag: boolean
   suppressionReason: string | null
+  suppressionReasonCode: SuppressionReasonCode | null
+  suppressionReasonDescription: string | null
   midMarketRate: number | null
   weightConfidence: number | null
   weightWindowDays: number | null
@@ -162,7 +166,47 @@ type DataWindowInfo = {
   capped: boolean
 }
 
+/**
+ * Enumerated suppression reason codes for enterprise clients.
+ *
+ * These map from the free-text `suppression_reason` in gold_export.cdp_daily
+ * to structured codes with human-readable descriptions.
+ */
+type SuppressionReasonCode =
+  | 'insufficient_providers'
+  | 'stale_data'
+  | 'dominance_exceeded'
+  | 'anomaly_detected'
+  | 'unknown'
+
+const SUPPRESSION_REASON_DESCRIPTIONS: Record<SuppressionReasonCode, string> = {
+  insufficient_providers: 'Fewer than the minimum required providers contributed data for this corridor.',
+  stale_data: 'Data freshness exceeds the acceptable threshold for this corridor tier.',
+  dominance_exceeded: 'A single provider or provider pair dominates the rate, reducing index reliability.',
+  anomaly_detected: 'Rate inversion, outlier, or other statistical anomaly detected in the data.',
+  unknown: 'Suppressed for an unspecified reason.',
+}
+
+const resolveSuppressionReasonCode = (reason: string | null): SuppressionReasonCode | null => {
+  if (!reason) return null
+  const lower = reason.toLowerCase()
+  if (lower.includes('insufficient_providers') || lower.includes('insufficient providers')) return 'insufficient_providers'
+  if (lower.includes('stale') || lower.includes('freshness')) return 'stale_data'
+  if (lower.includes('dominance')) return 'dominance_exceeded'
+  if (lower.includes('outlier') || lower.includes('inversion') || lower.includes('anomaly')) return 'anomaly_detected'
+  return 'unknown'
+}
+
 const toDateOnly = (value: Date) => value.toISOString().split('T')[0]
+
+/** Map a raw suppression_reason string to structured code + description. */
+const mapSuppressionFields = (reason: string | null) => {
+  const code = resolveSuppressionReasonCode(reason)
+  return {
+    suppressionReasonCode: code,
+    suppressionReasonDescription: code ? SUPPRESSION_REASON_DESCRIPTIONS[code] : null,
+  }
+}
 const embedSnapshotIdPattern = /^[a-f0-9]{32}$/i
 
 /**
@@ -373,6 +417,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           providerCount: row.provider_count ?? null,
           suppressionFlag: row.suppression_flag,
           suppressionReason: row.suppression_reason ?? null,
+          ...mapSuppressionFields(row.suppression_reason ?? null),
           midMarketRate: row.mid_market_rate ?? null,
           weightConfidence: row.weight_confidence ?? null,
           weightWindowDays: row.weight_window_days ?? null,
@@ -529,6 +574,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           providerCount: row.provider_count ?? null,
           suppressionFlag: row.suppression_flag,
           suppressionReason: row.suppression_reason ?? null,
+          ...mapSuppressionFields(row.suppression_reason ?? null),
           midMarketRate: row.mid_market_rate ?? null,
           weightConfidence: row.weight_confidence ?? null,
           weightWindowDays: row.weight_window_days ?? null,
@@ -683,6 +729,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           providerCount: row.provider_count ?? null,
           suppressionFlag: row.suppression_flag,
           suppressionReason: row.suppression_reason ?? null,
+          ...mapSuppressionFields(row.suppression_reason ?? null),
           midMarketRate: row.mid_market_rate ?? null,
           weightConfidence: row.weight_confidence ?? null,
           weightWindowDays: row.weight_window_days ?? null,
@@ -850,6 +897,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
           providerCount: latest.provider_count ?? null,
           suppressionFlag: latest.suppression_flag,
           suppressionReason: latest.suppression_reason ?? null,
+          ...mapSuppressionFields(latest.suppression_reason ?? null),
           midMarketRate: latest.mid_market_rate ?? null,
           weightConfidence: latest.weight_confidence ?? null,
           weightWindowDays: latest.weight_window_days ?? null,

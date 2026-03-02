@@ -40,6 +40,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
       - name: Resolve Image Tag (SSM fallback)
         shell: bash
         env:
@@ -57,6 +58,75 @@ jobs:
             exit 1
           fi
           echo "IMAGE_TAG=${tag}" >> "$GITHUB_ENV"
+      - name: Recover CloudFormation rollback state
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            echo "STACK_NAME is not set; skipping recovery check."
+            exit 0
+          fi
+
+          if ! aws cloudformation describe-stacks --stack-name "${STACK_NAME}" >/dev/null 2>&1; then
+            echo "Stack ${STACK_NAME} not found yet; continuing."
+            exit 0
+          fi
+
+          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+          echo "Current stack status: ${status}"
+          if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
+            echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
+            aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
+          fi
+
+          # Wait for stack to reach a deployable state (5 min max)
+          for i in $(seq 1 30); do
+            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            case "${status}" in
+              CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
+                echo "Stack is stable: ${status}"
+                break
+                ;;
+              *_IN_PROGRESS|*_CLEANUP_IN_PROGRESS)
+                echo "Waiting: ${status} (${i}/30)"
+                sleep 10
+                ;;
+              *)
+                echo "::error::Stack not deployable: ${status}"
+                exit 1
+                ;;
+            esac
+          done
+
+      - name: Pre-deploy infrastructure health check
+        shell: bash
+        env:
+          ENV_NAME: ${{ inputs.env }}
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
       - name: Roll back stack to image tag
         shell: bash
         env:

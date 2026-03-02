@@ -1,6 +1,6 @@
 import type { AdPlacement } from '~/lib/ads'
 
-const EZOIC_PLACEHOLDERS: Record<AdPlacement, number[]> = {
+const AD_SLOT_DEFAULTS: Record<AdPlacement, number[]> = {
   compare_inline: [101],
   compare_sidebar: [101],
   home_inline: [101],
@@ -13,7 +13,7 @@ const EZOIC_PLACEHOLDERS: Record<AdPlacement, number[]> = {
   blog_banner: [101],
 }
 
-type EzoicPlacementMap = Partial<Record<AdPlacement, number[]>>
+type AdSlotMap = Partial<Record<AdPlacement, number[]>>
 
 const usedPlaceholderIds = new Set<number>()
 
@@ -24,31 +24,31 @@ const sanitizePlaceholderIds = (ids?: number[]): number[] => {
     .filter(id => Number.isInteger(id) && id > 0)
 }
 
-export const getEzoicPlaceholderId = (
+export const getAdSlotId = (
   placement: AdPlacement,
   slotIndex?: number,
   overrideId?: number,
-  runtimePlacementIds?: EzoicPlacementMap,
+  runtimePlacementIds?: AdSlotMap,
 ): number | null => {
   if (overrideId !== undefined) return overrideId
   const runtimeIds = sanitizePlaceholderIds(runtimePlacementIds?.[placement])
-  const ids = runtimeIds.length > 0 ? runtimeIds : EZOIC_PLACEHOLDERS[placement] ?? []
+  const ids = runtimeIds.length > 0 ? runtimeIds : AD_SLOT_DEFAULTS[placement] ?? []
   if (slotIndex !== undefined) {
     return ids[slotIndex] ?? null
   }
   return ids[0] ?? null
 }
 
-export const claimEzoicPlaceholderId = (id: number): boolean => {
+export const claimAdSlotId = (id: number): boolean => {
   if (usedPlaceholderIds.has(id)) return false
   usedPlaceholderIds.add(id)
   return true
 }
 
-export const releaseEzoicPlaceholderId = (id: number) => {
+export const releaseAdSlotId = (id: number) => {
   usedPlaceholderIds.delete(id)
 }
 
-export const resetEzoicPlaceholderIds = () => {
+export const resetAdSlotIds = () => {
   usedPlaceholderIds.clear()
 }

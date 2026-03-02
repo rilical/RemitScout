@@ -9,6 +9,7 @@ import { listProviders } from '../../../shared/provider-catalog'
 import { FailureDetector } from './failure-detector'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { captureExceptionWithContext, addBreadcrumb } from '../../../shared/error-tracker'
+import { notifyAgent } from '../../../shared/agent-notifications'
 
 const logger = createLogger('plane-b.agents.orchestrator')
 
@@ -397,6 +398,12 @@ export class AgentOrchestrator {
               correlation_id: runId,
             }),
             highCardinality: true,
+          })
+          void notifyAgent({
+            type: 'correlated_failure_escalation',
+            title: `Correlated failure: ${bundles.length} bundles detected (threshold: ${CORRELATED_FAILURE_THRESHOLD}). Escalating — autonomous repair skipped.`,
+            severity: 'critical',
+            details: { bundleCount: bundles.length, threshold: CORRELATED_FAILURE_THRESHOLD, runId },
           })
           // Skip individual repairs — fall through to coverage telemetry only.
         } else {

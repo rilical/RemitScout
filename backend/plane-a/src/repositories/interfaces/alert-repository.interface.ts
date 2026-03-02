@@ -36,6 +36,9 @@ export type AlertWithStateRow = AlertRuleRow & {
   last_triggered_at: Date | null
   last_value: number | null
   in_alarm: boolean
+  data_available: boolean | null
+  data_unavailable_since: Date | null
+  last_evaluated_at: Date | null
 }
 
 export type AlertStateRow = {
@@ -47,6 +50,8 @@ export type AlertStateRow = {
   last_notified_at: Date | null
   snoozed_until: Date | null
   version: number
+  data_available: boolean | null
+  data_unavailable_since: Date | null
 }
 
 export type AlertEventRow = {
@@ -97,6 +102,8 @@ export interface IAlertRepository {
       last_notified_at?: Date | null
       snoozed_until?: Date | null
       version?: number
+      data_available?: boolean | undefined
+      data_unavailable_since?: Date | null | undefined
     },
   ): Promise<void>
   createAlertEvent(

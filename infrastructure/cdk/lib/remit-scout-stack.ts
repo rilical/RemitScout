@@ -1074,6 +1074,10 @@ export class RemitScoutStack extends Stack {
     )
     const planeCInternalApiTokenSecretJsonKey =
       process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
+    const planeAJwtSecretJsonKey =
+      this.node.tryGetContext('planeAJwtSecretJsonKey') ??
+      process.env.PLANE_A_JWT_SECRET_JSON_KEY ??
+      'PLANE_A_JWT_SECRET'
     const disablePlaneAExecuteEndpoint = toOptionalBool(
       this.node.tryGetContext('disablePlaneAExecuteEndpoint') ??
         process.env.PLANE_A_DISABLE_EXECUTE_ENDPOINT,
@@ -1387,6 +1391,8 @@ export class RemitScoutStack extends Stack {
         planeCDbName,
         sentrySecretArn,
         sentrySecretJsonKey,
+        sharedSecretArn,
+        planeAJwtSecretJsonKey,
         quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,
         quoteRefreshDlqUrl: queues.quoteRefreshDlq.queueUrl,
         quoteRefreshQueueMode,

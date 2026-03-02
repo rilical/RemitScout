@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - develop
+      - staging
   workflow_dispatch:
 
 permissions:
@@ -31,10 +32,14 @@ jobs:
       - name: Dependabot non-infra fast-skip
         id: gate
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          INFRA_CHANGED: ${{ steps.filter.outputs.infra }}
         run: |
           set -euo pipefail
           skip=false
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" = "dependabot[bot]" ] && [ "${{ steps.filter.outputs.infra }}" != "true" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$ACTOR" = "dependabot[bot]" ] && [ "$INFRA_CHANGED" != "true" ]; then
             skip=true
           fi
           echo "skip=${skip}" >> "$GITHUB_OUTPUT"

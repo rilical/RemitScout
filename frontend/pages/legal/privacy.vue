@@ -133,7 +133,7 @@
         D. Advertising & Consent Management
       </h3>
       <p class="mb-4 leading-relaxed">
-        We may show clearly labeled ads on free pages. We use <strong class="text-brand-600">Ezoic</strong> to serve and
+        We may show clearly labeled ads on free pages. We use third-party ad networks to serve and
         measure ads. We manage consent choices through our cookie banner and preferences settings; ads and marketing
         attribution that require cookies/identifiers only run after you opt in where required by law.
       </p>
@@ -192,7 +192,7 @@
         <li>Payment processing (Stripe)</li>
         <li>Email/newsletter delivery (Mailchimp)</li>
         <li>Phone/SMS service providers (Quo, if used)</li>
-        <li>Advertising (Ezoic)</li>
+        <li>Advertising (ad network provider)</li>
         <li>Analytics, performance monitoring, and error logging</li>
       </ul>
       <p class="mb-6 leading-relaxed">

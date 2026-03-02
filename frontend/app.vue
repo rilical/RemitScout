@@ -56,7 +56,6 @@ import { useTelemetry } from '~/composables/useTelemetry'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
 import { useVisitSession } from '~/composables/useVisitSession'
-import { useEntitlements } from '~/composables/useEntitlements'
 import { useSession } from '~/composables/useSession'
 import CookieConsentBanner from '~/components/privacy/CookieConsentBanner.vue'
 import CookiePreferencesModal from '~/components/privacy/CookiePreferencesModal.vue'
@@ -73,7 +72,6 @@ const { initSession } = useTelemetry()
 useVisitSession()
 const { analyticsConsent, marketingConsent } = usePrivacySettings()
 const { initMarketing, trackPageView } = useMarketingAnalytics()
-const { isPlus, hydrated } = useEntitlements()
 const { clearSession } = useSession()
 const runtimeConfig = useRuntimeConfig()
 const ga4Id = runtimeConfig.public.ga4MeasurementId
@@ -100,13 +98,6 @@ const allowMarketing = computed(() => marketingConsent.value)
 const isMaintenanceRoute = computed(() =>
   route.path === '/maintenance' || route.path.startsWith('/maintenance/'),
 )
-const allowEzoic = computed(() =>
-  runtimeConfig.public?.adsEnabled === true
-  && allowMarketing.value
-  && hydrated.value
-  && !isPlus.value,
-)
-
 const rootError = ref<unknown>(null)
 const crashId = ref<string | null>(null)
 
@@ -196,7 +187,6 @@ let redditPixelReady = false
 let xPixelReady = false
 let tikTokReady = false
 let newRelicReady = false
-let ezoicReady = false
 
 const ensureGoogleTagManager = () => {
   if (!import.meta.client) return
@@ -529,15 +519,6 @@ const ensureTikTokPixel = () => {
   tikTokReady = true
 }
 
-const ensureEzoic = () => {
-  if (!import.meta.client) return
-  if (!allowEzoic.value || ezoicReady) return
-  const win = window as DynamicWindow
-  win.ezstandalone = win.ezstandalone || {}
-  win.ezstandalone.cmd = Array.isArray(win.ezstandalone.cmd) ? win.ezstandalone.cmd : []
-  ezoicReady = true
-}
-
 const ensureMarketingTags = () => {
   if (!import.meta.client) return
   if (allowAnalytics.value) {
@@ -554,7 +535,6 @@ const ensureMarketingTags = () => {
     ensureXPixel()
     ensureTikTokPixel()
   }
-  ensureEzoic()
 }
 
 onMounted(() => {
@@ -623,37 +603,8 @@ watch(
 
 watch(
   () => route.fullPath,
-  async () => {
+  () => {
     void trackPageView()
-    if (!import.meta.client) return
-    if (!allowEzoic.value) return
-    await nextTick()
-    const win = window as typeof window & { ezstandalone?: any }
-    win.ezstandalone = win.ezstandalone || {}
-    win.ezstandalone.cmd = win.ezstandalone.cmd || []
-    win.ezstandalone.cmd.push(() => {
-      if (typeof win.ezstandalone.showAds === 'function') {
-        win.ezstandalone.showAds()
-      }
-    })
-  },
-)
-
-watch(
-  () => allowEzoic.value,
-  async (enabled) => {
-    if (!enabled) return
-    if (!import.meta.client) return
-    ensureEzoic()
-    await nextTick()
-    const win = window as typeof window & { ezstandalone?: any }
-    win.ezstandalone = win.ezstandalone || {}
-    win.ezstandalone.cmd = win.ezstandalone.cmd || []
-    win.ezstandalone.cmd.push(() => {
-      if (typeof win.ezstandalone.showAds === 'function') {
-        win.ezstandalone.showAds()
-      }
-    })
   },
 )
 </script>

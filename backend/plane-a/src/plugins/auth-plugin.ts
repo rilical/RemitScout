@@ -267,6 +267,25 @@ export const authPlugin = (app: FastifyInstance) => {
   // Runs after auth has identified the institutional client.
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.institutionalClient) return
+
+    // Global guard: reject expired or inactive institutional clients on ALL routes.
+    if (!isInstitutionalClientActive(request.institutionalClient)) {
+      reply.code(403)
+      reply.send({ error: 'forbidden', code: 'institutional_inactive' })
+      return
+    }
+
+    // Global guard: enforce corridor allowlist on ALL routes when a corridor_id is present.
+    const corridorsAllowed = request.institutionalClient.corridors_allowed
+    if (corridorsAllowed !== null) {
+      const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+      if (corridorId && !corridorsAllowed.includes(corridorId)) {
+        reply.code(403)
+        reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
+        return
+      }
+    }
+
     const path = resolveInstitutionalSurfacePath(request)
     if (!isInstitutionalSurface(path)) return
 

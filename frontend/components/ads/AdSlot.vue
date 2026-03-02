@@ -30,7 +30,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { AdPlacement, AdLayout } from '~/lib/ads'
 import { useEntitlements } from '~/composables/useEntitlements'
 import { usePrivacySettings } from '~/composables/usePrivacySettings'
-import { claimEzoicPlaceholderId, getEzoicPlaceholderId, releaseEzoicPlaceholderId } from '~/lib/ezoic'
+import { claimAdSlotId, getAdSlotId, releaseAdSlotId } from '~/lib/ad-slots'
 
 interface Props {
   placement: AdPlacement
@@ -60,23 +60,23 @@ const props = withDefaults(defineProps<Props>(), {
 const { isPlus, hydrated } = useEntitlements()
 const { marketingConsent } = usePrivacySettings()
 const runtimeConfig = useRuntimeConfig()
-type EzoicPlacementMap = Partial<Record<AdPlacement, number[]>>
+type AdSlotMap = Partial<Record<AdPlacement, number[]>>
 const activeId = ref<number | null>(null)
-const runtimeEzoicPlacementIds = computed<EzoicPlacementMap>(() => {
-  const raw = runtimeConfig.public?.ezoicPlacementIds as EzoicPlacementMap | undefined
+const runtimeAdPlacementIds = computed<AdSlotMap>(() => {
+  const raw = runtimeConfig.public?.adPlacementIds as AdSlotMap | undefined
   return raw || {}
 })
 const placeholderId = computed(() =>
-  getEzoicPlaceholderId(
+  getAdSlotId(
     props.placement,
     props.slotIndex,
     props.placeholderId,
-    runtimeEzoicPlacementIds.value,
+    runtimeAdPlacementIds.value,
   ),
 )
-const placeholderDomId = computed(() => (activeId.value ? `ezoic-pub-ad-placeholder-${activeId.value}` : ''))
+const placeholderDomId = computed(() => (activeId.value ? `ad-slot-${activeId.value}` : ''))
 const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
-const allowEzoic = computed(() => adsEnabled.value && marketingConsent.value)
+const allowAds = computed(() => adsEnabled.value && marketingConsent.value)
 
 const containerClasses = computed(() => {
   return [
@@ -97,49 +97,25 @@ const wrapperStyle = computed(() => {
   return style
 })
 
-const shouldRender = computed(() => allowEzoic.value && hydrated.value && !isPlus.value && activeId.value !== null)
+const shouldRender = computed(() => allowAds.value && hydrated.value && !isPlus.value && activeId.value !== null)
 
-const pushShowAds = (id: number) => {
-  if (!import.meta.client) return
-  if (!allowEzoic.value) return
-  const win = window as typeof window & { ezstandalone?: any }
-  win.ezstandalone = win.ezstandalone || {}
-  win.ezstandalone.cmd = win.ezstandalone.cmd || []
-  win.ezstandalone.cmd.push(() => {
-    if (typeof win.ezstandalone.showAds === 'function') {
-      win.ezstandalone.showAds(id)
-    }
-  })
-}
-
-const pushDestroy = (id: number) => {
-  if (!import.meta.client) return
-  if (!allowEzoic.value) return
-  const win = window as typeof window & { ezstandalone?: any }
-  if (!win.ezstandalone?.cmd) return
-  win.ezstandalone.cmd.push(() => {
-    if (typeof win.ezstandalone.destroyPlaceholders === 'function') {
-      win.ezstandalone.destroyPlaceholders(id)
-    }
-  })
-}
+// Ad provider SDK integration point — no-op until a provider is configured.
+// When integrating AdSense/etc., add SDK showAd/destroyAd calls here.
 
 const activateAd = async () => {
-  if (!import.meta.client || !allowEzoic.value || !hydrated.value || isPlus.value || activeId.value !== null) return
+  if (!import.meta.client || !allowAds.value || !hydrated.value || isPlus.value || activeId.value !== null) return
   const id = placeholderId.value
   if (!id) return
-  if (!claimEzoicPlaceholderId(id)) return
+  if (!claimAdSlotId(id)) return
   activeId.value = id
   await nextTick()
-  pushShowAds(id)
 }
 
 const deactivateAd = () => {
   if (!import.meta.client || activeId.value === null) return
   const id = activeId.value
   activeId.value = null
-  releaseEzoicPlaceholderId(id)
-  pushDestroy(id)
+  releaseAdSlotId(id)
 }
 
 onMounted(() => {
@@ -147,7 +123,7 @@ onMounted(() => {
 })
 
 watch(
-  () => [allowEzoic.value, hydrated.value, isPlus.value, placeholderId.value] as const,
+  () => [allowAds.value, hydrated.value, isPlus.value, placeholderId.value] as const,
   ([enabled, isHydrated, plus, id]) => {
     if (!import.meta.client) return
     if (!enabled || !isHydrated || plus || !id) {

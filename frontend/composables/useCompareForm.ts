@@ -1,10 +1,19 @@
 import { ref, computed } from 'vue'
+import type { Component } from 'vue'
 import type { Method } from '~/types/remit'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { getAvailableCurrencies, getCountryByCode } from '~/utils/countries-currencies'
 import { useApi } from '~/composables/useApi'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { formatCurrency, getMaxAmount, getMinAmount, sanitizeAmount } from '~/utils/currency-limits'
+import {
+  BuildingLibraryIcon,
+  BanknotesIcon,
+  WalletIcon,
+  SignalIcon,
+  HomeIcon,
+  CreditCardIcon,
+} from '@heroicons/vue/24/solid'
 
 export interface CompareFormState {
   from: string
@@ -15,14 +24,14 @@ export interface CompareFormState {
   toCurrency: string
 }
 
-export const DELIVERY_METHODS = [
-  { value: 'bank', label: 'Bank Transfer', icon: '🏦' },
-  { value: 'cash', label: 'Cash Pickup', icon: '💵' },
-  { value: 'wallet', label: 'Mobile Wallet', icon: '📱' },
-  { value: 'airtime', label: 'Airtime', icon: '📶' },
-  { value: 'home', label: 'Home Delivery', icon: '🏠' },
-  { value: 'card', label: 'Card Delivery', icon: '💳' },
-] as const
+export const DELIVERY_METHODS: ReadonlyArray<{ value: Method; label: string; icon: Component }> = [
+  { value: 'bank', label: 'Bank Transfer', icon: BuildingLibraryIcon },
+  { value: 'cash', label: 'Cash Pickup', icon: BanknotesIcon },
+  { value: 'wallet', label: 'Mobile Wallet', icon: WalletIcon },
+  { value: 'airtime', label: 'Airtime', icon: SignalIcon },
+  { value: 'home', label: 'Home Delivery', icon: HomeIcon },
+  { value: 'card', label: 'Card Delivery', icon: CreditCardIcon },
+]
 
 export function useCompareForm() {
   const form = useState<CompareFormState>('compare:form', () => ({

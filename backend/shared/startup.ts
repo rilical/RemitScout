@@ -81,7 +81,7 @@ export const waitForDependencies = async (opts: {
   sqs?: boolean
   maxWaitMs?: number
 }): Promise<void> => {
-  const deadline = Date.now() + (opts.maxWaitMs ?? 30_000)
+  const deadline = Date.now() + (opts.maxWaitMs ?? 60_000)
   const wantsDb = Boolean(opts.db)
   const wantsRedis = Boolean(opts.redis)
   const wantsSqs = Boolean(opts.sqs)
@@ -122,7 +122,7 @@ export const waitForDependencies = async (opts: {
       db: wantsDb,
       redis: wantsRedis,
       sqs: wantsSqs,
-      max_wait_ms: opts.maxWaitMs ?? 30_000,
+      max_wait_ms: opts.maxWaitMs ?? 60_000,
     },
   })
 
@@ -258,7 +258,7 @@ export const runStartupChecks = async (params: {
       dbUrls: !derived.skipDatabase ? requiredDbUrls : undefined,
       redis: !derived.skipRedis,
       sqs: !derived.skipSQS,
-      maxWaitMs: 30_000,
+      maxWaitMs: 60_000,
     })
     await assertAwsConfig(derived)
   }

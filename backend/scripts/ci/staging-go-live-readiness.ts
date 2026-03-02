@@ -29,7 +29,6 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'STRIPE_PRICE_ID_PLUS_ANNUAL', description: 'Stripe annual price id' },
   { key: 'PUBLIC_GA4_MEASUREMENT_ID', description: 'GA4 measurement id' },
   { key: 'PUBLIC_GOOGLE_ADS_CONVERSION_ID', description: 'Google Ads conversion id' },
-  { key: 'PUBLIC_ENABLE_EZOIC', description: 'Ezoic flag enabled for staging test surface' },
   { key: 'NEW_RELIC_USER_API_KEY', description: 'New Relic user API key for dashboard/alert/verify gates' },
   { key: 'NEW_RELIC_ACCOUNT_ID', description: 'New Relic account ID' },
   { key: 'NEW_RELIC_REGION', description: 'New Relic region (US/EU)' },
@@ -42,17 +41,32 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'SLACK_APP_TOKEN', description: 'Slack app token for Socket Mode' },
   { key: 'SLACK_SIGNING_SECRET', description: 'Slack signing secret for action verification' },
   { key: 'SLACK_CASES_CHANNEL_ID', description: 'Ops channel id for case cards' },
+  { key: 'ALERT_SLACK_WEBHOOK_URL', description: 'Alert webhook fallback channel' },
+  { key: 'SENTRY_AUTH_TOKEN', description: 'Sentry integration token (MCP/evidence)' },
+  { key: 'SENTRY_ORG', description: 'Sentry organization slug' },
+  { key: 'SENTRY_PROJECT', description: 'Sentry project slug' },
 ]
 
 const RECOMMENDED_KEYS: Requirement[] = [
-  { key: 'SENTRY_AUTH_TOKEN', description: 'Sentry integration token (MCP/evidence)' },
-  { key: 'ALERT_SLACK_WEBHOOK_URL', description: 'Alert webhook fallback channel' },
   { key: 'BRAIN_DISPATCH_GITHUB_ACTIONS', description: 'Brain dispatch gate (set to 1 for staging trial)' },
   { key: 'BRAIN_INGEST_GITHUB_ACTIONS', description: 'Brain ingestion gate (set to 1 for closed-loop run ingestion)' },
   { key: 'BRAIN_SLACK_POST_CASE_CARDS', description: 'Brain Slack posting gate' },
+  { key: 'PUBLIC_ENABLE_ADS', description: 'Ad network flag (set to 1 when ad provider is onboarded)' },
 ]
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
+const AD_PLACEMENT_ID_KEYS = [
+  'PUBLIC_AD_COMPARE_INLINE_IDS',
+  'PUBLIC_AD_COMPARE_SIDEBAR_IDS',
+  'PUBLIC_AD_HOME_INLINE_IDS',
+  'PUBLIC_AD_DASHBOARD_INLINE_IDS',
+  'PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS',
+  'PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS',
+  'PUBLIC_AD_CORRIDOR_FOOTER_IDS',
+  'PUBLIC_AD_BLOG_SIDEBAR_IDS',
+  'PUBLIC_AD_BLOG_INLINE_IDS',
+  'PUBLIC_AD_BLOG_BANNER_IDS',
+] as const
 const VALID_SOC2_REPORT_STATES = new Set(['in_progress', 'audited', 'expired', 'revoked'])
 const NEW_RELIC_GATE_KEYS = new Set([
   'NEW_RELIC_USER_API_KEY',
@@ -64,7 +78,11 @@ const getValue = (key: string) => String(process.env[key] || '').trim()
 
 const isMissing = (value: string) => value.length === 0
 
-const looksLikePlaceholder = (value: string) => PLACEHOLDER_PATTERNS.some(pattern => pattern.test(value))
+const looksLikeSlackWebhookPlaceholder = (value: string) =>
+  /hooks\.slack\.com\/services\/T0{8,}\/B0{8,}\/A{10,}/i.test(value)
+
+const looksLikePlaceholder = (value: string) =>
+  PLACEHOLDER_PATTERNS.some(pattern => pattern.test(value)) || looksLikeSlackWebhookPlaceholder(value)
 
 const hasStagingMarker = (value: string) => /staging/i.test(value)
 
@@ -230,9 +248,38 @@ const run = () => {
     policyViolations.push('PUBLIC_GOOGLE_ADS_CONVERSION_ID should start with "AW-"')
   }
 
-  const ezoic = getValue('PUBLIC_ENABLE_EZOIC').toLowerCase()
-  if (ezoic !== 'true' && ezoic !== '1') {
-    policyViolations.push('PUBLIC_ENABLE_EZOIC must be true/1 for this go-live profile')
+  const adFlag = getValue('PUBLIC_ENABLE_ADS').toLowerCase()
+  if (adFlag === 'true' || adFlag === '1') {
+    for (const key of AD_PLACEMENT_ID_KEYS) {
+      const raw = getValue(key)
+      if (!raw) {
+        policyViolations.push(`${key} must be set when PUBLIC_ENABLE_ADS=1`)
+        continue
+      }
+      const ids = splitCsv(raw)
+        .map(value => Number(value))
+        .filter(value => Number.isInteger(value) && value > 0)
+      if (ids.length === 0) {
+        policyViolations.push(`${key} must contain one or more positive integer placement IDs`)
+        continue
+      }
+      if (ids.includes(101)) {
+        policyViolations.push(`${key} contains fallback placement ID 101; replace with real ad provider placement IDs`)
+      }
+    }
+  }
+
+  const alertSlackWebhook = getValue('ALERT_SLACK_WEBHOOK_URL')
+  if (alertSlackWebhook && !/^https:\/\/hooks\.slack\.com\/services\//i.test(alertSlackWebhook)) {
+    policyViolations.push('ALERT_SLACK_WEBHOOK_URL must be a valid Slack incoming webhook URL')
+  }
+  if (looksLikeSlackWebhookPlaceholder(alertSlackWebhook)) {
+    policyViolations.push('ALERT_SLACK_WEBHOOK_URL is still a placeholder webhook value')
+  }
+
+  const sentryOrg = getValue('SENTRY_ORG')
+  if (sentryOrg && sentryOrg !== 'remit-scout') {
+    policyViolations.push(`SENTRY_ORG must be remit-scout (received "${sentryOrg}")`)
   }
 
   const tracingExporter = getValue('TRACING_EXPORTER').toLowerCase()

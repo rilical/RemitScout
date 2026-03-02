@@ -1,0 +1,31 @@
+{
+  "_profile": "prod-lean",
+  "_description": "Production LEAN — single AZ, no HA, minimal endpoints. ~$233/mo. Switch to prod-ha when revenue justifies.",
+  "enableSynthetics": true,
+  "enableWaf": true,
+  "wafEnableBotControl": false,
+  "enableCloudFront": true,
+  "enableDbProxy": true,
+  "prodNatGateways": 1,
+  "prodInterfaceEndpointsMode": "minimal",
+  "providerProbeMode": "fan_in",
+  "cpuArchitecture": "arm64",
+
+  "planeBIngestDesiredCount": 1,
+  "planeBIngestFanoutTier1DesiredCount": 1,
+  "planeBIngestFanoutTier2DesiredCount": 1,
+  "planeBB2cRefreshDesiredCount": 1,
+  "goldLiveDesiredCount": 1,
+  "planeBNotificationsDesiredCount": 1,
+  "alertEvaluationDesiredCount": 1,
+  "alertEvaluationServiceEnabled": true,
+
+  "planeBFxRateRefreshDesiredCount": 0,
+  "planeBOpsAlertsDesiredCount": 0,
+  "agentOrchestratorDesiredCount": 0,
+  "stressResponderDesiredCount": 0,
+  "normalizationWorkerDesiredCount": 0,
+  "exportWorkerDesiredCount": 0,
+  "planeBQueueWorkerDesiredCount": 0,
+  "planeBQueueWorkerSpotOnly": true
+}

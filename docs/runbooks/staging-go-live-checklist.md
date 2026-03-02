@@ -34,7 +34,7 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 - [ ] `COMPLIANCE_SOC2_TYPE_II_REPORT_URL`
 - [ ] `PUBLIC_GA4_MEASUREMENT_ID`
 - [ ] `PUBLIC_GOOGLE_ADS_CONVERSION_ID`
-- [ ] `PUBLIC_ENABLE_EZOIC=1`
+- [ ] Optional: `PUBLIC_ENABLE_ADS` (set to `1` when ad provider is onboarded; default `0` for initial launch)
 - [ ] `SLACK_CASES_CHANNEL_ID`
 - [ ] `BRAIN_DISPATCH_GITHUB_ACTIONS=1`
 - [ ] `BRAIN_INGEST_GITHUB_ACTIONS=1`
@@ -55,7 +55,10 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 - [ ] `SLACK_BOT_TOKEN`
 - [ ] `SLACK_APP_TOKEN`
 - [ ] `SLACK_SIGNING_SECRET`
-- [ ] Optional: `SENTRY_AUTH_TOKEN`
+- [ ] `SENTRY_AUTH_TOKEN`
+- [ ] `SENTRY_ORG`
+- [ ] `SENTRY_PROJECT`
+- [ ] `ALERT_SLACK_WEBHOOK_URL`
 
 ## 4) Backend env (staging profile)
 Source template:
@@ -83,7 +86,7 @@ Source template:
 - [ ] Supabase public staging keys set.
 - [ ] `PUBLIC_ALLOW_SEARCH_INDEXING=0` (noindex safeguard).
 - [ ] GA4 and Ads IDs set for staging test tracking.
-- [ ] `PUBLIC_ENABLE_EZOIC=1` set intentionally.
+- [ ] `PUBLIC_ENABLE_ADS` set intentionally (`0` for initial launch without ads).
 
 ## 6) Slack Front Desk setup
 - [ ] Slack app created.

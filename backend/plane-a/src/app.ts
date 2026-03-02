@@ -25,6 +25,7 @@ import { setupLambdaOptimizations } from './plugins/lambda-optimization'
 import { setupRdsProxyMonitor } from './plugins/rds-proxy-monitor'
 import { registerAdminIpAllowlist } from './plugins/ip-allowlist'
 import { registerSessionTracker } from './plugins/session-tracker-plugin'
+import { apiVersionPlugin } from './plugins/api-version'
 import { planeAContainer } from './container'
 import { billingRoutes } from './routes/billing'
 import { meRoutes } from './routes/me'
@@ -66,6 +67,7 @@ import { adsRoutes } from './routes/ads'
 import { marketingRoutes } from './routes/marketing'
 import { complianceRoutes } from './routes/compliance'
 import { indexCorrectionRoutes } from './routes/index-corrections'
+import { corridorCoverageRoutes } from './routes/corridor-coverage'
 import { authRoutes } from './routes/auth'
 
 const logger = createLogger('plane-a.app')
@@ -201,6 +203,7 @@ export const buildApp = async (options?: {
   }
 
   authPlugin(app)
+  apiVersionPlugin(app)
   registerSessionTracker(app)
   const corsOrigins = config.planeA.cors.origins
   if (corsOrigins.length === 0) {
@@ -544,6 +547,7 @@ export const buildApp = async (options?: {
   app.register(providerMetadataRoutes, { prefix: '/api/v1' })
   app.register(corridorCurrenciesRoutes, { prefix: '/api/v1' })
   app.register(corridorLimitsRoutes, { prefix: '/api/v1' })
+  app.register(corridorCoverageRoutes, { prefix: '/api/v1' })
   app.register(popularCorridorsRoutes, { prefix: '/api/v1' })
   app.register(meRoutes, { prefix: '/api/v1' })
   app.register(billingRoutes, { prefix: '/api/v1' })

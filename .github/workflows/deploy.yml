@@ -95,10 +95,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -151,6 +152,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -161,6 +163,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -193,10 +196,11 @@ jobs:
         shell: bash
         env:
           ENV_NAME: dev
+          AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
           set -euo pipefail
           echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_OUTPUT"
           echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
           echo "IMAGE_TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
           VERSION="$(jq -r '.version' package.json)"
@@ -333,6 +337,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: dev
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -352,7 +357,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts=90
+          poll_seconds=10
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -360,8 +367,21 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -370,8 +390,44 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (dev)
+        shell: bash
+        env:
+          ENV_NAME: dev
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (dev)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
+          retry-max-attempts: 3
 
       - name: CDK Deploy (dev, paused)
         shell: bash
@@ -491,7 +547,7 @@ jobs:
         if: always()
         shell: bash
         env:
-          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: dev
           STATUS: ${{ job.status }}
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
@@ -506,7 +562,7 @@ jobs:
   deploy-staging:
     if: |
       (github.event_name == 'workflow_dispatch' && inputs.env == 'staging') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'staging')
     concurrency:
       group: deploy-staging
       cancel-in-progress: false
@@ -546,9 +602,13 @@ jobs:
       PROXY_DATACENTER_SSM_NAME: ${{ vars.PROXY_DATACENTER_SSM_NAME }}
       PROXY_DATACENTER_URL: ${{ secrets.PROXY_DATACENTER_URL || vars.PROXY_DATACENTER_URL }}
       CAPABILITY_PROBE_PROXY_TIER: ${{ vars.CAPABILITY_PROBE_PROXY_TIER || 'NONE' }}
+      AGENT_LLM_CONNECTOR: ${{ vars.AGENT_LLM_CONNECTOR }}
+      AGENT_LLM_MODEL: ${{ vars.AGENT_LLM_MODEL }}
+      AGENT_LLM_PROMPT_VERSION: ${{ vars.AGENT_LLM_PROMPT_VERSION }}
+      AGENT_ANTHROPIC_API_KEY_SECRET_ARN: ${{ vars.AGENT_ANTHROPIC_API_KEY_SECRET_ARN }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
-      SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
       WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
@@ -557,6 +617,10 @@ jobs:
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
       PLANE_A_JWT_ISSUER: ${{ vars.PLANE_A_JWT_ISSUER }}
       PLANE_A_JWT_AUDIENCES: ${{ vars.PLANE_A_JWT_AUDIENCES }}
+      PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
+      PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
+      PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
+      PLANE_A_CORS_ALLOW_CREDENTIALS: ${{ vars.PLANE_A_CORS_ALLOW_CREDENTIALS }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
       PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
@@ -569,25 +633,17 @@ jobs:
       PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
-      PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
-      PUBLIC_EZOIC_COMPARE_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_COMPARE_INLINE_IDS }}
-      PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS: ${{ vars.PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS }}
-      PUBLIC_EZOIC_HOME_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_HOME_INLINE_IDS }}
-      PUBLIC_EZOIC_DASHBOARD_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_DASHBOARD_INLINE_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS }}
-      PUBLIC_EZOIC_BLOG_SIDEBAR_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_SIDEBAR_IDS }}
-      PUBLIC_EZOIC_BLOG_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_INLINE_IDS }}
-      PUBLIC_EZOIC_BLOG_BANNER_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_BANNER_IDS }}
-      PUBLIC_EZOIC_LIMIT_COOKIES: ${{ vars.PUBLIC_EZOIC_LIMIT_COOKIES }}
-      PUBLIC_EZOIC_ANCHOR_AD_POSITION: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_POSITION }}
-      PUBLIC_EZOIC_ANCHOR_AD_EXPANSION: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_EXPANSION }}
-      PUBLIC_EZOIC_DISABLE_INTERSTITIAL: ${{ vars.PUBLIC_EZOIC_DISABLE_INTERSTITIAL }}
-      PUBLIC_EZOIC_VIGNETTE_DESKTOP: ${{ vars.PUBLIC_EZOIC_VIGNETTE_DESKTOP }}
-      PUBLIC_EZOIC_VIGNETTE_MOBILE: ${{ vars.PUBLIC_EZOIC_VIGNETTE_MOBILE }}
-      PUBLIC_EZOIC_VIGNETTE_TABLET: ${{ vars.PUBLIC_EZOIC_VIGNETTE_TABLET }}
-      PUBLIC_EZOIC_ANCHOR_AD_ENABLED: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_ENABLED }}
+      PUBLIC_ENABLE_ADS: ${{ vars.PUBLIC_ENABLE_ADS }}
+      PUBLIC_AD_COMPARE_INLINE_IDS: ${{ vars.PUBLIC_AD_COMPARE_INLINE_IDS }}
+      PUBLIC_AD_COMPARE_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_COMPARE_SIDEBAR_IDS }}
+      PUBLIC_AD_HOME_INLINE_IDS: ${{ vars.PUBLIC_AD_HOME_INLINE_IDS }}
+      PUBLIC_AD_DASHBOARD_INLINE_IDS: ${{ vars.PUBLIC_AD_DASHBOARD_INLINE_IDS }}
+      PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS }}
+      PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS }}
+      PUBLIC_AD_CORRIDOR_FOOTER_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_FOOTER_IDS }}
+      PUBLIC_AD_BLOG_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_BLOG_SIDEBAR_IDS }}
+      PUBLIC_AD_BLOG_INLINE_IDS: ${{ vars.PUBLIC_AD_BLOG_INLINE_IDS }}
+      PUBLIC_AD_BLOG_BANNER_IDS: ${{ vars.PUBLIC_AD_BLOG_BANNER_IDS }}
       COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || vars.STAGING_COST_BUDGET_AMOUNT_USD || '100' }}
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.STAGING_COST_ANOMALY_THRESHOLD_USD || '60' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.STAGING_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
@@ -641,10 +697,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Manual deploys must reference a tested SHA."
@@ -697,6 +754,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -707,6 +765,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -796,10 +855,11 @@ jobs:
         shell: bash
         env:
           ENV_NAME: staging
+          AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
           set -euo pipefail
           echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_OUTPUT"
           echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
           echo "IMAGE_TAG=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
           VERSION="$(jq -r '.version' package.json)"
@@ -955,6 +1015,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: staging
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -974,7 +1035,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts=90
+          poll_seconds=10
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -982,8 +1045,21 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -992,8 +1068,44 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (staging)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 7200
+          retry-max-attempts: 3
 
       - name: CDK Deploy (staging)
         shell: bash
@@ -1110,8 +1222,11 @@ jobs:
 
           pnpm -C frontend build
           pnpm -C frontend generate
-          if ! pnpm -C frontend sentry:sourcemaps; then
-            echo "Sentry sourcemap upload failed in staging; continuing deployment."
+
+          if [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
+            pnpm -C frontend sentry:sourcemaps
+          else
+            echo "⚠️ SENTRY_AUTH_TOKEN not set — skipping sourcemap upload"
           fi
 
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json" --exclude "*.map"
@@ -1375,7 +1490,7 @@ jobs:
         if: always()
         shell: bash
         env:
-          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: staging
           STATUS: ${{ job.status }}
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}
@@ -1431,13 +1546,21 @@ jobs:
       PROXY_DATACENTER_SSM_NAME: ${{ vars.PROXY_DATACENTER_SSM_NAME }}
       PROXY_DATACENTER_URL: ${{ secrets.PROXY_DATACENTER_URL || vars.PROXY_DATACENTER_URL }}
       CAPABILITY_PROBE_PROXY_TIER: ${{ vars.CAPABILITY_PROBE_PROXY_TIER || 'NONE' }}
+      AGENT_LLM_CONNECTOR: ${{ vars.AGENT_LLM_CONNECTOR }}
+      AGENT_LLM_MODEL: ${{ vars.AGENT_LLM_MODEL }}
+      AGENT_LLM_PROMPT_VERSION: ${{ vars.AGENT_LLM_PROMPT_VERSION }}
+      AGENT_ANTHROPIC_API_KEY_SECRET_ARN: ${{ vars.AGENT_ANTHROPIC_API_KEY_SECRET_ARN }}
       SES_IDENTITY_ARNS: ${{ vars.SES_IDENTITY_ARNS }}
       SNS_TOPIC_ARNS: ${{ vars.SNS_TOPIC_ARNS }}
-      SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
       WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+      PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
+      PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
+      PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
+      PLANE_A_CORS_ALLOW_CREDENTIALS: ${{ vars.PLANE_A_CORS_ALLOW_CREDENTIALS }}
       COMPLIANCE_SOC2_TYPE_II_STATUS: ${{ vars.COMPLIANCE_SOC2_TYPE_II_STATUS }}
       COMPLIANCE_SOC2_TYPE_II_REPORT_STATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_STATE }}
       COMPLIANCE_SOC2_TYPE_II_REPORT_DATE: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_DATE }}
@@ -1455,25 +1578,17 @@ jobs:
       PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
-      PUBLIC_ENABLE_EZOIC: ${{ vars.PUBLIC_ENABLE_EZOIC }}
-      PUBLIC_EZOIC_COMPARE_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_COMPARE_INLINE_IDS }}
-      PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS: ${{ vars.PUBLIC_EZOIC_COMPARE_SIDEBAR_IDS }}
-      PUBLIC_EZOIC_HOME_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_HOME_INLINE_IDS }}
-      PUBLIC_EZOIC_DASHBOARD_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_DASHBOARD_INLINE_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_INTERSTITIAL_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_BELOW_FAQ_IDS }}
-      PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS: ${{ vars.PUBLIC_EZOIC_CORRIDOR_FOOTER_IDS }}
-      PUBLIC_EZOIC_BLOG_SIDEBAR_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_SIDEBAR_IDS }}
-      PUBLIC_EZOIC_BLOG_INLINE_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_INLINE_IDS }}
-      PUBLIC_EZOIC_BLOG_BANNER_IDS: ${{ vars.PUBLIC_EZOIC_BLOG_BANNER_IDS }}
-      PUBLIC_EZOIC_LIMIT_COOKIES: ${{ vars.PUBLIC_EZOIC_LIMIT_COOKIES }}
-      PUBLIC_EZOIC_ANCHOR_AD_POSITION: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_POSITION }}
-      PUBLIC_EZOIC_ANCHOR_AD_EXPANSION: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_EXPANSION }}
-      PUBLIC_EZOIC_DISABLE_INTERSTITIAL: ${{ vars.PUBLIC_EZOIC_DISABLE_INTERSTITIAL }}
-      PUBLIC_EZOIC_VIGNETTE_DESKTOP: ${{ vars.PUBLIC_EZOIC_VIGNETTE_DESKTOP }}
-      PUBLIC_EZOIC_VIGNETTE_MOBILE: ${{ vars.PUBLIC_EZOIC_VIGNETTE_MOBILE }}
-      PUBLIC_EZOIC_VIGNETTE_TABLET: ${{ vars.PUBLIC_EZOIC_VIGNETTE_TABLET }}
-      PUBLIC_EZOIC_ANCHOR_AD_ENABLED: ${{ vars.PUBLIC_EZOIC_ANCHOR_AD_ENABLED }}
+      PUBLIC_ENABLE_ADS: ${{ vars.PUBLIC_ENABLE_ADS }}
+      PUBLIC_AD_COMPARE_INLINE_IDS: ${{ vars.PUBLIC_AD_COMPARE_INLINE_IDS }}
+      PUBLIC_AD_COMPARE_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_COMPARE_SIDEBAR_IDS }}
+      PUBLIC_AD_HOME_INLINE_IDS: ${{ vars.PUBLIC_AD_HOME_INLINE_IDS }}
+      PUBLIC_AD_DASHBOARD_INLINE_IDS: ${{ vars.PUBLIC_AD_DASHBOARD_INLINE_IDS }}
+      PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS }}
+      PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS }}
+      PUBLIC_AD_CORRIDOR_FOOTER_IDS: ${{ vars.PUBLIC_AD_CORRIDOR_FOOTER_IDS }}
+      PUBLIC_AD_BLOG_SIDEBAR_IDS: ${{ vars.PUBLIC_AD_BLOG_SIDEBAR_IDS }}
+      PUBLIC_AD_BLOG_INLINE_IDS: ${{ vars.PUBLIC_AD_BLOG_INLINE_IDS }}
+      PUBLIC_AD_BLOG_BANNER_IDS: ${{ vars.PUBLIC_AD_BLOG_BANNER_IDS }}
       COST_BUDGET_AMOUNT_USD: ${{ vars.COST_BUDGET_AMOUNT_USD || vars.PROD_COST_BUDGET_AMOUNT_USD || '500' }}
       COST_ANOMALY_THRESHOLD_USD: ${{ vars.COST_ANOMALY_THRESHOLD_USD || vars.PROD_COST_ANOMALY_THRESHOLD_USD || '100' }}
       COST_ALERT_EMAILS: ${{ vars.COST_ALERT_EMAILS || vars.PROD_COST_ALERT_EMAILS || 'alerts@remit-scout.com' }}
@@ -1539,10 +1654,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful ci/main run found for commit ${deploy_sha}."
             echo "Block prod deploy until ci/main succeeds on this exact commit."
@@ -1672,6 +1788,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
           retry-max-attempts: 3
 
       - name: Configure AWS credentials (fallback role)
@@ -1682,6 +1799,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
           aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
           retry-max-attempts: 2
 
       - name: Validate AWS credential bootstrap
@@ -1770,12 +1888,14 @@ jobs:
         shell: bash
         env:
           ENV_NAME: prod
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> "$GITHUB_OUTPUT"
+          echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_OUTPUT"
           echo "ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ "$EVENT_NAME" = "push" ]; then
             IMAGE_TAG="${GITHUB_REF_NAME}"
           else
             IMAGE_TAG="$(git rev-parse --short=7 HEAD)"
@@ -1928,6 +2048,7 @@ jobs:
         shell: bash
         env:
           STACK_NAME: ${{ vars.STACK_NAME }}
+          ENV_NAME: prod
         run: |
           set -euo pipefail
           if [ -z "${STACK_NAME:-}" ]; then
@@ -1947,7 +2068,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts=90
+          poll_seconds=10
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -1955,8 +2078,21 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                # Every 60s, check if ECS services are stuck in failed deployment
+                if [ $((i % 6)) -eq 0 ] && [ "$i" -gt 6 ]; then
+                  failing=$(aws ecs list-services --cluster "remit-scout-${ENV_NAME}" --output json 2>/dev/null \
+                    | jq -r '.serviceArns[]' 2>/dev/null \
+                    | xargs -r -I{} aws ecs describe-services --cluster "remit-scout-${ENV_NAME}" --services {} --output json 2>/dev/null \
+                    | jq '[.services[] | select((.deployments[]? | select(.status=="PRIMARY") | .rolloutState) == "IN_PROGRESS")] | length' 2>/dev/null \
+                    || echo "0")
+                  if [ "${failing:-0}" -gt 3 ]; then
+                    echo "::error::${failing} ECS services stuck in failed deployment. Likely infrastructure dependency issue."
+                    echo "::error::Check Aurora status, secrets, and Redis before retrying."
+                    exit 1
+                  fi
+                fi
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -1965,8 +2101,44 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
+
+      - name: Pre-deploy infrastructure health check (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+        run: |
+          set -euo pipefail
+          cluster_id=$(aws rds describe-db-clusters \
+            --query "DBClusters[?contains(DBClusterIdentifier, '${ENV_NAME}')].DBClusterIdentifier" \
+            --output text | head -1)
+          if [ -z "$cluster_id" ]; then
+            echo "No Aurora cluster found for ${ENV_NAME}; skipping health check."
+            exit 0
+          fi
+          status=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$cluster_id" \
+            --query 'DBClusters[0].Status' --output text)
+          if [ "$status" = "stopped" ]; then
+            echo "::warning::Aurora cluster $cluster_id is stopped. Starting..."
+            aws rds start-db-cluster --db-cluster-identifier "$cluster_id"
+            aws rds wait db-cluster-available --db-cluster-identifier "$cluster_id"
+            echo "Aurora is now available."
+          elif [ "$status" != "available" ]; then
+            echo "::error::Aurora cluster is in state: $status"
+            exit 1
+          fi
+          echo "Aurora health check passed: $status"
+
+      - name: Refresh AWS credentials before CDK deploy (prod)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 10800
+          retry-max-attempts: 3
 
       - name: CDK Deploy (prod)
         shell: bash
@@ -2027,7 +2199,12 @@ jobs:
 
           pnpm -C frontend build
           pnpm -C frontend generate
-          pnpm -C frontend sentry:sourcemaps
+
+          if [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
+            pnpm -C frontend sentry:sourcemaps
+          else
+            echo "⚠️ SENTRY_AUTH_TOKEN not set — skipping sourcemap upload"
+          fi
 
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "public, max-age=31536000, immutable" --exclude "*.html" --exclude "*.json" --exclude "*.map"
           aws s3 sync "frontend/.output/public" "s3://${bucket}" --delete --cache-control "no-cache, no-store, must-revalidate" --exclude "*" --include "*.html" --include "*.json"
@@ -2201,7 +2378,7 @@ jobs:
         if: always()
         shell: bash
         env:
-          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
           ENV_NAME: prod
           STATUS: ${{ job.status }}
           COMMIT_SHA: ${{ steps.vars.outputs.IMAGE_TAG }}

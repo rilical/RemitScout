@@ -17,6 +17,8 @@ export type AgentNotificationType =
   | 'orchestrator_health'
   | 'knowledge_gap'
   | 'tool_gateway_violation'
+  | 'correlated_failure_escalation'
+  | 'spend_warning'
 
 export type AgentNotification = {
   type: AgentNotificationType
@@ -38,6 +40,8 @@ const TYPE_LABELS: Record<AgentNotificationType, string> = {
   orchestrator_health: 'Orchestrator Health',
   knowledge_gap: 'Knowledge Gap',
   tool_gateway_violation: 'Tool Gateway Violation',
+  correlated_failure_escalation: 'Correlated Failure Escalation',
+  spend_warning: 'Agent Spend Warning',
 }
 
 function buildSlackPayload(notification: AgentNotification): Record<string, unknown> {

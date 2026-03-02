@@ -44,6 +44,8 @@ export type EcsTaskOptions = {
   imageTag: string
   roles: IamResources
   cpuArchitecture?: CpuArchitecture
+  sharedSecretArn?: string
+  planeAJwtSecretJsonKey?: string
   planeBDbSecretArn?: string
   // Optional: privileged DB secret for migrations only. Do not share this with runtime workers.
   planeBDbMigratorSecretArn?: string
@@ -194,7 +196,7 @@ export const createEcsTasks = (
     interval: Duration.seconds(30),
     timeout: Duration.seconds(5),
     retries: 3,
-    startPeriod: Duration.seconds(60),
+    startPeriod: Duration.seconds(120),
   }
 
   const cpuArchitecture = options.cpuArchitecture ?? CpuArchitecture.ARM64
@@ -237,6 +239,8 @@ export const createEcsTasks = (
   const planeCDbHost = options.planeCDbHost ?? options.planeBDbHost
   const planeCDbPort = options.planeCDbPort ?? options.planeBDbPort
   const planeCDbName = options.planeCDbName ?? options.planeBDbName
+  const sharedSecretArn = options.sharedSecretArn
+  const planeAJwtSecretJsonKey = options.planeAJwtSecretJsonKey
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
   const redisSsmName = options.redisSsmName
@@ -383,6 +387,14 @@ export const createEcsTasks = (
         : EcsSecret.fromSecretsManager(secret)
     }
 
+    if (sharedSecretArn) {
+      const secret = Secret.fromSecretCompleteArn(scope, 'PlaneBEcsSharedSecret', sharedSecretArn)
+      secrets.PLANE_A_JWT_SECRET = EcsSecret.fromSecretsManager(
+        secret,
+        planeAJwtSecretJsonKey || 'PLANE_A_JWT_SECRET',
+      )
+    }
+
     if (agentAnthropicApiKeySecretArn) {
       const secret = Secret.fromSecretCompleteArn(
         scope,
@@ -451,6 +463,14 @@ export const createEcsTasks = (
       secrets.SENTRY_DSN = sentrySecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, sentrySecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
+    }
+
+    if (sharedSecretArn) {
+      const secret = Secret.fromSecretCompleteArn(scope, 'GoldLiveSharedSecret', sharedSecretArn)
+      secrets.PLANE_A_JWT_SECRET = EcsSecret.fromSecretsManager(
+        secret,
+        planeAJwtSecretJsonKey || 'PLANE_A_JWT_SECRET',
+      )
     }
 
     return secrets
