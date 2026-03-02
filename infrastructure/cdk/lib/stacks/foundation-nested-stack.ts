@@ -73,7 +73,9 @@ export class FoundationNestedStack extends NestedStack {
 
     const redisHost = cache.replicationGroup.attrPrimaryEndPointAddress
     const redisPort = cache.replicationGroup.attrPrimaryEndPointPort
-    const redisUrl = `rediss://${redisHost}:${redisPort}`
+    const redisUrl = props.redisAuthMode === 'required'
+      ? `rediss://:${cache.redisAuthToken.toString()}@${redisHost}:${redisPort}`
+      : `rediss://${redisHost}:${redisPort}`
 
     this.resources = {
       networking,
