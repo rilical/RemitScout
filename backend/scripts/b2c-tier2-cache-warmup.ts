@@ -152,7 +152,7 @@ export const runB2cTier2CacheWarmup = async (): Promise<number> => {
     if (!lock) return
     lock.extend().catch((error) => {
       logger.warn('lock_extend_failed', {
-        lock_key: 'b2c-tier2-warmup',
+        lock_key: 'b2c-tier2-warmup', // gitleaks:allow -- Redis lock name, not a secret
         error: error instanceof Error ? error.message : String(error),
       })
     })

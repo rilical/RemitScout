@@ -1486,7 +1486,7 @@ const rawConfig = {
       defaultAgentLlmModel,
     llmMaxTokens: toPositiveInt(process.env.AGENT_LLM_MAX_TOKENS, 2048),
     llmTemperature: toNumber(process.env.AGENT_LLM_TEMPERATURE, 0.2),
-    anthropicApiKey:
+    anthropicApiKey: // gitleaks:allow -- reads from env var, no literal secret
       toOptionalTrimmedString(process.env.AGENT_ANTHROPIC_API_KEY) ||
       toOptionalTrimmedString(process.env.ANTHROPIC_API_KEY),
     anthropicApiKeySecretArn: toOptionalTrimmedString(

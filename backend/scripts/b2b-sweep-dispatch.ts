@@ -1078,7 +1078,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
   const lockRefreshTimer = setInterval(() => {
     lock.extend().catch((error) => {
       logger.warn('lock_extend_failed', {
-        lock_key: 'b2b-sweep-scheduler',
+        lock_key: 'b2b-sweep-scheduler', // gitleaks:allow -- Redis lock name, not a secret
         error: error instanceof Error ? error.message : String(error),
       })
     })
@@ -1441,7 +1441,7 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     clearInterval(lockRefreshTimer)
     await lock.release().catch((error) => {
       logger.warn('lock_release_failed', {
-        lock_key: 'b2b-sweep-scheduler',
+        lock_key: 'b2b-sweep-scheduler', // gitleaks:allow -- Redis lock name, not a secret
         error: error instanceof Error ? error.message : String(error),
       })
     })

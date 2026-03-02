@@ -14,7 +14,7 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'SNS_TOPIC_ARNS', description: 'SNS topic ARNs for alarm fanout' },
   { key: 'DATABASE_URL_PLANE_B', description: 'Primary runtime DB URL (Plane B)' },
   { key: 'REDIS_URL', description: 'Redis URL for cache/session/queues' },
-  { key: 'BRONZE_S3_BUCKET', description: 'Bronze raw-data bucket' },
+  { key: 'BRONZE_S3_BUCKET', description: 'Bronze raw-data bucket' }, // gitleaks:allow -- env var name checklist, not a secret
   { key: 'EXPORTS_S3_BUCKET', description: 'Exports artifact bucket' },
   { key: 'PUBLIC_SITE_URL', description: 'Staging frontend base URL' },
   { key: 'PUBLIC_API_BASE', description: 'Staging public API base URL' },

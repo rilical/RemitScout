@@ -23,7 +23,7 @@ const buildHeaders = (request: CollectorRequest) => {
     channelid: '1',
     languageid: '1',
     partnerid: '1',
-    'ocp-apim-subscription-key': '2162a586e2164623a1cd9b6b2d300b4c',
+    'ocp-apim-subscription-key': '2162a586e2164623a1cd9b6b2d300b4c', // gitleaks:allow -- public APIM key from intermexonline.com website JS
     origin: 'https://www.intermexonline.com',
     referer: 'https://www.intermexonline.com/',
     'user-agent': getUserAgentForCorridor(request.corridor_id),
