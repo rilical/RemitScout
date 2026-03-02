@@ -1252,7 +1252,7 @@ jobs:
           pnpm -C frontend generate
 
           if [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
-            pnpm -C frontend sentry:sourcemaps
+            pnpm -C frontend sentry:sourcemaps || echo "::warning::Sentry sourcemap upload failed (non-fatal)"
           else
             echo "⚠️ SENTRY_AUTH_TOKEN not set — skipping sourcemap upload"
           fi
@@ -2248,7 +2248,7 @@ jobs:
           pnpm -C frontend generate
 
           if [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
-            pnpm -C frontend sentry:sourcemaps
+            pnpm -C frontend sentry:sourcemaps || echo "::warning::Sentry sourcemap upload failed (non-fatal)"
           else
             echo "⚠️ SENTRY_AUTH_TOKEN not set — skipping sourcemap upload"
           fi
