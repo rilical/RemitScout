@@ -140,6 +140,16 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
             `arn:aws:iam::${account}:role/cdk-hnb659fds-*`,
           ],
         }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            'rds:DescribeDBClusters',
+            'rds:StartDBCluster',
+          ],
+          resources: [
+            `arn:aws:rds:${region}:${account}:cluster:${envPrefix}*`,
+          ],
+        }),
       ],
     })
   }
@@ -164,7 +174,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
     description: `GitHub Actions deploy role (dev) for ${repoOwner}/${repoName}`,
     assumedBy: makePrincipal('refs/heads/develop'),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('dev') },
-    maxSessionDuration: Duration.hours(1),
+    maxSessionDuration: Duration.hours(3),
   })
 
   new Role(scope, 'GithubActionsDeployStagingRole', {
@@ -172,7 +182,7 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
     description: `GitHub Actions deploy role (staging) for ${repoOwner}/${repoName}`,
     assumedBy: makePrincipal('refs/heads/main'),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('staging') },
-    maxSessionDuration: Duration.hours(1),
+    maxSessionDuration: Duration.hours(3),
   })
 
   new Role(scope, 'GithubActionsDeployProdRole', {
@@ -180,6 +190,6 @@ export const createGithubActionsOidcRoles = (scope: Construct, options: GithubOi
     description: `GitHub Actions deploy role (prod) for ${repoOwner}/${repoName}`,
     assumedBy: makePrincipal('refs/tags/v*.*.*'),
     inlinePolicies: { DeployPermissions: buildDeployPolicy('prod') },
-    maxSessionDuration: Duration.hours(1),
+    maxSessionDuration: Duration.hours(3),
   })
 }
