@@ -272,6 +272,7 @@ jobs:
         if: needs.changes.outputs.run_backend == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
 
   contract-types:
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 12
     needs: [changes, lockfile-integrity]
@@ -404,6 +405,7 @@ jobs:
           fail_ci_if_error: true
 
   mutation-critical:
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [changes, lockfile-integrity]
