@@ -27,7 +27,7 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
 import type { IBucket } from 'aws-cdk-lib/aws-s3'
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
+import { Secret, type ISecret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import { CfnIPSet, CfnLoggingConfiguration, CfnWebACL } from 'aws-cdk-lib/aws-wafv2'
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
@@ -138,6 +138,17 @@ export type ApiResources = {
 }
 
 export const createApi = (scope: Construct, options: ApiOptions): ApiResources => {
+  const completeSecretArnPattern =
+    /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
+  const importSecretByRef = (id: string, secretRef: string): ISecret => {
+    if (secretRef.startsWith('arn:')) {
+      return completeSecretArnPattern.test(secretRef)
+        ? Secret.fromSecretCompleteArn(scope, id, secretRef)
+        : Secret.fromSecretPartialArn(scope, id, secretRef)
+    }
+    return Secret.fromSecretNameV2(scope, id, secretRef)
+  }
+
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : RetentionDays.TWO_WEEKS
@@ -392,7 +403,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     ? LayerVersion.fromLayerVersionArn(scope, 'ApiOtelLambdaLayer', options.otelLambdaLayerArn)
     : undefined
   const sentrySecret = options.sentrySecretArn
-    ? Secret.fromSecretCompleteArn(scope, 'ApiSentrySecret', options.sentrySecretArn)
+    ? importSecretByRef('ApiSentrySecret', options.sentrySecretArn)
     : undefined
   const sentrySecretJsonKey = options.sentrySecretJsonKey
   if (options.planeCDbHost) {
@@ -407,11 +418,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
 
   let resolvedRedisUrl: string | undefined
   if (options.redisSecretArn) {
-    const redisSecret = Secret.fromSecretCompleteArn(
-      scope,
-      'ApiRedisSecret',
-      options.redisSecretArn,
-    )
+    const redisSecret = importSecretByRef('ApiRedisSecret', options.redisSecretArn)
     const redisValue = options.redisSecretJsonKey
       ? redisSecret.secretValueFromJson(options.redisSecretJsonKey)
       : redisSecret.secretValue
@@ -471,11 +478,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
 
   if (options.planeCDbSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneCDbSecret',
-      options.planeCDbSecretArn,
-    )
+    const secret = importSecretByRef('PlaneCDbSecret', options.planeCDbSecretArn)
     secret.grantRead(planeCFunction)
     planeCFunction.addEnvironment('PLANE_C_DB_SECRET_ARN', options.planeCDbSecretArn)
   }
@@ -486,11 +489,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeCFunction.addEnvironment('PLANE_C_DB_SSM_NAME', options.planeCDbSsmName)
   }
   if (options.redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneCRedisSecret',
-      options.redisSecretArn,
-    )
+    const secret = importSecretByRef('PlaneCRedisSecret', options.redisSecretArn)
     secret.grantRead(planeCFunction)
     planeCFunction.addEnvironment('REDIS_SECRET_ARN', options.redisSecretArn)
   }
@@ -501,11 +500,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeCFunction.addEnvironment('REDIS_SSM_NAME', options.redisSsmName)
   }
   if (options.sharedSecretArn && options.planeCInternalApiTokenSecretJsonKey) {
-    const sharedSecret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneCInternalAuthSecret',
-      options.sharedSecretArn,
-    )
+    const sharedSecret = importSecretByRef('PlaneCInternalAuthSecret', options.sharedSecretArn)
     sharedSecret.grantRead(planeCFunction)
     const tokenValue = sharedSecret.secretValueFromJson(
       options.planeCInternalApiTokenSecretJsonKey,
@@ -579,11 +574,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
 
   if (options.planeADbSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneADbSecret',
-      options.planeADbSecretArn,
-    )
+    const secret = importSecretByRef('PlaneADbSecret', options.planeADbSecretArn)
     secret.grantRead(planeAFunction)
     planeAFunction.addEnvironment('PLANE_A_DB_SECRET_ARN', options.planeADbSecretArn)
   }
@@ -594,11 +585,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAFunction.addEnvironment('PLANE_A_DB_SSM_NAME', options.planeADbSsmName)
   }
   if (options.redisSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneARedisSecret',
-      options.redisSecretArn,
-    )
+    const secret = importSecretByRef('PlaneARedisSecret', options.redisSecretArn)
     secret.grantRead(planeAFunction)
     planeAFunction.addEnvironment('REDIS_SECRET_ARN', options.redisSecretArn)
   }
@@ -609,11 +596,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAFunction.addEnvironment('REDIS_SSM_NAME', options.redisSsmName)
   }
   if (options.supabaseSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneASupabaseSecret',
-      options.supabaseSecretArn,
-    )
+    const secret = importSecretByRef('PlaneASupabaseSecret', options.supabaseSecretArn)
     secret.grantRead(planeAFunction)
     planeAFunction.addEnvironment('SUPABASE_SECRET_ARN', options.supabaseSecretArn)
   }
@@ -621,11 +604,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAFunction.addEnvironment('SUPABASE_SSM_NAME', options.supabaseSsmName)
   }
   if (options.stripeSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneAStripeSecret',
-      options.stripeSecretArn,
-    )
+    const secret = importSecretByRef('PlaneAStripeSecret', options.stripeSecretArn)
     secret.grantRead(planeAFunction)
     planeAFunction.addEnvironment('STRIPE_SECRET_ARN', options.stripeSecretArn)
   }
@@ -633,11 +612,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     planeAFunction.addEnvironment('STRIPE_SSM_NAME', options.stripeSsmName)
   }
   if (options.communicationsSecretArn) {
-    const secret = Secret.fromSecretCompleteArn(
-      scope,
-      'PlaneACommunicationsSecret',
-      options.communicationsSecretArn,
-    )
+    const secret = importSecretByRef('PlaneACommunicationsSecret', options.communicationsSecretArn)
     secret.grantRead(planeAFunction)
     const communicationsEnvKeys = [
       'ALERT_UNSUBSCRIBE_SECRET',
