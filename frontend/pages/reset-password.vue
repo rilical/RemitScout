@@ -141,9 +141,9 @@
 <script setup lang="ts">
 import { setSeo } from '~/composables/useSeo'
 
-	const { updatePassword, ensureHydrated, isAuthenticated, isConfigured } = useAuth()
-	const route = useRoute()
-	const { public: { siteUrl, supabaseSuppressConfigError } } = useRuntimeConfig()
+  const { updatePassword, ensureHydrated, isAuthenticated, isConfigured } = useAuth()
+  const route = useRoute()
+  const { public: { siteUrl, supabaseSuppressConfigError } } = useRuntimeConfig()
 
 setSeo({
   title: 'Reset password | Remit-Scout',

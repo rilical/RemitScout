@@ -31,7 +31,7 @@ export function useEnterpriseEmbeds() {
   const snapshotGenerating = ref(false)
   const snapshotError = ref<string | null>(null)
 
-  const indices: { key: EmbedIndexKey; label: string }[] = [
+  const indices: { key: EmbedIndexKey, label: string }[] = [
     { key: 'teer', label: 'TEER' },
     { key: 'rci', label: 'RCI' },
     { key: 'rvi_bps', label: 'RVI (bps)' },
@@ -108,10 +108,12 @@ export function useEnterpriseEmbeds() {
       snapshotId.value = response.snapshotId
       snapshotCreatedAt.value = response.createdAt
       snapshotExpiresAt.value = response.expiresAt
-    } catch (error) {
+    }
+ catch (error) {
       const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
       snapshotError.value = raw || 'Unable to generate embed snapshot.'
-    } finally {
+    }
+ finally {
       snapshotGenerating.value = false
     }
   }
@@ -126,16 +128,22 @@ export function useEnterpriseEmbeds() {
     const code = embedCodes.value[key]
     if (!code || !import.meta.client) {
       copyStatus.value = 'Generate a static snapshot before copying embed code.'
-      setTimeout(() => { copyStatus.value = null }, 2500)
+      setTimeout(() => {
+        copyStatus.value = null
+      }, 2500)
       return
     }
     try {
       await navigator.clipboard.writeText(code)
       copyStatus.value = `${key.toUpperCase()} embed copied.`
-    } catch {
+    }
+ catch {
       copyStatus.value = 'Copy failed.'
-    } finally {
-      setTimeout(() => { copyStatus.value = null }, 2000)
+    }
+ finally {
+      setTimeout(() => {
+        copyStatus.value = null
+      }, 2000)
     }
   }
 

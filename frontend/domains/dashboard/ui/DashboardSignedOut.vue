@@ -202,104 +202,104 @@ const features = computed(() =>
           </div>
         </div>
       </CenteredPage>
-	    </section>
+      </section>
 
-	    <!-- Product Tour -->
-	    <CenteredPage
-	      as="section"
-	      max-width="7xl"
-	      padding-y="lg"
-	      section-gap-class="space-y-10"
-	    >
-	      <header class="text-center">
-	        <h2 class="text-h2 font-bold text-rs-fg">
-	          A dashboard that feels like a product
-	        </h2>
-	        <p class="mx-auto mt-3 max-w-3xl text-neutral-600">
-	        Watchlist, alerts, history, exports{{ pulseEnabled ? ', and Pulse' : '' }}. Built for repeat transfers, not one-off calculators.
-	        </p>
-	      </header>
+      <!-- Product Tour -->
+      <CenteredPage
+        as="section"
+        max-width="7xl"
+        padding-y="lg"
+        section-gap-class="space-y-10"
+      >
+        <header class="text-center">
+          <h2 class="text-h2 font-bold text-rs-fg">
+            A dashboard that feels like a product
+          </h2>
+          <p class="mx-auto mt-3 max-w-3xl text-neutral-600">
+          Watchlist, alerts, history, exports{{ pulseEnabled ? ', and Pulse' : '' }}. Built for repeat transfers, not one-off calculators.
+          </p>
+        </header>
 
-	      <div class="grid gap-8 lg:grid-cols-[360px,1fr]">
-	        <div class="space-y-3">
-	          <button
-	            v-for="shot in tourShots"
-	            :key="shot.id"
-	            type="button"
-	            class="w-full rounded-2xl border p-4 text-left transition-all"
-	            :class="activeTourShotId === shot.id
-	              ? 'border-brand-600 bg-primary-50 shadow-sm'
-	              : 'border-rs-border bg-surface hover:border-neutral-300 hover:bg-neutral-50'"
-	            @click="activeTourShotId = shot.id"
-	          >
-	            <div class="flex items-start justify-between gap-4">
-	              <div>
-	                <div class="text-body font-semibold text-rs-fg">
-	                  {{ shot.title }}
-	                </div>
-	                <div class="mt-1 text-body-sm leading-relaxed text-neutral-600">
-	                  {{ shot.body }}
-	                </div>
-	              </div>
-	              <div class="flex-shrink-0 rounded-full bg-neutral-900 px-3 py-1 text-body-sm font-semibold text-white">
-	                {{ shot.badge }}
-	              </div>
-	            </div>
-	          </button>
+        <div class="grid gap-8 lg:grid-cols-[360px,1fr]">
+          <div class="space-y-3">
+            <button
+              v-for="shot in tourShots"
+              :key="shot.id"
+              type="button"
+              class="w-full rounded-2xl border p-4 text-left transition-all"
+              :class="activeTourShotId === shot.id
+                ? 'border-brand-600 bg-primary-50 shadow-sm'
+                : 'border-rs-border bg-surface hover:border-neutral-300 hover:bg-neutral-50'"
+              @click="activeTourShotId = shot.id"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <div class="text-body font-semibold text-rs-fg">
+                    {{ shot.title }}
+                  </div>
+                  <div class="mt-1 text-body-sm leading-relaxed text-neutral-600">
+                    {{ shot.body }}
+                  </div>
+                </div>
+                <div class="flex-shrink-0 rounded-full bg-neutral-900 px-3 py-1 text-body-sm font-semibold text-white">
+                  {{ shot.badge }}
+                </div>
+              </div>
+            </button>
 
-	          <div class="rounded-2xl border border-rs-border bg-neutral-50 p-4 text-body-sm text-neutral-700">
-	            Tip: in Plus, you can scale to 16 corridors and 16 alerts and export your history.
-	          </div>
-	        </div>
+            <div class="rounded-2xl border border-rs-border bg-neutral-50 p-4 text-body-sm text-neutral-700">
+              Tip: in Plus, you can scale to 16 corridors and 16 alerts and export your history.
+            </div>
+          </div>
 
-	        <div class="relative">
-	          <div class="absolute -inset-6 rounded-3xl bg-primary-500/10 blur-3xl" />
-	          <div class="relative overflow-hidden rounded-2xl border border-rs-border bg-surface shadow-xl">
-	            <div class="flex items-center gap-2 border-b border-rs-border bg-neutral-50 px-4 py-2">
-	              <div class="flex gap-1.5">
-	                <span class="h-3 w-3 rounded-full bg-neutral-300" />
-	                <span class="h-3 w-3 rounded-full bg-neutral-300" />
-	                <span class="h-3 w-3 rounded-full bg-neutral-300" />
-	              </div>
-	              <div class="ml-2 truncate text-body-sm text-neutral-500">
-	                Dashboard preview (logged-in)
-	              </div>
-	            </div>
+          <div class="relative">
+            <div class="absolute -inset-6 rounded-3xl bg-primary-500/10 blur-3xl" />
+            <div class="relative overflow-hidden rounded-2xl border border-rs-border bg-surface shadow-xl">
+              <div class="flex items-center gap-2 border-b border-rs-border bg-neutral-50 px-4 py-2">
+                <div class="flex gap-1.5">
+                  <span class="h-3 w-3 rounded-full bg-neutral-300" />
+                  <span class="h-3 w-3 rounded-full bg-neutral-300" />
+                  <span class="h-3 w-3 rounded-full bg-neutral-300" />
+                </div>
+                <div class="ml-2 truncate text-body-sm text-neutral-500">
+                  Dashboard preview (logged-in)
+                </div>
+              </div>
 
-	            <div class="relative aspect-[16/10] overflow-hidden bg-surface">
-	              <NuxtImg
-	                :src="screenshotSrc"
-	                :alt="`Dashboard screenshot: ${activeTourShot.title}`"
-	                width="1898"
-	                height="1772"
-	                sizes="100vw"
-	                loading="lazy"
-	                format="webp"
-	                class="absolute inset-0 h-full w-full object-cover will-change-transform"
-	                :style="{
-	                  objectPosition: activeTourShot.objectPosition,
-	                  transform: `scale(${activeTourShot.scale})`,
-	                }"
-	              />
-	              <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
-	              <div class="absolute left-4 top-4 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-body-sm font-semibold text-white backdrop-blur-sm">
-	                {{ activeTourShot.title }}
-	              </div>
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	    </CenteredPage>
+              <div class="relative aspect-[16/10] overflow-hidden bg-surface">
+                <NuxtImg
+                  :src="screenshotSrc"
+                  :alt="`Dashboard screenshot: ${activeTourShot.title}`"
+                  width="1898"
+                  height="1772"
+                  sizes="100vw"
+                  loading="lazy"
+                  format="webp"
+                  class="absolute inset-0 h-full w-full object-cover will-change-transform"
+                  :style="{
+                    objectPosition: activeTourShot.objectPosition,
+                    transform: `scale(${activeTourShot.scale})`,
+                  }"
+                />
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
+                <div class="absolute left-4 top-4 rounded-full border border-white/20 bg-black/50 px-3 py-1 text-body-sm font-semibold text-white backdrop-blur-sm">
+                  {{ activeTourShot.title }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CenteredPage>
 
-	    <CenteredPage
+      <CenteredPage
 as="section"
 max-width="6xl"
 padding-y="lg"
 section-gap-class="space-y-10"
 >
-	      <header class="text-center">
-	        <h2 class="text-h3 font-bold text-rs-fg">
-	          Everything you need, without the noise
+        <header class="text-center">
+          <h2 class="text-h3 font-bold text-rs-fg">
+            Everything you need, without the noise
         </h2>
         <p class="mx-auto mt-3 max-w-2xl text-neutral-600">
           Build a watchlist, set alerts, and compare providers with total cost in view.
@@ -447,7 +447,10 @@ class="text-white"
 />
                 16 alerts
               </li>
-              <li v-if="pulseEnabled" class="flex items-center gap-2">
+              <li
+v-if="pulseEnabled"
+class="flex items-center gap-2"
+>
                 <Icon
 name="check"
 :size="20"

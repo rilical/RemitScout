@@ -1,11 +1,12 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-page px-page-x">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+:items="breadcrumbItems"
+:dark="true"
+/>
 
         <div class="mt-10 text-center">
           <h1 class="text-h1 font-bold leading-tight mb-4">

@@ -1,14 +1,14 @@
-export type AdPlacement =
-  | 'compare_inline'
-  | 'compare_sidebar'
-  | 'corridor_interstitial'
-  | 'corridor_below_faq'
-  | 'corridor_footer'
-  | 'home_inline'
-  | 'dashboard_inline'
-  | 'blog_sidebar'
-  | 'blog_inline'
-  | 'blog_banner'
+export type AdPlacement
+  = | 'compare_inline'
+    | 'compare_sidebar'
+    | 'corridor_interstitial'
+    | 'corridor_below_faq'
+    | 'corridor_footer'
+    | 'home_inline'
+    | 'dashboard_inline'
+    | 'blog_sidebar'
+    | 'blog_inline'
+    | 'blog_banner'
 
 export type AdLayout = 'horizontal' | 'vertical' | 'compact'
 
@@ -171,7 +171,7 @@ export const getPlacementConfig = (placement: AdPlacement): PlacementConfig => {
 export const pickAdForPlacement = (
   placement: AdPlacement,
   seed: string,
-  options?: { allowHouseAds?: boolean; pulseEnabled?: boolean },
+  options?: { allowHouseAds?: boolean, pulseEnabled?: boolean },
 ): AdCreative | null => {
   const now = new Date()
   let candidates = filterByPlacement(PAID_ADS, placement, now)

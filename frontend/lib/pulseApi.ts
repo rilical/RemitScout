@@ -634,9 +634,9 @@ export async function getPulsePinnedCorridors(): Promise<PulsePinnedCorridor[]> 
   return data.corridors ?? []
 }
 
-export async function pinPulseCorridor(corridorId: string, label?: string): Promise<{ status: string; id?: string }> {
+export async function pinPulseCorridor(corridorId: string, label?: string): Promise<{ status: string, id?: string }> {
   const { request } = useApi()
-  return await request<{ status: string; id?: string }>('/pulse/watchlist', {
+  return await request<{ status: string, id?: string }>('/pulse/watchlist', {
     method: 'POST',
     body: { corridorId, label },
   })

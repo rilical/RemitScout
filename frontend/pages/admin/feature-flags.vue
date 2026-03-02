@@ -47,7 +47,7 @@
           <input
             v-model="createForm.audienceJson"
             type="text"
-            placeholder='{"global": true, "audiences": [{"type":"country","allow":["US"]}]}'
+            placeholder="{&quot;global&quot;: true, &quot;audiences&quot;: [{&quot;type&quot;:&quot;country&quot;,&quot;allow&quot;:[&quot;US&quot;]}]}"
             class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm font-mono"
           >
         </label>
@@ -264,7 +264,7 @@ const flagColumns: DataTableColumn[] = [
 ]
 
 const flagRows = computed(() =>
-  flags.value.map((flag) => ({
+  flags.value.map(flag => ({
     key: flag.key,
     enabled: flag.enabled,
     updated_at: formatTimestamp(flag.updated_at),
@@ -280,7 +280,7 @@ const asString = (value: unknown): string => {
 const asBoolean = (value: unknown): boolean => value === true
 
 const selectedFlag = computed(() =>
-  flags.value.find((flag) => flag.key === selectedKey.value) ?? null,
+  flags.value.find(flag => flag.key === selectedKey.value) ?? null,
 )
 
 const parseJsonObject = (value: string, fallback: Record<string, unknown> = {}) => {
@@ -334,7 +334,7 @@ const loadFlags = async () => {
       selectedKey.value = flags.value[0].key
     }
     if (selectedKey.value) {
-      const selected = flags.value.find((item) => item.key === selectedKey.value) || null
+      const selected = flags.value.find(item => item.key === selectedKey.value) || null
       hydrateEditor(selected)
       if (selected) {
         await loadHistory(selected.key)
@@ -356,7 +356,7 @@ const selectFlag = async (key: string) => {
     return
   }
   selectedKey.value = normalized
-  const selected = flags.value.find((item) => item.key === normalized) || null
+  const selected = flags.value.find(item => item.key === normalized) || null
   hydrateEditor(selected)
   if (!selected) return
   await loadHistory(selected.key)

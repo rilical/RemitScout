@@ -408,10 +408,10 @@
                   v-if="showSmartExplainer"
                   class="mt-2 overflow-hidden rounded-lg border border-brand-200 bg-brand-50 p-4"
                 >
-	                  <div class="flex items-start gap-3">
-	                    <div class="flex-shrink-0 mt-0.5">
-	                      <svg
-	                        class="w-4 h-4 text-accent-600"
+                    <div class="flex items-start gap-3">
+                      <div class="flex-shrink-0 mt-0.5">
+                        <svg
+                          class="w-4 h-4 text-accent-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -421,20 +421,20 @@
                           stroke-linejoin="round"
                           stroke-width="2"
                           d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-	                        />
-	                      </svg>
-	                      <span :class="selectedMetricOption?.unavailable ? 'text-neutral-400' : 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent-600 to-brand-600'">
-	                        {{ selectedMetricOption?.label || 'Intelligent Alert' }}
-	                      </span>
-	                    </div>
-	                    <span
-	                      v-if="selectedMetricOption?.unavailable"
-	                      class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-medium text-warning-700"
-	                      :title="selectedMetricOption?.unavailableReason"
-	                    >
-	                      <svg
-	                        class="w-3 h-3"
-	                        fill="none"
+                          />
+                        </svg>
+                        <span :class="selectedMetricOption?.unavailable ? 'text-neutral-400' : 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent-600 to-brand-600'">
+                          {{ selectedMetricOption?.label || 'Intelligent Alert' }}
+                        </span>
+                      </div>
+                      <span
+                        v-if="selectedMetricOption?.unavailable"
+                        class="inline-flex items-center gap-1 rounded-full bg-warning-100 px-2 py-0.5 text-body-sm font-medium text-warning-700"
+                        :title="selectedMetricOption?.unavailableReason"
+                      >
+                        <svg
+                          class="w-3 h-3"
+                          fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
@@ -442,17 +442,17 @@
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-	                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-	                        />
-	                      </svg>
-	                      {{ selectedMetricOption?.unavailableLabel || 'No data' }}
-	                    </span>
-	                    <span
-	                      v-else-if="selectedMetricOption?.locked"
-	                      class="inline-flex items-center gap-1 rounded-full bg-neutral-200 px-2 py-0.5 text-body-sm font-semibold text-neutral-600"
-	                    >
-	                      <svg
-	                        class="w-3 h-3"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        {{ selectedMetricOption?.unavailableLabel || 'No data' }}
+                      </span>
+                      <span
+                        v-else-if="selectedMetricOption?.locked"
+                        class="inline-flex items-center gap-1 rounded-full bg-neutral-200 px-2 py-0.5 text-body-sm font-semibold text-neutral-600"
+                      >
+                        <svg
+                          class="w-3 h-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1032,120 +1032,120 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
   void loadCorridorEligibility()
 })
 
-	const metricOptions = computed(() => {
-	  const options: MetricOption[] = []
-	  switch (target.value.type) {
-	    case 'corridor':
-	      options.push({ value: 'rate' as const, label: 'FX rate' })
-	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
-	      options.push(
-	        {
-	          value: 'recipientGets' as const,
-	          label: 'Recipient gets',
-	          disabled: !quoteCoverageSupported.value && metric.value !== 'recipientGets',
-	        },
-	        {
-	          value: 'totalCost' as const,
-	          label: 'Total cost',
-	          disabled: !quoteCoverageSupported.value && metric.value !== 'totalCost',
-	        },
-	        {
-	          value: 'fee' as const,
-	          label: 'Fee',
-	          disabled: !quoteCoverageSupported.value && metric.value !== 'fee',
-	        },
-	      )
-	      {
-	        const shouldIncludeSmart = metric.value === 'sendScore' || smartProgramEligible.value
-	        if (!shouldIncludeSmart) break
+  const metricOptions = computed(() => {
+    const options: MetricOption[] = []
+    switch (target.value.type) {
+      case 'corridor':
+        options.push({ value: 'rate' as const, label: 'FX rate' })
+        options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
+        options.push(
+          {
+            value: 'recipientGets' as const,
+            label: 'Recipient gets',
+            disabled: !quoteCoverageSupported.value && metric.value !== 'recipientGets',
+          },
+          {
+            value: 'totalCost' as const,
+            label: 'Total cost',
+            disabled: !quoteCoverageSupported.value && metric.value !== 'totalCost',
+          },
+          {
+            value: 'fee' as const,
+            label: 'Fee',
+            disabled: !quoteCoverageSupported.value && metric.value !== 'fee',
+          },
+        )
+        {
+          const shouldIncludeSmart = metric.value === 'sendScore' || smartProgramEligible.value
+          if (!shouldIncludeSmart) break
 
-	        const reason = smartAlertDisabledReason.value
-	        const smartDisabled = reason !== null
+          const reason = smartAlertDisabledReason.value
+          const smartDisabled = reason !== null
         const isDataIssue = Boolean(reason && !['plus_required', 'loading'].includes(reason))
         const isLoading = reason === 'loading'
         const unavailableLabel = !isDataIssue
           ? undefined
-	          : reason === 'rolling_out'
-	            ? 'Collecting'
-	            : reason === 'not_offered'
-	              ? 'Not offered'
-	              : reason === 'unknown'
-	                ? 'Unknown'
-	                : 'No data'
-	        options.push({
-	          value: 'sendScore' as const,
-	          label: 'Intelligent Alert',
-	          disabled: smartDisabled,
+            : reason === 'rolling_out'
+              ? 'Collecting'
+              : reason === 'not_offered'
+                ? 'Not offered'
+                : reason === 'unknown'
+                  ? 'Unknown'
+                  : 'No data'
+          options.push({
+            value: 'sendScore' as const,
+            label: 'Intelligent Alert',
+            disabled: smartDisabled,
           locked: !isPlus.value,
           unavailable: isDataIssue,
           unavailableLabel,
           loading: isLoading,
           unavailableReason: smartAlertDisabledMessage.value ?? undefined,
         })
-	      }
-	      options.push(
-	        { value: 'rci_threshold' as const, label: 'RCI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
-	        { value: 'rvi_threshold' as const, label: 'RVI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
-	        { value: 'index' as const, label: 'Index' },
-	      )
-	      break
-	    case 'fxPair':
-	      options.push({ value: 'rate' as const, label: 'FX rate' })
-	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
-	      break
-	    case 'pulseChart':
-	      options.push({ value: 'index' as const, label: 'Index' })
-	      break
-	    case 'triangulatedCorridor':
-	      options.push({ value: 'rate' as const, label: 'FX rate (via USD)' })
-	      options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate (via USD)' })
-	      break
-	    case 'guide':
-	      options.push({
-	        value: 'index' as const,
-	        label: 'Index',
-	        disabled: true,
-	        unavailable: true,
-	        unavailableLabel: 'Not supported',
-	        unavailableReason: 'Alerts are not supported for guides yet.',
-	      })
-	      break
-	    default:
-	      options.push({ value: 'rate' as const, label: 'Rate' })
-	  }
-	  return options
-	})
+        }
+        options.push(
+          { value: 'rci_threshold' as const, label: 'RCI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
+          { value: 'rvi_threshold' as const, label: 'RVI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
+          { value: 'index' as const, label: 'Index' },
+        )
+        break
+      case 'fxPair':
+        options.push({ value: 'rate' as const, label: 'FX rate' })
+        options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate' })
+        break
+      case 'pulseChart':
+        options.push({ value: 'index' as const, label: 'Index' })
+        break
+      case 'triangulatedCorridor':
+        options.push({ value: 'rate' as const, label: 'FX rate (via USD)' })
+        options.push({ value: 'midMarketRate' as const, label: 'Mid-market rate (via USD)' })
+        break
+      case 'guide':
+        options.push({
+          value: 'index' as const,
+          label: 'Index',
+          disabled: true,
+          unavailable: true,
+          unavailableLabel: 'Not supported',
+          unavailableReason: 'Alerts are not supported for guides yet.',
+        })
+        break
+      default:
+        options.push({ value: 'rate' as const, label: 'Rate' })
+    }
+    return options
+  })
 
-	type MetricOption = {
-	  value: AlertRule['metric']
-	  label: string
-	  disabled?: boolean
-	  locked?: boolean
-	  unavailable?: boolean
-	  unavailableLabel?: string | undefined
-	  loading?: boolean
-	  unavailableReason?: string | undefined
-	}
+  type MetricOption = {
+    value: AlertRule['metric']
+    label: string
+    disabled?: boolean
+    locked?: boolean
+    unavailable?: boolean
+    unavailableLabel?: string | undefined
+    loading?: boolean
+    unavailableReason?: string | undefined
+  }
 
-	const selectedMetricOption = computed<MetricOption | null>(() => {
-	  const match = metricOptions.value.find((option: any) => {
-	    const optionValue = typeof option === 'string' ? option : option?.value
-	    return optionValue === metric.value
-	  })
-	  if (!match || typeof match === 'string') return null
-	  return match as MetricOption
-	})
+  const selectedMetricOption = computed<MetricOption | null>(() => {
+    const match = metricOptions.value.find((option: any) => {
+      const optionValue = typeof option === 'string' ? option : option?.value
+      return optionValue === metric.value
+    })
+    if (!match || typeof match === 'string') return null
+    return match as MetricOption
+  })
 
-	const firstEnabledMetric = computed<AlertRule['metric']>(() => {
-	  for (const option of metricOptions.value) {
-	    if (typeof option === 'string') return option as AlertRule['metric']
-	    if (!option.disabled && !option.unavailable) return option.value as AlertRule['metric']
-	  }
-	  const firstOption = metricOptions.value[0]
-	  if (firstOption && typeof firstOption !== 'string') {
-	    return firstOption.value
-	  }
-	  return 'rate'
+  const firstEnabledMetric = computed<AlertRule['metric']>(() => {
+    for (const option of metricOptions.value) {
+      if (typeof option === 'string') return option as AlertRule['metric']
+      if (!option.disabled && !option.unavailable) return option.value as AlertRule['metric']
+    }
+    const firstOption = metricOptions.value[0]
+    if (firstOption && typeof firstOption !== 'string') {
+      return firstOption.value
+    }
+    return 'rate'
 })
 
 const metricReady = computed(() => {

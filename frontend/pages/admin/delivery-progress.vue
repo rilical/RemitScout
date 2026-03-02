@@ -16,7 +16,10 @@
               class="h-4 w-4 rounded border-rs-border text-brand-600"
             >
             Auto-refresh
-            <span v-if="autoRefresh" class="tabular-nums font-semibold text-rs-fg">{{ countdown }}s</span>
+            <span
+v-if="autoRefresh"
+class="tabular-nums font-semibold text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -54,10 +57,16 @@
       <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">Progress by Domain</h2>
         <p class="mb-4 text-body-sm text-rs-muted">Modules grouped by collector type with production vs other statuses.</p>
-        <div v-if="!domainGroups.length" class="py-12 text-center text-body-sm text-rs-muted">
+        <div
+v-if="!domainGroups.length"
+class="py-12 text-center text-body-sm text-rs-muted"
+>
           No module data available.
         </div>
-        <div v-else class="space-y-4">
+        <div
+v-else
+class="space-y-4"
+>
           <div
             v-for="group in domainGroups"
             :key="group.collectorType"
@@ -70,7 +79,10 @@
               </span>
             </div>
             <div class="mb-2 flex flex-wrap gap-2 text-caption text-rs-muted">
-              <span v-if="group.otherStatuses.length" class="rounded bg-amber-100 px-2 py-0.5 text-amber-700">
+              <span
+v-if="group.otherStatuses.length"
+class="rounded bg-amber-100 px-2 py-0.5 text-amber-700"
+>
                 {{ group.otherStatuses.join(', ') }}
               </span>
             </div>
@@ -154,17 +166,25 @@ const countdown = ref(60)
 let timer: ReturnType<typeof setInterval> | null = null
 
 watch(autoRefresh, (on) => {
-  if (timer) { clearInterval(timer); timer = null }
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
   if (on) {
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
-      if (countdown.value <= 0) { countdown.value = 60; void load() }
+      if (countdown.value <= 0) {
+        countdown.value = 60
+        void load()
+      }
     }, 1000)
   }
 })
 
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const load = async () => {
   if (loading.value) return
@@ -183,5 +203,7 @@ const load = async () => {
   }
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

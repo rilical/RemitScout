@@ -94,7 +94,12 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            ><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 9l-7 7-7-7"
+/></svg>
           </button>
           <Transition
             enter-active-class="transition-all duration-200 ease-out"
@@ -154,7 +159,12 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            ><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 9l-7 7-7-7"
+/></svg>
           </button>
           <Transition
             enter-active-class="transition-all duration-200 ease-out"
@@ -353,12 +363,18 @@
         </div>
 
         <!-- Self-healing KPI tiles -->
-        <div v-if="platformMetrics" class="mt-4">
+        <div
+v-if="platformMetrics"
+class="mt-4"
+>
           <SelfHealingKpiTiles :metrics="platformMetrics" />
         </div>
 
         <!-- Recent agent actions inline -->
-        <div v-if="platformActions.length" class="mt-4 rounded-xl border border-rs-border p-4">
+        <div
+v-if="platformActions.length"
+class="mt-4 rounded-xl border border-rs-border p-4"
+>
           <div class="mb-3 text-body-sm font-semibold text-rs-fg">Recent Agent Actions</div>
           <AgentActionTimeline :actions="platformActions" />
         </div>
@@ -1092,7 +1108,7 @@ const watchedProviders = [
 ] as const
 
 const selectedProvider = computed(() =>
-  providerHealth.value.find((provider) => provider.provider_id === selectedProviderId.value) ?? null,
+  providerHealth.value.find(provider => provider.provider_id === selectedProviderId.value) ?? null,
 )
 
 const EXPECTED_SERVICES = [
@@ -1288,7 +1304,7 @@ const loadObserver = async () => {
       providerHealth.value = providersAggregateResult.value.providers ?? []
 
       providerChecks.value = watchedProviders.flatMap((provider) => {
-        const row = providerHealth.value.find((item) => item.provider_id === provider.id)
+        const row = providerHealth.value.find(item => item.provider_id === provider.id)
         if (!row) return []
         return [{
           providerId: row.provider_id,
@@ -1300,7 +1316,7 @@ const loadObserver = async () => {
         }]
       })
 
-      if (selectedProviderId.value && !providerHealth.value.some((item) => item.provider_id === selectedProviderId.value)) {
+      if (selectedProviderId.value && !providerHealth.value.some(item => item.provider_id === selectedProviderId.value)) {
         selectedProviderId.value = null
       }
     }

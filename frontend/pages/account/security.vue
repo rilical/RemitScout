@@ -92,7 +92,10 @@
             {{ enrolling ? 'Starting…' : 'Enable MFA' }}
           </button>
 
-          <div v-if="enrollment" class="rounded-xl border border-rs-border bg-neutral-50 p-4">
+          <div
+v-if="enrollment"
+class="rounded-xl border border-rs-border bg-neutral-50 p-4"
+>
             <p class="text-body-sm text-neutral-700">Scan the QR code with your authenticator app, or enter the secret manually.</p>
             <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
               <img
@@ -180,7 +183,7 @@ type MfaFactor = {
   created_at?: string | null
 }
 
-const factors = ref<{ totp?: MfaFactor[]; all?: MfaFactor[] } | null>(null)
+const factors = ref<{ totp?: MfaFactor[], all?: MfaFactor[] } | null>(null)
 const enrollment = ref<any | null>(null)
 const verificationCode = ref('')
 

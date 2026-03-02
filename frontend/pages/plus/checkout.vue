@@ -171,7 +171,10 @@
                 </svg>
                 <span class="text-body-sm text-neutral-300">16 smart alerts + 16 watchlist corridors</span>
               </div>
-              <div v-if="pulseEnabled" class="flex items-start gap-2">
+              <div
+v-if="pulseEnabled"
+class="flex items-start gap-2"
+>
                 <svg
                   class="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5"
                   fill="none"

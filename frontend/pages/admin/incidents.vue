@@ -16,7 +16,10 @@
               class="h-4 w-4 rounded border-rs-border text-brand-600"
             >
             Auto-refresh
-            <span v-if="autoRefresh" class="tabular-nums font-semibold text-rs-fg">{{ countdown }}s</span>
+            <span
+v-if="autoRefresh"
+class="tabular-nums font-semibold text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -33,10 +36,16 @@
       <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">Incident Lifecycle</h2>
         <p class="mb-4 text-body-sm text-rs-muted">Detection, triage, and resolution for each failure bundle.</p>
-        <div v-if="!incidents.length" class="py-12 text-center text-body-sm text-rs-muted">
+        <div
+v-if="!incidents.length"
+class="py-12 text-center text-body-sm text-rs-muted"
+>
           No incidents to display.
         </div>
-        <ul v-else class="space-y-4">
+        <ul
+v-else
+class="space-y-4"
+>
           <li
             v-for="inc in incidents"
             :key="inc.bundle_id"
@@ -47,7 +56,10 @@
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="font-medium text-rs-fg">{{ inc.module_id }}</span>
-                  <span class="rounded-full px-2 py-0.5 text-caption font-medium" :class="incidentBadgeClass(inc)">
+                  <span
+class="rounded-full px-2 py-0.5 text-caption font-medium"
+:class="incidentBadgeClass(inc)"
+>
                     {{ inc.repair_outcome ?? 'pending' }}
                   </span>
                   <a
@@ -58,8 +70,18 @@
                     class="inline-flex items-center gap-1 text-body-sm font-medium text-brand-600 hover:text-brand-700"
                   >
                     View PR
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                      <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+/>
                     </svg>
                   </a>
                 </div>
@@ -151,17 +173,25 @@ const countdown = ref(60)
 let timer: ReturnType<typeof setInterval> | null = null
 
 watch(autoRefresh, (on) => {
-  if (timer) { clearInterval(timer); timer = null }
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
   if (on) {
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
-      if (countdown.value <= 0) { countdown.value = 60; void load() }
+      if (countdown.value <= 0) {
+        countdown.value = 60
+        void load()
+      }
     }, 1000)
   }
 })
 
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const load = async () => {
   if (loading.value) return
@@ -184,5 +214,7 @@ const load = async () => {
   }
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

@@ -274,25 +274,49 @@
             <ul class="space-y-2 text-body-sm text-neutral-400">
               <li class="flex items-center gap-2">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
-                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                  <svg
+class="h-3 w-3"
+viewBox="0 0 12 12"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+><path d="M2 6l3 3 5-5" /></svg>
                 </span>
                 Remit-Scout branded header with chart title
               </li>
               <li class="flex items-center gap-2">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
-                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                  <svg
+class="h-3 w-3"
+viewBox="0 0 12 12"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+><path d="M2 6l3 3 5-5" /></svg>
                 </span>
                 Full chart at 2x resolution (retina-ready)
               </li>
               <li class="flex items-center gap-2">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
-                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                  <svg
+class="h-3 w-3"
+viewBox="0 0 12 12"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+><path d="M2 6l3 3 5-5" /></svg>
                 </span>
                 Source attribution and remit-scout.com backlink
               </li>
               <li class="flex items-center gap-2">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-success-600/20 text-success-600">
-                  <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" /></svg>
+                  <svg
+class="h-3 w-3"
+viewBox="0 0 12 12"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+><path d="M2 6l3 3 5-5" /></svg>
                 </span>
                 Corridor and date metadata in footer
               </li>

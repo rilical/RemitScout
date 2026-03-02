@@ -17,12 +17,12 @@
       </div>
 
       <div class="mb-6 flex flex-wrap gap-2">
-        <button 
-          v-for="view in views" 
+        <button
+          v-for="view in views"
           :key="view.id"
-          @click="activeView = view.id"
           class="px-4 py-2 rounded-lg text-body-sm font-medium transition-colors"
           :class="activeView === view.id ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'"
+          @click="activeView = view.id"
         >
           {{ view.label }}
         </button>
@@ -39,7 +39,10 @@
         >
           <!-- Logo above card -->
           <div class="mx-auto max-w-[600px] mb-6 text-center">
-            <a href="/" style="text-decoration:none; display:inline-block;">
+            <a
+href="/"
+style="text-decoration:none; display:inline-block;"
+>
               <NuxtImg
                 :src="['alert-score', 'billing-active'].includes(currentView.id) ? '/png/SVG/FULL_LOGO_PLUS.svg' : '/png/SVG/FULL_LOGO.svg'"
                 :alt="['alert-score', 'billing-active'].includes(currentView.id) ? 'Remit-Scout Plus logo' : 'Remit-Scout logo'"
@@ -73,13 +76,13 @@
 
             <!-- Body -->
             <div style="padding: 28px 36px 32px; font-size: 15px; line-height: 1.65; color: #0F172A;">
-              <div v-html="currentView.bodyHtml"></div>
+              <div v-html="currentView.bodyHtml" />
 
               <table
                 v-if="currentView.cta"
-                role="presentation" 
-                cellpadding="0" 
-                cellspacing="0" 
+                role="presentation"
+                cellpadding="0"
+                cellspacing="0"
                 style="margin-top: 24px;"
               >
                 <tr>
@@ -103,14 +106,20 @@
               <div
                 style="border-top: 1px solid #E2E8F0; padding-top: 20px; font-size: 13px; color: #64748B; line-height: 1.6;"
                 v-html="currentView.footerHtml"
-              ></div>
+              />
             </div>
           </div>
 
           <!-- Bottom links -->
-          <div class="mx-auto max-w-[600px] mt-6 text-center" style="font-size: 12px; color: #94A3B8;">
+          <div
+class="mx-auto max-w-[600px] mt-6 text-center"
+style="font-size: 12px; color: #94A3B8;"
+>
             remit-scout.com &middot;
-            <a href="#" style="color: #94A3B8; text-decoration: underline;">Email preferences</a>
+            <a
+href="#"
+style="color: #94A3B8; text-decoration: underline;"
+>Email preferences</a>
             <br>
             &copy; 2026 Remit-Scout LLC. All rights reserved.
           </div>
@@ -196,7 +205,7 @@ const views = [
       </table>
     `,
     cta: { text: 'View Alert', url: '#' },
-    footerHtml: 'Recipient gets at least 1,200 \xb7 US \u2192 MX<br><br><a href="#" style="color:#64748B; text-decoration:underline;">Manage notification preferences</a> | <a href="#" style="color:#64748B; text-decoration:underline;">Unsubscribe</a>'
+    footerHtml: 'Recipient gets at least 1,200 \xb7 US \u2192 MX<br><br><a href="#" style="color:#64748B; text-decoration:underline;">Manage notification preferences</a> | <a href="#" style="color:#64748B; text-decoration:underline;">Unsubscribe</a>',
   },
   {
     id: 'alert-score',
@@ -246,7 +255,7 @@ const views = [
       </div>
     `,
     cta: { text: 'View Alert', url: '#' },
-    footerHtml: 'Smart score at least 8.0 \xb7 US \u2192 MX<br><br><a href="#" style="color:#64748B; text-decoration:underline;">Manage notification preferences</a>'
+    footerHtml: 'Smart score at least 8.0 \xb7 US \u2192 MX<br><br><a href="#" style="color:#64748B; text-decoration:underline;">Manage notification preferences</a>',
   },
   {
     id: 'welcome',
@@ -279,7 +288,7 @@ const views = [
       </p>
     `,
     cta: { text: 'Set up your first alert', url: '#' },
-    footerHtml: 'You are receiving this because you signed up for Remit-Scout. If you need help, simply reply to this email.'
+    footerHtml: 'You are receiving this because you signed up for Remit-Scout. If you need help, simply reply to this email.',
   },
   {
     id: 'billing-active',
@@ -295,7 +304,7 @@ const views = [
       <p style="margin: 0 0 16px 0;">Your subscription is now active. You now have full access to premium features, alerts, and market insights.</p>
     `,
     cta: { text: 'Go to your dashboard', url: '#' },
-    footerHtml: 'This email confirms your new subscription. You can manage your billing settings in your dashboard at any time.'
+    footerHtml: 'This email confirms your new subscription. You can manage your billing settings in your dashboard at any time.',
   },
   {
     id: 'billing-failed',
@@ -311,7 +320,7 @@ const views = [
       <p style="margin: 0 0 16px 0;">Your access may be interrupted soon if your payment method isn't updated. Please check your card details to ensure uninterrupted access.</p>
     `,
     cta: { text: 'Update billing details', url: '#' },
-    footerHtml: 'Automated billing alert from Remit-Scout.'
+    footerHtml: 'Automated billing alert from Remit-Scout.',
   },
   {
     id: 'security',
@@ -348,7 +357,7 @@ const views = [
       <p style="margin: 0 0 16px 0;"><strong>If you don't recognize this activity</strong>, please secure your account immediately.</p>
     `,
     cta: { text: 'Secure your account', url: '#' },
-    footerHtml: 'This is an automated security notification from Remit-Scout. Do not reply to this email.'
+    footerHtml: 'This is an automated security notification from Remit-Scout. Do not reply to this email.',
   },
   {
     id: 'deletion',
@@ -365,7 +374,7 @@ const views = [
       <p style="margin: 0 0 16px 0;">If you did not request this or you changed your mind, you must cancel within the grace window using the button below.</p>
     `,
     cta: { text: 'Cancel account deletion', url: '#' },
-    footerHtml: 'This is an automated security notification from Remit-Scout. Do not reply to this email.'
+    footerHtml: 'This is an automated security notification from Remit-Scout. Do not reply to this email.',
   },
   {
     id: 'newsletter',
@@ -381,7 +390,7 @@ const views = [
       <p style="margin: 0 0 16px 0;">Please click the button below to confirm your subscription. You'll start receiving our updates and insights right away.</p>
     `,
     cta: { text: 'Confirm subscription', url: '#' },
-    footerHtml: 'If you did not request this, you can safely ignore this email.<br><a href="#" style="color:#64748B; text-decoration:underline; display:inline-block; margin-top:8px;">Unsubscribe</a>'
+    footerHtml: 'If you did not request this, you can safely ignore this email.<br><a href="#" style="color:#64748B; text-decoration:underline; display:inline-block; margin-top:8px;">Unsubscribe</a>',
   },
   {
     id: 'forgot-password',
@@ -397,7 +406,7 @@ const views = [
       <p style="margin: 0 0 16px 0;">Click the button below to securely set a new password. This link will expire in 1 hour.</p>
     `,
     cta: { text: 'Reset password', url: '#' },
-    footerHtml: 'If you did not request this, you can safely ignore this email. Your password will remain unchanged.'
+    footerHtml: 'If you did not request this, you can safely ignore this email. Your password will remain unchanged.',
   },
   {
     id: 'confirm-email',
@@ -413,8 +422,8 @@ const views = [
       <p style="margin: 0 0 16px 0;">Please click the button below to verify your email address and finish setting up your account.</p>
     `,
     cta: { text: 'Confirm email address', url: '#' },
-    footerHtml: 'If you did not request this, you can safely ignore this email.'
-  }
+    footerHtml: 'If you did not request this, you can safely ignore this email.',
+  },
 ]
 
 const activeView = ref('alert-score')

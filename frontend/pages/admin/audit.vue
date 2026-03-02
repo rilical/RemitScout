@@ -25,7 +25,10 @@
     <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
       <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
         <div>
-          <label for="audit-start-date" class="text-body-sm text-rs-muted">Start date</label>
+          <label
+for="audit-start-date"
+class="text-body-sm text-rs-muted"
+>Start date</label>
           <input
             id="audit-start-date"
             ref="firstFilterRef"
@@ -36,7 +39,10 @@
           >
         </div>
         <div>
-          <label for="audit-end-date" class="text-body-sm text-rs-muted">End date</label>
+          <label
+for="audit-end-date"
+class="text-body-sm text-rs-muted"
+>End date</label>
           <input
             id="audit-end-date"
             v-model="endDate"
@@ -46,7 +52,10 @@
           >
         </div>
         <div>
-          <label for="audit-actor-id" class="text-body-sm text-rs-muted">Actor ID</label>
+          <label
+for="audit-actor-id"
+class="text-body-sm text-rs-muted"
+>Actor ID</label>
           <input
             id="audit-actor-id"
             v-model="filters.actor_id"
@@ -55,7 +64,10 @@
           >
         </div>
         <div>
-          <label for="audit-action" class="text-body-sm text-rs-muted">Action</label>
+          <label
+for="audit-action"
+class="text-body-sm text-rs-muted"
+>Action</label>
           <input
             id="audit-action"
             v-model="filters.action"
@@ -64,7 +76,10 @@
           >
         </div>
         <div>
-          <label for="audit-category" class="text-body-sm text-rs-muted">Category</label>
+          <label
+for="audit-category"
+class="text-body-sm text-rs-muted"
+>Category</label>
           <select
             id="audit-category"
             v-model="filters.category"
@@ -81,7 +96,10 @@
           </select>
         </div>
         <div>
-          <label for="audit-severity" class="text-body-sm text-rs-muted">Severity</label>
+          <label
+for="audit-severity"
+class="text-body-sm text-rs-muted"
+>Severity</label>
           <select
             id="audit-severity"
             v-model="filters.severity"
@@ -209,7 +227,7 @@ const columns: DataTableColumn[] = [
 ]
 
 const tableRows = computed(() =>
-  logs.value.map((log) => ({
+  logs.value.map(log => ({
     ...log,
     created_at: formatTimestamp(log.created_at),
     entity: `${log.entity_type || 'entity'}${log.entity_id ? `:${log.entity_id}` : ''}`,

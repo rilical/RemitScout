@@ -13,26 +13,26 @@ class="bg-brand-600 text-white"
           <div class="py-2">
             <div class="flex items-center justify-center gap-3 text-body-sm">
               <span><strong>Upgrade to Plus</strong> — {{ upgradeBannerText }}</span>
-		              <NuxtLink
-	to="/plus"
-	class="inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100 underline underline-offset-2"
-	>
-		                <span>Learn more about Plus</span>
-	                <Icon
-	                  name="chevron-right"
-	                  :size="16"
-	                  class="text-current"
+                  <NuxtLink
+  to="/plus"
+  class="inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100 underline underline-offset-2"
+  >
+                    <span>Learn more about Plus</span>
+                  <Icon
+                    name="chevron-right"
+                    :size="16"
+                    class="text-current"
                 />
               </NuxtLink>
             </div>
           </div>
-	        </CenteredPage>
-	      </div>
+          </CenteredPage>
+        </div>
 
-	      <div
-	v-if="!isPlus"
-	class="bg-neutral-50 border-b border-rs-border"
-	>
+        <div
+  v-if="!isPlus"
+  class="bg-neutral-50 border-b border-rs-border"
+  >
         <CenteredPage
           as="div"
           padding-y="none"
@@ -82,11 +82,11 @@ min-height="120px"
                 />
                 <span class="font-semibold">{{ isEnterprise ? 'Enterprise' : 'Plus Member' }}</span>
               </div>
-	              <NuxtLink
-	                v-else
-	                  to="/plus/checkout"
-	                  class="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
-	                >
+                <NuxtLink
+                  v-else
+                    to="/plus/checkout"
+                    class="flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-neutral-800 transition-colors"
+                  >
                   <Icon
                     name="sparkles"
                     :size="16"
@@ -184,13 +184,13 @@ class="mt-2"
                     :style="{ width: `${Math.min(watchlistLimitPercent, 100)}%` }"
                   />
                 </div>
-	                <NuxtLink
-	                  v-if="!isPlus && watchlistLimitPercent >= 100"
-	                  to="/plus/checkout"
-	                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
-	                >
-	                  Upgrade for Plus →
-	                </NuxtLink>
+                  <NuxtLink
+                    v-if="!isPlus && watchlistLimitPercent >= 100"
+                    to="/plus/checkout"
+                    class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
+                  >
+                    Upgrade for Plus →
+                  </NuxtLink>
               </div>
             </div>
 
@@ -213,13 +213,13 @@ class="mt-2"
                     :style="{ width: `${Math.min(alertsLimitPercent, 100)}%` }"
                   />
                 </div>
-	                <NuxtLink
-	                  v-if="!isPlus && alertsLimitPercent >= 100"
-	                  to="/plus/checkout"
-	                  class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
-	                >
-	                  Upgrade for Plus →
-	                </NuxtLink>
+                  <NuxtLink
+                    v-if="!isPlus && alertsLimitPercent >= 100"
+                    to="/plus/checkout"
+                    class="text-body-sm text-white hover:text-white/80 font-medium mt-1 inline-block"
+                  >
+                    Upgrade for Plus →
+                  </NuxtLink>
               </div>
             </div>
 
@@ -261,9 +261,9 @@ class="mt-2"
               </div>
                 <div class="mt-2">
                   <span
-	v-if="currentRate.change !== null"
-	class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
-	>
+  v-if="currentRate.change !== null"
+  class="inline-flex items-center gap-1 text-body-sm font-medium text-white"
+  >
                     <Icon
                       name="arrow-up"
                       :size="16"
@@ -273,9 +273,9 @@ class="mt-2"
                     {{ formatPercentValue(currentRate.change) }} vs previous
                   </span>
                   <span
-	v-else
-	class="text-body-sm text-white/70"
-	>{{ selectedCorridor ? 'No rate history yet' : 'Select a corridor' }}</span>
+  v-else
+  class="text-body-sm text-white/70"
+  >{{ selectedCorridor ? 'No rate history yet' : 'Select a corridor' }}</span>
                 </div>
             </div>
           </div>
@@ -290,12 +290,12 @@ class="mt-2"
               <h3 class="font-semibold text-body-lg">You're approaching your limits</h3>
               <p class="text-white/90 text-body-sm mt-1">{{ upgradeLimitsText }}</p>
             </div>
-	              <NuxtLink
-	                to="/plus/checkout"
-	                class="inline-flex items-center justify-center rounded-lg bg-surface px-6 py-2.5 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors flex-shrink-0"
-	              >
-	                Upgrade to Plus
-	              </NuxtLink>
+                <NuxtLink
+                  to="/plus/checkout"
+                  class="inline-flex items-center justify-center rounded-lg bg-surface px-6 py-2.5 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors flex-shrink-0"
+                >
+                  Upgrade to Plus
+                </NuxtLink>
             </div>
           </div>
 
@@ -480,23 +480,23 @@ class="ml-1 text-[10px] text-neutral-400"
                             {{ formatPercentValue(currentRate.change) }}
                           </span>
                         </div>
-			                      <div class="text-body-sm text-neutral-400 mt-1">
-			                        <span
-			                          v-if="selectedHistoryLoading"
-			                          class="inline-flex items-center gap-2"
-			                          role="status"
-			                          aria-live="polite"
-			                        >
-		                          <span
-		                            class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"
-		                            aria-hidden="true"
-		                          />
-			                          <span>Loading rate history...</span>
-			                        </span>
-			                        <span v-else-if="!selectedCorridor">Select a corridor</span>
-			                        <span v-else-if="!currentRate.isAvailable">{{ selectedHistoryStatusMessage }}</span>
-			                        <span v-else>{{ currentRate.updatedLabel }}</span>
-			                      </div>
+                            <div class="text-body-sm text-neutral-400 mt-1">
+                              <span
+                                v-if="selectedHistoryLoading"
+                                class="inline-flex items-center gap-2"
+                                role="status"
+                                aria-live="polite"
+                              >
+                              <span
+                                class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-300 border-t-transparent"
+                                aria-hidden="true"
+                              />
+                                <span>Loading rate history...</span>
+                              </span>
+                              <span v-else-if="!selectedCorridor">Select a corridor</span>
+                              <span v-else-if="!currentRate.isAvailable">{{ selectedHistoryStatusMessage }}</span>
+                              <span v-else>{{ currentRate.updatedLabel }}</span>
+                            </div>
                         <div
                           v-if="selectedHistoryDerivedLabel && currentRate.isAvailable"
                           class="text-body-sm text-neutral-500 mt-0.5"
@@ -526,17 +526,17 @@ class="ml-1 text-[10px] text-neutral-400"
                     </div>
                   </div>
 
-	                  <!-- Chart -->
-	                  <div class="h-56 relative">
-	                    <div
-	v-if="selectedHistoryLoading"
-	class="absolute inset-0 flex items-center justify-center px-4"
-	>
-	                      <LoadingState
-	                        mode="inline"
-	                        message="Loading rate history..."
-	                      />
-	                    </div>
+                    <!-- Chart -->
+                    <div class="h-56 relative">
+                      <div
+  v-if="selectedHistoryLoading"
+  class="absolute inset-0 flex items-center justify-center px-4"
+  >
+                        <LoadingState
+                          mode="inline"
+                          message="Loading rate history..."
+                        />
+                      </div>
 <div
 v-else-if="graphData.length === 0"
 class="absolute inset-0 flex items-center justify-center text-body-sm text-neutral-400"
@@ -641,74 +641,74 @@ fill-opacity="0.2"
 
                 <!-- Action Bar -->
                 <div class="px-6 py-4 bg-neutral-50 border-t border-neutral-100 rounded-b-xl flex flex-wrap items-center justify-between gap-3">
-	                  <div class="flex items-center gap-3">
-	                    <button
-	                      type="button"
-	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
-	                      :class="(!selectedCorridor || watchlistLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
-	                      :disabled="!selectedCorridor || watchlistLimitReached"
-	                      @click="handleAddToWatchlist"
-		                    >
-	                      <Icon
-	                        name="plus"
-	                        :size="16"
-	                        class="text-current"
-	                      />
-	                      Add to Watchlist
-	                    </button>
-	                    <button
-	                      type="button"
-	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
-		                      :class="(!selectedCorridor || alertsLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
-		                      :disabled="!selectedCorridor || alertsLimitReached"
-		                      @click="handleSetAlert"
-		                    >
-	                      <Icon
-	                        name="bell-alert"
-	                        :size="16"
-	                        class="text-current"
-	                      />
-	                      Set Alert
-	                    </button>
+                    <div class="flex items-center gap-3">
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+                        :class="(!selectedCorridor || watchlistLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
+                        :disabled="!selectedCorridor || watchlistLimitReached"
+                        @click="handleAddToWatchlist"
+                        >
+                        <Icon
+                          name="plus"
+                          :size="16"
+                          class="text-current"
+                        />
+                        Add to Watchlist
+                      </button>
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+                          :class="(!selectedCorridor || alertsLimitReached) ? 'opacity-50 cursor-not-allowed hover:bg-neutral-100 hover:text-neutral-700' : ''"
+                          :disabled="!selectedCorridor || alertsLimitReached"
+                          @click="handleSetAlert"
+                        >
+                        <Icon
+                          name="bell-alert"
+                          :size="16"
+                          class="text-current"
+                        />
+                        Set Alert
+                      </button>
                     <button
                       v-if="isPlus"
                       type="button"
-	                      class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
-	                      @click="showExportModal = true"
-	                    >
-	                      <Icon
-	                        name="arrow-down-tray"
-	                        :size="16"
-	                        class="text-current"
-	                      />
-	                      Export
-	                    </button>
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
+                        @click="showExportModal = true"
+                      >
+                        <Icon
+                          name="arrow-down-tray"
+                          :size="16"
+                          class="text-current"
+                        />
+                        Export
+                      </button>
                   </div>
                   <button
                     type="button"
                     :disabled="!selectedCorridor || comparingSelectedCorridor"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-body-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
                     @click="handleCompareSelectedCorridor"
-			                  >
-		                    <div
-		                      v-if="comparingSelectedCorridor"
-		                      class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
-		                      aria-hidden="true"
-		                    />
-		                    <Icon
-		                      v-else
-		                      name="chevron-right"
-		                      :size="16"
-		                      class="text-current"
-		                    />
-		                    <span
-		                      v-if="comparingSelectedCorridor"
-		                      role="status"
-		                      aria-live="polite"
-		                    >Comparing…</span>
-		                    <span v-else>Compare Corridor</span>
-		                  </button>
-	                </div>
+                        >
+                        <div
+                          v-if="comparingSelectedCorridor"
+                          class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
+                          aria-hidden="true"
+                        />
+                        <Icon
+                          v-else
+                          name="chevron-right"
+                          :size="16"
+                          class="text-current"
+                        />
+                        <span
+                          v-if="comparingSelectedCorridor"
+                          role="status"
+                          aria-live="polite"
+                        >Comparing…</span>
+                        <span v-else>Compare Corridor</span>
+                      </button>
+                  </div>
               </div>
 
               <!-- Quick Actions -->
@@ -716,14 +716,14 @@ fill-opacity="0.2"
                 <NuxtLink
                   to="/send-money"
                   class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all group"
-	                >
-	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
-	                    <Icon
-	                      name="magnifying-glass"
-	                      :size="20"
-	                      class="text-brand-600 group-hover:text-white transition-colors"
-	                    />
-	                  </div>
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
+                      <Icon
+                        name="magnifying-glass"
+                        :size="20"
+                        class="text-brand-600 group-hover:text-white transition-colors"
+                      />
+                    </div>
                   <div>
                     <div class="text-body-sm font-semibold text-rs-fg">Compare</div>
                     <div class="text-body-sm text-rs-muted">Find best rates</div>
@@ -734,15 +734,15 @@ fill-opacity="0.2"
                   class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all text-left group"
                   :class="alertsLimitReached ? 'opacity-50 cursor-not-allowed hover:border-rs-border hover:shadow-none' : ''"
                   :disabled="alertsLimitReached"
-	                  @click="openCreateAlert"
-	                >
-	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
-	                    <Icon
-	                      name="bell-alert"
-	                      :size="20"
-	                      class="text-brand-600 group-hover:text-white transition-colors"
-	                    />
-	                  </div>
+                    @click="openCreateAlert"
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
+                      <Icon
+                        name="bell-alert"
+                        :size="20"
+                        class="text-brand-600 group-hover:text-white transition-colors"
+                      />
+                    </div>
                   <div>
                     <div class="text-body-sm font-semibold text-rs-fg">New Alert</div>
                     <div class="text-body-sm text-rs-muted">Set rate target</div>
@@ -751,19 +751,19 @@ fill-opacity="0.2"
                 <NuxtLink
                   to="/learn"
                   class="flex items-center gap-4 bg-surface rounded-xl border-2 border-rs-border p-4 hover:border-primary-500 hover:shadow-md transition-all group"
-	                >
-	                  <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
-	                    <Icon
-	                      name="book-open"
-	                      :size="20"
-	                      class="text-brand-600 group-hover:text-white transition-colors"
-	                    />
-	                  </div>
-	                  <div>
-	                    <div class="text-body-sm font-semibold text-rs-fg">Guides</div>
-	                    <div class="text-body-sm text-rs-muted">Explore guides</div>
-	                  </div>
-	                </NuxtLink>
+                  >
+                    <div class="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-600 transition-colors">
+                      <Icon
+                        name="book-open"
+                        :size="20"
+                        class="text-brand-600 group-hover:text-white transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <div class="text-body-sm font-semibold text-rs-fg">Guides</div>
+                      <div class="text-body-sm text-rs-muted">Explore guides</div>
+                    </div>
+                  </NuxtLink>
               </div>
 
               <!-- Watchlist Preview -->
@@ -808,15 +808,15 @@ class="divide-y divide-neutral-100"
                     class="flex items-center justify-between px-6 py-4 hover:bg-neutral-50 transition-colors"
                   >
                     <div class="flex items-center gap-3">
-	                      <div class="flex items-center gap-1">
-	                        <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
-	                        <Icon
-	                          name="chevron-right"
-	                          :size="16"
-	                          class="text-neutral-400"
-	                        />
-	                        <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
-	                      </div>
+                        <div class="flex items-center gap-1">
+                          <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
+                          <Icon
+                            name="chevron-right"
+                            :size="16"
+                            class="text-neutral-400"
+                          />
+                          <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
+                        </div>
                       <span class="text-body-sm font-medium text-rs-fg">{{ item.label }}</span>
                     </div>
                     <button
@@ -836,26 +836,26 @@ class="divide-y divide-neutral-100"
               <!-- Recent Searches -->
               <div class="bg-surface rounded-xl border border-rs-border p-6">
                 <h3 class="font-semibold text-rs-fg mb-4">Recent Searches</h3>
-	                <div
-	                  v-if="recentSearchesPending"
-	                  class="py-4"
-	                >
-	                  <LoadingState
-	                    mode="inline"
-	                    message="Loading recent searches..."
-	                  />
-	                </div>
+                  <div
+                    v-if="recentSearchesPending"
+                    class="py-4"
+                  >
+                    <LoadingState
+                      mode="inline"
+                      message="Loading recent searches..."
+                    />
+                  </div>
                 <div
-	                  v-else-if="recentSearches.length === 0"
-	                  class="text-center py-4"
-	                >
-	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
-	                    <Icon
-	                      name="magnifying-glass"
-	                      :size="20"
-	                      class="text-neutral-400"
-	                    />
-	                  </div>
+                    v-else-if="recentSearches.length === 0"
+                    class="text-center py-4"
+                  >
+                    <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+                      <Icon
+                        name="magnifying-glass"
+                        :size="20"
+                        class="text-neutral-400"
+                      />
+                    </div>
                   <p class="text-body-sm text-rs-muted mb-2">No searches yet</p>
                   <NuxtLink
 to="/send-money"
@@ -874,22 +874,22 @@ class="space-y-3"
                     :to="getCorridorUrl(search.from, search.to)"
                     class="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
-	                    <div class="flex items-center gap-1.5">
-	                      <span class="text-body-lg">{{ getFlag(search.from) }}</span>
-	                      <Icon
-	                        name="chevron-right"
-	                        :size="16"
-	                        class="text-neutral-400"
-	                      />
-	                      <span class="text-body-lg">{{ getFlag(search.to) }}</span>
-	                    </div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-body-lg">{{ getFlag(search.from) }}</span>
+                        <Icon
+                          name="chevron-right"
+                          :size="16"
+                          class="text-neutral-400"
+                        />
+                        <span class="text-body-lg">{{ getFlag(search.to) }}</span>
+                      </div>
                     <div class="flex-1 min-w-0">
                       <p class="text-body-sm font-medium text-rs-fg">
                         {{ getCountryName(search.from) }} → {{ getCountryName(search.to) }}
-	                      </p>
-		                      <p class="text-body-sm text-rs-muted font-medium">
-		                        ${{ formatOpsNumber(search.amount || 500, 0) }} • {{ formatMethod(search.method) }}
-		                      </p>
+                        </p>
+                          <p class="text-body-sm text-rs-muted font-medium">
+                            ${{ formatOpsNumber(search.amount || 500, 0) }} • {{ formatMethod(search.method) }}
+                          </p>
                     </div>
                   </NuxtLink>
                 </div>
@@ -898,49 +898,49 @@ class="space-y-3"
               <!-- Top Movers from Watchlist -->
               <div class="bg-surface rounded-xl border border-rs-border p-6">
                 <h3 class="font-semibold text-rs-fg mb-4">Top Movers Today</h3>
-	                <div
-	                  v-if="!watchlistHydrated"
-	                  class="py-4"
-	                >
-	                  <LoadingState
-	                    mode="inline"
-	                    message="Loading watchlist..."
-	                  />
-	                </div>
+                  <div
+                    v-if="!watchlistHydrated"
+                    class="py-4"
+                  >
+                    <LoadingState
+                      mode="inline"
+                      message="Loading watchlist..."
+                    />
+                  </div>
                 <div
-	                  v-else-if="corridorWatchlistItems.length === 0"
-	                  class="text-center py-4"
-	                >
-	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
-	                    <Icon
-	                      name="arrow-trending-up"
-	                      :size="20"
-	                      class="text-neutral-400"
-	                    />
-	                  </div>
+                    v-else-if="corridorWatchlistItems.length === 0"
+                    class="text-center py-4"
+                  >
+                    <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+                      <Icon
+                        name="arrow-trending-up"
+                        :size="20"
+                        class="text-neutral-400"
+                      />
+                    </div>
                   <p class="text-body-sm text-rs-muted mb-2">No corridors tracked</p>
                   <p class="text-body-sm text-neutral-400">Add corridors to your watchlist to see their daily movements</p>
                 </div>
-	                <div
-	v-else-if="topMoversLoading"
-	class="py-4"
-	>
-	                  <LoadingState
-	                    mode="inline"
-	                    message="Loading rate history..."
-	                  />
-	                </div>
+                  <div
+  v-else-if="topMoversLoading"
+  class="py-4"
+  >
+                    <LoadingState
+                      mode="inline"
+                      message="Loading rate history..."
+                    />
+                  </div>
                 <div
-	v-else-if="topMoversFromWatchlist.length === 0"
-	class="text-center py-4"
-	>
-	                  <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
-	                    <Icon
-	                      name="arrow-trending-up"
-	                      :size="20"
-	                      class="text-neutral-400"
-	                    />
-	                  </div>
+  v-else-if="topMoversFromWatchlist.length === 0"
+  class="text-center py-4"
+  >
+                    <div class="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
+                      <Icon
+                        name="arrow-trending-up"
+                        :size="20"
+                        class="text-neutral-400"
+                      />
+                    </div>
                   <p class="text-body-sm text-rs-muted mb-2">No rate history yet</p>
                   <p class="text-body-sm text-neutral-400">Once history is available, movers will appear here.</p>
                 </div>
@@ -954,16 +954,16 @@ class="space-y-3"
                     :to="getCorridorUrl(item.target.from, item.target.to)"
                     class="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
-	                    <div class="flex items-center gap-2">
-	                      <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
-	                      <Icon
-	                        name="chevron-right"
-	                        :size="16"
-	                        class="text-neutral-400"
-	                      />
-	                      <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
-	                      <span class="text-body-sm text-neutral-700">{{ item.target.from }}/{{ item.target.to }}</span>
-	                    </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
+                        <Icon
+                          name="chevron-right"
+                          :size="16"
+                          class="text-neutral-400"
+                        />
+                        <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
+                        <span class="text-body-sm text-neutral-700">{{ item.target.from }}/{{ item.target.to }}</span>
+                      </div>
                     <span
                       class="text-body-sm font-medium"
                       :class="(item.change ?? 0) >= 0 ? 'text-success-600' : 'text-danger-600'"
@@ -989,66 +989,66 @@ class="pt-2 border-t border-neutral-100"
               <!-- Contact Support -->
               <div class="bg-brand-600 rounded-xl border border-brand-700 p-6">
                 <div class="flex items-start gap-4">
-	                  <div class="flex-shrink-0">
-	                    <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center">
-	                      <Icon
-	                        name="chat-bubble"
-	                        :size="20"
-	                        class="text-white"
-	                      />
-	                    </div>
-	                  </div>
+                    <div class="flex-shrink-0">
+                      <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center">
+                        <Icon
+                          name="chat-bubble"
+                          :size="20"
+                          class="text-white"
+                        />
+                      </div>
+                    </div>
                   <div class="flex-1">
                     <h3 class="font-semibold text-white mb-2">Need Help?</h3>
                     <p class="text-body-sm text-white/90 mb-4">
                       Have questions or found an issue? Our support team is here to help.
                     </p>
-	                    <NuxtLink
-	                      to="/contact"
-	                      class="inline-flex items-center gap-2 rounded-lg bg-surface px-4 py-2 text-body-sm font-semibold text-brand-600 hover:bg-surface/90 transition-colors"
-	                    >
-	                      Contact Support
-	                      <Icon
-	                        name="chevron-right"
-	                        :size="16"
-	                        class="text-current"
-	                      />
-	                    </NuxtLink>
-	                  </div>
-	                </div>
-	              </div>
+                      <NuxtLink
+                        to="/contact"
+                        class="inline-flex items-center gap-2 rounded-lg bg-surface px-4 py-2 text-body-sm font-semibold text-brand-600 hover:bg-surface/90 transition-colors"
+                      >
+                        Contact Support
+                        <Icon
+                          name="chevron-right"
+                          :size="16"
+                          class="text-current"
+                        />
+                      </NuxtLink>
+                    </div>
+                  </div>
+                </div>
 
               <!-- Ad: Upgrade to Plus (Free users only) -->
               <div
 v-if="!isPlus"
 class="bg-brand-600 rounded-xl p-5 text-white"
 >
-	                <div class="flex items-start gap-3">
-	                  <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center flex-shrink-0">
-	                    <Icon
-	                      name="sparkles"
-	                      :size="20"
-	                      variant="solid"
-	                      class="text-current"
-	                    />
-	                  </div>
-	                  <div class="flex-1">
-	                    <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
-	                    <p class="text-body-sm text-white/90 mb-3">{{ removeAdsText }}</p>
-			                    <NuxtLink
-	to="/plus"
-	class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
-	>
-			                      <span>Learn more about Plus</span>
-		                      <Icon
-		                        name="chevron-right"
-		                        :size="16"
-		                        class="text-current"
-	                      />
-	                    </NuxtLink>
-	                  </div>
-	                </div>
-	              </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-surface/20 flex items-center justify-center flex-shrink-0">
+                      <Icon
+                        name="sparkles"
+                        :size="20"
+                        variant="solid"
+                        class="text-current"
+                      />
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-semibold text-body-sm mb-1">Remove Ads with Plus</h4>
+                      <p class="text-body-sm text-white/90 mb-3">{{ removeAdsText }}</p>
+                          <NuxtLink
+  to="/plus"
+  class="inline-flex items-center gap-1 text-body-sm font-semibold text-white hover:text-primary-100"
+  >
+                            <span>Learn more about Plus</span>
+                          <Icon
+                            name="chevron-right"
+                            :size="16"
+                            class="text-current"
+                        />
+                      </NuxtLink>
+                    </div>
+                  </div>
+                </div>
             </div>
           </div>
         </div>
@@ -1068,26 +1068,26 @@ class="bg-brand-600 rounded-xl p-5 text-white"
                 </span>
                 <span
                   v-else
-	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
-	                >
-	                  <Icon
-	                    name="check"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  Unlimited
-	                </span>
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
+                  >
+                    <Icon
+                      name="check"
+                      :size="16"
+                      class="text-current"
+                    />
+                    Unlimited
+                  </span>
               </div>
               <p class="text-body-sm text-rs-muted mt-1">{{ watchlistCount }} saved corridor{{ watchlistCount !== 1 ? 's' : '' }}</p>
             </div>
             <div class="flex items-center gap-3">
-	              <NuxtLink
-	                v-if="!isPlus && watchlistLimitPercent >= 66"
-	                to="/plus/checkout"
-	                class="inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-	              >
-	                Upgrade
-	              </NuxtLink>
+                <NuxtLink
+                  v-if="!isPlus && watchlistLimitPercent >= 66"
+                  to="/plus/checkout"
+                  class="inline-flex items-center rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+                >
+                  Upgrade
+                </NuxtLink>
               <button
                 v-if="watchlistCount > 0"
                 type="button"
@@ -1102,36 +1102,36 @@ class="bg-brand-600 rounded-xl p-5 text-white"
           <!-- Limit Warning Banner -->
           <div
             v-if="!isPlus && watchlistLimitPercent >= 100"
-	            class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
-	          >
-	            <Icon
-	              name="exclamation-triangle"
-	              :size="20"
-	              variant="solid"
-	              class="text-brand-600 flex-shrink-0 mt-0.5"
-	            />
+              class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
+            >
+              <Icon
+                name="exclamation-triangle"
+                :size="20"
+                variant="solid"
+                class="text-brand-600 flex-shrink-0 mt-0.5"
+              />
             <div class="flex-1">
               <h4 class="text-body-sm font-medium text-brand-600">Watchlist limit reached</h4>
               <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.watchlistItems }} watchlist corridors. Upgrade to Plus for up to 16 corridors.</p>
             </div>
-	            <NuxtLink
-	              to="/plus/checkout"
-	              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-	            >
-	              Upgrade
-	            </NuxtLink>
+              <NuxtLink
+                to="/plus/checkout"
+                class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              >
+                Upgrade
+              </NuxtLink>
           </div>
 
           <div
             v-else-if="isPlus && watchlistLimitReached"
-	            class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
-	          >
-	            <Icon
-	              name="exclamation-triangle"
-	              :size="20"
-	              variant="solid"
-	              class="text-warning-600 flex-shrink-0 mt-0.5"
-	            />
+              class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
+            >
+              <Icon
+                name="exclamation-triangle"
+                :size="20"
+                variant="solid"
+                class="text-warning-600 flex-shrink-0 mt-0.5"
+              />
             <div class="flex-1">
               <h4 class="text-body-sm font-medium text-warning-600">Watchlist limit reached</h4>
               <p class="text-body-sm text-warning-600/90 mt-0.5">
@@ -1159,13 +1159,13 @@ class="flex flex-col sm:flex-row gap-3"
                     searchable
                   />
                 </div>
-	                <div class="flex items-center text-neutral-400">
-	                  <Icon
-	                    name="arrow-right"
-	                    :size="20"
-	                    class="text-current"
-	                  />
-	                </div>
+                  <div class="flex items-center text-neutral-400">
+                    <Icon
+                      name="arrow-right"
+                      :size="20"
+                      class="text-current"
+                    />
+                  </div>
                 <div class="flex-1">
                   <label class="sr-only">To</label>
                   <UniversalDropdown
@@ -1177,23 +1177,23 @@ class="flex flex-col sm:flex-row gap-3"
                 </div>
               </div>
               <button
-	                type="submit"
-	                class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
-	              >
-	                <Icon
-	                  name="plus"
-	                  :size="16"
-	                  class="text-current"
-	                />
-	                Add Corridor
-	              </button>
+                  type="submit"
+                  class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                >
+                  <Icon
+                    name="plus"
+                    :size="16"
+                    class="text-current"
+                  />
+                  Add Corridor
+                </button>
             </form>
           </div>
 
           <div
-	v-if="!watchlistHydrated"
-	class="py-12 flex justify-center"
-	>
+  v-if="!watchlistHydrated"
+  class="py-12 flex justify-center"
+  >
             <LoadingState
               mode="inline"
               message="Loading watchlist..."
@@ -1227,32 +1227,32 @@ class="flex flex-col sm:flex-row gap-3"
               <div class="p-5 border-b border-neutral-100">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
-	                    <div class="flex items-center gap-2">
-	                      <span class="text-h3">{{ getFlag(item.target.from) }}</span>
-	                      <Icon
-	                        name="arrow-right"
-	                        :size="20"
-	                        class="text-neutral-300"
-	                      />
-	                      <span class="text-h3">{{ getFlag(item.target.to) }}</span>
-	                    </div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-h3">{{ getFlag(item.target.from) }}</span>
+                        <Icon
+                          name="arrow-right"
+                          :size="20"
+                          class="text-neutral-300"
+                        />
+                        <span class="text-h3">{{ getFlag(item.target.to) }}</span>
+                      </div>
                     <div>
                       <h3 class="font-semibold text-rs-fg text-body">{{ item.target.from }}→{{ item.target.to }}</h3>
                       <p class="text-body-sm text-rs-muted font-medium">{{ formatMethod(item.target.method) }}</p>
                     </div>
                   </div>
-		                  <button
-		                    type="button"
-		                    class="opacity-0 group-hover:opacity-100 motion-safe:transition-opacity inline-flex items-center justify-center rounded-lg border border-rs-border p-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600"
+                      <button
+                        type="button"
+                        class="opacity-0 group-hover:opacity-100 motion-safe:transition-opacity inline-flex items-center justify-center rounded-lg border border-rs-border p-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600"
                         :aria-label="`Remove ${item.target.from} to ${item.target.to} from watchlist`"
-		                    @click="openDeleteWatchlistModal(item)"
-		                  >
-	                    <Icon
-	                      name="trash"
-	                      :size="16"
-	                      class="text-current"
-	                    />
-	                  </button>
+                        @click="openDeleteWatchlistModal(item)"
+                      >
+                      <Icon
+                        name="trash"
+                        :size="16"
+                        class="text-current"
+                      />
+                    </button>
                 </div>
 
                 <!-- Current Rate -->
@@ -1269,15 +1269,15 @@ class="flex flex-col sm:flex-row gap-3"
                       :class="!getWatchlistSnapshot(item.id).hasChange
                         ? 'bg-neutral-100 text-rs-muted'
                         : (getWatchlistSnapshot(item.id).changeValue >= 0 ? 'bg-success-100 text-success-700' : 'bg-danger-100 text-danger-700')"
-	                    >
-	                      <Icon
-	                        name="arrow-up"
-	                        :size="16"
-	                        class="text-current"
-	                        :class="getWatchlistSnapshot(item.id).hasChange && getWatchlistSnapshot(item.id).changeValue < 0 ? 'rotate-180' : ''"
-	                      />
-	                      {{ formatPercentValue(getWatchlistSnapshot(item.id).change) }}
-	                    </div>
+                      >
+                        <Icon
+                          name="arrow-up"
+                          :size="16"
+                          class="text-current"
+                          :class="getWatchlistSnapshot(item.id).hasChange && getWatchlistSnapshot(item.id).changeValue < 0 ? 'rotate-180' : ''"
+                        />
+                        {{ formatPercentValue(getWatchlistSnapshot(item.id).change) }}
+                      </div>
                     <div class="text-body-sm text-rs-muted mt-1">1d change</div>
                   </div>
                 </div>
@@ -1287,31 +1287,31 @@ class="flex flex-col sm:flex-row gap-3"
               <div class="px-5 py-4 bg-gradient-to-b from-neutral-50 to-white">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-body-sm font-medium text-neutral-600">Last 7 days</span>
-	                  <span
-	                    v-if="getWatchlistAlertCount(item.id) > 0"
-	                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-50 text-brand-700"
-	                  >
-	                    <Icon
-	                      name="bell-alert"
-	                      :size="16"
-	                      variant="solid"
-	                      class="text-current"
-	                    />
-	                    {{ getWatchlistAlertCount(item.id) }} alert{{ getWatchlistAlertCount(item.id) !== 1 ? 's' : '' }}
-	                  </span>
+                    <span
+                      v-if="getWatchlistAlertCount(item.id) > 0"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-50 text-brand-700"
+                    >
+                      <Icon
+                        name="bell-alert"
+                        :size="16"
+                        variant="solid"
+                        class="text-current"
+                      />
+                      {{ getWatchlistAlertCount(item.id) }} alert{{ getWatchlistAlertCount(item.id) !== 1 ? 's' : '' }}
+                    </span>
                   </div>
 
                   <!-- Enhanced Chart -->
-	                  <div class="relative h-32 mb-3">
-	                  <div
-	                    v-if="isWatchlistHistoryLoading(item.id)"
-	                    class="absolute inset-0 flex items-center justify-center px-4"
-	                  >
-	                    <LoadingState
-	                      mode="inline"
-	                      message="Loading rate history..."
-	                    />
-	                  </div>
+                    <div class="relative h-32 mb-3">
+                    <div
+                      v-if="isWatchlistHistoryLoading(item.id)"
+                      class="absolute inset-0 flex items-center justify-center px-4"
+                    >
+                      <LoadingState
+                        mode="inline"
+                        message="Loading rate history..."
+                      />
+                    </div>
                   <div
                     v-else-if="getWatchlistSnapshot(item.id).history.length < 2"
                     class="absolute inset-0 flex items-center justify-center text-body-sm text-neutral-400"
@@ -1417,14 +1417,14 @@ stroke-width="1"
               <!-- Best Provider Section -->
               <div class="px-5 py-4 border-t border-rs-border bg-surface">
                 <div class="flex items-center justify-between mb-3">
-	                  <div class="flex items-center gap-2">
-	                    <Icon
-	                      name="sparkles"
-	                      :size="16"
-	                      class="text-success-600"
-	                    />
-	                    <span class="text-body-sm font-semibold text-neutral-700 uppercase tracking-wide">Best Provider (Latest)</span>
-	                  </div>
+                    <div class="flex items-center gap-2">
+                      <Icon
+                        name="sparkles"
+                        :size="16"
+                        class="text-success-600"
+                      />
+                      <span class="text-body-sm font-semibold text-neutral-700 uppercase tracking-wide">Best Provider (Latest)</span>
+                    </div>
                 </div>
                 <div
 v-if="getBestProviderForItem(item.id)"
@@ -1442,27 +1442,27 @@ class="flex items-center gap-3"
                     <h4 class="font-semibold text-rs-fg text-body-sm">{{ getBestProviderForItem(item.id)?.name }}</h4>
                   </div>
                   <NuxtLink
-	                    :to="`/learn/providers/${getBestProviderForItem(item.id)?.slug}`"
-	                    class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-neutral-300 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
-	                    :aria-label="`View provider review for ${getBestProviderForItem(item.id)?.name || 'this provider'}`"
-	                  >
-	                    Provider review
-	                    <Icon
-	                      name="chevron-right"
-	                      :size="16"
-	                      class="text-current"
-	                    />
-	                  </NuxtLink>
-	                </div>
-	                <div
-	v-else-if="isProviderRatesLoadingForItem(item.id)"
-	class="py-2"
-	>
-	                  <LoadingState
-	                    mode="inline"
-	                    message="Loading provider quotes..."
-	                  />
-	                </div>
+                      :to="`/learn/providers/${getBestProviderForItem(item.id)?.slug}`"
+                      class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-neutral-300 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
+                      :aria-label="`View provider review for ${getBestProviderForItem(item.id)?.name || 'this provider'}`"
+                    >
+                      Provider review
+                      <Icon
+                        name="chevron-right"
+                        :size="16"
+                        class="text-current"
+                      />
+                    </NuxtLink>
+                  </div>
+                  <div
+  v-else-if="isProviderRatesLoadingForItem(item.id)"
+  class="py-2"
+  >
+                    <LoadingState
+                      mode="inline"
+                      message="Loading provider quotes..."
+                    />
+                  </div>
                 <div
 v-else
 class="text-body-sm text-rs-muted"
@@ -1476,39 +1476,39 @@ class="text-body-sm text-rs-muted"
                 <button
                   type="button"
                   :disabled="comparingCorridor === item.id"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
-	                  @click="handleCompareClick(item)"
-		                >
-		                  <div
-		                    v-if="comparingCorridor === item.id"
-		                    class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
-		                    aria-hidden="true"
-		                  />
-		                  <Icon
-		                    v-else
-		                    name="magnifying-glass"
-		                    :size="16"
-		                    class="text-current"
-		                  />
-		                  <span
-		                    v-if="comparingCorridor === item.id"
-		                    role="status"
-		                    aria-live="polite"
-		                  >Comparing…</span>
-		                  <span v-else>Compare</span>
-		                </button>
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors disabled:opacity-75 disabled:cursor-wait"
+                    @click="handleCompareClick(item)"
+                    >
+                      <div
+                        v-if="comparingCorridor === item.id"
+                        class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
+                        aria-hidden="true"
+                      />
+                      <Icon
+                        v-else
+                        name="magnifying-glass"
+                        :size="16"
+                        class="text-current"
+                      />
+                      <span
+                        v-if="comparingCorridor === item.id"
+                        role="status"
+                        aria-live="polite"
+                      >Comparing…</span>
+                      <span v-else>Compare</span>
+                    </button>
                 <button
                   type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
-	                  @click="openAlert(item)"
-	                >
-	                  <Icon
-	                    name="bell-alert"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  Set Alert
-	                </button>
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2.5 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
+                    @click="openAlert(item)"
+                  >
+                    <Icon
+                      name="bell-alert"
+                      :size="16"
+                      class="text-current"
+                    />
+                    Set Alert
+                  </button>
               </div>
             </div>
           </div>
@@ -1520,10 +1520,10 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
 >
             <div class="flex items-center justify-between mb-3">
               <span class="text-body-sm text-neutral-400 uppercase tracking-wide">Sponsored</span>
-	              <NuxtLink
-	to="/plus/checkout"
-	class="text-body-sm text-brand-600 hover:text-brand-700"
-	>Remove ads</NuxtLink>
+                <NuxtLink
+  to="/plus/checkout"
+  class="text-body-sm text-brand-600 hover:text-brand-700"
+  >Remove ads</NuxtLink>
             </div>
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-success-600 flex items-center justify-center text-white font-bold text-body-lg">W</div>
@@ -1555,16 +1555,16 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
                   {{ alertsCount }}/{{ limits.alerts }} used
                 </span>
                 <span
-	                  v-else
-	                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
-	                >
-	                  <Icon
-	                    name="check"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  Unlimited
-	                </span>
+                    v-else
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-body-sm font-medium bg-primary-100 text-brand-700"
+                  >
+                    <Icon
+                      name="check"
+                      :size="16"
+                      class="text-current"
+                    />
+                    Unlimited
+                  </span>
               </div>
               <p class="text-body-sm text-rs-muted mt-1">{{ alertsCount }} alert{{ alertsCount !== 1 ? 's' : '' }}</p>
             </div>
@@ -1577,19 +1577,19 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
               >
                 New Alert
               </button>
-	              <NuxtLink
-	                v-if="!isPlus && alertsLimitPercent >= 66"
-	                to="/plus/checkout"
-		                class="inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 text-body-sm font-medium text-brand-600 hover:bg-primary-50 transition-colors"
-		              >
-	                <Icon
-	                  name="sparkles"
-	                  :size="16"
-	                  variant="solid"
-	                  class="text-current"
-	                />
-	                Upgrade
-	              </NuxtLink>
+                <NuxtLink
+                  v-if="!isPlus && alertsLimitPercent >= 66"
+                  to="/plus/checkout"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 text-body-sm font-medium text-brand-600 hover:bg-primary-50 transition-colors"
+                  >
+                  <Icon
+                    name="sparkles"
+                    :size="16"
+                    variant="solid"
+                    class="text-current"
+                  />
+                  Upgrade
+                </NuxtLink>
               <button
                 v-if="alertsCount > 0"
                 type="button"
@@ -1603,37 +1603,37 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
 
           <!-- Limit Warning Banner -->
           <div
-	            v-if="!isPlus && alertsLimitPercent >= 100"
-	            class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
-	          >
-	            <Icon
-	              name="exclamation-triangle"
-	              :size="20"
-	              variant="solid"
-	              class="text-brand-600 flex-shrink-0 mt-0.5"
-	            />
+              v-if="!isPlus && alertsLimitPercent >= 100"
+              class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3"
+            >
+              <Icon
+                name="exclamation-triangle"
+                :size="20"
+                variant="solid"
+                class="text-brand-600 flex-shrink-0 mt-0.5"
+              />
             <div class="flex-1">
               <h4 class="text-body-sm font-medium text-brand-600">Alert limit reached</h4>
               <p class="text-body-sm text-brand-700 mt-0.5">You've reached your limit of {{ limits.alerts }} alerts. Upgrade to Plus for up to 16 alerts.</p>
             </div>
-	            <NuxtLink
-	              to="/plus/checkout"
-	              class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
-	            >
-	              Upgrade
-	            </NuxtLink>
+              <NuxtLink
+                to="/plus/checkout"
+                class="flex-shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-body-sm font-medium text-white hover:bg-brand-700 transition-colors"
+              >
+                Upgrade
+              </NuxtLink>
           </div>
 
           <div
-	            v-else-if="isPlus && alertsLimitReached"
-	            class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
-	          >
-	            <Icon
-	              name="exclamation-triangle"
-	              :size="20"
-	              variant="solid"
-	              class="text-warning-600 flex-shrink-0 mt-0.5"
-	            />
+              v-else-if="isPlus && alertsLimitReached"
+              class="mb-6 bg-warning-600 border border-warning-600 rounded-xl p-4 flex items-start gap-3"
+            >
+              <Icon
+                name="exclamation-triangle"
+                :size="20"
+                variant="solid"
+                class="text-warning-600 flex-shrink-0 mt-0.5"
+              />
             <div class="flex-1">
               <h4 class="text-body-sm font-medium text-warning-600">Alert limit reached</h4>
               <p class="text-body-sm text-warning-600/90 mt-0.5">
@@ -1643,9 +1643,9 @@ class="mt-6 bg-neutral-50 rounded-xl border border-rs-border p-4"
           </div>
 
           <div
-	v-if="!alertsHydrated"
-	class="py-12 flex justify-center"
-	>
+  v-if="!alertsHydrated"
+  class="py-12 flex justify-center"
+  >
             <LoadingState
               mode="inline"
               message="Loading alerts..."
@@ -1698,15 +1698,15 @@ class="p-4 border-b"
                   <div class="flex items-center gap-2">
                     <div
                       class="w-8 h-8 rounded-full flex items-center justify-center"
-	                      :class="alert.enabled ? 'bg-success-600' : 'bg-neutral-200'"
-	                    >
-	                      <Icon
-	                        name="bell-alert"
-	                        :size="16"
-	                        variant="solid"
-	                        :class="alert.enabled ? 'text-success-600' : 'text-neutral-400'"
-	                      />
-	                    </div>
+                        :class="alert.enabled ? 'bg-success-600' : 'bg-neutral-200'"
+                      >
+                        <Icon
+                          name="bell-alert"
+                          :size="16"
+                          variant="solid"
+                          :class="alert.enabled ? 'text-success-600' : 'text-neutral-400'"
+                        />
+                      </div>
                     <span
                       class="px-2 py-0.5 rounded-full text-body-sm font-medium"
                       :class="alert.enabled ? 'bg-success-100 text-success-700' : 'bg-neutral-200 text-neutral-600'"
@@ -1737,16 +1737,16 @@ class="p-4 border-b"
                 <!-- Corridor with Flags -->
                 <div class="flex items-center gap-3 mb-3">
                   <div class="flex items-center">
-	                    <span class="text-h3">{{ getFlag(getAlertCorridor(alert).from) }}</span>
-	                    <div class="mx-2 flex flex-col items-center">
-	                      <Icon
-	                        name="arrow-right"
-	                        :size="16"
-	                        class="text-neutral-400"
-	                      />
-	                    </div>
-	                    <span class="text-h3">{{ getFlag(getAlertCorridor(alert).to) }}</span>
-	                  </div>
+                      <span class="text-h3">{{ getFlag(getAlertCorridor(alert).from) }}</span>
+                      <div class="mx-2 flex flex-col items-center">
+                        <Icon
+                          name="arrow-right"
+                          :size="16"
+                          class="text-neutral-400"
+                        />
+                      </div>
+                      <span class="text-h3">{{ getFlag(getAlertCorridor(alert).to) }}</span>
+                    </div>
                   <div class="flex-1">
                     <div class="font-semibold text-rs-fg">{{ getAlertCorridor(alert).from }}/{{ getAlertCorridor(alert).to }}</div>
                     <div class="text-body-sm text-rs-muted">{{ watchlistFindById(alert.watchlistItemId)?.label || 'Alert' }}</div>
@@ -1787,14 +1787,14 @@ class="inline-flex items-center px-2 py-1 rounded-md bg-neutral-100 text-neutral
                     <div class="text-body-sm text-neutral-400 mb-0.5">Current</div>
                     <div class="font-semibold text-rs-fg">{{ getAlertSnapshot(alert).rateLabel }}</div>
                     <div class="text-body-sm text-rs-muted">{{ getCurrencyCode(getAlertCorridor(alert).to) }}</div>
-	                  </div>
-	                  <div class="px-3">
-	                    <Icon
-	                      name="chevron-right"
-	                      :size="16"
-	                      class="text-neutral-300"
-	                    />
-	                  </div>
+                    </div>
+                    <div class="px-3">
+                      <Icon
+                        name="chevron-right"
+                        :size="16"
+                        class="text-neutral-300"
+                      />
+                    </div>
                   <div class="text-center flex-1">
                     <div class="text-body-sm text-neutral-400 mb-0.5">Target</div>
                     <div
@@ -1822,52 +1822,52 @@ class="font-semibold"
                 </div>
 
                 <!-- Frequency Badge -->
-	                <div class="flex items-center gap-2">
-	                  <Icon
-	                    name="clock"
-	                    :size="16"
-	                    class="text-neutral-400"
-	                  />
-	                  <span class="text-body-sm text-rs-muted">{{ formatFrequency(alert.frequency) }}</span>
-	                </div>
+                  <div class="flex items-center gap-2">
+                    <Icon
+                      name="clock"
+                      :size="16"
+                      class="text-neutral-400"
+                    />
+                    <span class="text-body-sm text-rs-muted">{{ formatFrequency(alert.frequency) }}</span>
+                  </div>
               </div>
 
               <!-- Quick Actions -->
               <div class="px-4 py-3 bg-neutral-50 border-t border-neutral-100 flex gap-2">
                 <NuxtLink
-	                  :to="getCorridorUrl(getAlertCorridor(alert).from, getAlertCorridor(alert).to)"
-	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
-	                >
-	                  <Icon
-	                    name="magnifying-glass"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  Compare
-	                </NuxtLink>
+                    :to="getCorridorUrl(getAlertCorridor(alert).from, getAlertCorridor(alert).to)"
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  >
+                    <Icon
+                      name="magnifying-glass"
+                      :size="16"
+                      class="text-current"
+                    />
+                    Compare
+                  </NuxtLink>
                 <button
                   type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-surface border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
-	                  @click="editAlert(alert)"
-	                >
-	                  <Icon
-	                    name="pencil-square"
-	                    :size="16"
-	                    class="text-current"
-	                  />
-	                  Edit
-	                </button>
-	                <button
-		                  type="button"
-		                  class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600 transition-colors"
-		                  @click="openDeleteAlertModal(alert)"
-		                >
-		                  <Icon
-		                    name="trash"
-		                    :size="16"
-		                    class="text-current"
-	                  />
-	                </button>
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-surface border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
+                    @click="editAlert(alert)"
+                  >
+                    <Icon
+                      name="pencil-square"
+                      :size="16"
+                      class="text-current"
+                    />
+                    Edit
+                  </button>
+                  <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 hover:text-danger-600 hover:border-danger-600 hover:bg-danger-600 transition-colors"
+                      @click="openDeleteAlertModal(alert)"
+                    >
+                      <Icon
+                        name="trash"
+                        :size="16"
+                        class="text-current"
+                    />
+                  </button>
               </div>
             </div>
           </div>
@@ -1877,26 +1877,26 @@ class="font-semibold"
 v-if="!isPlus"
 class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
 >
-	            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-	              <div class="flex items-start gap-4">
-	                <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
-	                  <Icon
-	                    name="bell-alert"
-	                    :size="24"
-	                    class="text-white"
-	                  />
-	                </div>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0">
+                    <Icon
+                      name="bell-alert"
+                      :size="24"
+                      class="text-white"
+                    />
+                  </div>
                 <div>
                   <h4 class="font-semibold mb-1">Need More Alerts?</h4>
                   <p class="text-body-sm text-neutral-300">{{ alertsUpgradeText }}</p>
                 </div>
               </div>
-	              <NuxtLink
-	to="/plus/checkout"
-	class="flex-shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
-	>
-	                Upgrade to Plus
-	              </NuxtLink>
+                <NuxtLink
+  to="/plus/checkout"
+  class="flex-shrink-0 rounded-lg bg-brand-600 px-5 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+  >
+                  Upgrade to Plus
+                </NuxtLink>
             </div>
           </div>
         </div>
@@ -1937,22 +1937,22 @@ class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
             v-if="showExportModal"
             class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-	            <div
-	class="absolute inset-0 bg-black/50"
-	aria-label="Close dialog"
-	@click="showExportModal = false"
-	/>
+              <div
+  class="absolute inset-0 bg-black/50"
+  aria-label="Close dialog"
+  @click="showExportModal = false"
+  />
             <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-6">
                 <h3 class="text-body-lg font-semibold text-rs-fg">Export Data</h3>
-	                <button
-	                  type="button"
-	                  class="text-neutral-400 hover:text-neutral-600"
-	                  aria-label="Close dialog"
-	                  @click="showExportModal = false"
-	                >
-	                  <Icon
-	                    name="x"
+                  <button
+                    type="button"
+                    class="text-neutral-400 hover:text-neutral-600"
+                    aria-label="Close dialog"
+                    @click="showExportModal = false"
+                  >
+                    <Icon
+                      name="x"
                     :size="20"
                     class="text-current"
                   />
@@ -1976,12 +1976,12 @@ class="text-center py-6"
                 <p class="text-body-sm text-rs-muted mb-6">
                   Export your comparison history and watchlist data to CSV or PDF with Plus.
                 </p>
-	                <NuxtLink
-	                  to="/plus/checkout"
-	                  class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
-	                >
-	                  Upgrade to Plus
-	                </NuxtLink>
+                  <NuxtLink
+                    to="/plus/checkout"
+                    class="inline-flex items-center justify-center rounded-lg bg-brand-600 px-6 py-2.5 text-body-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+                  >
+                    Upgrade to Plus
+                  </NuxtLink>
               </div>
 
               <!-- Export form for Plus users -->
@@ -2076,11 +2076,11 @@ class="space-y-6"
                     v-model="exportSettings.dateRange"
                     class="w-full rounded-xl border-2 border-neutral-300 bg-surface px-4 py-3 text-body-sm font-semibold text-rs-fg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all hover:border-neutral-400"
                     @change="setExportDateRange(exportSettings.dateRange)"
-	                  >
-	                    <option value="7d">Last 7 days</option>
-	                    <option value="30d">Last 30 days</option>
-	                  </select>
-	                </div>
+                    >
+                      <option value="7d">Last 7 days</option>
+                      <option value="30d">Last 30 days</option>
+                    </select>
+                  </div>
 
                 <div
                   v-if="exportSettings.dataType === 'history' || exportSettings.dataType === 'indices'"
@@ -2202,28 +2202,28 @@ class="text-neutral-600"
             v-if="showDeleteAccountModal"
             class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-	            <div
-	class="absolute inset-0 bg-black/50"
-	aria-label="Close dialog"
-	@click="closeDeleteAccountModal"
-	/>
+              <div
+  class="absolute inset-0 bg-black/50"
+  aria-label="Close dialog"
+  @click="closeDeleteAccountModal"
+  />
             <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-body-lg font-semibold text-rs-fg">Delete Account</h3>
-		                <button
-		                  type="button"
-		                  class="text-neutral-400 hover:text-neutral-600"
-		                  aria-label="Close dialog"
-		                  :disabled="accountDeleting"
-		                  @click="closeDeleteAccountModal"
-		                >
-		                  <Icon
-	                    name="x"
-	                    :size="20"
-	                    class="text-current"
-	                  />
-	                </button>
-	              </div>
+                    <button
+                      type="button"
+                      class="text-neutral-400 hover:text-neutral-600"
+                      aria-label="Close dialog"
+                      :disabled="accountDeleting"
+                      @click="closeDeleteAccountModal"
+                    >
+                      <Icon
+                      name="x"
+                      :size="20"
+                      class="text-current"
+                    />
+                  </button>
+                </div>
 
               <div class="space-y-4 text-body-sm text-neutral-600">
                 <p>
@@ -2290,27 +2290,27 @@ class="text-body-sm text-warning-600"
             </div>
           </div>
 
-	          <!-- Delete Watchlist Item Modal -->
-	          <div
-	            v-if="showDeleteWatchlistModal"
-	            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            <!-- Delete Watchlist Item Modal -->
+            <div
+              v-if="showDeleteWatchlistModal"
+              class="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-	            <div
-	class="absolute inset-0 bg-black/50"
-	aria-label="Close dialog"
-	@click="closeDeleteWatchlistModal"
-	/>
+              <div
+  class="absolute inset-0 bg-black/50"
+  aria-label="Close dialog"
+  @click="closeDeleteWatchlistModal"
+  />
             <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-body-lg font-semibold text-rs-fg">Remove from Watchlist</h3>
-	                <button
-	                  type="button"
-	                  class="text-neutral-400 hover:text-neutral-600"
-	                  aria-label="Close dialog"
-	                  @click="closeDeleteWatchlistModal"
-	                >
-	                  <Icon
-	                    name="x"
+                  <button
+                    type="button"
+                    class="text-neutral-400 hover:text-neutral-600"
+                    aria-label="Close dialog"
+                    @click="closeDeleteWatchlistModal"
+                  >
+                    <Icon
+                      name="x"
                     :size="20"
                     class="text-current"
                   />
@@ -2332,101 +2332,101 @@ class="text-body-sm text-warning-600"
                 </p>
               </div>
 
-	              <div class="flex gap-3 pt-6">
-	                <button
-	                  type="button"
-	                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
-	                  @click="closeDeleteWatchlistModal"
-	                >
-	                  Cancel
-	                </button>
-	                <button
-	                  type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
-	                  @click="confirmDeleteWatchlistItem"
-	                >
-	                  Remove
-	                </button>
-	              </div>
-	            </div>
-	          </div>
+                <div class="flex gap-3 pt-6">
+                  <button
+                    type="button"
+                    class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    @click="closeDeleteWatchlistModal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
+                    @click="confirmDeleteWatchlistItem"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
 
-	          <!-- Delete Alert Modal -->
-	          <div
-	            v-if="showDeleteAlertModal"
-	            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-	          >
-	            <div
-	              class="absolute inset-0 bg-black/50"
-	              aria-label="Close dialog"
-	              @click="closeDeleteAlertModal"
-	            />
-	            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
-	              <div class="flex items-center justify-between mb-4">
-	                <h3 class="text-body-lg font-semibold text-rs-fg">Delete Alert</h3>
-	                <button
-	                  type="button"
-	                  class="text-neutral-400 hover:text-neutral-600"
-	                  aria-label="Close dialog"
-	                  @click="closeDeleteAlertModal"
-	                >
-	                  <Icon
-	                    name="x"
-	                    :size="20"
-	                    class="text-current"
-	                  />
-	                </button>
-	              </div>
+            <!-- Delete Alert Modal -->
+            <div
+              v-if="showDeleteAlertModal"
+              class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div
+                class="absolute inset-0 bg-black/50"
+                aria-label="Close dialog"
+                @click="closeDeleteAlertModal"
+              />
+              <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-body-lg font-semibold text-rs-fg">Delete Alert</h3>
+                  <button
+                    type="button"
+                    class="text-neutral-400 hover:text-neutral-600"
+                    aria-label="Close dialog"
+                    @click="closeDeleteAlertModal"
+                  >
+                    <Icon
+                      name="x"
+                      :size="20"
+                      class="text-current"
+                    />
+                  </button>
+                </div>
 
-	              <div class="space-y-4 text-body-sm text-neutral-600">
-	                <p>
-	                  Are you sure you want to delete this alert?
-	                </p>
-	                <p
-	                  v-if="alertToDelete"
-	                  class="rounded-xl border border-rs-border bg-neutral-50 p-3"
-	                >
-	                  <span class="font-semibold text-rs-fg">
-	                    {{ watchlistFindById(alertToDelete.watchlistItemId)?.label || 'Alert' }}
-	                  </span>
-	                  <span class="text-neutral-400"> • </span>
-	                  <span class="text-rs-muted">
-	                    {{ formatRuleSummary(alertToDelete.rule) }}
-	                  </span>
-	                </p>
-	                <p class="text-body-sm text-rs-muted">
-	                  This can’t be undone, but you can always create a new alert later.
-	                </p>
-	              </div>
+                <div class="space-y-4 text-body-sm text-neutral-600">
+                  <p>
+                    Are you sure you want to delete this alert?
+                  </p>
+                  <p
+                    v-if="alertToDelete"
+                    class="rounded-xl border border-rs-border bg-neutral-50 p-3"
+                  >
+                    <span class="font-semibold text-rs-fg">
+                      {{ watchlistFindById(alertToDelete.watchlistItemId)?.label || 'Alert' }}
+                    </span>
+                    <span class="text-neutral-400"> • </span>
+                    <span class="text-rs-muted">
+                      {{ formatRuleSummary(alertToDelete.rule) }}
+                    </span>
+                  </p>
+                  <p class="text-body-sm text-rs-muted">
+                    This can’t be undone, but you can always create a new alert later.
+                  </p>
+                </div>
 
-	              <div class="flex gap-3 pt-6">
-	                <button
-	                  type="button"
-	                  class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
-	                  @click="closeDeleteAlertModal"
-	                >
-	                  Cancel
-	                </button>
-	                <button
-	                  type="button"
-	                  class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
-	                  @click="confirmDeleteAlert"
-	                >
-	                  Delete
-	                </button>
-	              </div>
-	            </div>
-	          </div>
+                <div class="flex gap-3 pt-6">
+                  <button
+                    type="button"
+                    class="flex-1 rounded-lg border border-neutral-300 px-4 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    @click="closeDeleteAlertModal"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2 text-body-sm font-semibold text-white hover:bg-danger-600 transition-colors"
+                    @click="confirmDeleteAlert"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
 
-	          <div
-	v-if="!compareHydrated"
-	class="py-12 flex justify-center"
-	>
-	            <LoadingState
-	              mode="inline"
-	              message="Loading comparisons..."
-	            />
-	          </div>
+            <div
+  v-if="!compareHydrated"
+  class="py-12 flex justify-center"
+  >
+              <LoadingState
+                mode="inline"
+                message="Loading comparisons..."
+              />
+            </div>
           <div
 v-else-if="compareRuns.length === 0"
 class="text-center py-16"
@@ -2464,15 +2464,15 @@ class="bg-surface rounded-xl border border-rs-border divide-y divide-neutral-100
                   class="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-primary-500 flex-shrink-0"
                 >
                 <div class="flex items-center gap-3 flex-1 min-w-0">
-	                  <div class="flex items-center gap-2 flex-shrink-0">
-	                    <span class="text-h4">{{ getFlag(run.from) }}</span>
-	                    <Icon
-	                      name="arrow-right"
-	                      :size="16"
-	                      class="text-neutral-400"
-	                    />
-	                    <span class="text-h4">{{ getFlag(run.to) }}</span>
-	                  </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span class="text-h4">{{ getFlag(run.from) }}</span>
+                      <Icon
+                        name="arrow-right"
+                        :size="16"
+                        class="text-neutral-400"
+                      />
+                      <span class="text-h4">{{ getFlag(run.to) }}</span>
+                    </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                       <span class="font-semibold text-rs-fg">{{ run.from }}/{{ run.to }}</span>
@@ -2481,10 +2481,10 @@ class="bg-surface rounded-xl border border-rs-border divide-y divide-neutral-100
                       <span class="text-neutral-400">•</span>
                       <span class="text-body-sm text-brand-600 capitalize font-medium">{{ run.method }}</span>
                     </div>
-	                    <div class="text-body-sm text-rs-muted mt-0.5">{{ formatDate(run.createdAt) }}</div>
-	                  </div>
-	                </div>
-	              </div>
+                      <div class="text-body-sm text-rs-muted mt-0.5">{{ formatDate(run.createdAt) }}</div>
+                    </div>
+                  </div>
+                </div>
               <div class="flex items-center gap-3 flex-shrink-0 ml-4">
                 <NuxtLink
                   v-if="run.path"
@@ -2502,23 +2502,23 @@ class="bg-surface rounded-xl border border-rs-border divide-y divide-neutral-100
 v-if="!isPlus"
 class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
 >
-	            <div class="flex items-start gap-4">
-	              <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-	                <Icon
-	                  name="clock"
-	                  :size="20"
-	                  class="text-brand-600"
-	                />
-	              </div>
+              <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+                  <Icon
+                    name="clock"
+                    :size="20"
+                    class="text-brand-600"
+                  />
+                </div>
               <div class="flex-1">
                 <h4 class="font-semibold text-brand-600 text-body-sm mb-1">Limited to 30-Day History</h4>
                 <p class="text-body-sm text-brand-700 mb-2">Free accounts can only view the last 30 days. Upgrade to Plus for 90-day history and export.</p>
-	                <NuxtLink
-	to="/plus/checkout"
-	class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
-	>
-	                  Upgrade to Plus
-	                  <Icon
+                  <NuxtLink
+  to="/plus/checkout"
+  class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+  >
+                    Upgrade to Plus
+                    <Icon
                     name="chevron-right"
                     :size="16"
                     class="text-current"
@@ -2541,14 +2541,14 @@ class="mt-6 bg-primary-50 border border-primary-200 rounded-xl p-5"
             >
               Export Selected
             </button>
-	            <button
-	              type="button"
-	              class="text-neutral-400 hover:text-white"
-	              aria-label="Clear selection"
-	              @click="selectedExportItems = []"
-	            >
-	              <Icon
-	                name="x"
+              <button
+                type="button"
+                class="text-neutral-400 hover:text-white"
+                aria-label="Clear selection"
+                @click="selectedExportItems = []"
+              >
+                <Icon
+                  name="x"
                 :size="16"
                 class="text-current"
               />
@@ -2646,15 +2646,15 @@ d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 </div>
               </div>
 
-	              <div
-	v-if="opsLoading[provider.id]"
-	class="px-6 py-6"
-	>
-	                <LoadingState
-	                  mode="inline"
-	                  message="Loading health data..."
-	                />
-	              </div>
+                <div
+  v-if="opsLoading[provider.id]"
+  class="px-6 py-6"
+  >
+                  <LoadingState
+                    mode="inline"
+                    message="Loading health data..."
+                  />
+                </div>
               <div
 v-else-if="opsErrors[provider.id]"
 class="px-6 py-6 text-body-sm text-warning-700 bg-warning-50"
@@ -2770,23 +2770,23 @@ class="px-3 py-2 text-right tabular-nums"
                   </div>
                 </div>
                 <div class="mt-4 space-y-3">
-	                  <NuxtLink
-	                    v-for="link in opsAdminLinks"
-	                    :key="link.label"
-	                    :to="link.to"
-	                    class="group flex items-start justify-between gap-4 rounded-lg border border-neutral-100 px-3 py-2 hover:border-primary-200 hover:bg-primary-50 transition-colors"
-	                  >
-	                    <div>
-	                      <div class="text-body-sm font-semibold text-rs-fg group-hover:text-brand-700">{{ link.label }}</div>
-	                      <div class="text-body-sm text-rs-muted">{{ link.description }}</div>
-	                    </div>
-	                    <Icon
-	                      name="chevron-right"
-	                      :size="16"
-	                      class="text-neutral-400 group-hover:text-brand-600"
-	                    />
-	                  </NuxtLink>
-	                </div>
+                    <NuxtLink
+                      v-for="link in opsAdminLinks"
+                      :key="link.label"
+                      :to="link.to"
+                      class="group flex items-start justify-between gap-4 rounded-lg border border-neutral-100 px-3 py-2 hover:border-primary-200 hover:bg-primary-50 transition-colors"
+                    >
+                      <div>
+                        <div class="text-body-sm font-semibold text-rs-fg group-hover:text-brand-700">{{ link.label }}</div>
+                        <div class="text-body-sm text-rs-muted">{{ link.description }}</div>
+                      </div>
+                      <Icon
+                        name="chevron-right"
+                        :size="16"
+                        class="text-neutral-400 group-hover:text-brand-600"
+                      />
+                    </NuxtLink>
+                  </div>
                 <div class="mt-4 text-body-sm text-neutral-400">
                   Admin endpoints: /analytics/*, /audit/*, /telemetry/analytics, /ops/*
                 </div>
@@ -2855,10 +2855,10 @@ class="font-semibold text-brand-600 hover:text-brand-700"
                   </div>
                   <button
                     type="button"
-	                    class="inline-flex items-center justify-center rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
-	                    :disabled="telemetryLoading"
-	                    @click="() => loadTelemetryAnalytics()"
-	                  >
+                      class="inline-flex items-center justify-center rounded-lg border border-rs-border px-3 py-2 text-body-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-60"
+                      :disabled="telemetryLoading"
+                      @click="() => loadTelemetryAnalytics()"
+                    >
                     {{ telemetryLoading ? 'Refreshing...' : 'Refresh' }}
                   </button>
                 </div>
@@ -2900,15 +2900,15 @@ class="mt-3 text-body-sm text-warning-700 bg-warning-50 rounded-lg px-3 py-2"
 v-else
 class="mt-4"
 >
-	                  <div
-	v-if="telemetryLoading"
-	class="py-2"
-	>
-	                    <LoadingState
-	                      mode="inline"
-	                      message="Loading telemetry analytics..."
-	                    />
-	                  </div>
+                    <div
+  v-if="telemetryLoading"
+  class="py-2"
+  >
+                      <LoadingState
+                        mode="inline"
+                        message="Loading telemetry analytics..."
+                      />
+                    </div>
                   <div
 v-else-if="!telemetryLatest"
 class="text-body-sm text-rs-muted"
@@ -3499,18 +3499,18 @@ class="space-y-6"
                   </div>
 
                   <div class="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between">
-	                    <div
-	v-if="profileSaved"
-	class="flex items-center gap-2 text-body-sm text-success-600"
-	>
-	                      <Icon
-	                        name="check-circle"
-	                        :size="16"
-	                        variant="solid"
-	                        class="text-current"
-	                      />
-	                      Changes saved!
-	                    </div>
+                      <div
+  v-if="profileSaved"
+  class="flex items-center gap-2 text-body-sm text-success-600"
+  >
+                        <Icon
+                          name="check-circle"
+                          :size="16"
+                          variant="solid"
+                          class="text-current"
+                        />
+                        Changes saved!
+                      </div>
                     <p
                       v-else-if="profileSaveError"
                       class="text-body-sm text-danger-600"
@@ -3600,15 +3600,15 @@ class="flex items-baseline justify-between"
 v-if="!isPlus"
 class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border border-primary-100"
 >
-	                    <div class="flex items-start gap-3">
-	                      <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-	                        <Icon
-	                          name="sparkles"
-	                          :size="16"
-	                          variant="solid"
-	                          class="text-brand-600"
-	                        />
-	                      </div>
+                      <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                          <Icon
+                            name="sparkles"
+                            :size="16"
+                            variant="solid"
+                            class="text-brand-600"
+                          />
+                        </div>
                       <div class="flex-1">
                         <h4 class="text-body-sm font-semibold text-rs-fg">Upgrade to Plus</h4>
                         <p class="text-body-sm text-neutral-600 mt-0.5">{{ sidebarUpgradeText }}</p>
@@ -3680,15 +3680,15 @@ v-if="isPlus"
 class="bg-surface rounded-xl border border-rs-border p-6"
 >
                   <h3 class="font-medium text-rs-fg mb-4">Billing History</h3>
-	                  <div
-	v-if="billingHistoryLoading"
-	class="py-2"
-	>
-	                    <LoadingState
-	                      mode="inline"
-	                      message="Loading billing history..."
-	                    />
-	                  </div>
+                    <div
+  v-if="billingHistoryLoading"
+  class="py-2"
+  >
+                      <LoadingState
+                        mode="inline"
+                        message="Loading billing history..."
+                      />
+                    </div>
                   <div
 v-else-if="billingHistoryError"
 class="text-body-sm text-danger-600"
@@ -3713,7 +3713,7 @@ class="space-y-3"
                     >
                       <div>
                         <div class="text-body-sm font-medium text-rs-fg">
-	                          {{ invoice.date ? formatMonthYear(invoice.date) : 'Invoice' }}
+                            {{ invoice.date ? formatMonthYear(invoice.date) : 'Invoice' }}
                         </div>
                         <div class="text-body-sm text-rs-muted">{{ invoice.status || 'paid' }}</div>
                       </div>
@@ -3970,15 +3970,15 @@ class="mt-4 rounded-lg bg-success-50 px-3 py-2 text-body-sm text-success-800"
 
                 <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <h3 class="font-medium text-rs-fg mb-4">Active Sessions</h3>
-	                  <div
-	v-if="sessionsLoading"
-	class="py-2"
-	>
-	                    <LoadingState
-	                      mode="inline"
-	                      message="Loading sessions..."
-	                    />
-	                  </div>
+                    <div
+  v-if="sessionsLoading"
+  class="py-2"
+  >
+                      <LoadingState
+                        mode="inline"
+                        message="Loading sessions..."
+                      />
+                    </div>
                   <div
 v-else-if="sessionsError"
 class="text-body-sm text-danger-600"
@@ -4001,16 +4001,16 @@ class="space-y-3"
                       class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg"
                     >
                       <div class="flex items-center gap-3">
-	                        <div
-	                          class="w-8 h-8 rounded-full flex items-center justify-center"
-	                          :class="session.is_current ? 'bg-success-600' : 'bg-neutral-100'"
-	                        >
-	                          <Icon
-	                            name="computer-desktop"
-	                            :size="16"
-	                            :class="session.is_current ? 'text-success-600' : 'text-neutral-600'"
-	                          />
-	                        </div>
+                          <div
+                            class="w-8 h-8 rounded-full flex items-center justify-center"
+                            :class="session.is_current ? 'bg-success-600' : 'bg-neutral-100'"
+                          >
+                            <Icon
+                              name="computer-desktop"
+                              :size="16"
+                              :class="session.is_current ? 'text-success-600' : 'text-neutral-600'"
+                            />
+                          </div>
                         <div>
                           <div class="text-body-sm font-medium text-rs-fg">
                             {{ session.is_current ? 'Current Session' : 'Session' }}
@@ -4180,75 +4180,75 @@ class="space-y-6"
                   <p class="text-body-sm text-neutral-600 mb-4">
                     Under GDPR, you have several rights regarding your personal data. We are committed to respecting and fulfilling these rights.
                   </p>
-	                  <div class="space-y-3">
-	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
-	                      <Icon
-	                        name="check-circle"
-	                        :size="20"
-	                        class="text-brand-600 flex-shrink-0 mt-0.5"
-	                      />
-	                      <div>
-	                        <div class="text-body-sm font-medium text-rs-fg">Right to Access</div>
-	                        <div class="text-body-sm text-rs-muted">Request a copy of your personal data</div>
-	                      </div>
-	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
-	                      <Icon
-	                        name="check-circle"
-	                        :size="20"
-	                        class="text-brand-600 flex-shrink-0 mt-0.5"
-	                      />
-	                      <div>
-	                        <div class="text-body-sm font-medium text-rs-fg">Right to Rectification</div>
-	                        <div class="text-body-sm text-rs-muted">Request correction of inaccurate data</div>
-	                      </div>
-	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
-	                      <Icon
-	                        name="check-circle"
-	                        :size="20"
-	                        class="text-brand-600 flex-shrink-0 mt-0.5"
-	                      />
-	                      <div>
-	                        <div class="text-body-sm font-medium text-rs-fg">Right to Erasure</div>
-	                        <div class="text-body-sm text-rs-muted">Request deletion of your personal data</div>
-	                      </div>
-	                    </div>
-	                    <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
-	                      <Icon
-	                        name="check-circle"
-	                        :size="20"
-	                        class="text-brand-600 flex-shrink-0 mt-0.5"
-	                      />
-	                      <div>
-	                        <div class="text-body-sm font-medium text-rs-fg">Right to Data Portability</div>
-	                        <div class="text-body-sm text-rs-muted">Receive your data in a machine-readable format</div>
-	                      </div>
-	                    </div>
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                        <Icon
+                          name="check-circle"
+                          :size="20"
+                          class="text-brand-600 flex-shrink-0 mt-0.5"
+                        />
+                        <div>
+                          <div class="text-body-sm font-medium text-rs-fg">Right to Access</div>
+                          <div class="text-body-sm text-rs-muted">Request a copy of your personal data</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                        <Icon
+                          name="check-circle"
+                          :size="20"
+                          class="text-brand-600 flex-shrink-0 mt-0.5"
+                        />
+                        <div>
+                          <div class="text-body-sm font-medium text-rs-fg">Right to Rectification</div>
+                          <div class="text-body-sm text-rs-muted">Request correction of inaccurate data</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                        <Icon
+                          name="check-circle"
+                          :size="20"
+                          class="text-brand-600 flex-shrink-0 mt-0.5"
+                        />
+                        <div>
+                          <div class="text-body-sm font-medium text-rs-fg">Right to Erasure</div>
+                          <div class="text-body-sm text-rs-muted">Request deletion of your personal data</div>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                        <Icon
+                          name="check-circle"
+                          :size="20"
+                          class="text-brand-600 flex-shrink-0 mt-0.5"
+                        />
+                        <div>
+                          <div class="text-body-sm font-medium text-rs-fg">Right to Data Portability</div>
+                          <div class="text-body-sm text-rs-muted">Receive your data in a machine-readable format</div>
+                        </div>
+                      </div>
                   </div>
                 </div>
 
                 <div class="bg-surface rounded-xl border border-rs-border p-6">
                   <h3 class="font-medium text-rs-fg mb-4">Legal Documents</h3>
                   <div class="space-y-3">
-	                    <NuxtLink
-	                      to="/privacy"
-	                      class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
-	                    >
-	                      <div class="flex items-center gap-3">
-	                        <Icon
-	                          name="document-text"
-	                          :size="20"
-	                          class="text-neutral-400"
-	                        />
-	                        <span class="text-body-sm font-medium text-rs-fg">Privacy Policy</span>
-	                      </div>
-	                      <Icon
-	                        name="chevron-right"
-	                        :size="16"
-	                        class="text-neutral-400"
-	                      />
-	                    </NuxtLink>
+                      <NuxtLink
+                        to="/privacy"
+                        class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
+                      >
+                        <div class="flex items-center gap-3">
+                          <Icon
+                            name="document-text"
+                            :size="20"
+                            class="text-neutral-400"
+                          />
+                          <span class="text-body-sm font-medium text-rs-fg">Privacy Policy</span>
+                        </div>
+                        <Icon
+                          name="chevron-right"
+                          :size="16"
+                          class="text-neutral-400"
+                        />
+                      </NuxtLink>
                     <NuxtLink
                       to="/terms"
                       class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors"
@@ -4306,41 +4306,41 @@ class="space-y-6"
         </div>
       </CenteredPage>
 
-	      <ProviderVisitPrompt
-	        ref="providerVisitPromptRef"
-	        :auto-open="false"
-	      />
+        <ProviderVisitPrompt
+          ref="providerVisitPromptRef"
+          :auto-open="false"
+        />
 
-	      <LimitReachedModal
-	        v-if="limitModalOpen"
-	        :is-open="limitModalOpen"
-	        :feature="limitModalFeature"
-	        :limit="limitModalLimit || 0"
-	        :current-count="limitModalCount"
-	        :show-upgrade="!isPlus"
-	        :title="limitModalFeature === 'watchlist' ? 'Watchlist limit reached' : 'Alert limit reached'"
-	        :message="limitModalFeature === 'watchlist'
-	          ? (isPlus ? 'You’ve hit the current plan limit. Remove a corridor to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 corridors.')
-	          : (isPlus ? 'You’ve hit the current plan limit. Remove an alert to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 alerts.')"
-	        :items="limitModalItems"
-	        @close="limitModalOpen = false"
-	        @remove="handleLimitRemove"
-	      />
-	    </div>
-	</template>
+        <LimitReachedModal
+          v-if="limitModalOpen"
+          :is-open="limitModalOpen"
+          :feature="limitModalFeature"
+          :limit="limitModalLimit || 0"
+          :current-count="limitModalCount"
+          :show-upgrade="!isPlus"
+          :title="limitModalFeature === 'watchlist' ? 'Watchlist limit reached' : 'Alert limit reached'"
+          :message="limitModalFeature === 'watchlist'
+            ? (isPlus ? 'You’ve hit the current plan limit. Remove a corridor to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 corridors.')
+            : (isPlus ? 'You’ve hit the current plan limit. Remove an alert to add another.' : 'Free accounts are limited. Upgrade to Plus for up to 16 alerts.')"
+          :items="limitModalItems"
+          @close="limitModalOpen = false"
+          @remove="handleLimitRemove"
+        />
+      </div>
+  </template>
 
-	<script setup lang="ts">
-	import type { LocationQueryRaw } from 'vue-router'
+  <script setup lang="ts">
+  import type { LocationQueryRaw } from 'vue-router'
 
-	import AdPlacement from '~/components/ads/AdPlacement.vue'
-	import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
-			import ProviderLogo from '~/components/shared/ProviderLogo.vue'
-	import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
-		import { CenteredPage, DataTable, EmptyState, Icon, type IconName, LoadingState } from '~/ui'
-	import {
-	  formatDate,
-	  formatDateTime,
-	  formatMonthDay,
+  import AdPlacement from '~/components/ads/AdPlacement.vue'
+  import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
+      import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+  import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
+    import { CenteredPage, DataTable, EmptyState, Icon, type IconName, LoadingState } from '~/ui'
+  import {
+    formatDate,
+    formatDateTime,
+    formatMonthDay,
   formatMonthYear,
   formatMoney,
   formatNumber,
@@ -4349,10 +4349,10 @@ class="space-y-6"
 } from '~/shared/lib/format'
 import { getCorridorUrl } from '~/utils/country-slugs'
 import { COUNTRIES } from '~/utils/countries-currencies'
-	import type { Alert, AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
-	import { getCorridors } from '~/lib/pulseApi'
-	import type { CorridorOption } from '~/types/pulse'
-	import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
+  import type { Alert, AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
+  import { getCorridors } from '~/lib/pulseApi'
+  import type { CorridorOption } from '~/types/pulse'
+  import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
 import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue'
@@ -4439,12 +4439,12 @@ const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.val
 const billingPortalLoading = computed(() => billingActions.portalLoading.value)
 const exportsApi = useExports()
 const dataExportApi = useDataExport()
-	const accountApi = useAccount()
-	const accountDeleting = computed(() => accountApi.deleting.value)
-	const modal = useSaveAlertModal()
-	const toast = useToast()
-	const { request } = useApi()
-	const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: [] })
+  const accountApi = useAccount()
+  const accountDeleting = computed(() => accountApi.deleting.value)
+  const modal = useSaveAlertModal()
+  const toast = useToast()
+  const { request } = useApi()
+  const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, { watch: [] })
 
 const {
   items: watchlistItems,
@@ -4462,70 +4462,70 @@ const corridorWatchlistItems = computed(() =>
   ),
 )
 
-	const {
-	  alerts: alertItems,
-	  hydrated: alertsHydrated,
-	  count: alertsCount,
+  const {
+    alerts: alertItems,
+    hydrated: alertsHydrated,
+    count: alertsCount,
   toggleEnabled: alertsToggleEnabled,
   remove: alertsRemove,
   reset: alertsReset,
   findById: alertsFindById,
-	  update: alertsUpdate,
-	} = useAlerts()
+    update: alertsUpdate,
+  } = useAlerts()
 
-	// Production-grade limit UX (no browser alert()).
-	const limitModalOpen = ref(false)
-	const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
-	const limitModalLimit = ref(0)
+  // Production-grade limit UX (no browser alert()).
+  const limitModalOpen = ref(false)
+  const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
+  const limitModalLimit = ref(0)
 
-	const limitModalCount = computed(() => {
-	  return limitModalFeature.value === 'watchlist' ? watchlistCount.value : alertsCount.value
-	})
+  const limitModalCount = computed(() => {
+    return limitModalFeature.value === 'watchlist' ? watchlistCount.value : alertsCount.value
+  })
 
-	const formatRuleSummary = (rule: AlertRule) => {
-	  const currency = rule.currency ? ` ${rule.currency}` : ''
-	  return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim()
-	}
+  const formatRuleSummary = (rule: AlertRule) => {
+    const currency = rule.currency ? ` ${rule.currency}` : ''
+    return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim()
+  }
 
-	const limitModalItems = computed(() => {
-	  const sliceLimit = limitModalLimit.value || 0
-	  if (limitModalFeature.value === 'alert') {
-	    const items = alertItems.value.map(alert => ({
-	      id: alert.id,
-	      label: watchlistFindById(alert.watchlistItemId)?.label || 'Alert',
-	      meta: formatRuleSummary(alert.rule),
-	    }))
-	    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
-	  }
+  const limitModalItems = computed(() => {
+    const sliceLimit = limitModalLimit.value || 0
+    if (limitModalFeature.value === 'alert') {
+      const items = alertItems.value.map(alert => ({
+        id: alert.id,
+        label: watchlistFindById(alert.watchlistItemId)?.label || 'Alert',
+        meta: formatRuleSummary(alert.rule),
+      }))
+      return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+    }
 
-	  const items = watchlistItems.value.map(item => ({
-	    id: item.id,
-	    label: item.label,
-	  }))
-	  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
-	})
+    const items = watchlistItems.value.map(item => ({
+      id: item.id,
+      label: item.label,
+    }))
+    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+  })
 
-	const openLimitModal = (feature: 'watchlist' | 'alert', explicitLimit?: number) => {
-	  limitModalFeature.value = feature
-	  const limit = explicitLimit ?? (feature === 'watchlist'
-	    ? (limits.value.watchlistItems === 'unlimited' ? 0 : Number(limits.value.watchlistItems))
-	    : (limits.value.alerts === 'unlimited' ? 0 : Number(limits.value.alerts)))
-	  limitModalLimit.value = Number.isFinite(limit) ? limit : 0
-	  limitModalOpen.value = true
-	}
+  const openLimitModal = (feature: 'watchlist' | 'alert', explicitLimit?: number) => {
+    limitModalFeature.value = feature
+    const limit = explicitLimit ?? (feature === 'watchlist'
+      ? (limits.value.watchlistItems === 'unlimited' ? 0 : Number(limits.value.watchlistItems))
+      : (limits.value.alerts === 'unlimited' ? 0 : Number(limits.value.alerts)))
+    limitModalLimit.value = Number.isFinite(limit) ? limit : 0
+    limitModalOpen.value = true
+  }
 
-		const handleLimitRemove = async (id: string) => {
-		  if (limitModalFeature.value === 'watchlist') {
-		    await watchlistRemove(id)
-		  }
-		  else {
-		    await alertsRemove(id)
-		  }
+    const handleLimitRemove = async (id: string) => {
+      if (limitModalFeature.value === 'watchlist') {
+        await watchlistRemove(id)
+      }
+      else {
+        await alertsRemove(id)
+      }
 
-		  if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
-		    limitModalOpen.value = false
-		  }
-		}
+      if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
+        limitModalOpen.value = false
+      }
+    }
 
 const {
   runs: compareRuns,
@@ -4813,30 +4813,30 @@ const alertsLimitReached = computed(() => {
 const hasAdminAccess = ref(false)
 const adminAccessChecked = ref(false)
 
-	const checkAdminAccess = async (signal?: AbortSignal) => {
-	  if (!import.meta.client) return
-	  if (!isAuthenticated.value) {
-	    hasAdminAccess.value = false
-	    adminAccessChecked.value = true
-	    return
-	  }
-	  if (isAdmin.value || user.value?.isAdmin) {
-	    hasAdminAccess.value = true
-	    adminAccessChecked.value = true
-	    return
-	  }
-	  if (adminAccessChecked.value) return
-	  let aborted = false
-	  try {
-	    // Determine admin access via `/me` instead of probing `/admin/*` routes.
-	    // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
-	    // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
-	    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
-	    hasAdminAccess.value = Boolean(me?.user?.is_admin)
-	  }
-	  catch (error: unknown) {
-	    if (isAbortError(error)) {
-	      aborted = true
+  const checkAdminAccess = async (signal?: AbortSignal) => {
+    if (!import.meta.client) return
+    if (!isAuthenticated.value) {
+      hasAdminAccess.value = false
+      adminAccessChecked.value = true
+      return
+    }
+    if (isAdmin.value || user.value?.isAdmin) {
+      hasAdminAccess.value = true
+      adminAccessChecked.value = true
+      return
+    }
+    if (adminAccessChecked.value) return
+    let aborted = false
+    try {
+      // Determine admin access via `/me` instead of probing `/admin/*` routes.
+      // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
+      // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
+      const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
+      hasAdminAccess.value = Boolean(me?.user?.is_admin)
+    }
+    catch (error: unknown) {
+      if (isAbortError(error)) {
+        aborted = true
       return
     }
     hasAdminAccess.value = false
@@ -5721,50 +5721,50 @@ useAbortableWatch(
   { immediate: true },
 )
 
-	// Form state
-	type CorridorSelection = { from: string, to: string }
+  // Form state
+  type CorridorSelection = { from: string, to: string }
 
-	const newWatchlist = ref<CorridorSelection>({ from: '', to: '' })
-	const graphTimeframe = ref('7d')
+  const newWatchlist = ref<CorridorSelection>({ from: '', to: '' })
+  const graphTimeframe = ref('7d')
 
-	// Rate Checker state
-	const showCorridorSelector = ref(false)
-	const selectedCorridor = ref<CorridorSelection | null>(null)
-	const customCorridor = ref<CorridorSelection>({ from: '', to: '' })
+  // Rate Checker state
+  const showCorridorSelector = ref(false)
+  const selectedCorridor = ref<CorridorSelection | null>(null)
+  const customCorridor = ref<CorridorSelection>({ from: '', to: '' })
 
-	const defaultSelectedCorridor = computed<CorridorSelection | null>(() => {
-	  const first = corridorWatchlistItems.value[0]
-	  if (!first || first.target.type !== 'corridor') return null
-	  return {
-	    from: first.target.from.toUpperCase(),
-	    to: first.target.to.toUpperCase(),
-	  }
-	})
+  const defaultSelectedCorridor = computed<CorridorSelection | null>(() => {
+    const first = corridorWatchlistItems.value[0]
+    if (!first || first.target.type !== 'corridor') return null
+    return {
+      from: first.target.from.toUpperCase(),
+      to: first.target.to.toUpperCase(),
+    }
+  })
 
-	// Avoid showing mock corridors. Default to the user's real watchlist corridor when available.
-	watch(
-	  () => [watchlistHydrated.value, corridorWatchlistItems.value.length] as const,
-	  ([hydrated]) => {
-	    if (!hydrated) return
-	    if (selectedCorridor.value) return
-	    const fallback = defaultSelectedCorridor.value
-	    if (!fallback) return
-	    selectedCorridor.value = fallback
-	  },
-	  { immediate: true },
-	)
+  // Avoid showing mock corridors. Default to the user's real watchlist corridor when available.
+  watch(
+    () => [watchlistHydrated.value, corridorWatchlistItems.value.length] as const,
+    ([hydrated]) => {
+      if (!hydrated) return
+      if (selectedCorridor.value) return
+      const fallback = defaultSelectedCorridor.value
+      if (!fallback) return
+      selectedCorridor.value = fallback
+    },
+    { immediate: true },
+  )
 
-	watch(
-	  () => showCorridorSelector.value,
-	  (open) => {
-	    if (!open) return
-	    if (selectedCorridor.value) {
-	      customCorridor.value = { ...selectedCorridor.value }
-	      return
-	    }
-	    customCorridor.value = { from: '', to: '' }
-	  },
-	)
+  watch(
+    () => showCorridorSelector.value,
+    (open) => {
+      if (!open) return
+      if (selectedCorridor.value) {
+        customCorridor.value = { ...selectedCorridor.value }
+        return
+      }
+      customCorridor.value = { from: '', to: '' }
+    },
+  )
 
 type TimeframePeriod = {
   label: string
@@ -5827,9 +5827,9 @@ const inlineToOptions = computed(() => countryOptions.value)
 const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
 
 const selectedPair = computed(() => {
-	  if (!selectedCorridor.value) return null
-	  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
-	})
+    if (!selectedCorridor.value) return null
+    return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
+  })
 
 const selectedHistoryMeta = computed(() => {
   const pair = selectedPair.value
@@ -6048,13 +6048,13 @@ watch(
   { immediate: true },
 )
 
-	function selectCorridor(from: string, to: string) {
-	  const nextFrom = (from || '').trim().toUpperCase()
-	  const nextTo = (to || '').trim().toUpperCase()
-	  if (!nextFrom || !nextTo) return
-	  selectedCorridor.value = { from: nextFrom, to: nextTo }
-	  showCorridorSelector.value = false
-	}
+  function selectCorridor(from: string, to: string) {
+    const nextFrom = (from || '').trim().toUpperCase()
+    const nextTo = (to || '').trim().toUpperCase()
+    if (!nextFrom || !nextTo) return
+    selectedCorridor.value = { from: nextFrom, to: nextTo }
+    showCorridorSelector.value = false
+  }
 
 function getTimeframeStartLabel() {
   if (selectedSnapshot.value.history.length > 0) {
@@ -6548,28 +6548,28 @@ const sessionMeta = (session: { device_type: string | null, location: string | n
   return `${device} • ${location}`
 }
 
-	const handleRevokeSession = async (sessionId: string) => {
-	  try {
-	    await revokeSession(sessionId)
-	    toast.success('Session signed out.')
-	  }
-	 catch (error) {
-	    useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
-	    toast.error('Unable to sign out session. Please try again.')
-	  }
-	}
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      await revokeSession(sessionId)
+      toast.success('Session signed out.')
+    }
+   catch (error) {
+      useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
+      toast.error('Unable to sign out session. Please try again.')
+    }
+  }
 
-	const handleRevokeAllSessions = async () => {
-	  const current = sessions.value.find(session => session.is_current)
-	  try {
-	    await revokeAllSessions(current?.session_id)
-	    toast.success('Signed out all other sessions.')
-	  }
-	 catch (error) {
-	    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
-	    toast.error('Unable to sign out other sessions. Please try again.')
-	  }
-	}
+  const handleRevokeAllSessions = async () => {
+    const current = sessions.value.find(session => session.is_current)
+    try {
+      await revokeAllSessions(current?.session_id)
+      toast.success('Signed out all other sessions.')
+    }
+   catch (error) {
+      useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
+      toast.error('Unable to sign out other sessions. Please try again.')
+    }
+  }
 
 const fetchBillingHistory = async (force = false) => {
   if (!isPlus.value) return
@@ -6625,7 +6625,7 @@ watch(
   { immediate: true },
 )
 
-	type ExportDateRange = '7d' | '30d'
+  type ExportDateRange = '7d' | '30d'
 
 const getDefaultDateFrom = () => {
   const date = new Date()
@@ -6662,12 +6662,12 @@ const exportCorridorIds = computed<string[]>(() => {
 
 const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
 
-	const resolveAllAvailableGoldHistoryRange = (windowDays: number): { dateFrom: string, dateTo: string } | null => {
-	  // Only meaningful when exporting corridor history (Gold indices).
-	  const byId = new Map<string, CorridorOption>()
-	  for (const c of trackedCorridorsData.value || []) {
-	    if (c.corridorId) byId.set(c.corridorId, c)
-	  }
+  const resolveAllAvailableGoldHistoryRange = (windowDays: number): { dateFrom: string, dateTo: string } | null => {
+    // Only meaningful when exporting corridor history (Gold indices).
+    const byId = new Map<string, CorridorOption>()
+    for (const c of trackedCorridorsData.value || []) {
+      if (c.corridorId) byId.set(c.corridorId, c)
+    }
 
   let minDate: string | null = null
   let maxDate: string | null = null
@@ -6682,18 +6682,18 @@ const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () 
     }
   }
 
-	  if (!minDate || !maxDate) return null
+    if (!minDate || !maxDate) return null
 
-	  // Use the maximum available window (up to hard cap) so exports remain bounded and
-	  // still work when Gold only has <30 days in a new environment.
-	  const end = new Date(`${maxDate}T00:00:00.000Z`)
-	  const start = new Date(end)
-	  const clampedDays = Math.min(Math.max(Math.floor(windowDays || EXPORTS_MAX_WINDOW_DAYS_HARD_CAP), 1), EXPORTS_MAX_WINDOW_DAYS_HARD_CAP)
-	  start.setUTCDate(start.getUTCDate() - (clampedDays - 1))
-	  const candidateFrom = start.toISOString().split('T')[0]
-	  const dateFrom = candidateFrom < minDate ? minDate : candidateFrom
-	  return { dateFrom, dateTo: maxDate }
-	}
+    // Use the maximum available window (up to hard cap) so exports remain bounded and
+    // still work when Gold only has <30 days in a new environment.
+    const end = new Date(`${maxDate}T00:00:00.000Z`)
+    const start = new Date(end)
+    const clampedDays = Math.min(Math.max(Math.floor(windowDays || EXPORTS_MAX_WINDOW_DAYS_HARD_CAP), 1), EXPORTS_MAX_WINDOW_DAYS_HARD_CAP)
+    start.setUTCDate(start.getUTCDate() - (clampedDays - 1))
+    const candidateFrom = start.toISOString().split('T')[0]
+    const dateFrom = candidateFrom < minDate ? minDate : candidateFrom
+    return { dateFrom, dateTo: maxDate }
+  }
 
 const exportStatusMessage = ref<string | null>(null)
 const exportErrorMessage = ref<string | null>(null)
@@ -6758,37 +6758,37 @@ const pollExportStatus = async (jobId: string) => {
   }, 2000)
 }
 
-	function setExportDateRange(range: ExportDateRange) {
-	  const days = range === '7d' ? 7 : 30
+  function setExportDateRange(range: ExportDateRange) {
+    const days = range === '7d' ? 7 : 30
 
-	  // Prefer Gold availability bounds when exporting corridor history.
-	  if (exportSettings.value.includeCorridorHistory && exportCorridorIds.value.length > 0) {
-	    const resolved = resolveAllAvailableGoldHistoryRange(days)
-	    if (resolved) {
-	      exportSettings.value.dateFrom = resolved.dateFrom
-	      exportSettings.value.dateTo = resolved.dateTo
-	      exportSettings.value.dateRange = range
-	      return
-	    }
-	  }
+    // Prefer Gold availability bounds when exporting corridor history.
+    if (exportSettings.value.includeCorridorHistory && exportCorridorIds.value.length > 0) {
+      const resolved = resolveAllAvailableGoldHistoryRange(days)
+      if (resolved) {
+        exportSettings.value.dateFrom = resolved.dateFrom
+        exportSettings.value.dateTo = resolved.dateTo
+        exportSettings.value.dateRange = range
+        return
+      }
+    }
 
-	  const today = new Date()
-	  exportSettings.value.dateTo = today.toISOString().split('T')[0]
+    const today = new Date()
+    exportSettings.value.dateTo = today.toISOString().split('T')[0]
 
-	  const fromDate = new Date()
-	  // Inclusive window: subtract (days-1).
-	  fromDate.setDate(fromDate.getDate() - (days - 1))
-	  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
-	  exportSettings.value.dateRange = range
-	}
+    const fromDate = new Date()
+    // Inclusive window: subtract (days-1).
+    fromDate.setDate(fromDate.getDate() - (days - 1))
+    exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
+    exportSettings.value.dateRange = range
+  }
 
 // Initialize date range when modal opens
-	watch(() => showExportModal.value, (isOpen) => {
-	  if (isOpen) {
-	    const range = exportSettings.value.dateRange || '30d'
-	    setExportDateRange(range)
-	  }
-	})
+  watch(() => showExportModal.value, (isOpen) => {
+    if (isOpen) {
+      const range = exportSettings.value.dateRange || '30d'
+      setExportDateRange(range)
+    }
+  })
 
 watch(
   () => exportSettings.value.dataType,
@@ -6803,14 +6803,14 @@ watch(
   },
 )
 
-	watch(
-	  () => exportSettings.value.includeCorridorHistory,
-	  (enabled) => {
-	    if (enabled) {
-	      setExportDateRange(exportSettings.value.dateRange || '30d')
-	    }
-	  },
-	)
+  watch(
+    () => exportSettings.value.includeCorridorHistory,
+    (enabled) => {
+      if (enabled) {
+        setExportDateRange(exportSettings.value.dateRange || '30d')
+      }
+    },
+  )
 
 watch(
   () => exportCorridorIds.value.length,
@@ -6877,10 +6877,10 @@ const deleteAccountConfirmed = ref(false)
 const deleteAccountError = ref<string | null>(null)
 const deleteAccountWarning = ref<string | null>(null)
 
-	const showDeleteWatchlistModal = ref(false)
-	const watchlistItemToDelete = ref<WatchlistItem | null>(null)
-	const showDeleteAlertModal = ref(false)
-	const alertToDelete = ref<Alert | null>(null)
+  const showDeleteWatchlistModal = ref(false)
+  const watchlistItemToDelete = ref<WatchlistItem | null>(null)
+  const showDeleteAlertModal = ref(false)
+  const alertToDelete = ref<Alert | null>(null)
 
 const deleteAccountReady = computed(() => {
   return deleteAccountConfirmed.value && deleteAccountConfirmText.value.trim().toUpperCase() === 'DELETE'
@@ -6977,33 +6977,33 @@ const closeDeleteWatchlistModal = () => {
   watchlistItemToDelete.value = null
 }
 
-	const confirmDeleteWatchlistItem = async () => {
-	  if (!watchlistItemToDelete.value) return
-	  const ok = await watchlistRemove(watchlistItemToDelete.value.id)
-	  if (ok) {
-	    toast.success('Removed from watchlist.')
-	    closeDeleteWatchlistModal()
-	  }
-	}
+  const confirmDeleteWatchlistItem = async () => {
+    if (!watchlistItemToDelete.value) return
+    const ok = await watchlistRemove(watchlistItemToDelete.value.id)
+    if (ok) {
+      toast.success('Removed from watchlist.')
+      closeDeleteWatchlistModal()
+    }
+  }
 
-	const openDeleteAlertModal = (alert: Alert) => {
-	  alertToDelete.value = alert
-	  showDeleteAlertModal.value = true
-	}
+  const openDeleteAlertModal = (alert: Alert) => {
+    alertToDelete.value = alert
+    showDeleteAlertModal.value = true
+  }
 
-	const closeDeleteAlertModal = () => {
-	  showDeleteAlertModal.value = false
-	  alertToDelete.value = null
-	}
+  const closeDeleteAlertModal = () => {
+    showDeleteAlertModal.value = false
+    alertToDelete.value = null
+  }
 
-	const confirmDeleteAlert = async () => {
-	  if (!alertToDelete.value) return
-	  const ok = await alertsRemove(alertToDelete.value.id)
-	  if (ok) {
-	    toast.success('Alert deleted.')
-	    closeDeleteAlertModal()
-	  }
-	}
+  const confirmDeleteAlert = async () => {
+    if (!alertToDelete.value) return
+    const ok = await alertsRemove(alertToDelete.value.id)
+    if (ok) {
+      toast.success('Alert deleted.')
+      closeDeleteAlertModal()
+    }
+  }
 
 // Graph data
 const graphData = computed(() => {

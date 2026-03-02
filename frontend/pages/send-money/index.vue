@@ -28,8 +28,18 @@
               <div class="space-y-3">
                 <div class="flex items-start gap-3">
                   <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
-                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    <svg
+class="w-3 h-3 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                      <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2.5"
+d="M5 13l4 4L19 7"
+/>
                     </svg>
                   </div>
                   <p class="text-body-sm text-neutral-700 leading-relaxed">
@@ -38,8 +48,18 @@
                 </div>
                 <div class="flex items-start gap-3">
                   <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
-                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    <svg
+class="w-3 h-3 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                      <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2.5"
+d="M5 13l4 4L19 7"
+/>
                     </svg>
                   </div>
                   <p class="text-body-sm text-neutral-700 leading-relaxed">
@@ -48,12 +68,34 @@
                 </div>
                 <div class="flex items-start gap-3">
                   <div class="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center">
-                    <svg class="w-3 h-3 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    <svg
+class="w-3 h-3 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                      <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2.5"
+d="M5 13l4 4L19 7"
+/>
                     </svg>
                   </div>
                   <p class="text-body-sm text-neutral-700 leading-relaxed">
-                    <span class="font-semibold text-neutral-900">Provider coverage.</span> <NuxtLink to="/learn/providers" class="text-brand-600 hover:text-brand-700 font-medium">30+ licensed providers</NuxtLink> including <NuxtLink to="/learn/providers/wise" class="text-brand-600 hover:text-brand-700 font-medium">Wise</NuxtLink>, <NuxtLink to="/learn/providers/remitly" class="text-brand-600 hover:text-brand-700 font-medium">Remitly</NuxtLink>, <NuxtLink to="/learn/providers/western-union" class="text-brand-600 hover:text-brand-700 font-medium">Western Union</NuxtLink>, and more.
+                    <span class="font-semibold text-neutral-900">Provider coverage.</span> <NuxtLink
+to="/learn/providers"
+class="text-brand-600 hover:text-brand-700 font-medium"
+>30+ licensed providers</NuxtLink> including <NuxtLink
+to="/learn/providers/wise"
+class="text-brand-600 hover:text-brand-700 font-medium"
+>Wise</NuxtLink>, <NuxtLink
+to="/learn/providers/remitly"
+class="text-brand-600 hover:text-brand-700 font-medium"
+>Remitly</NuxtLink>, <NuxtLink
+to="/learn/providers/western-union"
+class="text-brand-600 hover:text-brand-700 font-medium"
+>Western Union</NuxtLink>, and more.
                   </p>
                 </div>
               </div>
@@ -64,8 +106,18 @@
                   class="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-body px-6 py-3 motion-safe:transition-colors"
                 >
                   Explore guides
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                    <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
                   </svg>
                 </NuxtLink>
               </div>
@@ -181,8 +233,18 @@
               >
                 <span v-if="isWaitingForQuotes">Checking rates…</span>
                 <span v-else>Compare providers</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
                 </svg>
               </button>
 
@@ -202,15 +264,24 @@
               </p>
 
               <div class="pt-3 border-t border-rs-border flex items-center justify-center gap-4 flex-wrap">
-                <NuxtLink to="/methodology" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                <NuxtLink
+to="/methodology"
+class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
+>
                   Methodology
                 </NuxtLink>
                 <span class="text-neutral-300">·</span>
-                <NuxtLink to="/faq" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                <NuxtLink
+to="/faq"
+class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
+>
                   FAQ
                 </NuxtLink>
                 <span class="text-neutral-300">·</span>
-                <NuxtLink to="/learn/providers" class="text-body-sm text-brand-600 hover:text-brand-700 font-medium">
+                <NuxtLink
+to="/learn/providers"
+class="text-body-sm text-brand-600 hover:text-brand-700 font-medium"
+>
                   All providers
                 </NuxtLink>
               </div>
@@ -221,26 +292,66 @@
           <div class="lg:col-span-2 rounded-2xl bg-brand-600 px-6 py-5 text-white flex flex-col sm:flex-row sm:items-center gap-4">
             <div class="flex-1 flex flex-wrap items-center gap-x-6 gap-y-2">
               <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
-                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+class="w-4 h-4 text-white/70 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+/>
                 </svg>
                 No pay-to-rank
               </span>
               <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
-                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+class="w-4 h-4 text-white/70 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 10V3L4 14h7v7l9-11h-7z"
+/>
                 </svg>
                 Live quotes
               </span>
               <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
-                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <svg
+class="w-4 h-4 text-white/70 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+/>
                 </svg>
                 Affiliate transparency
               </span>
               <span class="flex items-center gap-2 text-body-sm font-semibold text-white">
-                <svg class="w-4 h-4 text-white/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+class="w-4 h-4 text-white/70 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+/>
                 </svg>
                 Algorithmic rankings
               </span>
@@ -250,8 +361,18 @@
               class="flex-shrink-0 inline-flex items-center gap-1.5 text-body-sm font-semibold text-white/80 hover:text-white motion-safe:transition-colors group"
             >
               Read our methodology
-              <svg class="w-4 h-4 group-hover:translate-x-0.5 motion-safe:transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4 group-hover:translate-x-0.5 motion-safe:transition-transform"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>

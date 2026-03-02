@@ -1,11 +1,12 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-page px-page-x relative">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+:items="breadcrumbItems"
+:dark="true"
+/>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left: Provider Info -->
@@ -1290,8 +1291,7 @@
                   </svg>
                 </NuxtLink>
               </div>
-
-            </div>
+</div>
           </div>
         </div>
       </div>

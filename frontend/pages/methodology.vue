@@ -191,7 +191,10 @@
         </div>
 
         <p class="mt-10 text-body-sm text-neutral-500 text-center max-w-2xl mx-auto">
-          Exchange rates are benchmarked against mid-market rates at quote capture time. See our <NuxtLink to="/indices-methodology" class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30">indices methodology</NuxtLink> for how this reference rate feeds TEER, RCI, and RVI.
+          Exchange rates are benchmarked against mid-market rates at quote capture time. See our <NuxtLink
+to="/indices-methodology"
+class="font-semibold text-brand-600 hover:text-brand-700 underline decoration-brand-600/30"
+>indices methodology</NuxtLink> for how this reference rate feeds TEER, RCI, and RVI.
         </p>
 
         <p class="mt-8 text-body text-neutral-500 text-center max-w-2xl mx-auto italic">
@@ -511,8 +514,7 @@
             </div>
           </div>
         </div>
-
-      </div>
+</div>
     </section>
 
     <!-- Editorial & Independence -->
@@ -999,9 +1001,9 @@
             >indices methodology</NuxtLink>
             for methodology overview and citation requirements.
           </p>
-	        </div>
-	      </div>
-	    </section>
+          </div>
+        </div>
+      </section>
 
     <!-- Technical Appendix (Institutional) -->
     <section

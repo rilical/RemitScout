@@ -313,7 +313,8 @@ export const useAuth = () => {
     if (sessionData?.session) {
       mfaPending.value = false
       setSession(sessionData.session)
-    } else {
+    }
+ else {
       mfaPending.value = false
     }
 

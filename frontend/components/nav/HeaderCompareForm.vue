@@ -177,7 +177,11 @@ const handleSubmit = async () => {
             :aria-pressed="form.method === method.value"
             @click="form.method = method.value"
           >
-            <component :is="method.icon" class="h-4 w-4" aria-hidden="true" />
+            <component
+:is="method.icon"
+class="h-4 w-4"
+aria-hidden="true"
+/>
             <span class="hidden lg:inline">{{ method.label }}</span>
           </button>
         </div>

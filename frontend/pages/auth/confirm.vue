@@ -90,9 +90,9 @@
 import { setSeo } from '~/composables/useSeo'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
-	const { ensureHydrated, isConfigured } = useAuth()
-	const route = useRoute()
-	const { public: { siteUrl, supabaseSuppressConfigError } } = useRuntimeConfig()
+  const { ensureHydrated, isConfigured } = useAuth()
+  const route = useRoute()
+  const { public: { siteUrl, supabaseSuppressConfigError } } = useRuntimeConfig()
 
 setSeo({
   title: 'Confirming email... | Remit-Scout',

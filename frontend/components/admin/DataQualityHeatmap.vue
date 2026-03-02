@@ -29,7 +29,11 @@ const fmtRate = (v: number) => `${(v * 100).toFixed(1)}%`
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.module_id" class="border-b border-rs-border/50">
+        <tr
+v-for="row in rows"
+:key="row.module_id"
+class="border-b border-rs-border/50"
+>
           <td class="py-1.5 pr-3 font-medium text-rs-fg">{{ row.display_name }}</td>
           <td class="px-2 py-1.5 text-right tabular-nums text-rs-fg">{{ row.total_observations }}</td>
           <td class="px-2 py-1.5 text-right tabular-nums text-rs-fg">{{ row.failure_count }}</td>
@@ -46,6 +50,11 @@ const fmtRate = (v: number) => `${(v * 100).toFixed(1)}%`
         </tr>
       </tbody>
     </table>
-    <p v-if="!rows.length" class="py-4 text-center text-body-sm text-rs-muted">No data quality metrics available.</p>
+    <p
+v-if="!rows.length"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
+No data quality metrics available.
+</p>
   </div>
 </template>

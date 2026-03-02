@@ -70,7 +70,10 @@ function formatShortDate(dateStr: string): string {
       class="w-full max-w-full"
       preserveAspectRatio="xMidYMid meet"
     >
-      <g v-if="chartData" class="chart">
+      <g
+v-if="chartData"
+class="chart"
+>
         <g class="y-axis">
           <text
             v-for="(label, i) in chartData.yLabels"
@@ -117,11 +120,17 @@ function formatShortDate(dateStr: string): string {
     </svg>
     <div class="mt-3 flex flex-wrap items-center justify-center gap-4">
       <span class="flex items-center gap-2 text-body-sm text-rs-muted">
-        <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: COLORS.total }" />
+        <span
+class="h-2.5 w-2.5 rounded-full"
+:style="{ backgroundColor: COLORS.total }"
+/>
         Total bundles
       </span>
       <span class="flex items-center gap-2 text-body-sm text-rs-muted">
-        <span class="h-2.5 w-2.5 rounded-full" :style="{ backgroundColor: COLORS.applied }" />
+        <span
+class="h-2.5 w-2.5 rounded-full"
+:style="{ backgroundColor: COLORS.applied }"
+/>
         Applied repairs
       </span>
     </div>

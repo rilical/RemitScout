@@ -16,7 +16,10 @@
               class="h-4 w-4 rounded border-rs-border text-brand-600"
             >
             Auto-refresh
-            <span v-if="autoRefresh" class="tabular-nums font-semibold text-rs-fg">{{ countdown }}s</span>
+            <span
+v-if="autoRefresh"
+class="tabular-nums font-semibold text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -35,7 +38,10 @@
       <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">Failure Rate Trends</h2>
         <p class="mb-4 text-body-sm text-rs-muted">Daily failure bundle count and applied repairs over the last 7 days.</p>
-        <div v-if="trendsLoading" class="flex h-48 items-center justify-center text-body-sm text-rs-muted">
+        <div
+v-if="trendsLoading"
+class="flex h-48 items-center justify-center text-body-sm text-rs-muted"
+>
           Loading trends…
         </div>
         <div
@@ -44,7 +50,10 @@
         >
           {{ trendsError ? 'Trend data unavailable' : 'No trend data available.' }}
         </div>
-        <FailureTrendsChart v-else :points="trendsData.points" />
+        <FailureTrendsChart
+v-else
+:points="trendsData.points"
+/>
       </section>
 
       <section class="grid gap-6 xl:grid-cols-2">
@@ -92,17 +101,25 @@ const countdown = ref(60)
 let timer: ReturnType<typeof setInterval> | null = null
 
 watch(autoRefresh, (on) => {
-  if (timer) { clearInterval(timer); timer = null }
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
   if (on) {
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
-      if (countdown.value <= 0) { countdown.value = 60; void load() }
+      if (countdown.value <= 0) {
+        countdown.value = 60
+        void load()
+      }
     }, 1000)
   }
 })
 
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const load = async () => {
   if (loading.value) return
@@ -143,5 +160,7 @@ const loadTrends = async () => {
   }
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

@@ -1,8 +1,7 @@
 <template>
   <section class="py-16 sm:py-20 bg-neutral-900">
     <div class="container">
-
-      <!-- Header -->
+<!-- Header -->
       <div class="text-center mb-12">
         <NuxtImg
           src="/png/SVG/FULL_LOGO_PLUS.svg"
@@ -31,12 +30,18 @@
 
       <!-- Feature grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-
-        <!-- Pulse — flagship, full row -->
-        <div v-if="pulseEnabled" class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg">
+<!-- Pulse — flagship, full row -->
+        <div
+v-if="pulseEnabled"
+class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg"
+>
           <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
             <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Icon name="signal" :size="24" class="text-white" />
+              <Icon
+name="signal"
+:size="24"
+class="text-white"
+/>
             </div>
           </div>
           <div class="flex-1">
@@ -54,7 +59,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="bell-alert" :size="20" class="text-brand-400" />
+              <Icon
+name="bell-alert"
+:size="20"
+class="text-brand-400"
+/>
             </div>
             <div class="flex items-center gap-2 text-body-sm">
               <span class="text-white/30 line-through">1</span>
@@ -76,7 +85,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="bookmark" :size="20" class="text-brand-400" />
+              <Icon
+name="bookmark"
+:size="20"
+class="text-brand-400"
+/>
             </div>
             <div class="flex items-center gap-2 text-body-sm">
               <span class="text-white/30 line-through">3</span>
@@ -98,7 +111,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="chart-bar" :size="20" class="text-brand-400" />
+              <Icon
+name="chart-bar"
+:size="20"
+class="text-brand-400"
+/>
             </div>
             <div class="flex items-center gap-2 text-body-sm">
               <span class="text-white/30 line-through">30d</span>
@@ -120,7 +137,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="arrow-down-tray" :size="20" class="text-brand-400" />
+              <Icon
+name="arrow-down-tray"
+:size="20"
+class="text-brand-400"
+/>
             </div>
             <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
           </div>
@@ -139,7 +160,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="shield-check" :size="20" class="text-brand-400" />
+              <Icon
+name="shield-check"
+:size="20"
+class="text-brand-400"
+/>
             </div>
             <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
           </div>
@@ -158,7 +183,11 @@
         <div class="flex flex-col gap-3 bg-white/5 border border-dashed border-white/20 rounded-2xl p-6">
           <div class="flex items-center justify-between">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <Icon name="sparkles" :size="20" class="text-brand-400" />
+              <Icon
+name="sparkles"
+:size="20"
+class="text-brand-400"
+/>
             </div>
           </div>
           <div class="flex-1">
@@ -171,8 +200,7 @@
             Stay tuned
           </p>
         </div>
-
-      </div>
+</div>
 
       <!-- CTA block -->
       <div class="text-center pt-10 border-t border-white/10">
@@ -191,12 +219,15 @@
           />
         </NuxtLink>
         <p class="text-body-sm text-white/30 mx-auto flex items-center justify-center gap-2 whitespace-nowrap">
-          <Icon name="shield-check" :size="16" class="text-white/30 flex-shrink-0" />
+          <Icon
+name="shield-check"
+:size="16"
+class="text-white/30 flex-shrink-0"
+/>
           Rankings are identical for free and Plus users — no pay-to-rank, ever.
         </p>
       </div>
-
-    </div>
+</div>
   </section>
 </template>
 
@@ -218,7 +249,7 @@ const { request } = useApi()
 
 const { data: pricing } = await useAsyncData(
   'plus-teaser:pricing',
-  () => request<{ configured: boolean; plus: { month: { amount: number | null; currency: string | null } } }>('/billing/pricing', { retries: 0 }).catch(() => null),
+  () => request<{ configured: boolean, plus: { month: { amount: number | null, currency: string | null } } }>('/billing/pricing', { retries: 0 }).catch(() => null),
 )
 
 const monthlyPrice = computed(() => {

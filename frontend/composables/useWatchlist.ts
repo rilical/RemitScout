@@ -1,15 +1,15 @@
 import { createId } from '~/utils/id'
 import type { WatchTarget, WatchlistItem } from '~/types/tracking'
 
-export type WatchlistSaveErrorReason =
-  | 'unauthorized'
-  | 'account_deleted'
-  | 'limit_reached'
-  | 'service_unavailable'
-  | 'unknown'
+export type WatchlistSaveErrorReason
+  = | 'unauthorized'
+    | 'account_deleted'
+    | 'limit_reached'
+    | 'service_unavailable'
+    | 'unknown'
 
-export type SaveResult =
-  | {
+export type SaveResult
+  = | {
     status: 'saved' | 'already_saved'
     item: WatchlistItem
   }

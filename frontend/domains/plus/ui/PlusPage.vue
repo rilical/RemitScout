@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-    <!-- Hero -->
+<!-- Hero -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
         <div class="flex justify-center mb-6">
@@ -34,7 +33,10 @@
               :class="['font-semibold', isPlus ? 'text-brand-400' : 'text-neutral-400']"
             >{{ isPlus ? 'Plus member' : 'Free plan' }}</span>
             <span v-if="!isPlus">
-              · <button class="text-brand-400 hover:text-brand-300 font-semibold motion-safe:transition-colors" @click="handleUpgrade">Upgrade now</button>
+              · <button
+class="text-brand-400 hover:text-brand-300 font-semibold motion-safe:transition-colors"
+@click="handleUpgrade"
+>Upgrade now</button>
             </span>
           </div>
         </div>
@@ -79,8 +81,7 @@
         </div>
 
         <div :class="['grid grid-cols-1 gap-6 max-w-5xl mx-auto', enterpriseEnabled ? 'lg:grid-cols-3' : 'lg:grid-cols-2']">
-
-          <!-- Free Plan -->
+<!-- Free Plan -->
           <div class="rounded-2xl border-2 border-neutral-200 bg-surface p-8 flex flex-col">
             <div class="mb-6">
               <h3 class="text-h3 font-bold text-rs-fg mb-1">
@@ -168,7 +169,10 @@
               <div class="text-body-sm text-white/70">
                 {{ plusPriceSuffix }}
               </div>
-              <p v-if="billedAnnuallyMonthlyDisplay" class="mt-1 text-body-sm text-white/60">
+              <p
+v-if="billedAnnuallyMonthlyDisplay"
+class="mt-1 text-body-sm text-white/60"
+>
                 ${{ resolvedYear.amount }} billed annually
               </p>
               <p class="mt-2 text-body-sm text-white/60">
@@ -257,23 +261,43 @@
 
             <ul class="space-y-3 mb-8 flex-grow">
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon
+name="check"
+:size="20"
+class="text-brand-400 flex-shrink-0 mt-0.5"
+/>
                 <span class="text-body-sm text-neutral-300 font-medium">Everything in Plus</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon
+name="check"
+:size="20"
+class="text-brand-400 flex-shrink-0 mt-0.5"
+/>
                 <span class="text-body-sm text-neutral-300">Extended rate history</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon
+name="check"
+:size="20"
+class="text-brand-400 flex-shrink-0 mt-0.5"
+/>
                 <span class="text-body-sm text-neutral-300">Custom data exports</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon
+name="check"
+:size="20"
+class="text-brand-400 flex-shrink-0 mt-0.5"
+/>
                 <span class="text-body-sm text-neutral-300">Data integrations & API access</span>
               </li>
               <li class="flex items-start gap-2.5">
-                <Icon name="check" :size="20" class="text-brand-400 flex-shrink-0 mt-0.5" />
+                <Icon
+name="check"
+:size="20"
+class="text-brand-400 flex-shrink-0 mt-0.5"
+/>
                 <span class="text-body-sm text-neutral-300">Dedicated account manager</span>
               </li>
             </ul>
@@ -312,15 +336,18 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-          <!-- Pulse access — full-width flagship card -->
+<!-- Pulse access — full-width flagship card -->
           <div
             v-if="pulseEnabled"
             class="lg:col-span-3 flex flex-col lg:flex-row lg:items-center gap-6 bg-brand-600 rounded-2xl p-8 shadow-lg"
           >
             <div class="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-3 lg:flex-shrink-0">
               <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                <Icon name="signal" :size="24" class="text-white" />
+                <Icon
+name="signal"
+:size="24"
+class="text-white"
+/>
               </div>
             </div>
             <div class="flex-1">
@@ -337,7 +364,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="bell-alert" :size="20" class="text-brand-400" />
+                <Icon
+name="bell-alert"
+:size="20"
+class="text-brand-400"
+/>
               </div>
               <div class="flex items-center gap-2 text-body-sm">
                 <span class="text-white/30 line-through">1</span>
@@ -356,7 +387,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="bookmark" :size="20" class="text-brand-400" />
+                <Icon
+name="bookmark"
+:size="20"
+class="text-brand-400"
+/>
               </div>
               <div class="flex items-center gap-2 text-body-sm">
                 <span class="text-white/30 line-through">3</span>
@@ -375,7 +410,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="chart-bar" :size="20" class="text-brand-400" />
+                <Icon
+name="chart-bar"
+:size="20"
+class="text-brand-400"
+/>
               </div>
               <div class="flex items-center gap-2 text-body-sm">
                 <span class="text-white/30 line-through">30d</span>
@@ -394,7 +433,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="arrow-down-tray" :size="20" class="text-brand-400" />
+                <Icon
+name="arrow-down-tray"
+:size="20"
+class="text-brand-400"
+/>
               </div>
               <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
             </div>
@@ -410,7 +453,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="shield-check" :size="20" class="text-brand-400" />
+                <Icon
+name="shield-check"
+:size="20"
+class="text-brand-400"
+/>
               </div>
               <span class="text-[10px] font-bold uppercase tracking-wide bg-brand-600/50 text-white px-2 py-0.5 rounded-full border border-brand-600/60">Plus only</span>
             </div>
@@ -426,7 +473,11 @@
           <div class="flex flex-col gap-3 bg-white/5 border border-dashed border-white/20 rounded-2xl p-6">
             <div class="flex items-center justify-between">
               <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-                <Icon name="sparkles" :size="20" class="text-brand-400" />
+                <Icon
+name="sparkles"
+:size="20"
+class="text-brand-400"
+/>
               </div>
             </div>
             <div class="flex-1">
@@ -519,8 +570,7 @@
         </p>
       </div>
     </section>
-
-  </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -543,8 +593,8 @@ type BillingPricingResponse = {
   success: true
   configured: boolean
   plus: {
-    month: { amount: number | null; currency: string | null; priceId: string | null }
-    year: { amount: number | null; currency: string | null; priceId: string | null }
+    month: { amount: number | null, currency: string | null, priceId: string | null }
+    year: { amount: number | null, currency: string | null, priceId: string | null }
   }
 }
 

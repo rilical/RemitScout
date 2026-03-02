@@ -1,8 +1,8 @@
 import { createId } from '~/utils/id'
 import type { Alert, AlertHistoryEvent, AlertRule, WatchTarget } from '~/types/tracking'
 
-export type CreateAlertResult =
-  | {
+export type CreateAlertResult
+  = | {
     status: 'created' | 'already_exists'
     alert: Alert
     watchlistItemId: string

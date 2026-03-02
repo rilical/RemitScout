@@ -269,7 +269,10 @@
             :level="stressLevel"
             :score="stressScore"
           />
-          <span v-else class="text-body-lg font-bold text-white">Normal</span>
+          <span
+v-else
+class="text-body-lg font-bold text-white"
+>Normal</span>
         </div>
       </div>
       <div class="px-6 py-4">

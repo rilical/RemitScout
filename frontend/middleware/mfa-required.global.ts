@@ -20,12 +20,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (MFA_EXEMPT_PATHS.some(p => to.path.startsWith(p))) return
 
   let me: {
-    user?: { is_admin?: boolean; mfa_verified?: boolean }
-    plan_effective?: { plan_code?: string; is_active?: boolean }
+    user?: { is_admin?: boolean, mfa_verified?: boolean }
+    plan_effective?: { plan_code?: string, is_active?: boolean }
   } | null = null
   try {
     me = await request('/me', { retries: 0 })
-  } catch {
+  }
+ catch {
     if (import.meta.client && !isAuthenticated.value) return
     return
   }
@@ -33,9 +34,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!me?.user) return
 
   const isAdmin = Boolean(me.user.is_admin)
-  const isEnterprise =
-    me.plan_effective?.plan_code === 'enterprise'
-    && (me.plan_effective?.is_active ?? true)
+  const isEnterprise
+    = me.plan_effective?.plan_code === 'enterprise'
+      && (me.plan_effective?.is_active ?? true)
 
   const requiresMfa = isAdmin || isEnterprise
   if (!requiresMfa) return

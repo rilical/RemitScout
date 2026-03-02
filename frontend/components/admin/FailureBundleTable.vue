@@ -30,13 +30,20 @@ const outcomeColor = (outcome: string | null) => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="b in bundles" :key="b.bundle_id" class="border-b border-rs-border/50">
+        <tr
+v-for="b in bundles"
+:key="b.bundle_id"
+class="border-b border-rs-border/50"
+>
           <td class="py-1.5 pr-3 font-medium text-rs-fg">{{ b.module_id }}</td>
           <td class="py-1.5 pr-3 text-rs-muted">{{ b.affected_corridors?.join(', ') || '—' }}</td>
           <td class="py-1.5 pr-3 text-rs-muted">{{ b.category }}</td>
           <td class="py-1.5 pr-3 text-right tabular-nums text-rs-fg">{{ b.consecutive_failures }}</td>
           <td class="py-1.5 pr-3">
-            <span class="inline-flex rounded-full px-2 py-0.5 font-medium" :class="outcomeColor(b.repair_outcome)">
+            <span
+class="inline-flex rounded-full px-2 py-0.5 font-medium"
+:class="outcomeColor(b.repair_outcome)"
+>
               {{ b.repair_outcome?.replace(/_/g, ' ') ?? '—' }}
             </span>
           </td>
@@ -44,6 +51,11 @@ const outcomeColor = (outcome: string | null) => {
         </tr>
       </tbody>
     </table>
-    <p v-if="!bundles.length" class="py-4 text-center text-body-sm text-rs-muted">No failure bundles.</p>
+    <p
+v-if="!bundles.length"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
+No failure bundles.
+</p>
   </div>
 </template>

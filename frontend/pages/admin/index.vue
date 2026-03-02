@@ -40,12 +40,32 @@
       >
         <div class="text-body-sm text-rs-muted">Active users (30d)</div>
         <template v-if="loading && kpis.activeUsers === null">
-          <SkeletonBlock width="60%" height="28" rounded="md" class="mt-1" />
-          <SkeletonBlock width="50%" height="14" rounded="md" class="mt-2" />
+          <SkeletonBlock
+width="60%"
+height="28"
+rounded="md"
+class="mt-1"
+/>
+          <SkeletonBlock
+width="50%"
+height="14"
+rounded="md"
+class="mt-2"
+/>
         </template>
         <template v-else-if="failures.includes('plans')">
           <div class="mt-1 flex items-center gap-2 text-danger-600">
-            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <svg
+class="h-5 w-5 shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
             <span class="text-body-sm font-semibold">Error</span>
           </div>
           <button
@@ -76,12 +96,32 @@
           />
         </div>
         <template v-if="loading && kpis.quoteRefreshPending === null">
-          <SkeletonBlock width="80%" height="28" rounded="md" class="mt-1" />
-          <SkeletonBlock width="50%" height="14" rounded="md" class="mt-2" />
+          <SkeletonBlock
+width="80%"
+height="28"
+rounded="md"
+class="mt-1"
+/>
+          <SkeletonBlock
+width="50%"
+height="14"
+rounded="md"
+class="mt-2"
+/>
         </template>
         <template v-else-if="failures.includes('observer')">
           <div class="mt-1 flex items-center gap-2 text-danger-600">
-            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <svg
+class="h-5 w-5 shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
             <span class="text-body-sm font-semibold">Error</span>
           </div>
           <button
@@ -106,12 +146,32 @@
       >
         <div class="text-body-sm text-rs-muted">Last Gold export</div>
         <template v-if="loading && kpis.lastGoldExportAt === null">
-          <SkeletonBlock width="70%" height="22" rounded="md" class="mt-1" />
-          <SkeletonBlock width="50%" height="14" rounded="md" class="mt-2" />
+          <SkeletonBlock
+width="70%"
+height="22"
+rounded="md"
+class="mt-1"
+/>
+          <SkeletonBlock
+width="50%"
+height="14"
+rounded="md"
+class="mt-2"
+/>
         </template>
         <template v-else-if="failures.includes('gold_exports')">
           <div class="mt-1 flex items-center gap-2 text-danger-600">
-            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <svg
+class="h-5 w-5 shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
             <span class="text-body-sm font-semibold">Error</span>
           </div>
           <button
@@ -145,11 +205,26 @@
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-          ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          ><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
         </div>
         <template v-if="loading && lastUpdatedAt === null">
-          <SkeletonBlock width="70%" height="22" rounded="md" class="mt-1" />
-          <SkeletonBlock width="40%" height="14" rounded="md" class="mt-2" />
+          <SkeletonBlock
+width="70%"
+height="22"
+rounded="md"
+class="mt-1"
+/>
+          <SkeletonBlock
+width="40%"
+height="14"
+rounded="md"
+class="mt-2"
+/>
         </template>
         <template v-else>
           <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ formatTimestamp(lastUpdatedAt) }}</div>
@@ -229,8 +304,8 @@ type ObserverSummaryResponse = {
     latest_date?: string | null
   }
   queues?: {
-    quote_refresh?: Array<{ status: string; count: number }>
-    fx_rate_refresh?: Array<{ status: string; count: number }>
+    quote_refresh?: Array<{ status: string, count: number }>
+    fx_rate_refresh?: Array<{ status: string, count: number }>
   }
 }
 
@@ -376,7 +451,7 @@ const loadDashboard = async () => {
   if (observerResult.status === 'fulfilled') {
     const quoteQueue = observerResult.value.queues?.quote_refresh ?? []
     const fxQueue = observerResult.value.queues?.fx_rate_refresh ?? []
-    const countPending = (rows: Array<{ status: string; count: number }>) =>
+    const countPending = (rows: Array<{ status: string, count: number }>) =>
       rows.reduce((sum, row) => (
         ['pending', 'processing', 'queued'].includes(row.status) ? sum + Number(row.count || 0) : sum
       ), 0)

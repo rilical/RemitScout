@@ -60,18 +60,28 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in filtered" :key="c.corridor_id" class="border-b border-rs-border/50">
+              <tr
+v-for="c in filtered"
+:key="c.corridor_id"
+class="border-b border-rs-border/50"
+>
                 <td class="py-2 pr-3 font-medium text-rs-fg">{{ c.corridor_id }}</td>
                 <td class="py-2 pr-3 text-right tabular-nums text-rs-fg">{{ c.stress_score?.toFixed(2) ?? '—' }}</td>
                 <td class="py-2 pr-3">
-                  <CorridorStressBadge :level="c.stress_level" :score="c.stress_score" />
+                  <CorridorStressBadge
+:level="c.stress_level"
+:score="c.stress_score"
+/>
                 </td>
                 <td class="py-2 pr-3 text-rs-muted">{{ c.confidence ?? '—' }}</td>
                 <td class="py-2 text-rs-muted">{{ formatDateTime(c.date) }}</td>
               </tr>
             </tbody>
           </table>
-          <p v-if="!filtered.length" class="py-4 text-center text-body-sm text-rs-muted">
+          <p
+v-if="!filtered.length"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
             {{ corridors.length ? 'No matching corridors.' : 'No stress data available.' }}
           </p>
         </div>
@@ -92,11 +102,19 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            ><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 9l-7 7-7-7"
+/></svg>
           </span>
         </button>
         <p class="mt-1 text-body-sm text-rs-muted">Override stress behavior. Backend endpoints may not exist yet.</p>
-        <div v-if="manualInterventionOpen" class="mt-4 space-y-6">
+        <div
+v-if="manualInterventionOpen"
+class="mt-4 space-y-6"
+>
           <div class="rounded-lg border border-rs-border p-4">
             <div class="flex items-center gap-2">
               <h3 class="text-body-sm font-semibold text-rs-fg">Pause Adaptive Probing</h3>
@@ -115,7 +133,12 @@
               >
                 {{ pauseProbingLoading ? 'Updating…' : (probePaused ? 'Resume' : 'Pause') }}
               </button>
-              <p v-if="pauseProbingError" class="text-caption text-red-600">{{ pauseProbingError }}</p>
+              <p
+v-if="pauseProbingError"
+class="text-caption text-red-600"
+>
+{{ pauseProbingError }}
+</p>
             </div>
           </div>
 
@@ -133,7 +156,11 @@
                   class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
                 >
                   <option value="">Select corridor</option>
-                  <option v-for="c in corridors" :key="c.corridor_id" :value="c.corridor_id">
+                  <option
+v-for="c in corridors"
+:key="c.corridor_id"
+:value="c.corridor_id"
+>
                     {{ c.corridor_id }}
                   </option>
                 </select>
@@ -173,7 +200,12 @@
                 </button>
               </div>
             </div>
-            <p v-if="overrideError" class="mt-2 text-caption text-red-600">{{ overrideError }}</p>
+            <p
+v-if="overrideError"
+class="mt-2 text-caption text-red-600"
+>
+{{ overrideError }}
+</p>
           </div>
 
           <div class="rounded-lg border border-red-200 bg-red-50/50 p-4">
@@ -191,7 +223,12 @@
               >
                 {{ killSwitchLoading ? 'Activating…' : 'Activate Kill Switch' }}
               </button>
-              <p v-if="killSwitchError" class="mt-2 text-caption text-red-600">{{ killSwitchError }}</p>
+              <p
+v-if="killSwitchError"
+class="mt-2 text-caption text-red-600"
+>
+{{ killSwitchError }}
+</p>
             </div>
           </div>
         </div>
@@ -319,5 +356,7 @@ const activateKillSwitch = async () => {
   }
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

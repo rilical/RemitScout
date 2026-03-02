@@ -36,7 +36,10 @@
         class="text-center"
       >
         <div class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-white">
-          <Icon name="envelope" :size="24" />
+          <Icon
+name="envelope"
+:size="24"
+/>
         </div>
         <h2 class="text-h3 font-bold text-white mb-3">
           Stay Ahead of the Market
@@ -103,7 +106,10 @@
             v-if="errorMessage"
             class="mt-4 flex items-center justify-center gap-2 text-body-sm text-red-400"
           >
-            <Icon name="exclamation-triangle" :size="16" />
+            <Icon
+name="exclamation-triangle"
+:size="16"
+/>
             <span>{{ errorMessage }}</span>
           </div>
 

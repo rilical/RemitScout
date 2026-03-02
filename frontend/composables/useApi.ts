@@ -227,7 +227,7 @@ export const useApi = () => {
   const config = useRuntimeConfig()
   // Avoid calling `useAuth()` here to prevent composable recursion (useAuth uses this API client for some calls).
   const session = useState<{ access_token?: string } | null>('auth:session', () => null)
-  const adminSession = useState<{ accessToken?: string | null; expiresAt?: number | null }>('auth:admin-session', () => ({
+  const adminSession = useState<{ accessToken?: string | null, expiresAt?: number | null }>('auth:admin-session', () => ({
     accessToken: null,
     expiresAt: null,
   }))

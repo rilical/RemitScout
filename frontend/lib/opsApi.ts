@@ -99,15 +99,15 @@ export async function getCorrectionLedger(options?: {
 
 export async function pauseAdaptiveProbing(paused: boolean): Promise<void> {
   const { request } = useApi()
-  await request<void>('/ops/stress/pause-probing', { method: 'POST', body: { paused } })
+  await request<undefined>('/ops/stress/pause-probing', { method: 'POST', body: { paused } })
 }
 
 export async function applyStressOverride(corridorId: string, level: string, durationHours: number): Promise<void> {
   const { request } = useApi()
-  await request<void>('/ops/stress/override', { method: 'POST', body: { corridorId, level, durationHours } })
+  await request<undefined>('/ops/stress/override', { method: 'POST', body: { corridorId, level, durationHours } })
 }
 
 export async function activateStressKillSwitch(): Promise<void> {
   const { request } = useApi()
-  await request<void>('/ops/stress/kill-switch', { method: 'POST' })
+  await request<undefined>('/ops/stress/kill-switch', { method: 'POST' })
 }

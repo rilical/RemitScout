@@ -325,7 +325,7 @@ const sendMessage = ref('')
 const sendSuccess = ref(false)
 
 const draftCampaigns = computed(() =>
-  campaigns.value.filter((c) => c.status === 'draft'),
+  campaigns.value.filter(c => c.status === 'draft'),
 )
 
 const statusClass = (status: string) => {
@@ -342,7 +342,8 @@ const loadSubscriberCount = async () => {
   try {
     const res = await request<{ count: number }>('/admin/newsletter/subscribers/count')
     subscriberCount.value = res.count ?? 0
-  } catch {
+  }
+ catch {
     subscriberCount.value = 0
   }
 }
@@ -355,9 +356,11 @@ const loadCampaigns = async () => {
       loadSubscriberCount(),
     ])
     campaigns.value = campaignRes.campaigns ?? []
-  } catch {
+  }
+ catch {
     campaigns.value = []
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }
@@ -382,10 +385,12 @@ const saveDraft = async () => {
     composeForm.previewText = ''
     composeForm.bodyHtml = ''
     await loadCampaigns()
-  } catch (err) {
+  }
+ catch (err) {
     composeMessage.value = err instanceof Error ? err.message : 'Failed to save draft.'
     composeSuccess.value = false
-  } finally {
+  }
+ finally {
     saving.value = false
   }
 }
@@ -404,9 +409,11 @@ const loadPreview = async () => {
     })
     previewHtml.value = res.html ?? ''
     activeTab.value = 'preview'
-  } catch {
+  }
+ catch {
     previewHtml.value = ''
-  } finally {
+  }
+ finally {
     previewing.value = false
   }
 }
@@ -423,17 +430,19 @@ const executeSend = async () => {
   sendMessage.value = ''
   sendSuccess.value = false
   try {
-    const res = await request<{ sent: number; failed: number }>(
+    const res = await request<{ sent: number, failed: number }>(
       `/admin/newsletter/campaigns/${campaign.id}/send`,
       { method: 'POST' },
     )
     sendMessage.value = `Sent to ${res.sent} subscribers${res.failed ? `, ${res.failed} failed` : ''}.`
     sendSuccess.value = true
     await loadCampaigns()
-  } catch (err) {
+  }
+ catch (err) {
     sendMessage.value = err instanceof Error ? err.message : 'Failed to send campaign.'
     sendSuccess.value = false
-  } finally {
+  }
+ finally {
     sending.value = null
   }
 }

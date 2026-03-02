@@ -80,7 +80,7 @@ const strengthLevel = computed(() => rules.value.filter(r => r.met).length)
 
 const isValid = computed(() => rules.value.every(r => r.met))
 
-watch(isValid, (v) => emit('update:valid', v), { immediate: true })
+watch(isValid, v => emit('update:valid', v), { immediate: true })
 
 const strengthLabel = computed(() => {
   switch (strengthLevel.value) {

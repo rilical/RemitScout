@@ -1,5 +1,8 @@
 <template>
-  <div :class="CHART_STYLE.card" class="overflow-hidden">
+  <div
+:class="CHART_STYLE.card"
+class="overflow-hidden"
+>
     <!-- Header -->
     <div class="p-6 border-b border-neutral-700">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

@@ -23,10 +23,10 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'select', corridorId: string): void
-  (e: 'pin', corridorId: string): void
-  (e: 'unpin', corridorId: string): void
-  (e: 'selectTimeframe', corridorId: string, timeframe: PulseTimeframe): void
+  select: [corridorId: string]
+  pin: [corridorId: string]
+  unpin: [corridorId: string]
+  selectTimeframe: [corridorId: string, timeframe: PulseTimeframe]
 }>()
 
 function getDaysAvailableForRow(row: PulseScreenerRow): number {
@@ -53,7 +53,8 @@ const handlePinToggle = (event: Event, row: PulseScreenerRow) => {
   event.stopPropagation()
   if (pinnedSet.value.has(row.corridorId)) {
     emit('unpin', row.corridorId)
-  } else {
+  }
+ else {
     emit('pin', row.corridorId)
   }
 }
@@ -329,7 +330,10 @@ const handleSelect = (row: PulseScreenerRow) => {
                   :score="row.stressScore"
                   compact
                 />
-                <span v-else class="text-body-sm font-mono font-bold text-white">—</span>
+                <span
+v-else
+class="text-body-sm font-mono font-bold text-white"
+>—</span>
               </div>
             </div>
             <div>

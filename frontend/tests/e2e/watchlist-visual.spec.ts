@@ -63,10 +63,10 @@ test.describe('Watchlist button - Visual documentation', () => {
  else {
       console.log('🔐 User is LOGGED IN')
 
-	      // Check for user name in header
-	      const header = page.locator('header').first()
-	      const headerText = (await header.textContent().catch(() => '')) ?? ''
-	      console.log(`📋 Header content sample: ${headerText.substring(0, 100)}...`)
+        // Check for user name in header
+        const header = page.locator('header').first()
+        const headerText = (await header.textContent().catch(() => '')) ?? ''
+        console.log(`📋 Header content sample: ${headerText.substring(0, 100)}...`)
 
       // 2. Capture before clicking
       await page.screenshot({
@@ -91,11 +91,11 @@ test.describe('Watchlist button - Visual documentation', () => {
       })
       console.log('📸 Screenshot 3: Toast notification appeared')
 
-	      // Verify toast content
-	      await expect(toast.getByText(/watchlist/i)).toBeVisible()
-	      const toastText = (await toast.textContent().catch(() => '')) ?? ''
-	      console.log(`✅ Toast message: "${toastText.trim()}"`)
-	    }
+        // Verify toast content
+        await expect(toast.getByText(/watchlist/i)).toBeVisible()
+        const toastText = (await toast.textContent().catch(() => '')) ?? ''
+        console.log(`✅ Toast message: "${toastText.trim()}"`)
+      }
 
     console.log('✅ Test complete - check test-results/ folder for screenshots')
   })
