@@ -7,7 +7,7 @@ const ANIMATION_MAP: Record<string, string> = {
 }
 
 let observer: IntersectionObserver | null = null
-const elements = new Map<Element, { animation: string; delay: number; childrenOnly: boolean }>()
+const elements = new Map<Element, { animation: string, delay: number, childrenOnly: boolean }>()
 
 function getObserver(): IntersectionObserver {
   if (observer) return observer
@@ -28,7 +28,8 @@ function getObserver(): IntersectionObserver {
               child.classList.remove('reveal-hidden')
               child.classList.add(config.animation)
             }
-          } else {
+          }
+ else {
             el.classList.remove('reveal-hidden')
             el.classList.add(config.animation)
           }
@@ -38,7 +39,8 @@ function getObserver(): IntersectionObserver {
 
         if (config.delay > 0) {
           setTimeout(reveal, config.delay)
-        } else {
+        }
+ else {
           reveal()
         }
       }
@@ -67,7 +69,8 @@ export function observeReveal(
     for (const child of Array.from(el.children) as HTMLElement[]) {
       child.classList.add('reveal-hidden')
     }
-  } else {
+  }
+ else {
     el.classList.add('reveal-hidden')
   }
   elements.set(el, { animation: animClass, delay, childrenOnly })
@@ -88,7 +91,8 @@ export function observeReveal(
                 child.classList.remove('reveal-hidden')
                 child.classList.add(config.animation)
               }
-            } else {
+            }
+ else {
               target.classList.remove('reveal-hidden')
               target.classList.add(config.animation)
             }
@@ -98,7 +102,8 @@ export function observeReveal(
 
           if (config.delay > 0) {
             setTimeout(reveal, config.delay)
-          } else {
+          }
+ else {
             reveal()
           }
         }

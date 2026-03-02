@@ -1,8 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative overflow-hidden bg-surface py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs :items="breadcrumbItems" />
@@ -376,8 +374,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </span>
           </NuxtLink>
@@ -393,8 +401,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </span>
           </NuxtLink>
@@ -410,8 +428,18 @@
             </p>
             <span class="inline-flex items-center gap-1 text-body-sm font-semibold text-white group-hover:gap-2 motion-safe:transition-all">
               Read guide
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </span>
           </NuxtLink>

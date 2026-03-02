@@ -15,7 +15,9 @@ describe('admin layout', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    window.localStorage.clear()
+    if (typeof window.localStorage?.clear === 'function') {
+      window.localStorage.clear()
+    }
 
     ;(globalThis as any).useRoute = () => route
     ;(globalThis as any).useAuth = () => ({

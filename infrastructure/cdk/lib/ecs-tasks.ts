@@ -65,6 +65,8 @@ export type EcsTaskOptions = {
   exportJobQueueMode?: string
   exportsBucketName?: string
   exportsPrefix?: string
+  supabaseSecretArn?: string
+  supabaseSsmName?: string
   communicationsSecretArn?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
@@ -1787,6 +1789,12 @@ export const createEcsTasks = (
       ...sharedEnv,
       ...(planeBDbMigratorSecretArn
         ? { PLANE_B_DB_MIGRATOR_SECRET_ARN: planeBDbMigratorSecretArn }
+        : {}),
+      ...(options.supabaseSecretArn
+        ? { SUPABASE_SECRET_ARN: options.supabaseSecretArn }
+        : {}),
+      ...(options.supabaseSsmName
+        ? { SUPABASE_SSM_NAME: options.supabaseSsmName }
         : {}),
       ALLOW_DB_MIGRATOR_URL: '1',
       HEALTH_PORT: '8080',

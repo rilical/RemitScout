@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen">
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative bg-neutral-900 py-12 lg:py-16">
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs
@@ -197,8 +196,7 @@
           </section>
         </div>
       </div>
-
-    </div>
+</div>
 
     <WhyTrustUs />
 

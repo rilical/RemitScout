@@ -3,11 +3,11 @@
  */
 
 const PROVIDER_LOGO_ALIASES: Record<string, string> = {
-  'westernunion': 'western-union',
-  'xe': 'xe-money',
-  'alansari': 'al-ansari-exchange',
-  'bossmoney': 'boss-money',
-  'wellsfargo': 'wells-fargo',
+  westernunion: 'western-union',
+  xe: 'xe-money',
+  alansari: 'al-ansari-exchange',
+  bossmoney: 'boss-money',
+  wellsfargo: 'wells-fargo',
 }
 
 const PROVIDER_LOGO_CANDIDATES: Record<string, { logos: string[], providers: string[] }> = {

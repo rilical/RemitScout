@@ -15,7 +15,12 @@
         </template>
       </AdminPageShell>
 
-      <ErrorState v-if="error" mode="card" :message="error" :on-retry="loadClients" />
+      <ErrorState
+v-if="error"
+mode="card"
+:message="error"
+:on-retry="loadClients"
+/>
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -46,8 +51,14 @@
           <h2 class="text-body-lg font-semibold text-rs-fg">Create New Client</h2>
           <span class="text-neutral-400">{{ showCreateForm ? '−' : '+' }}</span>
         </button>
-        <div v-if="showCreateForm" class="p-6">
-          <form class="grid gap-4 md:grid-cols-2" @submit.prevent="createClient">
+        <div
+v-if="showCreateForm"
+class="p-6"
+>
+          <form
+class="grid gap-4 md:grid-cols-2"
+@submit.prevent="createClient"
+>
             <div>
               <label class="block text-body-sm font-medium text-neutral-700 mb-1">Name</label>
               <input
@@ -276,14 +287,25 @@
               </button>
             </div>
 
-            <div v-if="detailLoading" class="text-body-sm text-rs-muted">Loading details...</div>
-            <div v-else-if="clientDetail" class="grid gap-4 md:grid-cols-3">
+            <div
+v-if="detailLoading"
+class="text-body-sm text-rs-muted"
+>
+Loading details...
+</div>
+            <div
+v-else-if="clientDetail"
+class="grid gap-4 md:grid-cols-3"
+>
               <div>
                 <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Usage (Last 30 days)</h4>
                 <div class="text-body-sm text-neutral-600">
                   Total requests: <strong>{{ clientDetail.usage.total_requests_30d }}</strong>
                 </div>
-                <div v-if="clientDetail.usage.by_endpoint.length" class="mt-2 space-y-1">
+                <div
+v-if="clientDetail.usage.by_endpoint.length"
+class="mt-2 space-y-1"
+>
                   <div
                     v-for="ep in clientDetail.usage.by_endpoint"
                     :key="ep.endpoint"
@@ -293,11 +315,19 @@
                     <span>{{ ep.count }}</span>
                   </div>
                 </div>
-                <div v-else class="mt-1 text-xs text-neutral-400">No usage data</div>
+                <div
+v-else
+class="mt-1 text-xs text-neutral-400"
+>
+No usage data
+</div>
               </div>
               <div>
                 <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Export History</h4>
-                <div v-if="clientDetail.exports.length" class="space-y-1">
+                <div
+v-if="clientDetail.exports.length"
+class="space-y-1"
+>
                   <div
                     v-for="exp in clientDetail.exports"
                     :key="exp.id"
@@ -307,7 +337,12 @@
                     <span>{{ exp.row_count }} rows</span>
                   </div>
                 </div>
-                <div v-else class="text-xs text-neutral-400">No exports yet</div>
+                <div
+v-else
+class="text-xs text-neutral-400"
+>
+No exports yet
+</div>
               </div>
               <div>
                 <h4 class="mb-2 text-body-sm font-semibold text-neutral-700">Scopes</h4>
@@ -334,7 +369,10 @@
       >
         <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
           <h3 class="text-body-lg font-semibold text-rs-fg mb-4">Edit: {{ editingClient.name }}</h3>
-          <form class="grid gap-4" @submit.prevent="saveEdit">
+          <form
+class="grid gap-4"
+@submit.prevent="saveEdit"
+>
             <div>
               <label class="block text-body-sm font-medium text-neutral-700 mb-1">Name</label>
               <input
@@ -345,7 +383,10 @@
             </div>
             <div>
               <label class="block text-body-sm font-medium text-neutral-700 mb-1">Tier</label>
-              <select v-model="editForm.tier" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+              <select
+v-model="editForm.tier"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
                 <option value="trial">Trial</option>
                 <option value="standard">Standard</option>
                 <option value="premium">Premium</option>
@@ -363,26 +404,47 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-body-sm font-medium text-neutral-700 mb-1">RPM</label>
-                <input v-model.number="editForm.rate_limit_rpm" type="number" min="0" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+                <input
+v-model.number="editForm.rate_limit_rpm"
+type="number"
+min="0"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
               </div>
               <div>
                 <label class="block text-body-sm font-medium text-neutral-700 mb-1">Daily</label>
-                <input v-model.number="editForm.rate_limit_daily" type="number" min="0" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+                <input
+v-model.number="editForm.rate_limit_daily"
+type="number"
+min="0"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-body-sm font-medium text-neutral-700 mb-1">Contract Start</label>
-                <input v-model="editForm.contract_start" type="date" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+                <input
+v-model="editForm.contract_start"
+type="date"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
               </div>
               <div>
                 <label class="block text-body-sm font-medium text-neutral-700 mb-1">Contract End</label>
-                <input v-model="editForm.contract_end" type="date" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+                <input
+v-model="editForm.contract_end"
+type="date"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
               </div>
             </div>
             <div>
               <label class="block text-body-sm font-medium text-neutral-700 mb-1">Report Schedule</label>
-              <select v-model="editForm.report_schedule" class="w-full px-4 py-2 border border-neutral-300 rounded-lg">
+              <select
+v-model="editForm.report_schedule"
+class="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+>
                 <option value="none">None</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
@@ -484,9 +546,9 @@ type ClientDetail = {
   client: InstitutionalClient
   usage: {
     total_requests_30d: number
-    by_endpoint: { endpoint: string; count: number }[]
+    by_endpoint: { endpoint: string, count: number }[]
   }
-  exports: { id: string; export_date: string; export_kind: string; row_count: number; created_at: string }[]
+  exports: { id: string, export_date: string, export_kind: string, row_count: number, created_at: string }[]
   scopes: string[]
 }
 
@@ -518,7 +580,7 @@ const createForm = reactive({
 const expandedId = ref<string | null>(null)
 const detailLoading = ref(false)
 const clientDetail = ref<ClientDetail | null>(null)
-const expandedClient = computed(() => clients.value.find((client) => client.id === expandedId.value) ?? null)
+const expandedClient = computed(() => clients.value.find(client => client.id === expandedId.value) ?? null)
 
 const editingClient = ref<InstitutionalClient | null>(null)
 const editForm = reactive({
@@ -560,7 +622,7 @@ const clientColumns: DataTableColumn[] = [
 ]
 
 const clientRows = computed(() =>
-  clients.value.map((client) => ({
+  clients.value.map(client => ({
     id: client.id,
     name: client.name,
     client_prefix: client.client_prefix,
@@ -604,10 +666,12 @@ const loadClients = async () => {
         Object.assign(summaryData, data.summary)
       }
     }
-  } catch (err) {
+  }
+ catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load institutional clients'
     log.error('Failed to load clients', err)
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }
@@ -619,7 +683,7 @@ const createClient = async () => {
   newApiKey.value = ''
 
   try {
-    const data = await request<{ success?: boolean; client?: InstitutionalClient; api_key?: string }>(
+    const data = await request<{ success?: boolean, client?: InstitutionalClient, api_key?: string }>(
       '/admin/institutional/clients',
       {
         method: 'POST',
@@ -651,13 +715,16 @@ const createClient = async () => {
       createForm.contract_end = ''
       createForm.report_schedule = 'none'
       await loadClients()
-    } else {
+    }
+ else {
       createMessage.value = 'Failed to create client.'
     }
-  } catch (err) {
+  }
+ catch (err) {
     createMessage.value = 'Failed to create client.'
     createSuccess.value = false
-  } finally {
+  }
+ finally {
     creating.value = false
   }
 }
@@ -665,7 +732,9 @@ const createClient = async () => {
 const copyApiKey = async () => {
   await navigator.clipboard.writeText(newApiKey.value)
   copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+  setTimeout(() => {
+    copied.value = false
+  }, 2000)
 }
 
 const toggleDetail = async (id: string) => {
@@ -681,9 +750,11 @@ const toggleDetail = async (id: string) => {
   try {
     const data = await request<ClientDetail>(`/admin/institutional/clients/${id}`)
     clientDetail.value = data
-  } catch (err) {
+  }
+ catch (err) {
     log.error('Failed to load client detail', err)
-  } finally {
+  }
+ finally {
     detailLoading.value = false
   }
 }
@@ -723,9 +794,11 @@ const saveEdit = async () => {
     )
     editingClient.value = null
     await loadClients()
-  } catch (err) {
+  }
+ catch (err) {
     log.error('Failed to update client', err)
-  } finally {
+  }
+ finally {
     saving.value = false
   }
 }
@@ -743,7 +816,8 @@ const changeStatus = async (client: InstitutionalClient, newStatus: string) => {
       },
     )
     await loadClients()
-  } catch (err) {
+  }
+ catch (err) {
     log.error('Failed to change status', err)
   }
 }
@@ -752,7 +826,7 @@ const rotateKey = async (client: InstitutionalClient) => {
   if (!confirm(`Rotate API key for "${client.name}"? The current key will be immediately invalidated.`)) return
 
   try {
-    const data = await request<{ success?: boolean; api_key?: string }>(
+    const data = await request<{ success?: boolean, api_key?: string }>(
       `/admin/institutional/clients/${client.id}/rotate-key`,
       { method: 'POST' },
     )
@@ -760,7 +834,8 @@ const rotateKey = async (client: InstitutionalClient) => {
       rotatedApiKey.value = data.api_key
       rotatedCopied.value = false
     }
-  } catch (err) {
+  }
+ catch (err) {
     log.error('Failed to rotate key', err)
   }
 }
@@ -768,7 +843,9 @@ const rotateKey = async (client: InstitutionalClient) => {
 const copyRotatedKey = async () => {
   await navigator.clipboard.writeText(rotatedApiKey.value)
   rotatedCopied.value = true
-  setTimeout(() => { rotatedCopied.value = false }, 2000)
+  setTimeout(() => {
+    rotatedCopied.value = false
+  }, 2000)
 }
 
 onMounted(() => {

@@ -184,7 +184,8 @@ export function useChartImageExport() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } finally {
+    }
+ finally {
       exporting.value = false
     }
   }

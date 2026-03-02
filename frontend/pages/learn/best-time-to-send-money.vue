@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px]" />
       <div class="relative mx-auto max-w-page px-page-x">
@@ -49,8 +48,7 @@
     <section class="py-16 lg:py-20 bg-surface">
       <div class="mx-auto max-w-page px-page-x">
         <div class="prose prose-lg max-w-none">
-
-          <!-- Quick Takeaways -->
+<!-- Quick Takeaways -->
           <div class="mb-16 rounded-3xl border-2 border-brand-200 bg-surface p-8 lg:p-10 shadow-xl">
             <div class="flex items-center gap-3 mb-6">
               <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center">
@@ -745,8 +743,7 @@
               </div>
             </div>
           </div>
-
-        </div>
+</div>
       </div>
     </section>
 

@@ -3439,19 +3439,19 @@ const excludedProviders = computed(() => {
   const raw = (quotesData.value as { excludedProviders?: Array<{ provider?: string, reason?: string }> } | null)?.excludedProviders
   if (!Array.isArray(raw)) return []
   return raw
-    .map((entry) => ({
+    .map(entry => ({
       provider: String(entry?.provider || '').trim().toLowerCase(),
       reason: String(entry?.reason || '').trim().toLowerCase(),
     }))
-    .filter((entry) => entry.provider && entry.reason)
+    .filter(entry => entry.provider && entry.reason)
 })
 
 const hasNoQuotesExclusions = computed(() => (
-  excludedProviders.value.some((entry) => entry.reason === 'no_quotes')
+  excludedProviders.value.some(entry => entry.reason === 'no_quotes')
 ))
 
 const hasStaleVisibleQuotes = computed(() => (
-  apiRows.value.some((row) => row.isStale)
+  apiRows.value.some(row => row.isStale)
 ))
 
 const needsCoverageRefresh = computed(() => (

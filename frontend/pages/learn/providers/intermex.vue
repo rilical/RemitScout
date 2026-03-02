@@ -1,10 +1,12 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
       <div class="mx-auto max-w-page px-page-x relative">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+:items="breadcrumbItems"
+:dark="true"
+/>
 
         <div class="grid lg:grid-cols-2 gap-12 items-center">
           <!-- Left: Provider Info -->
@@ -690,19 +692,59 @@
                   </h2>
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 13l4 4L19 7"
+/></svg>
                       <span>US-based senders who need cash pickup in Mexico, Guatemala, Honduras, El Salvador, or the Dominican Republic.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 13l4 4L19 7"
+/></svg>
                       <span>Recipients without bank accounts who rely on physical agent locations to collect money.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 13l4 4L19 7"
+/></svg>
                       <span>Senders who value an established, publicly traded company with decades of track record.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                      <svg
+class="w-5 h-5 text-success-600 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 13l4 4L19 7"
+/></svg>
                       <span>Spanish-speaking senders who prefer bilingual phone support.</span>
                     </li>
                   </ul>
@@ -727,19 +769,59 @@
                   </h2>
                   <ul class="space-y-3 text-neutral-700">
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                      <svg
+class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M6 18L18 6M6 6l12 12"
+/></svg>
                       <span>Anyone sending to Asia, Africa, Europe, or outside Latin America — corridor coverage is narrow.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                      <svg
+class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M6 18L18 6M6 6l12 12"
+/></svg>
                       <span>Cost-optimizers who want the absolute tightest FX spreads — digital-first providers usually win on raw delivered value.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                      <svg
+class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M6 18L18 6M6 6l12 12"
+/></svg>
                       <span>Users who expect a modern, app-first experience with real-time chat support.</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <svg class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                      <svg
+class="w-5 h-5 text-warning-800 mt-0.5 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M6 18L18 6M6 6l12 12"
+/></svg>
                       <span>Senders who prefer bank-to-bank transfers — Intermex's strength is cash pickup, not digital delivery.</span>
                     </li>
                   </ul>

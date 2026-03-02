@@ -20,7 +20,8 @@ export const useSessionTimeout = () => {
     if (!supabase) return
     try {
       await supabase.auth.refreshSession()
-    } catch {
+    }
+ catch {
       // Refresh failed silently; session will expire naturally
     }
   }
@@ -45,11 +46,13 @@ export const useSessionTimeout = () => {
             if (Date.now() - lastActivity < 5 * 60_000) {
               void refreshSession()
               showWarning.value = false
-            } else {
+            }
+ else {
               showWarning.value = true
             }
           }
-        } catch {
+        }
+ catch {
           // Malformed JWT payload; skip this check cycle
         }
       }, CHECK_INTERVAL)

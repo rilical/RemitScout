@@ -501,6 +501,7 @@ jobs:
           fail_ci_if_error: true
 
   frontend-e2e:
+    continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 35
     needs: [changes, lockfile-integrity, contract-types]

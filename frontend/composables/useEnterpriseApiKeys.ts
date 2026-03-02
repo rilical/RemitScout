@@ -65,12 +65,14 @@ export function useEnterpriseApiKeys() {
     apiKeysLoading.value = true
     apiKeysError.value = null
     try {
-      const response = await request<{ success: boolean; keys: ApiKeyRecord[] }>('/me/api-keys')
+      const response = await request<{ success: boolean, keys: ApiKeyRecord[] }>('/me/api-keys')
       apiKeys.value = response.keys ?? []
       apiKeysLoaded.value = true
-    } catch (error) {
+    }
+ catch (error) {
       apiKeysError.value = toErrorMessage(error, 'Unable to load API keys.')
-    } finally {
+    }
+ finally {
       apiKeysLoading.value = false
     }
   }
@@ -83,7 +85,7 @@ export function useEnterpriseApiKeys() {
     apiKeyTokenLabel.value = null
     try {
       const scopes = apiKeyScopes.value.length > 0 ? [...apiKeyScopes.value] : ['indices:read', 'corridors:read']
-      const response = await request<{ success: boolean; api_key: ApiKeyRecord; token: string }>('/me/api-keys', {
+      const response = await request<{ success: boolean, api_key: ApiKeyRecord, token: string }>('/me/api-keys', {
         method: 'POST',
         body: {
           name: apiKeyName.value.trim() || undefined,
@@ -94,9 +96,11 @@ export function useEnterpriseApiKeys() {
       apiKeyToken.value = response.token
       apiKeyTokenLabel.value = response.api_key.key_prefix
       apiKeyName.value = ''
-    } catch (error) {
+    }
+ catch (error) {
       apiKeysError.value = toErrorMessage(error, 'Unable to create API key.')
-    } finally {
+    }
+ finally {
       apiKeysLoading.value = false
     }
   }
@@ -108,7 +112,7 @@ export function useEnterpriseApiKeys() {
     apiKeyToken.value = null
     apiKeyTokenLabel.value = null
     try {
-      const response = await request<{ success: boolean; api_key: ApiKeyRecord; token: string }>(`/me/api-keys/${key.key_id}/rotate`, {
+      const response = await request<{ success: boolean, api_key: ApiKeyRecord, token: string }>(`/me/api-keys/${key.key_id}/rotate`, {
         method: 'POST',
       })
       apiKeys.value = apiKeys.value.map(item => (
@@ -116,9 +120,11 @@ export function useEnterpriseApiKeys() {
       ))
       apiKeyToken.value = response.token
       apiKeyTokenLabel.value = response.api_key.key_prefix
-    } catch (error) {
+    }
+ catch (error) {
       apiKeysError.value = toErrorMessage(error, 'Unable to rotate API key.')
-    } finally {
+    }
+ finally {
       apiKeysLoading.value = false
     }
   }
@@ -132,9 +138,11 @@ export function useEnterpriseApiKeys() {
       apiKeys.value = apiKeys.value.map(item => (
         item.key_id === key.key_id ? { ...item, revoked_at: new Date().toISOString() } : item
       ))
-    } catch (error) {
+    }
+ catch (error) {
       apiKeysError.value = toErrorMessage(error, 'Unable to revoke API key.')
-    } finally {
+    }
+ finally {
       apiKeysLoading.value = false
     }
   }
@@ -144,10 +152,14 @@ export function useEnterpriseApiKeys() {
     try {
       await navigator.clipboard.writeText(apiKeyToken.value)
       apiKeyCopyStatus.value = 'Token copied.'
-    } catch {
+    }
+ catch {
       apiKeyCopyStatus.value = 'Copy failed.'
-    } finally {
-      setTimeout(() => { apiKeyCopyStatus.value = null }, 2000)
+    }
+ finally {
+      setTimeout(() => {
+        apiKeyCopyStatus.value = null
+      }, 2000)
     }
   }
 

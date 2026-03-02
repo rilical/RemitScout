@@ -54,13 +54,15 @@ export function useEnterpriseExports() {
     loading.value = true
     error.value = null
     try {
-      const response = await request<{ success: boolean; jobs: ExportJobRecord[] }>('/exports')
+      const response = await request<{ success: boolean, jobs: ExportJobRecord[] }>('/exports')
       jobs.value = response.jobs ?? []
       loaded.value = true
-    } catch (err) {
+    }
+ catch (err) {
       const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : ''
       error.value = /429|too many|rate.?limit/i.test(raw) ? 'Rate limited — wait a moment then press Refresh.' : (raw || 'Unable to load exports.')
-    } finally {
+    }
+ finally {
       loading.value = false
     }
   }
@@ -93,12 +95,14 @@ export function useEnterpriseExports() {
         }
       }
 
-      await request<{ success: boolean; job: { id: string; status: string; jobType: string; createdAt: string } }>('/exports', { method: 'POST', body })
+      await request<{ success: boolean, job: { id: string, status: string, jobType: string, createdAt: string } }>('/exports', { method: 'POST', body })
       await fetchJobs()
-    } catch (err) {
+    }
+ catch (err) {
       const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : ''
       error.value = raw || 'Unable to create export.'
-    } finally {
+    }
+ finally {
       creating.value = false
     }
   }
@@ -109,7 +113,8 @@ export function useEnterpriseExports() {
       if (import.meta.client) {
         window.open(result.url, '_blank', 'noopener')
       }
-    } catch (err) {
+    }
+ catch (err) {
       const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : ''
       error.value = raw || 'Unable to fetch export download URL.'
     }

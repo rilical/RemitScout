@@ -1,7 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { ref, computed } from 'vue'
 import { mount } from '@vue/test-utils'
 
 import DashboardSignedOut from '../../domains/dashboard/ui/DashboardSignedOut.vue'
+
+vi.mock('~/composables/useFeatureFlags', () => ({
+  useFeatureFlags: () => ({
+    pulseEnabled: computed(() => true),
+    pulseScreenerEnabled: computed(() => false),
+    enterpriseEnabled: computed(() => false),
+  }),
+}))
 
 describe('DashboardSignedOut', () => {
   it('renders the signed-out dashboard hero + CTAs', () => {
@@ -12,8 +21,18 @@ describe('DashboardSignedOut', () => {
             props: ['to'],
             template: '<a :href="to"><slot /></a>',
           },
+          NuxtImg: {
+            template: '<img />',
+          },
           HomeTrustMetricsStrip: {
             template: '<div data-test="trust-strip" />',
+          },
+          Icon: {
+            props: ['name', 'size'],
+            template: '<span />',
+          },
+          CenteredPage: {
+            template: '<div><slot /></div>',
           },
         },
       },

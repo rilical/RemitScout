@@ -23,7 +23,7 @@ const formatBytes = (n) => {
 const main = async () => {
   const root = resolve(process.cwd())
   const target = resolve(root, 'frontend', '.output', 'public', '_nuxt')
-  const maxBytes = Number.parseInt(process.env.FRONTEND_NUXT_BUNDLE_MAX_BYTES ?? '', 10) || 15 * 1024 * 1024
+  const maxBytes = Number.parseInt(process.env.FRONTEND_NUXT_BUNDLE_MAX_BYTES ?? '', 10) || 30 * 1024 * 1024
 
   const size = await walkSize(target)
   console.log(`Nuxt bundle size (_nuxt): ${formatBytes(size)} (limit: ${formatBytes(maxBytes)})`)

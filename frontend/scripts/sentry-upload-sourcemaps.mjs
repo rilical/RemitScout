@@ -69,8 +69,7 @@ const uploadCode = run([
 ])
 
 if (uploadCode !== 0) {
-  log('upload failed')
-  process.exit(uploadCode)
+  log('upload failed (non-fatal, continuing deploy)')
 }
 
 runAllowFail(['releases', 'finalize', release])

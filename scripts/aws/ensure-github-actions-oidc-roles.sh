@@ -153,6 +153,15 @@ inline_policy_json() {
       "Resource": "*"
     },
     {
+      "Sid": "RdsClusterAccess",
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBClusters",
+        "rds:StartDBCluster"
+      ],
+      "Resource": "arn:aws:rds:*:*:cluster:remit-scout-*"
+    },
+    {
       "Sid": "PassRoles",
       "Effect": "Allow",
       "Action": "iam:PassRole",

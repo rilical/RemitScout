@@ -180,7 +180,10 @@
               >
                 <div class="flex items-start gap-3">
                   <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/20">
-                    <component :is="getIconForEmoji('🧪')" class="w-5 h-5 text-white" />
+                    <component
+:is="getIconForEmoji('🧪')"
+class="w-5 h-5 text-white"
+/>
                   </div>
                   <div>
                     <h3 class="text-body font-semibold text-white mb-1">
@@ -245,9 +248,24 @@
                   Founder, Remit-Scout
                 </p>
                 <div class="flex items-center gap-2 justify-center lg:justify-start text-body-sm text-white/70 mb-2">
-                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  <svg
+class="w-4 h-4 flex-shrink-0"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                    <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 14l9-5-9-5-9 5 9 5z"
+/>
+                    <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+/>
                   </svg>
                   <span>Carnegie Mellon University</span>
                 </div>
@@ -258,7 +276,11 @@
                   class="inline-flex items-center gap-1.5 text-body-sm text-white/70 hover:text-white motion-safe:transition-colors"
                   aria-label="LinkedIn"
                 >
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+class="w-4 h-4"
+fill="currentColor"
+viewBox="0 0 24 24"
+>
                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                   </svg>
                   LinkedIn
@@ -314,7 +336,10 @@
               class="rounded-2xl bg-white/5 border border-white/10 p-6"
             >
               <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600/20 mb-4">
-                <component :is="standard.icon" class="w-5 h-5 text-brand-400" />
+                <component
+:is="standard.icon"
+class="w-5 h-5 text-brand-400"
+/>
               </div>
               <h3 class="text-body font-semibold text-white mb-2">
                 {{ standard.title }}
@@ -355,7 +380,10 @@
             >
               <div class="flex items-start gap-3">
                 <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                  <component :is="getIconForEmoji(item.emoji)" class="w-5 h-5 text-brand-600" />
+                  <component
+:is="getIconForEmoji(item.emoji)"
+class="w-5 h-5 text-brand-600"
+/>
                 </div>
                 <div>
                   <h3 class="text-body font-semibold text-neutral-900 group-hover:text-brand-600 motion-safe:transition-colors">
@@ -382,8 +410,18 @@
               class="inline-flex items-center gap-2 text-body font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Explore our guides
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -418,8 +456,18 @@
                 class="inline-flex items-center gap-2 text-body-sm font-semibold text-brand-400 hover:text-brand-300 motion-safe:transition-colors"
               >
                 Partnership details
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
                 </svg>
               </NuxtLink>
             </div>
@@ -436,8 +484,18 @@
                 class="inline-flex items-center gap-2 text-body-sm font-semibold text-brand-400 hover:text-brand-300 motion-safe:transition-colors"
               >
                 Get in touch
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
                 </svg>
               </NuxtLink>
             </div>

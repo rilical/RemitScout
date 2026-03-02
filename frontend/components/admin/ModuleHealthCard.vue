@@ -70,17 +70,29 @@ const statusBorder = (status: string) => {
         </div>
       </div>
       <div class="flex items-center gap-4 text-right text-caption text-rs-muted">
-        <span v-if="module.quarantine_reason" class="rounded bg-red-100 px-1.5 py-0.5 text-red-700">
+        <span
+v-if="module.quarantine_reason"
+class="rounded bg-red-100 px-1.5 py-0.5 text-red-700"
+>
           {{ module.quarantine_reason }}
         </span>
         <span>{{ formatPercent(module.parse_error_rate) }} err</span>
         <span class="flex items-center gap-1">
-          <span v-if="!expanded" class="text-rs-muted">Show details</span>
-          <span class="transition-transform" :class="{ 'rotate-180': expanded }">&#9662;</span>
+          <span
+v-if="!expanded"
+class="text-rs-muted"
+>Show details</span>
+          <span
+class="transition-transform"
+:class="{ 'rotate-180': expanded }"
+>&#9662;</span>
         </span>
       </div>
     </button>
-    <div v-if="expanded" class="mt-3 space-y-3 border-t border-rs-border pt-3">
+    <div
+v-if="expanded"
+class="mt-3 space-y-3 border-t border-rs-border pt-3"
+>
       <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-caption text-rs-muted md:grid-cols-4">
         <div>
           <p class="font-medium text-rs-fg">Last Success</p>
@@ -101,7 +113,10 @@ const statusBorder = (status: string) => {
       </div>
       <div class="rounded-lg border border-rs-border bg-rs-bg p-3">
         <p class="mb-2 text-body-sm font-medium text-rs-fg">Corridor detail</p>
-        <div v-if="detailLoading" class="text-caption text-rs-muted">
+        <div
+v-if="detailLoading"
+class="text-caption text-rs-muted"
+>
           Loading…
         </div>
         <div
@@ -110,7 +125,10 @@ const statusBorder = (status: string) => {
         >
           {{ detailError }}
         </div>
-        <div v-else-if="detail" class="overflow-auto">
+        <div
+v-else-if="detail"
+class="overflow-auto"
+>
           <table class="min-w-full text-body-sm">
             <thead class="text-body-sm uppercase text-neutral-400">
               <tr>

@@ -78,6 +78,13 @@ Resources:
                   - ecs:DescribeServices
                   - ecs:ListTasks
                 Resource: '*'
+              - Sid: RdsClusterAccess
+                Effect: Allow
+                Action:
+                  - rds:DescribeDBClusters
+                  - rds:StartDBCluster
+                Resource:
+                  - !Sub arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:remit-scout-staging*
               - Sid: PassRoles
                 Effect: Allow
                 Action: iam:PassRole

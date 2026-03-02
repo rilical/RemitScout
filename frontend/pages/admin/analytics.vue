@@ -56,7 +56,10 @@
               class="rounded-xl border border-rs-border bg-rs-bg p-3"
             >
               <div class="mb-2 text-body-sm font-semibold text-rs-fg">{{ trend.corridorId }}</div>
-              <PulseLineChart :series="trend.series" unit="number" />
+              <PulseLineChart
+:series="trend.series"
+unit="number"
+/>
             </div>
             <div
               v-if="corridorTrendCharts.length === 0"
@@ -565,14 +568,14 @@ const mapCorridorTrendCharts = (rows: any[]) => {
     .sort((a, b) => b.totalSearches - a.totalSearches)
     .slice(0, 4)
 
-  corridorTrendCharts.value = sorted.map((item) => ({
+  corridorTrendCharts.value = sorted.map(item => ({
     corridorId: item.corridorId,
     series: [
       {
         id: `${item.corridorId}-searches`,
         label: 'Searches',
         color: chartColors.corridorSearch,
-        points: item.values.map((row) => ({
+        points: item.values.map(row => ({
           t: new Date(row.time_bucket).getTime(),
           v: Number(row.search_count || 0),
         })),
@@ -581,7 +584,7 @@ const mapCorridorTrendCharts = (rows: any[]) => {
         id: `${item.corridorId}-clicks`,
         label: 'Clicks',
         color: chartColors.corridorClicks,
-        points: item.values.map((row) => ({
+        points: item.values.map(row => ({
           t: new Date(row.time_bucket).getTime(),
           v: Number(row.click_count || 0),
         })),
@@ -611,8 +614,8 @@ const mapProviderCtrBars = (rows: any[]) => {
     .sort((a, b) => b.ctr - a.ctr)
     .slice(0, 10)
 
-  const maxCtr = Math.max(1, ...averaged.map((row) => row.ctr))
-  providerCtrBars.value = averaged.map((row) => ({
+  const maxCtr = Math.max(1, ...averaged.map(row => row.ctr))
+  providerCtrBars.value = averaged.map(row => ({
     ...row,
     widthPct: Math.max(4, Math.min(100, (row.ctr / maxCtr) * 100)),
   }))
@@ -624,7 +627,7 @@ const mapEngagementSeries = (rows: any[]) => {
       id: 'active-users',
       label: 'Active users',
       color: chartColors.activeUsers,
-      points: rows.map((row) => ({
+      points: rows.map(row => ({
         t: new Date(row.time_bucket).getTime(),
         v: Number(row.active_users || 0),
       })),
@@ -633,12 +636,12 @@ const mapEngagementSeries = (rows: any[]) => {
       id: 'returning-users',
       label: 'Returning users',
       color: chartColors.returningUsers,
-      points: rows.map((row) => ({
+      points: rows.map(row => ({
         t: new Date(row.time_bucket).getTime(),
         v: Number(row.returning_users || 0),
       })),
     },
-  ].filter((series) => series.points.length > 0)
+  ].filter(series => series.points.length > 0)
 }
 
 const loadAnalytics = async () => {

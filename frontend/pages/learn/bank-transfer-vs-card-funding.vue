@@ -1,8 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs

@@ -26,7 +26,10 @@ describe('PulsePlusGate', () => {
 
     expect(wrapper.find('[data-test="default-slot"]').exists()).toBe(false)
     expect(wrapper.find('[data-test="preview-slot"]').exists()).toBe(true)
-    expect(wrapper.find('a[href="/contact?type=enterprise&topic=pulse"]').exists()).toBe(true)
+    // CSS attribute selectors with & are unreliable in jsdom; check href via attributes() instead
+    const ctaLink = wrapper.find('a')
+    expect(ctaLink.exists()).toBe(true)
+    expect(ctaLink.attributes('href')).toBe('/contact?type=enterprise&topic=pulse')
     expect(wrapper.text()).toContain('Contact sales')
     expect(wrapper.text()).not.toContain('Learn more about Plus')
   })

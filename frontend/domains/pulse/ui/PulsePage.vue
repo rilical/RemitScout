@@ -38,7 +38,17 @@
                 class="inline-flex items-center gap-1.5 text-body-sm font-medium text-white/40 hover:text-white/70 transition-colors"
               >
                 Our methodology
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/></svg>
               </NuxtLink>
             </div>
 
@@ -55,8 +65,8 @@
           <div class="mb-10">
             <div class="flex items-center gap-2 mb-3">
               <span class="relative flex h-2.5 w-2.5">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
               </span>
               <span class="text-body-sm font-semibold text-neutral-500 uppercase tracking-wider">Sample Data — US → Philippines</span>
             </div>
@@ -65,7 +75,10 @@
           </div>
 
           <!-- 4 KPI Tiles -->
-          <div ref="kpiSectionRef" class="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-8">
+          <div
+ref="kpiSectionRef"
+class="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-8"
+>
             <div
               v-for="(kpi, idx) in sampleKpis"
               :key="kpi.id"
@@ -73,28 +86,94 @@
               :style="{ transitionDelay: `${idx * 100}ms` }"
             >
               <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50">
-                <svg v-if="kpi.icon === 'trending'" class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                <svg v-else-if="kpi.icon === 'percent'" class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M9 7h6" /></svg>
-                <svg v-else-if="kpi.icon === 'trophy'" class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
-                <svg v-else class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <svg
+v-if="kpi.icon === 'trending'"
+class="h-5 w-5 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+/></svg>
+                <svg
+v-else-if="kpi.icon === 'percent'"
+class="h-5 w-5 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 7H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2M9 7h6"
+/></svg>
+                <svg
+v-else-if="kpi.icon === 'trophy'"
+class="h-5 w-5 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+/></svg>
+                <svg
+v-else
+class="h-5 w-5 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 10V3L4 14h7v7l9-11h-7z"
+/></svg>
               </div>
               <div class="mb-1 text-body-sm font-medium text-neutral-500">{{ kpi.label }}</div>
-              <div class="kpi-value mb-1 text-h4 font-bold text-neutral-900 tabular-nums" :data-target="kpi.value">{{ kpi.value }}</div>
+              <div
+class="kpi-value mb-1 text-h4 font-bold text-neutral-900 tabular-nums"
+:data-target="kpi.value"
+>
+{{ kpi.value }}
+</div>
               <div class="flex items-center gap-1.5">
                 <span
                   class="text-body-sm font-semibold"
                   :class="kpi.deltaClass"
                 >
-                  <svg v-if="kpi.deltaType === 'positive'" class="inline h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                  <svg
+v-if="kpi.deltaType === 'positive'"
+class="inline h-3 w-3"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M5 10l7-7m0 0l7 7m-7-7v18"
+/></svg>
                   {{ kpi.delta }}
                 </span>
-                <span v-if="kpi.deltaLabel" class="text-body-sm text-neutral-400">{{ kpi.deltaLabel }}</span>
+                <span
+v-if="kpi.deltaLabel"
+class="text-body-sm text-neutral-400"
+>{{ kpi.deltaLabel }}</span>
               </div>
             </div>
           </div>
 
           <!-- Full-width Sample Area Chart -->
-          <div ref="chartRef" class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
+          <div
+ref="chartRef"
+class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden"
+>
             <div class="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
               <div>
                 <h3 class="text-body-lg font-bold text-neutral-900">All-in Cost Index</h3>
@@ -102,17 +181,24 @@
               </div>
               <div class="hidden sm:flex items-center gap-4 text-body-sm">
                 <span class="flex items-center gap-1.5">
-                  <span class="h-2 w-2 rounded-full bg-brand-600"></span>
+                  <span class="h-2 w-2 rounded-full bg-brand-600" />
                   <span class="text-neutral-500">Best rate</span>
                 </span>
                 <span class="flex items-center gap-1.5">
-                  <span class="h-0.5 w-4 bg-neutral-300" style="border-bottom: 2px dashed #d4d4d4; height: 0;"></span>
+                  <span
+class="h-0.5 w-4 bg-neutral-300"
+style="border-bottom: 2px dashed #d4d4d4; height: 0;"
+/>
                   <span class="text-neutral-500">Mid-market</span>
                 </span>
               </div>
             </div>
             <div class="px-4 py-6 sm:px-6">
-              <svg viewBox="0 0 780 280" class="w-full" preserveAspectRatio="xMidYMid meet">
+              <svg
+viewBox="0 0 780 280"
+class="w-full"
+preserveAspectRatio="xMidYMid meet"
+>
                 <line
                   v-for="tick in previewRateYTicks"
                   :key="`grid-${tick.y}`"
@@ -147,12 +233,30 @@
                 >{{ tick.label }}</text>
 
                 <defs>
-                  <linearGradient id="sample-area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.12" />
-                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+                  <linearGradient
+id="sample-area-grad"
+x1="0%"
+y1="0%"
+x2="0%"
+y2="100%"
+>
+                    <stop
+offset="0%"
+stop-color="#2563EB"
+stop-opacity="0.12"
+/>
+                    <stop
+offset="100%"
+stop-color="#2563EB"
+stop-opacity="0"
+/>
                   </linearGradient>
                 </defs>
-                <path :d="previewRateBestAreaPath" fill="url(#sample-area-grad)" :class="{ 'chart-area-animate': chartVisible }" />
+                <path
+:d="previewRateBestAreaPath"
+fill="url(#sample-area-grad)"
+:class="{ 'chart-area-animate': chartVisible }"
+/>
                 <polyline
                   :points="previewRateMidPolyline"
                   fill="none"
@@ -257,7 +361,12 @@
               :key="slug"
               class="flex h-10 w-20 items-center justify-center rounded-lg border border-neutral-100 bg-white p-1.5 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all"
             >
-              <ProviderLogo :slug="slug" :alt="slug" size="small" fit />
+              <ProviderLogo
+:slug="slug"
+:alt="slug"
+size="small"
+fit
+/>
             </div>
           </div>
         </div>
@@ -269,8 +378,8 @@
           <div class="mb-10 text-center">
             <div class="inline-flex items-center gap-2 mb-4 rounded-full border border-neutral-700 bg-neutral-800/60 px-4 py-1.5">
               <span class="relative flex h-2 w-2">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75"></span>
-                <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500"></span>
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
+                <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
               </span>
               <span class="text-body-sm font-semibold text-neutral-300">Sample data — 🇺🇸 USD → 🇵🇭 PHP</span>
             </div>
@@ -287,7 +396,10 @@
             >
               <div class="px-5 pt-5 pb-2">
                 <div class="mb-2 flex items-center gap-2">
-                  <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: chart.accent }"></span>
+                  <span
+class="h-2 w-2 rounded-full"
+:style="{ backgroundColor: chart.accent }"
+/>
                   <span class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500">{{ chart.category }}</span>
                 </div>
                 <h3 class="mb-1 text-body-lg font-bold text-white">{{ chart.title }}</h3>
@@ -322,7 +434,17 @@
           <div class="grid grid-cols-2 gap-6 lg:grid-cols-4">
             <div class="flex items-start gap-3">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                <svg class="h-4.5 w-4.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg
+class="h-4.5 w-4.5 text-neutral-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
               </div>
               <div>
                 <div class="text-body-sm font-bold text-white">5-min refresh cadence</div>
@@ -331,7 +453,17 @@
             </div>
             <div class="flex items-start gap-3">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                <svg class="h-4.5 w-4.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                <svg
+class="h-4.5 w-4.5 text-neutral-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+/></svg>
               </div>
               <div>
                 <div class="text-body-sm font-bold text-white">SHA-256 audit trail</div>
@@ -340,7 +472,17 @@
             </div>
             <div class="flex items-start gap-3">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                <svg class="h-4.5 w-4.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                <svg
+class="h-4.5 w-4.5 text-neutral-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+/></svg>
               </div>
               <div>
                 <div class="text-body-sm font-bold text-white">Synthetic verification v2.5</div>
@@ -349,7 +491,17 @@
             </div>
             <div class="flex items-start gap-3">
               <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                <svg class="h-4.5 w-4.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <svg
+class="h-4.5 w-4.5 text-neutral-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+/></svg>
               </div>
               <div>
                 <div class="text-body-sm font-bold text-white">Open methodology</div>
@@ -363,7 +515,17 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-400 hover:text-brand-300 transition-colors"
             >
               Read our full methodology
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/></svg>
             </NuxtLink>
           </div>
         </div>
@@ -390,7 +552,7 @@
               </div>
               <div class="rounded-2xl border border-neutral-200 bg-surface shadow-sm overflow-hidden">
                 <div class="grid grid-cols-[auto,1fr,auto] gap-4 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 border-b border-neutral-200">
-                  <span></span>
+                  <span />
                   <span>Corridor / Best Provider</span>
                   <span class="text-right">Spread / Coverage</span>
                 </div>
@@ -459,42 +621,102 @@
           <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-12">
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 10V3L4 14h7v7l9-11h-7z"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">Smart Gauge</div>
               <p class="text-body-sm text-neutral-400">AI-powered timing signals that tell you the best time to send money.</p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">18 Market Charts</div>
               <p class="text-body-sm text-neutral-400">Pricing, competition, volatility, and coverage analytics with full history.</p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">Corridor Screener</div>
               <p class="text-body-sm text-neutral-400">Scan 49,000+ corridors with real-time spread and provider rankings.</p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">Smart Alerts</div>
               <p class="text-body-sm text-neutral-400">Get notified when rates hit your target or providers change pricing.</p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">CSV Exports</div>
               <p class="text-body-sm text-neutral-400">Download snapshot and historical data for analysis and reporting.</p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600/15">
-                <svg class="h-5 w-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg
+class="h-5 w-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+/></svg>
               </div>
               <div class="text-body font-bold text-white mb-1">49,000+ Corridors</div>
               <p class="text-body-sm text-neutral-400">Coverage spanning major and emerging remittance routes worldwide.</p>
@@ -1964,7 +2186,10 @@ function animateCountUp(el: HTMLElement, target: string, duration = 1200) {
   const suffix = target.match(/[%]$/)?.[0] || ''
   const numStr = target.replace(/[₱$%,]/g, '')
   const end = parseFloat(numStr)
-  if (isNaN(end)) { el.textContent = target; return }
+  if (isNaN(end)) {
+    el.textContent = target
+    return
+  }
   const decimals = numStr.includes('.') ? numStr.split('.')[1].length : 0
   const start = performance.now()
   const step = (now: number) => {
@@ -1999,10 +2224,12 @@ watch(kpiSectionRef, (el) => {
             const target = valEl.dataset.target
             if (target) animateCountUp(valEl, target)
           })
-          observedEl.children && Array.from(observedEl.children).forEach((child) => {
-            ;(child as HTMLElement).style.opacity = '1'
-            ;(child as HTMLElement).style.transform = 'translateY(0)'
-          })
+          if (observedEl.children) {
+            Array.from(observedEl.children).forEach((child) => {
+              ;(child as HTMLElement).style.opacity = '1'
+              ;(child as HTMLElement).style.transform = 'translateY(0)'
+            })
+          }
           kpiObserver?.unobserve(entry.target as Element)
         }
       }
@@ -2030,7 +2257,6 @@ watch(chartRef, (el) => {
   )
   chartObserver.observe(observedEl)
 })
-
 
 const watchlist = useWatchlist()
 const saveAlertModal = useSaveAlertModal()
@@ -2294,8 +2520,9 @@ const loadPinnedCorridors = async () => {
   if (!isPro.value) return
   try {
     const pinned = await getPulsePinnedCorridors()
-    pulsePinnedCorridorIds.value = pinned.map((p) => p.corridorId)
-  } catch {
+    pulsePinnedCorridorIds.value = pinned.map(p => p.corridorId)
+  }
+ catch {
     pulsePinnedCorridorIds.value = []
   }
 }
@@ -2304,7 +2531,8 @@ const handlePinCorridor = async (corridorId: string) => {
   try {
     await pinPulseCorridor(corridorId)
     pulsePinnedCorridorIds.value = [...pulsePinnedCorridorIds.value, corridorId]
-  } catch (error: any) {
+  }
+ catch (error: any) {
     actionError.value = error?.message || 'Failed to pin corridor'
   }
 }
@@ -2312,8 +2540,9 @@ const handlePinCorridor = async (corridorId: string) => {
 const handleUnpinCorridor = async (corridorId: string) => {
   try {
     await unpinPulseCorridor(corridorId)
-    pulsePinnedCorridorIds.value = pulsePinnedCorridorIds.value.filter((id) => id !== corridorId)
-  } catch (error: any) {
+    pulsePinnedCorridorIds.value = pulsePinnedCorridorIds.value.filter(id => id !== corridorId)
+  }
+ catch (error: any) {
     actionError.value = error?.message || 'Failed to unpin corridor'
   }
 }

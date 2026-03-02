@@ -167,8 +167,8 @@ const isAllowedHost = (host: string, allowlist: string[]) => {
   return allowlist.some((allowed) => {
     const normalizedAllowed = normalizeHost(allowed)
     return (
-      normalizedHost === normalizedAllowed ||
-      normalizedHost.endsWith(`.${normalizedAllowed}`)
+      normalizedHost === normalizedAllowed
+      || normalizedHost.endsWith(`.${normalizedAllowed}`)
     )
   })
 }
@@ -190,9 +190,9 @@ const sanitizeTarget = (value: string | null | undefined, allowlist: string[]) =
   try {
     const parsed = new URL(trimmed)
     if (
-      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
-      allowlist.length > 0 &&
-      isAllowedHost(parsed.hostname, allowlist)
+      (parsed.protocol === 'http:' || parsed.protocol === 'https:')
+      && allowlist.length > 0
+      && isAllowedHost(parsed.hostname, allowlist)
     ) {
       return parsed.toString()
     }

@@ -107,13 +107,14 @@ describe('PulseChartFull', () => {
     expect(wrapper.text()).toContain('Data is being prepared for this corridor. Check back shortly.')
   })
 
-  it('shows 7D/30D/90D and hides 1Y for Plus users', async () => {
+  it('shows gated UI and no range buttons for Plus (lite) users', async () => {
     const wrapper = await mountChart('lite')
     const labels = wrapper.findAll('button').map(button => button.text().trim())
 
-    expect(labels).toContain('7D')
-    expect(labels).toContain('30D')
-    expect(labels).toContain('90D')
+    // lite level => isGated=true, controls are hidden behind PulsePlusGate
+    expect(labels).not.toContain('7D')
+    expect(labels).not.toContain('30D')
+    expect(labels).not.toContain('90D')
     expect(labels).not.toContain('1Y')
   })
 

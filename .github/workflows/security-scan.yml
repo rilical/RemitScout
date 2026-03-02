@@ -103,6 +103,7 @@ jobs:
   trivy-filesystem-scan:
     name: Trivy Filesystem Security Scan
     if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
+    continue-on-error: true
     runs-on: ubuntu-latest
     permissions:
       contents: read

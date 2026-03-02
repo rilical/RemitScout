@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-    <!-- Hero -->
+<!-- Hero -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs
@@ -31,8 +30,18 @@
             class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body font-semibold text-white motion-safe:transition-colors hover:bg-brand-700"
           >
             Get in touch
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+              <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
             </svg>
           </NuxtLink>
         </div>
@@ -82,8 +91,18 @@
             class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-body font-semibold text-white motion-safe:transition-colors hover:bg-brand-700"
           >
             Become a partner
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+              <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
             </svg>
           </NuxtLink>
         </div>
@@ -112,8 +131,18 @@
           <!-- Affiliate -->
           <div class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 mb-4">
-              <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <svg
+class="w-6 h-6 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+/>
               </svg>
             </div>
             <h3 class="text-h4 font-bold text-neutral-900 mb-2">
@@ -127,8 +156,18 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Provider onboarding
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -136,8 +175,18 @@
           <!-- Sponsorship -->
           <div class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 mb-4">
-              <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+class="w-6 h-6 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+/>
               </svg>
             </div>
             <h3 class="text-h4 font-bold text-neutral-900 mb-2">
@@ -151,8 +200,18 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Sponsorship enquiry
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -160,8 +219,18 @@
           <!-- Data & Widgets -->
           <div class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 mb-4">
-              <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+class="w-6 h-6 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+/>
               </svg>
             </div>
             <h3 class="text-h4 font-bold text-neutral-900 mb-2">
@@ -175,8 +244,18 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Publisher & media inquiry
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -188,8 +267,18 @@
           >
             <div class="flex items-start justify-between mb-4">
               <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100">
-                <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+class="w-6 h-6 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+/>
                 </svg>
               </div>
               <span class="text-[10px] font-bold uppercase tracking-wide bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full">NDA required</span>
@@ -205,8 +294,18 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Request access
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -217,8 +316,18 @@
             class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm"
           >
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100 mb-4">
-              <svg class="w-6 h-6 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              <svg
+class="w-6 h-6 text-brand-600"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+/>
               </svg>
             </div>
             <h3 class="text-h4 font-bold text-neutral-900 mb-2">
@@ -232,8 +341,18 @@
               class="inline-flex items-center gap-1.5 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Get in touch
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
               </svg>
             </NuxtLink>
           </div>
@@ -262,8 +381,18 @@
         <div class="grid gap-4 md:grid-cols-3">
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+class="w-5 h-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 10V3L4 14h7v7l9-11h-7z"
+/>
               </svg>
             </div>
             <h3 class="text-body-lg font-bold text-white">
@@ -276,8 +405,18 @@
 
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+class="w-5 h-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+/>
               </svg>
             </div>
             <h3 class="text-body-lg font-bold text-white">
@@ -290,8 +429,23 @@
 
           <div class="flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
             <div class="w-10 h-10 rounded-full bg-brand-600/20 flex items-center justify-center">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <svg
+class="w-5 h-5 text-brand-400"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+/><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+/>
               </svg>
             </div>
             <h3 class="text-body-lg font-bold text-white">
@@ -346,8 +500,18 @@
                 class="inline-flex items-center gap-2 text-body-sm font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
               >
                 See full scoring methodology
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
                 </svg>
               </NuxtLink>
             </div>
@@ -459,8 +623,18 @@
             class="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-surface px-6 py-3 text-body-sm font-semibold text-neutral-900 hover:bg-neutral-50 motion-safe:transition-colors"
           >
             Read the full methodology
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+              <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6"
+/>
             </svg>
           </NuxtLink>
         </div>
@@ -565,8 +739,18 @@
             class="inline-flex items-center gap-2 px-8 py-4 bg-surface text-brand-600 font-bold text-body rounded-xl hover:bg-neutral-50 motion-safe:transition-colors"
           >
             Get in touch
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <svg
+class="w-4 h-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+              <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
             </svg>
           </NuxtLink>
           <NuxtLink

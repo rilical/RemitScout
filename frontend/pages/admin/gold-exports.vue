@@ -243,12 +243,28 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            ><path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 9l-7 7-7-7"
+/></svg>
           </button>
           <p class="mt-1 text-body-sm text-rs-muted">Historical corrections to published index values.</p>
-          <div v-if="correctionsOpen" class="mt-4 overflow-auto">
-            <div v-if="correctionsLoading" class="text-body-sm text-rs-muted">Loading corrections…</div>
-            <table v-else-if="corrections.length" class="min-w-full text-body-sm">
+          <div
+v-if="correctionsOpen"
+class="mt-4 overflow-auto"
+>
+            <div
+v-if="correctionsLoading"
+class="text-body-sm text-rs-muted"
+>
+Loading corrections…
+</div>
+            <table
+v-else-if="corrections.length"
+class="min-w-full text-body-sm"
+>
               <thead class="text-body-sm uppercase text-neutral-400">
                 <tr>
                   <th class="py-2 text-left">Corridor</th>
@@ -261,7 +277,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="c in corrections" :key="c.correction_id" class="border-t border-neutral-100">
+                <tr
+v-for="c in corrections"
+:key="c.correction_id"
+class="border-t border-neutral-100"
+>
                   <td class="py-2 text-neutral-700">{{ c.corridor_id }}</td>
                   <td class="py-2 text-neutral-700">{{ c.field_name }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ c.old_value != null ? formatAdminNumber(c.old_value, 6) : '—' }}</td>
@@ -272,7 +292,12 @@
                 </tr>
               </tbody>
             </table>
-            <p v-else class="text-body-sm text-rs-muted">No corrections recorded.</p>
+            <p
+v-else
+class="text-body-sm text-rs-muted"
+>
+No corrections recorded.
+</p>
           </div>
         </div>
 

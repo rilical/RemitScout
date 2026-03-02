@@ -203,8 +203,7 @@
               </button>
             </div>
           </div>
-
-        </div>
+</div>
       </div>
 
       <!-- Sign In Link -->

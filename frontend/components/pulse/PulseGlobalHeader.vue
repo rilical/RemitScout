@@ -46,7 +46,7 @@
                   type="text"
                   placeholder="Search corridors..."
                   class="mb-2 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-body-sm text-white placeholder-neutral-500 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                />
+                >
                 <div class="max-h-80 overflow-y-auto">
                   <template v-if="groupedCorridors.length > 0">
                     <div
@@ -73,7 +73,10 @@
                             class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
                             :class="dataAvailabilityClass(corridor)"
                           />
-                          <span class="relative inline-flex h-2 w-2 rounded-full" :class="dataAvailabilityClass(corridor)" />
+                          <span
+class="relative inline-flex h-2 w-2 rounded-full"
+:class="dataAvailabilityClass(corridor)"
+/>
                         </span>
                         <span class="text-h4">{{ corridor.fromFlag }}</span>
                         <Icon
@@ -269,7 +272,7 @@ const filteredCorridors = computed<CorridorOption[]>(() => {
 
 const groupedCorridors = computed(() => {
   const list = filteredCorridors.value
-  const groups = new Map<string, { countryKey: string; countryLabel: string; corridors: CorridorOption[] }>()
+  const groups = new Map<string, { countryKey: string, countryLabel: string, corridors: CorridorOption[] }>()
   for (const opt of list) {
     const parts = opt.corridorId ? opt.corridorId.split('-') : []
     const countryKey = (opt.sourceCountry || parts[0] || opt.fromCode || 'XX').toUpperCase()

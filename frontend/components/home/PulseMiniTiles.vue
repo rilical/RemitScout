@@ -1,5 +1,8 @@
 <template>
-  <section v-if="pulseEnabled" class="py-16 sm:py-20 bg-brand-600">
+  <section
+v-if="pulseEnabled"
+class="py-16 sm:py-20 bg-brand-600"
+>
     <div class="container">
       <!-- Header -->
       <div class="text-center mb-12">

@@ -43,7 +43,7 @@ const environmentBadge = computed(() => {
 })
 
 const commands = computed<AdminCommand[]>(() => [
-  ...adminLinks.map((link) => ({
+  ...adminLinks.map(link => ({
     id: `nav:${link.to}`,
     label: `Go to ${link.label}`,
     description: link.description,
@@ -239,8 +239,18 @@ onUnmounted(() => {
               aria-label="Open navigation menu"
               @click="mobileNavOpen = !mobileNavOpen"
             >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M4 6h16M4 12h16M4 18h16"
+/>
               </svg>
             </button>
 
@@ -249,7 +259,10 @@ onUnmounted(() => {
               <div class="text-body-sm text-rs-muted">Ctrl/Cmd + K for command palette</div>
             </div>
 
-            <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="environmentBadge.className">
+            <span
+class="rounded-full px-3 py-1 text-xs font-semibold"
+:class="environmentBadge.className"
+>
               {{ environmentBadge.label }}
             </span>
 
@@ -286,8 +299,18 @@ onUnmounted(() => {
                   aria-label="Close navigation menu"
                   @click="mobileNavOpen = false"
                 >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                    <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M6 18L18 6M6 6l12 12"
+/>
                   </svg>
                 </button>
               </div>
@@ -309,7 +332,12 @@ onUnmounted(() => {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="link.icon" />
+                    <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+:d="link.icon"
+/>
                   </svg>
                   {{ link.label }}
                 </NuxtLink>
@@ -323,14 +351,13 @@ onUnmounted(() => {
         </main>
       </div>
     </div>
+    <AdminCommandPalette
+      :open="commandPaletteOpen"
+      :commands="commands"
+      @close="commandPaletteOpen = false"
+      @execute="executeCommand"
+    />
   </div>
-
-  <AdminCommandPalette
-    :open="commandPaletteOpen"
-    :commands="commands"
-    @close="commandPaletteOpen = false"
-    @execute="executeCommand"
-  />
 </template>
 
 <style scoped>

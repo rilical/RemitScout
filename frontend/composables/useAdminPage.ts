@@ -1,6 +1,6 @@
 import { setSeo } from '~/composables/useSeo'
 
-export const useAdminPage = (options: { title: string; description: string }) => {
+export const useAdminPage = (options: { title: string, description: string }) => {
   const route = useRoute()
   const {
     public: { siteUrl },

@@ -43,12 +43,12 @@ type RevenueParams = AnalyticsDateRange & {
   limit?: number
 }
 
-type SuppressionReason =
-  | 'below_k_threshold'
-  | 'insufficient_datapoints'
-  | 'insufficient_provider_quotes'
-  | 'outlier'
-  | 'low_volume_grouped'
+type SuppressionReason
+  = | 'below_k_threshold'
+    | 'insufficient_datapoints'
+    | 'insufficient_provider_quotes'
+    | 'outlier'
+    | 'low_volume_grouped'
 
 type PrivacyEnvelope = {
   applied: true

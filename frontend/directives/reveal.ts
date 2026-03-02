@@ -26,7 +26,8 @@ export const vReveal: Directive<HTMLElement, RevealValue> = {
 
     if (typeof binding.value === 'number') {
       delay = binding.value
-    } else if (binding.value && typeof binding.value === 'object') {
+    }
+ else if (binding.value && typeof binding.value === 'object') {
       animation = binding.value.animation || modifierAnimation
       delay = binding.value.delay || 0
       threshold = binding.value.threshold

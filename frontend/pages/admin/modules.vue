@@ -16,7 +16,10 @@
               class="h-4 w-4 rounded border-rs-border text-brand-600"
             >
             Auto-refresh
-            <span v-if="autoRefresh" class="tabular-nums font-semibold text-rs-fg">{{ countdown }}s</span>
+            <span
+v-if="autoRefresh"
+class="tabular-nums font-semibold text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -29,7 +32,10 @@
       </template>
     </AdminPageShell>
 
-    <section v-if="!loading && !error" class="grid gap-4 md:grid-cols-3">
+    <section
+v-if="!loading && !error"
+class="grid gap-4 md:grid-cols-3"
+>
       <article class="rounded-2xl border border-rs-border bg-rs-surface p-5 text-center shadow-sm">
         <p class="text-caption text-rs-muted">Production</p>
         <p class="text-h3 font-semibold tabular-nums text-green-600">{{ healthyCt }}</p>
@@ -44,7 +50,10 @@
       </article>
     </section>
 
-    <section v-if="!loading && !error" class="space-y-3">
+    <section
+v-if="!loading && !error"
+class="space-y-3"
+>
       <ModuleHealthCard
         v-for="mod in modules"
         :key="mod.module_id"
@@ -84,17 +93,25 @@ const countdown = ref(60)
 let timer: ReturnType<typeof setInterval> | null = null
 
 watch(autoRefresh, (on) => {
-  if (timer) { clearInterval(timer); timer = null }
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
   if (on) {
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
-      if (countdown.value <= 0) { countdown.value = 60; void load() }
+      if (countdown.value <= 0) {
+        countdown.value = 60
+        void load()
+      }
     }, 1000)
   }
 })
 
-onUnmounted(() => { if (timer) clearInterval(timer) })
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 const load = async () => {
   if (loading.value) return
@@ -113,5 +130,7 @@ const load = async () => {
   }
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

@@ -36,8 +36,8 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'select', mover: PulseTeaserMover): void
-  (e: 'added', mover: PulseTeaserMover): void
+  select: [mover: PulseTeaserMover]
+  added: [mover: PulseTeaserMover]
 }>()
 
 const { request } = useApi()

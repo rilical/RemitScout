@@ -59,7 +59,10 @@ function accentFor(key: ChartCategory): string {
 </script>
 
 <template>
-  <section v-if="pulseEnabled" class="py-16 sm:py-20 bg-neutral-900">
+  <section
+v-if="pulseEnabled"
+class="py-16 sm:py-20 bg-neutral-900"
+>
     <div class="container">
       <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
         <div class="lg:max-w-2xl">
@@ -105,7 +108,10 @@ function accentFor(key: ChartCategory): string {
           <div class="p-5 flex flex-col flex-1">
             <div class="flex items-center justify-between mb-4">
               <span class="text-body-sm font-bold text-white">{{ cat.label }}</span>
-              <span class="text-xs font-medium" :style="{ color: accentFor(cat.key) }">
+              <span
+class="text-xs font-medium"
+:style="{ color: accentFor(cat.key) }"
+>
                 {{ cat.trend }} {{ cat.trendLabel }}
               </span>
             </div>
@@ -120,9 +126,23 @@ function accentFor(key: ChartCategory): string {
                 preserveAspectRatio="none"
               >
                 <defs>
-                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
-                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  <linearGradient
+:id="`tsr-grad-${cat.key}`"
+x1="0"
+y1="0"
+x2="0"
+y2="1"
+>
+                    <stop
+offset="0%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.topOpacity"
+/>
+                    <stop
+offset="100%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.bottomOpacity"
+/>
                   </linearGradient>
                 </defs>
                 <path
@@ -147,14 +167,76 @@ function accentFor(key: ChartCategory): string {
                 :class="CHART_STYLE.sparkline.heightClass"
                 preserveAspectRatio="none"
               >
-                <rect x="8" y="24" width="16" height="36" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.8" />
-                <rect x="32" y="14" width="16" height="46" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.9" />
-                <rect x="56" y="30" width="16" height="30" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.6" />
-                <rect x="80" y="10" width="16" height="50" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" />
-                <rect x="104" y="20" width="16" height="40" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.7" />
-                <rect x="128" y="6" width="16" height="54" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" />
-                <rect x="152" y="16" width="16" height="44" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.85" />
-                <rect x="176" y="12" width="16" height="48" :rx="CHART_STYLE.bar.rx" :fill="accentFor(cat.key)" opacity="0.95" />
+                <rect
+x="8"
+y="24"
+width="16"
+height="36"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.8"
+/>
+                <rect
+x="32"
+y="14"
+width="16"
+height="46"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.9"
+/>
+                <rect
+x="56"
+y="30"
+width="16"
+height="30"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.6"
+/>
+                <rect
+x="80"
+y="10"
+width="16"
+height="50"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+/>
+                <rect
+x="104"
+y="20"
+width="16"
+height="40"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.7"
+/>
+                <rect
+x="128"
+y="6"
+width="16"
+height="54"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+/>
+                <rect
+x="152"
+y="16"
+width="16"
+height="44"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.85"
+/>
+                <rect
+x="176"
+y="12"
+width="16"
+height="48"
+:rx="CHART_STYLE.bar.rx"
+:fill="accentFor(cat.key)"
+opacity="0.95"
+/>
               </svg>
 
               <!-- Jagged line chart -->
@@ -166,9 +248,23 @@ function accentFor(key: ChartCategory): string {
                 preserveAspectRatio="none"
               >
                 <defs>
-                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
-                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  <linearGradient
+:id="`tsr-grad-${cat.key}`"
+x1="0"
+y1="0"
+x2="0"
+y2="1"
+>
+                    <stop
+offset="0%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.topOpacity"
+/>
+                    <stop
+offset="100%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.bottomOpacity"
+/>
                   </linearGradient>
                 </defs>
                 <path
@@ -194,9 +290,23 @@ function accentFor(key: ChartCategory): string {
                 preserveAspectRatio="none"
               >
                 <defs>
-                  <linearGradient :id="`tsr-grad-${cat.key}`" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.topOpacity" />
-                    <stop offset="100%" :stop-color="accentFor(cat.key)" :stop-opacity="CHART_STYLE.gradient.bottomOpacity" />
+                  <linearGradient
+:id="`tsr-grad-${cat.key}`"
+x1="0"
+y1="0"
+x2="0"
+y2="1"
+>
+                    <stop
+offset="0%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.topOpacity"
+/>
+                    <stop
+offset="100%"
+:stop-color="accentFor(cat.key)"
+:stop-opacity="CHART_STYLE.gradient.bottomOpacity"
+/>
                   </linearGradient>
                 </defs>
                 <path
@@ -212,7 +322,10 @@ function accentFor(key: ChartCategory): string {
                   stroke-linejoin="round"
                 />
                 <line
-                  x1="0" y1="28" x2="200" y2="28"
+                  x1="0"
+y1="28"
+x2="200"
+y2="28"
                   stroke="white"
                   :stroke-opacity="CHART_STYLE.grid.opacity"
                   stroke-width="1"

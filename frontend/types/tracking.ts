@@ -1,7 +1,7 @@
 import type { Method } from '~/types/remit'
 
-export type WatchTarget =
-  | {
+export type WatchTarget
+  = | {
     type: 'corridor'
     from: string
     to: string

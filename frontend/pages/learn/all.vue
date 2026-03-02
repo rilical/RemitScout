@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface">
-
-    <!-- Hero -->
+<!-- Hero -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
         <Breadcrumbs
@@ -44,7 +43,10 @@
                 :to="`/learn/${guide.slug}`"
                 class="block text-body-lg font-bold text-neutral-900 hover:text-brand-600 motion-safe:transition-colors"
               >
-                <RichHtml tag="span" :content="guide.title" />
+                <RichHtml
+tag="span"
+:content="guide.title"
+/>
               </NuxtLink>
               <p class="text-body-sm text-neutral-600 leading-relaxed">
                 {{ guide.excerpt }}
@@ -56,8 +58,18 @@
                 class="inline-flex items-center gap-1 text-body-sm font-semibold text-brand-600 hover:text-brand-700 group-hover:gap-2 motion-safe:transition-all"
               >
                 Read guide
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
+                  <path
+stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M9 5l7 7-7 7"
+/>
                 </svg>
               </NuxtLink>
             </div>

@@ -97,7 +97,12 @@
               <div
                 class="flex h-10 w-10 items-center justify-center rounded-lg bg-white overflow-hidden p-1"
               >
-                <ProviderLogo :slug="quote.slug" :alt="quote.provider" size="small" fit />
+                <ProviderLogo
+:slug="quote.slug"
+:alt="quote.provider"
+size="small"
+fit
+/>
               </div>
               <div>
                 <div class="font-semibold text-white">

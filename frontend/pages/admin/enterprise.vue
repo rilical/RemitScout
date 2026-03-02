@@ -179,7 +179,7 @@ const tableColumns: DataTableColumn[] = [
 ]
 
 const tableRows = computed(() =>
-  enterpriseUsers.value.map((user) => ({
+  enterpriseUsers.value.map(user => ({
     user_id: user.user_id,
     email: user.email || user.user_id,
     enterprise_granted_at: user.enterprise_granted_at ? formatTimestamp(user.enterprise_granted_at) : 'n/a',

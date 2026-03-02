@@ -41,7 +41,12 @@
           >
             <div class="text-[10px] text-neutral-500">{{ kpi.label }}</div>
             <div class="text-body-sm font-bold text-white tabular-nums">{{ kpi.value }}</div>
-            <div class="text-[10px] font-semibold" :class="kpi.deltaClass">{{ kpi.delta }}</div>
+            <div
+class="text-[10px] font-semibold"
+:class="kpi.deltaClass"
+>
+{{ kpi.delta }}
+</div>
           </div>
         </div>
 
@@ -60,22 +65,101 @@
               </span>
             </div>
           </div>
-          <svg viewBox="0 0 400 100" class="w-full" preserveAspectRatio="xMidYMid meet">
-            <line x1="0" y1="20" x2="400" y2="20" stroke="#262626" stroke-width="0.5" />
-            <line x1="0" y1="50" x2="400" y2="50" stroke="#262626" stroke-width="0.5" />
-            <line x1="0" y1="80" x2="400" y2="80" stroke="#262626" stroke-width="0.5" />
-            <line x1="0" y1="50" x2="400" y2="50" stroke="#404040" stroke-width="0.5" stroke-dasharray="4 3" />
+          <svg
+viewBox="0 0 400 100"
+class="w-full"
+preserveAspectRatio="xMidYMid meet"
+>
+            <line
+x1="0"
+y1="20"
+x2="400"
+y2="20"
+stroke="#262626"
+stroke-width="0.5"
+/>
+            <line
+x1="0"
+y1="50"
+x2="400"
+y2="50"
+stroke="#262626"
+stroke-width="0.5"
+/>
+            <line
+x1="0"
+y1="80"
+x2="400"
+y2="80"
+stroke="#262626"
+stroke-width="0.5"
+/>
+            <line
+x1="0"
+y1="50"
+x2="400"
+y2="50"
+stroke="#404040"
+stroke-width="0.5"
+stroke-dasharray="4 3"
+/>
             <defs>
-              <linearGradient id="dash-area" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2" />
-                <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
+              <linearGradient
+id="dash-area"
+x1="0%"
+y1="0%"
+x2="0%"
+y2="100%"
+>
+                <stop
+offset="0%"
+stop-color="#3B82F6"
+stop-opacity="0.2"
+/>
+                <stop
+offset="100%"
+stop-color="#3B82F6"
+stop-opacity="0"
+/>
               </linearGradient>
             </defs>
-            <path d="M 0,65 L 57,58 L 114,45 L 171,52 L 228,38 L 285,30 L 342,35 L 400,28 L 400,90 L 0,90 Z" fill="url(#dash-area)" />
-            <polyline points="0,65 57,58 114,45 171,52 228,38 285,30 342,35 400,28" fill="none" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx="285" cy="30" r="2.5" fill="#3B82F6" stroke="#1e293b" stroke-width="1" />
-            <circle cx="400" cy="28" r="2.5" fill="#3B82F6" stroke="#1e293b" stroke-width="1" />
-            <text x="395" y="22" text-anchor="end" fill="#93c5fd" font-size="8" font-weight="600" font-family="system-ui">56.04</text>
+            <path
+d="M 0,65 L 57,58 L 114,45 L 171,52 L 228,38 L 285,30 L 342,35 L 400,28 L 400,90 L 0,90 Z"
+fill="url(#dash-area)"
+/>
+            <polyline
+points="0,65 57,58 114,45 171,52 228,38 285,30 342,35 400,28"
+fill="none"
+stroke="#3B82F6"
+stroke-width="1.5"
+stroke-linecap="round"
+stroke-linejoin="round"
+/>
+            <circle
+cx="285"
+cy="30"
+r="2.5"
+fill="#3B82F6"
+stroke="#1e293b"
+stroke-width="1"
+/>
+            <circle
+cx="400"
+cy="28"
+r="2.5"
+fill="#3B82F6"
+stroke="#1e293b"
+stroke-width="1"
+/>
+            <text
+x="395"
+y="22"
+text-anchor="end"
+fill="#93c5fd"
+font-size="8"
+font-weight="600"
+font-family="system-ui"
+>56.04</text>
           </svg>
         </div>
 
@@ -95,14 +179,28 @@
           >
             <div class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded bg-white overflow-hidden p-0.5">
-                <ProviderLogo :slug="row.slug" :alt="row.provider" size="small" fit />
+                <ProviderLogo
+:slug="row.slug"
+:alt="row.provider"
+size="small"
+fit
+/>
               </div>
-              <span class="font-semibold" :class="idx === 0 ? 'text-brand-400' : 'text-white'">{{ row.provider }}</span>
-              <span v-if="idx === 0" class="rounded bg-brand-600/20 px-1 py-px text-[9px] font-bold text-brand-400 uppercase">Best</span>
+              <span
+class="font-semibold"
+:class="idx === 0 ? 'text-brand-400' : 'text-white'"
+>{{ row.provider }}</span>
+              <span
+v-if="idx === 0"
+class="rounded bg-brand-600/20 px-1 py-px text-[9px] font-bold text-brand-400 uppercase"
+>Best</span>
             </div>
             <span class="text-neutral-300 tabular-nums">{{ row.rate }}</span>
             <span class="text-neutral-400 tabular-nums">{{ row.markup }}</span>
-            <span class="text-right font-bold tabular-nums" :class="idx === 0 ? 'text-brand-400' : 'text-white'">{{ row.gets }}</span>
+            <span
+class="text-right font-bold tabular-nums"
+:class="idx === 0 ? 'text-brand-400' : 'text-white'"
+>{{ row.gets }}</span>
           </div>
         </div>
       </div>

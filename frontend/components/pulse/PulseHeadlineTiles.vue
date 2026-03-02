@@ -139,7 +139,7 @@ const props = withDefaults(defineProps<Props>(), {
 const tweenedValues = reactive<Record<string, string>>({})
 const prevNumericValues = ref<Record<string, number>>({})
 
-function parseNumeric(value: string): { prefix: string; num: number; suffix: string; decimals: number } | null {
+function parseNumeric(value: string): { prefix: string, num: number, suffix: string, decimals: number } | null {
   const match = value.match(/^([^0-9]*?)([\d,]+\.?\d*)(.*)$/)
   if (!match) return null
   const numStr = match[2].replace(/,/g, '')
@@ -185,7 +185,8 @@ watch(
       const prev = prevNumericValues.value[tile.id]
       if (prev !== undefined && prev !== parsed.num) {
         tweenValue(tile.id, prev, parsed.num, parsed.prefix, parsed.suffix, parsed.decimals)
-      } else {
+      }
+ else {
         tweenedValues[tile.id] = tile.value
       }
       prevNumericValues.value[tile.id] = parsed.num

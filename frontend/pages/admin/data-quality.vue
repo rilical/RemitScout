@@ -38,7 +38,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in mttdRows" :key="row.module_id" class="border-b border-rs-border/50">
+              <tr
+v-for="row in mttdRows"
+:key="row.module_id"
+class="border-b border-rs-border/50"
+>
                 <td class="py-2 pr-3 font-medium text-rs-fg">{{ row.display_name }}</td>
                 <td class="py-2 pr-3 text-right tabular-nums text-rs-fg">{{ row.mttd_minutes?.toFixed(1) ?? '—' }}</td>
                 <td class="py-2 pr-3 text-right tabular-nums text-rs-fg">{{ row.mttr_minutes?.toFixed(1) ?? '—' }}</td>
@@ -47,7 +51,12 @@
               </tr>
             </tbody>
           </table>
-          <p v-if="!mttdRows.length" class="py-4 text-center text-body-sm text-rs-muted">No MTTD/MTTR data available.</p>
+          <p
+v-if="!mttdRows.length"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
+No MTTD/MTTR data available.
+</p>
         </div>
       </section>
 
@@ -73,8 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TotalCollectionErrorRow } from '~/types/data-quality'
-import type { MttdMttrEntry } from '~/types/data-quality'
+import type { TotalCollectionErrorRow, MttdMttrEntry } from '~/types/data-quality'
 import { getTotalCollectionError, getMttdMttr } from '~/lib/opsApi'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
@@ -153,5 +161,7 @@ const cycleTimeBuckets = computed(() => {
   })
 })
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

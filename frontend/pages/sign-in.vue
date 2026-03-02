@@ -322,7 +322,8 @@ const isSafeRedirect = (url: string): boolean => {
   try {
     const parsed = new URL(url, window.location.origin)
     return parsed.origin === window.location.origin
-  } catch {
+  }
+ catch {
     return false
   }
 }

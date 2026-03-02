@@ -24,7 +24,7 @@ export interface CompareFormState {
   toCurrency: string
 }
 
-export const DELIVERY_METHODS: ReadonlyArray<{ value: Method; label: string; icon: Component }> = [
+export const DELIVERY_METHODS: ReadonlyArray<{ value: Method, label: string, icon: Component }> = [
   { value: 'bank', label: 'Bank Transfer', icon: BuildingLibraryIcon },
   { value: 'cash', label: 'Cash Pickup', icon: BanknotesIcon },
   { value: 'wallet', label: 'Mobile Wallet', icon: WalletIcon },

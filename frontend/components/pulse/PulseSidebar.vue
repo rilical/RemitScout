@@ -31,7 +31,10 @@
 
       <div class="p-6">
         <div v-if="!isPlus">
-          <div v-if="pulseEnabled" class="mb-4 rounded-xl bg-gradient-to-br from-primary-500/10 to-accent-600/10 border border-white/5 p-5">
+          <div
+v-if="pulseEnabled"
+class="mb-4 rounded-xl bg-gradient-to-br from-primary-500/10 to-accent-600/10 border border-white/5 p-5"
+>
             <div class="mb-3 flex items-center gap-2">
               <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/20">
                 <svg

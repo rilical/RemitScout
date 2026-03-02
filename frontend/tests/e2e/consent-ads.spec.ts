@@ -26,7 +26,8 @@ test('consent surface is available on home page', async ({ page }) => {
     await expect(acceptButton(page).first()).toBeVisible()
     await acceptButton(page).first().click()
     await expect(inAppBanner(page)).toHaveCount(0)
-  } else {
+  }
+ else {
     // Staging currently uses Gatekeeper CMP scripts instead of in-app copy.
     await expect(page.locator('script[src*="gatekeeperconsent"]')).toHaveCount(2)
     await expect(privacyPolicyLink(page)).toBeVisible()
@@ -42,7 +43,8 @@ test('reject/non-essential consent path is stable', async ({ page }) => {
   if (rejectCount > 0) {
     await rejectButton(page).first().click()
     await expect(inAppBanner(page)).toHaveCount(0)
-  } else {
+  }
+ else {
     await expect(page.locator('script[src*="gatekeeperconsent"]')).toHaveCount(2)
   }
 })
@@ -58,7 +60,8 @@ test('outside EEA/UK: banner does not auto-show; cookie settings entry is still 
   if (cookieSettingsCount > 0) {
     await cookieSettingsButton(page).first().click()
     await expect(page.getByText(/cookie preferences/i)).toBeVisible()
-  } else {
+  }
+ else {
     await expect(privacyPolicyLink(page)).toBeVisible()
   }
 })
