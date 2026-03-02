@@ -24,7 +24,7 @@
     "success": true,
     "findings": [
       {
-        "reason_code": "example_ok",
+        "reason_code": "queue.stats",
         "message": "No critical issues detected."
       }
     ]
@@ -39,7 +39,7 @@
     "template_version": "v1",
     "decision": "close_case",
     "summary": "Decision is based on bounded evidence findings and reproducible rollback pointers.",
-    "reason_codes": ["example_ok"],
+    "reason_codes": ["queue.stats"],
     "human_in_loop": {
       "contract_version": "v1",
       "required": false,
