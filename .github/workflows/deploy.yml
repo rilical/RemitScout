@@ -353,7 +353,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
+          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -361,8 +363,8 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -371,7 +373,8 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
 
       - name: CDK Deploy (dev, paused)
@@ -976,7 +979,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
+          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -984,8 +989,8 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -994,7 +999,8 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
 
       - name: CDK Deploy (staging)
@@ -1953,7 +1959,9 @@ jobs:
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
           fi
 
-          for i in $(seq 1 60); do
+          max_attempts="${STACK_STABLE_MAX_ATTEMPTS:-240}"
+          poll_seconds="${STACK_STABLE_POLL_SECONDS:-10}"
+          for i in $(seq 1 "${max_attempts}"); do
             status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
@@ -1961,8 +1969,8 @@ jobs:
                 exit 0
                 ;;
               *_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
-                echo "Waiting for stable stack state: ${status} (attempt ${i}/60)"
-                sleep 10
+                echo "Waiting for stable stack state: ${status} (attempt ${i}/${max_attempts})"
+                sleep "${poll_seconds}"
                 ;;
               *)
                 echo "::error::Stack is not deployable after recovery: ${status}"
@@ -1971,7 +1979,8 @@ jobs:
             esac
           done
 
-          echo "::error::Timed out waiting for stack to reach a deployable state."
+          timeout_seconds=$((max_attempts * poll_seconds))
+          echo "::error::Timed out waiting for stack to reach a deployable state after ${timeout_seconds}s."
           exit 1
 
       - name: CDK Deploy (prod)
