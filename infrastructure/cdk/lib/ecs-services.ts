@@ -166,11 +166,15 @@ export const createEcsServices = (
   // Non-prod accounts often have tighter Fargate vCPU quotas.
   // Keep updates effectively in-place while satisfying ECS AZ rebalancing
   // requirement that maximumPercent must be > 100.
-  const minHealthyPercent = isProd ? undefined : 0
-  const maxHealthyPercent = isProd ? undefined : 101
+  // Non-prod: allow 50% overlap so tasks can start before old ones are killed,
+  // avoiding thundering-herd connection storms on simultaneous restarts.
+  const minHealthyPercent = isProd ? undefined : 50
+  const maxHealthyPercent = isProd ? undefined : 200
   const circuitBreaker: DeploymentCircuitBreaker = {
     enable: true,
-    rollback: true,
+    // Only auto-rollback in prod — in staging, let CDK succeed even if
+    // some worker tasks can't start (avoids CloudFormation stack rollback).
+    rollback: isProd,
   }
   const tagManaged = (service: FargateService): void => {
     Tags.of(service).add('managed-by', 'ops-pause')
