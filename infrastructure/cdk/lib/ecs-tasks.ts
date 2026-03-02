@@ -11,7 +11,7 @@ import {
 } from 'aws-cdk-lib/aws-ecs'
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
 import type { IRepository } from 'aws-cdk-lib/aws-ecr'
-import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
+import { Secret, type ISecret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { Construct } from 'constructs'
 
@@ -137,6 +137,17 @@ export const createEcsTasks = (
   scope: Construct,
   options: EcsTaskOptions,
 ): EcsTaskResources => {
+  const completeSecretArnPattern =
+    /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
+  const importSecretByRef = (id: string, secretRef: string): ISecret => {
+    if (secretRef.startsWith('arn:')) {
+      return completeSecretArnPattern.test(secretRef)
+        ? Secret.fromSecretCompleteArn(scope, id, secretRef)
+        : Secret.fromSecretPartialArn(scope, id, secretRef)
+    }
+    return Secret.fromSecretNameV2(scope, id, secretRef)
+  }
+
   const isProd = options.envName === 'prod'
   const isDev = options.envName === 'dev'
   const isStaging = options.envName === 'staging'
@@ -321,8 +332,7 @@ export const createEcsTasks = (
       )
       secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     } else if (planeBDbSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
+      const secret = importSecretByRef(
         'PlaneBEcsDatabaseSecret',
         planeBDbSecretArn,
       )
@@ -331,7 +341,7 @@ export const createEcsTasks = (
     }
 
     if (redisSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(scope, 'PlaneBEcsRedisSecret', redisSecretArn)
+      const secret = importSecretByRef('PlaneBEcsRedisSecret', redisSecretArn)
       secrets.REDIS_URL = redisSecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, redisSecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
@@ -345,11 +355,7 @@ export const createEcsTasks = (
     }
 
     if (proxyResidentialSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
-        'PlaneBEcsProxyResidentialSecret',
-        proxyResidentialSecretArn,
-      )
+      const secret = importSecretByRef('PlaneBEcsProxyResidentialSecret', proxyResidentialSecretArn)
       secrets.PROXY_RESIDENTIAL_URL = proxyResidentialSecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, proxyResidentialSecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
@@ -363,11 +369,7 @@ export const createEcsTasks = (
     }
 
     if (proxyDatacenterSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
-        'PlaneBEcsProxyDatacenterSecret',
-        proxyDatacenterSecretArn,
-      )
+      const secret = importSecretByRef('PlaneBEcsProxyDatacenterSecret', proxyDatacenterSecretArn)
       secrets.PROXY_DATACENTER_URL = proxyDatacenterSecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, proxyDatacenterSecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
@@ -381,14 +383,14 @@ export const createEcsTasks = (
     }
 
     if (sentrySecretArn) {
-      const secret = Secret.fromSecretCompleteArn(scope, 'PlaneBEcsSentrySecret', sentrySecretArn)
+      const secret = importSecretByRef('PlaneBEcsSentrySecret', sentrySecretArn)
       secrets.SENTRY_DSN = sentrySecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, sentrySecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
     }
 
     if (sharedSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(scope, 'PlaneBEcsSharedSecret', sharedSecretArn)
+      const secret = importSecretByRef('PlaneBEcsSharedSecret', sharedSecretArn)
       secrets.PLANE_A_JWT_SECRET = EcsSecret.fromSecretsManager(
         secret,
         planeAJwtSecretJsonKey || 'PLANE_A_JWT_SECRET',
@@ -396,8 +398,7 @@ export const createEcsTasks = (
     }
 
     if (agentAnthropicApiKeySecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
+      const secret = importSecretByRef(
         'PlaneBAgentAnthropicApiKeySecret',
         agentAnthropicApiKeySecretArn,
       )
@@ -405,11 +406,7 @@ export const createEcsTasks = (
     }
 
     if (agentBedrockSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(
-        scope,
-        'PlaneBAgentBedrockSecret',
-        agentBedrockSecretArn,
-      )
+      const secret = importSecretByRef('PlaneBAgentBedrockSecret', agentBedrockSecretArn)
       if (!agentBedrockRegion) {
         secrets.AGENT_BEDROCK_REGION = EcsSecret.fromSecretsManager(secret, 'region')
       }
@@ -432,21 +429,13 @@ export const createEcsTasks = (
       )
       secrets.DATABASE_URL_PLANE_B = EcsSecret.fromSsmParameter(parameter)
     } else if (planeBDbSecretArn) {
-      const planeBSecret = Secret.fromSecretCompleteArn(
-        scope,
-        'GoldLivePlaneBDatabaseSecret',
-        planeBDbSecretArn,
-      )
+      const planeBSecret = importSecretByRef('GoldLivePlaneBDatabaseSecret', planeBDbSecretArn)
       secrets.PLANE_B_DB_USERNAME = EcsSecret.fromSecretsManager(planeBSecret, 'username')
       secrets.PLANE_B_DB_PASSWORD = EcsSecret.fromSecretsManager(planeBSecret, 'password')
     }
 
     if (planeCDbSecretArn) {
-      const planeCSecret = Secret.fromSecretCompleteArn(
-        scope,
-        'GoldLivePlaneCDatabaseSecret',
-        planeCDbSecretArn,
-      )
+      const planeCSecret = importSecretByRef('GoldLivePlaneCDatabaseSecret', planeCDbSecretArn)
       secrets.PLANE_C_DB_USERNAME = EcsSecret.fromSecretsManager(planeCSecret, 'username')
       secrets.PLANE_C_DB_PASSWORD = EcsSecret.fromSecretsManager(planeCSecret, 'password')
     } else if (planeCDbSsmName) {
@@ -459,14 +448,14 @@ export const createEcsTasks = (
     }
 
     if (sentrySecretArn) {
-      const secret = Secret.fromSecretCompleteArn(scope, 'GoldLiveSentrySecret', sentrySecretArn)
+      const secret = importSecretByRef('GoldLiveSentrySecret', sentrySecretArn)
       secrets.SENTRY_DSN = sentrySecretJsonKey
         ? EcsSecret.fromSecretsManager(secret, sentrySecretJsonKey)
         : EcsSecret.fromSecretsManager(secret)
     }
 
     if (sharedSecretArn) {
-      const secret = Secret.fromSecretCompleteArn(scope, 'GoldLiveSharedSecret', sharedSecretArn)
+      const secret = importSecretByRef('GoldLiveSharedSecret', sharedSecretArn)
       secrets.PLANE_A_JWT_SECRET = EcsSecret.fromSecretsManager(
         secret,
         planeAJwtSecretJsonKey || 'PLANE_A_JWT_SECRET',
