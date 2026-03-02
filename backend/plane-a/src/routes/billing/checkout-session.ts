@@ -85,6 +85,7 @@ const createCheckoutHandler = async (request: FastifyRequest, _reply: FastifyRep
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
+        allow_promotion_codes: true,
         // Helps correlate Stripe sessions/subscriptions back to our internal user ID.
         client_reference_id: user.user_id,
         // Stripe-hosted Checkout theming is controlled in Stripe Dashboard (Branding + custom domain).

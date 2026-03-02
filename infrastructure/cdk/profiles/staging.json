@@ -1,0 +1,28 @@
+{
+  "_profile": "staging",
+  "_description": "Staging — business hours only, minimal endpoints, fan-in probes",
+  "enableSynthetics": false,
+  "enableWaf": true,
+  "enableCloudFront": true,
+  "stagingBusinessHoursEnabled": true,
+  "stagingPauseCron": "0 22 * * *",
+  "stagingResumeCron": "0 8 * * MON-FRI",
+  "stagingTimezone": "America/New_York",
+  "providerProbeMode": "fan_in",
+  "stagingNatGateways": 1,
+  "stagingInterfaceEndpointsMode": "minimal",
+  "cpuArchitecture": "arm64",
+  "opsResumeRuleAllowlist": [
+    "b2c-retry-failed",
+    "alert-evaluation-worker",
+    "alert-evaluation-scheduler",
+    "gold-fx-rates",
+    "gold-reconciliation",
+    "data-health-slo",
+    "telemetry-analytics",
+    "session-cleanup",
+    "audit-log-cleanup",
+    "smart-alerts",
+    "alert-corridor-refresh"
+  ]
+}
