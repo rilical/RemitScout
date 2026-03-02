@@ -57,6 +57,7 @@ describe('DashboardSignedIn alerts tab', () => {
       isAuthenticated: ref(true),
       isAdmin: ref(false),
       updatePasswordWithCurrent: vi.fn().mockResolvedValue({ ok: true }),
+      listMfaFactors: vi.fn().mockResolvedValue([]),
     })
     ;(globalThis as any).useProviderVisits = () => ({
       pendingVisits: ref([]),
@@ -80,6 +81,7 @@ describe('DashboardSignedIn alerts tab', () => {
       limits: limitsRef,
       billing: ref({ status: 'inactive', next_billing_date: null }),
       refreshPlan: vi.fn().mockResolvedValue(undefined),
+      pulseLevel: ref('none'),
     })
     ;(globalThis as any).useBilling = () => ({
       checkoutLoading: ref(false),

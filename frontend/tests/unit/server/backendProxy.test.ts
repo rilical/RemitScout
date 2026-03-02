@@ -190,7 +190,7 @@ describe('proxyToBackend', () => {
     })
 
     const criticalCalls = errorSpy.mock.calls.filter(call =>
-      String(call[0]).includes('[CRITICAL] E2E_MOCK_API is enabled'),
+      String(call[0]).includes('e2e_mock_enabled_in_prod_like'),
     )
 
     expect(criticalCalls).toHaveLength(1)

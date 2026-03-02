@@ -1,6 +1,5 @@
 import { ref, computed, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useRuntimeConfig } from '#imports'
 
 type EmbedIndexKey = 'teer' | 'rci' | 'rvi_bps'
 
