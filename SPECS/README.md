@@ -2,7 +2,7 @@
 
 This directory is the loop-facing copy of governance, skill catalogs, and AGENTS/RAG instruction files.
 
-Generated: 2026-03-01T01:33:59.878Z
+Generated: 2026-03-02T00:00:41.551Z
 Total synced: 133 files (0 skipped)
 
 Governance: sync contract documented in `.remit-scout/AGENTS.md` (Documentation-to-SPECS sync contract).
