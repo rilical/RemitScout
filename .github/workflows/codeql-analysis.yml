@@ -24,17 +24,20 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" = "dependabot[bot]" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$ACTOR" = "dependabot[bot]" ]; then
             echo "should_run=false" >> "$GITHUB_OUTPUT"
             echo "skip_reason=dependabot_pr" >> "$GITHUB_OUTPUT"
             echo "::notice::Skipping CodeQL for Dependabot PR (single-fail strategy)."
             exit 0
           fi
 
-          api_url="https://api.github.com/repos/${{ github.repository }}/code-scanning/alerts?per_page=1"
+          api_url="https://api.github.com/repos/${REPO}/code-scanning/alerts?per_page=1"
           http_code="$(curl -sS -o /tmp/codeql-preflight.json -w '%{http_code}' \
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
