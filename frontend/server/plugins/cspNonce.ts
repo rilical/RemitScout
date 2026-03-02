@@ -1,5 +1,3 @@
-import { defineNitroPlugin } from 'nitropack/runtime/plugin'
-
 const addNonceToScripts = (html: string, nonce: string) => {
   return html.replace(/<script(?![^>]*\bnonce=)/g, `<script nonce="${nonce}"`)
 }

@@ -1,5 +1,3 @@
-import { defineNitroPlugin } from 'nitropack/runtime/plugin'
-
 const encodeNuxtAssetUrls = (html: string) => {
   return html.replace(
     /(href|src)=(")(\/_nuxt\/[^"]*)(")/g,
