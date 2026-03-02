@@ -83,14 +83,14 @@ jobs:
               - 'notes/**'
       - id: flags
         shell: bash
+        env:
+          MODE: ${{ inputs.mode || github.event.inputs.mode }}
+          BACKEND: ${{ steps.filter.outputs.backend_changed }}
+          FRONTEND: ${{ steps.filter.outputs.frontend_changed }}
+          INFRA: ${{ steps.filter.outputs.infra_changed }}
+          DOCS_ONLY: ${{ steps.filter.outputs.docs_only }}
         run: |
           set -euo pipefail
-
-          MODE="${{ inputs.mode || github.event.inputs.mode }}"
-          BACKEND="${{ steps.filter.outputs.backend_changed }}"
-          FRONTEND="${{ steps.filter.outputs.frontend_changed }}"
-          INFRA="${{ steps.filter.outputs.infra_changed }}"
-          DOCS_ONLY="${{ steps.filter.outputs.docs_only }}"
 
           if [ "$MODE" = "nightly" ]; then
             echo "run_backend=true" >> "$GITHUB_OUTPUT"
@@ -298,9 +298,11 @@ jobs:
           fetch-depth: 0
       - name: Disallow editing historical migrations
         shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
-          base="${{ github.base_ref }}"
+          base="$BASE_REF"
           git fetch origin "$base" --depth=1
           # Only allow added migrations in PR diffs. Modified/deleted migrations are blocked.
           bad=$(git diff --name-status "origin/$base"...HEAD -- backend/db/migrations | awk '$1 != "A" {print}')
@@ -381,9 +383,10 @@ jobs:
       - run: pnpm -C backend db:seed
       - name: Rights differential gate
         shell: bash
+        env:
+          MODE: ${{ inputs.mode || github.event.inputs.mode }}
         run: |
           set -euo pipefail
-          MODE="${{ inputs.mode || github.event.inputs.mode }}"
           if [ "$MODE" = "main" ] || [ "$MODE" = "nightly" ]; then
             RIGHTS_SCOPE=all STRICT_DATA_HEALTH=1 pnpm -C backend ci:rights-differential-gate
           else

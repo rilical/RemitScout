@@ -61,7 +61,10 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         enabled: row.enabled,
         createdAt: row.created_at.toISOString(),
         updatedAt: row.updated_at.toISOString(),
-        lastTriggeredAt: row.last_triggered_at?.toISOString(),
+        lastTriggeredAt: row.last_triggered_at?.toISOString() ?? null,
+        dataAvailable: row.data_available ?? null,
+        dataUnavailableSince: row.data_unavailable_since?.toISOString() ?? null,
+        lastEvaluatedAt: row.last_evaluated_at?.toISOString() ?? null,
       }))
 
       const durationSeconds = (Date.now() - startTime) / 1000

@@ -85,7 +85,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     defaultDatabaseName: 'remit_scout',
-    backup: { retention: Duration.days(isProd ? 30 : (isDev ? 3 : 14)) },
+    backup: { retention: Duration.days(isProd ? 14 : (isDev ? 3 : 14)) },
     storageEncrypted: true,
     storageEncryptionKey: encryptionKey,
     deletionProtection: isProtectedEnv,

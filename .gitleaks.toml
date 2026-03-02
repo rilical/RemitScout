@@ -23,6 +23,10 @@ paths = [
   '''coverage/''',
   '''\.env\.example''',
   '''\.env\.sample''',
+  '''\.github/workflows/.*\.yml$''',
+  '''\.github/actions/.*\.yml$''',
+  '''pnpm-lock\.yaml$''',
+  '''artifacts/''',
 ]
 
 commits = [
@@ -37,6 +41,10 @@ regexes = [
   '''test.*secret''',
   '''placeholder''',
   '''your.*here''',
+  '''sk_test_[A-Za-z0-9]+''',
+  '''GITHUB_TOKEN''',
+  '''secrets\.\w+''',
+  '''arn:aws:iam::[0-9]*:''',
 ]
 
 [[rules]]
