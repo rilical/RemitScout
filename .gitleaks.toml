@@ -34,8 +34,6 @@ commits = [
   '''^Merge.*''',
 ]
 
-[allowlist.regexes]
-description = "Allowlist regexes for known patterns"
 regexes = [
   '''example.*key''',
   '''test.*secret''',

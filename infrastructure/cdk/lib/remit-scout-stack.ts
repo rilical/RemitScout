@@ -1444,6 +1444,8 @@ export class RemitScoutStack extends Stack {
         exportJobQueueMode,
         exportsBucketName: storage.exportsBucket.bucketName,
         exportsPrefix,
+        supabaseSecretArn,
+        supabaseSsmName,
         communicationsSecretArn,
         b2cQueueInSweep,
         b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,

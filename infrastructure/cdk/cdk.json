@@ -5,7 +5,7 @@
     "planeAAdminEmails": [
       "admin@example.com"
     ],
-    "sharedSecretArn": "arn:aws:secretsmanager:us-east-1:111111111111:secret:remit-scout/dev/communications-example",
+    "sharedSecretArn": "arn:aws:secretsmanager:us-east-1:111111111111:secret:remit-scout/dev/communications-AbCdEf",
     "devPaused": false,
     "devMinimalInfra": false,
     "planeBB2bMaxQueueDepth": 5000,

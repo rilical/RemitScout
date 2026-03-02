@@ -1207,6 +1207,59 @@ jobs:
             exit 1
           fi
 
+      - name: Seed Launch Users (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
+          LAUNCH_PASSWORD_AUSTRILIC: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC }}
+          LAUNCH_PASSWORD_GHABAYENEDU: ${{ secrets.LAUNCH_PASSWORD_GHABAYENEDU }}
+          LAUNCH_PASSWORD_SUPPORT: ${{ secrets.LAUNCH_PASSWORD_SUPPORT }}
+          DEFAULT_LAUNCH_PASSWORD: ${{ secrets.DEFAULT_LAUNCH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '"%s",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+
+          # Build environment overrides JSON
+          env_overrides='['
+          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
+            val="${!var:-}"
+            if [ -n "$val" ]; then
+              env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
+            fi
+          done
+          env_overrides="${env_overrides%,}]"
+
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"-e\",\"require('tsx/cjs');require('./scripts/seed-launch-users.ts')\",\"--\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --query "tasks[0].taskArn" --output text)"
+
+          echo "Seed task: $task_arn"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "::warning::Seed task failed (exitCode=$exit_code) — non-fatal, continuing deploy"
+          else
+            echo "Seed completed successfully."
+          fi
+
       - name: Wait For ECS Stability (staging)
         shell: bash
         env:
@@ -2287,6 +2340,59 @@ jobs:
           if [ "$exit_code" != "0" ]; then
             echo "Migration task failed (exitCode=$exit_code): $task_arn"
             exit 1
+          fi
+
+      - name: Seed Launch Users (prod)
+        shell: bash
+        env:
+          ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
+          LAUNCH_PASSWORD_AUSTRILIC: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC }}
+          LAUNCH_PASSWORD_GHABAYENEDU: ${{ secrets.LAUNCH_PASSWORD_GHABAYENEDU }}
+          LAUNCH_PASSWORD_SUPPORT: ${{ secrets.LAUNCH_PASSWORD_SUPPORT }}
+          DEFAULT_LAUNCH_PASSWORD: ${{ secrets.DEFAULT_LAUNCH_PASSWORD }}
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
+          sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
+          subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
+          if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
+            subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
+          fi
+          IFS=',' read -r -a subnets <<< "$subnet_csv"
+          cluster="remit-scout-${ENV_NAME}"
+          subnet_list="$(printf '"%s",' "${subnets[@]}")"
+          subnet_list="[${subnet_list%,}]"
+
+          # Build environment overrides JSON
+          env_overrides='['
+          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
+            val="${!var:-}"
+            if [ -n "$val" ]; then
+              env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
+            fi
+          done
+          env_overrides="${env_overrides%,}]"
+
+          task_arn="$(aws ecs run-task \
+            --cluster "$cluster" \
+            --launch-type FARGATE \
+            --task-definition "$task_def" \
+            --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"-e\",\"require('tsx/cjs');require('./scripts/seed-launch-users.ts')\",\"--\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --query "tasks[0].taskArn" --output text)"
+
+          echo "Seed task: $task_arn"
+          aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
+          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          if [ "$exit_code" != "0" ]; then
+            echo "::warning::Seed task failed (exitCode=$exit_code) — non-fatal, continuing deploy"
+          else
+            echo "Seed completed successfully."
           fi
 
       - name: Wait For ECS Stability (prod)
