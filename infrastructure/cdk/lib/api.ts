@@ -58,6 +58,7 @@ export type ApiOptions = {
   sentrySecretArn?: string
   sentrySecretJsonKey?: string
   sharedSecretArn?: string
+  planeAJwtSecretJsonKey?: string
   planeCInternalApiTokenSecretJsonKey?: string
   planeAAdminEmails?: string[]
   planeAAdminIpAllowlist?: string[]
@@ -610,6 +611,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.stripeSsmName) {
     planeAFunction.addEnvironment('STRIPE_SSM_NAME', options.stripeSsmName)
+  }
+  if (options.sharedSecretArn) {
+    const sharedSecret = importSecretByRef('PlaneASharedSecret', options.sharedSecretArn)
+    sharedSecret.grantRead(planeAFunction)
+    const planeAJwtSecretValue = sharedSecret.secretValueFromJson(
+      options.planeAJwtSecretJsonKey ?? 'PLANE_A_JWT_SECRET',
+    )
+    planeAFunction.addEnvironment('PLANE_A_JWT_SECRET', planeAJwtSecretValue.toString())
   }
   if (options.communicationsSecretArn) {
     const secret = importSecretByRef('PlaneACommunicationsSecret', options.communicationsSecretArn)
