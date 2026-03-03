@@ -494,8 +494,8 @@ export default defineNuxtConfig({
   // Experimental Features
   experimental: {
     renderJsonPayloads: true,
-    // Enable in staging/prod to reduce duplicated SSR/ISR payload bytes across many static-ish routes.
-    // Keep disabled in dev for faster iteration and fewer generated artifacts.
+    // Disabled: static preset with payloadExtraction causes blank pages when CloudFront
+    // serves SPA fallback HTML in place of missing .payload.json files.
     payloadExtraction: false,
     viewTransition: true,
     watcher: 'chokidar-granular',
