@@ -1248,7 +1248,6 @@ jobs:
           task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
           sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
           subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
-          db_secret_arn="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="AuroraCredentialsSecretArn") | .OutputValue')"
           if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
             subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
           fi
@@ -1256,14 +1255,6 @@ jobs:
           cluster="remit-scout-${ENV_NAME}"
           subnet_list="$(printf '"%s",' "${subnets[@]}")"
           subnet_list="[${subnet_list%,}]"
-          db_secret_json="$(aws secretsmanager get-secret-value --secret-id "$db_secret_arn" --query SecretString --output text)"
-          db_user="$(echo "$db_secret_json" | jq -r '.username')"
-          db_pass="$(echo "$db_secret_json" | jq -r '.password')"
-          db_name="$(echo "$db_secret_json" | jq -r '.dbname')"
-          db_host="$(echo "$db_secret_json" | jq -r '.host')"
-          db_user_enc="$(jq -nr --arg v "$db_user" '$v|@uri')"
-          db_pass_enc="$(jq -nr --arg v "$db_pass" '$v|@uri')"
-          database_url="postgres://${db_user_enc}:${db_pass_enc}@${db_host}:5432/${db_name}?sslmode=require"
 
           # Build environment overrides JSON
           env_overrides='['
@@ -1273,8 +1264,6 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          env_overrides+='{"name":"DATABASE_URL","value":"'"$database_url"'"},'
-          env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$database_url"'"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -1282,7 +1271,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://${PLANE_B_DB_USERNAME}:${PLANE_B_DB_PASSWORD}@${PLANE_B_DB_HOST}:${PLANE_B_DB_PORT:-5432}/${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
@@ -2430,7 +2419,6 @@ jobs:
           task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
           sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
           subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PrivateSubnetIds") | .OutputValue')"
-          db_secret_arn="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="AuroraCredentialsSecretArn") | .OutputValue')"
           if [ -z "$subnet_csv" ] || [ "$subnet_csv" = "null" ]; then
             subnet_csv="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PublicSubnetIds") | .OutputValue')"
           fi
@@ -2438,14 +2426,6 @@ jobs:
           cluster="remit-scout-${ENV_NAME}"
           subnet_list="$(printf '"%s",' "${subnets[@]}")"
           subnet_list="[${subnet_list%,}]"
-          db_secret_json="$(aws secretsmanager get-secret-value --secret-id "$db_secret_arn" --query SecretString --output text)"
-          db_user="$(echo "$db_secret_json" | jq -r '.username')"
-          db_pass="$(echo "$db_secret_json" | jq -r '.password')"
-          db_name="$(echo "$db_secret_json" | jq -r '.dbname')"
-          db_host="$(echo "$db_secret_json" | jq -r '.host')"
-          db_user_enc="$(jq -nr --arg v "$db_user" '$v|@uri')"
-          db_pass_enc="$(jq -nr --arg v "$db_pass" '$v|@uri')"
-          database_url="postgres://${db_user_enc}:${db_pass_enc}@${db_host}:5432/${db_name}?sslmode=require"
 
           # Build environment overrides JSON
           env_overrides='['
@@ -2455,8 +2435,6 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          env_overrides+='{"name":"DATABASE_URL","value":"'"$database_url"'"},'
-          env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$database_url"'"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -2464,7 +2442,7 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://${PLANE_B_DB_USERNAME}:${PLANE_B_DB_PASSWORD}@${PLANE_B_DB_HOST}:${PLANE_B_DB_PORT:-5432}/${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
