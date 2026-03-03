@@ -308,7 +308,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify --keyless "${IMAGE_URI}"
+          cosign verify \
+  --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  ""
 
       - name: CDK Diff (dev)
         shell: bash
@@ -997,7 +1000,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify "${IMAGE_URI}"
+          cosign verify \
+  --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  ""
 
       - name: CDK Diff (staging)
         shell: bash
@@ -2110,7 +2116,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify --keyless "${IMAGE_URI}"
+          cosign verify \
+  --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  ""
 
       - name: CDK Diff (prod)
         shell: bash
@@ -2554,3 +2563,4 @@ jobs:
             COMMIT_SHA="${COMMIT_SHA:0:7}"
           fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
+
