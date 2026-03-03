@@ -272,14 +272,15 @@ export const createFrontend = (
         responseHttpStatus: 200,
         // For unknown routes on static hosting, serve Nuxt's SPA fallback.
         // Using index.html here collapses deep links to "/" because it's prerendered for home.
+        // Short TTL balances deploy freshness with origin request volume from bot scans/typos.
         responsePagePath: '/200.html',
-        ttl: Duration.minutes(10),
+        ttl: Duration.seconds(30),
       },
       {
         httpStatus: 404,
         responseHttpStatus: 200,
         responsePagePath: '/200.html',
-        ttl: Duration.minutes(10),
+        ttl: Duration.seconds(30),
       },
     ],
     defaultRootObject: 'index.html',

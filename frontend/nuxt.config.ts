@@ -494,9 +494,9 @@ export default defineNuxtConfig({
   // Experimental Features
   experimental: {
     renderJsonPayloads: true,
-    // Enable in staging/prod to reduce duplicated SSR/ISR payload bytes across many static-ish routes.
-    // Keep disabled in dev for faster iteration and fewer generated artifacts.
-    payloadExtraction: isStagingOrProd,
+    // Disabled: static preset with payloadExtraction causes blank pages when CloudFront
+    // serves SPA fallback HTML in place of missing .payload.json files.
+    payloadExtraction: false,
     viewTransition: true,
     watcher: 'chokidar-granular',
   },
@@ -507,19 +507,54 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     minify: !isAwsEnvironment, // Disable minify in dev to avoid build issues
     preset: isAwsEnvironment ? 'static' : undefined, // Use static generation for AWS deployment
-    prerender: isAwsEnvironment
-      ? {
-          crawlLinks: false,
-          routes: ['/', '/maintenance'],
-          failOnError: false,
-        }
-      : {
-          // Local/CI builds should be deterministic and not depend on backend availability.
-          // Crawling all links during build is slow/brittle (remote images, transient network failures).
-          crawlLinks: false,
-          routes: ['/', '/maintenance'],
-          failOnError: false,
-        },
+    prerender: {
+      crawlLinks: false,
+      routes: [
+        '/',
+        '/maintenance',
+        // Static content pages (no API dependencies at build time)
+        '/methodology',
+        '/about',
+        '/contact',
+        '/faq',
+        '/plus',
+        '/corrections',
+        '/privacy',
+        '/terms',
+        '/cookies',
+        '/how-we-make-money',
+        '/affiliate-disclosure',
+        '/affiliate-partnerships',
+        '/partnerships',
+        '/media-kit',
+        '/indices-methodology',
+        '/research',
+        '/smart-corridors',
+        '/status',
+        '/sign-in',
+        '/sign-up',
+        '/forgot-password',
+        '/reset-password',
+        // Legal pages
+        '/legal',
+        '/legal/privacy',
+        '/legal/terms',
+        '/legal/disclosure',
+        '/legal/how-we-make-money',
+        '/legal/do-not-sell',
+        '/legal/methodology',
+        // Learning center index + key guides
+        '/learn',
+        '/learn/all',
+        '/learn/providers',
+        // Pulse + providers index
+        '/pulse',
+        '/providers',
+        // Institutions landing
+        '/institutions',
+      ],
+      failOnError: false,
+    },
   },
 
   // Vite Configuration

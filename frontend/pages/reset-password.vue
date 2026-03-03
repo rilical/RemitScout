@@ -175,8 +175,21 @@ onMounted(async () => {
     return
   }
 
+  const tokenHash =
+    (typeof route.query.token_hash === 'string' && route.query.token_hash)
+    || (typeof route.query.token === 'string' && route.query.token)
   const code = typeof route.query.code === 'string' ? route.query.code : null
-  if (code) {
+
+  if (tokenHash) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'recovery',
+    })
+    if (error) {
+      errorMessage.value = error.message
+      return
+    }
+  } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       errorMessage.value = error.message
