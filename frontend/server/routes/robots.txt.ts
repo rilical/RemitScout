@@ -26,8 +26,39 @@ export const buildRobots = (siteUrl: string, envName: string) => {
 
   // Prod: allow indexing, but block internal/sensitive surfaces.
   // Keep this intentionally simple; we can tighten it later if a crawler misbehaves.
+  const cleanUrl = siteUrl.replace(/\/$/, '')
+
   return [
     '# Remit-Scout robots.txt',
+    '',
+    '# AI Crawlers — explicitly welcome',
+    'User-agent: GPTBot',
+    'Allow: /',
+    'Disallow: /api/',
+    'Disallow: /admin/',
+    'Disallow: /dashboard/',
+    'Disallow: /auth/',
+    '',
+    'User-agent: ChatGPT-User',
+    'Allow: /',
+    '',
+    'User-agent: ClaudeBot',
+    'Allow: /',
+    'Disallow: /api/',
+    'Disallow: /admin/',
+    '',
+    'User-agent: PerplexityBot',
+    'Allow: /',
+    'Disallow: /api/',
+    'Disallow: /admin/',
+    '',
+    'User-agent: Google-Extended',
+    'Allow: /',
+    '',
+    'User-agent: Applebot-Extended',
+    'Allow: /',
+    '',
+    '# Default catch-all',
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
@@ -46,7 +77,10 @@ export const buildRobots = (siteUrl: string, envName: string) => {
     'Allow: /google*.html',
     'Allow: /.well-known/',
     'Allow: /.well-known/security.txt',
-    `Sitemap: ${siteUrl.replace(/\/$/, '')}/sitemap.xml`,
+    '',
+    `Sitemap: ${cleanUrl}/sitemap.xml`,
+    '# LLM-readable site map',
+    `# See: ${cleanUrl}/llms.txt`,
     '',
   ].join('\n')
 }
