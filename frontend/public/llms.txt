@@ -1,0 +1,135 @@
+# Remit-Scout
+
+> Remit-Scout is an independent comparison platform for international money transfers. We aggregate live quotes from 25+ licensed providers (Wise, Remitly, Western Union, etc.) and rank them by total cost, speed, and trust score across 200+ corridors worldwide.
+
+## Key Pages
+
+- [Compare Money Transfers](https://remitscout.com/send-money): Side-by-side comparison of providers for any corridor
+- [All Corridors](https://remitscout.com/corridors): Browse all supported remittance corridors
+- [Exchange Rates](https://remitscout.com/exchange-rates): Live mid-market exchange rates
+- [Provider Directory](https://remitscout.com/learn/providers): Reviews and scores for every provider
+- [Methodology](https://remitscout.com/methodology): How we calculate Remit-Score and rank providers
+
+## Corridor Comparisons
+
+### United States Outbound
+- [United States to India](https://remitscout.com/send-money/united-states-to-india)
+- [United States to Mexico](https://remitscout.com/send-money/united-states-to-mexico)
+- [United States to Philippines](https://remitscout.com/send-money/united-states-to-philippines)
+- [United States to China](https://remitscout.com/send-money/united-states-to-china)
+- [United States to Vietnam](https://remitscout.com/send-money/united-states-to-vietnam)
+- [United States to Nigeria](https://remitscout.com/send-money/united-states-to-nigeria)
+- [United States to Pakistan](https://remitscout.com/send-money/united-states-to-pakistan)
+- [United States to Bangladesh](https://remitscout.com/send-money/united-states-to-bangladesh)
+- [United States to Guatemala](https://remitscout.com/send-money/united-states-to-guatemala)
+- [United States to Dominican Republic](https://remitscout.com/send-money/united-states-to-dominican-republic)
+- [United States to Jordan](https://remitscout.com/send-money/united-states-to-jordan)
+- [United States to Egypt](https://remitscout.com/send-money/united-states-to-egypt)
+- [United States to Colombia](https://remitscout.com/send-money/united-states-to-colombia)
+- [United States to Brazil](https://remitscout.com/send-money/united-states-to-brazil)
+- [United States to Japan](https://remitscout.com/send-money/united-states-to-japan)
+
+### United Kingdom Outbound
+- [United Kingdom to India](https://remitscout.com/send-money/united-kingdom-to-india)
+- [United Kingdom to Pakistan](https://remitscout.com/send-money/united-kingdom-to-pakistan)
+- [United Kingdom to Nigeria](https://remitscout.com/send-money/united-kingdom-to-nigeria)
+- [United Kingdom to Philippines](https://remitscout.com/send-money/united-kingdom-to-philippines)
+- [United Kingdom to Poland](https://remitscout.com/send-money/united-kingdom-to-poland)
+- [United Kingdom to Bangladesh](https://remitscout.com/send-money/united-kingdom-to-bangladesh)
+- [United Kingdom to Ghana](https://remitscout.com/send-money/united-kingdom-to-ghana)
+
+### Canada Outbound
+- [Canada to India](https://remitscout.com/send-money/canada-to-india)
+- [Canada to Philippines](https://remitscout.com/send-money/canada-to-philippines)
+- [Canada to Pakistan](https://remitscout.com/send-money/canada-to-pakistan)
+- [Canada to China](https://remitscout.com/send-money/canada-to-china)
+
+### Australia Outbound
+- [Australia to India](https://remitscout.com/send-money/australia-to-india)
+- [Australia to Philippines](https://remitscout.com/send-money/australia-to-philippines)
+- [Australia to Vietnam](https://remitscout.com/send-money/australia-to-vietnam)
+- [Australia to China](https://remitscout.com/send-money/australia-to-china)
+
+### United Arab Emirates Outbound
+- [United Arab Emirates to India](https://remitscout.com/send-money/united-arab-emirates-to-india)
+- [United Arab Emirates to Pakistan](https://remitscout.com/send-money/united-arab-emirates-to-pakistan)
+- [United Arab Emirates to Philippines](https://remitscout.com/send-money/united-arab-emirates-to-philippines)
+- [United Arab Emirates to Bangladesh](https://remitscout.com/send-money/united-arab-emirates-to-bangladesh)
+
+### Germany Outbound
+- [Germany to Turkey](https://remitscout.com/send-money/germany-to-turkey)
+- [Germany to Poland](https://remitscout.com/send-money/germany-to-poland)
+- [Germany to Romania](https://remitscout.com/send-money/germany-to-romania)
+
+## Provider Reviews
+
+- [Wise](https://remitscout.com/learn/providers/wise): Remit-Score 9.3/10
+- [Remitly](https://remitscout.com/learn/providers/remitly): Remit-Score 9.1/10
+- [Sendwave](https://remitscout.com/learn/providers/sendwave): Remit-Score 9.0/10
+- [BOSS Money](https://remitscout.com/learn/providers/boss-money): Remit-Score 8.8/10
+- [XE Money](https://remitscout.com/learn/providers/xe-money): Remit-Score 8.7/10
+- [TransferGo](https://remitscout.com/learn/providers/transfergo): Remit-Score 8.6/10
+- [Xoom](https://remitscout.com/learn/providers/xoom): Remit-Score 8.5/10
+- [Mukuru](https://remitscout.com/learn/providers/mukuru): Remit-Score 8.4/10
+- [Instarem](https://remitscout.com/learn/providers/instarem): Remit-Score 8.4/10
+- [RemitBee](https://remitscout.com/learn/providers/remitbee): Remit-Score 8.3/10
+- [Pangea](https://remitscout.com/learn/providers/pangea): Remit-Score 8.3/10
+- [KoronaPay](https://remitscout.com/learn/providers/koronapay): Remit-Score 8.3/10
+- [Western Union](https://remitscout.com/learn/providers/western-union): Remit-Score 8.2/10
+- [WorldRemit](https://remitscout.com/learn/providers/worldremit): Remit-Score 8.2/10
+- [SingX](https://remitscout.com/learn/providers/singx): Remit-Score 8.2/10
+- [WireBarley](https://remitscout.com/learn/providers/wirebarley): Remit-Score 8.2/10
+- [Placid](https://remitscout.com/learn/providers/placid): Remit-Score 8.2/10
+- [Paysend](https://remitscout.com/learn/providers/paysend): Remit-Score 8.1/10
+- [OrbitRemit](https://remitscout.com/learn/providers/orbitremit): Remit-Score 8.1/10
+- [RIA](https://remitscout.com/learn/providers/ria): Remit-Score 8.0/10
+- [Intermex](https://remitscout.com/learn/providers/intermex): Remit-Score 8.0/10
+- [Dahabshiil](https://remitscout.com/learn/providers/dahabshiil): Remit-Score 8.0/10
+- [Al Ansari Exchange](https://remitscout.com/learn/providers/al-ansari-exchange): Remit-Score 7.9/10
+
+## Provider Comparisons
+
+- [Wise vs Remitly](https://remitscout.com/compare/wise-vs-remitly)
+- [Wise vs Western Union](https://remitscout.com/compare/wise-vs-western-union)
+- [Wise vs Xoom](https://remitscout.com/compare/wise-vs-xoom)
+- [Remitly vs Western Union](https://remitscout.com/compare/remitly-vs-western-union)
+
+## Exchange Rates
+
+- [USD to INR](https://remitscout.com/exchange-rates/usd-inr)
+- [USD to PHP](https://remitscout.com/exchange-rates/usd-php)
+- [USD to MXN](https://remitscout.com/exchange-rates/usd-mxn)
+- [USD to NGN](https://remitscout.com/exchange-rates/usd-ngn)
+- [GBP to INR](https://remitscout.com/exchange-rates/gbp-inr)
+- [GBP to NGN](https://remitscout.com/exchange-rates/gbp-ngn)
+- [GBP to PKR](https://remitscout.com/exchange-rates/gbp-pkr)
+- [GBP to USD](https://remitscout.com/exchange-rates/gbp-usd)
+- [CAD to INR](https://remitscout.com/exchange-rates/cad-inr)
+- [CAD to PHP](https://remitscout.com/exchange-rates/cad-php)
+- [CAD to NGN](https://remitscout.com/exchange-rates/cad-ngn)
+- [CAD to USD](https://remitscout.com/exchange-rates/cad-usd)
+- [EUR to USD](https://remitscout.com/exchange-rates/eur-usd)
+- [EUR to INR](https://remitscout.com/exchange-rates/eur-inr)
+- [EUR to GBP](https://remitscout.com/exchange-rates/eur-gbp)
+- [EUR to NGN](https://remitscout.com/exchange-rates/eur-ngn)
+
+## Learn Guides
+
+- [Bank Transfer vs Card Funding](https://remitscout.com/learn/bank-transfer-vs-card-funding)
+- [Bank Transfer vs Card vs Cash Pickup](https://remitscout.com/learn/bank-transfer-vs-card-vs-cash-pickup)
+- [Best Time to Send Money](https://remitscout.com/learn/best-time-to-send-money)
+- [Choose the Right Delivery Method](https://remitscout.com/learn/choose-right-delivery-method)
+- [Embed Remit-Scout on Your Site](https://remitscout.com/learn/embed-remit-scout-on-your-site)
+- [Hidden Exchange Rate Fees Explained](https://remitscout.com/learn/hidden-exchange-rate-fees-explained)
+- [How Exchange Rates Work](https://remitscout.com/learn/how-exchange-rates-work)
+- [How Fast Is International Money Transfer](https://remitscout.com/learn/how-fast-is-international-money-transfer)
+- [How Remit-Score Works](https://remitscout.com/learn/how-remit-score-works)
+- [How to Read a Remittance Quote](https://remitscout.com/learn/how-to-read-remittance-quote)
+- [Money Transfer Guide](https://remitscout.com/learn/money-transfer)
+- [Promo Codes and Intro Rates](https://remitscout.com/learn/promo-codes-intro-rates)
+- [Why Checkout Price Differs](https://remitscout.com/learn/why-checkout-price-differs)
+- [Why Compare Before Every Transfer](https://remitscout.com/learn/why-compare-before-every-transfer)
+
+## API Documentation
+
+- [OpenAPI Spec (JSON)](https://remitscout.com/api-docs/json)
