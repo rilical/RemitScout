@@ -528,6 +528,31 @@ aria-current="page"
             See methodology
           </NuxtLink>
         </p>
+        <table
+          v-if="content.table.rows.length"
+          class="sr-only"
+          :aria-label="`Top providers for ${content.from} to ${content.to} transfers`"
+        >
+          <caption>Top {{ Math.min(content.table.rows.length, 5) }} money transfer providers: {{ content.from }} to {{ content.to }} ({{ fromCurrencyCode }} {{ displayAmount.toLocaleString('en-US') }})</caption>
+          <thead>
+            <tr>
+              <th scope="col">Provider</th>
+              <th scope="col">Fee</th>
+              <th scope="col">Exchange Rate</th>
+              <th scope="col">Recipient Gets</th>
+              <th scope="col">Delivery Speed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in content.table.rows.slice(0, 5)" :key="row.provider">
+              <td>{{ row.provider }}</td>
+              <td>{{ row.fee }}</td>
+              <td>{{ row.rate }}</td>
+              <td>{{ row.recipientGets }}</td>
+              <td>{{ row.speed }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
