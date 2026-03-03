@@ -21,6 +21,7 @@ import {
   type ReliabilityScore,
   type ReliabilityConfig,
 } from '../plane-b/src/scoring/provider-reliability'
+import { GLOBAL_WEIGHT_CORRIDOR_ID } from '../shared/weighting-model'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -37,8 +38,6 @@ const makeOperationalData = (
   rateStddev: overrides.rateStddev ?? 0.02,
   medianRate: overrides.medianRate ?? 18.4,
   avgMttrSeconds: overrides.avgMttrSeconds ?? 600,
-  repairsSucceeded: overrides.repairsSucceeded ?? 8,
-  repairsAttempted: overrides.repairsAttempted ?? 10,
 })
 
 // ---------------------------------------------------------------------------
@@ -254,6 +253,32 @@ describe('ProviderReliabilityScorer', () => {
     scorer = new ProviderReliabilityScorer()
   })
 
+  describe('constructor', () => {
+    it('throws when custom weights do not sum to 1.0', () => {
+      expect(
+        () =>
+          new ProviderReliabilityScorer({
+            successRateWeight: 0.5,
+            freshnessWeight: 0.5,
+            consistencyWeight: 0.5,
+            repairSpeedWeight: 0.5,
+          }),
+      ).toThrow('Reliability config weights must sum to 1.0, got 2')
+    })
+
+    it('accepts weights that sum to 1.0', () => {
+      expect(
+        () =>
+          new ProviderReliabilityScorer({
+            successRateWeight: 0.25,
+            freshnessWeight: 0.25,
+            consistencyWeight: 0.25,
+            repairSpeedWeight: 0.25,
+          }),
+      ).not.toThrow()
+    })
+  })
+
   describe('computeReliability', () => {
     it('computes a perfect score for a healthy provider', () => {
       const data = makeOperationalData({
@@ -405,12 +430,12 @@ describe('ProviderReliabilityScorer', () => {
       expect(result.size).toBe(0)
     })
 
-    it('uses __global__ key for null corridorId', () => {
+    it('uses GLOBAL_WEIGHT_CORRIDOR_ID key for null corridorId', () => {
       const data = [makeOperationalData({ corridorId: null })]
       const result = scorer.computeAll(data)
 
       const wiseMap = result.get('wise')!
-      expect(wiseMap.has('__global__')).toBe(true)
+      expect(wiseMap.has(GLOBAL_WEIGHT_CORRIDOR_ID)).toBe(true)
     })
 
     it('computes correct scores for each entry', () => {

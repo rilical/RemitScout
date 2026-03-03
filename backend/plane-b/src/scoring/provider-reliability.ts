@@ -1,4 +1,5 @@
 import { createLogger } from '../../../shared/logger'
+import { GLOBAL_WEIGHT_CORRIDOR_ID } from '../../../shared/weighting-model'
 
 const logger = createLogger('plane-b.scoring.provider-reliability')
 
@@ -38,10 +39,6 @@ export type ProviderOperationalData = {
   // --- Repair-speed inputs (from silver.failure_bundle) ---
   /** Mean time to repair in seconds (avg time from first_failure_at to repair_outcome = 'applied') */
   avgMttrSeconds: number
-  /** Number of failure bundles that were successfully repaired */
-  repairsSucceeded: number
-  /** Total failure bundles observed */
-  repairsAttempted: number
 }
 
 /**
@@ -239,13 +236,9 @@ export class ProviderReliabilityScorer {
       this.config.repairSpeedWeight
 
     if (Math.abs(weightSum - 1.0) > 1e-6) {
-      logger.warn('reliability_config_weights_not_normalized', {
-        weight_sum: weightSum,
-        success_rate_weight: this.config.successRateWeight,
-        freshness_weight: this.config.freshnessWeight,
-        consistency_weight: this.config.consistencyWeight,
-        repair_speed_weight: this.config.repairSpeedWeight,
-      })
+      throw new Error(
+        `Reliability config weights must sum to 1.0, got ${weightSum}`,
+      )
     }
   }
 
@@ -317,7 +310,7 @@ export class ProviderReliabilityScorer {
         providerMap = new Map<string, ReliabilityScore>()
         result.set(data.providerId, providerMap)
       }
-      providerMap.set(data.corridorId ?? '__global__', score)
+      providerMap.set(data.corridorId ?? GLOBAL_WEIGHT_CORRIDOR_ID, score)
     }
 
     logger.info('reliability_bulk_computed', {
