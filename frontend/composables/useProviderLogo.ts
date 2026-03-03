@@ -102,33 +102,33 @@ export function getProviderLogoSize(slug: string, context: 'default' | 'large' |
   // Base sizes for different contexts
   const contextSizes: Record<string, Record<string, string>> = {
     small: {
-      'wise': 'h-12 w-auto', // viewBox 219.7x50 (4.4:1) - very wide (15% bigger: h-10 -> h-12)
-      'remitly': 'h-16 w-auto', // viewBox 1000x428 (2.3:1) (bigger on cards: h-14 -> h-16)
-      'worldremit': 'h-14 w-auto', // viewBox 1062x326 (3.3:1) (15% bigger: h-12 -> h-14)
-      'western-union': 'h-12 w-auto', // viewBox 299.7x70 (4.3:1) - very wide (15% bigger: h-10 -> h-12)
-      'westernunion': 'h-12 w-auto',
-      'xe-money': 'h-16 w-auto', // viewBox 600x484 (1.24:1) - almost square (15% bigger: h-14 -> h-16)
-      'xe': 'h-16 w-auto',
-      'ria': 'h-16 w-auto', // viewBox 145x67 (2.16:1) - moderate
-      'dahabshiil': 'h-16 w-auto',
-      'sendwave': 'h-16 w-auto',
-      'xoom': 'h-16 w-auto', // viewBox 200x69 (2.9:1) - moderate
-      'transfergo': 'h-12 w-auto', // viewBox 121x20 (6:1) - very wide
-      'paysend': 'h-16 w-auto', // viewBox 220x60 (3.7:1) - moderate
-      'orbitremit': 'h-12 w-auto',
-      'bossmoney': 'h-12 w-auto',
-      'boss-money': 'h-12 w-auto',
-      'instarem': 'h-10 w-auto', // viewBox 182x32 (5.7:1) - very wide
-      'wirebarley': 'h-10 w-auto', // 492x96 (5.1:1) - very wide
-      'intermex': 'h-10 w-auto',
-      'koronapay': 'h-12 w-auto', // viewBox 1450x362 (4:1) - wide
-      'remitbee': 'h-14 w-auto', // square-ish logo mark
-      'singx': 'h-12 w-auto',
-      'placid': 'h-12 w-auto',
-      'mukuru': 'h-12 w-auto',
-      'pangea': 'h-12 w-auto', // 289x105 (2.8:1) - moderate
-      'al-ansari-exchange': 'h-12 w-auto',
-      'alansari': 'h-12 w-auto',
+      'wise': 'h-14 w-auto', // viewBox 219.7x50 (4.4:1) - very wide
+      'remitly': 'h-20 w-auto', // viewBox 1000x428 (2.3:1)
+      'worldremit': 'h-16 w-auto', // viewBox 1062x326 (3.3:1)
+      'western-union': 'h-14 w-auto', // viewBox 299.7x70 (4.3:1) - very wide
+      'westernunion': 'h-14 w-auto',
+      'xe-money': 'h-20 w-auto', // viewBox 600x484 (1.24:1) - almost square
+      'xe': 'h-20 w-auto',
+      'ria': 'h-20 w-auto', // viewBox 145x67 (2.16:1) - moderate
+      'dahabshiil': 'h-20 w-auto',
+      'sendwave': 'h-20 w-auto',
+      'xoom': 'h-20 w-auto', // viewBox 200x69 (2.9:1) - moderate
+      'transfergo': 'h-14 w-auto', // viewBox 121x20 (6:1) - very wide
+      'paysend': 'h-20 w-auto', // viewBox 220x60 (3.7:1) - moderate
+      'orbitremit': 'h-14 w-auto',
+      'bossmoney': 'h-14 w-auto',
+      'boss-money': 'h-14 w-auto',
+      'instarem': 'h-12 w-auto', // viewBox 182x32 (5.7:1) - very wide
+      'wirebarley': 'h-12 w-auto', // 492x96 (5.1:1) - very wide
+      'intermex': 'h-12 w-auto',
+      'koronapay': 'h-14 w-auto', // viewBox 1450x362 (4:1) - wide
+      'remitbee': 'h-16 w-auto', // square-ish logo mark
+      'singx': 'h-14 w-auto',
+      'placid': 'h-14 w-auto',
+      'mukuru': 'h-14 w-auto',
+      'pangea': 'h-14 w-auto', // 289x105 (2.8:1) - moderate
+      'al-ansari-exchange': 'h-14 w-auto',
+      'alansari': 'h-14 w-auto',
     },
     default: {
       'wise': 'h-18 w-auto', // viewBox 219.7x50 (4.4:1) (30% bigger: h-14 -> h-18)

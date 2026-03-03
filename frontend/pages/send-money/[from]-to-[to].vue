@@ -738,7 +738,7 @@ aria-current="page"
                       <ProviderLogo
                         :slug="row._slug || ''"
                         :alt="row.provider"
-                        size="small"
+                        size="large"
                         class="object-contain"
                       />
                     </div>
@@ -4734,7 +4734,8 @@ watch(quoteRefreshKey, () => {
   refreshTimedOut.value = false
   refreshFinalizing.value = false
   lastRefreshKey.value = null
-  providersLive.value = false
+  // Don't reset providersLive here — useProviders handles the transition
+  // via its own pending state. Resetting causes visible "unavailable" flicker.
   refreshStatus.value = null
   clearRefreshPoll()
   clearRefreshStatusPoll()
