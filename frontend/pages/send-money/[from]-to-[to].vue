@@ -509,6 +509,28 @@ aria-current="page"
       </div>
     </section>
 
+    <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
+    <section
+      v-if="hasApiQuotes && verdictParagraph"
+      class="bg-neutral-50 border-y border-neutral-200"
+    >
+      <div class="container py-6">
+        <h2 class="text-h3 font-black text-rs-fg mb-3">
+          Best way to send money from {{ content.from }} to {{ content.to }}
+        </h2>
+        <p class="text-body text-neutral-700 max-w-3xl">
+          {{ verdictParagraph }}
+        </p>
+        <p class="text-body-sm text-rs-muted mt-2">
+          Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
+          Data sourced from provider APIs.
+          <NuxtLink to="/methodology" class="font-semibold text-brand-600 hover:text-brand-500 underline underline-offset-2">
+            See methodology
+          </NuxtLink>
+        </p>
+      </div>
+    </section>
+
     <!-- Anchor Mini Nav -->
     <CorridorMiniNav :last-updated="mostRecentUpdateLabel" />
 
@@ -4212,6 +4234,35 @@ const fastestSpeedDisplay = computed(() => {
     return hoursA - hoursB
   })[0]
   return fastest?.speed || '—'
+})
+
+const cheapestProvider = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length) return null
+  return rows[0] // Already sorted by best deal (highest recipientGets)
+})
+
+const fastestProvider = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length) return null
+  return [...rows].sort((a, b) => parseSpeedToHours(a.speed) - parseSpeedToHours(b.speed))[0]
+})
+
+const verdictParagraph = computed(() => {
+  if (!hasApiQuotes.value || !cheapestProvider.value) return ''
+  const cheap = cheapestProvider.value
+  const fast = fastestProvider.value
+  const count = providerCount.value
+  const from = content.value.from
+  const to = content.value.to
+  const amount = displayAmount.value
+  const fromCcy = fromCurrencyCode.value
+
+  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString()} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`
+  if (fast && fast.provider !== cheap.provider) {
+    text += ` The fastest option is ${fast.provider} with delivery in ${fast.speed}.`
+  }
+  return text
 })
 
 const calculatedAverageCost = computed(() => {
