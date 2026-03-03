@@ -191,6 +191,22 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
   }
+  const privacyHashSalt = (
+    process.env.PRIVACY_HASH_SALT ??
+    process.env.PLANE_A_PRIVACY_HASH_SALT ??
+    ''
+  ).trim()
+  const privacySessionSalt = (
+    process.env.PRIVACY_SESSION_SALT ??
+    process.env.PLANE_A_PRIVACY_SESSION_SALT ??
+    ''
+  ).trim()
+  if (privacyHashSalt) {
+    planeAEnvironment.PRIVACY_HASH_SALT = privacyHashSalt
+  }
+  if (privacySessionSalt) {
+    planeAEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
+  }
   const enforceJwtAuth =
     options.enablePlaneAJwtAuth ??
     (options.envName === 'prod' || options.envName === 'staging')
@@ -375,6 +391,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (privacyHashSalt) {
+    planeCEnvironment.PRIVACY_HASH_SALT = privacyHashSalt
+  }
+  if (privacySessionSalt) {
+    planeCEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
   }
   const cDefaultDbPoolMax = isProd || isStaging ? '8' : '5'
   planeCEnvironment.DB_QUERY_TIMEOUT_MS =
