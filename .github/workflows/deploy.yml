@@ -816,10 +816,16 @@ jobs:
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
+          FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
         run: |
           set -euo pipefail
           if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
             echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
+            exit 1
+          fi
+          if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
+            echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: staging)."
             exit 1
           fi
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
@@ -1154,6 +1160,8 @@ jobs:
         env:
           ENV_NAME: staging
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
+          FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk exec -- cdk deploy \
