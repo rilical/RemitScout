@@ -144,38 +144,11 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   // ── Key Pages ──
   lines.push('## Key Pages')
   lines.push('')
-  lines.push(`- Compare Money Transfers: ${base}/send-money`)
-  lines.push(`- All Corridors: ${base}/corridors`)
-  lines.push(`- Exchange Rates: ${base}/exchange-rates`)
-  lines.push(`- Provider Directory: ${base}/learn/providers`)
-  lines.push(`- Methodology: ${base}/methodology`)
-  lines.push('')
-
-  // ── Provider Reviews (expanded) ──
-  lines.push('## Provider Reviews')
-  lines.push('')
-
-  const sortedProviders = Object.values(PROVIDER_SCORES).sort((a, b) => b.remitScore - a.remitScore)
-  for (const provider of sortedProviders) {
-    lines.push(`### ${provider.name}`)
-    lines.push(`URL: ${base}/learn/providers/${provider.slug}`)
-    lines.push(`Remit-Score: ${provider.remitScore}/10`)
-    if (provider.scoreBreakdown) {
-      lines.push(formatScoreBreakdown(provider.scoreBreakdown))
-    }
-    lines.push('')
-  }
-
-  // ── Provider Comparisons ──
-  lines.push('## Provider Comparisons')
-  lines.push('')
-  for (const slug of PROVIDER_COMPARISONS) {
-    const title = slug
-      .split('-vs-')
-      .map(s => slugToTitle(s))
-      .join(' vs ')
-    lines.push(`- ${title}: ${base}/compare/${slug}`)
-  }
+  lines.push(`- [Compare Money Transfers](${base}/send-money)`)
+  lines.push(`- [All Corridors](${base}/corridors)`)
+  lines.push(`- [Exchange Rates](${base}/exchange-rates)`)
+  lines.push(`- [Provider Directory](${base}/learn/providers)`)
+  lines.push(`- [Methodology](${base}/methodology)`)
   lines.push('')
 
   // ── Corridor Comparisons (expanded) ──
@@ -200,10 +173,37 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
       const fromName = COUNTRY_NAMES[corridor.from] || corridor.from
       const toName = COUNTRY_NAMES[corridor.to] || corridor.to
       const url = getCorridorUrl(corridor.from, corridor.to)
-      lines.push(`- ${fromName} to ${toName}: ${base}${url}`)
+      lines.push(`- [${fromName} to ${toName}](${base}${url})`)
     }
     lines.push('')
   }
+
+  // ── Provider Reviews (expanded) ──
+  lines.push('## Provider Reviews')
+  lines.push('')
+
+  const sortedProviders = Object.values(PROVIDER_SCORES).sort((a, b) => b.remitScore - a.remitScore)
+  for (const provider of sortedProviders) {
+    lines.push(`### ${provider.name}`)
+    lines.push(`URL: ${base}/learn/providers/${provider.slug}`)
+    lines.push(`Remit-Score: ${provider.remitScore}/10`)
+    if (provider.scoreBreakdown) {
+      lines.push(formatScoreBreakdown(provider.scoreBreakdown))
+    }
+    lines.push('')
+  }
+
+  // ── Provider Comparisons ──
+  lines.push('## Provider Comparisons')
+  lines.push('')
+  for (const slug of PROVIDER_COMPARISONS) {
+    const title = slug
+      .split('-vs-')
+      .map(s => slugToTitle(s))
+      .join(' vs ')
+    lines.push(`- [${title}](${base}/compare/${slug})`)
+  }
+  lines.push('')
 
   // ── Exchange Rates (expanded) ──
   lines.push('## Exchange Rates')
@@ -212,7 +212,7 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   lines.push('')
   for (const slug of EXCHANGE_RATE_PAIR_SLUGS) {
     const name = EXCHANGE_RATE_NAMES[slug] || slug.toUpperCase().replace('-', '/')
-    lines.push(`- ${name}: ${base}/exchange-rates/${slug}`)
+    lines.push(`- [${name}](${base}/exchange-rates/${slug})`)
   }
   lines.push('')
 
@@ -265,7 +265,7 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   // ── API Documentation ──
   lines.push('## API Documentation')
   lines.push('')
-  lines.push(`OpenAPI Spec (JSON): ${base}/api-docs/json`)
+  lines.push(`- [OpenAPI Spec (JSON)](${base}/api-docs/json)`)
   lines.push('')
 
   return lines.join('\n')
