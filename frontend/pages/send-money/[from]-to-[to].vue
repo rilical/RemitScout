@@ -4225,17 +4225,6 @@ const recipientDeltaDisplay = computed(() => {
   return `${currencyCode} ${Math.round(delta).toLocaleString('en-US')}`
 })
 
-const fastestSpeedDisplay = computed(() => {
-  const rows = content.value.table.rows
-  if (!rows.length) return '—'
-  const fastest = [...rows].sort((a, b) => {
-    const hoursA = parseSpeedToHours(a.speed)
-    const hoursB = parseSpeedToHours(b.speed)
-    return hoursA - hoursB
-  })[0]
-  return fastest?.speed || '—'
-})
-
 const cheapestProvider = computed(() => {
   const rows = content.value.table.rows
   if (!rows.length) return null
@@ -4248,6 +4237,8 @@ const fastestProvider = computed(() => {
   return [...rows].sort((a, b) => parseSpeedToHours(a.speed) - parseSpeedToHours(b.speed))[0]
 })
 
+const fastestSpeedDisplay = computed(() => fastestProvider.value?.speed || '—')
+
 const verdictParagraph = computed(() => {
   if (!hasApiQuotes.value || !cheapestProvider.value) return ''
   const cheap = cheapestProvider.value
@@ -4258,7 +4249,7 @@ const verdictParagraph = computed(() => {
   const amount = displayAmount.value
   const fromCcy = fromCurrencyCode.value
 
-  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString()} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`
+  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString('en-US')} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`
   if (fast && fast.provider !== cheap.provider) {
     text += ` The fastest option is ${fast.provider} with delivery in ${fast.speed}.`
   }
