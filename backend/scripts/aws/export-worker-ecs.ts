@@ -63,6 +63,12 @@ export const handler = async (): Promise<void> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.export-worker-ecs.health-server',
+    enableDatabaseCheck: false,
+  })
+
   const { runExportWorker } = await import('../export-worker')
   await runExportWorker()
 }
