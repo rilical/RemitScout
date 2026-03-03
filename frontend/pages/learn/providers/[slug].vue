@@ -629,7 +629,7 @@ const breadcrumbItems = computed(() => [
 ])
 
 // Structured data
-const { addAggregateRatingSchema, addBreadcrumbSchema } = useStructuredData()
+const { addAggregateRatingSchema, addBreadcrumbSchema, addFinancialProductSchema, addFAQSchema } = useStructuredData()
 
 addBreadcrumbSchema(breadcrumbItems.value.map(item => ({
   name: item.name,
@@ -644,5 +644,37 @@ if (remitScore.value && typeof remitScore.value === 'number') {
     worstRating: 1,
     reviewCount: 1,
   })
+}
+
+// Add FinancialProduct schema for the provider
+if (provider.value || localScore) {
+  addFinancialProductSchema({
+    name: `${providerName.value} Money Transfer`,
+    description: `Send money internationally with ${providerName.value}. Compare fees, exchange rates, and delivery speeds on Remit-Scout.`,
+    url: `${siteBaseUrl}${route.path}`,
+    provider: providerName.value,
+    currency: 'USD',
+  })
+
+  const scoreDisplay = remitScore.value ? remitScore.value.toFixed(1) : 'N/A'
+
+  addFAQSchema([
+    {
+      question: `Is ${providerName.value} safe to use?`,
+      answer: `${providerName.value} is a licensed money transfer provider. Our Remit-Score rates them ${scoreDisplay}/10 for trust and safety.`,
+    },
+    {
+      question: `What is ${providerName.value}'s Remit-Score?`,
+      answer: `${providerName.value} has a Remit-Score of ${scoreDisplay}/10, based on delivered value, reliability, speed, support, and trust ratings.`,
+    },
+    {
+      question: `How fast is ${providerName.value}?`,
+      answer: `Transfer speeds with ${providerName.value} vary by corridor and delivery method. Check live quotes on Remit-Scout for current delivery estimates.`,
+    },
+    {
+      question: `What are ${providerName.value}'s fees?`,
+      answer: `Fees depend on your corridor, amount, and payment method. Compare ${providerName.value}'s live rates on Remit-Scout.`,
+    },
+  ])
 }
 </script>

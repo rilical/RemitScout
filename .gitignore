@@ -27,6 +27,8 @@ backend/plane-a/src/**/*.d.ts
 backend/plane-b/src/**/*.d.ts
 backend/plane-c/src/**/*.d.ts
 backend/scripts/**/*.d.ts
+backend/scripts/**/*.js
+!backend/scripts/bronze-access-check.js
 backend/shared/**/*.d.ts
 
 # CDK Infrastructure

@@ -169,4 +169,51 @@ const breadcrumbItems = computed(() => [
 // Provider data
 const { data: providerA } = await useProvider(route.params.a as string)
 const { data: providerB } = await useProvider(route.params.b as string)
+
+// Structured data
+const { addProviderListSchema, addFAQSchema } = useStructuredData()
+
+if (providerA.value && providerB.value) {
+  addProviderListSchema(
+    [
+      {
+        provider: providerA.value.name,
+        areaServed: 'Worldwide',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      {
+        provider: providerB.value.name,
+        areaServed: 'Worldwide',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    ],
+    `${providerA.value.name} vs ${providerB.value.name}`,
+  )
+
+  const nameA = providerA.value.name
+  const nameB = providerB.value.name
+  const scoreA = providerA.value.remitScore?.toFixed(1) ?? providerA.value.score?.toFixed(1) ?? 'N/A'
+  const scoreB = providerB.value.remitScore?.toFixed(1) ?? providerB.value.score?.toFixed(1) ?? 'N/A'
+
+  addFAQSchema([
+    {
+      question: `Is ${nameA} cheaper than ${nameB}?`,
+      answer: `Compare ${nameA} and ${nameB} on Remit-Scout to see real-time fee and rate differences. The cheapest option depends on your corridor and transfer amount.`,
+    },
+    {
+      question: `Is ${nameA} faster than ${nameB}?`,
+      answer: `Transfer speeds vary by corridor and delivery method. Compare ${nameA} and ${nameB} side by side on Remit-Scout for current delivery estimates.`,
+    },
+    {
+      question: `Which has better reviews, ${nameA} or ${nameB}?`,
+      answer: `${nameA} has a Remit-Score of ${scoreA}/10 and ${nameB} has ${scoreB}/10. Scores are based on delivered value, reliability, speed, support, and trust.`,
+    },
+    {
+      question: `Should I use ${nameA} or ${nameB} to send money?`,
+      answer: `The best choice depends on your specific corridor, amount, and priorities (cost vs speed vs coverage). Use Remit-Scout to compare live quotes.`,
+    },
+  ])
+}
 </script>

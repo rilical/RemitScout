@@ -150,5 +150,21 @@ export const getNotificationConfig = (): NotificationConfig => {
   return result.data
 }
 
+/**
+ * Push notification configuration.
+ */
+export const PUSH_CONFIG = {
+  PROVIDER: config.communications.push.provider,
+  API_KEY: config.communications.push.firebaseServerKey,
+  MAX_RETRIES: config.communications.push.maxRetries,
+} as const
 
+/**
+ * Signal type constants.
+ */
+export const SIGNAL_TYPES = {
+  ARBITRAGE_SIGNAL: 'ARBITRAGE_SIGNAL',
+} as const
+
+export type SignalType = typeof SIGNAL_TYPES[keyof typeof SIGNAL_TYPES]
 

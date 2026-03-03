@@ -509,6 +509,53 @@ aria-current="page"
       </div>
     </section>
 
+    <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
+    <section
+      v-if="hasApiQuotes && verdictParagraph"
+      class="bg-neutral-50 border-y border-neutral-200"
+    >
+      <div class="container py-6">
+        <h2 class="text-h3 font-black text-rs-fg mb-3">
+          Best way to send money from {{ content.from }} to {{ content.to }}
+        </h2>
+        <p class="text-body text-neutral-700 max-w-3xl">
+          {{ verdictParagraph }}
+        </p>
+        <p class="text-body-sm text-rs-muted mt-2">
+          Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
+          Data sourced from provider APIs.
+          <NuxtLink to="/methodology" class="font-semibold text-brand-600 hover:text-brand-500 underline underline-offset-2">
+            See methodology
+          </NuxtLink>
+        </p>
+        <table
+          v-if="content.table.rows.length"
+          class="sr-only"
+          :aria-label="`Top providers for ${content.from} to ${content.to} transfers`"
+        >
+          <caption>Top {{ Math.min(content.table.rows.length, 5) }} money transfer providers: {{ content.from }} to {{ content.to }} ({{ fromCurrencyCode }} {{ displayAmount.toLocaleString('en-US') }})</caption>
+          <thead>
+            <tr>
+              <th scope="col">Provider</th>
+              <th scope="col">Fee</th>
+              <th scope="col">Exchange Rate</th>
+              <th scope="col">Recipient Gets</th>
+              <th scope="col">Delivery Speed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in content.table.rows.slice(0, 5)" :key="row.provider">
+              <td>{{ row.provider }}</td>
+              <td>{{ row.fee }}</td>
+              <td>{{ row.rate }}</td>
+              <td>{{ row.recipientGets }}</td>
+              <td>{{ row.speed }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Anchor Mini Nav -->
     <CorridorMiniNav :last-updated="mostRecentUpdateLabel" />
 
@@ -1231,6 +1278,14 @@ aria-current="page"
             </p>
           </div>
         </div>
+
+        <p
+          v-if="content.lastUpdated || seoUpdatedLabel"
+          class="text-body-sm text-rs-muted mb-6"
+        >
+          Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
+          Comparing {{ providerCount }} provider{{ providerCount === 1 ? '' : 's' }} for {{ fromCurrencyCode }} {{ displayAmount.toLocaleString('en-US') }} to {{ toCurrencyCode }}.
+        </p>
 
         <!-- Provider Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -3638,6 +3693,30 @@ const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => ([
     q: 'How do you rank the providers?',
     a: 'We rank providers based on total cost (fees plus exchange-rate markup), then show transfer speed and other details to help you decide. Providers cannot pay to rank higher. Rankings are based on the data we collect and our methodology.',
   },
+  {
+    q: `Which provider has the best exchange rate for ${fromCurrencyCode.value} to ${toCurrencyCode.value}?`,
+    a: bestRateLabel.value && bestQuote.value
+      ? `As of ${seoUpdatedLabel.value}, ${bestQuote.value.name} offers the best exchange rate at ${bestRateLabel.value}. Exchange rates change frequently — use our live comparison above to check the latest.`
+      : `Exchange rates change frequently. Use our live comparison tool above to check which provider currently offers the best ${fromCurrencyCode.value} to ${toCurrencyCode.value} rate.`,
+  },
+  {
+    q: `How many providers support ${content.value.from} to ${content.value.to} transfers?`,
+    a: providerCount.value
+      ? `We currently compare ${providerCount.value} providers for transfers from ${content.value.from} to ${content.value.to}. The number of available providers can vary depending on the transfer amount and delivery method.`
+      : `Multiple providers support transfers from ${content.value.from} to ${content.value.to}. Use the comparison tool above to see all currently available options.`,
+  },
+  {
+    q: `Can I send money from ${content.value.from} to ${content.value.to} for cash pickup?`,
+    a: (() => {
+      const cashProviders = content.value.table.rows
+        .filter(row => (row.payOut || '').toLowerCase().includes('cash'))
+        .map(row => row.provider)
+      if (cashProviders.length) {
+        return `Yes. ${cashProviders.slice(0, 3).join(', ')}${cashProviders.length > 3 ? ` and ${cashProviders.length - 3} more` : ''} offer cash pickup for ${content.value.from} to ${content.value.to} transfers. Check each provider for pickup location availability.`
+      }
+      return `Cash pickup availability for ${content.value.from} to ${content.value.to} depends on the provider and destination. Check the delivery methods column in our comparison above.`
+    })(),
+  },
 ]))
 
 const corridorFaqsRaw = computed<Array<{ q: string, a: string }>>(() => {
@@ -3930,7 +4009,7 @@ if (corridorFaqsRaw.value.length) {
 }
 
 // Add FinancialProduct schema for the best quote
-const { addFinancialProductSchema, addRemittanceCorridorSchema } = useStructuredData()
+const { addFinancialProductSchema, addRemittanceCorridorSchema, addProviderListSchema, addExchangeRateSchema } = useStructuredData()
 
 watchEffect(() => {
   if (!providerCount.value) return
@@ -3941,6 +4020,7 @@ watchEffect(() => {
     to: content.value.to,
     providers: corridorSchemaProviders.value,
     bestRate: bestRateLabel.value,
+    lastUpdated: new Date().toISOString(),
   })
 })
 
@@ -3958,6 +4038,34 @@ if (bestQuote.value && hasApiQuotes.value) {
     amount: String(displayAmount.value),
   })
 }
+
+// Add provider list schema for all live quotes
+watchEffect(() => {
+  if (!ratedQuotes.value.length) return
+  addProviderListSchema(
+    ratedQuotes.value.map(quote => ({
+      provider: quote.name,
+      areaServed: content.value.to,
+      price: String(quote.fee),
+      priceCurrency: fromCurrencyCode.value,
+      deliveryTime: quote.delivery || undefined,
+      exchangeRate: quote.fxRate ? String(quote.fxRate) : undefined,
+    })),
+    `Money Transfer Providers: ${content.value.from} to ${content.value.to}`,
+  )
+})
+
+// Add exchange rate schema for mid-market rate
+watchEffect(() => {
+  if (!midMarketRate.value) return
+  addExchangeRateSchema({
+    baseCurrency: fromCurrencyCode.value,
+    quoteCurrency: toCurrencyCode.value,
+    rate: midMarketRate.value,
+    provider: 'Mid-Market',
+    lastUpdated: new Date().toISOString(),
+  })
+})
 
 const displayCurrency = ref(toCurrencyCode.value)
 
@@ -4175,15 +4283,35 @@ const recipientDeltaDisplay = computed(() => {
   return `${currencyCode} ${Math.round(delta).toLocaleString('en-US')}`
 })
 
-const fastestSpeedDisplay = computed(() => {
+const cheapestProvider = computed(() => {
   const rows = content.value.table.rows
-  if (!rows.length) return '—'
-  const fastest = [...rows].sort((a, b) => {
-    const hoursA = parseSpeedToHours(a.speed)
-    const hoursB = parseSpeedToHours(b.speed)
-    return hoursA - hoursB
-  })[0]
-  return fastest?.speed || '—'
+  if (!rows.length) return null
+  return rows[0] // Already sorted by best deal (highest recipientGets)
+})
+
+const fastestProvider = computed(() => {
+  const rows = content.value.table.rows
+  if (!rows.length) return null
+  return [...rows].sort((a, b) => parseSpeedToHours(a.speed) - parseSpeedToHours(b.speed))[0]
+})
+
+const fastestSpeedDisplay = computed(() => fastestProvider.value?.speed || '—')
+
+const verdictParagraph = computed(() => {
+  if (!hasApiQuotes.value || !cheapestProvider.value) return ''
+  const cheap = cheapestProvider.value
+  const fast = fastestProvider.value
+  const count = providerCount.value
+  const from = content.value.from
+  const to = content.value.to
+  const amount = displayAmount.value
+  const fromCcy = fromCurrencyCode.value
+
+  let text = `Based on live quotes from ${count} providers, the cheapest way to send ${fromCcy} ${amount.toLocaleString('en-US')} from ${from} to ${to} is ${cheap.provider} at ${cheap.fee} total cost (recipient gets ${cheap.recipientGets}).`
+  if (fast && fast.provider !== cheap.provider) {
+    text += ` The fastest option is ${fast.provider} with delivery in ${fast.speed}.`
+  }
+  return text
 })
 
 const calculatedAverageCost = computed(() => {

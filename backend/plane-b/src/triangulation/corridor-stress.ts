@@ -5,6 +5,7 @@ import { sendJsonMessage } from '../../../shared/sqs'
 import type { CorridorStressSignal } from '../agents/stress-responder'
 import type { StressSignal, StressSignalType } from './engine'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
+import { computeDecayedIntensity } from '../scoring/decay-functions'
 
 const logger = createLogger('plane-b.triangulation.corridor-stress')
 
@@ -106,23 +107,26 @@ export class CorridorStressCalculator {
     let totalWeight = 0
 
     for (const signal of signals) {
-      // Only consider non-expired signals
+      // TTL is a hard ceiling: signals past their TTL are fully removed regardless
+      // of decay state.  Within the TTL window, exponential decay (below) gradually
+      // diminishes the signal's intensity based on its type-specific half-life.
       const expiresAt = new Date(signal.detectedAt).getTime() + signal.ttlSeconds * 1000
       if (now >= expiresAt) continue
 
       const weight = this.signalTypeWeights[signal.signalType] ?? 0.05
-      // Apply a recency decay: signals closer to expiry contribute less
-      const remainingRatio = Math.max(0, (expiresAt - now) / (signal.ttlSeconds * 1000))
-      const decayedWeight = weight * (0.3 + 0.7 * remainingRatio) // never fully zero
 
-      const weightedContribution = signal.intensity * decayedWeight
+      // Exponential decay: intensity decays based on signal-type-specific half-life.
+      // The weight (signal-type importance) stays constant; only intensity diminishes.
+      const decayedIntensity = computeDecayedIntensity(signal, now)
+
+      const weightedContribution = decayedIntensity * weight
       weightedSum += weightedContribution
-      totalWeight += decayedWeight
+      totalWeight += weight
 
       contributions.push({
         signalType: signal.signalType,
-        intensity: signal.intensity,
-        weight: decayedWeight,
+        intensity: decayedIntensity,
+        weight,
         weightedContribution,
       })
     }

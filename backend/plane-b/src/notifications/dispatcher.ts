@@ -28,7 +28,10 @@ import { withWorkerRetry } from '../../../shared/worker-retry'
 import type { AnomalyResult } from '../signals/anomaly-detector'
 import type { WebhookSubscriptionRecord } from '../repositories'
 import { SignalRepository, WebhookRepository } from '../repositories'
-import { WEBHOOK_CONFIG, NOTIFICATION_CONFIG, SIGNAL_TYPES } from './config'
+import { getWebhookConfig, getNotificationConfig, SIGNAL_TYPES } from './config-aws'
+
+const WEBHOOK_CONFIG = getWebhookConfig()
+const NOTIFICATION_CONFIG = getNotificationConfig()
 import { recordNotificationMetric, recordNotificationDuration } from './aws-services'
 import type { SignalType, WebhookPayload } from './types'
 
