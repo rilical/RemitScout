@@ -108,6 +108,11 @@ export const handler = async (): Promise<number> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.fx-rate-refresh-worker-ecs.health-server',
+  })
+
   try {
     const { runFxRateRefreshWorkerLoop } = await import('../fx-rate-refresh-worker')
     return await runFxRateRefreshWorkerLoop()
