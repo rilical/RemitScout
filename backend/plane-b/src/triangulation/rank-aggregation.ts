@@ -178,9 +178,13 @@ export class RankAggregator {
 
       for (const [dimId, ranked] of rankedDimensions) {
         const weight = weights.get(dimId) ?? 0
-        if (weight <= 0) continue
+        if (weight < 0) {
+          logger.warn('aggregate_negative_weight_ignored', { dimId, weight })
+          continue
+        }
+        if (weight === 0) continue
 
-        const percentile = ranked.get(corridorId) ?? dimensionMedians.get(dimId)!
+        const percentile = ranked.get(corridorId) ?? dimensionMedians.get(dimId) ?? 50
         weightedSum += percentile * weight
       }
 
