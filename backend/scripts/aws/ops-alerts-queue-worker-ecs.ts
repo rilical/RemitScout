@@ -48,6 +48,12 @@ export const handler = async (): Promise<void> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.ops-alerts-queue-worker-ecs.health-server',
+    enableDatabaseCheck: false,
+  })
+
   const { runOpsAlertsQueueWorkerLoop } = await import('../ops-alerts-queue-worker')
   await runOpsAlertsQueueWorkerLoop()
 }
