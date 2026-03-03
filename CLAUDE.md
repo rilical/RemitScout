@@ -1,6 +1,6 @@
 # CLAUDE.md — Remit-Scout V2
 
-Remit-Scout is a remittance price comparison platform. It aggregates real-time quotes from 20+ money transfer providers (Wise, Remitly, Western Union, etc.), normalizes them into a bronze/silver/gold data pipeline, and serves them via a B2B API (Plane A) and B2C frontend. The system includes self-healing agents that detect and repair collector failures autonomously.
+Remit-Scout is a remittance price comparison platform. It aggregates real-time quotes from 24 money transfer providers (Wise, Remitly, Western Union, etc.), normalizes them into a bronze/silver/gold data pipeline, and serves them via a B2B API (Plane A) and B2C frontend. The system includes self-healing agents that detect and repair collector failures autonomously.
 
 ## Architecture
 
@@ -82,7 +82,7 @@ cd backend && pnpm guardrail:test                 # Bronze layer access check
 | What | Location | Pattern |
 |------|----------|---------|
 | Tests | `backend/tests/*.test.ts` | Colocated test directory, not next to source |
-| Migrations | `backend/db/migrations/NNN_*.sql` | Sequential numbering (currently 000-093) |
+| Migrations | `backend/db/migrations/NNN_*.sql` | Sequential numbering (currently 001-096) |
 | CDK constructs | `infrastructure/cdk/lib/*.ts` | 4 nested stacks: Foundation, Runtime, Edge, Ops |
 | Routes | `backend/plane-a/src/routes/*.ts` | Registered in `app.ts` with `/api/v1` prefix |
 | Collectors | `backend/plane-b/src/collectors/*.ts` | One file per provider |
@@ -90,18 +90,19 @@ cd backend && pnpm guardrail:test                 # Bronze layer access check
 | Shared code | `backend/shared/*.ts` | Cross-plane utilities, config, DB, Redis |
 | Frontend pages | `frontend/pages/**/*.vue` | Nuxt file-based routing |
 | Frontend components | `frontend/components/**/*.vue` | Auto-imported by Nuxt |
+| Scripts | `backend/scripts/*.ts` | Workers for ECS tasks; import from owning plane + shared |
 
 ## Architecture Rules
 
 **These are hard rules. Violations will cause problems.**
 
-1. **Plane isolation**: Plane A never imports from Plane B/C directly. Communication is via SQS queues or shared database. The ONLY cross-plane import allowed is from `backend/shared/`.
+1. **Plane isolation**: Plane source modules (`plane-a/src/`, `plane-b/src/`, `plane-c/src/`) never import from each other directly. Communication is via SQS queues or shared database. The ONLY cross-plane import allowed is from `backend/shared/`. Worker scripts in `backend/scripts/` are an exception — they run as ECS tasks within a specific plane's context and may import from that plane's internals (but not from other planes).
 
 2. **Config through config.ts**: All configuration reads go through `backend/shared/config.ts`. Never use raw `process.env` in application code. Config uses `toBoolean()`, `toNumber()`, `toOptionalNumber()` helpers.
 
 3. **Parameterized SQL only**: Use `$1, $2` placeholders with `pool.query(sql, [params])`. Never concatenate user input into SQL strings. Run `pnpm guardrail:sql:unsafe-interpolation` to verify.
 
-4. **Structured logging**: Use `createLogger('module-name')` from `backend/shared/logger.ts`. Never use `console.log` in production code. Logger emits JSON with correlation IDs.
+4. **Structured logging**: Use `createLogger('module-name')` from `backend/shared/logger.ts`. Never use `console.log` in backend application code. Logger emits JSON with correlation IDs. Frontend Nitro server middleware uses structured JSON console output (the standard pattern for H3/Nitro).
 
 5. **Typed errors**: Use error classes from `backend/shared/errors.ts`. Never throw raw `new Error()` in route handlers.
 
@@ -235,7 +236,7 @@ Co-Authored-By: ...
 
 ## Database Schema
 
-~70 tables across 5 schemas. Schema defined in 94 sequential migration files (`backend/db/migrations/001_*.sql` through `093_*.sql`).
+~70 tables across 5 schemas. Schema defined in 97 sequential migration files (`backend/db/migrations/001_*.sql` through `096_*.sql`).
 
 | Schema | Tables | Purpose |
 |--------|--------|---------|
@@ -251,7 +252,7 @@ Co-Authored-By: ...
 
 ## Providers
 
-25 remittance providers, each with a probe script in `backend/scripts/[provider]-probe.ts`:
+24 remittance providers, each with a probe script in `backend/scripts/[provider]-probe.ts`:
 
 Al Ansari, Boss Money, Dahabshiil, Instarem, Intermex, KoronaPay, Mukuru, OrbitRemit, Pangea, Paysend, Placid, Remitbee, Remitly, RIA, Sendwave, SingX, TransferGo, Wells Fargo, Western Union, WireBarley, Wise, WorldRemit, XE, Xoom
 
