@@ -309,9 +309,9 @@ jobs:
         run: |
           set -euo pipefail
           cosign verify \
-          --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
-          --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-          "${IMAGE_URI}"
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (dev)
         shell: bash
@@ -640,6 +640,8 @@ jobs:
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
       PLANE_A_JWT_ISSUER: ${{ vars.PLANE_A_JWT_ISSUER }}
       PLANE_A_JWT_AUDIENCES: ${{ vars.PLANE_A_JWT_AUDIENCES }}
+      PRIVACY_HASH_SALT: ${{ secrets.PRIVACY_HASH_SALT }}
+      PRIVACY_SESSION_SALT: ${{ secrets.PRIVACY_SESSION_SALT }}
       PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
       PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
@@ -824,6 +826,10 @@ jobs:
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: staging)."
             exit 1
           fi
+          if [ -z "${PRIVACY_HASH_SALT:-}" ] || [ -z "${PRIVACY_SESSION_SALT:-}" ]; then
+            echo "Missing PRIVACY_HASH_SALT / PRIVACY_SESSION_SALT (configure in GitHub environment secrets: staging)."
+            exit 1
+          fi
           if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
             echo "Missing SES_IDENTITY_ARNS / SNS_TOPIC_ARNS (configure in GitHub environment vars: staging)."
             exit 1
@@ -1001,9 +1007,9 @@ jobs:
         run: |
           set -euo pipefail
           cosign verify \
-          --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
-          --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-          "${IMAGE_URI}"
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (staging)
         shell: bash
@@ -1655,6 +1661,8 @@ jobs:
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+      PRIVACY_HASH_SALT: ${{ secrets.PRIVACY_HASH_SALT }}
+      PRIVACY_SESSION_SALT: ${{ secrets.PRIVACY_SESSION_SALT }}
       PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
       PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
@@ -1929,6 +1937,10 @@ jobs:
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
             exit 1
           fi
+          if [ -z "${PRIVACY_HASH_SALT:-}" ] || [ -z "${PRIVACY_SESSION_SALT:-}" ]; then
+            echo "Missing PRIVACY_HASH_SALT / PRIVACY_SESSION_SALT (configure in GitHub environment secrets: prod)."
+            exit 1
+          fi
           if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
             echo "Missing SES_IDENTITY_ARNS / SNS_TOPIC_ARNS (configure in GitHub environment vars: prod)."
             exit 1
@@ -2117,9 +2129,9 @@ jobs:
         run: |
           set -euo pipefail
           cosign verify \
-          --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
-          --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-          "${IMAGE_URI}"
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (prod)
         shell: bash
@@ -2563,6 +2575,3 @@ jobs:
             COMMIT_SHA="${COMMIT_SHA:0:7}"
           fi
           curl -sS -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"Deploy ${ENV_NAME}: ${STATUS} (${COMMIT_SHA})\"}" >/dev/null
-
-
-
