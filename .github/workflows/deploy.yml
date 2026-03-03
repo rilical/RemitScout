@@ -1234,7 +1234,6 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
-          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
@@ -1265,11 +1264,6 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
-            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
-            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
-          fi
-          env_overrides+='{"name":"NODE_OPTIONS","value":"--dns-result-order=ipv4first"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -2411,7 +2405,6 @@ jobs:
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
-          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
@@ -2442,11 +2435,6 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
-            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
-            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
-          fi
-          env_overrides+='{"name":"NODE_OPTIONS","value":"--dns-result-order=ipv4first"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
