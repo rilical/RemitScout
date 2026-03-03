@@ -140,7 +140,7 @@ export const createEcsTasks = (
   options: EcsTaskOptions,
 ): EcsTaskResources => {
   const importSecretByRef = (id: string, secretRef: string): ISecret => {
-    const normalizedRef = secretRef.trim().replace(/:[^:]+::, '')
+    const normalizedRef = secretRef.trim()
     if (normalizedRef.startsWith('arn:')) {
       return Secret.fromSecretCompleteArn(scope, id, normalizedRef)
     }
@@ -1824,5 +1824,6 @@ export const createEcsTasks = (
     dbMigrateTask,
   }
 }
+
 
 
