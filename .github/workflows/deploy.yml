@@ -1471,9 +1471,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          dispatch_ref="${GITHUB_REF_NAME:-staging}"
+          dispatch_ref="${{ steps.resolve_ref.outputs.sha }}"
           if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
-            dispatch_ref="staging"
+            dispatch_ref="${GITHUB_REF_NAME:-staging}"
           fi
 
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
