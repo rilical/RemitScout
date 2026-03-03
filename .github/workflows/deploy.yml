@@ -127,7 +127,7 @@ jobs:
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
-          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
           if [ "$audit_exit" -ne 0 ]; then
             echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
@@ -754,7 +754,7 @@ jobs:
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
-          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
           if [ "$audit_exit" -ne 0 ]; then
             echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
@@ -1899,7 +1899,7 @@ jobs:
             dir:/workspace \
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
-          pnpm -w audit --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
+          pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
           if [ "$audit_exit" -ne 0 ]; then
             echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
