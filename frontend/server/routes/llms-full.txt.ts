@@ -1,27 +1,7 @@
 import { defineEventHandler, setHeader } from 'h3'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
 import { POPULAR_CORRIDOR_CODES, getCorridorUrl } from '~/utils/country-slugs'
-
-// NOTE:
-// This route is bundled by Nitro (Rollup), which cannot import/parse `.vue` SFCs.
-// If you add/remove learn guide pages under `frontend/pages/learn/*.vue`,
-// update this list accordingly.
-const LEARN_GUIDE_SLUGS = [
-  'bank-transfer-vs-card-funding',
-  'bank-transfer-vs-card-vs-cash-pickup',
-  'best-time-to-send-money',
-  'choose-right-delivery-method',
-  'embed-remit-scout-on-your-site',
-  'hidden-exchange-rate-fees-explained',
-  'how-exchange-rates-work',
-  'how-fast-is-international-money-transfer',
-  'how-remit-score-works',
-  'how-to-read-remittance-quote',
-  'money-transfer',
-  'promo-codes-intro-rates',
-  'why-checkout-price-differs',
-  'why-compare-before-every-transfer',
-] as const
+import { LEARN_GUIDE_SLUGS, EXCHANGE_RATE_PAIR_SLUGS, PROVIDER_COMPARISONS } from '~/server/utils/seo-constants'
 
 const LEARN_GUIDE_DESCRIPTIONS: Record<string, string> = {
   'bank-transfer-vs-card-funding': 'Compares bank transfer and card funding methods for international transfers, including fees, speed, and when to use each.',
@@ -39,26 +19,6 @@ const LEARN_GUIDE_DESCRIPTIONS: Record<string, string> = {
   'why-checkout-price-differs': 'Explains why the price you see at checkout can differ from the comparison page and how to handle it.',
   'why-compare-before-every-transfer': 'Makes the case for comparing providers before each transfer, since rates and fees change constantly.',
 }
-
-// Exchange rate pairs - keep in sync with the curated list on `/exchange-rates`.
-const EXCHANGE_RATE_PAIR_SLUGS = [
-  'usd-inr',
-  'usd-php',
-  'usd-mxn',
-  'usd-ngn',
-  'gbp-inr',
-  'gbp-ngn',
-  'gbp-pkr',
-  'gbp-usd',
-  'cad-inr',
-  'cad-php',
-  'cad-ngn',
-  'cad-usd',
-  'eur-usd',
-  'eur-inr',
-  'eur-gbp',
-  'eur-ngn',
-] as const
 
 const EXCHANGE_RATE_NAMES: Record<string, string> = {
   'usd-inr': 'US Dollar to Indian Rupee',
@@ -108,20 +68,13 @@ const COUNTRY_NAMES: Record<string, string> = {
   RO: 'Romania',
 }
 
-const PROVIDER_COMPARISONS = [
-  'wise-vs-remitly',
-  'wise-vs-western-union',
-  'wise-vs-xoom',
-  'remitly-vs-western-union',
-]
-
 const slugToTitle = (slug: string): string =>
   slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 
-const formatScoreBreakdown = (breakdown: { deliveredValue: number; reliability: number; frictionSpeed: number; supportRefunds: number; trustSafety: number }): string => {
+const formatScoreBreakdown = (breakdown: { deliveredValue: number, reliability: number, frictionSpeed: number, supportRefunds: number, trustSafety: number }): string => {
   return [
     `  Delivered Value: ${(breakdown.deliveredValue * 10).toFixed(1)}/10`,
     `  Reliability: ${(breakdown.reliability * 10).toFixed(1)}/10`,
@@ -158,7 +111,7 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   lines.push('')
 
   // Group corridors by source country
-  const corridorsBySource: Record<string, Array<{ from: string; to: string }>> = {}
+  const corridorsBySource: Record<string, Array<{ from: string, to: string }>> = {}
   for (const corridor of POPULAR_CORRIDOR_CODES) {
     if (!corridorsBySource[corridor.from]) {
       corridorsBySource[corridor.from] = []
@@ -271,12 +224,27 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   return lines.join('\n')
 }
 
+const toEnvName = () => {
+  const raw = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').toLowerCase().trim()
+  if (raw === 'prod') return 'production'
+  if (raw === 'dev') return 'development'
+  return raw || 'development'
+}
+
+const isProductionEnv = () => toEnvName() === 'production'
+
 export default defineEventHandler((event) => {
   const { public: { siteUrl } } = useRuntimeConfig()
   const base = siteUrl || 'https://remitscout.com'
 
   setHeader(event, 'content-type', 'text/plain; charset=utf-8')
-  setHeader(event, 'cache-control', 'public, max-age=3600, s-maxage=3600')
+
+  if (!isProductionEnv()) {
+    setHeader(event, 'cache-control', 'no-store')
+    return ''
+  }
+
+  setHeader(event, 'cache-control', 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=7200')
 
   return buildLlmsFullTxt(base)
 })

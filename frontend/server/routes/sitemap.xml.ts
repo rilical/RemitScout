@@ -2,52 +2,11 @@ import { defineEventHandler, setHeader } from 'h3'
 import { getAllCorridorUrls } from '~/utils/country-slugs'
 import { PROVIDER_SCORES } from '~/lib/providerScores'
 import { pulseChartRegistry } from '~/lib/pulseChartRegistry'
+import { LEARN_GUIDE_SLUGS, EXCHANGE_RATE_PAIR_SLUGS, PROVIDER_COMPARISONS } from '~/server/utils/seo-constants'
 
 const today = new Date().toISOString().split('T')[0]
 
 const sitePath = (path: string) => path.startsWith('/') ? path : `/${path}`
-
-// NOTE:
-// This route is bundled by Nitro (Rollup), which cannot import/parse `.vue` SFCs.
-// Avoid `import.meta.glob('~/pages/learn/*.vue')` here, or the production build fails.
-// If you add/remove top-level learn guide pages under `frontend/pages/learn/*.vue`,
-// update this list accordingly.
-const LEARN_GUIDE_SLUGS = [
-  'bank-transfer-vs-card-funding',
-  'bank-transfer-vs-card-vs-cash-pickup',
-  'best-time-to-send-money',
-  'choose-right-delivery-method',
-  'embed-remit-scout-on-your-site',
-  'hidden-exchange-rate-fees-explained',
-  'how-exchange-rates-work',
-  'how-fast-is-international-money-transfer',
-  'how-remit-score-works',
-  'how-to-read-remittance-quote',
-  'money-transfer',
-  'promo-codes-intro-rates',
-  'why-checkout-price-differs',
-  'why-compare-before-every-transfer',
-] as const
-
-// Exchange rate pairs - keep in sync with the curated list on `/exchange-rates`.
-const EXCHANGE_RATE_PAIR_SLUGS = [
-  'usd-inr',
-  'usd-php',
-  'usd-mxn',
-  'usd-ngn',
-  'gbp-inr',
-  'gbp-ngn',
-  'gbp-pkr',
-  'gbp-usd',
-  'cad-inr',
-  'cad-php',
-  'cad-ngn',
-  'cad-usd',
-  'eur-usd',
-  'eur-inr',
-  'eur-gbp',
-  'eur-ngn',
-] as const
 
 const urlEntry = (siteUrl: string, path: string, changefreq = 'weekly', priority = '0.5', lastmod?: string) => {
   const lastmodDate = lastmod || today
@@ -131,12 +90,7 @@ export const buildSitemapXml = (siteUrl: string) => {
   }))
 
   // Provider comparisons - high priority
-  const providerComparisons = [
-    'wise-vs-remitly',
-    'wise-vs-western-union',
-    'wise-vs-xoom',
-    'remitly-vs-western-union',
-  ].map(slug => ({ path: `/compare/${slug}`, priority: '0.8', changefreq: 'weekly' }))
+  const providerComparisons = PROVIDER_COMPARISONS.map(slug => ({ path: `/compare/${slug}`, priority: '0.8', changefreq: 'weekly' }))
 
   // Popular corridors - high priority, daily updates for rate changes
   const corridorPages = getAllCorridorUrls().map(path => ({
