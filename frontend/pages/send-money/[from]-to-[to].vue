@@ -1279,6 +1279,14 @@ aria-current="page"
           </div>
         </div>
 
+        <p
+          v-if="content.lastUpdated || seoUpdatedLabel"
+          class="text-body-sm text-rs-muted mb-6"
+        >
+          Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
+          Comparing {{ providerCount }} provider{{ providerCount === 1 ? '' : 's' }} for {{ fromCurrencyCode }} {{ displayAmount.toLocaleString('en-US') }} to {{ toCurrencyCode }}.
+        </p>
+
         <!-- Provider Comparison -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="rounded-xl border border-rs-border bg-surface p-5">
@@ -4012,6 +4020,7 @@ watchEffect(() => {
     to: content.value.to,
     providers: corridorSchemaProviders.value,
     bestRate: bestRateLabel.value,
+    lastUpdated: new Date().toISOString(),
   })
 })
 
