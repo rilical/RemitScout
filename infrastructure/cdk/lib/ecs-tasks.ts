@@ -139,15 +139,12 @@ export const createEcsTasks = (
   scope: Construct,
   options: EcsTaskOptions,
 ): EcsTaskResources => {
-  const completeSecretArnPattern =
-    /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
   const importSecretByRef = (id: string, secretRef: string): ISecret => {
-    if (secretRef.startsWith('arn:')) {
-      return completeSecretArnPattern.test(secretRef)
-        ? Secret.fromSecretCompleteArn(scope, id, secretRef)
-        : Secret.fromSecretPartialArn(scope, id, secretRef)
+    const normalizedRef = secretRef.trim().replace(/:[^:]+::, )
+    if (normalizedRef.startsWith('arn:')) {
+      return Secret.fromSecretCompleteArn(scope, id, normalizedRef)
     }
-    return Secret.fromSecretNameV2(scope, id, secretRef)
+    return Secret.fromSecretNameV2(scope, id, normalizedRef)
   }
 
   const isProd = options.envName === 'prod'
@@ -1827,3 +1824,4 @@ export const createEcsTasks = (
     dbMigrateTask,
   }
 }
+
