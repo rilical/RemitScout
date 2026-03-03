@@ -1,5 +1,5 @@
 import { type Construct } from 'constructs'
-import { RemovalPolicy } from 'aws-cdk-lib'
+import { Duration, RemovalPolicy } from 'aws-cdk-lib'
 import {
   Vpc,
   SubnetType,
@@ -11,7 +11,11 @@ import {
   GatewayVpcEndpointAwsService,
   InterfaceVpcEndpointAwsService,
 } from 'aws-cdk-lib/aws-ec2'
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
+import {
+  BlockPublicAccess,
+  Bucket,
+  BucketEncryption,
+} from 'aws-cdk-lib/aws-s3'
 
 export type NetworkingResources = {
   vpc: Vpc
@@ -65,14 +69,24 @@ export const createNetworking = (
     ],
   })
 
+  // VPC flow logs stored in S3 (21x cheaper than CloudWatch Logs ingestion).
+  // Retention matches previous CloudWatch config: 14 days prod, 3 days non-prod.
+  const flowLogsBucket = new Bucket(scope, 'VpcFlowLogsBucket', {
+    bucketName: `remit-scout-vpc-flow-logs-${options.envName}`,
+    encryption: BucketEncryption.S3_MANAGED,
+    blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    autoDeleteObjects: !isProd,
+    lifecycleRules: [
+      {
+        expiration: Duration.days(isProd ? 14 : 3),
+        abortIncompleteMultipartUploadAfter: Duration.days(1),
+      },
+    ],
+  })
+
   vpc.addFlowLog('VpcFlowLog', {
-    destination: FlowLogDestination.toCloudWatchLogs(
-      new LogGroup(scope, 'VpcFlowLogGroup', {
-        logGroupName: `/remit-scout/${options.envName}/vpc-flow-logs`,
-        retention: isProd ? RetentionDays.TWO_WEEKS : RetentionDays.THREE_DAYS,
-        removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-      }),
-    ),
+    destination: FlowLogDestination.toS3(flowLogsBucket, `${options.envName}/vpc-flow-logs`),
     trafficType: FlowLogTrafficType.REJECT,
   })
 

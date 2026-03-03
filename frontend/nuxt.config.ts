@@ -76,11 +76,16 @@ const resolvePublicApiBase = () => {
   const forceDirectPublicApi = parseEnvFlag(
     resolveEnvValue('PUBLIC_API_BASE_DIRECT', 'NUXT_PUBLIC_API_BASE_DIRECT') || '',
   )
+  // In static deployments (S3), no Nitro BFF proxy exists to rewrite /api/* → /api/v1/*.
+  // Client-side requests must target /api/v1 directly so CloudFront routes them to the
+  // correct API Gateway public routes instead of the auth-gated catch-all.
+  const staticFallback = isAwsEnvironment ? '/api/v1' : '/api'
+
   const publicBase = readEnvValue('PUBLIC_API_BASE')
   if (publicBase) {
     const normalized = normalizeApiBase(publicBase) || publicBase
     if (isAbsoluteUrl(normalized) && !forceDirectPublicApi) {
-      return '/api'
+      return staticFallback
     }
     return normalized
   }
@@ -96,8 +101,8 @@ const resolvePublicApiBase = () => {
     }
   }
 
-  // Default to same-origin BFF proxy (Nitro server/api/* routes) to avoid browser CORS drift.
-  return '/api'
+  // Default: BFF proxy in SSR mode, direct /api/v1 in static mode.
+  return staticFallback
 }
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')
