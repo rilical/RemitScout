@@ -5,13 +5,14 @@ import {
   ViewerProtocolPolicy,
   AllowedMethods,
   CachePolicy,
+  OriginRequestPolicy,
   ResponseHeadersPolicy,
   ErrorResponse,
   Function,
   FunctionCode,
   FunctionEventType,
 } from 'aws-cdk-lib/aws-cloudfront'
-import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
+import { HttpOrigin, S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import {
   Bucket,
   BucketAccessControl,
@@ -69,6 +70,15 @@ const createISRLambdaEdge = (scope: Construct): Function => {
   })
 }
 
+const resolveOriginDomain = (value: string): string => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return new URL(trimmed).hostname
+  }
+  return trimmed.split('/')[0]
+}
+
 export const createFrontend = (
   scope: Construct,
   options: FrontendOptions,
@@ -102,6 +112,10 @@ export const createFrontend = (
   })
 
   const s3Origin = S3BucketOrigin.withOriginAccessControl(bucket)
+  const planeAOriginDomain = options.planeACloudFrontDomain
+    ? resolveOriginDomain(options.planeACloudFrontDomain)
+    : ''
+  const planeAOrigin = planeAOriginDomain ? new HttpOrigin(planeAOriginDomain) : undefined
 
   const isrFunction = createISRLambdaEdge(scope)
 
@@ -155,6 +169,42 @@ export const createFrontend = (
       ],
     },
     additionalBehaviors: {
+      ...(planeAOrigin
+        ? {
+            '/api': {
+              origin: planeAOrigin,
+              viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+              allowedMethods: AllowedMethods.ALLOW_ALL,
+              cachePolicy: CachePolicy.CACHING_DISABLED,
+              originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+              compress: true,
+            },
+            '/api/*': {
+              origin: planeAOrigin,
+              viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+              allowedMethods: AllowedMethods.ALLOW_ALL,
+              cachePolicy: CachePolicy.CACHING_DISABLED,
+              originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+              compress: true,
+            },
+            '/healthz': {
+              origin: planeAOrigin,
+              viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+              allowedMethods: AllowedMethods.ALLOW_ALL,
+              cachePolicy: CachePolicy.CACHING_DISABLED,
+              originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+              compress: true,
+            },
+            '/readyz': {
+              origin: planeAOrigin,
+              viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+              allowedMethods: AllowedMethods.ALLOW_ALL,
+              cachePolicy: CachePolicy.CACHING_DISABLED,
+              originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+              compress: true,
+            },
+          }
+        : {}),
       '/send-money/*': {
         origin: s3Origin,
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
