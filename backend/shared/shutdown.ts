@@ -6,6 +6,7 @@ import { captureError } from './error-tracker'
 import { getLambdaContext, isLambdaTimeoutWarning, type LambdaContext } from './utils/aws-context'
 import { emitOpsEvent } from './ops-events'
 import { shutdownNewRelicLogExport } from './newrelic-log-exporter'
+import { shutdownNewRelicMetricExport } from './newrelic-metric-exporter'
 
 const logger = createLogger('shared.shutdown')
 
@@ -200,6 +201,21 @@ const performCleanup = async (
         log.debug('new_relic_logs_flushed')
       } catch (error) {
         log.warn('new_relic_logs_flush_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    },
+  })
+
+  cleanupTasks.push({
+    name: 'flush_new_relic_metrics',
+    priority: 5,
+    task: async () => {
+      try {
+        await shutdownNewRelicMetricExport()
+        log.debug('new_relic_metrics_flushed')
+      } catch (error) {
+        log.warn('new_relic_metrics_flush_failed', {
           error: error instanceof Error ? error.message : String(error),
         })
       }

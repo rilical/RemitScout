@@ -152,9 +152,11 @@ export const createEcsTasks = (
   const isStaging = options.envName === 'staging'
   const isConservativeWorkerDefaults = isDev || isStaging
   const minimalMode = options.minimalMode === true
+  // Prod stays at 90 days for SOC 2 compliance (DPA mandates 90-day API access logs).
+  // Non-prod reduced to 1 day — New Relic retains full log history.
   const appLogRetentionDays = process.env.APP_LOG_RETENTION_DAYS
     ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
-    : (isProd ? 90 : (isDev ? 1 : 7))
+    : (isProd ? 90 : 1)
   const logRetention = appLogRetentionDays
   const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
   const tracingEnv = resolveTracingEnv({

@@ -8,6 +8,7 @@ import { config } from './config'
 import { CircuitBreaker } from './circuit-breaker'
 import { createLogger } from './logger'
 import { registerCloudWatchClient } from './connection-manager'
+import { enqueueNewRelicMetric, isNewRelicMetricExportEnabled } from './newrelic-metric-exporter'
 
 export type CloudWatchMetricInput = {
   name: string
@@ -24,6 +25,20 @@ const MAX_BATCH_SIZE = 20
 const MAX_QUEUE_SIZE = 1000 // Backpressure threshold
 const MAX_DIMENSIONS = 30 // CloudWatch limit
 const METRIC_NAME_REGEX = /^[a-zA-Z0-9_]+$/
+
+// Namespaces whose metrics back CloudWatch Alarms and MUST stay in CloudWatch.
+// All other namespaces are forwarded to New Relic only (cost optimization).
+const CLOUDWATCH_ALARM_NAMESPACES = new Set([
+  'RemitScout',
+  'RemitScout/Agents',
+  'RemitScout/Probes',
+  'RemitScout/BatchJobs',
+  'RemitScout/Workers',
+  'RemitScout/Tracing',
+])
+
+const isCloudWatchRequired = (namespace: string): boolean =>
+  CLOUDWATCH_ALARM_NAMESPACES.has(namespace)
 
 let client: CloudWatchClient | null = null
 let flushTimer: NodeJS.Timeout | null = null
@@ -187,7 +202,6 @@ const scheduleFlush = () => {
 }
 
 export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
-  if (!shouldRecordMetric(metric)) return
   if (!Number.isFinite(metric.value)) return
 
   // Validate metric name
@@ -208,6 +222,26 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
     })
     return
   }
+
+  const resolvedNamespace = metric.namespace || config.observability.cloudwatch.namespace
+
+  // Route non-alarm namespaces to New Relic directly (skip CloudWatch).
+  if (!isCloudWatchRequired(resolvedNamespace) && isNewRelicMetricExportEnabled()) {
+    enqueueNewRelicMetric({
+      name: metric.name,
+      type: 'gauge',
+      value: metric.value,
+      attributes: {
+        ...Object.fromEntries(
+          Object.entries(metric.dimensions || {}).map(([k, v]) => [k, String(v)]),
+        ),
+        namespace: resolvedNamespace,
+      },
+    })
+    return
+  }
+
+  if (!shouldRecordMetric(metric)) return
 
   // Backpressure: drop metrics if queue is too large
   if (metricQueue.length >= MAX_QUEUE_SIZE) {

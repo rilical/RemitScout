@@ -1234,10 +1234,10 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
-          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
+          LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}
           LAUNCH_PASSWORD_AUSTRILIC: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC }}
           LAUNCH_PASSWORD_GHABAYENEDU: ${{ secrets.LAUNCH_PASSWORD_GHABAYENEDU }}
           LAUNCH_PASSWORD_SUPPORT: ${{ secrets.LAUNCH_PASSWORD_SUPPORT }}
@@ -1258,16 +1258,12 @@ jobs:
 
           # Build environment overrides JSON
           env_overrides='['
-          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
+          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_DEVELOPER LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
             val="${!var:-}"
             if [ -n "$val" ]; then
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
-            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
-            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
-          fi
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -1275,14 +1271,38 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://${PLANE_B_DB_USERNAME}:${PLANE_B_DB_PASSWORD}@${PLANE_B_DB_HOST}:${PLANE_B_DB_PORT:-5432}/${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
-          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
           if [ "$exit_code" != "0" ]; then
             echo "::error::Seed task failed (exitCode=$exit_code)."
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping seed task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
             exit 1
           else
             echo "Seed completed successfully."
@@ -2385,10 +2405,10 @@ jobs:
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
-          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
+          LAUNCH_PASSWORD_DEVELOPER: ${{ secrets.LAUNCH_PASSWORD_DEVELOPER }}
           LAUNCH_PASSWORD_AUSTRILIC: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC }}
           LAUNCH_PASSWORD_GHABAYENEDU: ${{ secrets.LAUNCH_PASSWORD_GHABAYENEDU }}
           LAUNCH_PASSWORD_SUPPORT: ${{ secrets.LAUNCH_PASSWORD_SUPPORT }}
@@ -2409,16 +2429,12 @@ jobs:
 
           # Build environment overrides JSON
           env_overrides='['
-          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
+          for var in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY LAUNCH_PASSWORD_OMAR LAUNCH_PASSWORD_DEVELOPER LAUNCH_PASSWORD_AUSTRILIC LAUNCH_PASSWORD_GHABAYENEDU LAUNCH_PASSWORD_SUPPORT DEFAULT_LAUNCH_PASSWORD; do
             val="${!var:-}"
             if [ -n "$val" ]; then
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
-          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
-            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
-            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
-          fi
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -2426,14 +2442,38 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"sh\",\"-lc\",\"set -euo pipefail; DATABASE_URL=\\\"postgres://${PLANE_B_DB_USERNAME}:${PLANE_B_DB_PASSWORD}@${PLANE_B_DB_HOST}:${PLANE_B_DB_PORT:-5432}/${PLANE_B_DB_NAME}?sslmode=require\\\"; export DATABASE_URL DATABASE_URL_PLANE_A=\\\"$DATABASE_URL\\\"; node backend/dist/scripts/seed-launch-users.js --force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
-          exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
+          task_json="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --output json)"
+          exit_code="$(echo "$task_json" | jq -r '.tasks[0].containers[0].exitCode // "null"')"
           if [ "$exit_code" != "0" ]; then
             echo "::error::Seed task failed (exitCode=$exit_code)."
+            stopped_reason="$(echo "$task_json" | jq -r '.tasks[0].stoppedReason // ""')"
+            container_reason="$(echo "$task_json" | jq -r '.tasks[0].containers[0].reason // ""')"
+            log_group="$(aws ecs describe-task-definition --task-definition "$task_def" --query 'taskDefinition.containerDefinitions[?name==`DbMigrateContainer`].logConfiguration.options."awslogs-group"' --output text 2>/dev/null || true)"
+            log_stream="$(echo "$task_json" | jq -r '.tasks[0].containers[0].logStreamName // ""')"
+            if [ -z "$log_stream" ] || [ "$log_stream" = "null" ]; then
+              task_id="${task_arn##*/}"
+              log_stream="db-migrate/DbMigrateContainer/${task_id}"
+            fi
+            if [ -n "$stopped_reason" ] && [ "$stopped_reason" != "null" ]; then
+              echo "::error::ECS stoppedReason: $stopped_reason"
+            fi
+            if [ -n "$container_reason" ] && [ "$container_reason" != "null" ]; then
+              echo "::error::Container reason: $container_reason"
+            fi
+            if [ -n "$log_group" ] && [ "$log_group" != "None" ] && [ -n "$log_stream" ] && [ "$log_stream" != "null" ]; then
+              echo "Dumping seed task logs from ${log_group}:${log_stream}"
+              aws logs get-log-events \
+                --log-group-name "$log_group" \
+                --log-stream-name "$log_stream" \
+                --limit 200 \
+                --query 'events[].message' \
+                --output text || true
+            fi
             exit 1
           else
             echo "Seed completed successfully."
