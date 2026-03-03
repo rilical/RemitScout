@@ -1,9 +1,0 @@
-{
-  "ok": false,
-  "status": 404,
-  "json": {
-    "message": "Route GET:/quotes/current?corridor_id=US-MX-USD-MXN&amount=100&payin=bank_transfer&payout=bank_deposit not found",
-    "error": "Not Found",
-    "statusCode": 404
-  }
-}
