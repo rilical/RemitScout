@@ -1542,6 +1542,7 @@ export class RemitScoutStack extends Stack {
       sentrySecretArn,
       sentrySecretJsonKey,
       sharedSecretArn,
+      planeAJwtSecretJsonKey,
       planeCInternalApiTokenSecretJsonKey,
       planeAAdminEmails,
       planeAAdminIpAllowlist,
