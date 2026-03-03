@@ -109,6 +109,11 @@ export const handler = async (): Promise<number> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.b2c-refresh-worker-ecs.health-server',
+  })
+
   // Import and run worker (using direct import path, not path.resolve)
   try {
     const { runB2cRefreshWorkerLoop } = await import('../b2c-refresh-worker')

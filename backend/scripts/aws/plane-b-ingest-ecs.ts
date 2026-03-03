@@ -62,6 +62,11 @@ export const handler = async (): Promise<void> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.plane-b-ingest-ecs.health-server',
+  })
+
   const shutdown = createShutdownHandler({
     name: 'plane-b-ingest-ecs',
     logger,

@@ -90,6 +90,11 @@ export const handler = async (): Promise<number> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.gold-live-worker-ecs.health-server',
+  })
+
   const goldLiveMode = process.env.GOLD_LIVE_QUEUE_MODE || 'off'
   if (goldLiveMode === 'queue' && !process.env.GOLD_LIVE_QUEUE_URL) {
     throw new Error('GOLD_LIVE_QUEUE_URL required when GOLD_LIVE_QUEUE_MODE=queue')
