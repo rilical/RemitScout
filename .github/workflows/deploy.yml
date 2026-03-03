@@ -1471,7 +1471,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          dispatch_ref="${{ steps.resolve_ref.outputs.sha }}"
+          dispatch_ref="${{ steps.resolve_ref.outputs.requested_ref }}"
+          if [[ "${dispatch_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            dispatch_ref="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
+          fi
           if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
             dispatch_ref="${GITHUB_REF_NAME:-staging}"
           fi
