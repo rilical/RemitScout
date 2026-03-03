@@ -58,6 +58,7 @@ export type ApiOptions = {
   sentrySecretArn?: string
   sentrySecretJsonKey?: string
   sharedSecretArn?: string
+  planeAJwtSecretJsonKey?: string
   planeCInternalApiTokenSecretJsonKey?: string
   planeAAdminEmails?: string[]
   planeAAdminIpAllowlist?: string[]
@@ -189,6 +190,22 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  const privacyHashSalt = (
+    process.env.PRIVACY_HASH_SALT ??
+    process.env.PLANE_A_PRIVACY_HASH_SALT ??
+    ''
+  ).trim()
+  const privacySessionSalt = (
+    process.env.PRIVACY_SESSION_SALT ??
+    process.env.PLANE_A_PRIVACY_SESSION_SALT ??
+    ''
+  ).trim()
+  if (privacyHashSalt) {
+    planeAEnvironment.PRIVACY_HASH_SALT = privacyHashSalt
+  }
+  if (privacySessionSalt) {
+    planeAEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
   }
   const enforceJwtAuth =
     options.enablePlaneAJwtAuth ??
@@ -374,6 +391,12 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     CLOUDWATCH_NAMESPACE: 'RemitScout',
     CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS: '15000',
     CLOUDWATCH_HIGH_CARDINALITY_METRICS: '0',
+  }
+  if (privacyHashSalt) {
+    planeCEnvironment.PRIVACY_HASH_SALT = privacyHashSalt
+  }
+  if (privacySessionSalt) {
+    planeCEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
   }
   const cDefaultDbPoolMax = isProd || isStaging ? '8' : '5'
   planeCEnvironment.DB_QUERY_TIMEOUT_MS =
@@ -610,6 +633,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (options.stripeSsmName) {
     planeAFunction.addEnvironment('STRIPE_SSM_NAME', options.stripeSsmName)
+  }
+  if (options.sharedSecretArn) {
+    const sharedSecret = importSecretByRef('PlaneASharedSecret', options.sharedSecretArn)
+    sharedSecret.grantRead(planeAFunction)
+    const planeAJwtSecretValue = sharedSecret.secretValueFromJson(
+      options.planeAJwtSecretJsonKey ?? 'PLANE_A_JWT_SECRET',
+    )
+    planeAFunction.addEnvironment('PLANE_A_JWT_SECRET', planeAJwtSecretValue.toString())
   }
   if (options.communicationsSecretArn) {
     const secret = importSecretByRef('PlaneACommunicationsSecret', options.communicationsSecretArn)
