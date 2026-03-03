@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib'
+import { Duration, RemovalPolicy, Stack, Token } from 'aws-cdk-lib'
 import {
   ContainerImage,
   CpuArchitecture,
@@ -141,7 +141,7 @@ export const createEcsTasks = (
 ): EcsTaskResources => {
   const importSecretByRef = (id: string, secretRef: string): ISecret => {
     const normalizedRef = secretRef.trim()
-    if (normalizedRef.startsWith('arn:')) {
+    if (Token.isUnresolved(normalizedRef) || normalizedRef.startsWith('arn:')) {
       return Secret.fromSecretCompleteArn(scope, id, normalizedRef)
     }
     return Secret.fromSecretNameV2(scope, id, normalizedRef)
@@ -1824,6 +1824,7 @@ export const createEcsTasks = (
     dbMigrateTask,
   }
 }
+
 
 
 
