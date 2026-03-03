@@ -81,6 +81,11 @@ export const handler = async (): Promise<number> => {
     },
   })
 
+  const { startHealthServer } = await import('../../shared/health-server')
+  await startHealthServer({
+    loggerName: 'script.ingest-fanout-worker-ecs.health-server',
+  })
+
   const { runIngestFanoutWorkerLoop } = await import('../ingest-fanout-worker')
   return await runIngestFanoutWorkerLoop()
 }
