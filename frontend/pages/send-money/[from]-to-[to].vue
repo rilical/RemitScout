@@ -3685,6 +3685,30 @@ const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => ([
     q: 'How do you rank the providers?',
     a: 'We rank providers based on total cost (fees plus exchange-rate markup), then show transfer speed and other details to help you decide. Providers cannot pay to rank higher. Rankings are based on the data we collect and our methodology.',
   },
+  {
+    q: `Which provider has the best exchange rate for ${fromCurrencyCode.value} to ${toCurrencyCode.value}?`,
+    a: bestRateLabel.value && bestQuote.value
+      ? `As of ${seoUpdatedLabel.value}, ${bestQuote.value.name} offers the best exchange rate at ${bestRateLabel.value}. Exchange rates change frequently — use our live comparison above to check the latest.`
+      : `Exchange rates change frequently. Use our live comparison tool above to check which provider currently offers the best ${fromCurrencyCode.value} to ${toCurrencyCode.value} rate.`,
+  },
+  {
+    q: `How many providers support ${content.value.from} to ${content.value.to} transfers?`,
+    a: providerCount.value
+      ? `We currently compare ${providerCount.value} providers for transfers from ${content.value.from} to ${content.value.to}. The number of available providers can vary depending on the transfer amount and delivery method.`
+      : `Multiple providers support transfers from ${content.value.from} to ${content.value.to}. Use the comparison tool above to see all currently available options.`,
+  },
+  {
+    q: `Can I send money from ${content.value.from} to ${content.value.to} for cash pickup?`,
+    a: (() => {
+      const cashProviders = content.value.table.rows
+        .filter(row => (row.payOut || '').toLowerCase().includes('cash'))
+        .map(row => row.provider)
+      if (cashProviders.length) {
+        return `Yes. ${cashProviders.slice(0, 3).join(', ')}${cashProviders.length > 3 ? ` and ${cashProviders.length - 3} more` : ''} offer cash pickup for ${content.value.from} to ${content.value.to} transfers. Check each provider for pickup location availability.`
+      }
+      return `Cash pickup availability for ${content.value.from} to ${content.value.to} depends on the provider and destination. Check the delivery methods column in our comparison above.`
+    })(),
+  },
 ]))
 
 const corridorFaqsRaw = computed<Array<{ q: string, a: string }>>(() => {
