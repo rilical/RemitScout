@@ -3930,7 +3930,7 @@ if (corridorFaqsRaw.value.length) {
 }
 
 // Add FinancialProduct schema for the best quote
-const { addFinancialProductSchema, addRemittanceCorridorSchema } = useStructuredData()
+const { addFinancialProductSchema, addRemittanceCorridorSchema, addProviderListSchema, addExchangeRateSchema } = useStructuredData()
 
 watchEffect(() => {
   if (!providerCount.value) return
@@ -3958,6 +3958,34 @@ if (bestQuote.value && hasApiQuotes.value) {
     amount: String(displayAmount.value),
   })
 }
+
+// Add provider list schema for all live quotes
+watchEffect(() => {
+  if (!ratedQuotes.value.length) return
+  addProviderListSchema(
+    ratedQuotes.value.map(quote => ({
+      provider: quote.name,
+      areaServed: content.value.to,
+      price: String(quote.fee),
+      priceCurrency: fromCurrencyCode.value,
+      deliveryTime: quote.delivery || undefined,
+      exchangeRate: quote.fxRate ? String(quote.fxRate) : undefined,
+    })),
+    `Money Transfer Providers: ${content.value.from} to ${content.value.to}`,
+  )
+})
+
+// Add exchange rate schema for mid-market rate
+watchEffect(() => {
+  if (!midMarketRate.value) return
+  addExchangeRateSchema({
+    baseCurrency: fromCurrencyCode.value,
+    quoteCurrency: toCurrencyCode.value,
+    rate: midMarketRate.value,
+    provider: 'Mid-Market',
+    lastUpdated: new Date().toISOString(),
+  })
+})
 
 const displayCurrency = ref(toCurrencyCode.value)
 
