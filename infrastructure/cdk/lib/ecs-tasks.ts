@@ -139,10 +139,17 @@ export const createEcsTasks = (
   scope: Construct,
   options: EcsTaskOptions,
 ): EcsTaskResources => {
+  const completeSecretArnPattern =
+    /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
   const importSecretByRef = (id: string, secretRef: string): ISecret => {
     const normalizedRef = secretRef.trim()
-    if (Token.isUnresolved(normalizedRef) || normalizedRef.startsWith('arn:')) {
+    if (Token.isUnresolved(normalizedRef)) {
       return Secret.fromSecretCompleteArn(scope, id, normalizedRef)
+    }
+    if (normalizedRef.startsWith('arn:')) {
+      return completeSecretArnPattern.test(normalizedRef)
+        ? Secret.fromSecretCompleteArn(scope, id, normalizedRef)
+        : Secret.fromSecretPartialArn(scope, id, normalizedRef)
     }
     return Secret.fromSecretNameV2(scope, id, normalizedRef)
   }
