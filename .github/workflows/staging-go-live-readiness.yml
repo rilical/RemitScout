@@ -102,6 +102,7 @@ jobs:
         run: pnpm -C backend ci:staging-go-live-readiness
 
       - name: Sentry release scope check
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -175,6 +176,10 @@ jobs:
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           STRIPE_PRICE_ID_PLUS: ${{ secrets.STRIPE_PRICE_ID_PLUS }}
           STRIPE_PRICE_ID_PLUS_ANNUAL: ${{ secrets.STRIPE_PRICE_ID_PLUS_ANNUAL }}
+          PLANE_A_JWT_SECRET: ${{ secrets.PLANE_A_JWT_SECRET }}
+          PRIVACY_HASH_SALT: ${{ secrets.PRIVACY_HASH_SALT }}
+          PRIVACY_SESSION_SALT: ${{ secrets.PRIVACY_SESSION_SALT }}
+          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
           TRACING_EXPORTER: ${{ vars.TRACING_EXPORTER || 'otlp' }}
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT || vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}

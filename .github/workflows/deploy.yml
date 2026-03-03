@@ -308,7 +308,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify --keyless "${IMAGE_URI}"
+          cosign verify \
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (dev)
         shell: bash
@@ -637,6 +640,8 @@ jobs:
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
       PLANE_A_JWT_ISSUER: ${{ vars.PLANE_A_JWT_ISSUER }}
       PLANE_A_JWT_AUDIENCES: ${{ vars.PLANE_A_JWT_AUDIENCES }}
+      PRIVACY_HASH_SALT: ${{ secrets.PRIVACY_HASH_SALT }}
+      PRIVACY_SESSION_SALT: ${{ secrets.PRIVACY_SESSION_SALT }}
       PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
       PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
@@ -811,14 +816,24 @@ jobs:
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
+          FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
         run: |
           set -euo pipefail
           if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
             echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
             exit 1
           fi
+          if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
+            echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: staging)."
+            exit 1
+          fi
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: staging)."
+            exit 1
+          fi
+          if [ -z "${PRIVACY_HASH_SALT:-}" ] || [ -z "${PRIVACY_SESSION_SALT:-}" ]; then
+            echo "Missing PRIVACY_HASH_SALT / PRIVACY_SESSION_SALT (configure in GitHub environment secrets: staging)."
             exit 1
           fi
           if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
@@ -997,7 +1012,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify "${IMAGE_URI}"
+          cosign verify \
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (staging)
         shell: bash
@@ -1142,6 +1160,8 @@ jobs:
         env:
           ENV_NAME: staging
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
+          FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
+          FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk exec -- cdk deploy \
@@ -1214,6 +1234,7 @@ jobs:
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
+          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
@@ -1243,6 +1264,10 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
+          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
+            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
+            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
+          fi
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -1250,14 +1275,15 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"-e\",\"require('tsx/cjs');require('./scripts/seed-launch-users.ts')\",\"--\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
           exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
           if [ "$exit_code" != "0" ]; then
-            echo "::warning::Seed task failed (exitCode=$exit_code) — non-fatal, continuing deploy"
+            echo "::error::Seed task failed (exitCode=$exit_code)."
+            exit 1
           else
             echo "Seed completed successfully."
           fi
@@ -1649,6 +1675,8 @@ jobs:
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
       PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
+      PRIVACY_HASH_SALT: ${{ secrets.PRIVACY_HASH_SALT }}
+      PRIVACY_SESSION_SALT: ${{ secrets.PRIVACY_SESSION_SALT }}
       PLANE_A_CORS_ORIGINS: ${{ vars.PLANE_A_CORS_ORIGINS }}
       PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
@@ -1923,6 +1951,10 @@ jobs:
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
             exit 1
           fi
+          if [ -z "${PRIVACY_HASH_SALT:-}" ] || [ -z "${PRIVACY_SESSION_SALT:-}" ]; then
+            echo "Missing PRIVACY_HASH_SALT / PRIVACY_SESSION_SALT (configure in GitHub environment secrets: prod)."
+            exit 1
+          fi
           if [ -z "${SES_IDENTITY_ARNS:-}" ] || [ -z "${SNS_TOPIC_ARNS:-}" ]; then
             echo "Missing SES_IDENTITY_ARNS / SNS_TOPIC_ARNS (configure in GitHub environment vars: prod)."
             exit 1
@@ -2110,7 +2142,10 @@ jobs:
           IMAGE_URI: ${{ steps.sign_image.outputs.IMAGE_URI }}
         run: |
           set -euo pipefail
-          cosign verify --keyless "${IMAGE_URI}"
+          cosign verify \
+            --certificate-identity-regexp="https://github.com/rilical/Remit-Scout-V2/.*" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            "${IMAGE_URI}"
 
       - name: CDK Diff (prod)
         shell: bash
@@ -2350,6 +2385,7 @@ jobs:
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
+          DATABASE_URL_PLANE_A: ${{ secrets.DATABASE_URL_PLANE_A }}
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           LAUNCH_PASSWORD_OMAR: ${{ secrets.LAUNCH_PASSWORD_OMAR }}
@@ -2379,6 +2415,10 @@ jobs:
               env_overrides+='{"name":"'"$var"'","value":"'"$val"'"},'
             fi
           done
+          if [ -n "${DATABASE_URL_PLANE_A:-}" ]; then
+            env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
+            env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
+          fi
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -2386,14 +2426,15 @@ jobs:
             --launch-type FARGATE \
             --task-definition "$task_def" \
             --network-configuration "awsvpcConfiguration={subnets=${subnet_list},securityGroups=[\"$sg_id\"],assignPublicIp=DISABLED}" \
-            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"-e\",\"require('tsx/cjs');require('./scripts/seed-launch-users.ts')\",\"--\",\"--force\"],\"environment\":${env_overrides}}]}" \
+            --overrides "{\"containerOverrides\":[{\"name\":\"DbMigrateContainer\",\"command\":[\"node\",\"backend/dist/scripts/seed-launch-users.js\",\"--force\"],\"environment\":${env_overrides}}]}" \
             --query "tasks[0].taskArn" --output text)"
 
           echo "Seed task: $task_arn"
           aws ecs wait tasks-stopped --cluster "$cluster" --tasks "$task_arn"
           exit_code="$(aws ecs describe-tasks --cluster "$cluster" --tasks "$task_arn" --query "tasks[0].containers[0].exitCode" --output text)"
           if [ "$exit_code" != "0" ]; then
-            echo "::warning::Seed task failed (exitCode=$exit_code) — non-fatal, continuing deploy"
+            echo "::error::Seed task failed (exitCode=$exit_code)."
+            exit 1
           else
             echo "Seed completed successfully."
           fi
