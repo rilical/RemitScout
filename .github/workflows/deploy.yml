@@ -1269,6 +1269,7 @@ jobs:
             env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
             env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
           fi
+          env_overrides+='{"name":"NODE_OPTIONS","value":"--dns-result-order=ipv4first"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
@@ -2445,6 +2446,7 @@ jobs:
             env_overrides+='{"name":"DATABASE_URL","value":"'"$DATABASE_URL_PLANE_A"'"},'
             env_overrides+='{"name":"DATABASE_URL_PLANE_A","value":"'"$DATABASE_URL_PLANE_A"'"},'
           fi
+          env_overrides+='{"name":"NODE_OPTIONS","value":"--dns-result-order=ipv4first"},'
           env_overrides="${env_overrides%,}]"
 
           task_arn="$(aws ecs run-task \
