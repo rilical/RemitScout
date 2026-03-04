@@ -660,6 +660,14 @@ jobs:
       PUBLIC_X_PIXEL_ID: ${{ vars.PUBLIC_X_PIXEL_ID }}
       PUBLIC_TIKTOK_PIXEL_ID: ${{ vars.PUBLIC_TIKTOK_PIXEL_ID }}
       PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
+      PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+      PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+      PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+      PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+      PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+      PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ secrets.PUBLIC_NEW_RELIC_LICENSE_KEY || vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+      PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+      PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
       PUBLIC_ENABLE_ADS: ${{ vars.PUBLIC_ENABLE_ADS }}
@@ -855,10 +863,29 @@ jobs:
             exit 1
           fi
           if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
-            echo "WARN: New Relic hard gate vars missing; observability gates will be skipped for this staging deploy."
+            echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
+            exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "WARN: New Relic cloud-link vars missing; observability gates will be skipped for this staging deploy."
+          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
+            exit 1
+          fi
+          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
+            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+            exit 1
+          fi
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
+             ( [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_TRUST_KEY:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ] ); then
+            echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
+            exit 1
           fi
 
       - name: Observability prereq gate (staging)
@@ -880,13 +907,6 @@ jobs:
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
-          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
-             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
-             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
-             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Skipping staging observability prereq gate: New Relic prerequisites are incomplete."
-            exit 0
-          fi
           pnpm -C backend ci:observability
 
       - name: Compute Build Vars
@@ -1549,12 +1569,17 @@ jobs:
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
         run: |
           set -euo pipefail
-          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || \
-             [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ] || \
-             [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || \
-             [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Skipping staging New Relic gate: prerequisites are incomplete."
-            exit 0
+          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
+            echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
+            exit 1
+          fi
+          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
+            exit 1
+          fi
+          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+            exit 1
           fi
           set +e
           node ops/newrelic/bootstrap-dashboards.mjs
@@ -1727,6 +1752,14 @@ jobs:
       PUBLIC_X_PIXEL_ID: ${{ vars.PUBLIC_X_PIXEL_ID }}
       PUBLIC_TIKTOK_PIXEL_ID: ${{ vars.PUBLIC_TIKTOK_PIXEL_ID }}
       PUBLIC_CONTENTSQUARE_TAG_SRC: ${{ vars.PUBLIC_CONTENTSQUARE_TAG_SRC }}
+      PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+      PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+      PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+      PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+      PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+      PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ secrets.PUBLIC_NEW_RELIC_LICENSE_KEY || vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+      PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+      PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
       PUBLIC_GOOGLE_ADS_CONVERSION_ID: ${{ vars.PUBLIC_GOOGLE_ADS_CONVERSION_ID }}
       PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID: ${{ vars.PUBLIC_GOOGLE_ADSENSE_PUBLISHER_ID }}
       PUBLIC_ENABLE_ADS: ${{ vars.PUBLIC_ENABLE_ADS }}
@@ -2014,6 +2047,15 @@ jobs:
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
             echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+            exit 1
+          fi
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
+             ( [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_TRUST_KEY:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ] ); then
+            echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
             exit 1
           fi
 
