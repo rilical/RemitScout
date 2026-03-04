@@ -50,10 +50,21 @@ const ingestFanoutTierMisconfigured =
   (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
   && !ingestFanoutTiered
 const ingestFanoutEnabled = ingestFanoutMode !== 'off' && Boolean(ingestFanoutQueueUrl)
-const fanoutMessageMode =
-  process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE === 'provider'
-    ? 'provider'
-    : 'corridor'
+const VALID_FANOUT_MESSAGE_MODES = ['corridor', 'provider'] as const
+type FanoutMessageMode = (typeof VALID_FANOUT_MESSAGE_MODES)[number]
+const rawFanoutMessageMode = process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE
+const fanoutMessageMode: FanoutMessageMode = (() => {
+  if (!rawFanoutMessageMode) return 'corridor'
+  if (VALID_FANOUT_MESSAGE_MODES.includes(rawFanoutMessageMode as FanoutMessageMode)) {
+    return rawFanoutMessageMode as FanoutMessageMode
+  }
+  logger.error('invalid_fanout_message_mode', {
+    value: rawFanoutMessageMode,
+    allowed: VALID_FANOUT_MESSAGE_MODES,
+    fallback: 'corridor',
+  })
+  return 'corridor'
+})()
 const _toPositiveInt = (value: string | undefined, fallback: number) => {
   const parsed = Number.parseInt(value ?? '', 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
@@ -217,6 +228,8 @@ const resolveIngestQueueClassFromPriorityTier = (priorityTier?: string) => {
   return priorityTier === 'tier_2' ? 'ingest-fanout-t2' as const : 'ingest-fanout-t1' as const
 }
 
+const ENQUEUE_MAX_ATTEMPTS = 3
+
 const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolean> => {
   const queueUrl = resolveIngestFanoutQueueUrl(
     isCorridorPayload(payload)
@@ -234,37 +247,53 @@ const enqueueIngestFanout = async (payload: IngestFanoutPayload): Promise<boolea
     ? payload.providers.map(task => task.collectorType).join(',')
     : payload.collectorType
 
-  try {
-    await sendJsonMessage(
-      queueUrl,
-      wrapEnvelope(
-        resolveIngestQueueClassFromPriorityTier(
-          isCorridorPayload(payload)
-            ? payload.providers[0]?.priorityTier
-            : payload.priorityTier,
-        ),
-        payload,
-        {
-          runId: payload.sweepRunId,
-          correlationId: isCorridorPayload(payload)
-            ? payload.corridorId
-            : payload.corridors[0],
-        },
-      ),
-    )
-    return true
-  } catch (error) {
-    logger.warn('ingest_fanout_enqueue_failed', {
-      provider_id: providerId,
-      collector_type: collectorType,
-      queue_url: queueUrl,
-      sweep_run_id: payload.sweepRunId ?? null,
-      requested_at: payload.requestedAt ?? null,
-      trace_id: payload.traceId ?? null,
-      error: error instanceof Error ? error.message : String(error),
-    })
-    return false
+  const envelope = wrapEnvelope(
+    resolveIngestQueueClassFromPriorityTier(
+      isCorridorPayload(payload)
+        ? payload.providers[0]?.priorityTier
+        : payload.priorityTier,
+    ),
+    payload,
+    {
+      runId: payload.sweepRunId,
+      correlationId: isCorridorPayload(payload)
+        ? payload.corridorId
+        : payload.corridors[0],
+    },
+  )
+
+  let lastError: unknown
+  for (let attempt = 0; attempt < ENQUEUE_MAX_ATTEMPTS; attempt++) {
+    if (attempt > 0) {
+      const delayMs = 100 * Math.pow(2, attempt - 1)
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      logger.debug('ingest_fanout_enqueue_retry', {
+        attempt,
+        max_attempts: ENQUEUE_MAX_ATTEMPTS,
+        delay_ms: delayMs,
+        provider_id: providerId,
+        collector_type: collectorType,
+      })
+    }
+    try {
+      await sendJsonMessage(queueUrl, envelope)
+      return true
+    } catch (error) {
+      lastError = error
+    }
   }
+
+  logger.error('ingest_fanout_enqueue_failed', {
+    provider_id: providerId,
+    collector_type: collectorType,
+    queue_url: queueUrl,
+    sweep_run_id: payload.sweepRunId ?? null,
+    requested_at: payload.requestedAt ?? null,
+    trace_id: payload.traceId ?? null,
+    attempts: ENQUEUE_MAX_ATTEMPTS,
+    error: lastError instanceof Error ? lastError.message : String(lastError),
+  })
+  return false
 }
 
 const shutdown = createShutdownHandler({
@@ -1811,6 +1840,38 @@ export const runIngestion = async (options: IngestOptions = {}) => {
       } catch (error) {
         logger.warn('b2b_sweep_duration_error', { error })
       }
+
+      // Partition maintenance monitoring: count rows in DEFAULT partitions.
+      // If ensure_daily_partitions() cron has not run, new data spills into
+      // the DEFAULT partition, causing slower queries.
+      try {
+        const defaultRowCountResult = await query(
+          `SELECT
+             (SELECT count(*) FROM silver.observation_default) +
+             (SELECT count(*) FROM silver.quote_record_default) AS total`,
+          [],
+          pool,
+        )
+        const defaultRowCount = Number(defaultRowCountResult.rows[0]?.total ?? 0)
+        recordCloudWatchMetric({
+          name: 'PartitionDefaultRowCount',
+          value: defaultRowCount,
+          unit: 'Count',
+          namespace: 'RemitScout/Pipeline',
+          dimensions: {
+            environment: config.envName || config.env,
+          },
+        })
+        if (defaultRowCount > 0) {
+          logger.warn('partition_default_rows_detected', {
+            default_row_count: defaultRowCount,
+            action: 'ensure_daily_partitions() may have failed — rows spilling into DEFAULT partition',
+          })
+        }
+      } catch (error) {
+        logger.warn('partition_default_check_error', { error })
+      }
+
       return ok
     } finally {
       if (shouldClose) {

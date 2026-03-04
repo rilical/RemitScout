@@ -31,6 +31,9 @@ import { initErrorTracking } from '../shared/error-tracker'
 import { createShutdownHandler } from '../shared/shutdown'
 import { initTracing } from '../shared/tracing'
 import { ExportJobRepository, type ExportJobRow } from '../plane-a/src/repositories'
+import { decrementExportCounter } from '../plane-a/src/routes/exports-limit'
+import { fireExportWebhook } from '../plane-a/src/services/export-webhook'
+import { getSignedExportDownload } from '../plane-a/src/routes/exports.service'
 import {
   buildCsv,
   buildCsvSections,
@@ -1054,12 +1057,38 @@ const processJob = async (jobId: string) => {
     recordBusinessMetric('export_jobs_completed', 1, {
       mode: queueMode === 'off' ? 'db' : 'sqs',
     })
+
+    // Fire webhook notification for institutional clients (fire-and-forget).
+    const downloadSigned = await getSignedExportDownload(key)
+    fireExportWebhook(pool, {
+      exportId: job.id,
+      userId: job.user_id,
+      status: 'done',
+      completedAt: new Date(),
+      downloadUrl: downloadSigned?.url ?? null,
+    })
+
+    // Release the distributed export slot now that the job is done.
+    await decrementExportCounter(job.user_id)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     await exportRepo.updateStatus(job.id, 'failed', { finished_at: new Date(), error: message })
     recordBusinessMetric('export_jobs_failed', 1, {
       mode: queueMode === 'off' ? 'db' : 'sqs',
     })
+
+    // Fire webhook notification for institutional clients (fire-and-forget).
+    fireExportWebhook(pool, {
+      exportId: job.id,
+      userId: job.user_id,
+      status: 'failed',
+      completedAt: new Date(),
+      downloadUrl: null,
+    })
+
+    // Release the distributed export slot on failure so the user is not
+    // permanently locked out.
+    await decrementExportCounter(job.user_id)
     throw error
   }
 }

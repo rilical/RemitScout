@@ -35,6 +35,7 @@ async function main() {
   try {
     // Run triangulation
     const engine = new TriangulationEngine(pool)
+    await engine.hydrateFromDb()
     const amountBuckets = (process.env.TRIANGULATION_AMOUNT_BUCKETS ?? '500')
       .split(',')
       .map((s) => parseInt(s.trim(), 10))

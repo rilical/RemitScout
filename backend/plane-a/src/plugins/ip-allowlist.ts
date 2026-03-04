@@ -43,9 +43,21 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
   const allowlist = Array.isArray(cidrAllowlist)
     ? cidrAllowlist.filter(Boolean)
     : splitCsv(config.planeA.adminIpAllowlistRaw)
+
   if (allowlist.length === 0) {
+    logger.warn('admin_ip_allowlist_empty', {
+      message: 'No admin IP allowlist configured. Admin endpoints (/api/v1/ops, /api/v1/admin, '
+        + '/api/v1/audit, /api/v1/analytics) are not IP-restricted. '
+        + 'Set ADMIN_IP_ALLOWLIST to a comma-separated list of CIDRs to enable IP filtering.',
+      env: config.env,
+    })
     return
   }
+
+  logger.info('admin_ip_allowlist_registered', {
+    cidr_count: allowlist.length,
+    env: config.env,
+  })
 
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const path = request.url.split('?')[0] || ''
@@ -58,10 +70,14 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
 
     const ip = resolveClientIp(request)
     if (!ip) {
+      logger.debug('admin_ip_allowlist_check', { path, ip: null, result: 'denied_no_ip' })
       reply.code(403)
       return reply.send({ error: 'forbidden' })
     }
     const allowed = allowlist.some((cidr) => isIpInCidr(ip, cidr))
+
+    logger.debug('admin_ip_allowlist_check', { path, ip, result: allowed ? 'allowed' : 'denied' })
+
     if (allowed) return
 
     logger.warn('admin_ip_blocked', {

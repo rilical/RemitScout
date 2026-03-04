@@ -334,25 +334,38 @@ export class AgentOrchestrator {
    * Run failure detection cycle and route bundles to appropriate agents.
    *
    * Safety controls applied in order:
-   *   1. Advisory lock — skips if another orchestrator instance is already scanning
+   *   1. Transaction-scoped advisory lock — skips if another orchestrator instance
+   *      is already scanning. Uses `pg_try_advisory_xact_lock` so the lock is
+   *      automatically released when the transaction ends (COMMIT or ROLLBACK),
+   *      preventing deadlocks if the orchestrator crashes mid-cycle.
    *   2. Correlated failure guard — escalates instead of repairing when >= 10 bundles detected
    *   3. Blast radius cap — processes only the top MAX_BUNDLES_PER_CYCLE by severity
+   *   4. Timeout safeguard — logs a warning if detection cycle exceeds 5 minutes
    */
   private async runFailureDetection(): Promise<void> {
-    // --- Advisory lock: prevent duplicate detection scans across orchestrator instances ---
-    const { rows: lockRows } = await this.pool.query<{ acquired: boolean }>(
-      'SELECT pg_try_advisory_lock($1) AS acquired',
-      [DETECTION_ADVISORY_LOCK_KEY],
-    )
-    if (!lockRows[0]?.acquired) {
-      logger.info('detection_cycle_skipped_lock_held', {
-        reason: 'another_orchestrator_holds_detection_lock',
-        lockKey: DETECTION_ADVISORY_LOCK_KEY,
-      })
-      return
-    }
+    const cycleStartMs = Date.now()
+    const DETECTION_CYCLE_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 
+    const client = await this.pool.connect()
     try {
+      await client.query('BEGIN')
+
+      // --- Transaction-scoped advisory lock: prevent duplicate detection scans ---
+      // pg_try_advisory_xact_lock auto-releases when the transaction ends,
+      // so a crash mid-cycle will not leave an orphaned lock.
+      const { rows: lockRows } = await client.query<{ acquired: boolean }>(
+        'SELECT pg_try_advisory_xact_lock($1) AS acquired',
+        [DETECTION_ADVISORY_LOCK_KEY],
+      )
+      if (!lockRows[0]?.acquired) {
+        await client.query('ROLLBACK')
+        logger.info('detection_cycle_skipped_lock_held', {
+          reason: 'another_orchestrator_holds_detection_lock',
+          lockKey: DETECTION_ADVISORY_LOCK_KEY,
+        })
+        return
+      }
+
       const runId = randomUUID()
       const bundles = await this.failureDetector.detectFailures()
       const providersWithHealableEvents = new Set<string>(bundles.map((bundle) => bundle.providerId))
@@ -491,12 +504,29 @@ export class AgentOrchestrator {
         }),
         highCardinality: true,
       })
+
+      await client.query('COMMIT')
+
+      // --- Timeout safeguard: warn if the detection cycle took too long ---
+      const cycleDurationMs = Date.now() - cycleStartMs
+      if (cycleDurationMs > DETECTION_CYCLE_TIMEOUT_MS) {
+        logger.warn('detection_cycle_exceeded_timeout', {
+          cycleDurationMs,
+          timeoutMs: DETECTION_CYCLE_TIMEOUT_MS,
+          cycle: this.detectionCycleCount,
+        })
+      }
     } catch (err) {
+      await client.query('ROLLBACK').catch((rollbackErr) => {
+        logger.error('detection_cycle_rollback_error', {
+          error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+        })
+      })
       const error = err instanceof Error ? err : new Error(String(err))
       captureExceptionWithContext(error, { component: 'orchestrator.failureDetection', cycle: this.detectionCycleCount }, { agent: 'orchestrator' })
       logger.error('failure_detection_error', { error: error.message })
     } finally {
-      await this.pool.query('SELECT pg_advisory_unlock($1)', [DETECTION_ADVISORY_LOCK_KEY])
+      client.release()
     }
   }
 

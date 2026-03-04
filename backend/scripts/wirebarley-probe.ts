@@ -17,7 +17,7 @@ const main = async () => {
     const result = await runGenericProbe({
       providerId: 'wirebarley',
       timeoutMs: Number(process.env.PROBE_TIMEOUT_MS) || 300000,
-      retries: Number(process.env.PROBE_RETRIES) || 0,
+      retries: Number(process.env.PROBE_RETRIES) || 3,
       outputFormat: process.env.PROBE_OUTPUT_FORMAT === 'text' ? 'text' : 'json',
     })
 

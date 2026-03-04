@@ -322,6 +322,51 @@ export const createMonitoring = (
     period: Duration.minutes(5),
   })
 
+  // Consumer lag ratio: queue_depth / running_task_count.
+  // A rising value indicates consumers are not keeping up with producers.
+  const consumerLagPairs: Array<{ label: string; queueMetric: Metric; service: FargateService }> = [
+    ...(options.ecs.b2cRefreshService
+      ? [{ label: 'Quote Refresh', queueMetric: options.queues.quoteRefreshQueue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }), service: options.ecs.b2cRefreshService }]
+      : []),
+    ...(options.ecs.ingestFanoutTier1Service
+      ? [{ label: 'Ingest Fanout T1', queueMetric: options.queues.ingestFanoutQueue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }), service: options.ecs.ingestFanoutTier1Service }]
+      : []),
+    ...(options.ecs.ingestFanoutTier2Service
+      ? [{ label: 'Ingest Fanout T2', queueMetric: options.queues.ingestFanoutTier2Queue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }), service: options.ecs.ingestFanoutTier2Service }]
+      : []),
+    ...(options.ecs.goldLiveService
+      ? [{ label: 'Gold Live', queueMetric: options.queues.goldLiveQueue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }), service: options.ecs.goldLiveService }]
+      : []),
+    ...(options.ecs.exportWorkerService
+      ? [{ label: 'Export', queueMetric: options.queues.exportJobQueue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }), service: options.ecs.exportWorkerService }]
+      : []),
+  ]
+  const consumerLagWidget = new GraphWidget({
+    title: 'Consumer Lag (queue depth / task count)',
+    left: consumerLagPairs.map(({ label, queueMetric, service }, i) => {
+      const taskCountMetric = new Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'RunningTaskCount',
+        dimensionsMap: {
+          ClusterName: service.cluster.clusterName,
+          ServiceName: service.serviceName,
+        },
+        statistic: 'Average',
+        period: Duration.minutes(5),
+      })
+      return new MathExpression({
+        label,
+        expression: `IF(tasks${i}>0, depth${i}/tasks${i}, depth${i})`,
+        usingMetrics: {
+          [`depth${i}`]: queueMetric,
+          [`tasks${i}`]: taskCountMetric,
+        },
+        period: Duration.minutes(5),
+      })
+    }),
+    period: Duration.minutes(5),
+  })
+
   const rdsCpuWidget = new GraphWidget({
     title: 'Aurora CPU & Connections',
     left: [
@@ -361,6 +406,7 @@ export const createMonitoring = (
     }),
     ecsCpuWidget,
     ecsMemoryWidget,
+    consumerLagWidget,
     rdsCpuWidget,
     redisCpuWidget,
   )
@@ -1293,6 +1339,31 @@ export const createMonitoring = (
     alarm.addAlarmAction(opsAction)
   })
 
+  // Ingest fanout worker backpressure alarm — fires when BackpressureDetected
+  // sum > 0 for 3 consecutive 1-minute periods, indicating sustained queue
+  // depth exceeding the backpressure threshold.
+  const ingestFanoutBackpressureAlarm = new Alarm(scope, 'IngestFanoutBackpressureAlarm', {
+    alarmName: useExplicitAlarmNames
+      ? `remit-scout-${options.envName}-ingest-fanout-backpressure`
+      : undefined,
+    metric: new Metric({
+      namespace: 'RemitScout/Workers',
+      metricName: 'BackpressureDetected',
+      statistic: 'Sum',
+      period: Duration.minutes(1),
+      dimensionsMap: {
+        Worker: 'ingest-fanout',
+        environment: options.envName,
+      },
+    }),
+    threshold: 0,
+    evaluationPeriods: 3,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription: 'Ingest fanout worker backpressure detected for >= 3 consecutive minutes',
+  })
+  ingestFanoutBackpressureAlarm.addAlarmAction(opsAction)
+
   if (isProd || isStaging) {
     const envelopeParseErrorWorkers = [
       'ingest-fanout-worker',
@@ -1813,6 +1884,30 @@ export const createMonitoring = (
     ],
     period: agentPeriod,
   })
+
+  // Partition maintenance monitoring: fires when rows land in DEFAULT partitions,
+  // indicating ensure_daily_partitions() cron has not run and data is spilling
+  // into the catch-all DEFAULT partition (causes slower queries).
+  const partitionDefaultRowCountAlarm = new Alarm(scope, 'PartitionDefaultRowCountAlarm', {
+    alarmName: `remit-scout-${options.envName}-partition-default-row-count`,
+    metric: new Metric({
+      namespace: 'RemitScout/Pipeline',
+      metricName: 'PartitionDefaultRowCount',
+      statistic: 'Sum',
+      period: Duration.hours(1),
+      dimensionsMap: {
+        environment: options.envName,
+      },
+    }),
+    threshold: 0,
+    evaluationPeriods: 2,
+    comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+    treatMissingData: TreatMissingData.NOT_BREACHING,
+    alarmDescription:
+      'Rows detected in DEFAULT partitions for silver.observation or silver.quote_record — ' +
+      'ensure_daily_partitions() cron may have failed',
+  })
+  partitionDefaultRowCountAlarm.addAlarmAction(opsAction)
 
   dashboard.addWidgets(
     dataFreshnessWidget,

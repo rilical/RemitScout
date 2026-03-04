@@ -1,5 +1,6 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
+import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
 import { parseCorridorId } from '../../../shared/corridor'
 
@@ -90,8 +91,8 @@ export class TriangulationEngine {
   private readonly pool: Pool
   private readonly methodologyVersion = 'triangulation_v1'
 
-  // Intermediary currencies for triangulation paths
-  private readonly intermediaries = ['USD', 'EUR', 'GBP']
+  // Intermediary currencies for triangulation paths (configurable via TRIANGULATION_INTERMEDIARIES)
+  private readonly intermediaries = config.triangulation.intermediaries
 
   // Minimum provider count per leg for meaningful triangulation
   private readonly minProvidersPerLeg = 2
@@ -148,6 +149,20 @@ export class TriangulationEngine {
     }
 
     this.activeSignals.set(validated.signalId, validated)
+
+    // Write-through to DB for persistence across restarts (fire-and-forget)
+    const expiresAt = new Date(new Date(validated.detectedAt).getTime() + validated.ttlSeconds * 1000).toISOString()
+    this.pool.query(
+      `INSERT INTO silver.stress_signal (signal_id, corridor_id, signal_type, intensity, source, detected_at, expires_at, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (signal_id) DO NOTHING`,
+      [validated.signalId, validated.corridorId, validated.signalType, validated.intensity, validated.source, validated.detectedAt, expiresAt, '{}'],
+    ).catch((err: unknown) => {
+      logger.warn('stress_signal_persist_failed', {
+        signalId: validated.signalId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    })
 
     logger.debug('stress_signal_ingested', {
       signalId: validated.signalId,
@@ -216,7 +231,7 @@ export class TriangulationEngine {
   }
 
   /**
-   * Remove all expired signals from the active store.
+   * Remove all expired signals from the active store and DB.
    */
   purgeExpiredSignals(): number {
     const now = Date.now()
@@ -232,9 +247,75 @@ export class TriangulationEngine {
 
     if (purged > 0) {
       logger.debug('stress_signals_purged', { count: purged, remaining: this.activeSignals.size })
+
+      // Delete expired rows from DB (fire-and-forget)
+      this.pool.query(
+        `DELETE FROM silver.stress_signal WHERE expires_at <= $1`,
+        [new Date(now).toISOString()],
+      ).catch((err: unknown) => {
+        logger.warn('stress_signal_db_purge_failed', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      })
     }
 
     return purged
+  }
+
+  /**
+   * Hydrate the in-memory signal map from the database.
+   *
+   * Call this once during engine initialization so that signals
+   * persisted before a restart are restored into the hot-path map.
+   */
+  async hydrateFromDb(): Promise<number> {
+    try {
+      const { rows } = await this.pool.query<{
+        signal_id: string
+        corridor_id: string
+        signal_type: string
+        intensity: string
+        source: string
+        detected_at: string
+        expires_at: string
+      }>(
+        `SELECT signal_id, corridor_id, signal_type, intensity, source, detected_at, expires_at
+         FROM silver.stress_signal
+         WHERE expires_at > NOW()
+         ORDER BY detected_at ASC`,
+      )
+
+      let loaded = 0
+      for (const row of rows) {
+        const detectedAt = new Date(row.detected_at)
+        const expiresAt = new Date(row.expires_at)
+        const ttlSeconds = Math.max(0, Math.round((expiresAt.getTime() - detectedAt.getTime()) / 1000))
+
+        const signal: StressSignal = {
+          signalId: row.signal_id,
+          corridorId: row.corridor_id,
+          signalType: row.signal_type as StressSignalType,
+          intensity: parseFloat(row.intensity),
+          detectedAt: detectedAt.toISOString(),
+          ttlSeconds,
+          source: row.source,
+        }
+
+        this.activeSignals.set(signal.signalId, signal)
+        loaded++
+      }
+
+      if (loaded > 0) {
+        logger.info('stress_signals_hydrated', { count: loaded })
+      }
+
+      return loaded
+    } catch (err) {
+      logger.warn('stress_signal_hydrate_failed', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+      return 0
+    }
   }
 
   /**

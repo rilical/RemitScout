@@ -312,6 +312,11 @@ type ProviderQuoteResponse = {
         payout: number
         total: number
       }
+      promoType?: 'FEE_WAIVER' | 'RATE_BOOST' | 'FEE_WAIVER_AND_RATE_BOOST'
+      standardFee?: number
+      standardRate?: number
+      promoFee?: number
+      promoRate?: number
     }>
     exposures: unknown[]
     valueProps: unknown[]
@@ -817,9 +822,24 @@ const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote =>
     const promoFee = toNumberOrZero(quote.promotional_fee_amount)
     const promoReceiveAmount = sendAmount * promoRate - promoFee
 
+    // Classify promo type dynamically instead of hardcoding
+    const hasFeeWaiver = promoFee < feeAmount
+    const hasRateBoost = promoRate !== rate && promoRate > rate
+    const promoType = hasFeeWaiver && hasRateBoost
+      ? 'FEE_WAIVER_AND_RATE_BOOST' as const
+      : hasFeeWaiver
+      ? 'FEE_WAIVER' as const
+      : 'RATE_BOOST' as const
+
+    const headline = promoType === 'FEE_WAIVER_AND_RATE_BOOST'
+      ? 'h-preferential-fees-and-rate'
+      : promoType === 'FEE_WAIVER'
+      ? 'h-reduced-fees'
+      : 'h-boosted-rate'
+
     promos.push({
       id: `${quote.provider_id}-promo`,
-      headline: 'h-preferential-fees-rate-1st',
+      headline,
       details: ['d-only-1st-transfer'],
       conditions: ['c-new-customers'],
       endDate: null,
@@ -834,6 +854,11 @@ const transformQuote = (quote: LatestQuoteByCorridorRecord): TransformedQuote =>
         payout: 0,
         total: promoFee,
       },
+      promoType,
+      standardFee: feeAmount,
+      standardRate: rate,
+      promoFee,
+      promoRate,
     })
   }
 

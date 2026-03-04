@@ -54,7 +54,7 @@ export class RankAggregator {
    * Percentile formula: ((rank - 1) / (n - 1)) * 100
    *   - The lowest-ranked corridor gets percentile 0
    *   - The highest-ranked corridor gets percentile 100
-   *   - Single corridor -> percentile 100 (it is the best)
+   *   - Single corridor -> percentile 50 (neutral; no peers to compare against)
    *   - Empty map -> empty result
    *
    * @param scores  Map of corridorId -> raw score
@@ -66,11 +66,15 @@ export class RankAggregator {
 
     if (n === 0) return result
 
-    // Single corridor: it's the only one, so it gets percentile 100
+    // Single corridor edge case: with no peers, percentile ranking is
+    // meaningless. Return 50 (neutral midpoint) instead of 100 to avoid
+    // inflating the composite score of corridors that happen to appear
+    // alone in a dimension. A single corridor is neither "best" nor
+    // "worst" — it simply has no ranking context.
     if (n === 1) {
       const [corridorId] = scores.entries().next().value as [string, number]
-      result.set(corridorId, 100)
-      logger.debug('rank_within_dimension', { corridors: 1, single: true })
+      result.set(corridorId, 50)
+      logger.debug('rank_within_dimension', { corridors: 1, single: true, percentile: 50 })
       return result
     }
 

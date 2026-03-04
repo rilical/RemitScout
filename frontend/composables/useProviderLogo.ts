@@ -31,7 +31,7 @@ const PROVIDER_LOGO_CANDIDATES: Record<string, { logos: string[], providers: str
     logos: ['/logos/wirebarley.png', '/logos/WIREBARELY_LOGO.PNG'],
     providers: ['/png/SVG/PROVIDERS/WIREBARLEY_LOGO.png'],
   },
-  'intermex': { logos: ['/logos/intermex.svg', '/logos/intermex.png'], providers: ['/png/SVG/PROVIDERS/INTERMEX_LOGO.png'] },
+  'intermex': { logos: ['/logos/intermex.png'], providers: ['/png/SVG/PROVIDERS/INTERMEX_LOGO.png'] },
   'koronapay': { logos: ['/logos/koronapay.svg'], providers: ['/png/SVG/PROVIDERS/KORONAPAY_LOGO.svg'] },
   'remitbee': {
     logos: ['/logos/remitbee.svg', '/logos/remitbee.jpeg', '/logos/remitbee.jpg'],

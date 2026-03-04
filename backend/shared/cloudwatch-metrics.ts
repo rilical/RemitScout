@@ -31,6 +31,7 @@ const METRIC_NAME_REGEX = /^[a-zA-Z0-9_]+$/
 const CLOUDWATCH_ALARM_NAMESPACES = new Set([
   'RemitScout',
   'RemitScout/Agents',
+  'RemitScout/Pipeline',
   'RemitScout/Probes',
   'RemitScout/BatchJobs',
   'RemitScout/Workers',

@@ -20,6 +20,8 @@ import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env
 import { resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
+  planeATask: FargateTaskDefinition
+  planeCTask: FargateTaskDefinition
   planeBIngestTask: FargateTaskDefinition
   b2cRefreshTask: FargateTaskDefinition
   fxRateRefreshTask: FargateTaskDefinition
@@ -1769,6 +1771,120 @@ export const createEcsTasks = (
   )
   normalizationWorkerContainer.addMountPoints(tmpMountPoint)
 
+  // ── Plane A API server task definition ────────────────────────────────────
+  // Runs the Fastify API server (plane-a/src/server.ts) on port 4000.
+  // Uses FARGATE (not Spot) for stable, predictable API availability.
+  const planeAApiCpu = isProd ? 512 : 256
+  const planeAApiMemory = isProd ? 1024 : 512
+  const planeATask = new FargateTaskDefinition(scope, 'PlaneATask', {
+    cpu: planeAApiCpu,
+    memoryLimitMiB: planeAApiMemory,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+  addTmpVolume(planeATask)
+
+  const planeAApiLogGroup = new LogGroup(scope, 'PlaneAApiLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/plane-a-api`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+  const planeAApiEnv: Record<string, string> = {
+    ...sharedEnv,
+    ...planeAWorkerEnv,
+    PLANE_A_PORT: '4000',
+    HEALTH_PORT: '4000',
+  }
+  const planeAApiContainer = planeATask.addContainer('PlaneAApiContainer', {
+    image,
+    readonlyRootFilesystem: true,
+    command: resolveCommand(
+      'plane-a/src/server.js',
+      'plane-a/src/server.ts',
+    ),
+    environment: planeAApiEnv,
+    ...secretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'plane-a-api',
+      logGroup: planeAApiLogGroup,
+    }),
+    healthCheck: {
+      command: [
+        'CMD-SHELL',
+        'node -e "require(\'http\').get(\'http://127.0.0.1:4000/healthz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      ],
+      interval: Duration.seconds(30),
+      timeout: Duration.seconds(5),
+      retries: 3,
+      startPeriod: Duration.seconds(60),
+    },
+    portMappings: [{ containerPort: 4000, protocol: Protocol.TCP }],
+    stopTimeout: Duration.seconds(30),
+  })
+  planeAApiContainer.addMountPoints(tmpMountPoint)
+
+  // ── Plane C Gold publisher task definition ─────────────────────────────────
+  // Runs the Fastify Gold publisher API server (plane-c/src/server.ts) on port 4100.
+  // Uses FARGATE (not Spot) for stable internal API availability.
+  const planeCApiCpu = isProd ? 512 : 256
+  const planeCApiMemory = isProd ? 1024 : 512
+  const planeCTask = new FargateTaskDefinition(scope, 'PlaneCTask', {
+    cpu: planeCApiCpu,
+    memoryLimitMiB: planeCApiMemory,
+    executionRole: options.roles.planeBEcsTaskExecutionRole,
+    taskRole: options.roles.planeBEcsTaskRole,
+    runtimePlatform,
+  })
+  addTmpVolume(planeCTask)
+
+  const planeCApiLogGroup = new LogGroup(scope, 'PlaneCApiLogGroup', {
+    logGroupName: `/remit-scout/${options.envName}/plane-c-api`,
+    retention: logRetention,
+    removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+  })
+  const planeCApiEnv: Record<string, string> = {
+    ...sharedEnv,
+    PLANE_C_PORT: '4100',
+    HEALTH_PORT: '4100',
+  }
+  if (planeCDbHost) {
+    planeCApiEnv.PLANE_C_DB_HOST = planeCDbHost
+  }
+  if (planeCDbPort) {
+    planeCApiEnv.PLANE_C_DB_PORT = planeCDbPort
+  }
+  if (planeCDbName) {
+    planeCApiEnv.PLANE_C_DB_NAME = planeCDbName
+  }
+  const planeCApiContainer = planeCTask.addContainer('PlaneCApiContainer', {
+    image,
+    readonlyRootFilesystem: true,
+    command: resolveCommand(
+      'plane-c/src/server.js',
+      'plane-c/src/server.ts',
+    ),
+    environment: planeCApiEnv,
+    ...goldLiveSecretsConfig,
+    logging: LogDrivers.awsLogs({
+      streamPrefix: 'plane-c-api',
+      logGroup: planeCApiLogGroup,
+    }),
+    healthCheck: {
+      command: [
+        'CMD-SHELL',
+        'node -e "require(\'http\').get(\'http://127.0.0.1:4100/healthz\', r=>process.exit(r.statusCode===200?0:1)).on(\'error\',()=>process.exit(1))"',
+      ],
+      interval: Duration.seconds(30),
+      timeout: Duration.seconds(5),
+      retries: 3,
+      startPeriod: Duration.seconds(60),
+    },
+    portMappings: [{ containerPort: 4100, protocol: Protocol.TCP }],
+    stopTimeout: Duration.seconds(30),
+  })
+  planeCApiContainer.addMountPoints(tmpMountPoint)
+
   const dbMigrateTask = new FargateTaskDefinition(scope, 'DbMigrateTask', {
     cpu: 256,
     memoryLimitMiB: 512,
@@ -1816,6 +1932,8 @@ export const createEcsTasks = (
   dbMigrateContainer.addMountPoints(tmpMountPoint)
 
   return {
+    planeATask,
+    planeCTask,
     planeBIngestTask,
     b2cRefreshTask,
     fxRateRefreshTask,

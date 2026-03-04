@@ -512,19 +512,19 @@ aria-current="page"
     <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
     <section
       v-if="hasApiQuotes && verdictParagraph"
-      class="bg-neutral-50 border-y border-neutral-200"
+      class="bg-brand-600"
     >
       <div class="container py-6">
-        <h2 class="text-h3 font-black text-rs-fg mb-3">
+        <h2 class="text-h3 font-black text-white mb-3">
           Best way to send money from {{ content.from }} to {{ content.to }}
         </h2>
-        <p class="text-body text-neutral-700 max-w-3xl">
+        <p class="text-body text-white/85 max-w-3xl">
           {{ verdictParagraph }}
         </p>
-        <p class="text-body-sm text-rs-muted mt-2">
+        <p class="text-body-sm text-white/60 mt-2">
           Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
           Data sourced from provider APIs.
-          <NuxtLink to="/methodology" class="font-semibold text-brand-600 hover:text-brand-500 underline underline-offset-2">
+          <NuxtLink to="/methodology" class="font-semibold text-white hover:text-white/80 underline underline-offset-2">
             See methodology
           </NuxtLink>
         </p>
@@ -794,10 +794,10 @@ aria-current="page"
                       <!-- Promotional Info -->
                       <div
                         v-if="row.hasPromo && row.promoInfo"
-                        class="mt-2 flex items-center gap-2 rounded-lg bg-white border border-neutral-200 px-3 py-1.5 w-full shadow-sm"
+                        class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-sm px-3 py-1"
                       >
                         <svg
-                          class="h-4 w-4 text-brand-600 flex-shrink-0"
+                          class="h-3.5 w-3.5 text-green-300 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -806,18 +806,12 @@ aria-current="page"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 8v13m0-13V6a2 2 0 112 2h-2m0 0V5.5A2.5 2.5 0 1013.5 8H12m-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
+                            d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <div class="flex flex-col gap-0.5">
-                          <span class="text-body-sm font-semibold text-brand-700">
-                            Promotional Offer
-                          </span>
-                          <span class="text-body-sm text-neutral-700">
-                            {{ row.promoInfo.newCustomersOnly ? 'New customers only' : 'Special rate' }} ·
-                            Fee: {{ formatMoney(row.promoInfo.fee, fromCurrencyCode) }}
-                          </span>
-                        </div>
+                        <span class="text-body-sm font-medium text-white/90">
+                          {{ row.promoInfo.newCustomersOnly ? 'New customer promo' : 'Promo rate' }} · Fee: {{ formatMoney(row.promoInfo.fee, fromCurrencyCode) }}
+                        </span>
                       </div>
                     </div>
                   </div>

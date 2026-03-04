@@ -69,7 +69,11 @@ export type RuntimeNestedStackProps = NestedStackProps & {
     EcsServiceOptions,
     | 'envName'
     | 'cluster'
+    | 'planeASecurityGroup'
+    | 'planeCSecurityGroup'
     | 'planeBSecurityGroup'
+    | 'planeATask'
+    | 'planeCTask'
     | 'planeBIngestTask'
     | 'b2cRefreshTask'
     | 'fxRateRefreshTask'

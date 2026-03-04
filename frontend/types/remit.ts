@@ -1,5 +1,7 @@
 export type Method = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
 
+export type PromoType = 'FEE_WAIVER' | 'RATE_BOOST' | 'FEE_WAIVER_AND_RATE_BOOST'
+
 export type Corridor = {
   from: string // ISO alpha-2
   to: string // ISO alpha-2
@@ -40,6 +42,11 @@ export type ProviderQuote = {
     headline: string
     details: string[]
     newCustomersOnly: boolean
+    promoType?: PromoType
+    standardFee?: number
+    standardRate?: number
+    promoFee?: number
+    promoRate?: number
   } | null
   score?: number
   scoreBreakdown?: {

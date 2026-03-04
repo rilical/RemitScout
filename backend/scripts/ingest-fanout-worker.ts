@@ -237,6 +237,31 @@ const reportBackpressure = (active: boolean, queueDepth: number): void => {
     },
   })
 
+  // Emit BackpressureDetected as a continuous signal (1 = active, 0 = clear)
+  // so the CloudWatch alarm has data points in every period.
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Workers',
+    name: 'BackpressureDetected',
+    value: active ? 1 : 0,
+    unit: 'Count',
+    dimensions: {
+      Worker: 'ingest-fanout',
+      environment: config.envName || config.env,
+    },
+  })
+
+  // Emit the current active extender count as a gauge for capacity visibility.
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Workers',
+    name: 'ActiveExtenders',
+    value: activeExtenders.size,
+    unit: 'Count',
+    dimensions: {
+      Worker: 'ingest-fanout',
+      environment: config.envName || config.env,
+    },
+  })
+
   if (active) {
     recordCloudWatchMetric({
       name: 'worker_backpressure',

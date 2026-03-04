@@ -132,11 +132,13 @@ export const createProbeRunner = (options: {
   corridors?: readonly string[]
   timeoutMs?: number
   retries?: number
+  retryBaseDelayMs?: number
   onResult?: (result: ProbeResult) => void
 }) => {
   const logger = createLogger(`script.probe.${options.providerId}`)
   const timeoutMs = options.timeoutMs ?? 300000
-  const retries = options.retries ?? 0
+  const retries = options.retries ?? 3
+  const retryBaseDelayMs = options.retryBaseDelayMs ?? 1000
   const corridorCount = options.corridors?.length ?? 0
 
   return {
@@ -188,8 +190,15 @@ export const createProbeRunner = (options: {
         } catch (error) {
           lastError = error instanceof Error ? error : new Error(String(error))
           if (attempt < retries) {
-            logger.warn('probe_retry', { attempt: attempt + 1, error: lastError.message })
-            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+            const delayMs = retryBaseDelayMs * Math.pow(2, attempt)
+            logger.warn('probe_retry', {
+              provider_id: options.providerId,
+              attempt: attempt + 1,
+              max_retries: retries,
+              delay_ms: delayMs,
+              error: lastError.message,
+            })
+            await new Promise(resolve => setTimeout(resolve, delayMs))
           }
         } finally {
           if (timeoutId) {

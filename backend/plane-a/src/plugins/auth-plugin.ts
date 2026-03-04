@@ -3,6 +3,7 @@ import { config } from '../../../shared/config'
 import { getPool, query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { getRedisClient } from '../../../shared/redis'
+import { DailyUsageCounterRepository } from '../repositories'
 import { formatCorridorId, parseCorridorId } from '../../../shared/corridor'
 import { verifyPlaneAAdminJwt, isPlaneAAdminAccessClaims } from '../auth/admin-jwt'
 import { verifySupabaseJwt } from '../auth/verify-supabase-jwt'
@@ -18,6 +19,7 @@ import { getEntitlementsForPlan, type Entitlements, type PlanCode } from '../ser
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
+import { initUsageLogBuffer, pushUsageLogEntry } from '../services/usage-log-buffer'
 
 type EntitlementType = 'pulse' | 'pulse_full' | 'exports' | 'alerts' | 'history' | 'api_access'
 
@@ -96,10 +98,63 @@ const resolveNormalizedCorridorId = (raw: unknown): string | null => {
   })
 }
 
+/**
+ * Resolve the corridor ID from both query params (`corridor_id`) and path
+ * params (`corridorId`). Routes use both naming conventions. Returns the
+ * first valid, normalized corridor ID found, or null.
+ */
+const resolveCorridorIdFromRequest = (request: FastifyRequest): string | null => {
+  const fromQuery = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+  if (fromQuery) return fromQuery
+  const fromParams = resolveNormalizedCorridorId((request.params as any)?.corridorId)
+  return fromParams
+}
+
+/**
+ * Check whether the corridors_allowed field effectively restricts access.
+ * Returns true when the allowlist is non-null AND non-empty (i.e. there are
+ * explicit corridor restrictions). Null or empty array means "allow all".
+ */
+const hasCorridorRestrictions = (corridorsAllowed: string[] | null): corridorsAllowed is string[] => {
+  return corridorsAllowed !== null && corridorsAllowed.length > 0
+}
+
 const getSecondsUntilNextUtcMidnight = (now: Date): number => {
   const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
   const deltaMs = Math.max(0, next.getTime() - now.getTime())
   return Math.max(1, Math.ceil(deltaMs / 1000))
+}
+
+/**
+ * Fire-and-forget DB write-through for daily usage counter.
+ * Increments the persistent counter so the count survives Redis failures.
+ * Never blocks the request — errors are logged and swallowed.
+ */
+const writeThroughDbCounter = (repo: DailyUsageCounterRepository, clientId: string): void => {
+  repo.incrementAndGet(clientId).catch((error) => {
+    rateLimitLogger.warn('daily_usage_db_write_through_failed', {
+      client_id: clientId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
+}
+
+/**
+ * Recover the daily usage count from the DB when Redis is unavailable.
+ * Uses incrementAndGet so the DB reflects this request too.
+ * Returns the new count after incrementing, or -1 if the DB is also down.
+ */
+const recoverCountFromDb = async (repo: DailyUsageCounterRepository, clientId: string): Promise<number> => {
+  try {
+    return await repo.incrementAndGet(clientId)
+  } catch (error) {
+    rateLimitLogger.warn('daily_usage_db_recovery_failed', {
+      client_id: clientId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    // If DB is also down, fall through to in-memory fallback.
+    return -1
+  }
 }
 
 const applyInstitutionalDailyRateLimit = async (
@@ -115,17 +170,49 @@ const applyInstitutionalDailyRateLimit = async (
 
   const redis = await getRedisClient()
   if (redis) {
-    const redisKey = `plane-a:inst-daily:${clientId}:${dateKey}`
-    const current = await redis.incr(redisKey)
-    if (current === 1) {
-      await redis.expire(redisKey, secondsUntilReset)
-    }
+    try {
+      const redisKey = `plane-a:inst-daily:${clientId}:${dateKey}`
+      const current = await redis.incr(redisKey)
+      if (current === 1) {
+        await redis.expire(redisKey, secondsUntilReset)
+      }
 
+      // Fire-and-forget: persist to DB so the count survives Redis restarts.
+      writeThroughDbCounter(dailyUsageRepo, clientId)
+
+      reply.header('X-RateLimit-Daily-Limit', String(maxRequestsPerDay))
+      reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - current)))
+      reply.header('X-RateLimit-Daily-Reset', String(resetAtMs))
+
+      if (current > maxRequestsPerDay) {
+        reply.code(429)
+        reply.send({
+          error: 'daily_limit_exceeded',
+          message: 'Daily request limit exceeded.',
+          retryAfter: secondsUntilReset,
+        })
+        return false
+      }
+      return true
+    } catch (redisError) {
+      rateLimitLogger.warn('daily_rate_limit_redis_failed_recovering_from_db', {
+        client_id: clientId,
+        error: redisError instanceof Error ? redisError.message : String(redisError),
+      })
+      // Fall through to DB recovery path below.
+    }
+  }
+
+  // Redis unavailable or errored — recover the authoritative count from DB.
+  const dbCount = await recoverCountFromDb(dailyUsageRepo, clientId)
+
+  if (dbCount >= 0) {
+    // DB recovery succeeded; dbCount is the post-increment value.
     reply.header('X-RateLimit-Daily-Limit', String(maxRequestsPerDay))
-    reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - current)))
+    reply.header('X-RateLimit-Daily-Remaining', String(Math.max(0, maxRequestsPerDay - dbCount)))
     reply.header('X-RateLimit-Daily-Reset', String(resetAtMs))
 
-    if (current > maxRequestsPerDay) {
+    if (dbCount > maxRequestsPerDay) {
       reply.code(429)
       reply.send({
         error: 'daily_limit_exceeded',
@@ -137,7 +224,7 @@ const applyInstitutionalDailyRateLimit = async (
     return true
   }
 
-  // Fallback: in-memory daily limiter (best-effort; not distributed).
+  // Last resort: in-memory daily limiter (best-effort; not distributed).
   const memoryKey = `${clientId}:${dateKey}`
   const entry = institutionalDailyRateLimitStore.get(memoryKey)
   const nowMs = now.getTime()
@@ -177,6 +264,8 @@ const applyInstitutionalDailyRateLimit = async (
 }
 
 export const authPlugin = (app: FastifyInstance) => {
+  initUsageLogBuffer(planeAPool)
+
   app.addHook('preHandler', async (request: FastifyRequest) => {
     const apiKeyToken = resolveApiKeyToken(request)
     if (apiKeyToken) {
@@ -276,10 +365,16 @@ export const authPlugin = (app: FastifyInstance) => {
     }
 
     // Global guard: enforce corridor allowlist on ALL routes when a corridor_id is present.
+    // Resolves corridor from both query params (?corridor_id=) and path params (/:corridorId).
     const corridorsAllowed = request.institutionalClient.corridors_allowed
-    if (corridorsAllowed !== null) {
-      const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+    if (hasCorridorRestrictions(corridorsAllowed)) {
+      const corridorId = resolveCorridorIdFromRequest(request)
       if (corridorId && !corridorsAllowed.includes(corridorId)) {
+        logger.warn('institutional_corridor_blocked', {
+          client_id: request.institutionalClient.id,
+          corridor_id: corridorId,
+          allowed_count: corridorsAllowed.length,
+        })
         reply.code(403)
         reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
         return
@@ -301,44 +396,25 @@ export const authPlugin = (app: FastifyInstance) => {
     }
   })
 
-  // Best-effort usage logging for institutional surfaces. Must never block the response.
-  app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+  // Best-effort usage logging for institutional surfaces.
+  // Entries are buffered in-memory and flushed to DB periodically in bulk
+  // to reduce per-request write contention on public.api_usage_log.
+  app.addHook('onResponse', (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.institutionalClient) return
     const path = resolveInstitutionalSurfacePath(request)
     if (!isInstitutionalSurface(path)) return
 
-    const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+    const corridorId = resolveCorridorIdFromRequest(request)
     const endpoint = request.routeOptions?.url || path
     const responseTimeMs = Number.isFinite(reply.elapsedTime) ? Math.round(reply.elapsedTime) : null
 
-    try {
-      await query(
-        `
-        INSERT INTO public.api_usage_log (
-          client_id,
-          endpoint,
-          corridor_id,
-          response_time_ms,
-          status_code
-        ) VALUES ($1, $2, $3, $4, $5)
-        `,
-        [
-          request.institutionalClient.id,
-          endpoint,
-          corridorId,
-          responseTimeMs,
-          reply.statusCode,
-        ],
-        planeAPool,
-      )
-    } catch (error) {
-      logger.warn('api_usage_log_insert_failed', {
-        client_id: request.institutionalClient.id,
-        endpoint,
-        status_code: reply.statusCode,
-        error: getErrorMessage(error),
-      })
-    }
+    pushUsageLogEntry({
+      clientId: request.institutionalClient.id,
+      endpoint,
+      corridorId,
+      responseTimeMs,
+      statusCode: reply.statusCode,
+    })
   })
 }
 
@@ -516,6 +592,8 @@ export const requireSuperAdmin = () => {
 
 const planeAPool = getPool(config.db.planeAUrl)
 const logger = createLogger('plane-a.auth-plugin')
+const rateLimitLogger = createLogger('plane-a.rate-limit')
+const dailyUsageRepo = new DailyUsageCounterRepository(planeAPool)
 
 const hasTotpMfaAmr = (claims: Record<string, unknown> | undefined): boolean => {
   const amr = Array.isArray(claims?.amr)
@@ -685,9 +763,15 @@ export const requireEntitlement = (entitlement: EntitlementType) => {
       }
 
       const corridorsAllowed = request.institutionalClient.corridors_allowed
-      if (corridorsAllowed !== null) {
-        const corridorId = resolveNormalizedCorridorId((request.query as any)?.corridor_id)
+      if (hasCorridorRestrictions(corridorsAllowed)) {
+        const corridorId = resolveCorridorIdFromRequest(request)
         if (corridorId && !corridorsAllowed.includes(corridorId)) {
+          logger.warn('institutional_corridor_blocked', {
+            client_id: request.institutionalClient.id,
+            corridor_id: corridorId,
+            allowed_count: corridorsAllowed.length,
+            source: 'requireEntitlement',
+          })
           reply.code(403)
           return reply.send({ error: 'corridor_not_allowed', corridor_id: corridorId })
         }

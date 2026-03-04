@@ -428,7 +428,10 @@ export const indicesRoutes = async (app: FastifyInstance) => {
         },
       }
 
-      const ttlMs = collectionCadenceMinutes * 60 * 1000
+      const overrideTtlSeconds = config.indices.cacheTtlOverrideSeconds
+      const ttlMs = overrideTtlSeconds > 0
+        ? overrideTtlSeconds * 1000
+        : collectionCadenceMinutes * 60 * 1000
       await indicesCache.set(cacheKey, response, ttlMs)
       reply.header('X-Data-Tier', String(dataTier))
       reply.header('X-Data-Cadence-Minutes', String(collectionCadenceMinutes))
@@ -925,7 +928,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
   app.get('/indices/corridors', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     try {
       const corridorsAllowed = request.institutionalClient?.corridors_allowed ?? null
-      const filterByAllowed = corridorsAllowed !== null
+      const filterByAllowed = corridorsAllowed !== null && corridorsAllowed.length > 0
 
       const whereClause = filterByAllowed
         ? 'WHERE amount_bucket = $1 AND corridor_id = ANY($2::text[])'

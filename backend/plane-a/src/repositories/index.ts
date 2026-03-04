@@ -31,6 +31,7 @@ export * from './interfaces/agent-actions-repository.interface'
 export * from './interfaces/triangulated-index-repository.interface'
 export * from './interfaces/correction-ledger-repository.interface'
 export * from './interfaces/data-quality-repository.interface'
+export * from './interfaces/daily-usage-counter-repository.interface'
 
 export { AlertRepository } from './implementations/alert-repository'
 export { ApiKeyRepository } from './implementations/api-key-repository'
@@ -65,3 +66,4 @@ export { AgentActionsRepository } from './implementations/agent-actions-reposito
 export { TriangulatedIndexRepository } from './implementations/triangulated-index-repository'
 export { CorrectionLedgerRepository } from './implementations/correction-ledger-repository'
 export { DataQualityRepository } from './implementations/data-quality-repository'
+export { DailyUsageCounterRepository } from './implementations/daily-usage-counter-repository'

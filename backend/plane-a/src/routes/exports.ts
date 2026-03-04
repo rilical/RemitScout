@@ -19,6 +19,10 @@ import {
   exportJobParamsSchema,
   exportListSchema,
 } from './exports.schema'
+import {
+  checkAndIncrementExportLimit,
+  decrementExportCounter,
+} from './exports-limit'
 
 const logger = createLogger('plane-a.exports')
 
@@ -59,10 +63,32 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
     const { jobType, params } = resolveCreateExport(request, parsed.data)
 
+    const maxActive = config.exports?.maxActivePerUser ?? 2
+
+    // --- Distributed limit check (Redis) with DB fallback ---
+    const redisLimit = await checkAndIncrementExportLimit(actor.userId, maxActive)
+    if (redisLimit.limited) {
+      reply.code(429)
+      return {
+        error: 'export_limit_reached',
+        active: redisLimit.currentCount,
+        maxActive,
+      }
+    }
+
+    // Track whether we incremented Redis so we can roll back on failure.
+    const redisIncremented = redisLimit.redisAvailable
+
     try {
+      // Belt-and-suspenders: always verify against the DB as a secondary check.
+      // When Redis is down this is the only guard; when Redis is up it catches
+      // any drift between the counter and actual DB state.
       const activeCount = await exportJobRepository.countByUserAndStatus(actor.userId)
-      const maxActive = config.exports?.maxActivePerUser ?? 2
       if (activeCount >= maxActive) {
+        // Roll back the Redis increment — DB says we are already at the limit.
+        if (redisIncremented) {
+          await decrementExportCounter(actor.userId)
+        }
         reply.code(429)
         return {
           error: 'export_limit_reached',
@@ -114,6 +140,11 @@ export const exportsRoutes = async (app: FastifyInstance) => {
         },
       }
     } catch (error) {
+      // Roll back the Redis increment on any failure so the counter stays
+      // accurate even if the DB insert or SQS enqueue fails.
+      if (redisIncremented) {
+        await decrementExportCounter(actor.userId)
+      }
       logger.error('export_job_create_failed', {
         user_id: actor.userId,
         error: error instanceof Error ? error.message : String(error),

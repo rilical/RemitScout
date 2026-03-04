@@ -13,6 +13,25 @@ const agentMetricDimensions = (): Record<string, string> => ({
 const logger = createLogger('plane-b.agents.stress-responder')
 
 /**
+ * Minimum collection interval enforced on any cadence override.
+ * No provider may be collected more than once every 20 seconds (3 req/min).
+ */
+const MIN_INTERVAL_MS = 20_000
+
+/**
+ * Maximum number of entries retained in the escalation tracker (and the
+ * lastOverrideAt cooldown map).  Entries beyond this cap are evicted by age
+ * (oldest-first) to bound in-process memory growth.
+ */
+const ESCALATION_TRACKER_MAX_SIZE = 1_000
+
+/**
+ * Time-to-live for escalation tracker entries.  Corridors whose last-detected
+ * timestamp is older than this value are evicted on the next write.
+ */
+const ESCALATION_TRACKER_TTL_MS = 60 * 60 * 1_000 // 1 hour
+
+/**
  * Corridor stress signal.
  */
 export type CorridorStressSignal = {
@@ -68,10 +87,14 @@ export class StressResponder {
   private readonly highThreshold = 0.6
   private readonly criticalThreshold = 0.8
 
-  // Cadence multipliers
+  // Cadence multipliers — applied as: overrideIntervalMs = baseIntervalMs * multiplier.
+  // A value < 1 shortens the interval (increases collection frequency).
+  //   elevated:  60 s * 0.75 = 45 s  →  25 % faster  ✓
+  //   high:      60 s * 0.50 = 30 s  →  50 % faster  ✓
+  //   critical:  60 s * 0.25 = 15 s  →  75 % faster  ✓ (clamped to MIN_INTERVAL_MS = 20 s)
   private readonly elevatedMultiplier = 0.75  // 25% faster
   private readonly highMultiplier = 0.5       // 50% faster
-  private readonly criticalMultiplier = 0.25  // 75% faster
+  private readonly criticalMultiplier = 0.25  // 75% faster (floor: MIN_INTERVAL_MS)
 
   // Override TTLs
   private readonly defaultOverrideTtlMs = 300_000  // 5 minutes
@@ -149,7 +172,9 @@ export class StressResponder {
         const multiplier = this.getMultiplier(signal.stressLevel)
         const ttlMs = signal.stressLevel === 'critical' ? this.criticalOverrideTtlMs : this.defaultOverrideTtlMs
         const baseIntervalMs = 60_000 // Default base interval (1 minute)
-        const overrideIntervalMs = Math.max(10_000, Math.round(baseIntervalMs * multiplier))
+        // Clamp to MIN_INTERVAL_MS so no provider is collected more than
+        // once every 20 seconds regardless of the stress multiplier.
+        const overrideIntervalMs = Math.max(MIN_INTERVAL_MS, Math.round(baseIntervalMs * multiplier))
 
         const override: CadenceOverride = {
           moduleId: mod.module_id,
@@ -234,8 +259,14 @@ export class StressResponder {
 
   /**
    * Track consecutive high/critical signals for a corridor.
+   *
+   * Runs TTL eviction and size-cap enforcement before mutating the map so
+   * memory growth is bounded on every write path.
    */
   private trackEscalation(signal: CorridorStressSignal): void {
+    // Housekeeping first — keep the in-process maps within bounds.
+    this.evictStaleTrackerEntries()
+
     if (signal.stressLevel !== 'high' && signal.stressLevel !== 'critical') {
       // Only track high/critical for escalation; elevated resets the counter
       const existing = this.escalationTracker.get(signal.corridorId)
@@ -345,6 +376,66 @@ export class StressResponder {
    */
   getEscalationRecord(corridorId: string): EscalationRecord | null {
     return this.escalationTracker.get(corridorId) ?? null
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tracker housekeeping — TTL eviction + size cap
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Evict stale entries from `escalationTracker` and `lastOverrideAt`.
+   *
+   * Two criteria, applied in order:
+   *  1. TTL — remove entries whose `lastDetectedAt` is older than
+   *     ESCALATION_TRACKER_TTL_MS (1 hour).
+   *  2. Size cap — if the tracker still exceeds ESCALATION_TRACKER_MAX_SIZE
+   *     after TTL eviction, remove the oldest entries (by lastDetectedAt) until
+   *     the cap is satisfied.
+   *
+   * Called from `trackEscalation` before inserting a new entry so the maps
+   * are trimmed on every write path without a separate timer.
+   */
+  private evictStaleTrackerEntries(): void {
+    const now = Date.now()
+    const cutoff = now - ESCALATION_TRACKER_TTL_MS
+
+    // --- Pass 1: TTL eviction ---
+    let ttlEvicted = 0
+    for (const [corridorId, record] of this.escalationTracker) {
+      if (new Date(record.lastDetectedAt).getTime() < cutoff) {
+        this.escalationTracker.delete(corridorId)
+        this.lastOverrideAt.delete(corridorId)
+        ttlEvicted++
+      }
+    }
+
+    // --- Pass 2: size cap (oldest-first) ---
+    const overCap = this.escalationTracker.size - ESCALATION_TRACKER_MAX_SIZE
+    if (overCap > 0) {
+      // Sort ascending by lastDetectedAt so we drop the oldest first.
+      const sorted = [...this.escalationTracker.entries()].sort(
+        ([, a], [, b]) =>
+          new Date(a.lastDetectedAt).getTime() - new Date(b.lastDetectedAt).getTime(),
+      )
+      let capEvicted = 0
+      for (const [corridorId] of sorted) {
+        if (capEvicted >= overCap) break
+        this.escalationTracker.delete(corridorId)
+        this.lastOverrideAt.delete(corridorId)
+        capEvicted++
+      }
+      logger.warn('escalation_tracker_cap_eviction', {
+        evicted: capEvicted,
+        remaining: this.escalationTracker.size,
+      })
+    }
+
+    if (ttlEvicted > 0) {
+      logger.debug('escalation_tracker_ttl_eviction', {
+        evicted: ttlEvicted,
+        remaining: this.escalationTracker.size,
+      })
+    }
   }
 
   /**

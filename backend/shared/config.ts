@@ -441,6 +441,8 @@ const rawConfig = {
       return true
     })(),
     apiKeyRotationGraceSeconds: toNumber(process.env.API_KEY_ROTATION_GRACE_SECONDS, 300),
+    usageLogFlushIntervalMs: toPositiveInt(process.env.PLANE_A_USAGE_LOG_FLUSH_INTERVAL_MS, 5000),
+    usageLogBufferSize: toPositiveInt(process.env.PLANE_A_USAGE_LOG_BUFFER_SIZE, 100),
     sentryCaptureRate4xx: (() => {
       const raw = process.env.SENTRY_CAPTURE_4XX_SAMPLE_RATE
       if (raw !== undefined && raw.trim()) {
@@ -1021,6 +1023,39 @@ const rawConfig = {
         xoom: resolveProviderPlaywrightLimits('PLANE_B_XOOM'),
       },
     },
+    discovery: {
+      enabled: toBoolean(process.env.DISCOVERY_ENABLED),
+      screenshotsEnabled: toBoolean(process.env.DISCOVERY_SCREENSHOTS_ENABLED),
+      navigationTimeoutMs: toNumber(process.env.DISCOVERY_NAVIGATION_TIMEOUT_MS, 30000),
+      interProviderDelayMs: toNumber(process.env.DISCOVERY_INTER_PROVIDER_DELAY_MS, 60000),
+      maxCorridorsPerProvider: toNumber(process.env.DISCOVERY_MAX_CORRIDORS_PER_PROVIDER, 500),
+      providerUrls: {
+        alansari: process.env.DISCOVERY_URL_ALANSARI || 'https://www.alansariexchange.com',
+        bossmoney: process.env.DISCOVERY_URL_BOSSMONEY || 'https://www.bossmoneytransfer.com',
+        dahabshiil: process.env.DISCOVERY_URL_DAHABSHIIL || 'https://www.dahabshiil.com',
+        instarem: process.env.DISCOVERY_URL_INSTAREM || 'https://www.instarem.com',
+        intermex: process.env.DISCOVERY_URL_INTERMEX || 'https://www.intermexonline.com',
+        koronapay: process.env.DISCOVERY_URL_KORONAPAY || 'https://koronapay.com',
+        mukuru: process.env.DISCOVERY_URL_MUKURU || 'https://www.mukuru.com',
+        orbitremit: process.env.DISCOVERY_URL_ORBITREMIT || 'https://www.orbitremit.com',
+        pangea: process.env.DISCOVERY_URL_PANGEA || 'https://www.pangearemittances.com',
+        paysend: process.env.DISCOVERY_URL_PAYSEND || 'https://www.paysend.com',
+        placid: process.env.DISCOVERY_URL_PLACID || 'https://www.placid.app',
+        remitbee: process.env.DISCOVERY_URL_REMITBEE || 'https://www.remitbee.com',
+        remitly: process.env.DISCOVERY_URL_REMITLY || 'https://www.remitly.com',
+        ria: process.env.DISCOVERY_URL_RIA || 'https://www.riamoneytransfer.com',
+        sendwave: process.env.DISCOVERY_URL_SENDWAVE || 'https://www.sendwave.com',
+        singx: process.env.DISCOVERY_URL_SINGX || 'https://www.singx.co',
+        transfergo: process.env.DISCOVERY_URL_TRANSFERGO || 'https://www.transfergo.com',
+        wellsfargo: process.env.DISCOVERY_URL_WELLSFARGO || 'https://www.wellsfargo.com',
+        westernunion: process.env.DISCOVERY_URL_WESTERNUNION || 'https://www.westernunion.com',
+        wirebarley: process.env.DISCOVERY_URL_WIREBARLEY || 'https://www.wirebarley.com',
+        wise: process.env.DISCOVERY_URL_WISE || 'https://wise.com',
+        worldremit: process.env.DISCOVERY_URL_WORLDREMIT || 'https://www.worldremit.com',
+        xe: process.env.DISCOVERY_URL_XE || 'https://www.xe.com',
+        xoom: process.env.DISCOVERY_URL_XOOM || 'https://www.xoom.com',
+      },
+    },
   },
   fxRates: {
     oandaFallbackEnabled: toBoolean(process.env.FX_RATE_OANDA_FALLBACK),
@@ -1123,6 +1158,7 @@ const rawConfig = {
   exports: {
     maxActivePerUser: toNumber(process.env.EXPORT_JOB_MAX_ACTIVE_PER_USER, 2),
     parquetEnabled: toBoolean(process.env.EXPORTS_PARQUET_ENABLED, isStaging),
+    activeCounterTtlSeconds: toNumber(process.env.EXPORT_ACTIVE_COUNTER_TTL_SECONDS, 86400),
   },
   marketing: {
     meta: {
@@ -1469,6 +1505,10 @@ const rawConfig = {
   indices: {
     amountBucket: toNumber(process.env.GOLD_INDICES_AMOUNT_BUCKET, 500),
     providerWeightModel: process.env.PROVIDER_WEIGHT_MODEL || '',
+    /** Runtime override for indices cache TTL (seconds). When set, overrides
+     *  tier-based TTLs across all corridors — useful during incident response
+     *  to force frequent cache refreshes. 0 or unset = use tier-based defaults. */
+    cacheTtlOverrideSeconds: toNumber(process.env.INDICES_CACHE_TTL_OVERRIDE_SECONDS, 0),
   },
   agent: {
     enabled: toBoolean(process.env.AGENT_ENABLED),
@@ -1520,7 +1560,7 @@ const rawConfig = {
     enabled: toBoolean(process.env.TRIANGULATION_ENABLED),
     amountBuckets: toList(process.env.TRIANGULATION_AMOUNT_BUCKETS ?? '500').map(Number).filter(Number.isFinite),
     methodProfile: process.env.TRIANGULATION_METHOD_PROFILE || 'bank_transfer:bank_deposit',
-    intermediaries: toList(process.env.TRIANGULATION_INTERMEDIARIES ?? 'USD,EUR,GBP'),
+    intermediaries: toList(process.env.TRIANGULATION_INTERMEDIARIES ?? 'USD,EUR,GBP,AUD,SGD,AED'),
     minProvidersPerLeg: toPositiveInt(process.env.TRIANGULATION_MIN_PROVIDERS_PER_LEG, 2),
     maxFreshnessMinutes: toNumber(process.env.TRIANGULATION_MAX_FRESHNESS_MINUTES, 120),
     stressDetectionEnabled: toBoolean(process.env.STRESS_DETECTION_ENABLED),
@@ -1532,6 +1572,10 @@ const rawConfig = {
     maxConsecutiveFailures: toPositiveInt(process.env.MODULE_MAX_CONSECUTIVE_FAILURES, 5),
     maxParseErrorRate: toNumber(process.env.MODULE_MAX_PARSE_ERROR_RATE, 0.3),
     quarantineCooldownMs: toNumber(process.env.MODULE_QUARANTINE_COOLDOWN_MS, 300000),
+    failureDetectorWindowMs: toNumber(
+      process.env.MODULE_FAILURE_DETECTOR_WINDOW_MS,
+      4 * 60 * 60 * 1000, // 4 hours (was 1 hour before P2-2)
+    ),
   },
   toolGateway: {
     writeEnabled: toBoolean(process.env.TOOL_GATEWAY_WRITE_ENABLED),

@@ -6,6 +6,8 @@ import type { Construct } from 'constructs'
 import type { QueueResources } from './queues'
 
 export type EcsServiceResources = {
+  planeAService?: FargateService
+  planeCService?: FargateService
   planeBIngestService?: FargateService
   b2cRefreshService?: FargateService
   fxRateRefreshService?: FargateService
@@ -24,7 +26,11 @@ export type EcsServiceResources = {
 export type EcsServiceOptions = {
   envName: string
   cluster: Cluster
+  planeASecurityGroup: SecurityGroup
+  planeCSecurityGroup: SecurityGroup
   planeBSecurityGroup: SecurityGroup
+  planeATask: FargateTaskDefinition
+  planeCTask: FargateTaskDefinition
   planeBIngestTask: FargateTaskDefinition
   b2cRefreshTask: FargateTaskDefinition
   fxRateRefreshTask: FargateTaskDefinition
@@ -249,6 +255,40 @@ export const createEcsServices = (
       ingestFanoutTier2Service: minimalIngestFanoutTier2Service,
     }
   }
+
+  // Plane A API server — always on FARGATE (not Spot) for stable API availability.
+  // Desired count is always 1; auto-scaling handles bursts.
+  const planeAService = new FargateService(scope, 'PlaneAService', {
+    cluster: options.cluster,
+    taskDefinition: options.planeATask,
+    desiredCount: isPaused ? 0 : 1,
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
+    securityGroups: [options.planeASecurityGroup],
+    capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+    enableExecuteCommand,
+    circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
+  })
+  tagManaged(planeAService)
+
+  // Plane C Gold publisher — always on FARGATE for stable internal API availability.
+  // Desired count is always 1; auto-scaling handles bursts (prod only).
+  const planeCService = new FargateService(scope, 'PlaneCService', {
+    cluster: options.cluster,
+    taskDefinition: options.planeCTask,
+    desiredCount: isPaused ? 0 : 1,
+    assignPublicIp: usePublicSubnets,
+    vpcSubnets: { subnetType },
+    securityGroups: [options.planeCSecurityGroup],
+    capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+    enableExecuteCommand,
+    circuitBreaker,
+    minHealthyPercent,
+    maxHealthyPercent,
+  })
+  tagManaged(planeCService)
 
   const planeBIngestService = new FargateService(scope, 'PlaneBIngestService', {
     cluster: options.cluster,
@@ -481,6 +521,40 @@ export const createEcsServices = (
   const scaleOutCooldown = isDev ? Duration.minutes(2) : Duration.minutes(1)
   const defaultQueueAgeTargetSeconds = isProd ? 120 : 300
 
+  // ── Plane A auto-scaling (CPU target-tracking) ────────────────────────────
+  // prod:     min=1, max=4, target CPU=60%
+  // non-prod: min=1, max=2, target CPU=60%
+  if (!isPaused) {
+    const planeAMinCapacity = 1
+    const planeAMaxCapacity = isProd ? 4 : 2
+    const planeAScaling = planeAService.autoScaleTaskCount({
+      minCapacity: planeAMinCapacity,
+      maxCapacity: planeAMaxCapacity,
+    })
+    planeAScaling.scaleOnCpuUtilization('PlaneACpuScaling', {
+      targetUtilizationPercent: 60,
+      scaleOutCooldown: Duration.seconds(60),
+      scaleInCooldown: isProd ? Duration.seconds(180) : Duration.seconds(300),
+    })
+  }
+
+  // ── Plane C auto-scaling (CPU target-tracking) ────────────────────────────
+  // prod:     min=1, max=2, target CPU=70%
+  // non-prod: min=1, max=1 (effectively no scaling — single instance)
+  if (!isPaused) {
+    const planeCMinCapacity = 1
+    const planeCMaxCapacity = isProd ? 2 : 1
+    const planeCScaling = planeCService.autoScaleTaskCount({
+      minCapacity: planeCMinCapacity,
+      maxCapacity: planeCMaxCapacity,
+    })
+    planeCScaling.scaleOnCpuUtilization('PlaneCCpuScaling', {
+      targetUtilizationPercent: 70,
+      scaleOutCooldown: Duration.seconds(60),
+      scaleInCooldown: isProd ? Duration.seconds(180) : Duration.seconds(300),
+    })
+  }
+
   if (!isPaused && options.quoteRefreshMode === 'queue' && b2cRefreshServiceEnabled) {
     const b2cBounds = resolveScaleBounds(b2cRefreshDesired)
     const b2cScaling = b2cRefreshService.autoScaleTaskCount({
@@ -709,6 +783,8 @@ export const createEcsServices = (
   }
 
   return {
+    planeAService,
+    planeCService,
     planeBIngestService,
     b2cRefreshService,
     fxRateRefreshService,

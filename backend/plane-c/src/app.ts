@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify'
 import { SpanStatusCode, type Span } from '@opentelemetry/api'
 import { config } from '../../shared/config'
 import { getPool } from '../../shared/db'
+import { getRedisClient } from '../../shared/redis'
 import { getTracer } from '../../shared/tracing'
 import {
   recordRequest,
@@ -46,17 +47,34 @@ export const buildApp = (): PlaneCApp => {
   app.get('/healthz', async () => ({ status: 'ok' }))
 
   app.get('/readyz', async (_request, reply) => {
+    const checks: Record<string, 'ok' | 'fail'> = { db: 'fail', redis: 'fail' }
     try {
       await pool.query('SELECT 1')
-      return { status: 'ready' }
+      checks.db = 'ok'
     } catch (error) {
       app.log.warn({
-        event: 'plane_c_ready_check_failed',
+        event: 'plane_c_ready_check_db_failed',
         error: error instanceof Error ? error.message : String(error),
       })
-      reply.code(503)
-      return { status: 'not_ready' }
     }
+    try {
+      const redis = await getRedisClient()
+      if (redis) {
+        const pong = await redis.ping()
+        if (pong === 'PONG') checks.redis = 'ok'
+      }
+    } catch (error) {
+      app.log.warn({
+        event: 'plane_c_ready_check_redis_failed',
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+    const allOk = checks.db === 'ok' && checks.redis === 'ok'
+    if (!allOk) {
+      reply.code(503)
+      return { status: 'not_ready', checks }
+    }
+    return { status: 'ready', checks }
   })
 
   app.get('/metrics', async (_request, reply) => {

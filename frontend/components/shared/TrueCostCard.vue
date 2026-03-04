@@ -88,35 +88,35 @@
             <span
               v-if="hasPromo && promoInfo"
               :class="[
-                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold',
-                darkBackground ? 'bg-success-600/30 text-success-600 border border-white' : 'bg-success-100 text-success-700',
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide',
+                darkBackground ? 'bg-white/15 text-green-300' : 'bg-success-50 text-success-700',
               ]"
             >
-              <svg
-                class="w-2.5 h-2.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              PROMO
+              {{ promoBadgeText }}
             </span>
           </div>
           <div :class="['text-[10px]', darkBackground ? 'text-white/60' : 'text-neutral-500']">
-            {{ hasPromo && promoInfo ? 'Promotional pricing applied' : 'What they charge you directly' }}
+            {{ hasPromo && promoInfo ? promoSubtitle : 'What they charge you directly' }}
           </div>
         </div>
-        <span
-          :class="['font-bold', darkBackground ? 'text-white' : 'text-neutral-900', compact ? 'text-body' : 'text-body-sm']"
-        >
-          {{ formatCurrency(upfrontFee) }}
-        </span>
+        <div class="flex items-center gap-2">
+          <span
+            v-if="hasPromo && promoInfo && promoInfo.standardFee != null && promoInfo.standardFee !== upfrontFee"
+            :class="['line-through text-body-sm', darkBackground ? 'text-white/40' : 'text-neutral-400']"
+          >
+            {{ formatCurrency(promoInfo.standardFee) }}
+          </span>
+          <span
+            :class="[
+              'font-bold',
+              darkBackground ? 'text-white' : 'text-neutral-900',
+              compact ? 'text-body' : 'text-body-sm',
+              hasPromo && promoInfo ? (darkBackground ? 'text-green-300' : 'text-success-700') : '',
+            ]"
+          >
+            {{ formatCurrency(upfrontFee) }}
+          </span>
+        </div>
       </div>
 
       <!-- Hidden Markup Row -->
@@ -178,6 +178,11 @@ interface Props {
     fee: number
     rate: number
     newCustomersOnly: boolean
+    promoType?: 'FEE_WAIVER' | 'RATE_BOOST' | 'FEE_WAIVER_AND_RATE_BOOST'
+    standardFee?: number
+    standardRate?: number
+    promoFee?: number
+    promoRate?: number
   } | null
 }
 
@@ -257,6 +262,22 @@ const markupBadgeClass = computed(() => {
     poor: 'bg-danger-100 text-danger-700',
   }
   return classes[markupSeverity.value]
+})
+
+const promoBadgeText = computed(() => {
+  const type = props.promoInfo?.promoType
+  if (type === 'FEE_WAIVER') return 'FEE WAIVER'
+  if (type === 'RATE_BOOST') return 'RATE BOOST'
+  if (type === 'FEE_WAIVER_AND_RATE_BOOST') return 'FEE + RATE PROMO'
+  return 'PROMO'
+})
+
+const promoSubtitle = computed(() => {
+  const type = props.promoInfo?.promoType
+  if (type === 'FEE_WAIVER') return 'Reduced fees for new customers'
+  if (type === 'RATE_BOOST') return 'Boosted exchange rate for new customers'
+  if (type === 'FEE_WAIVER_AND_RATE_BOOST') return 'Reduced fees + boosted rate for new customers'
+  return 'Promotional pricing applied'
 })
 
 function formatCurrency(value: number): string {

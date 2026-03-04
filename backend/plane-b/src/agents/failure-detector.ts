@@ -67,6 +67,13 @@ export class FailureDetector {
   /**
    * Cache of last-known DOM signature hashes per module.
    * Used for drift detection between detection cycles.
+   *
+   * TODO(P2-3): This cache is in-memory only and lost on restart. After a
+   * restart the first detection cycle will re-establish baselines from the
+   * current observation window, so no false drift alerts are fired. However,
+   * genuine drift that occurred across a restart boundary may be missed for
+   * one cycle. A future improvement could persist this map to Redis or a
+   * dedicated DB table (e.g. silver.dom_signature_cache) for continuity.
    */
   private readonly domSignatureCache = new Map<string, string>()
 
@@ -145,10 +152,10 @@ export class FailureDetector {
         `SELECT observation_id, corridor_id, payload, observed_at
          FROM silver.observation
          WHERE module_id = $1 AND type = 'failure'
-           AND observed_at > NOW() - INTERVAL '1 hour'
+           AND observed_at > NOW() - make_interval(secs := $2)
          ORDER BY observed_at DESC
          LIMIT 50`,
-        [mod.module_id],
+        [mod.module_id, Math.round(config.modules.failureDetectorWindowMs / 1000)],
       )
 
       if (failures.length === 0) {

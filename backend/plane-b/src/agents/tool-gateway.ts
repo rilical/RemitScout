@@ -147,9 +147,20 @@ export class ToolGateway {
     this.policy = policy ?? DEFAULT_TOOL_GATEWAY_POLICY
   }
 
+  /**
+   * Extract telemetry dimensions from a tool request.
+   *
+   * Dimensions are split into two tiers:
+   * - **base**: Low-cardinality dimensions (agent_id, tool_type) that are safe
+   *   to emit to CloudWatch without risking unbounded unique metric streams.
+   * - **highCardinality**: Dimensions like provider_id, run_id, route, and
+   *   validator_module that can produce many unique combinations. These are
+   *   only included when `CLOUDWATCH_HIGH_CARDINALITY_METRICS` is enabled,
+   *   gated via the `highCardinality` flag on the metric call.
+   */
   private extractRequestTelemetryDims(
     request: Omit<ToolRequest, 'requestId' | 'submittedAt'>,
-  ): Record<string, string> {
+  ): { base: Record<string, string>; highCardinality: Record<string, string> } {
     const params = request.params || {}
     const asString = (value: unknown): string | undefined =>
       typeof value === 'string' && value.trim() ? value.trim() : undefined
@@ -176,13 +187,17 @@ export class ToolGateway {
       request.agentId
 
     return {
-      provider_id: providerId,
-      route,
-      validator_module: validatorModule,
-      run_id: runId,
-      correlation_id: runId,
-      tool_type: request.toolType,
-      agent_id: request.agentId,
+      base: {
+        tool_type: request.toolType,
+        agent_id: request.agentId,
+      },
+      highCardinality: {
+        provider_id: providerId,
+        route,
+        validator_module: validatorModule,
+        run_id: runId,
+        correlation_id: runId,
+      },
     }
   }
 
@@ -193,16 +208,27 @@ export class ToolGateway {
     const requestId = randomUUID()
     const submittedAt = new Date().toISOString()
     const startedAt = Date.now()
-    const requestDims = this.extractRequestTelemetryDims(request)
+    const { base: baseDims, highCardinality: hcDims } = this.extractRequestTelemetryDims(request)
 
-    // Emit tool request metric
+    // Emit tool request metric (base dimensions always; high-cardinality gated)
     recordCloudWatchMetric({
       name: 'tool_request_total',
       value: 1,
       unit: 'Count',
       namespace: AGENT_METRIC_NAMESPACE,
       dimensions: agentMetricDimensions({
-        ...requestDims,
+        ...baseDims,
+        outcome: 'submitted',
+      }),
+    })
+    recordCloudWatchMetric({
+      name: 'tool_request_total',
+      value: 1,
+      unit: 'Count',
+      namespace: AGENT_METRIC_NAMESPACE,
+      dimensions: agentMetricDimensions({
+        ...baseDims,
+        ...hcDims,
         outcome: 'submitted',
       }),
       highCardinality: true,
@@ -248,9 +274,13 @@ export class ToolGateway {
       return this.deny(requestId, request, startedAt, `Agent '${request.agentId}' rate limit exceeded`)
     }
 
-    // Rate limit check: per-agent-per-tool
-    if (!this.checkToolRateLimit(request.agentId, request.toolType)) {
-      return this.deny(requestId, request, startedAt, `Tool '${request.toolType}' rate limit exceeded for agent '${request.agentId}'`)
+    // Rate limit check: per-agent-per-tool (scoped per provider for HTTP tools)
+    const providerId =
+      (typeof request.params.providerId === 'string' && request.params.providerId) ||
+      (typeof request.params.provider_id === 'string' && request.params.provider_id) ||
+      undefined
+    if (!this.checkToolRateLimit(request.agentId, request.toolType, providerId)) {
+      return this.deny(requestId, request, startedAt, `Tool '${request.toolType}' rate limit exceeded for agent '${request.agentId}'${providerId ? ` (provider: ${providerId})` : ''}`)
     }
 
     // Spend check: block if agent exceeds spend limit (applies to cost-bearing tools)
@@ -330,7 +360,18 @@ export class ToolGateway {
         unit: 'Count',
         namespace: AGENT_METRIC_NAMESPACE,
         dimensions: agentMetricDimensions({
-          ...requestDims,
+          ...baseDims,
+          outcome: 'success',
+        }),
+      })
+      recordCloudWatchMetric({
+        name: 'tool_request_success',
+        value: 1,
+        unit: 'Count',
+        namespace: AGENT_METRIC_NAMESPACE,
+        dimensions: agentMetricDimensions({
+          ...baseDims,
+          ...hcDims,
           outcome: 'success',
           reason_code: 'executed',
         }),
@@ -363,7 +404,18 @@ export class ToolGateway {
         unit: 'Count',
         namespace: AGENT_METRIC_NAMESPACE,
         dimensions: agentMetricDimensions({
-          ...requestDims,
+          ...baseDims,
+          outcome: 'error',
+        }),
+      })
+      recordCloudWatchMetric({
+        name: 'tool_request_error',
+        value: 1,
+        unit: 'Count',
+        namespace: AGENT_METRIC_NAMESPACE,
+        dimensions: agentMetricDimensions({
+          ...baseDims,
+          ...hcDims,
           outcome: 'error',
           reason_code: error.message.slice(0, 64),
         }),
@@ -411,12 +463,21 @@ export class ToolGateway {
    *
    * Some tools (http_fetch, browser_navigate, llm_inference) have their own
    * per-minute limits to prevent abuse.
+   *
+   * For http_fetch and browser_navigate, limits are tracked per-provider so
+   * that one noisy provider cannot starve others of their budget (P2-4).
    */
-  private checkToolRateLimit(agentId: string, toolType: ToolType): boolean {
+  private checkToolRateLimit(agentId: string, toolType: ToolType, providerId?: string): boolean {
     const toolLimit = ToolGateway.TOOL_RATE_LIMITS[toolType]
     if (toolLimit === undefined) return true // No per-tool limit
 
-    const key = `${agentId}:${toolType}`
+    // For HTTP-based tools, scope the rate limit per provider so one
+    // provider's traffic cannot exhaust the budget for others.
+    const providerSuffix =
+      providerId && (toolType === 'http_fetch' || toolType === 'browser_navigate')
+        ? `:${providerId}`
+        : ''
+    const key = `${agentId}:${toolType}${providerSuffix}`
     return this.checkRateLimitEntry(this.toolRateLimits, key, toolLimit, 60_000)
   }
 
@@ -728,15 +789,26 @@ export class ToolGateway {
     startedAt: number,
     reason: string,
   ): ToolResult {
-    const requestDims = this.extractRequestTelemetryDims(request)
-    // Emit blocked metric
+    const { base: baseDims, highCardinality: hcDims } = this.extractRequestTelemetryDims(request)
+    // Emit blocked metric (base dimensions always; high-cardinality gated)
     recordCloudWatchMetric({
       name: 'tool_request_blocked',
       value: 1,
       unit: 'Count',
       namespace: AGENT_METRIC_NAMESPACE,
       dimensions: agentMetricDimensions({
-        ...requestDims,
+        ...baseDims,
+        outcome: 'blocked',
+      }),
+    })
+    recordCloudWatchMetric({
+      name: 'tool_request_blocked',
+      value: 1,
+      unit: 'Count',
+      namespace: AGENT_METRIC_NAMESPACE,
+      dimensions: agentMetricDimensions({
+        ...baseDims,
+        ...hcDims,
         outcome: 'blocked',
         reason_code: reason.slice(0, 64),
       }),

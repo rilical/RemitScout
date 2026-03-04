@@ -17,6 +17,7 @@ export type GenericProbeOptions = {
   providerId: string
   timeoutMs?: number
   retries?: number
+  retryBaseDelayMs?: number
   outputFormat?: 'json' | 'text'
   amountBuckets?: number[]
   payinMethod?: string
@@ -47,7 +48,8 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
     ? corridors.slice(0, maxCorridors)
     : corridors
   const timeoutMs = options.timeoutMs ?? (Number(process.env.PROBE_TIMEOUT_MS) || 300000)
-  const retries = options.retries ?? (Number(process.env.PROBE_RETRIES) || 0)
+  const retries = options.retries ?? (Number(process.env.PROBE_RETRIES) || 3)
+  const retryBaseDelayMs = options.retryBaseDelayMs ?? (Number(process.env.PROBE_RETRY_BASE_DELAY_MS) || 1000)
   const amountBucketsEnv = process.env.PROBE_AMOUNT_BUCKETS
   const parsedAmountBuckets = amountBucketsEnv
     ? amountBucketsEnv
@@ -65,6 +67,7 @@ export const runGenericProbe = async (options: GenericProbeOptions): Promise<Pro
       corridors: limitedCorridors,
     timeoutMs,
     retries,
+    retryBaseDelayMs,
   })
 
   const pool = createPool(config.db.planeBUrl)

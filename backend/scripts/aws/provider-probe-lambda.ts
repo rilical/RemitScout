@@ -54,7 +54,7 @@ export const handler = async (): Promise<ProbeLambdaResponse> => {
   const requestedProbeTimeoutMs = Number.isFinite(probeTimeoutOverride) && probeTimeoutOverride > 0
     ? probeTimeoutOverride
     : 300000
-  const probeRetries = Number(process.env.PROBE_RETRIES) || 0
+  const probeRetries = Number(process.env.PROBE_RETRIES) || 3
 
   if (providerIds.length === 0) {
     const error = 'Missing PROVIDER_ID or PROVIDER_IDS'

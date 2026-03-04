@@ -203,4 +203,97 @@ describe('institutional global guard (routes without requireEntitlement)', () =>
       await app.close()
     }
   })
+
+  it('treats empty corridors_allowed array as allow-all (backward compatible)', async () => {
+    vi.mocked(validateInstitutionalClientApiKey).mockResolvedValue({
+      id: 'c-empty-array',
+      name: 'Premium Client',
+      tier: 'premium',
+      corridors_allowed: [],
+      rate_limit_rpm: 60,
+      rate_limit_daily: 100000,
+      status: 'active',
+      contract_start: null,
+      contract_end: null,
+    })
+
+    const app = await buildApp()
+    app.get('/api/v1/quotes/test-public', async () => ({ ok: true }))
+
+    try {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/quotes/test-public?corridor_id=US-CA-USD-CAD',
+        headers: { 'x-api-key': 'token' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ ok: true })
+    } finally {
+      await app.close()
+    }
+  })
+
+  it('rejects corridor-restricted client on disallowed corridor via path param', async () => {
+    vi.mocked(validateInstitutionalClientApiKey).mockResolvedValue({
+      id: 'c-restricted',
+      name: 'Restricted Client',
+      tier: 'standard',
+      corridors_allowed: ['US-MX-USD-MXN'],
+      rate_limit_rpm: 60,
+      rate_limit_daily: 100000,
+      status: 'active',
+      contract_start: null,
+      contract_end: null,
+    })
+
+    const app = await buildApp()
+    app.get('/api/v1/test/:corridorId', async () => ({ ok: true }))
+
+    try {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/test/US-CA-USD-CAD',
+        headers: { 'x-api-key': 'token' },
+      })
+
+      expect(res.statusCode).toBe(403)
+      expect(res.json()).toMatchObject({
+        error: 'corridor_not_allowed',
+        corridor_id: 'US-CA-USD-CAD',
+      })
+    } finally {
+      await app.close()
+    }
+  })
+
+  it('allows corridor-restricted client on allowed corridor via path param', async () => {
+    vi.mocked(validateInstitutionalClientApiKey).mockResolvedValue({
+      id: 'c-restricted',
+      name: 'Restricted Client',
+      tier: 'standard',
+      corridors_allowed: ['US-MX-USD-MXN'],
+      rate_limit_rpm: 60,
+      rate_limit_daily: 100000,
+      status: 'active',
+      contract_start: null,
+      contract_end: null,
+    })
+
+    const app = await buildApp()
+    app.get('/api/v1/test/:corridorId', async () => ({ ok: true }))
+
+    try {
+      const res = await app.inject({
+        method: 'GET',
+        url: '/api/v1/test/US-MX-USD-MXN',
+        headers: { 'x-api-key': 'token' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ ok: true })
+    } finally {
+      await app.close()
+    }
+  })
 })

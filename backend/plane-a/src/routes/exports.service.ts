@@ -126,16 +126,43 @@ export const resolveCreateExport = (
 ): { jobType: ExportJobType; params: Record<string, unknown> } => {
   const jobType = resolveExportJobType(payload.dataType, payload.format)
 
+  /**
+   * Parquet format gating.
+   *
+   * Parquet export requires two conditions:
+   * 1. Server-side flag: `config.exports.parquetEnabled` must be `true`.
+   *    This is controlled by the `EXPORTS_PARQUET_ENABLED` env var (see config.ts).
+   *    Typically enabled only in environments where the export worker has the
+   *    `@apache-arrow/parquet` dependency available.
+   * 2. User entitlement: the caller's plan must include `bulk_export`.
+   *
+   * If either condition is unmet, the request is rejected with a descriptive error.
+   */
   if (payload.format === 'parquet') {
-    const parquetEnabled = config.exports?.parquetEnabled ?? false
+    const isParquetEnabled = config.exports?.parquetEnabled ?? false
     const entitlements = request.entitlementsContext?.entitlements
-    const bulkExportEnabled = Boolean(entitlements?.bulk_export)
+    const hasBulkExportEntitlement = Boolean(entitlements?.bulk_export)
 
-    if (!parquetEnabled) {
-      throw new ValidationError('Invalid request', { details: { error: 'parquet_not_enabled' } })
+    if (!isParquetEnabled) {
+      logger.warn('parquet_format_requested_but_not_enabled', {
+        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+        message: 'Parquet export was requested but EXPORTS_PARQUET_ENABLED is not set to true. '
+          + 'Enable it via the EXPORTS_PARQUET_ENABLED env var once the export worker has parquet support.',
+      })
+      throw new ValidationError('Parquet format is not available in this environment', {
+        details: {
+          error: 'parquet_not_enabled',
+          hint: 'Parquet export requires EXPORTS_PARQUET_ENABLED=true on the server.',
+        },
+      })
     }
-    if (!bulkExportEnabled) {
-      throw new ValidationError('Invalid request', { details: { error: 'parquet_not_allowed' } })
+    if (!hasBulkExportEntitlement) {
+      logger.info('parquet_format_requested_without_entitlement', {
+        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+      })
+      throw new ValidationError('Parquet export requires a plan with bulk export access', {
+        details: { error: 'parquet_not_allowed' },
+      })
     }
   }
 

@@ -49,7 +49,11 @@ export class RuntimeNestedStack extends NestedStack {
     const ecsServices = createEcsServices(this, {
       envName: props.envName,
       cluster: compute.cluster,
+      planeASecurityGroup: props.foundation.networking.planeASecurityGroup,
+      planeCSecurityGroup: props.foundation.networking.planeCSecurityGroup,
       planeBSecurityGroup: props.foundation.networking.planeBSecurityGroup,
+      planeATask: tasks.planeATask,
+      planeCTask: tasks.planeCTask,
       planeBIngestTask: tasks.planeBIngestTask,
       b2cRefreshTask: tasks.b2cRefreshTask,
       fxRateRefreshTask: tasks.fxRateRefreshTask,
