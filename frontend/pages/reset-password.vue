@@ -175,9 +175,7 @@ onMounted(async () => {
     return
   }
 
-  const tokenHash =
-    (typeof route.query.token_hash === 'string' && route.query.token_hash)
-    || (typeof route.query.token === 'string' && route.query.token)
+  const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash) || (typeof route.query.token === 'string' && route.query.token)
   const code = typeof route.query.code === 'string' ? route.query.code : null
 
   if (tokenHash) {
@@ -189,7 +187,8 @@ onMounted(async () => {
       errorMessage.value = error.message
       return
     }
-  } else if (code) {
+  }
+  else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       errorMessage.value = error.message
