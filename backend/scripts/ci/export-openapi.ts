@@ -1,6 +1,5 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { buildApp } from '../../plane-a/src/app'
 
 type Args = {
   out: string
@@ -37,6 +36,11 @@ const main = async () => {
 
   // Ensure swagger generation is enabled even if AWS_* env vars are present.
   process.env.SWAGGER_ENABLED = '1'
+  if (!process.env.PLANE_A_CORS_ORIGINS || process.env.PLANE_A_CORS_ORIGINS.trim() === '') {
+    process.env.PLANE_A_CORS_ORIGINS = 'http://localhost:3000'
+  }
+
+  const { buildApp } = await import('../../plane-a/src/app')
 
   const app = await buildApp()
   await app.ready()
