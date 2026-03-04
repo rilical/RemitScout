@@ -7,7 +7,7 @@
           class="inline-block"
         >
           <NuxtImg
-            src="/png/SVG/LOGO.svg"
+            src="/png/SVG/FULL_LOGO.svg"
             alt="RemitScout"
             width="32"
             height="40"
@@ -175,25 +175,21 @@ onMounted(async () => {
     return
   }
 
-  const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash) || (typeof route.query.token === 'string' && route.query.token)
-  const code = typeof route.query.code === 'string' ? route.query.code : null
+  const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash)
+    || (typeof route.query.token === 'string' && route.query.token)
 
-  if (tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'recovery',
-    })
-    if (error) {
-      errorMessage.value = error.message
-      return
-    }
+  if (!tokenHash) {
+    errorMessage.value = 'This reset link is invalid or expired.'
+    return
   }
-  else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) {
-      errorMessage.value = error.message
-      return
-    }
+
+  const { error } = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: 'recovery',
+  })
+  if (error) {
+    errorMessage.value = error.message
+    return
   }
 
   await ensureHydrated()

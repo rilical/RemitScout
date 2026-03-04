@@ -85,6 +85,7 @@ export type ScheduledJobsResources = {
   oandaSyncRule?: Rule
   triangulationJobRule?: Rule
   knowledgeChunkIndexingRule?: Rule
+  discoveryScheduleRule?: Rule
 }
 
 export type ScheduledJobsOptions = {
@@ -154,6 +155,7 @@ export type ScheduledJobsOptions = {
   providerProbeMode?: ProviderProbeMode
   agentOrchestratorTask?: FargateTaskDefinition
   stressResponderTask?: FargateTaskDefinition
+  discoveryTask?: FargateTaskDefinition
 }
 
 const tagManagedRule = (rule: Rule, envName: string): void => {
@@ -2216,6 +2218,31 @@ export const createScheduledJobs = (
       })()
     : undefined
 
+  // Weekly discovery scan — crawls provider websites to detect new/removed
+  // corridors and promotional pricing changes. Only created when a discovery
+  // task definition is provided (requires the Playwright-based image).
+  const discoveryScheduleRule = options.discoveryTask
+    ? (() => {
+        const rule = new Rule(scope, 'DiscoveryScanSchedule', {
+          ruleName: ruleName('discovery-scan'),
+          schedule: Schedule.cron({ minute: '0', hour: '3', weekDay: 'SUN' }),
+          description: 'Runs weekly discovery scan on Sundays at 03:00 UTC.',
+          enabled: rulesEnabled,
+        })
+        tagManagedRule(rule, options.envName)
+        rule.addTarget(new EcsTask({
+          cluster: options.cluster,
+          taskDefinition: options.discoveryTask,
+          subnetSelection: { subnetType: isDev ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS },
+          securityGroups: [options.planeBSecurityGroup],
+          taskCount: 1,
+          platformVersion: FargatePlatformVersion.LATEST,
+          assignPublicIp: isDev,
+        }))
+        return rule
+      })()
+    : undefined
+
   return {
     goldFxRatesFunction,
     goldFxRatesRule,
@@ -2257,6 +2284,7 @@ export const createScheduledJobs = (
     oandaSyncRule,
     triangulationJobRule,
     knowledgeChunkIndexingRule,
+    discoveryScheduleRule,
   }
 }
 

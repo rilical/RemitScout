@@ -73,7 +73,7 @@ const AGENT_POLICY_OVERRIDES: Partial<Record<AgentId, AgentPolicyOverride>> = {
     rateLimitWindowMs: 60_000,
   },
   'patch-proposer': {
-    allowedTools: ['db_query', 'file_read', 'http_fetch', 'llm_inference'],
+    allowedTools: ['db_query', 'file_read', 'http_fetch', 'llm_inference', 'playwright_discovery'],
     rateLimitMaxRequests: 30,
     rateLimitWindowMs: 60_000,
   },
@@ -140,6 +140,7 @@ export class ToolGateway {
     llm_inference: 10,
     github_api: 15,
     shell_exec: 5,
+    playwright_discovery: 2,
   }
 
   constructor(pool: Pool, policy?: ToolGatewayPolicy) {
@@ -535,6 +536,8 @@ export class ToolGateway {
           return this.executeFileRead(params)
         case 'github_api':
           return this.executeGitHubApi(params, controller.signal)
+        case 'playwright_discovery':
+          return this.executePlaywrightDiscovery(params)
         default:
           throw new Error(`Tool type '${toolType}' execution not yet implemented`)
       }
@@ -674,6 +677,109 @@ export class ToolGateway {
       // Playwright not available — fall back to http_fetch
       logger.info('browser_navigate_fallback_to_http', { url })
       return this.executeHttpFetch({ url, method: 'GET' }, new AbortController().signal)
+    }
+  }
+
+  /**
+   * Execute a Playwright discovery scan for provider corridor/delivery-method detection.
+   *
+   * Supported params:
+   * - providerId (string, optional): Scan a specific provider. If omitted, scans all.
+   * - applyResults (boolean, optional): Whether to auto-apply discovered corridors
+   *   and delivery methods to rights_matrix + capability tables (default: false).
+   * - correlationId (string, optional): Correlation ID for tracing.
+   *
+   * Rate limiting is inherent from the agent policy (patch-proposer: 30 RPM).
+   * The discovery runner itself adds inter-provider delays for multi-provider scans.
+   */
+  private async executePlaywrightDiscovery(params: Record<string, unknown>): Promise<unknown> {
+    const { runDiscoveryForProvider, runDiscoveryForAll, getRegisteredDiscoveryProviders } =
+      await import('../discovery/discovery-runner')
+
+    const providerId = params.providerId as string | undefined
+    const applyResults = (params.applyResults as boolean) ?? false
+    const correlationId = params.correlationId as string | undefined
+
+    const options = {
+      triggeredBy: 'agent' as const,
+      applyResults,
+      correlationId,
+    }
+
+    if (providerId) {
+      // Single-provider scan
+      const registeredProviders = getRegisteredDiscoveryProviders()
+      if (!registeredProviders.includes(providerId)) {
+        throw new Error(
+          `Provider '${providerId}' has no registered discovery script. ` +
+          `Available: ${registeredProviders.join(', ')}`,
+        )
+      }
+
+      const result = await runDiscoveryForProvider(this.pool, providerId, options)
+      if (!result) {
+        return {
+          providerId,
+          status: 'no_result',
+          corridors: 0,
+          deliveryMethods: 0,
+          promotions: 0,
+          errors: [],
+        }
+      }
+
+      return {
+        providerId: result.providerId,
+        status: result.errors.some((e) => !e.recoverable) && result.corridors.length === 0
+          ? 'failed'
+          : result.errors.length > 0
+            ? 'partial'
+            : 'completed',
+        corridors: result.corridors.length,
+        deliveryMethods: result.deliveryMethods.length,
+        promotions: result.promotions.length,
+        errors: result.errors.map((e) => ({
+          step: e.step,
+          message: e.message,
+          recoverable: e.recoverable,
+        })),
+        durationMs: result.metadata.durationMs,
+        pagesVisited: result.metadata.pagesVisited,
+      }
+    }
+
+    // Multi-provider scan
+    const results = await runDiscoveryForAll(this.pool, options)
+    const summary: Array<{
+      providerId: string
+      status: string
+      corridors: number
+      deliveryMethods: number
+      promotions: number
+      errorCount: number
+      durationMs: number
+    }> = []
+
+    for (const [pid, result] of results) {
+      const hasCriticalErrors = result.errors.some((e) => !e.recoverable)
+      summary.push({
+        providerId: pid,
+        status: hasCriticalErrors && result.corridors.length === 0
+          ? 'failed'
+          : result.errors.length > 0
+            ? 'partial'
+            : 'completed',
+        corridors: result.corridors.length,
+        deliveryMethods: result.deliveryMethods.length,
+        promotions: result.promotions.length,
+        errorCount: result.errors.length,
+        durationMs: result.metadata.durationMs,
+      })
+    }
+
+    return {
+      scannedProviders: summary.length,
+      summary,
     }
   }
 

@@ -222,6 +222,12 @@ export const parseRemitbeePayload = (
   const feeAmountRaw = parseNumber(payment?.fees)
   const feeAmount = Number.isFinite(feeAmountRaw) ? feeAmountRaw : Number.NaN
 
+  const hasFreeTransferPromo = payload.payment_additional_info?.first_transfer_free === true
+    || payload.payment_additional_info?.all_transfers_free === true
+  const promotionalFeeAmount = hasFreeTransferPromo && Number.isFinite(feeAmount) && feeAmount > 0
+    ? 0
+    : null
+
   if (!Number.isFinite(feeAmount)) {
     flags.push(qualityFlags.partial_data)
   }
@@ -243,7 +249,7 @@ export const parseRemitbeePayload = (
     payin_method: payin,
     payout_method: payout,
     fee_currency: sourceCurrency ?? null,
-    promotional_fee_amount: null,
+    promotional_fee_amount: promotionalFeeAmount,
     promotional_rate: Number.isFinite(promotionalRate) ? promotionalRate : null,
     base_rate: Number.isFinite(baseRate) ? baseRate : null,
     promotional_cap_amount: Number.isFinite(promotionalCap) ? promotionalCap : null,

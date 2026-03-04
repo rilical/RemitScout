@@ -91,6 +91,7 @@ export class OpsNestedStack extends NestedStack {
       b2bSweepSchedulerTask: props.runtime.tasks.b2bSweepSchedulerTask,
       agentOrchestratorTask: props.runtime.tasks.agentOrchestratorTask,
       stressResponderTask: props.runtime.tasks.stressResponderTask,
+      discoveryTask: props.runtime.tasks.discoveryTask,
       planeASecurityGroup: props.foundation.networking.planeASecurityGroup,
       planeBSecurityGroup: props.foundation.networking.planeBSecurityGroup,
       planeCSecurityGroup: props.foundation.networking.planeCSecurityGroup,
