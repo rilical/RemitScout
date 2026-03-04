@@ -83,6 +83,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
     alias: `remit-scout-${options.envName}-data`,
     description: `RemitScout ${options.envName} data encryption key (bronze + audit-logs)`,
     enableKeyRotation: true,
+    pendingWindow: Duration.days(30),
     removalPolicy: isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
   })
 
@@ -115,7 +116,7 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
 
   const exportsBucket = new Bucket(scope, 'ExportsBucket', {
     bucketName: `remit-scout-exports-${options.envName}`,
-    versioned: false,
+    versioned: true,
     encryption: BucketEncryption.S3_MANAGED,
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('exports'),
@@ -163,12 +164,15 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
       {
         abortIncompleteMultipartUploadAfter: Duration.days(7),
       },
+      {
+        noncurrentVersionExpiration: Duration.days(30),
+      },
     ],
   })
 
   const userAssetsBucket = new Bucket(scope, 'UserAssetsBucket', {
     bucketName: `remit-scout-user-assets-${options.envName}`,
-    versioned: false,
+    versioned: true,
     encryption: BucketEncryption.S3_MANAGED,
     serverAccessLogsBucket: storageAccessLogsBucket,
     serverAccessLogsPrefix: sourceLogPrefix('user-assets'),
@@ -179,12 +183,15 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
         expiration: Duration.days(365),
         abortIncompleteMultipartUploadAfter: Duration.days(7),
       },
+      {
+        noncurrentVersionExpiration: Duration.days(30),
+      },
     ],
   })
 
   const auditLogsBucket = new Bucket(scope, 'AuditLogsBucket', {
     bucketName: `remit-scout-audit-logs-${options.envName}`,
-    versioned: false,
+    versioned: true,
     encryption: BucketEncryption.KMS,
     encryptionKey: dataEncryptionKey,
     bucketKeyEnabled: true,
@@ -205,6 +212,9 @@ export const createStorage = (scope: Construct, options: StorageOptions): Storag
           },
         ],
         abortIncompleteMultipartUploadAfter: Duration.days(7),
+      },
+      {
+        noncurrentVersionExpiration: Duration.days(90),
       },
     ],
   })
