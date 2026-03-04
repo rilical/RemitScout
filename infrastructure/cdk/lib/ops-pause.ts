@@ -125,7 +125,7 @@ export const createOpsPause = (
     const jwtSecretValue = sharedSecret.secretValueFromJson(
       options.planeAJwtSecretJsonKey ?? 'PLANE_A_JWT_SECRET',
     )
-    controllerFunction.addEnvironment('PLANE_A_JWT_SECRET', jwtSecretValue.unsafeUnwrap())
+    controllerFunction.addEnvironment('PLANE_A_JWT_SECRET', jwtSecretValue.toString())
   }
 
   Tags.of(controllerFunction).add('managed-by', 'ops-pause')

@@ -53,7 +53,7 @@ export const resolveTracingEnv = ({
     if (!rawIngestKey) return ''
     try {
       const parsed = JSON.parse(rawIngestKey)
-      return typeof parsed === 'object' && parsed.LicenseKey
+      return typeof parsed === 'object' && parsed !== null && parsed.LicenseKey
         ? String(parsed.LicenseKey).trim()
         : rawIngestKey
     } catch {
