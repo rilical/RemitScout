@@ -66,6 +66,8 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     cacheSubnetGroupName: subnetGroup.ref,
     securityGroupIds: [options.redisSecurityGroup.securityGroupId],
     autoMinorVersionUpgrade: true,
+    snapshotRetentionLimit: isProtectedEnv ? 1 : 0,
+    snapshotWindow: isProtectedEnv ? '03:00-04:00' : undefined,
     // Auth token must be enabled for protected environments. We use a distinct
     // logical ID when auth is enabled so upgrades can migrate by replacement.
     authToken: authEnabled ? redisAuthToken.toString() : undefined,
