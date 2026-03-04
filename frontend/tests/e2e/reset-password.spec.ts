@@ -77,7 +77,7 @@ test.describe('reset password flow', () => {
 
     const missingConfig = await page.getByText('Supabase is not configured.').isVisible({ timeout: 2000 }).catch(() => false)
     if (missingConfig) {
-      test.skip('Supabase not configured in this environment')
+      test.skip(true, 'Supabase not configured in this environment')
     }
 
     await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible()
