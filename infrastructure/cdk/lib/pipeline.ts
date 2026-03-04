@@ -41,6 +41,14 @@ export type PipelineOptions = {
   publicMetaPixelId?: string
   publicAdsEnabled?: string
   publicPulseEnabled?: string
+  publicNewRelicBrowserEnabled?: string
+  publicNewRelicAccountId?: string
+  publicNewRelicTrustKey?: string
+  publicNewRelicAgentId?: string
+  publicNewRelicApplicationId?: string
+  publicNewRelicLicenseKey?: string
+  publicNewRelicBeacon?: string
+  publicNewRelicErrorBeacon?: string
 }
 
 export type PipelineResources = {
@@ -129,6 +137,30 @@ export const createPipeline = (
   if (options.publicPulseEnabled) {
     buildEnvVars.PUBLIC_PULSE_ENABLED = { value: options.publicPulseEnabled }
   }
+  if (options.publicNewRelicBrowserEnabled) {
+    buildEnvVars.PUBLIC_NEW_RELIC_BROWSER_ENABLED = { value: options.publicNewRelicBrowserEnabled }
+  }
+  if (options.publicNewRelicAccountId) {
+    buildEnvVars.PUBLIC_NEW_RELIC_ACCOUNT_ID = { value: options.publicNewRelicAccountId }
+  }
+  if (options.publicNewRelicTrustKey) {
+    buildEnvVars.PUBLIC_NEW_RELIC_TRUST_KEY = { value: options.publicNewRelicTrustKey }
+  }
+  if (options.publicNewRelicAgentId) {
+    buildEnvVars.PUBLIC_NEW_RELIC_AGENT_ID = { value: options.publicNewRelicAgentId }
+  }
+  if (options.publicNewRelicApplicationId) {
+    buildEnvVars.PUBLIC_NEW_RELIC_APPLICATION_ID = { value: options.publicNewRelicApplicationId }
+  }
+  if (options.publicNewRelicLicenseKey) {
+    buildEnvVars.PUBLIC_NEW_RELIC_LICENSE_KEY = { value: options.publicNewRelicLicenseKey }
+  }
+  if (options.publicNewRelicBeacon) {
+    buildEnvVars.PUBLIC_NEW_RELIC_BEACON = { value: options.publicNewRelicBeacon }
+  }
+  if (options.publicNewRelicErrorBeacon) {
+    buildEnvVars.PUBLIC_NEW_RELIC_ERROR_BEACON = { value: options.publicNewRelicErrorBeacon }
+  }
 
   const buildProject = new PipelineProject(scope, 'RemitScoutBuildProject', {
     environment: {
@@ -182,6 +214,14 @@ export const createPipeline = (
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',
               '  export PUBLIC_PULSE_ENABLED=${PUBLIC_PULSE_ENABLED:-}',
+              '  export PUBLIC_NEW_RELIC_BROWSER_ENABLED=${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}',
+              '  export PUBLIC_NEW_RELIC_ACCOUNT_ID=${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}',
+              '  export PUBLIC_NEW_RELIC_TRUST_KEY=${PUBLIC_NEW_RELIC_TRUST_KEY:-}',
+              '  export PUBLIC_NEW_RELIC_AGENT_ID=${PUBLIC_NEW_RELIC_AGENT_ID:-}',
+              '  export PUBLIC_NEW_RELIC_APPLICATION_ID=${PUBLIC_NEW_RELIC_APPLICATION_ID:-}',
+              '  export PUBLIC_NEW_RELIC_LICENSE_KEY=${PUBLIC_NEW_RELIC_LICENSE_KEY:-}',
+              '  export PUBLIC_NEW_RELIC_BEACON=${PUBLIC_NEW_RELIC_BEACON:-}',
+              '  export PUBLIC_NEW_RELIC_ERROR_BEACON=${PUBLIC_NEW_RELIC_ERROR_BEACON:-}',
               '  pnpm -C frontend build',
               '  pnpm -C frontend generate',
               '  echo "Frontend build complete"',

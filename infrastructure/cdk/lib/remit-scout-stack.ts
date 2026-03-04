@@ -1062,6 +1062,31 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('publicPulseEnabled') ??
       process.env.PUBLIC_PULSE_ENABLED ??
       process.env.NUXT_PUBLIC_PULSE_ENABLED
+    const publicNewRelicBrowserEnabled =
+      this.node.tryGetContext('publicNewRelicBrowserEnabled') ??
+      process.env.PUBLIC_NEW_RELIC_BROWSER_ENABLED ??
+      process.env.NEW_RELIC_BROWSER_ENABLED
+    const publicNewRelicAccountId =
+      this.node.tryGetContext('publicNewRelicAccountId') ??
+      process.env.PUBLIC_NEW_RELIC_ACCOUNT_ID
+    const publicNewRelicTrustKey =
+      this.node.tryGetContext('publicNewRelicTrustKey') ??
+      process.env.PUBLIC_NEW_RELIC_TRUST_KEY
+    const publicNewRelicAgentId =
+      this.node.tryGetContext('publicNewRelicAgentId') ??
+      process.env.PUBLIC_NEW_RELIC_AGENT_ID
+    const publicNewRelicApplicationId =
+      this.node.tryGetContext('publicNewRelicApplicationId') ??
+      process.env.PUBLIC_NEW_RELIC_APPLICATION_ID
+    const publicNewRelicLicenseKey =
+      this.node.tryGetContext('publicNewRelicLicenseKey') ??
+      process.env.PUBLIC_NEW_RELIC_LICENSE_KEY
+    const publicNewRelicBeacon =
+      this.node.tryGetContext('publicNewRelicBeacon') ??
+      process.env.PUBLIC_NEW_RELIC_BEACON
+    const publicNewRelicErrorBeacon =
+      this.node.tryGetContext('publicNewRelicErrorBeacon') ??
+      process.env.PUBLIC_NEW_RELIC_ERROR_BEACON
     const publicSupabaseUrlSecretJsonKey =
       this.node.tryGetContext('publicSupabaseUrlSecretJsonKey') ??
       process.env.PUBLIC_SUPABASE_URL_SECRET_JSON_KEY
@@ -1744,6 +1769,14 @@ export class RemitScoutStack extends Stack {
         publicMetaPixelId,
         publicAdsEnabled,
         publicPulseEnabled,
+        publicNewRelicBrowserEnabled,
+        publicNewRelicAccountId,
+        publicNewRelicTrustKey,
+        publicNewRelicAgentId,
+        publicNewRelicApplicationId,
+        publicNewRelicLicenseKey,
+        publicNewRelicBeacon,
+        publicNewRelicErrorBeacon,
         devPaused,
       },
       scheduledJobsOptions: {
