@@ -523,7 +523,6 @@ aria-current="page"
         </p>
         <p class="text-body-sm text-white/60 mt-2">
           Rates last updated: {{ content.lastUpdated || seoUpdatedLabel }}.
-          Data sourced from provider APIs.
           <NuxtLink to="/methodology" class="font-semibold text-white hover:text-white/80 underline underline-offset-2">
             See methodology
           </NuxtLink>
