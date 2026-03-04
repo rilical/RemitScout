@@ -33,6 +33,7 @@ overrides:
   bn.js: 5.2.3
   '@isaacs/brace-expansion': 5.0.1
   qs: 6.15.0
+  svgo: 4.0.1
 
 importers:
 
@@ -217,11 +218,11 @@ importers:
         specifier: ^9.6.0
         version: 9.6.0(@types/node@25.3.3)
       '@stryker-mutator/typescript-checker':
-        specifier: ^8.5.0
-        version: 8.7.1(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(typescript@5.9.3)
+        specifier: ^9.6.0
+        version: 9.6.0(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(typescript@5.9.3)
       '@stryker-mutator/vitest-runner':
-        specifier: ^8.5.0
-        version: 8.7.1(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(vitest@2.1.9(@types/node@25.3.3)(jsdom@28.1.0)(terser@5.46.0))
+        specifier: ^9.6.0
+        version: 9.6.0(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(vitest@2.1.9(@types/node@25.3.3)(jsdom@28.1.0)(terser@5.46.0))
       '@types/archiver':
         specifier: ^6.0.3
         version: 6.0.4
@@ -3838,10 +3839,6 @@ packages:
   '@speed-highlight/core@1.2.14':
     resolution: {integrity: sha512-G4ewlBNhUtlLvrJTb88d2mdy2KRijzs4UhnlrOSRT4bmjh/IqNElZa3zkrZ+TC47TwtlDWzVLFADljF1Ijp5hA==}
 
-  '@stryker-mutator/api@8.7.1':
-    resolution: {integrity: sha512-56vxcVxIfW0jxJhr7HB9Zx6Xr5/M95RG9MUK1DtbQhlmQesjpfBBsrPLOPzBJaITPH/vOYykuJ69vgSAMccQyw==}
-    engines: {node: '>=18.0.0'}
-
   '@stryker-mutator/api@9.6.0':
     resolution: {integrity: sha512-kJEEwOVoWDXGEIXuM+9efT6LSJ7nyxnQQvjEoKg8GSZXbDUjfD0tqA0aBD06U1SzQLKCM7ffjgPffr154MHZKw==}
     engines: {node: '>=20.0.0'}
@@ -3855,25 +3852,22 @@ packages:
     resolution: {integrity: sha512-tWdRYfm9LF4Go7cNOos0xEIOEnN7ZOSj38rfXvGZS9IINlvYBrBCl2xcz/67v6l5A7xksMWWByZRIq2bgdnnUg==}
     engines: {node: '>=20.0.0'}
 
-  '@stryker-mutator/typescript-checker@8.7.1':
-    resolution: {integrity: sha512-ZliTju52pOR9Xnh1AjGn4Oet7lTWjbDbi6RfoBGAPzVSZSYcZNnupr3tBtDJX4p2qVYYfYvmhoAKYXbe30dWBQ==}
-    engines: {node: '>=18.0.0'}
+  '@stryker-mutator/typescript-checker@9.6.0':
+    resolution: {integrity: sha512-mPoB2Eogda4bpIoNgdN+VHnZvbwD0R/oNCCbmq7UQVLZtzF09nH1M1kbilYdmrCyxYYkFyTCKy3WhU3YGWdDjA==}
+    engines: {node: '>=20.0.0'}
     peerDependencies:
-      '@stryker-mutator/core': ~8.7.0
+      '@stryker-mutator/core': 9.6.0
       typescript: '>=3.6'
-
-  '@stryker-mutator/util@8.7.1':
-    resolution: {integrity: sha512-Oj/sIHZI1GLfGOHKnud4Gw0ZRufm7ONoQYNnhcaAYEXTWraYVcV7mue/th8fZComTHvDPA8Ge8U16FvWYEb8dg==}
 
   '@stryker-mutator/util@9.6.0':
     resolution: {integrity: sha512-gw7fJOFNHEj9inAEOodD9RrrMEMhZmWJ46Ww/kDJAXlSsBBmdwCzeomNLngmLTvgp14z7Tfq85DHYwvmNMdOxA==}
 
-  '@stryker-mutator/vitest-runner@8.7.1':
-    resolution: {integrity: sha512-vNRTM6MEy+0hNK5UhJ44euEIRjluDV43UROcMAKIMbT9ELdp8XgM/tA5GrTcp5QadnvrBwvEcCRQk+ARL+e0sg==}
+  '@stryker-mutator/vitest-runner@9.6.0':
+    resolution: {integrity: sha512-/zyELz5jTDAiH0Hr23G6KSnBFl9XV+vn0T0qUAk4sPqJoP5NVm9jjpgt9EBACS/VTkVqSvXqBid4jmESPx11Sg==}
     engines: {node: '>=14.18.0'}
     peerDependencies:
-      '@stryker-mutator/core': ~8.7.0
-      vitest: '>=0.31.2'
+      '@stryker-mutator/core': 9.6.0
+      vitest: '>=2.0.0'
 
   '@stylistic/eslint-plugin@5.9.0':
     resolution: {integrity: sha512-FqqSkvDMYJReydrMhlugc71M76yLLQWNfmGq+SIlLa7N3kHp8Qq8i2PyWrVNAfjOyOIY+xv9XaaYwvVW7vroMA==}
@@ -3907,10 +3901,6 @@ packages:
 
   '@swc/helpers@0.3.17':
     resolution: {integrity: sha512-tb7Iu+oZ+zWJZ3HJqwx8oNwSDIU440hmVMDPhpACWQWnrZHK99Bxs70gT1L2dnr5Hg50ZRWEFkQCAnOVVV0z1Q==}
-
-  '@trysound/sax@0.2.0':
-    resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
-    engines: {node: '>=10.13.0'}
 
   '@tsconfig/node10@1.0.12':
     resolution: {integrity: sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==}
@@ -4984,10 +4974,6 @@ packages:
     resolution: {integrity: sha512-U7VdrJFnJgo4xjrHpTzu0yrHPGImdsmD95ZlgYSEajAn2JKzDhDTPG9kBTefmObL2w/ngeZnilk+OV9CG3d7UA==}
     engines: {node: '>= 6'}
 
-  commander@7.2.0:
-    resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
-    engines: {node: '>= 10'}
-
   commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
@@ -5127,10 +5113,6 @@ packages:
   css-tree@2.2.1:
     resolution: {integrity: sha512-OA0mILzGc1kCOCSJerOeqDxDQ4HOh+G8NbOJFOTgOCzpw7fCBubk0fEyxp8AgOL/jvLgYA/uV0cMbe43ElF1JA==}
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0, npm: '>=7.0.0'}
-
-  css-tree@2.3.1:
-    resolution: {integrity: sha512-6Fv1DV/TYw//QF5IzQdqsNDjx/wc8TrMBZsqjL9eW01tWb7R7k/mq+/VXfJCl7SoD5emsJop9cOByJZfs8hYIw==}
-    engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
   css-tree@3.1.0:
     resolution: {integrity: sha512-0eW44TGN5SQXU1mWSkKwFstI/22X2bG1nYzZTYMAWjylYURhse752YgbE4Cx46AC+bAvI+/dYTPRk1LqSUnu6w==}
@@ -6739,9 +6721,6 @@ packages:
   mdn-data@2.0.28:
     resolution: {integrity: sha512-aylIc7Z9y4yzHYAJNuESG3hfhC+0Ibp/MAMiaOZgNv4pmEdFyfZhhhny4MNiAfWdBQ1RQ2mfDWmM1x8SvGyp8g==}
 
-  mdn-data@2.0.30:
-    resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
-
   mdn-data@2.12.2:
     resolution: {integrity: sha512-IEn+pegP1aManZuckezWCO+XZQDplx1366JoVhTpMpBB1sPey/SbveZQUosKiKiGYjg1wH4pMlNgXbCiYgihQA==}
 
@@ -6870,14 +6849,8 @@ packages:
   mutation-testing-elements@3.7.2:
     resolution: {integrity: sha512-i7X2Q4X5eYon72W2QQ9HND7plVhQcqTnv+Xc3KeYslRZSJ4WYJoal8LFdbWm7dKWLNE0rYkCUrvboasWzF3MMA==}
 
-  mutation-testing-metrics@3.3.0:
-    resolution: {integrity: sha512-vZEJ84SpK3Rwyk7k28SORS5o6ZDtehwifLPH6fQULrozJqlz2Nj8vi52+CjA+aMZCyyKB+9eYUh1HtiWVo4o/A==}
-
   mutation-testing-metrics@3.7.2:
     resolution: {integrity: sha512-ichXZSC4FeJbcVHYOWzWUhNuTJGogc0WiQol8lqEBrBSp+ADl3fmcZMqrx0ogInEUiImn+A8JyTk6uh9vd25TQ==}
-
-  mutation-testing-report-schema@3.3.0:
-    resolution: {integrity: sha512-DF56q0sb0GYzxYUYNdzlfQzyE5oJBEasz8zL76bt3OFJU8q4iHSdUDdihPWWJD+4JLxSs3neM/R968zYdy0SWQ==}
 
   mutation-testing-report-schema@3.7.2:
     resolution: {integrity: sha512-fN5M61SDzIOeJyatMOhGPLDOFz5BQIjTNPjo4PcHIEUWrejO4i4B5PFuQ/2l43709hEsTxeiXX00H73WERKcDw==}
@@ -7982,8 +7955,8 @@ packages:
     resolution: {integrity: sha512-HanEzgXHlX3fzpGgxPoR3qI7FDpc/B+uE/KplzA6BkZGlWMaH98B/1Amq+OBF1pYPlGNzAXPYNHlrEVBvRBnHQ==}
     engines: {node: '>=16'}
 
-  sax@1.4.4:
-    resolution: {integrity: sha512-1n3r/tGXO6b6VXMdFT54SHzT9ytu9yr7TaELowdYpMqY/Ao7EnlQGmAQ1+RatX7Tkkdm6hONI2owqNx2aZj5Sw==}
+  sax@1.5.0:
+    resolution: {integrity: sha512-21IYA3Q5cQf089Z6tgaUTr7lDAyzoTPx5HRtbhsME8Udispad8dC/+sziTNugOEx54ilvatQ9YCzl4KQLPcRHA==}
     engines: {node: '>=11.0.0'}
 
   saxes@6.0.0:
@@ -8002,11 +7975,6 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
-    hasBin: true
-
-  semver@7.6.3:
-    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
-    engines: {node: '>=10'}
     hasBin: true
 
   semver@7.7.4:
@@ -8311,13 +8279,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svgo@3.3.2:
-    resolution: {integrity: sha512-OoohrmuUlBs8B8o6MB2Aevn+pRIH9zDALSR+6hhqVfa6fRwG/Qw9VUMSMW9VNg2CFc/MTIfabtdOVl9ODIJjpw==}
-    engines: {node: '>=14.0.0'}
-    hasBin: true
-
-  svgo@4.0.0:
-    resolution: {integrity: sha512-VvrHQ+9uniE+Mvx3+C9IEe/lWasXCU0nXMY2kZeLrHNICuRiC8uMPyM14UEaMOFA5mhyQqEkB02VoQ16n3DLaw==}
+  svgo@4.0.1:
+    resolution: {integrity: sha512-XDpWUOPC6FEibaLzjfe0ucaV0YrOjYotGJO1WpF0Zd+n6ZGEQUsSugaoLq9QkEZtAfQIxT42UChcssDVPP3+/w==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -8502,9 +8465,6 @@ packages:
   tslib@2.3.0:
     resolution: {integrity: sha512-N82ooyxVNm6h1riLCoyS9e3fuJ3AMG2zIZs2Gd1ATcSFjSA23Q0fzjjZeh0jbJvWVDZ0cJT8yaNNaaXHzueNjg==}
 
-  tslib@2.7.0:
-    resolution: {integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==}
-
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -8546,10 +8506,6 @@ packages:
 
   type-level-regexp@0.1.17:
     resolution: {integrity: sha512-wTk4DH3cxwk196uGLK/E9pE45aLfeKJacKmcEgEOA/q5dnPGNxXt0cfYdFxb57L+sEpf1oJH4Dnx/pnRcku9jg==}
-
-  typed-inject@4.0.0:
-    resolution: {integrity: sha512-OuBL3G8CJlS/kjbGV/cN8Ni32+ktyyi6ADDZpKvksbX0fYBV5WcukhRCYa7WqLce7dY/Br2dwtmJ9diiadLFpg==}
-    engines: {node: '>=16'}
 
   typed-inject@5.0.0:
     resolution: {integrity: sha512-0Ql2ORqBORLMdAW89TQKZsb1PQkFGImFfVmncXWe7a+AA3+7dh7Se9exxZowH4kbnlvKEFkMxUYdHUpjYWFJaA==}
@@ -14359,13 +14315,6 @@ snapshots:
 
   '@speed-highlight/core@1.2.14': {}
 
-  '@stryker-mutator/api@8.7.1':
-    dependencies:
-      mutation-testing-metrics: 3.3.0
-      mutation-testing-report-schema: 3.3.0
-      tslib: 2.7.0
-      typed-inject: 4.0.0
-
   '@stryker-mutator/api@9.6.0':
     dependencies:
       mutation-testing-metrics: 3.7.2
@@ -14422,24 +14371,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@stryker-mutator/typescript-checker@8.7.1(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(typescript@5.9.3)':
+  '@stryker-mutator/typescript-checker@9.6.0(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(typescript@5.9.3)':
     dependencies:
-      '@stryker-mutator/api': 8.7.1
+      '@stryker-mutator/api': 9.6.0
       '@stryker-mutator/core': 9.6.0(@types/node@25.3.3)
-      '@stryker-mutator/util': 8.7.1
-      semver: 7.6.3
+      '@stryker-mutator/util': 9.6.0
+      semver: 7.7.4
       typescript: 5.9.3
-
-  '@stryker-mutator/util@8.7.1': {}
 
   '@stryker-mutator/util@9.6.0': {}
 
-  '@stryker-mutator/vitest-runner@8.7.1(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(vitest@2.1.9(@types/node@25.3.3)(jsdom@28.1.0)(terser@5.46.0))':
+  '@stryker-mutator/vitest-runner@9.6.0(@stryker-mutator/core@9.6.0(@types/node@25.3.3))(vitest@2.1.9(@types/node@25.3.3)(jsdom@28.1.0)(terser@5.46.0))':
     dependencies:
-      '@stryker-mutator/api': 8.7.1
+      '@stryker-mutator/api': 9.6.0
       '@stryker-mutator/core': 9.6.0(@types/node@25.3.3)
-      '@stryker-mutator/util': 8.7.1
-      tslib: 2.7.0
+      '@stryker-mutator/util': 9.6.0
+      tslib: 2.8.1
       vitest: 2.1.9(@types/node@25.3.3)(jsdom@28.1.0)(terser@5.46.0)
 
   '@stylistic/eslint-plugin@5.9.0(eslint@10.0.2(jiti@2.6.1))':
@@ -14493,9 +14440,6 @@ snapshots:
   '@swc/helpers@0.3.17':
     dependencies:
       tslib: 2.8.1
-
-  '@trysound/sax@0.2.0':
-    optional: true
 
   '@tsconfig/node10@1.0.12': {}
 
@@ -15800,9 +15744,6 @@ snapshots:
 
   commander@6.2.1: {}
 
-  commander@7.2.0:
-    optional: true
-
   commander@8.3.0: {}
 
   comment-parser@1.4.5: {}
@@ -15924,12 +15865,6 @@ snapshots:
     dependencies:
       mdn-data: 2.0.28
       source-map-js: 1.2.1
-
-  css-tree@2.3.1:
-    dependencies:
-      mdn-data: 2.0.30
-      source-map-js: 1.2.1
-    optional: true
 
   css-tree@3.1.0:
     dependencies:
@@ -17253,7 +17188,7 @@ snapshots:
       ofetch: 1.5.1
       pathe: 1.1.2
       sharp: 0.32.6
-      svgo: 3.3.2
+      svgo: 4.0.1
       ufo: 1.6.3
       unstorage: 1.17.4(db0@0.3.4)(ioredis@5.9.3)
       xss: 1.0.15
@@ -17834,9 +17769,6 @@ snapshots:
 
   mdn-data@2.0.28: {}
 
-  mdn-data@2.0.30:
-    optional: true
-
   mdn-data@2.12.2: {}
 
   media-typer@0.3.0: {}
@@ -17931,15 +17863,9 @@ snapshots:
 
   mutation-testing-elements@3.7.2: {}
 
-  mutation-testing-metrics@3.3.0:
-    dependencies:
-      mutation-testing-report-schema: 3.3.0
-
   mutation-testing-metrics@3.7.2:
     dependencies:
       mutation-testing-report-schema: 3.7.2
-
-  mutation-testing-report-schema@3.3.0: {}
 
   mutation-testing-report-schema@3.7.2: {}
 
@@ -18908,7 +18834,7 @@ snapshots:
     dependencies:
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
-      svgo: 4.0.0
+      svgo: 4.0.1
 
   postcss-unique-selectors@7.0.4(postcss@8.5.6):
     dependencies:
@@ -19299,7 +19225,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       yoga-layout: 3.2.1
 
-  sax@1.4.4: {}
+  sax@1.5.0: {}
 
   saxes@6.0.0:
     dependencies:
@@ -19316,8 +19242,6 @@ snapshots:
   secure-json-parse@4.1.0: {}
 
   semver@6.3.1: {}
-
-  semver@7.6.3: {}
 
   semver@7.7.4: {}
 
@@ -19666,18 +19590,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svgo@3.3.2:
-    dependencies:
-      '@trysound/sax': 0.2.0
-      commander: 7.2.0
-      css-select: 5.2.2
-      css-tree: 2.3.1
-      css-what: 6.2.2
-      csso: 5.0.5
-      picocolors: 1.1.1
-    optional: true
-
-  svgo@4.0.0:
+  svgo@4.0.1:
     dependencies:
       commander: 11.1.0
       css-select: 5.2.2
@@ -19685,7 +19598,7 @@ snapshots:
       css-what: 6.2.2
       csso: 5.0.5
       picocolors: 1.1.1
-      sax: 1.4.4
+      sax: 1.5.0
 
   symbol-tree@3.2.4: {}
 
@@ -19910,8 +19823,6 @@ snapshots:
 
   tslib@2.3.0: {}
 
-  tslib@2.7.0: {}
-
   tslib@2.8.1: {}
 
   tsscmp@1.0.6: {}
@@ -19952,8 +19863,6 @@ snapshots:
       mime-types: 3.0.2
 
   type-level-regexp@0.1.17: {}
-
-  typed-inject@4.0.0: {}
 
   typed-inject@5.0.0: {}
 

@@ -38,6 +38,9 @@ COPY --from=deps /app/backend/node_modules backend/node_modules
 COPY --from=deps /app/pnpm-lock.yaml pnpm-lock.yaml
 COPY --from=deps /app/pnpm-workspace.yaml pnpm-workspace.yaml
 
+# Ensure root-level module resolution finds backend native deps in smoke checks.
+RUN ln -sfn /app/backend/node_modules/sharp /app/node_modules/sharp
+
 # Drop root privileges for runtime.
 RUN chown -R node:node /app
 USER node
