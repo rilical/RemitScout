@@ -1823,6 +1823,8 @@ export class RemitScoutStack extends Stack {
         purgeQueuesOnResume,
         purgeQueueUrls: purgeQueuesOnResume ? resolvedPurgeQueueUrls : [],
         purgeQueueArns: purgeQueuesOnResume ? resolvedPurgeQueueArns : [],
+        sharedSecretArn,
+        planeAJwtSecretJsonKey,
       },
     })
     const {

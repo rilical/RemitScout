@@ -4,6 +4,7 @@ import { Duration, Tags } from 'aws-cdk-lib'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager'
 import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { IRole } from 'aws-cdk-lib/aws-iam'
 import type { Construct } from 'constructs'
@@ -39,6 +40,8 @@ export type OpsPauseOptions = {
   redisAtRestEncryption?: boolean
   redisAutoMinorVersionUpgrade?: boolean
   role: IRole
+  sharedSecretArn?: string
+  planeAJwtSecretJsonKey?: string
 }
 
 export const createOpsPause = (
@@ -112,6 +115,18 @@ export const createOpsPause = (
       REDIS_ALLOW_DELETE: '0',
     },
   })
+
+  // The Lambda imports shared/logger which triggers shared/config.ts evaluation.
+  // config.ts throws in staging/prod if PLANE_A_JWT_SECRET is missing, even though
+  // the ops-pause Lambda never uses JWT. Inject the real secret to prevent crash.
+  if (options.sharedSecretArn) {
+    const sharedSecret = Secret.fromSecretCompleteArn(scope, 'OpsPauseSharedSecret', options.sharedSecretArn)
+    sharedSecret.grantRead(controllerFunction)
+    const jwtSecretValue = sharedSecret.secretValueFromJson(
+      options.planeAJwtSecretJsonKey ?? 'PLANE_A_JWT_SECRET',
+    )
+    controllerFunction.addEnvironment('PLANE_A_JWT_SECRET', jwtSecretValue.unsafeUnwrap())
+  }
 
   Tags.of(controllerFunction).add('managed-by', 'ops-pause')
   Tags.of(pauseParam).add('managed-by', 'ops-pause')
