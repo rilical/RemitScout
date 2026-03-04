@@ -511,8 +511,12 @@ jobs:
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
           services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
-          if [ -n "$services" ]; then
-            aws ecs wait services-stable --cluster "$cluster" --services $services
+          if [ -n "$services" ] && [ "$services" != "None" ]; then
+            read -r -a service_arns <<< "$services"
+            for ((i=0; i<${#service_arns[@]}; i+=10)); do
+              batch=("${service_arns[@]:i:10}")
+              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+            done
           fi
 
       - name: Post-deploy Smoke (dev)
@@ -1316,8 +1320,12 @@ jobs:
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
           services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
-          if [ -n "$services" ]; then
-            aws ecs wait services-stable --cluster "$cluster" --services $services
+          if [ -n "$services" ] && [ "$services" != "None" ]; then
+            read -r -a service_arns <<< "$services"
+            for ((i=0; i<${#service_arns[@]}; i+=10)); do
+              batch=("${service_arns[@]:i:10}")
+              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+            done
           fi
 
       - name: Deploy Frontend (staging)
@@ -2490,8 +2498,12 @@ jobs:
           set -euo pipefail
           cluster="remit-scout-${ENV_NAME}"
           services="$(aws ecs list-services --cluster "$cluster" --query 'serviceArns' --output text)"
-          if [ -n "$services" ]; then
-            aws ecs wait services-stable --cluster "$cluster" --services $services
+          if [ -n "$services" ] && [ "$services" != "None" ]; then
+            read -r -a service_arns <<< "$services"
+            for ((i=0; i<${#service_arns[@]}; i+=10)); do
+              batch=("${service_arns[@]:i:10}")
+              aws ecs wait services-stable --cluster "$cluster" --services "${batch[@]}"
+            done
           fi
 
       - name: Post-deploy Smoke (prod) + Auto Rollback On Failure
