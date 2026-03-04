@@ -18,12 +18,7 @@
 
 import pg from 'pg'
 import { readFileSync } from 'node:fs'
-import { resolve, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const __dirname = typeof import.meta.url !== 'undefined'
-  ? dirname(fileURLToPath(import.meta.url))
-  : process.cwd() + '/scripts'
+import { resolve } from 'node:path'
 
 const DB_URL = process.env.DATABASE_URL ?? 'postgres://remit:remit-local-dev@localhost:5432/remit'
 
@@ -66,7 +61,7 @@ type DryRunResult = {
 
 async function main() {
   // Read dry-run results
-  const resultsPath = resolve(__dirname, 'discovery-results.json')
+  const resultsPath = resolve(process.cwd(), 'scripts', 'discovery-results.json')
   let results: DryRunResult[]
   try {
     results = JSON.parse(readFileSync(resultsPath, 'utf-8'))
