@@ -15,27 +15,25 @@ jobs:
       - name: rebase
         uses: airlock-hq/airlock/defaults/rebase@main
 
-      # Run linters directly (skip agent-based lint due to codex --output-schema incompatibility)
+      # Run linters and formatters, auto-fix issues
       - name: lint
-        run: |
-          echo "Running ESLint (backend)..."
-          cd backend && pnpm lint --max-warnings=0 2>&1 || true
-          echo "Running ESLint (frontend)..."
-          cd ../frontend && pnpm lint 2>&1 || true
-          echo "Running TypeScript type-check (backend)..."
-          cd ../backend && pnpm build 2>&1
-          echo "Lint stage complete."
+        uses: airlock-hq/airlock/defaults/lint@main
 
       # Commit auto-fix patches and lock the worktree
       - name: freeze
         run: airlock exec freeze
 
+      # Generate PR title and description from the diff
+      - name: describe
+        uses: airlock-hq/airlock/defaults/describe@main
+
+      # Update documentation to reflect changes
+      - name: document
+        uses: airlock-hq/airlock/defaults/document@main
+
       # Run tests
       - name: test
-        run: |
-          echo "Running backend tests..."
-          cd backend && pnpm test 2>&1
-          echo "Tests complete."
+        uses: airlock-hq/airlock/defaults/test@main
 
       # Critique the code change for bugs, risks, and simplification opportunities
       - name: critique
