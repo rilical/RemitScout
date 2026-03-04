@@ -70,6 +70,8 @@ export type EcsTaskOptions = {
   exportsPrefix?: string
   supabaseSecretArn?: string
   supabaseSsmName?: string
+  stripeSecretArn?: string
+  stripeSsmName?: string
   communicationsSecretArn?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
@@ -279,6 +281,11 @@ export const createEcsTasks = (
   const proxyDatacenterUrl = options.proxyDatacenterUrl
   const sentrySecretArn = options.sentrySecretArn
   const sentrySecretJsonKey = options.sentrySecretJsonKey
+  const supabaseSecretArn = options.supabaseSecretArn
+  const supabaseSsmName = options.supabaseSsmName
+  const stripeSecretArn = options.stripeSecretArn
+  const stripeSsmName = options.stripeSsmName
+  const communicationsSecretArn = options.communicationsSecretArn
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
   const quoteRefreshDlqUrl = options.quoteRefreshDlqUrl
   const quoteRefreshQueueMode = options.quoteRefreshQueueMode
@@ -584,11 +591,30 @@ export const createEcsTasks = (
   if (planeCDbSecretArn) {
     sharedEnv.PLANE_C_DB_SECRET_ARN = planeCDbSecretArn
   }
+  if (planeCDbSsmName) {
+    sharedEnv.PLANE_C_DB_SSM_NAME = planeCDbSsmName
+  }
   if (planeCDbPort) {
     sharedEnv.PLANE_C_DB_PORT = planeCDbPort
   }
   if (planeCDbName) {
     sharedEnv.PLANE_C_DB_NAME = planeCDbName
+  }
+  if (sharedSecretArn) {
+    sharedEnv.SHARED_SECRET_ARN = sharedSecretArn
+  }
+  if (process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY) {
+    sharedEnv.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY =
+      process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
+  }
+  if (redisSecretArn) {
+    sharedEnv.REDIS_SECRET_ARN = redisSecretArn
+  }
+  if (redisSecretJsonKey) {
+    sharedEnv.REDIS_SECRET_JSON_KEY = redisSecretJsonKey
+  }
+  if (redisSsmName) {
+    sharedEnv.REDIS_SSM_NAME = redisSsmName
   }
   if (redisUrl && !sharedSecrets.REDIS_URL) {
     sharedEnv.REDIS_URL = redisUrl
@@ -1506,6 +1532,57 @@ export const createEcsTasks = (
   if (planeADbName) {
     planeAWorkerEnv.PLANE_A_DB_NAME = planeADbName
   }
+  if (supabaseSecretArn) {
+    planeAWorkerEnv.SUPABASE_SECRET_ARN = supabaseSecretArn
+  }
+  if (supabaseSsmName) {
+    planeAWorkerEnv.SUPABASE_SSM_NAME = supabaseSsmName
+  }
+  if (stripeSecretArn) {
+    planeAWorkerEnv.STRIPE_SECRET_ARN = stripeSecretArn
+  }
+  if (stripeSsmName) {
+    planeAWorkerEnv.STRIPE_SSM_NAME = stripeSsmName
+  }
+  if (communicationsSecretArn) {
+    planeAWorkerEnv.COMMUNICATIONS_SECRET_ARN = communicationsSecretArn
+  }
+  if (sharedSecretArn) {
+    planeAWorkerEnv.SHARED_SECRET_ARN = sharedSecretArn
+  }
+  if (planeAJwtSecretJsonKey) {
+    planeAWorkerEnv.PLANE_A_JWT_SECRET_JSON_KEY = planeAJwtSecretJsonKey
+  }
+  if (process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY) {
+    planeAWorkerEnv.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY =
+      process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
+  }
+  const planeARuntimePassthroughKeys = [
+    'PLANE_A_ADMIN_EMAILS',
+    'ADMIN_IP_ALLOWLIST',
+    'WAF_ADMIN_ALLOWLIST_IPS',
+    'WAF_ALLOWLIST_IPS',
+    'PRIVACY_HASH_SALT',
+    'PRIVACY_SESSION_SALT',
+    'PLANE_A_CORS_ORIGINS',
+    'PLANE_A_CORS_ALLOWED_HEADERS',
+    'PLANE_A_CORS_ALLOWED_METHODS',
+    'PLANE_A_CORS_ALLOW_CREDENTIALS',
+    'PUBLIC_SITE_URL',
+    'FRONTEND_BASE_URL',
+    'PLANE_A_JWT_ISSUER',
+    'PLANE_A_JWT_AUDIENCES',
+    'PLANE_A_ENABLE_JWT_AUTH',
+    'PLANE_A_REQUIRE_JWT',
+    'PLANE_A_REQUIRE_API_KEY',
+    'PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED',
+  ] as const
+  for (const key of planeARuntimePassthroughKeys) {
+    const value = process.env[key]
+    if (value !== undefined && value !== '') {
+      planeAWorkerEnv[key] = value
+    }
+  }
 
   const alertEvaluationTask = new FargateTaskDefinition(
     scope,
@@ -1803,8 +1880,8 @@ export const createEcsTasks = (
     image,
     readonlyRootFilesystem: true,
     command: resolveCommand(
-      'plane-a/src/server.js',
-      'plane-a/src/server.ts',
+      'scripts/aws/plane-a-api-ecs.js',
+      'scripts/aws/plane-a-api-ecs.ts',
     ),
     environment: planeAApiEnv,
     ...secretsConfig,
@@ -1864,8 +1941,8 @@ export const createEcsTasks = (
     image,
     readonlyRootFilesystem: true,
     command: resolveCommand(
-      'plane-c/src/server.js',
-      'plane-c/src/server.ts',
+      'scripts/aws/plane-c-api-ecs.js',
+      'scripts/aws/plane-c-api-ecs.ts',
     ),
     environment: planeCApiEnv,
     ...goldLiveSecretsConfig,
@@ -2009,7 +2086,3 @@ export const createEcsTasks = (
     discoveryTask,
   }
 }
-
-
-
-

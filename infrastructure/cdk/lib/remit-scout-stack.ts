@@ -1446,6 +1446,8 @@ export class RemitScoutStack extends Stack {
         exportsPrefix,
         supabaseSecretArn,
         supabaseSsmName,
+        stripeSecretArn,
+        stripeSsmName,
         communicationsSecretArn,
         b2cQueueInSweep,
         b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
