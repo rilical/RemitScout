@@ -168,13 +168,23 @@ export const parseKoronaPayPayload = (
   const totalDebitRaw = parseNumber(tariff.sendingAmount)
   const receiveAmountRaw = parseNumber(tariff.receivingAmount)
   const exchangeRate = parseNumber(tariff.exchangeRate)
+  const exchangeRateDiscountRaw = parseNumber(tariff.exchangeRateDiscount)
+  const commissionDiscountRaw = parseNumber(tariff.sendingCommissionDiscount)
+
+  const hasCommissionDiscount = Number.isFinite(commissionDiscountRaw) && commissionDiscountRaw > 0
+  const hasRateDiscount = Number.isFinite(exchangeRateDiscountRaw) && exchangeRateDiscountRaw > 0
 
   const sendAmount = Number.isFinite(sendAmountRaw)
     ? fromMinorUnits(sendAmountRaw, sendCurrency)
     : Number.NaN
   const feeAmount = Number.isFinite(feeAmountRaw)
-    ? fromMinorUnits(feeAmountRaw, sendCurrency)
+    ? hasCommissionDiscount
+      ? fromMinorUnits(feeAmountRaw + commissionDiscountRaw, sendCurrency)
+      : fromMinorUnits(feeAmountRaw, sendCurrency)
     : Number.NaN
+  const promotionalFeeAmount = Number.isFinite(feeAmountRaw) && hasCommissionDiscount
+    ? fromMinorUnits(feeAmountRaw, sendCurrency)
+    : null
   const totalDebit = Number.isFinite(totalDebitRaw)
     ? fromMinorUnits(totalDebitRaw, sendCurrency)
     : Number.NaN
@@ -205,9 +215,13 @@ export const parseKoronaPayPayload = (
     payin_method: request.payin_method,
     payout_method: request.payout_method,
     fee_currency: sendCurrency ?? null,
-    promotional_fee_amount: null,
-    promotional_rate: null,
-    base_rate: Number.isFinite(exchangeRate) ? exchangeRate : null,
+    promotional_fee_amount: promotionalFeeAmount,
+    promotional_rate: hasRateDiscount && Number.isFinite(exchangeRate)
+      ? exchangeRate
+      : null,
+    base_rate: hasRateDiscount && Number.isFinite(exchangeRate)
+      ? exchangeRate - exchangeRateDiscountRaw
+      : Number.isFinite(exchangeRate) ? exchangeRate : null,
     promotional_cap_amount: null,
     delivery_time_min_minutes: null,
     delivery_time_max_minutes: null,

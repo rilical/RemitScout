@@ -17,6 +17,7 @@ export type ToolType =
   | 'github_api'
   | 'llm_inference'
   | 'shell_exec'
+  | 'playwright_discovery'
 
 /**
  * Tool request — submitted by agents to the Tool Gateway for approval.
@@ -88,7 +89,7 @@ export type ToolGatewayPolicy = {
  * Default read-only policy for new agents.
  */
 export const DEFAULT_TOOL_GATEWAY_POLICY: ToolGatewayPolicy = {
-  allowedTools: ['http_fetch', 'db_query', 'redis_command', 'file_read', 'git_read'],
+  allowedTools: ['http_fetch', 'db_query', 'redis_command', 'file_read', 'git_read', 'playwright_discovery'],
   approvalRequired: ['git_write', 'github_api', 'shell_exec', 'file_write'],
   maxConcurrentRequests: 3,
   rateLimitMaxRequests: 60,

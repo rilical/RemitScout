@@ -134,7 +134,11 @@ export const parseDahabshiilPayload = (
   const { sourceCurrency } = requireCorridorId(request.corridor_id)
   const sendAmountRaw = parseNumber(charges.source_amount)
   const sendAmount = Number.isFinite(sendAmountRaw) ? sendAmountRaw : request.send_amount
-  const rate = parseNumber(charges.base_rate ?? charges.rate)
+  const baseRateRaw = parseNumber(charges.base_rate)
+  const rateRaw = parseNumber(charges.rate)
+  const rate = Number.isFinite(baseRateRaw) ? baseRateRaw : rateRaw
+  const hasRatePromo = Number.isFinite(rateRaw) && Number.isFinite(baseRateRaw)
+    && rateRaw !== baseRateRaw
   const receiveAmountRaw = parseNumber(charges.destination_amount)
   const receiveAmount = Number.isFinite(receiveAmountRaw)
     ? receiveAmountRaw
@@ -190,8 +194,10 @@ export const parseDahabshiilPayload = (
     payout_method: payoutMethod,
     fee_currency: charges.source_currency ?? sourceCurrency,
     promotional_fee_amount: null,
-    promotional_rate: null,
-    base_rate: Number.isFinite(rate) ? rate : null,
+    promotional_rate: hasRatePromo ? rateRaw : null,
+    base_rate: Number.isFinite(baseRateRaw)
+      ? baseRateRaw
+      : Number.isFinite(rateRaw) ? rateRaw : null,
     promotional_cap_amount: null,
     delivery_time_min_minutes: null,
     delivery_time_max_minutes: null,

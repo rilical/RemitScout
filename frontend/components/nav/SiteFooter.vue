@@ -6,7 +6,7 @@
         <div class="lg:col-span-1">
           <div class="mb-6">
             <NuxtImg
-              src="/png/SVG/LOGO.svg"
+              src="/png/SVG/FULL_LOGO.svg"
               alt="RemitScout"
               width="64"
               height="80"

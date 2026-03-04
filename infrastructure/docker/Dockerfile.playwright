@@ -1,0 +1,73 @@
+# Remit-Scout Discovery Scanner (Playwright-based)
+# Build from repo root:
+#   docker build -f infrastructure/docker/Dockerfile.playwright -t remit-scout-discovery:latest .
+#
+# This image runs weekly discovery scans that crawl provider websites to detect
+# new/removed corridors and promotional pricing. It uses Playwright for
+# browser-based crawling that respects robots.txt.
+
+# --- deps stage: install production Node.js dependencies ---
+FROM mcr.microsoft.com/playwright:v1.48.0-noble AS deps
+WORKDIR /app
+
+# The Playwright base image ships Node.js 18. Install Node.js 20 to match the
+# rest of the backend. Uninstall the bundled version first to avoid conflicts.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && corepack enable \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY backend/package.json backend/
+RUN pnpm install --filter remit-scout-backend... --frozen-lockfile
+
+# --- build stage: compile TypeScript ---
+FROM deps AS build
+COPY backend backend
+COPY .remit-scout .remit-scout
+RUN pnpm -C backend build
+
+# --- runner stage: slim runtime image ---
+FROM mcr.microsoft.com/playwright:v1.48.0-noble AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Install Node.js 20 in the runner stage as well.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG BUILD_VERSION=dev
+LABEL org.opencontainers.image.revision=$BUILD_VERSION
+
+# Copy compiled output and runtime dependencies.
+COPY --from=build /app/backend/dist backend/dist
+COPY --from=build /app/backend/dist/shared backend/shared
+COPY --from=build /app/backend/dist/plane-b backend/dist/plane-b/src
+COPY --from=build /app/backend/dist/scripts backend/dist/scripts
+COPY --from=build /app/backend/package.json backend/package.json
+COPY --from=build /app/.remit-scout .remit-scout
+COPY --from=build /app/.remit-scout backend/.remit-scout
+COPY --from=deps /app/node_modules node_modules
+COPY --from=deps /app/backend/node_modules backend/node_modules
+COPY --from=deps /app/pnpm-lock.yaml pnpm-lock.yaml
+COPY --from=deps /app/pnpm-workspace.yaml pnpm-workspace.yaml
+
+# The Playwright image already has browser binaries installed. Verify Chromium
+# is present (playwright-core will use the pre-installed browser).
+RUN npx playwright install --with-deps chromium 2>/dev/null || true
+
+# Drop root privileges for runtime.
+RUN useradd -m appuser 2>/dev/null || true \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Discovery scans are batch jobs — no HTTP health endpoint needed.
+# ECS will rely on task exit code for health.
+
+# Default entrypoint runs the full discovery scan.
+CMD ["node", "backend/dist/scripts/discovery-scan.js"]
