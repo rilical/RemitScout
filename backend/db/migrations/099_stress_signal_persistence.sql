@@ -19,7 +19,7 @@ CREATE INDEX idx_stress_signal_corridor
   ON silver.stress_signal (corridor_id, signal_type, detected_at DESC);
 
 CREATE INDEX idx_stress_signal_expires
-  ON silver.stress_signal (expires_at) WHERE expires_at > NOW();
+  ON silver.stress_signal (expires_at);
 
 GRANT SELECT, INSERT, DELETE ON silver.stress_signal TO plane_b;
 
