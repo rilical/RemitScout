@@ -29,6 +29,13 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const redisAuthMode = options.redisAuthMode ?? (isProtectedEnv ? 'required' : 'legacy')
   const authEnabled = redisAuthMode === 'required'
 
+  const redisSnapshottingClusterIdRaw = process.env.REDIS_SNAPSHOTTING_CLUSTER_ID?.trim()
+  const redisSnapshottingClusterId =
+    isProtectedEnv && redisSnapshottingClusterIdRaw
+      ? redisSnapshottingClusterIdRaw
+      : undefined
+  const snapshotsEnabled = Boolean(redisSnapshottingClusterId)
+
   const redisAuthSecret = new Secret(scope, 'RedisAuthSecret', {
     secretName: `remit-scout/${options.envName}/redis-auth`,
     description: `Redis AUTH token for Remit-Scout ${options.envName}`,
@@ -53,25 +60,29 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     scope,
     authEnabled ? 'RedisReplicationGroupAuth' : 'RedisReplicationGroup',
     {
-    replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
-    cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
-    engine: 'redis',
-    engineVersion: '7.1',
-    numNodeGroups: 1,
-    replicasPerNodeGroup: isProd ? 1 : undefined,
-    automaticFailoverEnabled: isProd,
-    multiAzEnabled: isProd,
-    atRestEncryptionEnabled: true,
-    transitEncryptionEnabled: true,
-    cacheSubnetGroupName: subnetGroup.ref,
-    securityGroupIds: [options.redisSecurityGroup.securityGroupId],
-    autoMinorVersionUpgrade: true,
-    snapshotRetentionLimit: isProtectedEnv ? 1 : 0,
-    snapshotWindow: isProtectedEnv ? '03:00-04:00' : undefined,
-    // Auth token must be enabled for protected environments. We use a distinct
-    // logical ID when auth is enabled so upgrades can migrate by replacement.
-    authToken: authEnabled ? redisAuthToken.toString() : undefined,
-  })
+      replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
+      cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
+      engine: 'redis',
+      engineVersion: '7.1',
+      numNodeGroups: 1,
+      replicasPerNodeGroup: isProd ? 1 : undefined,
+      automaticFailoverEnabled: isProd,
+      multiAzEnabled: isProd,
+      atRestEncryptionEnabled: true,
+      transitEncryptionEnabled: true,
+      cacheSubnetGroupName: subnetGroup.ref,
+      securityGroupIds: [options.redisSecurityGroup.securityGroupId],
+      autoMinorVersionUpgrade: true,
+      // AWS requires SnapshottingClusterId whenever SnapshotRetentionLimit is enabled.
+      // Keep snapshots disabled until the cluster id is explicitly provided.
+      snapshotRetentionLimit: snapshotsEnabled ? 1 : 0,
+      snapshotWindow: snapshotsEnabled ? '03:00-04:00' : undefined,
+      snapshottingClusterId: snapshotsEnabled ? redisSnapshottingClusterId : undefined,
+      // Auth token must be enabled for protected environments. We use a distinct
+      // logical ID when auth is enabled so upgrades can migrate by replacement.
+      authToken: authEnabled ? redisAuthToken.toString() : undefined,
+    },
+  )
 
   const removalPolicy = isProtectedEnv ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY
   redisAuthSecret.applyRemovalPolicy(removalPolicy)
