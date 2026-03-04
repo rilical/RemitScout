@@ -47,7 +47,19 @@ export const resolveTracingEnv = ({
   const explicitHeaders =
     trim(process.env.OTEL_EXPORTER_OTLP_TRACES_HEADERS) ||
     trim(process.env.OTEL_EXPORTER_OTLP_HEADERS)
-  const newRelicIngestKey = trim(process.env.NEW_RELIC_INGEST_KEY)
+  const rawIngestKey = trim(process.env.NEW_RELIC_INGEST_KEY)
+  // Unwrap JSON-wrapped secret: { "LicenseKey": "..." } → plain key string
+  const newRelicIngestKey = (() => {
+    if (!rawIngestKey) return ''
+    try {
+      const parsed = JSON.parse(rawIngestKey)
+      return typeof parsed === 'object' && parsed.LicenseKey
+        ? String(parsed.LicenseKey).trim()
+        : rawIngestKey
+    } catch {
+      return rawIngestKey
+    }
+  })()
   const derivedHeaders =
     !explicitHeaders && newRelicIngestKey && otlpEndpoint.includes('nr-data.net')
       ? `api-key=${newRelicIngestKey}`
