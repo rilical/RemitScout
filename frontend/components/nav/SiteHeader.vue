@@ -21,13 +21,13 @@ const dashboardNavTo = computed(() => (
 
 const logoPlusSrc = computed(() => {
   // Route to SVG file in public/png/SVG directory
-  // Use LOGO_PLUS.svg (icon only, no text) for Plus accounts
-  return '/png/SVG/LOGO_PLUS.svg'
+  // Use FULL_LOGO_PLUS.svg for Plus accounts
+  return '/png/SVG/FULL_LOGO_PLUS.svg'
 })
 
 const logoRegularSrc = computed(() => {
-  // Use LOGO.svg (icon only, no text) for regular accounts
-  return '/png/SVG/LOGO.svg'
+  // Use FULL_LOGO.svg for regular accounts
+  return '/png/SVG/FULL_LOGO.svg'
 })
 
 function handleLogoError() {
@@ -99,27 +99,30 @@ watch(() => route.path, () => {
             v-if="isPlus && !logoError"
             :src="logoPlusSrc"
             alt="Remit-Scout Plus logo"
-            width="40"
-            height="40"
+            width="142"
+            height="38"
             loading="eager"
             preload
-            class="h-10 w-10 object-contain flex-shrink-0"
+            class="h-9 w-auto object-contain flex-shrink-0"
             @error="handleLogoError"
           />
           <NuxtImg
             v-else
             :src="logoRegularSrc"
             alt="Remit-Scout logo"
-            width="40"
-            height="40"
+            width="142"
+            height="38"
             loading="eager"
             preload
-            class="h-10 w-10 object-contain flex-shrink-0"
+            class="h-9 w-auto object-contain flex-shrink-0"
           />
-          <span class="text-body-lg font-bold text-neutral-900 whitespace-nowrap">
+          <span
+            v-if="logoError"
+            class="text-body-lg font-bold text-neutral-900 whitespace-nowrap"
+          >
             Remit-Scout
             <span
-              v-if="isPlus && !logoError"
+              v-if="isPlus"
               class="text-brand-600"
             > Plus</span>
           </span>

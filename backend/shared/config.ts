@@ -393,10 +393,10 @@ const rawConfig = {
       env !== 'production',
     ),
     b2c: {
-      cacheTtlSeconds: toNumber(process.env.PLANE_A_B2C_CACHE_TTL_SECONDS, 900),
+      cacheTtlSeconds: toNumber(process.env.PLANE_A_B2C_CACHE_TTL_SECONDS, 1800),
       jitterMs: toNumber(process.env.PLANE_A_B2C_JITTER_MS, 300),
       fxRateCacheTtlSeconds: toNumber(process.env.PLANE_A_FX_RATE_CACHE_TTL_SECONDS, 300),
-      latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 15),
+      latestQuoteCacheTtlSeconds: toNumber(process.env.PLANE_A_LATEST_QUOTE_CACHE_TTL_SECONDS, 90),
       maxQuoteAgeSeconds: toNumber(process.env.PLANE_A_B2C_MAX_QUOTE_AGE_SECONDS, 1800),
       staleGraceSeconds: toNumber(process.env.PLANE_A_B2C_STALE_GRACE_SECONDS, 1800),
       maxBucketDeltaPct: toNumber(process.env.PLANE_A_B2C_MAX_BUCKET_DELTA_PCT, 0),
@@ -1338,7 +1338,7 @@ const rawConfig = {
       jwtIssuer: process.env.SUPABASE_JWT_ISSUER || '',
       jwtAudience: process.env.SUPABASE_JWT_AUDIENCE || process.env.SUPABASE_JWT_AUD || '',
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
-      remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 30),
+      remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 120),
     },
   },
   billing: {

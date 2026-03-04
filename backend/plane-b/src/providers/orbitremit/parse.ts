@@ -169,26 +169,26 @@ export const parseOrbitRemitPayload = (
   const sendAmount = Number.isFinite(sendAmountRaw) ? sendAmountRaw : request.send_amount
 
   const rateRaw = parseNumber(rateAttributes.rate)
-  const promotionalRateRaw = parseNumber(rateAttributes.promotion_rate ?? rateAttributes.rate)
+  const promotionalRateRaw = parseNumber(rateAttributes.promotion_rate)
   const baseRateRaw = parseNumber(rateAttributes.standard_rate)
+
+  const effectiveRate = Number.isFinite(rateRaw) ? rateRaw : promotionalRateRaw
 
   const receiveAmountRaw = parseNumber(rateAttributes.payout_amount)
   const receiveAmount = Number.isFinite(receiveAmountRaw)
     ? receiveAmountRaw
-    : Number.isFinite(promotionalRateRaw)
-      ? sendAmount * promotionalRateRaw
+    : Number.isFinite(effectiveRate)
+      ? sendAmount * effectiveRate
       : Number.isFinite(baseRateRaw)
         ? sendAmount * baseRateRaw
-        : Number.isFinite(rateRaw)
-          ? sendAmount * rateRaw
-          : Number.NaN
+        : Number.NaN
 
   if (!Number.isFinite(sendAmount) || !Number.isFinite(receiveAmount)) {
     flags.push(qualityFlags.parse_error)
     return null
   }
 
-  if (!Number.isFinite(promotionalRateRaw) && !Number.isFinite(baseRateRaw)) {
+  if (!Number.isFinite(effectiveRate) && !Number.isFinite(baseRateRaw)) {
     flags.push(qualityFlags.partial_data)
   }
 
@@ -241,7 +241,11 @@ export const parseOrbitRemitPayload = (
     fee_currency: sendCurrency ?? sourceCurrency,
     promotional_fee_amount: null,
     promotional_rate: Number.isFinite(promotionalRateRaw) ? promotionalRateRaw : null,
-    base_rate: Number.isFinite(baseRateRaw) ? baseRateRaw : null,
+    base_rate: Number.isFinite(baseRateRaw)
+      ? baseRateRaw
+      : Number.isFinite(rateRaw)
+        ? rateRaw
+        : null,
     promotional_cap_amount: Number.isFinite(promotionalCapRaw) ? promotionalCapRaw : null,
     delivery_time_min_minutes: null,
     delivery_time_max_minutes: null,

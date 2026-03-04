@@ -146,6 +146,7 @@ export type OpsNestedStackProps = NestedStackProps & {
     | 'agentOrchestratorTask'
     | 'stressResponderTask'
     | 'normalizationWorkerTask'
+    | 'discoveryTask'
     | 'planeASecurityGroup'
     | 'planeBSecurityGroup'
     | 'planeCSecurityGroup'

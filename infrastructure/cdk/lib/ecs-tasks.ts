@@ -37,6 +37,7 @@ export type EcsTaskResources = {
   stressResponderTask: FargateTaskDefinition
   normalizationWorkerTask: FargateTaskDefinition
   dbMigrateTask: FargateTaskDefinition
+  discoveryTask?: FargateTaskDefinition
 }
 
 export type EcsTaskOptions = {
@@ -135,6 +136,8 @@ export type EcsTaskOptions = {
   planeBDbPoolMax?: string
   planeBDbPoolMin?: string
   goldIndicesMinProviders?: string
+  discoveryRepository?: IRepository
+  discoveryImageTag?: string
 }
 
 export const createEcsTasks = (
@@ -1931,6 +1934,60 @@ export const createEcsTasks = (
   })
   dbMigrateContainer.addMountPoints(tmpMountPoint)
 
+  // --- Discovery scanner task (Playwright-based, separate image) ---
+  // Only created when a discovery ECR repository is provided. The discovery
+  // image is built from infrastructure/docker/Dockerfile.playwright and ships
+  // Playwright + Chromium for browser-based corridor crawling.
+  let discoveryTask: FargateTaskDefinition | undefined
+  if (options.discoveryRepository) {
+    const discoveryImageTag = options.discoveryImageTag ?? options.imageTag
+    const discoveryImage = ContainerImage.fromEcrRepository(
+      options.discoveryRepository,
+      discoveryImageTag,
+    )
+
+    discoveryTask = new FargateTaskDefinition(scope, 'DiscoveryTask', {
+      cpu: 1024,
+      memoryLimitMiB: 2048,
+      ephemeralStorageGiB: 30,
+      executionRole: options.roles.planeBEcsTaskExecutionRole,
+      taskRole: options.roles.planeBEcsTaskRole,
+      runtimePlatform: {
+        cpuArchitecture: CpuArchitecture.X86_64,
+        operatingSystemFamily: OperatingSystemFamily.LINUX,
+      },
+    })
+    addTmpVolume(discoveryTask)
+
+    const discoveryLogGroup = new LogGroup(scope, 'DiscoveryLogGroup', {
+      logGroupName: `/remit-scout/${options.envName}/discovery`,
+      retention: logRetention,
+      removalPolicy: isProd ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    })
+
+    const discoveryContainer = discoveryTask.addContainer('DiscoveryContainer', {
+      image: discoveryImage,
+      readonlyRootFilesystem: false,
+      command: ['node', 'backend/dist/scripts/discovery-scan.js'],
+      environment: {
+        ...sharedEnv,
+        DISCOVERY_ENABLED: '1',
+        DISCOVERY_APPLY_RESULTS: '0',
+        HEALTH_PORT: '8080',
+        ...(bronzeBucketName ? { BRONZE_BUCKET_NAME: bronzeBucketName } : {}),
+        ...(bronzePrefix ? { BRONZE_PREFIX: bronzePrefix } : {}),
+      },
+      ...secretsConfig,
+      logging: LogDrivers.awsLogs({
+        streamPrefix: 'discovery',
+        logGroup: discoveryLogGroup,
+      }),
+      healthCheck: workerHealthCheck,
+      stopTimeout: Duration.seconds(120),
+    })
+    discoveryContainer.addMountPoints(tmpMountPoint)
+  }
+
   return {
     planeATask,
     planeCTask,
@@ -1949,6 +2006,7 @@ export const createEcsTasks = (
     stressResponderTask,
     normalizationWorkerTask,
     dbMigrateTask,
+    discoveryTask,
   }
 }
 

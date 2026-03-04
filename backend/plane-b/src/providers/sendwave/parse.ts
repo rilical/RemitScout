@@ -172,6 +172,8 @@ export const parseSendwavePayload = (
 
   const promotionalRate = parseNumber(pricing.effectiveExchangeRate)
   const baseRate = parseNumber(pricing.baseExchangeRate)
+  const baseFee = parseNumber(pricing.baseFeeAmount)
+  const effectiveFee = parseNumber(pricing.effectiveFeeAmount)
 
   const receiveAmountRaw = parseNumber(pricing.receiveAmount)
   const receiveAmount = Number.isFinite(receiveAmountRaw)
@@ -182,8 +184,13 @@ export const parseSendwavePayload = (
         ? sendAmount * baseRate
         : Number.NaN
 
-  const feeAmountRaw = parseNumber(pricing.effectiveFeeAmount ?? pricing.baseFeeAmount)
+  const hasFeeDiscount = Number.isFinite(baseFee) && Number.isFinite(effectiveFee)
+    && effectiveFee < baseFee
+  const feeAmountRaw = hasFeeDiscount
+    ? baseFee
+    : parseNumber(pricing.effectiveFeeAmount ?? pricing.baseFeeAmount)
   const feeAmount = Number.isFinite(feeAmountRaw) ? feeAmountRaw : Number.NaN
+  const promotionalFeeAmount = hasFeeDiscount ? effectiveFee : null
 
   const totalDebitRaw = parseNumber(pricing.payAmount)
   const totalDebit = Number.isFinite(totalDebitRaw)
@@ -236,7 +243,7 @@ export const parseSendwavePayload = (
     payin_method: payinMethod,
     payout_method: payoutMethod,
     fee_currency: sourceCurrency,
-    promotional_fee_amount: null,
+    promotional_fee_amount: promotionalFeeAmount,
     promotional_rate: Number.isFinite(promotionalRate) ? promotionalRate : null,
     base_rate: Number.isFinite(baseRate) ? baseRate : null,
     promotional_cap_amount: null,

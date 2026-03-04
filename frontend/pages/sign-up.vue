@@ -8,7 +8,7 @@
           class="inline-block"
         >
           <NuxtImg
-            src="/png/SVG/LOGO.svg"
+            src="/png/SVG/FULL_LOGO.svg"
             alt="RemitScout"
             width="32"
             height="40"
