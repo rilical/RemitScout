@@ -511,7 +511,7 @@ aria-current="page"
 
     <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
     <section
-      v-if="hasApiQuotes && verdictParagraph"
+      v-if="hasApiQuotes && verdictParagraph && !showRefreshGate"
       class="bg-brand-600"
     >
       <div class="container py-6">
@@ -2297,6 +2297,7 @@ let refreshPollController: AbortController | null = null
 let refreshStatusController: AbortController | null = null
 const refreshTimedOut = ref(false)
 const refreshFinalizing = ref(false)
+const methodTransitioning = ref(false)
 const refreshGateStartedAt = ref<number | null>(null)
 const refreshGateTimer = ref<number | null>(null)
 const refreshElapsedSeconds = ref(0)
@@ -3497,9 +3498,12 @@ const shouldReuseLastRows = computed(() => {
     || quotesPending.value
 })
 
-const displayApiRows = computed<TableRow[]>(() => (
-  shouldReuseLastRows.value ? lastStableApiRows.value : apiRows.value
-))
+const displayApiRows = computed<TableRow[]>(() => {
+  if (methodTransitioning.value && lastStableApiRows.value.length > 0) {
+    return lastStableApiRows.value
+  }
+  return shouldReuseLastRows.value ? lastStableApiRows.value : apiRows.value
+})
 
 const hasCurrentApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
 const hasApiQuotes = computed(() => displayApiRows.value.length > 0 && !quotesError.value)
@@ -4721,21 +4725,22 @@ useAbortableWatch(
     catch {
       // Ignore refresh errors; we'll surface API errors in the UI.
     }
-    finally {
-      refreshFinalizing.value = false
-    }
+    // Stop polls BEFORE dropping the gate — prevents data poll from firing
+    // after gate drops and causing the provider count to tick up incrementally.
+    clearRefreshPoll()
+    clearRefreshStatusPoll()
     if (hasCurrentApiQuotes.value || refreshTimedOut.value) {
       providersLive.value = false
       refreshStatus.value = null
-      refreshFinalizing.value = false
-      lastRefreshKey.value = null
+      // lastRefreshKey intentionally NOT cleared — prevents needsCoverageRefresh
+      // from immediately re-triggering a new refresh cycle for the same corridor.
+      // A new cycle only starts when quoteRefreshKey changes (corridor, amount, or method).
       refreshAttempts.value = 0
-      clearRefreshPoll()
-      clearRefreshStatusPoll()
       clearRefreshGateTimer()
       refreshGateStartedAt.value = null
       refreshElapsedSeconds.value = 0
     }
+    refreshFinalizing.value = false
   },
 )
 
@@ -4772,6 +4777,7 @@ watch(quoteRefreshKey, () => {
 })
 
 useAbortableWatch(payoutMethod, async (_, signal) => {
+  methodTransitioning.value = true
   refreshTimedOut.value = false
   refreshStatus.value = null
   refreshAttempts.value = 0
@@ -4787,6 +4793,9 @@ useAbortableWatch(payoutMethod, async (_, signal) => {
   }
   catch {
     // Ignore refresh errors; the auto refresh queue handles retries.
+  }
+  finally {
+    methodTransitioning.value = false
   }
   if ((!hasCurrentApiQuotes.value || isQuoteStale.value) && !hasApiError.value && !corridorUnavailable.value && !corridorUnsupported.value) {
     await requestQuoteRefresh('auto', signal)

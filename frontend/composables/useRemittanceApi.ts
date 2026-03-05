@@ -3,6 +3,7 @@ import { computed, isRef, unref } from 'vue'
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import type { paths } from '~/shared/lib/api/types'
 import { getProviderScore } from '~/lib/providerScores'
+import { applyProviderSourceVisibility } from '~/lib/providerVisibility'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
 
@@ -276,8 +277,9 @@ export const useRemittanceApi = () => {
               },
             },
           )
-          providersSuccessCache.set(resolvedKey.value, response)
-          return response
+          const normalizedResponse = applyProviderSourceVisibility(response, fromValue)
+          providersSuccessCache.set(resolvedKey.value, normalizedResponse)
+          return normalizedResponse
         }
         catch (error: unknown) {
           if (import.meta.dev) useLogger('remittance').warn('providers unavailable', error)
