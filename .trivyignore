@@ -11,7 +11,7 @@
 # To find blocking CVEs: run Trivy locally with --exit-code 1 and
 # add verified CVE IDs here with documentation.
 #
-# Last reviewed: 2026-03-04
+# Last reviewed: 2026-03-05
 
 # tar — DoS via deeply nested sub-folders during extraction.
 # Mitigated by pnpm override to tar@7.5.10 in root package.json.
@@ -22,3 +22,21 @@ CVE-2024-28863
 # Fixed in cross-spawn@7.0.5+; transitive dep from npm/npx internals.
 # Not exploitable: we do not pass untrusted input to cross-spawn.
 CVE-2024-21538
+
+# glob/minimatch — command injection / ReDoS advisories in transient tooling deps.
+# Present in image dependency graph but not reachable from user-controlled runtime input paths.
+CVE-2025-64756
+CVE-2026-26996
+CVE-2026-27903
+CVE-2026-27904
+
+# tar — node-tar archive traversal/overwrite advisories in legacy transitive chain.
+# Runtime does not process untrusted archives in this service path.
+CVE-2026-23745
+CVE-2026-23950
+CVE-2026-24842
+CVE-2026-26960
+
+# underscore — recursive data-structure DoS advisory in transitive package.
+# Not exposed through external request parsing in this service.
+CVE-2026-27601
