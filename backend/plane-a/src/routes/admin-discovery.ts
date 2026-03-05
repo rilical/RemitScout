@@ -124,6 +124,13 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
         })
       }
 
+      if (!scan.diff_json) {
+        await client.query('ROLLBACK')
+        throw new ValidationError('Scan has already been approved', {
+          details: [{ message: 'already_approved', scanId }],
+        })
+      }
+
       const resultJson = scan.result_json as {
         providerId?: string
         corridors?: Array<{

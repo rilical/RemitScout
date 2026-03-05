@@ -92,7 +92,8 @@ export class DiscoveryScanRepository implements IDiscoveryScanRepository {
     const result = await query<DiscoveryScanApproveRecord>(
       `SELECT id, provider_id, status, result_json, diff_json
        FROM silver.discovery_scan
-       WHERE id = $1`,
+       WHERE id = $1
+       ${client ? 'FOR UPDATE' : ''}`,
       [scanId],
       client ?? this.pool,
     )
