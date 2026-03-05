@@ -37,6 +37,10 @@ CVE-2026-23950
 CVE-2026-24842
 CVE-2026-26960
 
+# tar — GHSA advisory reported from base runtime tooling chain.
+# Current runtime path does not extract untrusted tar input.
+GHSA-qffp-2rhf-9h96
+
 # underscore — recursive data-structure DoS advisory in transitive package.
 # Not exposed through external request parsing in this service.
 CVE-2026-27601
