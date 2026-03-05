@@ -216,6 +216,7 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
               scanId,
               providerId,
               error: message,
+              stack: err instanceof Error ? err.stack : undefined,
             })
             applyResult.errors.push(`rights_matrix: ${message}`)
           }
@@ -268,6 +269,7 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
               providerId,
               corridorId,
               error: message,
+              stack: err instanceof Error ? err.stack : undefined,
             })
             applyResult.errors.push(`corridor_capability[${corridorId}]: ${message}`)
           }
@@ -288,6 +290,7 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
         destinationCountriesAdded: applyResult.destinationCountriesAdded.length,
         capabilitiesUpserted: applyResult.capabilitiesUpserted,
         corridorsWithNewMethods: applyResult.corridorsWithNewMethods.length,
+        errorCount: applyResult.errors.length,
       })
 
       return { result: applyResult }
