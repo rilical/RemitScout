@@ -390,7 +390,7 @@ const rawConfig = {
     // Default: enabled for dev/staging; disabled for production unless explicitly enabled.
     internalUsersGetEnterprise: toBoolean(
       process.env.PLANE_A_INTERNAL_USERS_GET_ENTERPRISE,
-      env !== 'production',
+      envName === 'staging' || env !== 'production',
     ),
     b2c: {
       cacheTtlSeconds: toNumber(process.env.PLANE_A_B2C_CACHE_TTL_SECONDS, 1800),
