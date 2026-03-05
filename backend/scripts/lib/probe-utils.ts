@@ -1,4 +1,4 @@
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { CloudWatchClient, PutMetricDataCommand, type MetricDatum } from '@aws-sdk/client-cloudwatch'
 import fs from 'node:fs'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
@@ -24,7 +24,7 @@ const publishProbeMetrics = async (
   providerId: string,
   result: ProbeResult,
 ): Promise<void> => {
-  const metricData = [
+  const metricData: MetricDatum[] = [
     {
       MetricName: 'probe_run_total',
       Value: 1,
@@ -99,12 +99,19 @@ const publishProbeMetrics = async (
         { Name: 'environment', Value: environmentDimension },
       ],
     },
-  ] as const
+  ]
 
   if (isNewRelicMetricExportEnabled()) {
     for (const datum of metricData) {
+      if (typeof datum.MetricName !== 'string') continue
+
       const attributes = Object.fromEntries(
-        (datum.Dimensions || []).map((dimension) => [dimension.Name, dimension.Value]),
+        (datum.Dimensions || [])
+          .filter(
+            (dimension): dimension is { Name: string; Value: string } =>
+              typeof dimension.Name === 'string' && typeof dimension.Value === 'string',
+          )
+          .map((dimension) => [dimension.Name, dimension.Value]),
       )
       enqueueNewRelicMetric({
         name: datum.MetricName,
