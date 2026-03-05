@@ -28,10 +28,6 @@ const resolveAppRoleFromClaims = (claims: Record<string, unknown> | undefined): 
   const appMetadataRole = toAppRole(appMetadata?.app_role) ?? toAppRole(appMetadata?.role)
   if (appMetadataRole) return appMetadataRole
 
-  const userMetadata = getRecord(claims.user_metadata)
-  const userMetadataRole = toAppRole(userMetadata?.app_role) ?? toAppRole(userMetadata?.role)
-  if (userMetadataRole) return userMetadataRole
-
   return toAppRole(claims.role)
 }
 

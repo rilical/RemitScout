@@ -249,7 +249,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -259,13 +258,13 @@ jobs:
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-dev"
           docker run --rm \
+            -v "${{ github.workspace }}/.trivyignore:/root/.trivyignore:ro" \
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 0 "${ECR_URI}:${IMAGE_TAG}"
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -287,7 +286,8 @@ jobs:
             --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
             --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
           if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
-            echo "::warning::ECR scan found $CRITICAL CRITICAL vulnerabilities."
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
           fi
 
       - name: Install cosign
@@ -981,7 +981,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -991,13 +990,13 @@ jobs:
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-staging"
           docker run --rm \
+            -v "${{ github.workspace }}/.trivyignore:/root/.trivyignore:ro" \
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 0 "${ECR_URI}:${IMAGE_TAG}"
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -1019,7 +1018,8 @@ jobs:
             --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
             --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
           if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
-            echo "::warning::ECR scan found $CRITICAL CRITICAL vulnerabilities."
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
           fi
 
       - name: Install cosign
@@ -2161,7 +2161,6 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan Backend Image (Trivy HIGH/CRITICAL)
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -2171,13 +2170,13 @@ jobs:
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-prod"
           docker run --rm \
+            -v "${{ github.workspace }}/.trivyignore:/root/.trivyignore:ro" \
             -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN \
             -e AWS_DEFAULT_REGION="${AWS_REGION}" \
             aquasec/trivy:0.50.1 \
-            image --no-progress --severity HIGH,CRITICAL --exit-code 0 "${ECR_URI}:${IMAGE_TAG}"
+            image --no-progress --severity HIGH,CRITICAL --exit-code 1 --ignorefile /root/.trivyignore "${ECR_URI}:${IMAGE_TAG}"
 
       - name: Validate ECR Scan Results
-        continue-on-error: true
         shell: bash
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
@@ -2199,7 +2198,8 @@ jobs:
             --repository-name "$REPO" --image-id imageTag="$IMAGE_TAG" \
             --query 'imageScanFindings.findingSeverityCounts.CRITICAL' --output text 2>/dev/null || echo "0")"
           if [ "$CRITICAL" != "0" ] && [ "$CRITICAL" != "None" ]; then
-            echo "::warning::ECR scan found $CRITICAL CRITICAL vulnerabilities."
+            echo "ECR scan found $CRITICAL CRITICAL vulnerabilities. Blocking deploy."
+            exit 1
           fi
 
       - name: Install cosign

@@ -1245,6 +1245,44 @@ const rawConfig = {
       namespace: process.env.CLOUDWATCH_NAMESPACE || 'RemitScout',
       flushIntervalMs: toNumber(process.env.CLOUDWATCH_METRICS_FLUSH_INTERVAL_MS, 15000),
       highCardinalityEnabled: toBoolean(process.env.CLOUDWATCH_HIGH_CARDINALITY_METRICS),
+      metricRoutingMode: (() => {
+        const normalized = (process.env.METRIC_ROUTING_MODE || '').trim().toLowerCase()
+        if (normalized === 'cloudwatch_only' || normalized === 'newrelic_only' || normalized === 'split') {
+          return normalized as 'split' | 'cloudwatch_only' | 'newrelic_only'
+        }
+        return 'split' as const
+      })(),
+    },
+    newRelicMetrics: {
+      enabled: (() => {
+        const raw = (process.env.NEW_RELIC_METRICS_ENABLED || '').trim().toLowerCase()
+        if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true
+        if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+        // Fall back to NODE_ENV when ENVIRONMENT is unset (matches original exporter behavior)
+        if (isProdLikeEnvironment) return true
+        const nodeEnv = (process.env.NODE_ENV || '').trim().toLowerCase()
+        return nodeEnv === 'staging' || nodeEnv === 'production'
+      })(),
+      ingestKey: (process.env.NEW_RELIC_INGEST_KEY || '').trim(),
+      endpoint: (() => {
+        const explicit = (process.env.NEW_RELIC_METRICS_ENDPOINT || '').trim()
+        if (explicit) return explicit
+        const region = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
+        return region === 'EU'
+          ? 'https://metric-api.eu.newrelic.com/metric/v1'
+          : 'https://metric-api.newrelic.com/metric/v1'
+      })(),
+      batchSize: toPositiveInt(process.env.NEW_RELIC_METRICS_BATCH_SIZE, 100),
+      flushIntervalMs: toPositiveInt(process.env.NEW_RELIC_METRICS_FLUSH_MS, 10_000),
+      maxQueue: toPositiveInt(process.env.NEW_RELIC_METRICS_MAX_QUEUE, 5000),
+      serviceName: (process.env.SERVICE_NAME || process.env.OTEL_SERVICE_NAME || '').trim(),
+      // Normalized for NR metric payloads: production→prod, development→dev
+      normalizedEnvironment: (() => {
+        const raw = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim().toLowerCase()
+        if (raw === 'production') return 'prod'
+        if (raw === 'development') return 'dev'
+        return raw
+      })(),
     },
     tracing: {
       exporter: (

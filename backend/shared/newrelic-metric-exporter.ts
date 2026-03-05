@@ -1,3 +1,5 @@
+import { config } from './config'
+
 type MetricRecord = {
   name: string
   type: 'gauge' | 'count'
@@ -15,11 +17,6 @@ type ExporterConfig = {
   maxQueue: number
 }
 
-const DEFAULT_ENDPOINT_US = 'https://metric-api.newrelic.com/metric/v1'
-const DEFAULT_ENDPOINT_EU = 'https://metric-api.eu.newrelic.com/metric/v1'
-const DEFAULT_BATCH_SIZE = 100
-const DEFAULT_FLUSH_INTERVAL_MS = 10_000
-const DEFAULT_MAX_QUEUE = 5000
 const DROP_WARN_INTERVAL_MS = 30_000
 
 let cachedConfig: ExporterConfig | null = null
@@ -29,44 +26,18 @@ let inFlightFlush: Promise<void> | null = null
 let droppedCount = 0
 let lastDropWarnAt = 0
 
-const parsePositiveInt = (value: string | undefined, fallback: number): number => {
-  const parsed = Number.parseInt((value || '').trim(), 10)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
-}
-
-const normalizeEnvName = (value: string | undefined): string => {
-  const normalized = (value || '').trim().toLowerCase()
-  if (normalized === 'production') return 'prod'
-  if (normalized === 'development') return 'dev'
-  return normalized
-}
-
-const parseEnabled = (): boolean => {
-  const raw = (process.env.NEW_RELIC_METRICS_ENABLED || '').trim().toLowerCase()
-  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true
-  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
-
-  const envName = normalizeEnvName(process.env.ENVIRONMENT || process.env.NODE_ENV)
-  return envName === 'staging' || envName === 'prod'
-}
-
-const resolveEndpoint = (): string => {
-  const explicit = (process.env.NEW_RELIC_METRICS_ENDPOINT || '').trim()
-  if (explicit) return explicit
-  const region = (process.env.NEW_RELIC_REGION || 'US').trim().toUpperCase()
-  return region === 'EU' ? DEFAULT_ENDPOINT_EU : DEFAULT_ENDPOINT_US
-}
-
 const getConfig = (): ExporterConfig => {
   if (cachedConfig) return cachedConfig
 
+  const nrm = config.observability.newRelicMetrics
+
   cachedConfig = {
-    enabled: parseEnabled(),
-    ingestKey: (process.env.NEW_RELIC_INGEST_KEY || '').trim(),
-    endpoint: resolveEndpoint(),
-    batchSize: parsePositiveInt(process.env.NEW_RELIC_METRICS_BATCH_SIZE, DEFAULT_BATCH_SIZE),
-    flushIntervalMs: parsePositiveInt(process.env.NEW_RELIC_METRICS_FLUSH_MS, DEFAULT_FLUSH_INTERVAL_MS),
-    maxQueue: parsePositiveInt(process.env.NEW_RELIC_METRICS_MAX_QUEUE, DEFAULT_MAX_QUEUE),
+    enabled: nrm.enabled,
+    ingestKey: nrm.ingestKey,
+    endpoint: nrm.endpoint,
+    batchSize: nrm.batchSize,
+    flushIntervalMs: nrm.flushIntervalMs,
+    maxQueue: nrm.maxQueue,
   }
 
   return cachedConfig
@@ -92,8 +63,9 @@ const emitDropWarning = (): void => {
 
 const buildPayload = (batch: MetricRecord[]): object[] => {
   const now = Math.floor(Date.now() / 1000)
-  const serviceName = (process.env.SERVICE_NAME || process.env.OTEL_SERVICE_NAME || '').trim()
-  const environment = normalizeEnvName(process.env.ENVIRONMENT || process.env.NODE_ENV)
+  const nrm = config.observability.newRelicMetrics
+  const serviceName = nrm.serviceName
+  const environment = nrm.normalizedEnvironment
 
   const commonAttributes: Record<string, string> = { environment }
   if (serviceName) commonAttributes.service = serviceName
@@ -114,12 +86,12 @@ const buildPayload = (batch: MetricRecord[]): object[] => {
   ]
 }
 
-const sendBatch = async (config: ExporterConfig, batch: MetricRecord[]): Promise<void> => {
-  const response = await fetch(config.endpoint, {
+const sendBatch = async (cfg: ExporterConfig, batch: MetricRecord[]): Promise<void> => {
+  const response = await fetch(cfg.endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Api-Key': config.ingestKey,
+      'Api-Key': cfg.ingestKey,
     },
     body: JSON.stringify(buildPayload(batch)),
   })
@@ -129,12 +101,12 @@ const sendBatch = async (config: ExporterConfig, batch: MetricRecord[]): Promise
   }
 }
 
-const ensureFlushTimer = (config: ExporterConfig): void => {
-  if (flushTimer || !config.enabled || !config.ingestKey) return
+const ensureFlushTimer = (cfg: ExporterConfig): void => {
+  if (flushTimer || !cfg.enabled || !cfg.ingestKey) return
 
   flushTimer = setInterval(() => {
     void flushNewRelicMetrics()
-  }, config.flushIntervalMs)
+  }, cfg.flushIntervalMs)
   flushTimer.unref?.()
 }
 
@@ -145,31 +117,31 @@ const stopFlushTimer = (): void => {
 }
 
 export const isNewRelicMetricExportEnabled = (): boolean => {
-  const config = getConfig()
-  return config.enabled && Boolean(config.ingestKey)
+  const cfg = getConfig()
+  return cfg.enabled && Boolean(cfg.ingestKey)
 }
 
 export const enqueueNewRelicMetric = (record: MetricRecord): void => {
-  const config = getConfig()
-  if (!config.enabled || !config.ingestKey) return
+  const cfg = getConfig()
+  if (!cfg.enabled || !cfg.ingestKey) return
 
-  if (queue.length >= config.maxQueue) {
+  if (queue.length >= cfg.maxQueue) {
     queue.shift()
     droppedCount += 1
     emitDropWarning()
   }
 
   queue.push(record)
-  ensureFlushTimer(config)
+  ensureFlushTimer(cfg)
 
-  if (queue.length >= config.batchSize) {
+  if (queue.length >= cfg.batchSize) {
     void flushNewRelicMetrics()
   }
 }
 
 export const flushNewRelicMetrics = async (drain = false): Promise<void> => {
-  const config = getConfig()
-  if (!config.enabled || !config.ingestKey || queue.length === 0) return
+  const cfg = getConfig()
+  if (!cfg.enabled || !cfg.ingestKey || queue.length === 0) return
 
   if (inFlightFlush) {
     await inFlightFlush
@@ -178,11 +150,11 @@ export const flushNewRelicMetrics = async (drain = false): Promise<void> => {
 
   inFlightFlush = (async () => {
     while (queue.length > 0) {
-      const batchSize = drain ? Math.min(queue.length, config.batchSize) : config.batchSize
+      const batchSize = drain ? Math.min(queue.length, cfg.batchSize) : cfg.batchSize
       const batch = queue.slice(0, batchSize)
 
       try {
-        await sendBatch(config, batch)
+        await sendBatch(cfg, batch)
         queue = queue.slice(batch.length)
       } catch (error) {
         const warning = {

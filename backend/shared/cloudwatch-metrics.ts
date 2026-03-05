@@ -25,7 +25,6 @@ const MAX_BATCH_SIZE = 20
 const MAX_QUEUE_SIZE = 1000 // Backpressure threshold
 const MAX_DIMENSIONS = 30 // CloudWatch limit
 const METRIC_NAME_REGEX = /^[a-zA-Z0-9_]+$/
-type MetricRoutingMode = 'split' | 'cloudwatch_only' | 'newrelic_only'
 
 // Namespaces whose metrics back CloudWatch Alarms and MUST stay in CloudWatch.
 // All other namespaces are forwarded to New Relic only (cost optimization).
@@ -41,16 +40,6 @@ const CLOUDWATCH_ALARM_NAMESPACES = new Set([
 
 const isCloudWatchRequired = (namespace: string): boolean =>
   CLOUDWATCH_ALARM_NAMESPACES.has(namespace)
-
-const parseMetricRoutingMode = (): MetricRoutingMode => {
-  const normalized = (process.env.METRIC_ROUTING_MODE || '').trim().toLowerCase()
-  if (normalized === 'cloudwatch_only' || normalized === 'newrelic_only' || normalized === 'split') {
-    return normalized
-  }
-  return 'split'
-}
-
-const metricRoutingMode = parseMetricRoutingMode()
 
 let client: CloudWatchClient | null = null
 let flushTimer: NodeJS.Timeout | null = null
@@ -241,9 +230,10 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
 
   // In split mode: all metrics go to NR; alarm namespaces also go to CloudWatch.
   // In newrelic_only: all to NR. In cloudwatch_only: all to CloudWatch.
+  const routingMode = config.observability.cloudwatch.metricRoutingMode
   const shouldWriteToNewRelic =
     newRelicEnabled &&
-    (metricRoutingMode === 'newrelic_only' || metricRoutingMode === 'split')
+    (routingMode === 'newrelic_only' || routingMode === 'split')
 
   if (shouldWriteToNewRelic) {
     enqueueNewRelicMetric({
@@ -258,10 +248,10 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
       },
     })
     // Non-alarm namespaces: NR only (cost optimization — skip CloudWatch)
-    if (!cloudWatchRequired) return
+    if (!cloudWatchRequired || routingMode === 'newrelic_only') return
   }
 
-  if (metricRoutingMode === 'newrelic_only' && !newRelicEnabled) {
+  if (routingMode === 'newrelic_only' && !newRelicEnabled) {
     logger.warn('cloudwatch_metric_newrelic_only_fallback', {
       metric_name: metric.name,
       namespace: resolvedNamespace,

@@ -204,7 +204,7 @@ describe('institutional global guard (routes without requireEntitlement)', () =>
     }
   })
 
-  it('treats empty corridors_allowed array as allow-all (backward compatible)', async () => {
+  it('treats empty corridors_allowed array as deny-all (no corridors permitted)', async () => {
     vi.mocked(validateInstitutionalClientApiKey).mockResolvedValue({
       id: 'c-empty-array',
       name: 'Premium Client',
@@ -227,8 +227,8 @@ describe('institutional global guard (routes without requireEntitlement)', () =>
         headers: { 'x-api-key': 'token' },
       })
 
-      expect(res.statusCode).toBe(200)
-      expect(res.json()).toEqual({ ok: true })
+      expect(res.statusCode).toBe(403)
+      expect(res.json()).toMatchObject({ error: 'corridor_not_allowed' })
     } finally {
       await app.close()
     }

@@ -1,0 +1,24 @@
+# .trivyignore — Known upstream CVEs in transitive dependencies
+#
+# These CVEs exist in transitive npm dependencies that are pulled in
+# by the Node.js runtime or build tooling. They are not exploitable
+# in our application context but trigger Trivy HIGH/CRITICAL findings
+# that block deploys.
+#
+# Review this file periodically and remove entries once the upstream
+# dependency ships a fix that flows into our lock file.
+#
+# To find blocking CVEs: run Trivy locally with --exit-code 1 and
+# add verified CVE IDs here with documentation.
+#
+# Last reviewed: 2026-03-04
+
+# tar — DoS via deeply nested sub-folders during extraction.
+# Mitigated by pnpm override to tar@7.5.10 in root package.json.
+# Not exploitable: we do not extract untrusted tar archives at runtime.
+CVE-2024-28863
+
+# cross-spawn — ReDoS via crafted command string.
+# Fixed in cross-spawn@7.0.5+; transitive dep from npm/npx internals.
+# Not exploitable: we do not pass untrusted input to cross-spawn.
+CVE-2024-21538
