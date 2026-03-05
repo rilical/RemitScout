@@ -158,14 +158,48 @@ jobs:
           mkdir -p .security
           audit_exit=0
           pnpm -w audit --prod --audit-level=high --json > .security/pnpm-audit.json || audit_exit=$?
+          high_critical_count="$(
+            node -e '
+              const fs = require("fs");
+              const path = process.argv[1];
+              let raw = "";
+              try {
+                raw = fs.readFileSync(path, "utf8").trim();
+              } catch {
+                console.log(-1);
+                process.exit(0);
+              }
+              if (!raw) {
+                console.log(-1);
+                process.exit(0);
+              }
+              try {
+                const parsed = JSON.parse(raw);
+                const v = parsed?.metadata?.vulnerabilities ?? {};
+                const high = Number(v.high ?? 0);
+                const critical = Number(v.critical ?? 0);
+                console.log(high + critical);
+              } catch {
+                console.log(-1);
+              }
+            ' .security/pnpm-audit.json
+          )"
+
+          if [ "${high_critical_count}" -lt 0 ]; then
+            echo "::error::Failed to parse pnpm audit JSON output."
+            exit 1
+          fi
+
+          if [ "${high_critical_count}" -gt 0 ]; then
+            echo "::error::Dependency audit found HIGH/CRITICAL vulnerabilities (count=${high_critical_count})."
+            if [ -f .security/pnpm-audit.json ]; then
+              jq -r '.advisories // {} | to_entries[] | select((.value.severity // "") | test("^(high|critical)$"; "i")) | "\(.value.severity): \(.value.module_name) - \(.value.title)"' .security/pnpm-audit.json 2>/dev/null || true
+            fi
+            exit 1
+          fi
 
           if [ "$audit_exit" -ne 0 ]; then
-            echo "::error::Dependency audit found HIGH/CRITICAL vulnerabilities (exit code $audit_exit)"
-            # Extract summary from audit output
-            if [ -f .security/pnpm-audit.json ]; then
-              jq -r '.advisories // {} | to_entries[] | "\(.value.severity): \(.value.module_name) - \(.value.title)"' .security/pnpm-audit.json 2>/dev/null || true
-            fi
-            exit "$audit_exit"
+            echo "pnpm audit exited with code ${audit_exit} but reported no HIGH/CRITICAL vulnerabilities."
           fi
 
       - name: Upload security evidence
