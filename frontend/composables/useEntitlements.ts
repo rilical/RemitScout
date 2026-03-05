@@ -88,16 +88,25 @@ const mapEntitlementsToLimits = (entitlements: MeResponse['entitlements']): Plan
 
 export const useEntitlements = () => {
   const { request } = useApi()
-  const { isLoggedIn, applyBackendProfile } = useAuth()
+  const { isLoggedIn, isAdmin, applyBackendProfile } = useAuth()
 
-  const plan = useState<Plan>('entitlements:plan', () => 'free')
-  const limits = useState<PlanLimits>('entitlements:limits', () => ({
+  const freeLimits: PlanLimits = {
     watchlistItems: 3,
     alerts: 1,
     historyDays: 30,
     exports: false,
     exportsMaxDays: 0,
-  }))
+  }
+  const enterpriseFallbackLimits: PlanLimits = {
+    watchlistItems: 'unlimited',
+    alerts: 'unlimited',
+    historyDays: 'unlimited',
+    exports: true,
+    exportsMaxDays: 'unlimited',
+  }
+
+  const plan = useState<Plan>('entitlements:plan', () => 'free')
+  const limits = useState<PlanLimits>('entitlements:limits', () => freeLimits)
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
   const apiTier = useState<number | null>('entitlements:api-tier', () => null)
   const apiKeyMax = useState<number | null>('entitlements:api-key-max', () => null)
@@ -126,13 +135,7 @@ export const useEntitlements = () => {
   async function fetchPlan() {
     if (!isLoggedIn.value) {
       plan.value = 'free'
-      limits.value = {
-        watchlistItems: 3,
-        alerts: 1,
-        historyDays: 30,
-        exports: false,
-        exportsMaxDays: 0,
-      }
+      limits.value = freeLimits
       apiAccess.value = false
       apiTier.value = null
       apiKeyMax.value = null
@@ -174,21 +177,18 @@ export const useEntitlements = () => {
     }
     catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch plan'
-      // Default to free plan on error
-      plan.value = 'free'
-      limits.value = {
-        watchlistItems: 3,
-        alerts: 1,
-        historyDays: 30,
-        exports: false,
-        exportsMaxDays: 0,
+      // On failure, preserve last known entitlements if we have them.
+      // Only fall back to free defaults on the very first fetch (never hydrated).
+      if (!hydrated.value) {
+        plan.value = 'free'
+        limits.value = freeLimits
+        apiAccess.value = false
+        apiTier.value = null
+        apiKeyMax.value = null
+        apiRateLimitRpm.value = null
+        pulseAccess.value = 'none'
+        billing.value = null
       }
-      apiAccess.value = false
-      apiTier.value = null
-      apiKeyMax.value = null
-      apiRateLimitRpm.value = null
-      pulseAccess.value = 'none'
-      billing.value = null
       hydrated.value = true
     }
     finally {
@@ -224,13 +224,7 @@ export const useEntitlements = () => {
     }
     else {
       plan.value = 'free'
-      limits.value = {
-        watchlistItems: 3,
-        alerts: 1,
-        historyDays: 30,
-        exports: false,
-        exportsMaxDays: 0,
-      }
+      limits.value = freeLimits
       apiAccess.value = false
       apiTier.value = null
       apiKeyMax.value = null
