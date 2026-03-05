@@ -67,6 +67,7 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
     || input.supabaseRole === 'super_admin'
     || appRole === 'admin'
     || appRole === 'super_admin'
+  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
 
   if (!hasAdminRole) {
     return {
@@ -79,8 +80,6 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
       denyReason: 'admin_role_required',
     }
   }
-
-  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
 
   if (requireAllowlist && !hasAllowlistConfigured) {
     return {

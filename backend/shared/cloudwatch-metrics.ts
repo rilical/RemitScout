@@ -239,10 +239,11 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
   const newRelicEnabled = isNewRelicMetricExportEnabled()
   const cloudWatchRequired = isCloudWatchRequired(resolvedNamespace)
 
-  // Keep metrics single-sink per emit to avoid accidental dual writes.
+  // In split mode: all metrics go to NR; alarm namespaces also go to CloudWatch.
+  // In newrelic_only: all to NR. In cloudwatch_only: all to CloudWatch.
   const shouldWriteToNewRelic =
     newRelicEnabled &&
-    (metricRoutingMode === 'newrelic_only' || (metricRoutingMode === 'split' && !cloudWatchRequired))
+    (metricRoutingMode === 'newrelic_only' || metricRoutingMode === 'split')
 
   if (shouldWriteToNewRelic) {
     enqueueNewRelicMetric({
@@ -256,7 +257,8 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
         namespace: resolvedNamespace,
       },
     })
-    return
+    // Non-alarm namespaces: NR only (cost optimization — skip CloudWatch)
+    if (!cloudWatchRequired) return
   }
 
   if (metricRoutingMode === 'newrelic_only' && !newRelicEnabled) {
