@@ -265,9 +265,14 @@ const createOrUpdateSupabaseUser = async (
   user: LaunchUserSpec,
   password: string,
 ): Promise<{ userId: string; created: boolean }> => {
-  const metadata = {
+  // Roles are DB-authoritative — never write them to user_metadata (user-writable).
+  // app_metadata is server-side only, safe for audit/reference.
+  const appMetadata = {
     role: user.appRole,
     app_role: user.appRole,
+    plan_code: user.planCode,
+  }
+  const userMetadata = {
     plan_code: user.planCode,
   }
 
@@ -277,8 +282,8 @@ const createOrUpdateSupabaseUser = async (
       email: user.email,
       password,
       email_confirm: true,
-      user_metadata: metadata,
-      app_metadata: metadata,
+      user_metadata: userMetadata,
+      app_metadata: appMetadata,
     }),
   })
 
@@ -310,8 +315,8 @@ const createOrUpdateSupabaseUser = async (
       email: user.email,
       password,
       email_confirm: true,
-      user_metadata: metadata,
-      app_metadata: metadata,
+      user_metadata: userMetadata,
+      app_metadata: appMetadata,
     }),
   })
   if (!updateResult.response.ok) {

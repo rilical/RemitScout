@@ -656,7 +656,9 @@ jobs:
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
       PLANE_A_CORS_ALLOW_CREDENTIALS: ${{ vars.PLANE_A_CORS_ALLOW_CREDENTIALS }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+      PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
       PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
       PUBLIC_GTM_CONTAINER_ID: ${{ vars.PUBLIC_GTM_CONTAINER_ID }}
       PUBLIC_META_PIXEL_ID: ${{ vars.PUBLIC_META_PIXEL_ID }}
@@ -1365,6 +1367,8 @@ jobs:
           STACK_NAME: ${{ vars.STACK_NAME }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
+          PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -1379,6 +1383,7 @@ jobs:
           fi
 
           export NODE_ENV=staging
+          export ENVIRONMENT="${ENV_NAME}"
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
           export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
@@ -1386,6 +1391,10 @@ jobs:
           export PUBLIC_API_BASE="${api_base}/api/v1"
           export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
           export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
+          export PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV:-${ENV_NAME}}"
+          export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
+          export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
+          export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
 
           pnpm -C frontend build
           pnpm -C frontend generate
@@ -1753,7 +1762,9 @@ jobs:
       COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
       COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
+      PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
       PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
       PUBLIC_GTM_CONTAINER_ID: ${{ vars.PUBLIC_GTM_CONTAINER_ID }}
       PUBLIC_META_PIXEL_ID: ${{ vars.PUBLIC_META_PIXEL_ID }}
@@ -2396,6 +2407,8 @@ jobs:
           STACK_NAME: ${{ vars.STACK_NAME }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
+          PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -2410,6 +2423,7 @@ jobs:
           fi
 
           export NODE_ENV=production
+          export ENVIRONMENT="${ENV_NAME}"
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
           export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
@@ -2417,6 +2431,10 @@ jobs:
           export PUBLIC_API_BASE="${api_base}/api/v1"
           export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
           export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
+          export PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV:-${ENV_NAME}}"
+          export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
+          export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
+          export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
 
           pnpm -C frontend build
           pnpm -C frontend generate

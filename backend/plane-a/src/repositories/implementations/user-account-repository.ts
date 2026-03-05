@@ -24,11 +24,6 @@ export class UserAccountRepository implements IUserAccountRepository {
       )
       ON CONFLICT (user_id)
       DO UPDATE SET email = EXCLUDED.email,
-                    app_role = CASE
-                      WHEN EXCLUDED.app_role IN ('admin', 'super_admin') THEN EXCLUDED.app_role
-                      WHEN silver.user_account.app_role IS NULL THEN COALESCE(EXCLUDED.app_role, 'user')
-                      ELSE silver.user_account.app_role
-                    END,
                     last_seen_at = NOW()
       WHERE NOT EXISTS (
         SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1

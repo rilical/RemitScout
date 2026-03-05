@@ -124,7 +124,6 @@ export const sessionsRoutes = async (app: FastifyInstance) => {
       pool,
       userId: authResult.user_id,
       email: authResult.email ?? null,
-      supabaseRole: authResult.role ?? null,
     })
 
     if (!access.allowed) {

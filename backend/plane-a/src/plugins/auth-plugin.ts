@@ -487,7 +487,6 @@ export const requireAdmin = () => {
       pool: planeAPool,
       userId: request.user.user_id,
       email: request.user.email ?? null,
-      supabaseRole: request.user.role ?? null,
     })
 
     if (!access.allowed) {
@@ -560,11 +559,6 @@ export const requireSuperAdmin = () => {
           message: 'Multi-factor authentication is required for admin access.',
         })
       }
-    }
-
-    const supabaseRole = request.user.role
-    if (supabaseRole === 'super_admin') {
-      return
     }
 
     try {

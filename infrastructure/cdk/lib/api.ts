@@ -158,7 +158,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const isProd = options.envName === 'prod'
   const enablePlaneCIamAuth =
     options.enablePlaneCIamAuth ?? (options.envName === 'prod' || options.envName === 'staging')
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',

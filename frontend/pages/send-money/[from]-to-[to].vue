@@ -2322,11 +2322,10 @@ const shouldBlockResults = computed(() => {
 
   const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
-    if (!hasApiQuotes.value && refreshCompletion.value && !refreshCompletion.value.done) return true
-    if (!refreshCompletion.value && !hasApiQuotes.value) return true
-    if (!hasApiQuotes.value && refreshFinalizing.value) return true
-    if (!hasApiQuotes.value && quotesPending.value) return true
-    if (!hasApiQuotes.value) return true
+    // Block until ALL providers respond — even if some quotes arrived early
+    if (refreshCompletion.value && !refreshCompletion.value.done) return true
+    if (!refreshCompletion.value) return true
+    if (refreshFinalizing.value) return true
   }
 
   if (!hasApiQuotes.value && quoteRefreshPending.value) return true

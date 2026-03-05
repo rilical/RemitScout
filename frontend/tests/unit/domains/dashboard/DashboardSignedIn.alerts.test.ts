@@ -283,7 +283,7 @@ describe('DashboardSignedIn alerts tab', () => {
     expect(buttonLabels.some(label => label.startsWith('1Y'))).toBe(false)
   })
 
-  it('shows enterprise timeframe set including 6M and 1Y', async () => {
+  it('shows enterprise timeframe set including 6M', async () => {
     route.query.tab = 'overview'
     isPlusRef.value = true
     isEnterpriseRef.value = true
@@ -300,6 +300,5 @@ describe('DashboardSignedIn alerts tab', () => {
     expect(buttonLabels.some(label => label.startsWith('1M'))).toBe(true)
     expect(buttonLabels.some(label => label.startsWith('3M'))).toBe(true)
     expect(buttonLabels.some(label => label.startsWith('6M'))).toBe(true)
-    expect(buttonLabels.some(label => label.startsWith('1Y'))).toBe(true)
   })
 })

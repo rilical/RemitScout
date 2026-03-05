@@ -177,18 +177,27 @@ onMounted(async () => {
 
   const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash)
     || (typeof route.query.token === 'string' && route.query.token)
+  const pkceCode = typeof route.query.code === 'string' ? route.query.code : null
 
-  if (!tokenHash) {
-    errorMessage.value = 'This reset link is invalid or expired.'
-    return
+  if (tokenHash) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: 'recovery',
+    })
+    if (error) {
+      errorMessage.value = error.message
+      return
+    }
   }
-
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: 'recovery',
-  })
-  if (error) {
-    errorMessage.value = error.message
+  else if (pkceCode) {
+    const { error } = await supabase.auth.exchangeCodeForSession(pkceCode)
+    if (error) {
+      errorMessage.value = error.message
+      return
+    }
+  }
+  else {
+    errorMessage.value = 'This reset link is invalid or expired.'
     return
   }
 

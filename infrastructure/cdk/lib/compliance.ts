@@ -19,7 +19,7 @@ export type ComplianceOptions = {
 
 export const createComplianceServices = (scope: Construct, options: ComplianceOptions): void => {
   const { envName } = options
-  if (envName === 'dev') {
+  if (envName !== 'prod') {
     return
   }
 
