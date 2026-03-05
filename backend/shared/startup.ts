@@ -6,6 +6,8 @@ import { assertRuntimeConfig, config, type RuntimeConfigRequirements } from './c
 import { createPool } from './db'
 import { getRedisClient } from './redis'
 import { emitOpsEvent } from './ops-events'
+import { isNewRelicLogExportEnabled } from './newrelic-log-exporter'
+import { isNewRelicMetricExportEnabled } from './newrelic-metric-exporter'
 import { setTimeout as sleep } from 'timers/promises'
 
 const logger = createLogger('shared.startup')
@@ -261,5 +263,27 @@ export const runStartupChecks = async (params: {
       maxWaitMs: 60_000,
     })
     await assertAwsConfig(derived)
+  }
+
+  const nrMetricsCfg = config.observability.newRelicMetrics
+  const nrLogsEnabled = isNewRelicLogExportEnabled()
+  const nrMetricsEnabled = isNewRelicMetricExportEnabled()
+
+  logger.info('startup_observability_state', {
+    newrelic_metrics_enabled: nrMetricsEnabled,
+    newrelic_logs_enabled: nrLogsEnabled,
+    newrelic_ingest_key_present: Boolean(nrMetricsCfg.ingestKey),
+    newrelic_metrics_endpoint: nrMetricsCfg.endpoint,
+    tracing_exporter: config.observability.tracing.exporter,
+    tracing_otlp_endpoint: config.observability.tracing.otlpEndpoint || '(none)',
+    cloudwatch_metrics_enabled: config.observability.cloudwatch.enabled,
+  })
+
+  if ((nrMetricsCfg.enabled || nrLogsEnabled) && !nrMetricsCfg.ingestKey) {
+    logger.error('startup_newrelic_misconfigured', {
+      message: 'New Relic export enabled but NEW_RELIC_INGEST_KEY is empty — all metrics/logs will be silently dropped',
+      metrics_enabled: nrMetricsCfg.enabled,
+      logs_enabled: nrLogsEnabled,
+    })
   }
 }

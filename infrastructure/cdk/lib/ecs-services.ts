@@ -157,7 +157,7 @@ export const createEcsServices = (
   const minimalIngestFanoutTier2Desired = isPaused
     ? 0
     : (options.ingestFanoutTier2DesiredCount ?? 1)
-  const spotOnly = options.queueWorkerSpotOnly ?? isDev
+  const spotOnly = options.queueWorkerSpotOnly ?? !isProd
   const spotCapacityProviderStrategies = spotOnly
     ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
     : isProd

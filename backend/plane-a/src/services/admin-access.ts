@@ -10,7 +10,6 @@ export type AdminAccessInput = {
   pool: Pool
   userId: string
   email?: string | null
-  supabaseRole?: string | null
 }
 
 export type AdminAccessResult = {
@@ -62,11 +61,8 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
     })
   }
 
-  const hasAdminRole =
-    input.supabaseRole === 'admin'
-    || input.supabaseRole === 'super_admin'
-    || appRole === 'admin'
-    || appRole === 'super_admin'
+  const hasAdminRole = appRole === 'admin' || appRole === 'super_admin'
+  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
 
   if (!hasAdminRole) {
     return {
@@ -79,8 +75,6 @@ export const resolveAdminAccess = async (input: AdminAccessInput): Promise<Admin
       denyReason: 'admin_role_required',
     }
   }
-
-  const allowlisted = Boolean(email && allowlist.includes(email)) || resolveDomainAllowed(email, domainAllowlist)
 
   if (requireAllowlist && !hasAllowlistConfigured) {
     return {

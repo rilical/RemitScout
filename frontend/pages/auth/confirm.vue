@@ -125,6 +125,7 @@ onMounted(async () => {
   const tokenHash
     = (typeof route.query.token_hash === 'string' && route.query.token_hash)
       || (typeof route.query.token === 'string' && route.query.token)
+  const pkceCode = typeof route.query.code === 'string' ? route.query.code : null
 
   const rawType = typeof route.query.type === 'string' ? route.query.type : 'signup'
   const otpTypeAllowlist = new Set<EmailOtpType>([
@@ -135,26 +136,34 @@ onMounted(async () => {
     'email',
     'email_change',
   ])
-  if (!otpTypeAllowlist.has(rawType as EmailOtpType)) {
-    status.value = 'error'
-    errorMessage.value = 'Invalid confirmation type.'
-    return
-  }
 
-  if (!tokenHash) {
+  if (tokenHash) {
+    if (!otpTypeAllowlist.has(rawType as EmailOtpType)) {
+      status.value = 'error'
+      errorMessage.value = 'Invalid confirmation type.'
+      return
+    }
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: rawType as EmailOtpType,
+    })
+    if (error) {
+      status.value = 'error'
+      errorMessage.value = error.message
+      return
+    }
+  }
+  else if (pkceCode) {
+    const { error } = await supabase.auth.exchangeCodeForSession(pkceCode)
+    if (error) {
+      status.value = 'error'
+      errorMessage.value = error.message
+      return
+    }
+  }
+  else {
     status.value = 'error'
     errorMessage.value = 'Missing confirmation token.'
-    return
-  }
-
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: rawType as EmailOtpType,
-  })
-
-  if (error) {
-    status.value = 'error'
-    errorMessage.value = error.message
     return
   }
 

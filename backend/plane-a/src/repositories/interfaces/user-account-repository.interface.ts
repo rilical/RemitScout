@@ -1,6 +1,7 @@
 export type UserAccountUpsertInput = {
   user_id: string
   email: string | null
+  app_role?: 'user' | 'admin' | 'super_admin' | null
 }
 
 export type UserAccountProfile = {

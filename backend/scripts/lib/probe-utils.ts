@@ -1,7 +1,8 @@
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
+import { CloudWatchClient, PutMetricDataCommand, type MetricDatum } from '@aws-sdk/client-cloudwatch'
 import fs from 'node:fs'
 import { config } from '../../shared/config'
 import { createLogger } from '../../shared/logger'
+import { enqueueNewRelicMetric, isNewRelicMetricExportEnabled } from '../../shared/newrelic-metric-exporter'
 import { formatError } from '../../shared/utils/error-handling'
 
 const logger = createLogger('script.probe-utils')
@@ -23,90 +24,115 @@ const publishProbeMetrics = async (
   providerId: string,
   result: ProbeResult,
 ): Promise<void> => {
-  try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
+  const metricData: MetricDatum[] = [
+    {
+      MetricName: 'probe_run_total',
+      Value: 1,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      MetricName: 'probe_result',
+      // Count occurrences by status. Alarms and dashboards can SUM per Status.
+      // (A 0 value would never breach a Sum-based failure alarm.)
+      Value: 1,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'Status', Value: result.success ? 'success' : 'failure' },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      // Aggregate probe result without ProviderId dimension for fleet-wide alarms.
+      MetricName: 'probe_result_global',
+      Value: 1,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'Status', Value: result.success ? 'success' : 'failure' },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      MetricName: 'probe_duration',
+      Value: result.durationMs / 1000, // Convert to seconds
+      Unit: 'Seconds',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      MetricName: 'probe_corridors_tested',
+      Value: result.corridorsTested,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      MetricName: 'probe_corridors_succeeded',
+      Value: result.corridorsSucceeded,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+    {
+      MetricName: 'probe_corridors_failed',
+      Value: result.corridorsFailed,
+      Unit: 'Count',
+      Timestamp: new Date(),
+      Dimensions: [
+        { Name: 'ProviderId', Value: providerId },
+        { Name: 'environment', Value: environmentDimension },
+      ],
+    },
+  ]
+
+  if (isNewRelicMetricExportEnabled()) {
+    for (const datum of metricData) {
+      if (typeof datum.MetricName !== 'string') continue
+
+      const attributes = Object.fromEntries(
+        (datum.Dimensions || [])
+          .filter(
+            (dimension): dimension is { Name: string; Value: string } =>
+              typeof dimension.Name === 'string' && typeof dimension.Value === 'string',
+          )
+          .map((dimension) => [dimension.Name, dimension.Value]),
+      )
+      enqueueNewRelicMetric({
+        name: datum.MetricName,
+        type: 'gauge',
+        value: Number(datum.Value || 0),
+        attributes: {
+          ...attributes,
+          namespace: 'RemitScout/Probes',
+        },
+      })
     }
+  }
+
+  try {
+    if (!config.observability.cloudwatch.enabled) return
+
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
         Namespace: 'RemitScout/Probes',
-        MetricData: [
-          {
-            MetricName: 'probe_run_total',
-            Value: 1,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            MetricName: 'probe_result',
-            // Count occurrences by status. Alarms and dashboards can SUM per Status.
-            // (A 0 value would never breach a Sum-based failure alarm.)
-            Value: 1,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'Status', Value: result.success ? 'success' : 'failure' },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            // Aggregate probe result without ProviderId dimension for fleet-wide alarms.
-            MetricName: 'probe_result_global',
-            Value: 1,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'Status', Value: result.success ? 'success' : 'failure' },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            MetricName: 'probe_duration',
-            Value: result.durationMs / 1000, // Convert to seconds
-            Unit: 'Seconds',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            MetricName: 'probe_corridors_tested',
-            Value: result.corridorsTested,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            MetricName: 'probe_corridors_succeeded',
-            Value: result.corridorsSucceeded,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-          {
-            MetricName: 'probe_corridors_failed',
-            Value: result.corridorsFailed,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'ProviderId', Value: providerId },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-        ],
+        MetricData: metricData,
       }),
     )
   } catch (error: unknown) {

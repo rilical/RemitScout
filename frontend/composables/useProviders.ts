@@ -2,6 +2,7 @@ import { unref } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import type { paths } from '~/shared/lib/api/types'
 import { useApi } from '~/composables/useApi'
+import { applyProviderSourceVisibility } from '~/lib/providerVisibility'
 import type { Method, ProviderQuote } from '~/types/remit'
 
 type MaybeRef<T> = T | Ref<T> | ComputedRef<T>
@@ -61,8 +62,9 @@ export const useProviders = (
           query,
           signal: signal?.value,
         })
-        lastSuccess = response
-        return response
+        const normalizedResponse = applyProviderSourceVisibility(response, fromValue)
+        lastSuccess = normalizedResponse
+        return normalizedResponse
       }
       catch (error: any) {
         if (error?.name === 'AbortError') {

@@ -112,11 +112,12 @@ const resolveCorridorIdFromRequest = (request: FastifyRequest): string | null =>
 
 /**
  * Check whether the corridors_allowed field effectively restricts access.
- * Returns true when the allowlist is non-null AND non-empty (i.e. there are
- * explicit corridor restrictions). Null or empty array means "allow all".
+ * Returns true when the allowlist is non-null (i.e. there are explicit
+ * corridor restrictions). Only null means "allow all"; an empty array
+ * means "deny all" (restricted to zero corridors).
  */
 const hasCorridorRestrictions = (corridorsAllowed: string[] | null): corridorsAllowed is string[] => {
-  return corridorsAllowed !== null && corridorsAllowed.length > 0
+  return corridorsAllowed !== null
 }
 
 const getSecondsUntilNextUtcMidnight = (now: Date): number => {
@@ -486,7 +487,6 @@ export const requireAdmin = () => {
       pool: planeAPool,
       userId: request.user.user_id,
       email: request.user.email ?? null,
-      supabaseRole: request.user.role ?? null,
     })
 
     if (!access.allowed) {
@@ -559,11 +559,6 @@ export const requireSuperAdmin = () => {
           message: 'Multi-factor authentication is required for admin access.',
         })
       }
-    }
-
-    const supabaseRole = request.user.role
-    if (supabaseRole === 'super_admin') {
-      return
     }
 
     try {

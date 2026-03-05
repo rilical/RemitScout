@@ -172,7 +172,7 @@ export const createEcsTasks = (
     ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
     : (isProd ? 90 : 1)
   const logRetention = appLogRetentionDays
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',

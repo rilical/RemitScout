@@ -1,12 +1,31 @@
 import { CloudWatchClient, PutMetricDataCommand, type MetricDatum, StandardUnit } from '@aws-sdk/client-cloudwatch'
 import { config } from './config'
 import { createLogger } from './logger'
+import { enqueueNewRelicMetric, isNewRelicMetricExportEnabled } from './newrelic-metric-exporter'
 import { formatError } from './utils/error-handling'
 
 const logger = createLogger('shared.worker-metrics')
 
 let cloudWatchClient: CloudWatchClient | null = null
 const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
+
+const enqueueNewRelicMirror = (
+  name: string,
+  value: number,
+  namespace: string,
+  dimensions: Record<string, string>,
+) => {
+  if (!Number.isFinite(value) || !isNewRelicMetricExportEnabled()) return
+  enqueueNewRelicMetric({
+    name,
+    type: 'gauge',
+    value,
+    attributes: {
+      ...dimensions,
+      namespace,
+    },
+  })
+}
 
 const getCloudWatchClient = (): CloudWatchClient => {
   if (!cloudWatchClient) {
@@ -30,10 +49,20 @@ export const recordWorkerMetric = async (
   count: number = 1,
   additionalDimensions?: Record<string, string>,
 ): Promise<void> => {
+  const dimensions: Record<string, string> = {
+    WorkerName: workerName,
+    environment: environmentDimension,
+    ...Object.fromEntries(
+      Object.entries(additionalDimensions || {})
+        .filter(([key]) => key.toLowerCase() !== 'environment'),
+    ),
+  }
+
+  enqueueNewRelicMirror(operation, count, 'RemitScout/Workers', dimensions)
+
   try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
+    if (!config.observability.cloudwatch.enabled) return
+
     const client = getCloudWatchClient()
     const metricData: MetricDatum[] = [
       {
@@ -41,16 +70,7 @@ export const recordWorkerMetric = async (
         Value: count,
         Unit: StandardUnit.Count,
         Timestamp: new Date(),
-        Dimensions: [
-          { Name: 'WorkerName', Value: workerName },
-          { Name: 'environment', Value: environmentDimension },
-          ...Object.entries(additionalDimensions || {})
-            .filter(([key]) => key.toLowerCase() !== 'environment')
-            .map(([key, value]) => ({
-              Name: key,
-              Value: value,
-            })),
-        ],
+        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
       },
     ]
     await client.send(
@@ -77,10 +97,23 @@ export const recordBatchJobMetric = async (
   durationSeconds?: number,
   additionalDimensions?: Record<string, string>,
 ): Promise<void> => {
+  const dimensions: Record<string, string> = {
+    JobName: jobName,
+    environment: environmentDimension,
+    ...Object.fromEntries(
+      Object.entries(additionalDimensions || {})
+        .filter(([key]) => key.toLowerCase() !== 'environment'),
+    ),
+  }
+
+  enqueueNewRelicMirror(operation, 1, 'RemitScout/BatchJobs', dimensions)
+  if (durationSeconds !== undefined) {
+    enqueueNewRelicMirror('job_duration', durationSeconds, 'RemitScout/BatchJobs', dimensions)
+  }
+
   try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
+    if (!config.observability.cloudwatch.enabled) return
+
     const client = getCloudWatchClient()
     const metricData: MetricDatum[] = [
       {
@@ -88,16 +121,7 @@ export const recordBatchJobMetric = async (
         Value: 1,
         Unit: StandardUnit.Count,
         Timestamp: new Date(),
-        Dimensions: [
-          { Name: 'JobName', Value: jobName },
-          { Name: 'environment', Value: environmentDimension },
-          ...Object.entries(additionalDimensions || {})
-            .filter(([key]) => key.toLowerCase() !== 'environment')
-            .map(([key, value]) => ({
-              Name: key,
-              Value: value,
-            })),
-        ],
+        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
       },
     ]
 
@@ -107,16 +131,7 @@ export const recordBatchJobMetric = async (
         Value: durationSeconds,
         Unit: StandardUnit.Seconds,
         Timestamp: new Date(),
-        Dimensions: [
-          { Name: 'JobName', Value: jobName },
-          { Name: 'environment', Value: environmentDimension },
-          ...Object.entries(additionalDimensions || {})
-            .filter(([key]) => key.toLowerCase() !== 'environment')
-            .map(([key, value]) => ({
-              Name: key,
-              Value: value,
-            })),
-        ],
+        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
       })
     }
 
@@ -142,10 +157,16 @@ export const recordQueueDepthMetric = async (
   queueName: string,
   depth: number,
 ): Promise<void> => {
+  enqueueNewRelicMirror(
+    'queue_depth',
+    depth,
+    'RemitScout/Queues',
+    { QueueName: queueName, environment: environmentDimension },
+  )
+
   try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
+    if (!config.observability.cloudwatch.enabled) return
+
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -156,7 +177,10 @@ export const recordQueueDepthMetric = async (
             Value: depth,
             Unit: 'Count',
             Timestamp: new Date(),
-            Dimensions: [{ Name: 'QueueName', Value: queueName }],
+            Dimensions: [
+              { Name: 'QueueName', Value: queueName },
+              { Name: 'environment', Value: environmentDimension },
+            ],
           },
         ],
       }),
@@ -177,10 +201,16 @@ export const recordDLQMessageCount = async (
   dlqName: string,
   count: number,
 ): Promise<void> => {
+  enqueueNewRelicMirror(
+    'dlq_message_count',
+    count,
+    'RemitScout/Queues',
+    { QueueName: queueName, DLQName: dlqName, environment: environmentDimension },
+  )
+
   try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
+    if (!config.observability.cloudwatch.enabled) return
+
     const client = getCloudWatchClient()
     await client.send(
       new PutMetricDataCommand({
@@ -194,6 +224,7 @@ export const recordDLQMessageCount = async (
             Dimensions: [
               { Name: 'QueueName', Value: queueName },
               { Name: 'DLQName', Value: dlqName },
+              { Name: 'environment', Value: environmentDimension },
             ],
           },
         ],

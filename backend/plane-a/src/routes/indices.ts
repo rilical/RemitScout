@@ -928,7 +928,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
   app.get('/indices/corridors', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
     try {
       const corridorsAllowed = request.institutionalClient?.corridors_allowed ?? null
-      const filterByAllowed = corridorsAllowed !== null && corridorsAllowed.length > 0
+      const filterByAllowed = corridorsAllowed !== null
 
       const whereClause = filterByAllowed
         ? 'WHERE amount_bucket = $1 AND corridor_id = ANY($2::text[])'

@@ -1,6 +1,8 @@
-import { Pool } from 'pg'
+import type { Pool } from 'pg'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
+import { UsageLogRepository } from '../repositories'
+import type { IUsageLogRepository } from '../repositories'
 
 const logger = createLogger('plane-a.usage-log-buffer')
 
@@ -14,18 +16,20 @@ export type UsageLogEntry = {
 
 const buffer: UsageLogEntry[] = []
 let flushTimer: NodeJS.Timeout | null = null
-let pool: Pool | null = null
+let repo: IUsageLogRepository | null = null
 let shutdownRegistered = false
+let droppedCount = 0
 
 const MAX_BUFFER_SIZE = config.planeA.usageLogBufferSize
 const FLUSH_INTERVAL_MS = config.planeA.usageLogFlushIntervalMs
+const HARD_MAX_BUFFER_SIZE = MAX_BUFFER_SIZE * 10
 
 /**
  * Initialize the usage log buffer with the database pool.
  * Must be called once at startup before pushing entries.
  */
 export const initUsageLogBuffer = (dbPool: Pool): void => {
-  pool = dbPool
+  repo = new UsageLogRepository(dbPool)
 
   if (!shutdownRegistered) {
     shutdownRegistered = true
@@ -49,8 +53,21 @@ export const initUsageLogBuffer = (dbPool: Pool): void => {
 /**
  * Push a usage log entry into the in-memory buffer.
  * When the buffer reaches its max size, an immediate flush is triggered.
+ * Entries are dropped if the buffer exceeds the hard memory cap.
  */
 export const pushUsageLogEntry = (entry: UsageLogEntry): void => {
+  if (buffer.length >= HARD_MAX_BUFFER_SIZE) {
+    droppedCount++
+    if (droppedCount % 100 === 0) {
+      logger.warn('usage_log_buffer_hard_cap_reached', {
+        dropped_count: droppedCount,
+        buffer_size: buffer.length,
+        hard_max: HARD_MAX_BUFFER_SIZE,
+      })
+    }
+    return
+  }
+
   buffer.push(entry)
 
   if (buffer.length >= MAX_BUFFER_SIZE) {
@@ -84,8 +101,8 @@ const scheduleFlush = (): void => {
  */
 export const flushUsageLogBuffer = async (): Promise<void> => {
   if (buffer.length === 0) return
-  if (!pool) {
-    logger.warn('usage_log_buffer_flush_skipped', { reason: 'pool_not_initialized' })
+  if (!repo) {
+    logger.warn('usage_log_buffer_flush_skipped', { reason: 'repo_not_initialized' })
     return
   }
 
@@ -94,36 +111,7 @@ export const flushUsageLogBuffer = async (): Promise<void> => {
   const batch = buffer.splice(0, buffer.length)
 
   try {
-    // Build a single bulk INSERT with parameterized placeholders.
-    // Each row has 5 columns, so row N uses params at offset N*5.
-    const valueClauses: string[] = []
-    const params: unknown[] = []
-
-    for (let i = 0; i < batch.length; i++) {
-      const offset = i * 5
-      valueClauses.push(
-        `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`,
-      )
-      params.push(
-        batch[i].clientId,
-        batch[i].endpoint,
-        batch[i].corridorId,
-        batch[i].responseTimeMs,
-        batch[i].statusCode,
-      )
-    }
-
-    const sql = `
-      INSERT INTO public.api_usage_log (
-        client_id,
-        endpoint,
-        corridor_id,
-        response_time_ms,
-        status_code
-      ) VALUES ${valueClauses.join(', ')}
-    `
-
-    await pool.query(sql, params)
+    await repo.bulkInsertUsageLogs(batch)
 
     logger.debug('usage_log_buffer_flushed', { count: batch.length })
   } catch (error) {

@@ -28,12 +28,13 @@ describe('UserAccountRepository', () => {
 
       expect(dbModule.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO silver.user_account'),
-        ['user123', 'test@example.com'],
+        ['user123', 'test@example.com', null],
         mockPool,
       )
       const queryCall = vi.mocked(dbModule.query).mock.calls[0][0] as string
       expect(queryCall).toContain('ON CONFLICT (user_id)')
       expect(queryCall).toContain('DO UPDATE SET email = EXCLUDED.email')
+      expect(queryCall).toContain('app_role = CASE')
     })
 
     it('handles null email', async () => {
@@ -46,7 +47,7 @@ describe('UserAccountRepository', () => {
 
       expect(dbModule.query).toHaveBeenCalledWith(
         expect.any(String),
-        ['user123', null],
+        ['user123', null, null],
         mockPool,
       )
     })
@@ -64,7 +65,6 @@ describe('UserAccountRepository', () => {
     })
   })
 })
-
 
 
 

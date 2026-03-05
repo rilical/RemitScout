@@ -660,6 +660,7 @@ watch(
     if (!country?.currency) return
 
     const defaultCurrency = country.currency.toUpperCase()
+    if (moneyForm.value.fromCurrency === defaultCurrency) return
 
     if (availableFromCurrencies.value.length > 0) {
       if (availableFromCurrencies.value.includes(defaultCurrency)) {
@@ -682,6 +683,7 @@ watch(
     if (!country?.currency) return
 
     const defaultCurrency = country.currency.toUpperCase()
+    if (moneyForm.value.toCurrency === defaultCurrency) return
 
     if (availableToCurrencies.value.length > 0) {
       if (availableToCurrencies.value.includes(defaultCurrency)) {
@@ -690,25 +692,6 @@ watch(
       else if (!moneyForm.value.toCurrency || !availableToCurrencies.value.includes(moneyForm.value.toCurrency)) {
         moneyForm.value.toCurrency = availableToCurrencies.value[0]
       }
-    }
-  },
-  { immediate: false },
-)
-
-watch(
-  availableFromCurrencies,
-  (currencies) => {
-    if (!moneyForm.value.from || currencies.length === 0) return
-
-    const country = getCountryByCode(moneyForm.value.from)
-    if (!country?.currency) return
-
-    const defaultCurrency = country.currency.toUpperCase()
-    if (currencies.includes(defaultCurrency) && (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency))) {
-      moneyForm.value.fromCurrency = defaultCurrency
-    }
-    else if (!moneyForm.value.fromCurrency || !currencies.includes(moneyForm.value.fromCurrency)) {
-      moneyForm.value.fromCurrency = currencies[0]
     }
   },
   { immediate: false },
@@ -730,25 +713,6 @@ watch(
       moneyForm.value.amount = max
     }
   },
-)
-
-watch(
-  availableToCurrencies,
-  (currencies) => {
-    if (!moneyForm.value.to || currencies.length === 0) return
-
-    const country = getCountryByCode(moneyForm.value.to)
-    if (!country?.currency) return
-
-    const defaultCurrency = country.currency.toUpperCase()
-    if (currencies.includes(defaultCurrency) && (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency))) {
-      moneyForm.value.toCurrency = defaultCurrency
-    }
-    else if (!moneyForm.value.toCurrency || !currencies.includes(moneyForm.value.toCurrency)) {
-      moneyForm.value.toCurrency = currencies[0]
-    }
-  },
-  { immediate: false },
 )
 
 defineExpose({

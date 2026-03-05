@@ -29,7 +29,7 @@
     "stagingResumeCron": "cron(0 8 ? * MON-FRI *)",
     "stagingTimezone": "America/New_York",
     "providerProbeMode": "fan_in",
-    "stagingInterfaceEndpointsMode": "minimal",
+    "stagingInterfaceEndpointsMode": "none",
     "opsResumeRuleAllowlist": [
       "b2c-retry-failed",
       "alert-evaluation-worker",

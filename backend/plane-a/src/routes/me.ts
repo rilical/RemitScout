@@ -257,24 +257,8 @@ export const meRoutes = async (app: FastifyInstance) => {
       })
       const mfaVerified = claims?.mfa_verified === true || hasTotpMfa
 
-      const email = user.email?.toLowerCase() ?? null
-      const adminAllowlist = config.planeA.adminEmails
-      const adminDomainAllowlist = config.planeA.adminEmailDomains
-      const isAdminByDomain = (() => {
-        if (!email) return false
-        const [, domain] = email.split('@')
-        if (!domain) return false
-        return adminDomainAllowlist.includes(domain)
-      })()
-      const isAdminByEmail = adminAllowlist.length > 0 && email ? adminAllowlist.includes(email) : false
       const supabaseRole = user.role ?? null
-      const isAdmin =
-        isAdminByEmail
-        || isAdminByDomain
-        || supabaseRole === 'admin'
-        || supabaseRole === 'super_admin'
-        || appRole === 'admin'
-        || appRole === 'super_admin'
+      const isAdmin = appRole === 'admin' || appRole === 'super_admin'
 
       // Internal admin accounts can be treated as enterprise (feature access) even when Stripe isn't wired yet.
       const internalEnterpriseOverride = Boolean(isAdmin && config.planeA.internalUsersGetEnterprise)

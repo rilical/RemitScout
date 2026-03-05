@@ -265,9 +265,14 @@ const createOrUpdateSupabaseUser = async (
   user: LaunchUserSpec,
   password: string,
 ): Promise<{ userId: string; created: boolean }> => {
-  const metadata = {
+  // Roles are DB-authoritative — never write them to user_metadata (user-writable).
+  // app_metadata is server-side only, safe for audit/reference.
+  const appMetadata = {
     role: user.appRole,
     app_role: user.appRole,
+    plan_code: user.planCode,
+  }
+  const userMetadata = {
     plan_code: user.planCode,
   }
 
@@ -277,8 +282,8 @@ const createOrUpdateSupabaseUser = async (
       email: user.email,
       password,
       email_confirm: true,
-      user_metadata: metadata,
-      app_metadata: metadata,
+      user_metadata: userMetadata,
+      app_metadata: appMetadata,
     }),
   })
 
@@ -310,8 +315,8 @@ const createOrUpdateSupabaseUser = async (
       email: user.email,
       password,
       email_confirm: true,
-      user_metadata: metadata,
-      app_metadata: metadata,
+      user_metadata: userMetadata,
+      app_metadata: appMetadata,
     }),
   })
   if (!updateResult.response.ok) {
@@ -448,6 +453,40 @@ const main = async () => {
           password: password.value,
         })
       }
+    }
+
+    // Post-seed verification: confirm all launch users have correct roles and plans
+    if (pool) {
+      const verifyResult = await query<{ email: string; app_role: string | null; plan_code: string | null }>(
+        `SELECT ua.email, ua.app_role, up.plan_code
+         FROM silver.user_account ua
+         LEFT JOIN silver.user_plan up ON ua.user_id = up.user_id
+         WHERE LOWER(ua.email) = ANY($1::text[])`,
+        [launchUsers.map((u) => u.email.toLowerCase())],
+        pool,
+      )
+
+      let mismatches = 0
+      for (const user of launchUsers) {
+        const row = verifyResult.rows.find((r) => r.email?.toLowerCase() === user.email.toLowerCase())
+        if (!row) {
+          logger.error('seed_verify_missing', { email: user.email })
+          mismatches++
+        } else if (row.app_role !== user.appRole || row.plan_code !== user.planCode) {
+          logger.error('seed_verify_mismatch', {
+            email: user.email,
+            expected_role: user.appRole,
+            actual_role: row.app_role,
+            expected_plan: user.planCode,
+            actual_plan: row.plan_code,
+          })
+          mismatches++
+        }
+      }
+      if (mismatches > 0) {
+        throw new Error(`Seed verification failed: ${mismatches} user(s) have incorrect roles/plans`)
+      }
+      logger.info('seed_verify_passed', { count: launchUsers.length })
     }
   } finally {
     if (pool) {

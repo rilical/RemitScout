@@ -308,7 +308,7 @@ export const createScheduledJobs = (
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? '1'
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
   const resolvedTracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',

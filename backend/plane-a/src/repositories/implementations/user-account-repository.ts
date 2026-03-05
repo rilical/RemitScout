@@ -17,19 +17,20 @@ export class UserAccountRepository implements IUserAccountRepository {
   async upsertUserAccount(input: UserAccountUpsertInput): Promise<{ created: boolean }> {
     const result = await query<{ created: boolean }>(
       `
-      INSERT INTO silver.user_account (user_id, email, last_seen_at)
-      SELECT $1, $2, NOW()
+      INSERT INTO silver.user_account (user_id, email, app_role, last_seen_at)
+      SELECT $1, $2, COALESCE($3, 'user'), NOW()
       WHERE NOT EXISTS (
         SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1
       )
       ON CONFLICT (user_id)
-      DO UPDATE SET email = EXCLUDED.email, last_seen_at = NOW()
+      DO UPDATE SET email = EXCLUDED.email,
+                    last_seen_at = NOW()
       WHERE NOT EXISTS (
         SELECT 1 FROM silver.account_deletion_tombstone WHERE user_id = $1
       )
       RETURNING (xmax = 0) AS created
       `,
-      [input.user_id, input.email],
+      [input.user_id, input.email, input.app_role ?? null],
       this.pool,
     )
     return { created: result.rows[0]?.created === true }

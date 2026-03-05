@@ -511,7 +511,7 @@ aria-current="page"
 
     <!-- SEO Verdict Block — extractable answer for LLM crawlers -->
     <section
-      v-if="hasApiQuotes && verdictParagraph"
+      v-if="hasApiQuotes && verdictParagraph && !showRefreshGate"
       class="bg-brand-600"
     >
       <div class="container py-6">
@@ -611,7 +611,8 @@ aria-current="page"
                 </div>
               </div>
               <p class="mt-4 text-body-sm text-neutral-600 max-w-2xl text-center mx-auto">
-                We query every available provider for this corridor. Results appear together once all providers respond
+                We refresh {{ refreshTargetLabel }} for this corridor. Cached results stay visible while live quotes sync.
+                Final results appear once those providers respond
                 or after {{ refreshTimeoutSeconds }} seconds.
               </p>
             </div>
@@ -2296,6 +2297,7 @@ let refreshPollController: AbortController | null = null
 let refreshStatusController: AbortController | null = null
 const refreshTimedOut = ref(false)
 const refreshFinalizing = ref(false)
+const methodTransitioning = ref(false)
 const refreshGateStartedAt = ref<number | null>(null)
 const refreshGateTimer = ref<number | null>(null)
 const refreshElapsedSeconds = ref(0)
@@ -2321,11 +2323,10 @@ const shouldBlockResults = computed(() => {
 
   const hasRefresh = Boolean(refreshStatus.value?.enqueued)
   if (hasRefresh) {
-    if (!hasApiQuotes.value && refreshCompletion.value && !refreshCompletion.value.done) return true
-    if (!refreshCompletion.value && !hasApiQuotes.value) return true
-    if (!hasApiQuotes.value && refreshFinalizing.value) return true
-    if (!hasApiQuotes.value && quotesPending.value) return true
-    if (!hasApiQuotes.value) return true
+    // Block until ALL providers respond — even if some quotes arrived early
+    if (refreshCompletion.value && !refreshCompletion.value.done) return true
+    if (!refreshCompletion.value) return true
+    if (refreshFinalizing.value) return true
   }
 
   if (!hasApiQuotes.value && quoteRefreshPending.value) return true
@@ -2682,10 +2683,6 @@ watch(availableMethods, (methods) => {
 })
 
 const providerQuotes = computed(() => {
-  if (refreshGateActive.value) {
-    return []
-  }
-
   const allQuotes = (quotesData.value?.data || []) as ProviderQuote[]
 
   // Filter by selected payout method - only show providers that support this method
@@ -3481,7 +3478,35 @@ const apiRows = computed<TableRow[]>(() => {
   })
 })
 
-const hasApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
+const lastStableApiRows = ref<TableRow[]>([])
+
+watch(apiRows, (rows) => {
+  if (rows.length > 0) {
+    lastStableApiRows.value = rows
+  }
+}, { immediate: true })
+
+const shouldReuseLastRows = computed(() => {
+  if (apiRows.value.length > 0) return false
+  if (!lastStableApiRows.value.length) return false
+  if (refreshTimedOut.value) return false
+  if (corridorUnavailable.value || corridorUnsupported.value || hasApiError.value) return false
+  return quoteRefreshPending.value
+    || providersLive.value
+    || refreshGateActive.value
+    || refreshFinalizing.value
+    || quotesPending.value
+})
+
+const displayApiRows = computed<TableRow[]>(() => {
+  if (methodTransitioning.value && lastStableApiRows.value.length > 0) {
+    return lastStableApiRows.value
+  }
+  return shouldReuseLastRows.value ? lastStableApiRows.value : apiRows.value
+})
+
+const hasCurrentApiQuotes = computed(() => apiRows.value.length > 0 && !quotesError.value)
+const hasApiQuotes = computed(() => displayApiRows.value.length > 0 && !quotesError.value)
 
 const excludedProviders = computed(() => {
   const raw = (quotesData.value as { excludedProviders?: Array<{ provider?: string, reason?: string }> } | null)?.excludedProviders
@@ -3503,10 +3528,10 @@ const hasStaleVisibleQuotes = computed(() => (
 ))
 
 const needsCoverageRefresh = computed(() => (
-  hasNoQuotesExclusions.value || hasStaleVisibleQuotes.value
+  hasStaleVisibleQuotes.value || (!hasCurrentApiQuotes.value && hasNoQuotesExclusions.value)
 ))
 
-const currentRows = computed(() => hasApiQuotes.value ? apiRows.value : content.value.table.rows)
+const currentRows = computed(() => hasApiQuotes.value ? displayApiRows.value : content.value.table.rows)
 
 const rawIndices = computed(() => {
   return (quotesData.value as { indices?: CorridorIndices } | null)?.indices ?? null
@@ -3640,7 +3665,7 @@ const content = computed(() => {
     source: midMarketSource.value || merged.rateWidget.source || 'Mid-market',
     changes: rateChanges.value.length ? rateChanges.value : merged.rateWidget.changes,
   }
-  const tableRows = hasApiQuotes.value ? apiRows.value : []
+  const tableRows = hasApiQuotes.value ? displayApiRows.value : []
   return {
     ...merged,
     lastUpdated: mostRecentUpdateLabel.value || apiUpdatedLabel.value || merged.lastUpdated,
@@ -3731,6 +3756,19 @@ const breadcrumbItems = computed(() => [
 ])
 
 const providerCount = computed(() => content.value.table.rows.length || 0)
+const refreshTargetCount = computed(() => {
+  const providerCountFromRefresh = refreshStatus.value?.providers?.length ?? 0
+  if (providerCountFromRefresh > 0) return providerCountFromRefresh
+  const providerCountFromCompletion = Number(refreshCompletion.value?.total ?? 0)
+  return Number.isFinite(providerCountFromCompletion) ? providerCountFromCompletion : 0
+})
+const refreshTargetLabel = computed(() => {
+  const targetCount = refreshTargetCount.value
+  if (targetCount > 0) {
+    return `${targetCount} ${targetCount === 1 ? 'provider' : 'providers'} that need a live update`
+  }
+  return 'providers that need a live update'
+})
 const bestQuote = computed(() => {
   if (!providerQuotes.value.length) return null
   return [...providerQuotes.value].sort((a, b) => b.recipientGets - a.recipientGets)[0]
@@ -3802,7 +3840,7 @@ function parseSpeedToHours(speed: string): number {
 }
 
 const recommendations = computed<Recommendation[]>(() => {
-  const rows = hasApiQuotes.value ? apiRows.value : content.value.table.rows
+  const rows = hasApiQuotes.value ? displayApiRows.value : content.value.table.rows
   if (!rows.length) return []
 
   const results: Recommendation[] = []
@@ -4429,7 +4467,7 @@ const scheduleRefreshPoll = () => {
       useLogger('send-money').warn('refresh poll failed', error)
     }
     const timedOut = refreshAttempts.value >= MAX_REFRESH_ATTEMPTS
-    if (timedOut && !hasApiQuotes.value && !refreshTimedOut.value) {
+    if (timedOut && !hasCurrentApiQuotes.value && !refreshTimedOut.value) {
       refreshTimedOut.value = true
       searchInitiated.value = false
       providersLive.value = false
@@ -4443,7 +4481,7 @@ const scheduleRefreshPoll = () => {
       && !hasApiError.value
       && !corridorUnavailable.value
       && !corridorUnsupported.value
-      && (!hasApiQuotes.value || needsCoverageRefresh.value)
+      && (!hasCurrentApiQuotes.value || needsCoverageRefresh.value)
       && !refreshTimedOut.value
     if (shouldContinue) {
       scheduleRefreshPoll()
@@ -4638,7 +4676,7 @@ useAbortableWatch(
     corridorUnavailable,
     corridorUnsupported,
     refreshTimedOut,
-    hasApiQuotes,
+    hasCurrentApiQuotes,
     isQuoteStale,
     needsCoverageRefresh,
   ],
@@ -4687,25 +4725,26 @@ useAbortableWatch(
     catch {
       // Ignore refresh errors; we'll surface API errors in the UI.
     }
-    finally {
-      refreshFinalizing.value = false
-    }
-    if (hasApiQuotes.value || refreshTimedOut.value) {
+    // Stop polls BEFORE dropping the gate — prevents data poll from firing
+    // after gate drops and causing the provider count to tick up incrementally.
+    clearRefreshPoll()
+    clearRefreshStatusPoll()
+    if (hasCurrentApiQuotes.value || refreshTimedOut.value) {
       providersLive.value = false
       refreshStatus.value = null
-      refreshFinalizing.value = false
-      lastRefreshKey.value = null
+      // lastRefreshKey intentionally NOT cleared — prevents needsCoverageRefresh
+      // from immediately re-triggering a new refresh cycle for the same corridor.
+      // A new cycle only starts when quoteRefreshKey changes (corridor, amount, or method).
       refreshAttempts.value = 0
-      clearRefreshPoll()
-      clearRefreshStatusPoll()
       clearRefreshGateTimer()
       refreshGateStartedAt.value = null
       refreshElapsedSeconds.value = 0
     }
+    refreshFinalizing.value = false
   },
 )
 
-watch(hasApiQuotes, (hasQuotes) => {
+watch(hasCurrentApiQuotes, (hasQuotes) => {
   if (!hasQuotes) return
   refreshTimedOut.value = false
   if (!refreshStatus.value?.enqueued) return
@@ -4738,6 +4777,7 @@ watch(quoteRefreshKey, () => {
 })
 
 useAbortableWatch(payoutMethod, async (_, signal) => {
+  methodTransitioning.value = true
   refreshTimedOut.value = false
   refreshStatus.value = null
   refreshAttempts.value = 0
@@ -4754,7 +4794,10 @@ useAbortableWatch(payoutMethod, async (_, signal) => {
   catch {
     // Ignore refresh errors; the auto refresh queue handles retries.
   }
-  if ((!hasApiQuotes.value || isQuoteStale.value) && !hasApiError.value && !corridorUnavailable.value && !corridorUnsupported.value) {
+  finally {
+    methodTransitioning.value = false
+  }
+  if ((!hasCurrentApiQuotes.value || isQuoteStale.value) && !hasApiError.value && !corridorUnavailable.value && !corridorUnsupported.value) {
     await requestQuoteRefresh('auto', signal)
   }
 })

@@ -57,6 +57,7 @@ type ApiClientDeps = {
   getServerHeaders?: () => Record<string, string>
   getCloudFrontRequestId?: () => string | undefined
   logger?: { warn: (message: string, meta: Record<string, unknown>) => void }
+  onUnauthorized?: () => Promise<boolean>
 }
 
 export const createApiClient = (deps: ApiClientDeps) => {
@@ -132,6 +133,7 @@ export const createApiClient = (deps: ApiClientDeps) => {
     const method = options.method || 'GET'
     const maxRetries = options.retries ?? 0
     const timeoutMs = options.timeoutMs ?? getDefaultTimeoutMs(path)
+    let hasRetriedAuth = false
 
     const makeRequest = async () => {
       const headers: Record<string, string> = {
@@ -191,6 +193,21 @@ export const createApiClient = (deps: ApiClientDeps) => {
       }
 
       const statusCode = apiError?.statusCode || apiError?.response?.status
+
+      // On 401, try refreshing the session once and retry
+      if (statusCode === 401 && deps.onUnauthorized && !hasRetriedAuth) {
+        hasRetriedAuth = true
+        try {
+          const refreshed = await deps.onUnauthorized()
+          if (refreshed) {
+            return await makeRequest()
+          }
+        }
+        catch {
+          // Refresh failed; fall through to original error
+        }
+      }
+
       const message = apiError?.data?.message || apiError?.statusMessage || apiError?.message || 'Request failed'
       const wrapped = new Error(message) as Error & {
         statusCode?: number
@@ -269,6 +286,21 @@ export const useApi = () => {
     },
     getServerHeaders,
     getCloudFrontRequestId,
+    onUnauthorized: import.meta.client
+      ? async () => {
+          try {
+            const supabase = useSupabaseClient()
+            if (!supabase) return false
+            const { data, error } = await supabase.auth.refreshSession()
+            if (error || !data.session) return false
+            session.value = data.session
+            return true
+          }
+          catch {
+            return false
+          }
+        }
+      : undefined,
     logger: {
       warn: (message, meta) => useLogger('api').warn(message, meta),
     },

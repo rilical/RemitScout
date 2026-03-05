@@ -234,7 +234,7 @@ class="text-body-sm text-white/70"
                 <span
 v-else
 class="text-body-sm text-white"
->{{ isEnterprise ? '365 days' : '90 days' }}</span>
+>{{ isEnterprise ? '180 days' : '90 days' }}</span>
               </div>
               <div class="text-h3 font-semibold text-white">{{ compareCount }}</div>
                 <div
@@ -435,10 +435,6 @@ class="mt-2"
                         @click="graphTimeframe = period.value"
                       >
                         {{ period.label }}
-                        <span
-v-if="period.requiredPlan && isTimeframeLocked(period.value)"
-class="ml-1 text-[10px] text-neutral-400"
->{{ period.requiredPlan === 'enterprise' ? 'Enterprise' : 'Plus' }}</span>
                       </button>
                     </div>
                   </div>
@@ -5777,13 +5773,12 @@ const allTimeframePeriods: TimeframePeriod[] = [
   { label: '1M', value: '30d', requiredPlan: null },
   { label: '3M', value: '90d', requiredPlan: 'plus' },
   { label: '6M', value: '180d', requiredPlan: 'enterprise' },
-  { label: '1Y', value: '365d', requiredPlan: 'enterprise' },
 ]
 
 const timeframePeriods = computed<TimeframePeriod[]>(() => {
   if (isEnterprise.value) return allTimeframePeriods
-  if (isPlus.value) return allTimeframePeriods.filter(period => period.requiredPlan !== 'enterprise')
-  return allTimeframePeriods
+  // Plus and free users: hide enterprise-only tabs (6M)
+  return allTimeframePeriods.filter(period => period.requiredPlan !== 'enterprise')
 })
 
 const hasTimeframeAccess = (period: TimeframePeriod) => {
@@ -5804,7 +5799,7 @@ const lockedTimeframeTitle = (period: TimeframePeriod) => {
 }
 
 const getAllowedTimeframes = () => {
-  if (isEnterprise.value) return ['7d', '30d', '90d', '180d', '365d']
+  if (isEnterprise.value) return ['7d', '30d', '90d', '180d']
   if (isPlus.value) return ['7d', '30d', '90d']
   return ['7d', '30d']
 }
@@ -7014,11 +7009,11 @@ const graphData = computed(() => {
   if (!values.length) return []
   const minRate = Math.min(...values)
   const maxRate = Math.max(...values)
-  const range = maxRate - minRate || 1
+  const range = maxRate - minRate
+  const isFlat = range === 0
   return series.map((point, index) => {
     const x = series.length === 1 ? 400 : (index / (series.length - 1)) * 400
-    const normalized = (point.rate - minRate) / range
-    const y = 170 - (normalized * 160)
+    const y = isFlat ? 90 : 170 - (((point.rate - minRate) / range) * 160)
     return { x, y: Math.max(10, Math.min(170, y)) }
   })
 })

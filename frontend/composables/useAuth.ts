@@ -326,7 +326,10 @@ export const useAuth = () => {
     if (!supabase) {
       return { ok: false, error: 'Supabase client is not available.' }
     }
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      friendlyName: `Authenticator-${Date.now()}`,
+    })
     if (error) {
       lastError.value = error.message
       return { ok: false, error: error.message }
