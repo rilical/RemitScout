@@ -25,6 +25,11 @@ on:
         required: false
         default: false
         type: boolean
+      skip_new_relic_gates:
+        description: Emergency override for New Relic prereq/observability gates.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -840,6 +845,7 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
           FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
+          SKIP_NEW_RELIC_GATES: ${{ inputs.skip_new_relic_gates }}
         run: |
           set -euo pipefail
           if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
@@ -866,39 +872,44 @@ jobs:
             echo "Missing SENTRY_SECRET_ARN / SENTRY_SECRET_JSON_KEY (configure in GitHub environment vars: staging)."
             exit 1
           fi
-          if [[ "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" == *"nr-data.net"* ]] && \
-            [ -z "${OTEL_EXPORTER_OTLP_HEADERS:-}" ] && \
-            [ -z "${NEW_RELIC_INGEST_KEY:-}" ]; then
-            echo "Missing OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY for New Relic OTLP endpoint."
-            exit 1
-          fi
-          if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
-            echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
-            exit 1
-          fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
-            exit 1
-          fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
-            exit 1
-          fi
-          if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
-            echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
-            exit 1
-          fi
-          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
-             ( [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
-               [ -z "${PUBLIC_NEW_RELIC_TRUST_KEY:-}" ] || \
-               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
-               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
-               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ] ); then
-            echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
-            exit 1
+          if [ "${SKIP_NEW_RELIC_GATES:-false}" = "true" ]; then
+            echo "::warning::Skipping New Relic prereq checks for manual staging recovery deploy."
+          else
+            if [[ "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" == *"nr-data.net"* ]] && \
+              [ -z "${OTEL_EXPORTER_OTLP_HEADERS:-}" ] && \
+              [ -z "${NEW_RELIC_INGEST_KEY:-}" ]; then
+              echo "Missing OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY for New Relic OTLP endpoint."
+              exit 1
+            fi
+            if [ -z "${NEW_RELIC_USER_API_KEY:-}" ] || [ -z "${NEW_RELIC_ACCOUNT_ID:-}" ] || [ -z "${NEW_RELIC_REGION:-}" ]; then
+              echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
+              exit 1
+            fi
+            if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+              echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
+              exit 1
+            fi
+            if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+              echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+              exit 1
+            fi
+            if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
+              echo "NEW_RELIC_LOGS_ENABLED must not be 0 in staging/prod deploys."
+              exit 1
+            fi
+            if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ] && \
+               ( [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+                 [ -z "${PUBLIC_NEW_RELIC_TRUST_KEY:-}" ] || \
+                 [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+                 [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+                 [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ] ); then
+              echo "PUBLIC_NEW_RELIC_BROWSER_ENABLED=1 requires PUBLIC_NEW_RELIC_ACCOUNT_ID/TRUST_KEY/AGENT_ID/APPLICATION_ID/LICENSE_KEY."
+              exit 1
+            fi
           fi
 
       - name: Observability prereq gate (staging)
+        if: github.event_name != 'workflow_dispatch' || inputs.skip_new_relic_gates != true
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -1563,6 +1574,7 @@ jobs:
           exit 1
 
       - name: New Relic observability gate (staging)
+        if: github.event_name != 'workflow_dispatch' || inputs.skip_new_relic_gates != true
         shell: bash
         env:
           ENV_NAME: staging
