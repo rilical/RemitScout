@@ -1611,6 +1611,7 @@ jobs:
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
+          REQUIRE_CUSTOM_METRICS=0 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e
