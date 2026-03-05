@@ -180,34 +180,44 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
         const newDests = [...discoveredDests].filter((c) => !existingDestSet.has(c)).sort()
 
         if (newSources.length > 0 || newDests.length > 0) {
-          await repo.upsertRightsMatrix(providerId, mergedSources, mergedDests, client)
+          try {
+            await repo.upsertRightsMatrix(providerId, mergedSources, mergedDests, client)
 
-          applyResult.rightsMatrixUpdated = true
-          applyResult.sourceCountriesAdded = newSources
-          applyResult.destinationCountriesAdded = newDests
+            applyResult.rightsMatrixUpdated = true
+            applyResult.sourceCountriesAdded = newSources
+            applyResult.destinationCountriesAdded = newDests
 
-          if (newSources.length > 0) {
-            await repo.insertRightsMatrixAuditLog(
-              providerId,
-              'source_countries',
-              JSON.stringify(existingSources),
-              JSON.stringify(mergedSources),
+            if (newSources.length > 0) {
+              await repo.insertRightsMatrixAuditLog(
+                providerId,
+                'source_countries',
+                JSON.stringify(existingSources),
+                JSON.stringify(mergedSources),
+                scanId,
+                approvedBy,
+                client,
+              )
+            }
+
+            if (newDests.length > 0) {
+              await repo.insertRightsMatrixAuditLog(
+                providerId,
+                'destination_countries',
+                JSON.stringify(existingDests),
+                JSON.stringify(mergedDests),
+                scanId,
+                approvedBy,
+                client,
+              )
+            }
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            logger.error('discovery_approve_rights_matrix_error', {
               scanId,
-              approvedBy,
-              client,
-            )
-          }
-
-          if (newDests.length > 0) {
-            await repo.insertRightsMatrixAuditLog(
               providerId,
-              'destination_countries',
-              JSON.stringify(existingDests),
-              JSON.stringify(mergedDests),
-              scanId,
-              approvedBy,
-              client,
-            )
+              error: message,
+            })
+            applyResult.errors.push(`rights_matrix: ${message}`)
           }
         }
       }
@@ -224,31 +234,42 @@ export const adminDiscoveryRoutes = async (app: FastifyInstance) => {
         }
 
         for (const [corridorId, methods] of byCorridorId) {
-          const discoveredPayins = new Set<string>()
-          const discoveredPayouts = new Set<string>()
-          for (const m of methods) {
-            discoveredPayins.add(m.normalizedPayin)
-            discoveredPayouts.add(m.normalizedPayout)
-          }
+          try {
+            const discoveredPayins = new Set<string>()
+            const discoveredPayouts = new Set<string>()
+            for (const m of methods) {
+              discoveredPayins.add(m.normalizedPayin)
+              discoveredPayouts.add(m.normalizedPayout)
+            }
 
-          const existingRow = await repo.getCorridorCapabilityMethods(providerId, corridorId, client)
+            const existingRow = await repo.getCorridorCapabilityMethods(providerId, corridorId, client)
 
-          const existingPayins: string[] = existingRow?.payin_methods ?? []
-          const existingPayouts: string[] = existingRow?.payout_methods ?? []
+            const existingPayins: string[] = existingRow?.payin_methods ?? []
+            const existingPayouts: string[] = existingRow?.payout_methods ?? []
 
-          const mergedPayins = [...new Set([...existingPayins, ...discoveredPayins])].sort()
-          const mergedPayouts = [...new Set([...existingPayouts, ...discoveredPayouts])].sort()
+            const mergedPayins = [...new Set([...existingPayins, ...discoveredPayins])].sort()
+            const mergedPayouts = [...new Set([...existingPayouts, ...discoveredPayouts])].sort()
 
-          const existingPayinSet = new Set(existingPayins)
-          const existingPayoutSet = new Set(existingPayouts)
-          const hasNewPayins = [...discoveredPayins].some((m) => !existingPayinSet.has(m))
-          const hasNewPayouts = [...discoveredPayouts].some((m) => !existingPayoutSet.has(m))
+            const existingPayinSet = new Set(existingPayins)
+            const existingPayoutSet = new Set(existingPayouts)
+            const hasNewPayins = [...discoveredPayins].some((m) => !existingPayinSet.has(m))
+            const hasNewPayouts = [...discoveredPayouts].some((m) => !existingPayoutSet.has(m))
 
-          await repo.upsertCorridorCapability(providerId, corridorId, mergedPayins, mergedPayouts, client)
+            await repo.upsertCorridorCapability(providerId, corridorId, mergedPayins, mergedPayouts, client)
 
-          applyResult.capabilitiesUpserted++
-          if (hasNewPayins || hasNewPayouts) {
-            applyResult.corridorsWithNewMethods.push(corridorId)
+            applyResult.capabilitiesUpserted++
+            if (hasNewPayins || hasNewPayouts) {
+              applyResult.corridorsWithNewMethods.push(corridorId)
+            }
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            logger.error('discovery_approve_capability_error', {
+              scanId,
+              providerId,
+              corridorId,
+              error: message,
+            })
+            applyResult.errors.push(`corridor_capability[${corridorId}]: ${message}`)
           }
         }
       }
