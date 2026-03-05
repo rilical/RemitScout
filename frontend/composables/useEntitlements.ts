@@ -88,7 +88,7 @@ const mapEntitlementsToLimits = (entitlements: MeResponse['entitlements']): Plan
 
 export const useEntitlements = () => {
   const { request } = useApi()
-  const { isLoggedIn, isAdmin, applyBackendProfile } = useAuth()
+  const { isLoggedIn, applyBackendProfile } = useAuth()
 
   const freeLimits: PlanLimits = {
     watchlistItems: 3,
@@ -97,14 +97,6 @@ export const useEntitlements = () => {
     exports: false,
     exportsMaxDays: 0,
   }
-  const enterpriseFallbackLimits: PlanLimits = {
-    watchlistItems: 'unlimited',
-    alerts: 'unlimited',
-    historyDays: 'unlimited',
-    exports: true,
-    exportsMaxDays: 'unlimited',
-  }
-
   const plan = useState<Plan>('entitlements:plan', () => 'free')
   const limits = useState<PlanLimits>('entitlements:limits', () => freeLimits)
   const apiAccess = useState<boolean>('entitlements:api-access', () => false)
