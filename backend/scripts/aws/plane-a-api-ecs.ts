@@ -203,9 +203,11 @@ export const handler = async (): Promise<void> => {
       ],
     },
     {
-      envVar: 'HASH_SALT',
+      envVar: 'PRIVACY_HASH_SALT',
       secretArnEnv: 'SHARED_SECRET_ARN',
       jsonKeys: [
+        'PRIVACY_HASH_SALT',
+        'plane_a_privacy_hash_salt',
         'HASH_SALT',
         'hash_salt',
         'privacy_hash_salt',
@@ -213,9 +215,11 @@ export const handler = async (): Promise<void> => {
       required: true,
     },
     {
-      envVar: 'SESSION_SALT',
+      envVar: 'PRIVACY_SESSION_SALT',
       secretArnEnv: 'SHARED_SECRET_ARN',
       jsonKeys: [
+        'PRIVACY_SESSION_SALT',
+        'plane_a_privacy_session_salt',
         'SESSION_SALT',
         'session_salt',
         'privacy_session_salt',
