@@ -13,14 +13,40 @@ const splitCsv = (value: string | undefined) => {
     .filter(Boolean)
 }
 
-const resolveClientIp = (request: FastifyRequest): string | null => {
-  const forwarded = request.headers['x-forwarded-for']
-  const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded
-  if (typeof raw === 'string' && raw.trim()) {
-    const first = raw.split(',')[0]?.trim() || ''
-    if (first) return first
+const parseForwardedIps = (value: string | string[] | undefined): string[] => {
+  const raw = Array.isArray(value) ? value.join(',') : value
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  return raw
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
+const isCloudFrontForwardedRequest = (request: FastifyRequest): boolean => {
+  const headers = request.headers ?? {}
+  const cfId = headers['x-amz-cf-id']
+  if (typeof cfId === 'string' && cfId.trim()) return true
+
+  const via = headers.via
+  const values = Array.isArray(via) ? via : [via]
+  return values.some((value) => typeof value === 'string' && value.toLowerCase().includes('cloudfront'))
+}
+
+export const resolveClientIp = (request: FastifyRequest): string | null => {
+  const remoteIp = request.ip || null
+  if (remoteIp && !isCloudFrontForwardedRequest(request)) {
+    return remoteIp
   }
-  return request.ip || null
+
+  const headers = request.headers ?? {}
+  const forwarded = headers['x-forwarded-for']
+  const forwardedIps = parseForwardedIps(forwarded)
+  const lastForwardedIp = forwardedIps.at(-1) || null
+  if (lastForwardedIp) {
+    return lastForwardedIp
+  }
+
+  return remoteIp
 }
 
 const isIpInCidr = (ip: string, cidr: string): boolean => {
@@ -47,7 +73,7 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
   if (allowlist.length === 0) {
     logger.warn('admin_ip_allowlist_empty', {
       message: 'No admin IP allowlist configured. Admin endpoints (/api/v1/ops, /api/v1/admin, '
-        + '/api/v1/audit, /api/v1/analytics) are not IP-restricted. '
+        + '/api/v1/audit, /api/v1/analytics, /api/v1/indices/corrections) are not IP-restricted. '
         + 'Set ADMIN_IP_ALLOWLIST to a comma-separated list of CIDRs to enable IP filtering.',
       env: config.env,
     })
@@ -61,7 +87,13 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
 
   app.addHook('preHandler', async (request: FastifyRequest, reply: FastifyReply) => {
     const path = request.url.split('?')[0] || ''
-    const protectedPrefixes = ['/api/v1/ops', '/api/v1/admin', '/api/v1/audit', '/api/v1/analytics']
+    const protectedPrefixes = [
+      '/api/v1/ops',
+      '/api/v1/admin',
+      '/api/v1/audit',
+      '/api/v1/analytics',
+      '/api/v1/indices/corrections',
+    ]
     const protectedExact = new Set(['/api/v1/telemetry/analytics'])
     const isProtected =
       protectedPrefixes.some(prefix => path.startsWith(prefix))
@@ -72,7 +104,10 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
     if (!ip) {
       logger.debug('admin_ip_allowlist_check', { path, ip: null, result: 'denied_no_ip' })
       reply.code(403)
-      return reply.send({ error: 'forbidden' })
+      return reply.send({
+        error: 'forbidden',
+        code: 'admin_ip_unresolved',
+      })
     }
     const allowed = allowlist.some((cidr) => isIpInCidr(ip, cidr))
 
@@ -85,6 +120,9 @@ export const registerAdminIpAllowlist = (app: FastifyInstance, cidrAllowlist?: s
       path,
     })
     reply.code(403)
-    return reply.send({ error: 'forbidden' })
+    return reply.send({
+      error: 'forbidden',
+      code: 'admin_ip_not_allowlisted',
+    })
   })
 }

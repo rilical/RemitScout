@@ -122,7 +122,46 @@ export const dbAdminRoutes = (app: FastifyInstance) => {
             reply.code(409)
             return { success: false, error: 'read_only', message: 'Runtime is read-only.' }
           }
-          await pool.query(ensureAttemptsSql)
+          const client = await pool.connect()
+          try {
+            await client.query('BEGIN')
+            await client.query(ensureAttemptsSql)
+
+            const existsAfterResult = await client.query<{ regclass: string | null }>(
+              `SELECT to_regclass('silver.alert_notification_attempt') AS regclass`,
+            )
+            const existsAfter = Boolean(existsAfterResult.rows[0]?.regclass)
+            const payload = {
+              success: true,
+              requested_mode: requestedMode,
+              applied_mode: appliedMode,
+              exists: existsAfter,
+              missing: !existsAfter,
+              migration: migrationPath,
+              message: 'Ensure completed.',
+            }
+
+            await logAuditEvent(client, {
+              actorId: adminId,
+              actorType: 'admin',
+              actorRole: request.user?.role ?? undefined,
+              action: 'ops.db.ensure_alert_notification_attempts',
+              entityType: 'db',
+              entityId: 'silver.alert_notification_attempt',
+              category: 'admin',
+              severity: 'warning',
+              metadata: payload,
+              ...getRequestContext(request),
+            })
+
+            await client.query('COMMIT')
+            return payload
+          } catch (error) {
+            await client.query('ROLLBACK')
+            throw error
+          } finally {
+            client.release()
+          }
         }
 
         const existsAfterResult = await pool.query<{ regclass: string | null }>(
@@ -130,38 +169,15 @@ export const dbAdminRoutes = (app: FastifyInstance) => {
         )
         const existsAfter = Boolean(existsAfterResult.rows[0]?.regclass)
 
-        const payload = {
+        return {
           success: true,
           requested_mode: requestedMode,
           applied_mode: appliedMode,
           exists: existsAfter,
           missing: !existsAfter,
           migration: migrationPath,
-          message: ensureRequested
-            ? 'Ensure completed.'
-            : (existsAfter ? 'Table exists.' : 'Table is missing. Apply migration to create it.'),
+          message: existsAfter ? 'Table exists.' : 'Table is missing. Apply migration to create it.',
         }
-
-        try {
-          await logAuditEvent(pool, {
-            actorId: adminId,
-            actorType: 'admin',
-            actorRole: request.user?.role ?? undefined,
-            action: 'ops.db.ensure_alert_notification_attempts',
-            entityType: 'db',
-            entityId: 'silver.alert_notification_attempt',
-            category: 'admin',
-            severity: ensureRequested ? 'warning' : 'info',
-            metadata: payload,
-            ...getRequestContext(request),
-          })
-        } catch (auditError) {
-          logger.warn('ops_db_ensure_audit_failed', {
-            error: auditError instanceof Error ? auditError.message : String(auditError),
-          })
-        }
-
-        return payload
       } catch (error) {
         logger.error('ensure_alert_notification_attempts_failed', {
           error: getErrorMessage(error),

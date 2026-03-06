@@ -124,6 +124,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { DataTable } from '~/ui'
 import type { DataTableColumn } from '~/ui'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -204,7 +205,7 @@ const loadUsers = async () => {
     }
   }
   catch (error) {
-    tableError.value = error instanceof Error ? error.message : 'Failed to load enterprise users.'
+    tableError.value = getAdminApiErrorMessage(error, 'Failed to load enterprise users.')
     log.error('Failed to load users', error)
   }
   finally {
@@ -243,7 +244,7 @@ const grantAccess = async () => {
     }
   }
   catch (error) {
-    grantMessage.value = 'Failed to grant access'
+    grantMessage.value = getAdminApiErrorMessage(error, 'Failed to grant access.')
     grantSuccess.value = false
   }
   finally {
@@ -266,6 +267,8 @@ const revokeAccess = async (user: UserWithPlan) => {
     await loadUsers()
   }
   catch (error) {
+    grantMessage.value = getAdminApiErrorMessage(error, 'Failed to revoke access.')
+    grantSuccess.value = false
     log.error('Failed to revoke access', error)
   }
   finally {

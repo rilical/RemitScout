@@ -279,12 +279,7 @@
         </button>
         <div class="flex items-center gap-3">
           <button
-            class="text-body-sm text-neutral-400 hover:text-white transition-colors"
-            @click="handleShare"
-          >
-            Share
-          </button>
-          <button
+            v-if="canEmbed"
             class="text-body-sm text-neutral-400 hover:text-white transition-colors"
             @click="handleEmbed"
           >
@@ -317,6 +312,7 @@ interface Props {
   ctaLabel?: string
   disableActions?: boolean
   daysAvailable?: number
+  canEmbed?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -329,11 +325,11 @@ const props = withDefaults(defineProps<Props>(), {
   ctaLabel: undefined,
   disableActions: undefined,
   daysAvailable: 0,
+  canEmbed: false,
 })
 
 const emit = defineEmits<{
   view: [chartId: string]
-  share: [chartId: string]
   embed: [chartId: string]
 }>()
 
@@ -501,11 +497,6 @@ const areaPath = computed(() => {
 function handleView() {
   if (resolvedDisableActions.value) return
   emit('view', props.metadata.id)
-}
-
-function handleShare() {
-  if (resolvedDisableActions.value) return
-  emit('share', props.metadata.id)
 }
 
 function handleEmbed() {

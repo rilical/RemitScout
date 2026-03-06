@@ -9,11 +9,13 @@
  * merging discovered payin/payout methods with existing ones.
  */
 
-import type { Pool } from 'pg'
+import type { Pool, PoolClient } from 'pg'
 import { createLogger } from '../../../shared/logger'
 import type { DiscoveryResult, DiscoveredDeliveryMethod } from './discovery-types'
 
 const logger = createLogger('plane-b.discovery.applier')
+
+type Queryable = Pick<Pool, 'query'> | Pick<PoolClient, 'query'>
 
 // ── Result types ────────────────────────────────────────────────────
 
@@ -27,6 +29,11 @@ export type ApplyResult = {
   errors: string[]
 }
 
+export type ApplyDiscoveryOptions = {
+  discoveryScanId?: number
+  approvedBy?: string
+}
+
 // ── Main entry point ────────────────────────────────────────────────
 
 /**
@@ -37,9 +44,10 @@ export type ApplyResult = {
  *    into provider_corridor_capability (merging with existing).
  */
 export async function applyDiscoveryResults(
-  pool: Pool,
+  pool: Queryable,
   providerId: string,
   result: DiscoveryResult,
+  options: ApplyDiscoveryOptions = {},
 ): Promise<ApplyResult> {
   const applyResult: ApplyResult = {
     providerId,
@@ -51,23 +59,8 @@ export async function applyDiscoveryResults(
     errors: [],
   }
 
-  // 1. Apply country expansions to rights_matrix
-  try {
-    await applyCountryExpansions(pool, providerId, result, applyResult)
-  } catch (err) {
-    const msg = `rights_matrix update failed: ${err instanceof Error ? err.message : String(err)}`
-    applyResult.errors.push(msg)
-    logger.error('discovery_apply_rights_matrix_error', { providerId, error: msg })
-  }
-
-  // 2. Apply delivery method updates to provider_corridor_capability
-  try {
-    await applyCapabilityUpdates(pool, providerId, result, applyResult)
-  } catch (err) {
-    const msg = `capability update failed: ${err instanceof Error ? err.message : String(err)}`
-    applyResult.errors.push(msg)
-    logger.error('discovery_apply_capability_error', { providerId, error: msg })
-  }
+  await applyCountryExpansions(pool, providerId, result, applyResult, options)
+  await applyCapabilityUpdates(pool, providerId, result, applyResult)
 
   logger.info('discovery_apply_completed', {
     providerId,
@@ -85,10 +78,11 @@ export async function applyDiscoveryResults(
 // ── Country expansions ──────────────────────────────────────────────
 
 async function applyCountryExpansions(
-  pool: Pool,
+  pool: Queryable,
   providerId: string,
   result: DiscoveryResult,
   applyResult: ApplyResult,
+  options: ApplyDiscoveryOptions,
 ): Promise<void> {
   if (result.corridors.length === 0) return
 
@@ -136,6 +130,7 @@ async function applyCountryExpansions(
      ON CONFLICT (provider_id) DO UPDATE SET
        source_countries = $2,
        destination_countries = $3,
+       last_audited_at = NOW(),
        updated_at = NOW()`,
     [providerId, mergedSources, mergedDests],
   )
@@ -143,6 +138,37 @@ async function applyCountryExpansions(
   applyResult.rightsMatrixUpdated = true
   applyResult.sourceCountriesAdded = newSources
   applyResult.destinationCountriesAdded = newDests
+
+  if (options.discoveryScanId && options.approvedBy) {
+    if (newSources.length > 0) {
+      await pool.query(
+        `INSERT INTO silver.rights_matrix_audit_log
+           (provider_id, field_changed, previous_value, new_value, discovery_scan_id, approved_by)
+         VALUES ($1, 'source_countries', $2, $3, $4, $5)`,
+        [
+          providerId,
+          JSON.stringify(existingSources),
+          JSON.stringify(mergedSources),
+          options.discoveryScanId,
+          options.approvedBy,
+        ],
+      )
+    }
+    if (newDests.length > 0) {
+      await pool.query(
+        `INSERT INTO silver.rights_matrix_audit_log
+           (provider_id, field_changed, previous_value, new_value, discovery_scan_id, approved_by)
+         VALUES ($1, 'destination_countries', $2, $3, $4, $5)`,
+        [
+          providerId,
+          JSON.stringify(existingDests),
+          JSON.stringify(mergedDests),
+          options.discoveryScanId,
+          options.approvedBy,
+        ],
+      )
+    }
+  }
 
   logger.info('discovery_apply_countries_expanded', {
     providerId,
@@ -156,7 +182,7 @@ async function applyCountryExpansions(
 // ── Capability updates ──────────────────────────────────────────────
 
 async function applyCapabilityUpdates(
-  pool: Pool,
+  pool: Queryable,
   providerId: string,
   result: DiscoveryResult,
   applyResult: ApplyResult,
@@ -174,63 +200,53 @@ async function applyCapabilityUpdates(
   }
 
   for (const [corridorId, methods] of byCorridorId) {
-    try {
-      // Collect unique payin/payout methods from discovery
-      const discoveredPayins = new Set<string>()
-      const discoveredPayouts = new Set<string>()
-      for (const m of methods) {
-        discoveredPayins.add(m.normalizedPayin)
-        discoveredPayouts.add(m.normalizedPayout)
-      }
+    const discoveredPayins = new Set<string>()
+    const discoveredPayouts = new Set<string>()
+    for (const m of methods) {
+      discoveredPayins.add(m.normalizedPayin)
+      discoveredPayouts.add(m.normalizedPayout)
+    }
 
-      // Load existing capability for this corridor
-      const existingRow = await pool.query(
-        `SELECT payin_methods, payout_methods
-         FROM silver.provider_corridor_capability
-         WHERE provider_id = $1 AND corridor_id = $2
-         LIMIT 1`,
-        [providerId, corridorId],
-      )
+    const existingRow = await pool.query(
+      `SELECT payin_methods, payout_methods
+       FROM silver.provider_corridor_capability
+       WHERE provider_id = $1 AND corridor_id = $2
+       LIMIT 1`,
+      [providerId, corridorId],
+    )
 
-      const existingPayins: string[] = existingRow.rows[0]?.payin_methods ?? []
-      const existingPayouts: string[] = existingRow.rows[0]?.payout_methods ?? []
+    const existingPayins: string[] = existingRow.rows[0]?.payin_methods ?? []
+    const existingPayouts: string[] = existingRow.rows[0]?.payout_methods ?? []
 
-      // Merge: union of existing + discovered
-      const mergedPayins = [...new Set([...existingPayins, ...discoveredPayins])].sort()
-      const mergedPayouts = [...new Set([...existingPayouts, ...discoveredPayouts])].sort()
+    const mergedPayins = [...new Set([...existingPayins, ...discoveredPayins])].sort()
+    const mergedPayouts = [...new Set([...existingPayouts, ...discoveredPayouts])].sort()
 
-      // Track if we're adding new methods
-      const existingPayinSet = new Set(existingPayins)
-      const existingPayoutSet = new Set(existingPayouts)
-      const hasNewPayins = [...discoveredPayins].some((m) => !existingPayinSet.has(m))
-      const hasNewPayouts = [...discoveredPayouts].some((m) => !existingPayoutSet.has(m))
+    const existingPayinSet = new Set(existingPayins)
+    const existingPayoutSet = new Set(existingPayouts)
+    const hasNewPayins = [...discoveredPayins].some((m) => !existingPayinSet.has(m))
+    const hasNewPayouts = [...discoveredPayouts].some((m) => !existingPayoutSet.has(m))
 
-      // Upsert with merged methods
-      await pool.query(
-        `INSERT INTO silver.provider_corridor_capability
-           (provider_id, corridor_id, payin_methods, payout_methods, is_supported, source, last_verified_at)
-         VALUES ($1, $2, $3, $4, true, 'discovery', NOW())
-         ON CONFLICT (provider_id, corridor_id) DO UPDATE SET
-           payin_methods = $3,
-           payout_methods = $4,
-           is_supported = true,
-           source = CASE
-             WHEN silver.provider_corridor_capability.source = 'discovery' THEN 'discovery'
-             ELSE silver.provider_corridor_capability.source || '+discovery'
-           END,
-           last_verified_at = NOW(),
-           updated_at = NOW()`,
-        [providerId, corridorId, mergedPayins, mergedPayouts],
-      )
+    await pool.query(
+      `INSERT INTO silver.provider_corridor_capability
+         (provider_id, corridor_id, payin_methods, payout_methods, is_supported, source, last_verified_at)
+       VALUES ($1, $2, $3, $4, true, 'discovery', NOW())
+       ON CONFLICT (provider_id, corridor_id) DO UPDATE SET
+         payin_methods = $3,
+         payout_methods = $4,
+         is_supported = true,
+         source = CASE
+           WHEN silver.provider_corridor_capability.source IS NULL THEN 'discovery'
+           WHEN silver.provider_corridor_capability.source = 'discovery' THEN 'discovery'
+           ELSE silver.provider_corridor_capability.source || '+discovery'
+         END,
+         last_verified_at = NOW(),
+         updated_at = NOW()`,
+      [providerId, corridorId, mergedPayins, mergedPayouts],
+    )
 
-      applyResult.capabilitiesUpserted++
-      if (hasNewPayins || hasNewPayouts) {
-        applyResult.corridorsWithNewMethods.push(corridorId)
-      }
-    } catch (err) {
-      const msg = `corridor ${corridorId}: ${err instanceof Error ? err.message : String(err)}`
-      applyResult.errors.push(msg)
-      logger.warn('discovery_apply_corridor_error', { providerId, corridorId, error: msg })
+    applyResult.capabilitiesUpserted++
+    if (hasNewPayins || hasNewPayouts) {
+      applyResult.corridorsWithNewMethods.push(corridorId)
     }
   }
 }

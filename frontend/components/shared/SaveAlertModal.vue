@@ -240,7 +240,7 @@
                           d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                         />
                       </svg>
-                      Plus only
+                      {{ option?.lockLabel || 'Locked' }}
                     </span>
                     <span
                       v-else
@@ -299,12 +299,12 @@
                       </div>
                       <div class="relative flex items-center gap-3 mt-1 ml-6">
                         <NuxtLink
-                          to="/plus"
+                          :to="option.upgradePath || '/plus'"
                           class="text-body-sm font-semibold text-brand-600 hover:text-brand-800 transition-colors relative z-10"
                           @mousedown.stop
                           @click.stop="close"
                         >
-                          Upgrade to Plus
+                          {{ option.upgradeLabel || 'Upgrade' }}
                         </NuxtLink>
                         <span class="text-neutral-300">·</span>
                         <button
@@ -699,7 +699,14 @@ import { useFocusTrap } from '~/composables/useFocusTrap'
 const { isOpen, context, close: closeModal } = useSaveAlertModal()
 const alerts = useAlerts()
 const watchlist = useWatchlist()
-const { isPlus, isEnterprise } = useEntitlements()
+const {
+  isPlus,
+  smartAlertsEnabled,
+  dailyAlertsEnabled,
+  indexThresholdAlertsEnabled,
+  recoveryAvailable,
+  recoveryAction,
+} = useEntitlements()
 const { request } = useApi()
 const route = useRoute()
 
@@ -976,7 +983,7 @@ const triangulationAvailable = computed(() => corridorEligibility.value?.regular
 const isTriangulatedTarget = computed(() => target.value.type === 'triangulatedCorridor')
 
 const smartAlertDisabledReason = computed(() => {
-  if (!isPlus.value) return 'plus_required'
+  if (!smartAlertsEnabled.value) return recoveryAvailable.value ? 'plan_inactive' : 'plus_required'
   if (eligibilityLoading.value) return 'loading'
   if (!corridorEligibility.value) return 'unknown'
   if (corridorEligibility.value.smartAlerts.programEligible === false) return 'not_offered'
@@ -989,6 +996,10 @@ const smartAlertDisabledMessage = computed(() => {
   switch (smartAlertDisabledReason.value) {
     case 'plus_required':
       return 'Upgrade to Plus to use Smart Alerts'
+    case 'plan_inactive':
+      return recoveryAction.value === 'billing_portal'
+        ? 'Reactivate billing to use Smart Alerts'
+        : 'Upgrade again to use Smart Alerts'
     case 'loading':
       return 'Checking corridor data...'
     case 'unknown':
@@ -1076,18 +1087,43 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
             value: 'sendScore' as const,
             label: 'Intelligent Alert',
             disabled: smartDisabled,
-          locked: !isPlus.value,
-          unavailable: isDataIssue,
-          unavailableLabel,
-          loading: isLoading,
-          unavailableReason: smartAlertDisabledMessage.value ?? undefined,
-        })
+            locked: !smartAlertsEnabled.value,
+            lockLabel: 'Plus only',
+            upgradePath: '/plus',
+            upgradeLabel: 'Upgrade to Plus',
+            unavailable: isDataIssue,
+            unavailableLabel,
+            loading: isLoading,
+            unavailableReason: smartAlertDisabledMessage.value ?? undefined,
+          })
         }
-        options.push(
-          { value: 'rci_threshold' as const, label: 'RCI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
-          { value: 'rvi_threshold' as const, label: 'RVI Threshold', disabled: !isEnterprise.value, locked: !isEnterprise.value },
-          { value: 'index' as const, label: 'Index' },
-        )
+        if (
+          indexThresholdAlertsEnabled.value
+          || metric.value === 'rci_threshold'
+          || metric.value === 'rvi_threshold'
+        ) {
+          options.push(
+            {
+              value: 'rci_threshold' as const,
+              label: 'RCI Threshold',
+              disabled: !indexThresholdAlertsEnabled.value,
+              locked: !indexThresholdAlertsEnabled.value,
+              lockLabel: 'Enterprise only',
+              upgradePath: '/contact?type=enterprise&topic=alerts',
+              upgradeLabel: 'Contact sales',
+            },
+            {
+              value: 'rvi_threshold' as const,
+              label: 'RVI Threshold',
+              disabled: !indexThresholdAlertsEnabled.value,
+              locked: !indexThresholdAlertsEnabled.value,
+              lockLabel: 'Enterprise only',
+              upgradePath: '/contact?type=enterprise&topic=alerts',
+              upgradeLabel: 'Contact sales',
+            },
+          )
+        }
+        options.push({ value: 'index' as const, label: 'Index' })
         break
       case 'fxPair':
         options.push({ value: 'rate' as const, label: 'FX rate' })
@@ -1121,6 +1157,9 @@ watch([isOpen, corridorFrom, corridorTo, corridorFromCurrency, corridorToCurrenc
     label: string
     disabled?: boolean
     locked?: boolean
+    lockLabel?: string | undefined
+    upgradePath?: string | undefined
+    upgradeLabel?: string | undefined
     unavailable?: boolean
     unavailableLabel?: string | undefined
     loading?: boolean
@@ -1189,7 +1228,7 @@ const frequencyOptions = computed(() => {
   const isSmart = metric.value === 'sendScore'
   return [
     { value: 'weekly' as const, label: 'Weekly' },
-    { value: 'daily' as const, label: 'Daily', disabled: !isPlus.value || isSmart },
+    { value: 'daily' as const, label: 'Daily', disabled: !dailyAlertsEnabled.value || isSmart },
   ]
 })
 
@@ -1353,7 +1392,7 @@ async function handleManage() {
 const isEditing = computed(() => !!context.value?.alertId)
 const shouldDefaultToSmartAlert = computed(() => (
   (context.value?.source === 'alerts' || context.value?.source === 'pulse')
-  && isPlus.value
+  && smartAlertsEnabled.value
   && target.value.type === 'corridor'
   && corridorEligibility.value?.smartAlerts?.status === 'available'
 ))
@@ -1474,7 +1513,7 @@ watch(
       metric.value = defaultMetric
       comparator.value = 'gte'
       value.value = defaultValueForMetric(metric.value)
-      frequency.value = isPlus.value && defaultMetric !== 'sendScore' ? 'daily' : 'weekly'
+      frequency.value = dailyAlertsEnabled.value && defaultMetric !== 'sendScore' ? 'daily' : 'weekly'
       currency.value = showCurrency.value ? defaultCurrencyForMetric(metric.value) : ''
     }
 
@@ -1506,7 +1545,7 @@ watch(currentRateValue, (rate) => {
 watch(metric, (nextMetric) => {
   if (initializing.value) return
   if (nextMetric === 'sendScore') {
-    if (!isPlus.value) {
+    if (!smartAlertsEnabled.value) {
       error.value = 'Smart alerts are available on Plus plans.'
       metric.value = firstEnabledMetric.value
       return
@@ -1525,12 +1564,12 @@ watch(metric, (nextMetric) => {
   }
 })
 
-watch([isPlus, metric, frequency], ([plus, nextMetric, nextFrequency]) => {
+watch([dailyAlertsEnabled, metric, frequency], ([dailyEnabled, nextMetric, nextFrequency]) => {
   if (nextMetric === 'sendScore' && nextFrequency !== 'weekly') {
     frequency.value = 'weekly'
     return
   }
-  if (!plus && nextFrequency === 'daily') {
+  if (!dailyEnabled && nextFrequency === 'daily') {
     frequency.value = 'weekly'
   }
 })

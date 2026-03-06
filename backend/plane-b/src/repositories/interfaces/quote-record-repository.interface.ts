@@ -32,6 +32,26 @@ export type QuoteRecordPersistInput = QuoteRecordInsertInput & {
   qualityFlags: string
 }
 
+export type QuoteObservationPersistInput = {
+  moduleId: string
+  providerId: string
+  ownerKind: 'provider' | 'signal_source'
+  ownerId: string
+  signalLayer: string
+  captureMethod: string | null
+  parserVersion: string | null
+  sourceRef: string | null
+  corridorId: string
+  amountBucket: number
+  confidence: string
+  observedAt: string | Date
+  ingestionRunId: string
+  payload: string
+  lineage: string
+  traceId: string | null
+  parentSpanId: string | null
+}
+
 export type QuoteBaselineRecord = {
   avg_rate: number | null
   stddev_rate: number | null
@@ -43,6 +63,7 @@ export interface IQuoteRecordRepository {
   insertQuoteAndUpsertLatest(input: {
     quote: QuoteRecordPersistInput
     latest: LatestQuoteUpsertInput
+    observation?: QuoteObservationPersistInput
   }): Promise<void>
   /**
    * Retrieves 24-hour baseline statistics for anomaly detection.

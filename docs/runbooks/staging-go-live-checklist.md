@@ -115,6 +115,9 @@ Source template:
 - [ ] Run workflow: `.github/workflows/deploy.yml` with `env=staging` (PASS).
 - [ ] Runtime config validation passes (`ci:config-validate` in staging profile).
 - [ ] Authenticated watchlist/alerts smoke passes (`pnpm -C backend ci:alerts-watchlists-smoke` in deploy pipeline).
+- [ ] Authenticated smoke for `omar@remit-scout.com` confirms `/api/v1/me` returns `app_role=super_admin` and enterprise entitlements.
+- [ ] Admin surface smoke passes (`pnpm -C backend ci:admin-surface-smoke`) and leaves artifact logs in workflow evidence.
+- [ ] Current GitHub runner IP is inside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`; admin smoke must not bypass network controls.
 - [ ] For enterprise-mode staging (`PLANE_A_REQUIRE_API_KEY=1`), SOC 2 report state is allowed (`in_progress`/`audited`) and not expired/revoked in readiness checks.
 
 ## 10) Functional checks after deploy

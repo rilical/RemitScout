@@ -2,6 +2,7 @@ import './load-env'
 import './error-extensions'
 import { PROVIDER_QUALITY_GATES } from './provider-quality-gates'
 import { clampInt, toBoolean, toList, toNumber, toPositiveInt } from './config-helpers'
+import { resolveIngestFanoutQueueState } from './ingest-fanout-queues'
 
 const toQueueMode = (value: string | undefined) => {
   if (value === 'queue' || value === 'shadow') return value
@@ -329,18 +330,13 @@ const rawConfig = {
     enterpriseApiRateLimitMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_MAX, 600),
     enterpriseApiRateLimitWindowMs: toNumber(process.env.PLANE_A_ENTERPRISE_API_RATE_LIMIT_WINDOW_MS, 60000),
     enterpriseApiKeyMax: toNumber(process.env.PLANE_A_ENTERPRISE_API_KEY_MAX, 5),
+    enterprisePublishedEmbedMax: toNumber(process.env.PLANE_A_ENTERPRISE_PUBLISHED_EMBED_MAX, 100),
     requireApiKey: toBoolean(process.env.PLANE_A_REQUIRE_API_KEY),
     requireJwt: toBoolean(process.env.PLANE_A_REQUIRE_JWT),
     apiKeys: (process.env.PLANE_A_API_KEYS || '').split(',').map(k => k.trim()).filter(Boolean),
-    jwtSecret: (() => {
-      const secret = process.env.PLANE_A_JWT_SECRET || ''
-      if (isProdLikeEnvironment && !secret.trim()) {
-        throw new Error(
-          'PLANE_A_JWT_SECRET must be set to a non-empty value in production/staging environments',
-        )
-      }
-      return secret
-    })(),
+    // Plane A auth is validated by assertRuntimeConfig in Plane A entrypoints.
+    // Keep shared config import-safe for non-Plane-A jobs that don't use JWT auth.
+    jwtSecret: process.env.PLANE_A_JWT_SECRET || '',
     adminTokenIssuer: process.env.PLANE_A_ADMIN_TOKEN_ISSUER || 'remit-scout-plane-a',
     adminAccessTokenTtlSeconds: toPositiveInt(
       process.env.PLANE_A_ADMIN_ACCESS_TOKEN_TTL_SECONDS,
@@ -1366,6 +1362,9 @@ const rawConfig = {
         expires_on: process.env.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON || '',
       },
     },
+    institutional_data_maturity: {
+      required_days: toPositiveInt(process.env.COMPLIANCE_INSTITUTIONAL_DATA_MIN_DAYS, 180),
+    },
   },
   auth: {
     supabase: {
@@ -1597,7 +1596,7 @@ const rawConfig = {
   triangulation: {
     enabled: toBoolean(process.env.TRIANGULATION_ENABLED),
     amountBuckets: toList(process.env.TRIANGULATION_AMOUNT_BUCKETS ?? '500').map(Number).filter(Number.isFinite),
-    methodProfile: process.env.TRIANGULATION_METHOD_PROFILE || 'bank_transfer:bank_deposit',
+    methodProfile: process.env.TRIANGULATION_METHOD_PROFILE || 'standard_bank',
     intermediaries: toList(process.env.TRIANGULATION_INTERMEDIARIES ?? 'USD,EUR,GBP,AUD,SGD,AED'),
     minProvidersPerLeg: toPositiveInt(process.env.TRIANGULATION_MIN_PROVIDERS_PER_LEG, 2),
     maxFreshnessMinutes: toNumber(process.env.TRIANGULATION_MAX_FRESHNESS_MINUTES, 120),
@@ -1730,6 +1729,12 @@ export const assertRuntimeConfig = (
   requirements: RuntimeConfigRequirements = {},
 ): void => {
   const missing: string[] = []
+  const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+    mode: config.queues.ingestFanout.mode,
+    url: config.queues.ingestFanout.url,
+    tier1Url: config.queues.ingestFanout.tier1Url,
+    tier2Url: config.queues.ingestFanout.tier2Url,
+  })
 
   if (requirements.requirePlaneA && !config.db.planeAUrl) {
     missing.push('DATABASE_URL_PLANE_A')
@@ -1782,8 +1787,11 @@ export const assertRuntimeConfig = (
     if (requireExportJobQueue && !config.queues.exports.url) {
       missing.push('EXPORT_JOB_QUEUE_URL')
     }
-    if (requireIngestFanoutQueue && !config.queues.ingestFanout.url) {
-      missing.push('PLANE_B_INGEST_FANOUT_QUEUE_URL')
+    if (requireIngestFanoutQueue && !ingestFanoutQueueState.enabled) {
+      missing.push('PLANE_B_INGEST_FANOUT_QUEUE_URL or PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL + PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL')
+    }
+    if (requireIngestFanoutQueue && ingestFanoutQueueState.tierMisconfigured) {
+      missing.push('PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL + PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL (both required when using tiered ingest fanout queues)')
     }
     if (requireNotificationsQueue && !config.queues.notifications.url) {
       missing.push('PLANE_B_NOTIFICATIONS_QUEUE_URL')

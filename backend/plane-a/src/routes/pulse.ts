@@ -40,6 +40,8 @@ import { requireEntitlement } from '../plugins/auth-plugin'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 import type { PlaneAContainer } from '../container'
 import { getCountryByCode } from '../../../shared/countries-currencies'
+import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { buildPublishedEmbedListItem } from '../services/published-embeds'
 
 const logger = createLogger('plane-a.pulse')
 const pulseIndicesCache = createTtlCache({ namespace: 'plane_a:pulse_indices' })
@@ -305,6 +307,21 @@ type PulseEmbedSnapshot = {
   expiresAt: string
 }
 
+type PulsePublishedEmbedPayload = {
+  chartId: string
+  chart: PulseEmbedSnapshot['chart']
+  methodCoverage?: PulseEmbedSnapshot['methodCoverage']
+  filters: PulseEmbedSnapshot['filters']
+  corridorLabel: string
+  theme: 'dark' | 'light'
+}
+
+type PulsePublishedEmbedResponse = PulsePublishedEmbedPayload & {
+  publishedId: string
+  createdAt: string
+  publishedAt: string
+}
+
 const normalizeCommaList = (value: string) => value
   .split(',')
   .map((part) => part.trim())
@@ -352,6 +369,12 @@ const pulseEmbedSnapshotBodySchema = z.object({
   payout_method: z.enum(['bank', 'cash', 'wallet']).optional(),
   range: z.enum(['7d', '30d', '90d', '365d']).optional(),
 })
+
+const pulsePublishedEmbedBodySchema = pulseEmbedSnapshotBodySchema.extend({
+  theme: z.enum(['dark', 'light']).default('dark'),
+})
+
+const publishedEmbedIdSchema = z.string().uuid()
 
 const toSafeNumber = (value: unknown): number | null => {
   const parsed = typeof value === 'number' ? value : Number(value)
@@ -1257,6 +1280,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   const comparisonHistoryRepository = repositories.comparisonHistory
   const guardLite = { preHandler: requireEntitlement('pulse') }
   const guardPro = { preHandler: requireEntitlement('pulse_full') }
+  const guardPulseEmbed = { preHandler: requireEntitlement('pulse_embed') }
   const loadPulse = (
     baseKey: string,
     filters: PulseCacheFilters,
@@ -1291,6 +1315,123 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       const candidateDelta = Math.abs(candidate - amount)
       return candidateDelta < bestDelta ? candidate : best
     }, PULSE_AMOUNTS[0] || 500)
+  }
+
+  const buildPulseEmbedPayload = async (
+    request: { query?: unknown; entitlementsContext?: { entitlements?: { pulse_access?: string | null } } },
+    input: z.infer<typeof pulseEmbedSnapshotBodySchema>,
+  ) => {
+    const chartId = input.chart_id
+    if (!PULSE_CHART_IDS.includes(chartId as any)) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_chart_id',
+          chart_id: chartId,
+        },
+      })
+    }
+
+    const queryParams: Record<string, unknown> = {
+      corridor: input.corridor,
+      corridor_id: input.corridor_id,
+      amount: input.amount ?? INDICES_AMOUNT_BUCKET,
+      fundingMethod: input.funding_method ?? 'bank',
+      payoutMethod: input.payout_method ?? 'bank',
+      range: input.range ?? '30d',
+    }
+
+    const filters = buildRequestFilters(request, queryParams)
+    const resolvedCorridorId = await resolveIndicesCorridorId(
+      goldIndicesRepository,
+      filters,
+      input.corridor_id ?? null,
+    )
+
+    if (!resolvedCorridorId) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'missing_corridor_id',
+          message: 'corridor_id is required for Pulse embeds.',
+        },
+      })
+    }
+
+    const trackedResult = await query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
+      [resolvedCorridorId],
+      planeAPool,
+    )
+    const corridorTracked = (trackedResult.rows[0]?.count ?? 0) > 0
+    if (!corridorTracked) {
+      throw new NotFoundError('Not found', {
+        details: {
+          error: 'corridor_not_tracked',
+          message: `Corridor ${resolvedCorridorId} is not available in Gold export.`,
+        },
+      })
+    }
+
+    const snapshotFilters: PulseCacheFilters = {
+      ...filters,
+      amount: input.amount ?? filters.amount ?? INDICES_AMOUNT_BUCKET,
+      payin: input.funding_method ?? filters.payin ?? 'bank',
+      payout: input.payout_method ?? filters.payout ?? 'bank',
+      range: input.range ?? filters.range ?? '30d',
+    }
+
+    const chart = INDEX_CHART_IDS.has(chartId)
+      ? (() => {
+          const indicesFilters: PulseCacheFilters = {
+            ...snapshotFilters,
+            corridor: snapshotFilters.corridor ?? resolvedCorridorId,
+          }
+          return loadIndices(chartId, indicesFilters, {
+            ...queryParams,
+            corridor_id: resolvedCorridorId,
+          })
+        })()
+      : (() => loadPulse(`chart:${chartId}`, snapshotFilters, null).then(({ payload, updatedAt }) => ({
+          ...normalizeChartPayload(chartId, payload, updatedAt),
+          dataAvailable: Boolean(updatedAt),
+          updatedAt: updatedAt || null,
+          source: updatedAt ? ('gold_cache' as const) : ('none' as const),
+        })))()
+
+    const [resolvedChart, methodCoverage] = await Promise.all([
+      chart,
+      chartId === 'payment-rail-coverage'
+        ? loadPulse('method-coverage', snapshotFilters, pulseDefaults.methodCoverage)
+          .then(({ payload }) => mapMethodCoverage(payload))
+        : Promise.resolve(undefined),
+    ])
+
+    const chartWithState = INDEX_CHART_IDS.has(chartId)
+      ? {
+          ...resolvedChart,
+          dataAvailable: Array.isArray((resolvedChart as any).series) && (resolvedChart as any).series.length > 0,
+          updatedAt: (resolvedChart as any).metadata?.lastUpdated || null,
+          source: 'gold_export' as const,
+        }
+      : (resolvedChart as PulseEmbedSnapshot['chart'])
+
+    return {
+      chartId,
+      chart: chartWithState,
+      methodCoverage: Array.isArray(methodCoverage)
+        ? methodCoverage as PulseEmbedSnapshot['methodCoverage']
+        : undefined,
+      filters: {
+        corridor: snapshotFilters.corridor || 'global',
+        corridorId: resolvedCorridorId,
+        amount: Number(snapshotFilters.amount) || INDICES_AMOUNT_BUCKET,
+        fundingMethod: (snapshotFilters.payin as 'bank' | 'card' | 'cash') || 'bank',
+        payoutMethod: (snapshotFilters.payout as 'bank' | 'cash' | 'wallet') || 'bank',
+        range: (normalizePulseRange(snapshotFilters.range) || '30d') as '7d' | '30d' | '90d' | '365d',
+      },
+      corridorId: resolvedCorridorId,
+      corridorLabel: formatCorridorLabelFromId(resolvedCorridorId),
+      title: chartWithState.metadata?.title || buildChartData(chartId).metadata.title,
+    }
   }
 
   const formatWeekdayLabel = (dateInput: string): string => {
@@ -1938,7 +2079,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/pulse/embed-snapshots', guardPro, async (request, reply) => {
+  app.post('/pulse/embed-snapshots', guardPulseEmbed, async (request, reply) => {
     const parsed = pulseEmbedSnapshotBodySchema.safeParse(request.body)
     if (!parsed.success) {
       throw new ValidationError('Invalid request', {
@@ -1949,116 +2090,27 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       })
     }
 
-    const chartId = parsed.data.chart_id
-    if (!PULSE_CHART_IDS.includes(chartId as any)) {
-      throw new ValidationError('Invalid request', {
-        details: {
-          error: 'invalid_chart_id',
-          chart_id: chartId,
-        },
-      })
-    }
-
-    const queryParams: Record<string, unknown> = {
-      corridor: parsed.data.corridor,
-      corridor_id: parsed.data.corridor_id,
-      amount: parsed.data.amount ?? INDICES_AMOUNT_BUCKET,
-      fundingMethod: parsed.data.funding_method ?? 'bank',
-      payoutMethod: parsed.data.payout_method ?? 'bank',
-      range: parsed.data.range ?? '30d',
-    }
-
-    const filters = buildRequestFilters(request, queryParams)
-    const resolvedCorridorId = await resolveIndicesCorridorId(
-      goldIndicesRepository,
-      filters,
-      parsed.data.corridor_id ?? null,
-    )
-
-    if (!resolvedCorridorId) {
-      throw new ValidationError('Invalid request', {
-        details: {
-          error: 'missing_corridor_id',
-          message: 'corridor_id is required for embed snapshots.',
-        },
-      })
-    }
-
-    const trackedResult = await query<{ count: number }>(
-      `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
-      [resolvedCorridorId],
-      planeAPool,
-    )
-    const corridorTracked = (trackedResult.rows[0]?.count ?? 0) > 0
-    if (!corridorTracked) {
-      reply.code(404)
-      return {
-        error: 'corridor_not_tracked',
-        message: `Corridor ${resolvedCorridorId} is not available in Gold export.`,
+    let prepared
+    try {
+      prepared = await buildPulseEmbedPayload(request, parsed.data)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        reply.code(404)
+        return error.details
       }
+      throw error
     }
-
-    const snapshotFilters: PulseCacheFilters = {
-      ...filters,
-      amount: parsed.data.amount ?? filters.amount ?? INDICES_AMOUNT_BUCKET,
-      payin: parsed.data.funding_method ?? filters.payin ?? 'bank',
-      payout: parsed.data.payout_method ?? filters.payout ?? 'bank',
-      range: parsed.data.range ?? filters.range ?? '30d',
-    }
-
-    const chart = INDEX_CHART_IDS.has(chartId)
-      ? (() => {
-          const indicesFilters: PulseCacheFilters = {
-            ...snapshotFilters,
-            corridor: snapshotFilters.corridor ?? resolvedCorridorId,
-          }
-          return loadIndices(chartId, indicesFilters, {
-            ...queryParams,
-            corridor_id: resolvedCorridorId,
-          })
-        })()
-      : (() => loadPulse(`chart:${chartId}`, snapshotFilters, null).then(({ payload, updatedAt }) => ({
-          ...normalizeChartPayload(chartId, payload, updatedAt),
-          dataAvailable: Boolean(updatedAt),
-          updatedAt: updatedAt || null,
-          source: updatedAt ? ('gold_cache' as const) : ('none' as const),
-        })))()
-
-    const [resolvedChart, methodCoverage] = await Promise.all([
-      chart,
-      chartId === 'payment-rail-coverage'
-        ? loadPulse('method-coverage', snapshotFilters, pulseDefaults.methodCoverage)
-          .then(({ payload }) => mapMethodCoverage(payload))
-        : Promise.resolve(undefined),
-    ])
-    const chartWithState = INDEX_CHART_IDS.has(chartId)
-      ? {
-          ...resolvedChart,
-          dataAvailable: Array.isArray((resolvedChart as any).series) && (resolvedChart as any).series.length > 0,
-          updatedAt: (resolvedChart as any).metadata?.lastUpdated || null,
-          source: 'gold_export' as const,
-        }
-      : (resolvedChart as PulseEmbedSnapshot['chart'])
 
     const snapshotId = randomUUID().replace(/-/g, '')
     const createdAt = new Date().toISOString()
     const expiresAt = new Date(Date.now() + PULSE_EMBED_SNAPSHOT_TTL_MS).toISOString()
     const snapshot: PulseEmbedSnapshot = {
       snapshotId,
-      chartId,
-      chart: chartWithState,
-      methodCoverage: Array.isArray(methodCoverage)
-        ? methodCoverage as PulseEmbedSnapshot['methodCoverage']
-        : undefined,
-      filters: {
-        corridor: snapshotFilters.corridor || 'global',
-        corridorId: resolvedCorridorId,
-        amount: Number(snapshotFilters.amount) || INDICES_AMOUNT_BUCKET,
-        fundingMethod: (snapshotFilters.payin as 'bank' | 'card' | 'cash') || 'bank',
-        payoutMethod: (snapshotFilters.payout as 'bank' | 'cash' | 'wallet') || 'bank',
-        range: (normalizePulseRange(snapshotFilters.range) || '30d') as '7d' | '30d' | '90d' | '365d',
-      },
-      corridorLabel: formatCorridorLabelFromId(resolvedCorridorId),
+      chartId: prepared.chartId,
+      chart: prepared.chart,
+      methodCoverage: prepared.methodCoverage,
+      filters: prepared.filters,
+      corridorLabel: prepared.corridorLabel,
       createdAt,
       expiresAt,
     }
@@ -2070,8 +2122,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
       snapshotId,
       createdAt,
       expiresAt,
-      chartId,
-      corridorId: resolvedCorridorId,
+      chartId: prepared.chartId,
+      corridorId: prepared.corridorId,
     }
   })
 
@@ -2096,6 +2148,146 @@ export const pulseRoutes = async (app: FastifyInstance) => {
 
     reply.header('Cache-Control', 'public, max-age=300')
     return snapshot
+  })
+
+  app.post('/pulse/published-embeds', guardPulseEmbed, async (request, reply) => {
+    const parsed = pulsePublishedEmbedBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'bad_request',
+          details: parsed.error.issues,
+        },
+      })
+    }
+
+    const user = request.user
+    if (!user) {
+      reply.code(401)
+      return { error: 'unauthorized' }
+    }
+
+    let prepared
+    try {
+      prepared = await buildPulseEmbedPayload(request, parsed.data)
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        reply.code(404)
+        return error.details
+      }
+      throw error
+    }
+
+    const publishedEmbedRepository = app.container.repositories.publishedEmbed
+    const activeCount = await publishedEmbedRepository.countActiveByOwnerUserId(user.user_id)
+    if (activeCount >= config.planeA.enterprisePublishedEmbedMax) {
+      reply.code(409)
+      return {
+        error: 'published_embed_limit_reached',
+        maxPublishedEmbeds: config.planeA.enterprisePublishedEmbedMax,
+        message: 'Revoke an existing published embed before publishing another one.',
+      }
+    }
+
+    const row = await publishedEmbedRepository.create({
+      owner_user_id: user.user_id,
+      surface_kind: 'pulse',
+      chart_key: prepared.chartId,
+      title: prepared.title,
+      theme: parsed.data.theme,
+      filters_json: prepared.filters,
+      payload_json: {
+        chartId: prepared.chartId,
+        chart: prepared.chart,
+        methodCoverage: prepared.methodCoverage,
+        filters: prepared.filters,
+        corridorLabel: prepared.corridorLabel,
+        theme: parsed.data.theme,
+      } satisfies PulsePublishedEmbedPayload,
+    })
+
+    try {
+      await logAuditEvent(planeAPool, {
+        actorId: user.user_id,
+        actorType: 'user',
+        actorRole: user.role ?? undefined,
+        action: 'published_embed.create',
+        entityType: 'published_embed',
+        entityId: row.id,
+        afterSnapshot: {
+          surface_kind: row.surface_kind,
+          chart_key: row.chart_key,
+          title: row.title,
+          theme: row.theme,
+        },
+        category: 'user_action',
+        severity: 'info',
+        ...getRequestContext(request),
+      })
+    } catch (error) {
+      logger.warn('published_embed_audit_log_failed', {
+        user_id: user.user_id,
+        embed_id: row.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
+    const published = buildPublishedEmbedListItem(row)
+
+    return {
+      success: true,
+      publishedId: row.id,
+      chartId: prepared.chartId,
+      title: row.title,
+      theme: row.theme,
+      publicUrl: published.publicUrl,
+      embedCode: published.embedCode,
+      variants: published.variants,
+      createdAt: row.created_at.toISOString(),
+      publishedAt: row.published_at.toISOString(),
+      corridorId: prepared.corridorId,
+    }
+  })
+
+  app.get('/public/pulse/published-embeds/:id', async (request, reply) => {
+    const rawId = String((request.params as { id?: string }).id || '').trim()
+    const parsedId = publishedEmbedIdSchema.safeParse(rawId)
+    if (!parsedId.success) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_published_id',
+        },
+      })
+    }
+
+    const publishedEmbedRepository = app.container.repositories.publishedEmbed
+    const row = await publishedEmbedRepository.getById(parsedId.data)
+    if (!row || row.surface_kind !== 'pulse') {
+      reply.code(404)
+      return {
+        error: 'not_found',
+        message: 'Published embed not found.',
+      }
+    }
+
+    if (row.revoked_at) {
+      reply.code(410)
+      return {
+        error: 'published_embed_revoked',
+        message: 'Published embed has been removed by the publisher.',
+      }
+    }
+
+    const payload = row.payload_json as PulsePublishedEmbedPayload
+    const response: PulsePublishedEmbedResponse = {
+      publishedId: row.id,
+      ...payload,
+      createdAt: row.created_at.toISOString(),
+      publishedAt: row.published_at.toISOString(),
+    }
+
+    reply.header('Cache-Control', 'public, max-age=600')
+    return response
   })
 
   const publicRateLimitMap = new Map<string, { count: number; resetAt: number }>()

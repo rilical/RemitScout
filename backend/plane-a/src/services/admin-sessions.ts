@@ -7,6 +7,7 @@ import { config } from '../../../shared/config'
 import { getErrorMessage } from '../types/errors'
 import { generateToken, hashToken } from '../utils/token-generator'
 import { issuePlaneAAdminAccessToken } from '../auth/admin-jwt'
+import { resolveAdminAccess } from './admin-access'
 
 const logger = createLogger('plane-a.admin-sessions')
 
@@ -58,6 +59,11 @@ const addJsonMetadata = (metadata: Record<string, unknown> | undefined) => {
   catch {
     return '{}'
   }
+}
+
+const readStringMetadata = (metadata: Record<string, unknown>, key: string): string | null => {
+  const value = metadata[key]
+  return typeof value === 'string' && value.trim() ? value : null
 }
 
 const selectUserProfile = async (executor: Pool | PoolClient, userId: string) => {
@@ -174,7 +180,11 @@ export const issueAdminSession = async (input: IssueAdminSessionInput): Promise<
       issuedAccess.jti,
       input.ipHash ?? null,
       input.userAgent ?? null,
-      addJsonMetadata(input.metadata),
+      addJsonMetadata({
+        ...(input.metadata ?? {}),
+        supabase_role: input.role ?? null,
+        app_role: input.appRole ?? null,
+      }),
     ],
     input.pool,
   )
@@ -279,8 +289,24 @@ export const refreshAdminSession = async (
       throw new AdminSessionError('refresh_expired', 'Refresh token expired')
     }
 
-    const profile = await selectUserProfile(client, row.user_id)
     const metadata = toObject(row.metadata)
+    const storedSupabaseRole = readStringMetadata(metadata, 'supabase_role')
+    const profile = await selectUserProfile(client, row.user_id)
+    const access = await resolveAdminAccess({
+      pool: client,
+      userId: row.user_id,
+      email: profile.email,
+      supabaseRole: storedSupabaseRole,
+    })
+    if (!access.allowed) {
+      await revokeRefreshFamily(client, row.token_family_id, access.denyReason ?? 'admin_access_revoked')
+      await client.query('COMMIT')
+      throw new AdminSessionError(
+        access.denyReason ?? 'admin_access_revoked',
+        'Admin access is no longer available for this session',
+        403,
+      )
+    }
     const mfaVerified = metadata.mfa_verified === true
     const refreshToken = generateToken(48)
     const newRefreshHash = hashToken(refreshToken)
@@ -289,7 +315,7 @@ export const refreshAdminSession = async (
     const issuedAccess = await issuePlaneAAdminAccessToken({
       userId: row.user_id,
       email: profile.email,
-      role: profile.appRole,
+      role: storedSupabaseRole,
       appRole: profile.appRole,
       refreshFamilyId: row.token_family_id,
       mfaVerified,
@@ -330,6 +356,8 @@ export const refreshAdminSession = async (
           ...metadata,
           ...(input.metadata ?? {}),
           mfa_verified: mfaVerified,
+          supabase_role: storedSupabaseRole,
+          app_role: profile.appRole ?? null,
         }),
       ],
     )

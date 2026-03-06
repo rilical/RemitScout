@@ -26,6 +26,10 @@ export type ObservationType =
  */
 export type ObservationConfidence = 'high' | 'medium' | 'low' | 'unknown'
 
+export type ObservationOwnerKind = 'provider' | 'signal_source'
+
+export type ObservationSignalLayer = 'quote' | 'factor' | 'stress' | 'health' | 'failure' | 'event'
+
 /**
  * Universal observation envelope.
  *
@@ -37,10 +41,22 @@ export type ObservationEnvelope<T = unknown> = {
   observationId: string
   /** Module that produced this observation */
   moduleId: string
-  /** Provider ID */
+  /** Legacy producer ID retained for compatibility with provider-oriented queries. */
   providerId: string
+  /** Canonical owner kind for this observation. */
+  ownerKind: ObservationOwnerKind
+  /** Canonical owner identifier for this observation. */
+  ownerId: string
   /** Type of observation */
   type: ObservationType
+  /** Logical signal layer for downstream routing/governance. */
+  signalLayer: ObservationSignalLayer
+  /** Collection or capture method (http, api, browser, queue, derived, etc.). */
+  captureMethod: string | null
+  /** Parser/schema version tied to the observed payload, if applicable. */
+  parserVersion: string | null
+  /** External or internal source reference for lineage. */
+  sourceRef: string | null
   /** Corridor this observation relates to (null for provider-level observations) */
   corridorId: string | null
   /** Amount bucket context (null if not applicable) */
@@ -55,8 +71,31 @@ export type ObservationEnvelope<T = unknown> = {
   ingestionRunId: string
   /** Type-specific payload */
   payload: T
+  /** Additional lineage metadata used by downstream jobs. */
+  lineage?: Record<string, unknown>
   /** Trace correlation for distributed tracing */
   trace?: TraceCorrelation
   /** Schema version of this envelope */
   schemaVersion: number
+}
+
+export const getObservationSignalLayer = (type: ObservationType): ObservationSignalLayer => {
+  switch (type) {
+    case 'quote':
+      return 'quote'
+    case 'failure':
+      return 'failure'
+    case 'health_check':
+    case 'rate_limit':
+    case 'status':
+      return 'health'
+    case 'event':
+    case 'maritime':
+    case 'migration':
+    case 'displacement':
+    case 'telecom':
+      return 'event'
+    default:
+      return 'factor'
+  }
 }

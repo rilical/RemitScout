@@ -49,28 +49,54 @@ type FreshnessRow = {
   last_collected_at: string | null
 }
 
+export type ProviderHealthEvidenceInput = {
+  providerId?: string
+  windowHours?: number
+  caseId?: string
+  pool?: ReturnType<typeof createPool>
+}
+
+export type ProviderHealthEvidenceSummary = {
+  providerId: string
+  displayName: string
+  windowHours: number
+  runs: number
+  successRuns: number
+  alerts: number
+  circuits: number
+  missingCorridors: string[]
+  staleCorridors: string[]
+}
+
+export type ProviderHealthEvidenceOutput = {
+  evidence: EvidenceResult
+  summary: ProviderHealthEvidenceSummary
+}
+
 const parseWindowHours = (value: string | undefined): number => {
   const n = Number(value)
   if (!Number.isFinite(n) || n <= 0) return 6
   return Math.min(168, Math.max(1, Math.floor(n)))
 }
 
-const main = async () => {
-  const providerId = String(process.env.PROVIDER_ID || '').trim()
+export const collectProviderHealthEvidence = async (
+  input: ProviderHealthEvidenceInput = {},
+): Promise<ProviderHealthEvidenceOutput> => {
+  const providerId = String(input.providerId || process.env.PROVIDER_ID || '').trim()
   if (!providerId) {
-    console.error('Missing PROVIDER_ID')
-    process.exit(2)
+    throw new Error('Missing PROVIDER_ID')
   }
 
-  const windowHours = parseWindowHours(process.env.WINDOW_HOURS)
+  const windowHours = input.windowHours ?? parseWindowHours(process.env.WINDOW_HOURS)
   const since = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString()
-  const caseId = String(process.env.CASE_ID || '').trim()
+  const caseId = String(input.caseId || process.env.CASE_ID || '').trim()
 
   const entry = getProviderCatalogEntry(providerId as ProviderId)
   const displayName = entry?.display_name ?? providerId
   const env = resolveCaseEnv(config.envName || process.env.ENVIRONMENT || process.env.NODE_ENV || 'dev')
 
-  const pool = createPool(config.db.planeBUrl)
+  const pool = input.pool ?? createPool(config.db.planeBUrl)
+  const ownsPool = !input.pool
   try {
     const healthCorridors = [...getHealthCorridors(providerId as ProviderId)].map((c) => String(c).trim()).filter(Boolean)
 
@@ -284,7 +310,20 @@ const main = async () => {
       budgets: DEFAULT_EVIDENCE_BUDGETS,
     }
 
-    writeEvidenceResult(evidence)
+    return {
+      evidence,
+      summary: {
+        providerId,
+        displayName,
+        windowHours,
+        runs: runs.length,
+        successRuns,
+        alerts: alerts.length,
+        circuits: circuits.length,
+        missingCorridors,
+        staleCorridors,
+      },
+    }
   } catch (error: unknown) {
     const { message, stack } = formatError(error)
     const env = resolveCaseEnv(config.envName || process.env.ENVIRONMENT || process.env.NODE_ENV || 'dev')
@@ -307,14 +346,38 @@ const main = async () => {
       pointers: [],
       budgets: DEFAULT_EVIDENCE_BUDGETS,
     }
-    writeEvidenceResult(evidence)
-    process.exit(1)
+    return {
+      evidence,
+      summary: {
+        providerId,
+        displayName,
+        windowHours,
+        runs: 0,
+        successRuns: 0,
+        alerts: 0,
+        circuits: 0,
+        missingCorridors: [],
+        staleCorridors: [],
+      },
+    }
   } finally {
-    await pool.end()
+    if (ownsPool) {
+      await pool.end()
+    }
   }
 }
 
-main().catch((error) => {
-  console.error('provider_health_evidence_fatal', { error: error instanceof Error ? error.message : String(error) })
-  process.exit(1)
-})
+const main = async () => {
+  const { evidence } = await collectProviderHealthEvidence()
+  writeEvidenceResult(evidence)
+  if (!evidence.success) {
+    process.exit(1)
+  }
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('provider_health_evidence_fatal', { error: error instanceof Error ? error.message : String(error) })
+    process.exit(1)
+  })
+}

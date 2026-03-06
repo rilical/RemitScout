@@ -254,3 +254,16 @@ skills:
     outputs:
       stdout: "text"
     risk_tier: 1
+
+  - skill_id: "provider.onboarding.local"
+    purpose: "Run deterministic provider onboarding orchestration (scaffold, probes, evidence, smoke, remit-score, review card) from a single v1 contract."
+    executor: "local_codex"
+    command: "pnpm -C backend provider:onboarding-orchestrator"
+    required_inputs:
+      providers: "json"
+      execution_env: "dev|staging|prod"
+      ci_ref: "string"
+    outputs:
+      artifact: "artifacts/provider-onboarding/<run_id>/provider-onboarding-run.json"
+      files: "per-provider artifacts + evidence payloads"
+    risk_tier: 1

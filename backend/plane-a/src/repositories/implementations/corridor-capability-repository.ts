@@ -13,7 +13,8 @@ export class CorridorCapabilityRepository implements ICorridorCapabilityReposito
       `SELECT provider_id,
               payin_methods,
               payout_methods,
-              is_supported
+              is_supported,
+              source
          FROM silver.provider_corridor_capability
         WHERE corridor_id = $1`,
       [corridorId],

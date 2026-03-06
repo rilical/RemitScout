@@ -268,6 +268,8 @@
 </template>
 
 <script setup lang="ts">
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
+
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
 useAdminPage({
@@ -387,7 +389,7 @@ const saveDraft = async () => {
     await loadCampaigns()
   }
  catch (err) {
-    composeMessage.value = err instanceof Error ? err.message : 'Failed to save draft.'
+    composeMessage.value = getAdminApiErrorMessage(err, 'Failed to save draft.')
     composeSuccess.value = false
   }
  finally {
@@ -439,7 +441,7 @@ const executeSend = async () => {
     await loadCampaigns()
   }
  catch (err) {
-    sendMessage.value = err instanceof Error ? err.message : 'Failed to send campaign.'
+    sendMessage.value = getAdminApiErrorMessage(err, 'Failed to send campaign.')
     sendSuccess.value = false
   }
  finally {

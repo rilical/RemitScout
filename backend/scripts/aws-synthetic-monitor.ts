@@ -159,6 +159,26 @@ const testPopularCorridorsEndpoint = async (baseUrl: string): Promise<TestResult
   }
 }
 
+const testProviderOnboardingProbeEndpoint = async (baseUrl: string, onboardingPath: string): Promise<TestResult> => {
+  const startTime = Date.now()
+  const normalizedPath = onboardingPath.startsWith('/') ? onboardingPath : `/${onboardingPath}`
+  try {
+    const { status, duration } = await fetchWithTimeout(`${baseUrl}${normalizedPath}`, 3000)
+    const success = status === 200 && duration < 3
+    return {
+      success,
+      duration,
+      error: success ? undefined : `Status: ${status}, Duration: ${duration}s`,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      duration: (Date.now() - startTime) / 1000,
+      error: formatError(error).message,
+    }
+  }
+}
+
 /**
  * Records CloudWatch metrics for synthetic tests.
  */
@@ -219,6 +239,14 @@ export const handler = async (): Promise<{ success: boolean; results: TestResult
     { name: 'quotes', fn: () => testQuotesEndpoint(baseUrl) },
     { name: 'popular_corridors', fn: () => testPopularCorridorsEndpoint(baseUrl) },
   ]
+
+  const onboardingPath = String(process.env.PROVIDER_ONBOARDING_HEALTH_PATH || '').trim()
+  if (onboardingPath) {
+    tests.push({
+      name: 'provider_onboarding',
+      fn: () => testProviderOnboardingProbeEndpoint(baseUrl, onboardingPath),
+    })
+  }
 
   const results = await Promise.allSettled(tests.map((t) => t.fn()))
 

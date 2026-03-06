@@ -7,7 +7,12 @@ info:
     
     ## Authentication
     - Public endpoints: Rate-limited by IP
-    - Protected endpoints: Require JWT Bearer token
+    - Protected endpoints: Require JWT Bearer token unless the route explicitly supports `X-API-Key`
+    - `X-API-Key` is route-scoped and authoritative when present
+      - Retail user API keys are created under `/api/v1/me/api-keys` and can access only explicit retail API-key routes, subject to scope checks
+      - Institutional API keys are admin-managed, corridor-aware, and limited to explicit B2B routes
+      - Presenting `X-API-Key` on an unsupported route returns `403 api_key_route_not_allowed`
+      - Invalid keys return `401 invalid_api_key`; revoked retail keys return `401 revoked_api_key`
     
     ## Rate Limiting
     - Public: 100 requests per window (default 1 minute)
@@ -113,6 +118,8 @@ paths:
       summary: Get index series for a corridor
       description: |
         Returns TEER, RCI, and RVI time series derived from B2B queue quotes.
+        Supports bearer JWT, retail user API keys with `indices:read`, and institutional API keys with `indices:read`.
+        Institutional API-key requests remain corridor-scoped and fail closed on unsupported routes or scopes.
       tags:
         - Indices
       security:
@@ -121,7 +128,7 @@ paths:
       parameters:
         - name: X-API-Key
           in: header
-          description: Enterprise API key (optional when using bearer auth)
+          description: Retail user or institutional API key with `indices:read` (optional when using bearer auth)
           required: false
           schema:
             type: string
@@ -189,6 +196,8 @@ paths:
       summary: Get latest index point for a corridor
       description: |
         Returns the most recent TEER, RCI, and RVI point for a corridor.
+        Supports bearer JWT, retail user API keys with `indices:read`, and institutional API keys with `indices:read`.
+        Institutional API-key requests remain corridor-scoped and fail closed on unsupported routes or scopes.
       tags:
         - Indices
       security:
@@ -197,7 +206,7 @@ paths:
       parameters:
         - name: X-API-Key
           in: header
-          description: Enterprise API key (optional when using bearer auth)
+          description: Retail user or institutional API key with `indices:read` (optional when using bearer auth)
           required: false
           schema:
             type: string
@@ -252,6 +261,117 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/compliance/status:
+    get:
+      summary: Get institutional compliance and launch-readiness status
+      description: |
+        Returns public-facing compliance metadata and the institutional data-maturity gate.
+        This surface is used by the institutional waitlist pages and does not require authentication.
+      tags:
+        - Institutions
+      responses:
+        '200':
+          description: Compliance and launch-readiness status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceStatusResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/usage:
+    get:
+      summary: Get institutional API usage analytics
+      description: |
+        Returns per-client request totals, endpoint distribution, and daily request counts
+        for an institutional API key.
+        Supports institutional API keys with `indices:read`. Bearer-authenticated users without
+        an institutional client context receive `403 institutional_only`.
+      tags:
+        - Institutions
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          description: Institutional API key with `indices:read`
+          required: false
+          schema:
+            type: string
+        - name: days
+          in: query
+          description: Number of trailing days to include
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 7
+      responses:
+        '200':
+          description: Institutional API usage summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionalUsageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/corridors/{corridorId}/coverage:
+    get:
+      summary: Get corridor provider coverage for institutional monitoring
+      description: |
+        Returns the recent provider freshness view and publishability gate for a corridor.
+        Supports bearer JWT and institutional API keys with `corridors:read`.
+      tags:
+        - Institutions
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          description: Institutional API key with `corridors:read`
+          required: false
+          schema:
+            type: string
+        - name: corridorId
+          in: path
+          description: Full corridor ID (for example `US-MX-USD-MXN`)
+          required: true
+          schema:
+            type: string
+        - name: amount_bucket
+          in: query
+          description: Amount bucket to evaluate
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 500
+      responses:
+        '200':
+          description: Corridor coverage summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorridorCoverageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/quotes/current:
     get:
@@ -502,7 +622,10 @@ paths:
   /api/v1/me:
     get:
       summary: Get current user information
-      description: Returns user plan, entitlements, and usage information
+      description: |
+        Returns raw purchased plan state, effective capability state, billing summary,
+        entitlements, and usage. `plan` is the stored purchased tier. `plan_effective`
+        is the canonical capability plan after lifecycle fallback and admin overrides.
       tags:
         - User
       security:
@@ -521,8 +644,11 @@ paths:
 
   /api/v1/me/api-keys:
     get:
-      summary: List enterprise API keys
-      description: Returns API keys for the current user (enterprise only)
+      summary: List retail enterprise user API keys
+      description: |
+        Returns retail user API keys for the current authenticated enterprise user.
+        Institutional API keys are provisioned through admin institutional client flows and are not listed here.
+        Inactive paid plans fail with canonical `plan_inactive` detail fields.
       tags:
         - API Keys
       security:
@@ -541,8 +667,12 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
     post:
-      summary: Create enterprise API key
-      description: Creates a new API key for the current user (enterprise only)
+      summary: Create retail enterprise user API key
+      description: |
+        Creates a retail user API key for the current authenticated enterprise user.
+        Supported scopes are `indices:read`, `corridors:read`, and `exports:read`.
+        Unknown scopes and legacy values such as `tier:1` are rejected.
+        Inactive paid plans fail with canonical `plan_inactive` detail fields.
       tags:
         - API Keys
       security:
@@ -557,9 +687,11 @@ paths:
                 name:
                   type: string
                 scopes:
+                  description: Optional retail API-key scopes. Defaults to `indices:read` and `corridors:read`.
                   type: array
                   items:
                     type: string
+                    enum: [indices:read, corridors:read, exports:read]
       responses:
         '200':
           description: API key created
@@ -578,8 +710,8 @@ paths:
 
   /api/v1/me/api-keys/{keyId}/rotate:
     post:
-      summary: Rotate an enterprise API key
-      description: Rotates the API key token for the given key ID (enterprise only)
+      summary: Rotate a retail enterprise user API key
+      description: Rotates the retail user API key token for the given key ID. Requires active Enterprise API access.
       tags:
         - API Keys
       security:
@@ -608,8 +740,8 @@ paths:
 
   /api/v1/me/api-keys/{keyId}:
     delete:
-      summary: Revoke an enterprise API key
-      description: Revokes the API key for the given key ID (enterprise only)
+      summary: Revoke a retail enterprise user API key
+      description: Revokes the retail user API key for the given key ID. Requires active Enterprise API access.
       tags:
         - API Keys
       security:
@@ -639,6 +771,121 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/me/export-jobs:
+    get:
+      summary: List enterprise export jobs
+      description: Returns bulk export jobs for the current user. Requires active Enterprise bulk export access.
+      tags:
+        - Exports
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Export jobs list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeExportJobsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create enterprise export job
+      description: |
+        Creates a bulk export job for the current user. TEER / RCI / RVI exports
+        require `indices_exports_enabled` in addition to bulk export access.
+      tags:
+        - Exports
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobType:
+                  type: string
+                  enum: [history, watchlist, alerts, all, indices]
+                format:
+                  type: string
+                  enum: [csv, pdf]
+                dateFrom:
+                  type: string
+                dateTo:
+                  type: string
+                corridorIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Export job queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeExportJobCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/me/export-jobs/{jobId}/download:
+    get:
+      summary: Download enterprise export artifact
+      description: Returns a signed download URL for a completed export job.
+      tags:
+        - Exports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export download URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Export is not ready yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: Export artifact has expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/billing/checkout-session:
     post:
       summary: Create Stripe checkout session
@@ -656,7 +903,10 @@ paths:
               properties:
                 plan_code:
                   type: string
-                  enum: [plus]
+                  enum: [plus, enterprise]
+                billing_interval:
+                  type: string
+                  enum: [month, year]
       responses:
         '200':
           description: Checkout session created
@@ -668,15 +918,25 @@ paths:
                   url:
                     type: string
                     format: uri
+                  session_id:
+                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '409':
+          description: User already has an active or trialing Plus subscription
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/v1/billing/portal:
     get:
       summary: Get Stripe billing portal link
-      description: Returns a link to the Stripe customer portal for managing subscriptions
+      description: |
+        Returns a link to the Stripe customer portal for managing subscriptions.
+        If no Stripe customer is attached to the account, the route returns `customer_not_found`.
       tags:
         - Billing
       security:
@@ -692,6 +952,58 @@ paths:
                   url:
                     type: string
                     format: uri
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/billing/history:
+    get:
+      summary: Get billing history
+      description: Returns up to 24 Stripe invoices for the current account.
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Billing history response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/billing/verify-session:
+    post:
+      summary: Verify Stripe checkout session
+      description: Verifies that a Stripe Checkout session belongs to the current user.
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId]
+              properties:
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: Verification response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyCheckoutSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -2098,7 +2410,7 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: Enterprise API key for server-to-server access
+      description: Route-scoped API key for supported retail user and institutional consumers. Unsupported routes fail with `403 api_key_route_not_allowed`.
 
   schemas:
     ProviderQuote:
@@ -2475,6 +2787,205 @@ components:
         capped:
           type: boolean
 
+    InstitutionalDataMaturity:
+      type: object
+      required:
+        - ready
+        - required_days
+        - available_days
+        - reason
+        - updated_at
+      properties:
+        ready:
+          type: boolean
+        required_days:
+          type: integer
+          example: 180
+        available_days:
+          type: integer
+          example: 45
+        reason:
+          type: string
+          enum: [ready, no_sellable_history, accumulating_history]
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ComplianceStatusResponse:
+      type: object
+      required:
+        - updated_at
+        - certifications
+        - institutional_data_maturity
+        - privacy_controls
+      properties:
+        updated_at:
+          type: string
+          format: date-time
+        certifications:
+          type: object
+          properties:
+            gdpr:
+              type: string
+            ccpa:
+              type: string
+            soc2_type_ii:
+              type: object
+              properties:
+                status:
+                  type: string
+                report_state:
+                  type: string
+                report_date:
+                  type: string
+                  nullable: true
+                report_url:
+                  type: string
+                  nullable: true
+                expires_on:
+                  type: string
+                  nullable: true
+        institutional_data_maturity:
+          $ref: '#/components/schemas/InstitutionalDataMaturity'
+        privacy_controls:
+          type: object
+          properties:
+            data_minimization:
+              type: string
+            ip_handling:
+              type: string
+            session_identity:
+              type: string
+
+    InstitutionalUsageResponse:
+      type: object
+      required:
+        - clientId
+        - windowDays
+        - from
+        - to
+        - totals
+        - byEndpoint
+        - byDay
+      properties:
+        clientId:
+          type: string
+        windowDays:
+          type: integer
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+        totals:
+          type: object
+          required:
+            - requests
+            - errors4xx
+            - errors5xx
+            - avgResponseTimeMs
+          properties:
+            requests:
+              type: integer
+            errors4xx:
+              type: integer
+            errors5xx:
+              type: integer
+            avgResponseTimeMs:
+              type: integer
+              nullable: true
+        byEndpoint:
+          type: array
+          items:
+            type: object
+            required:
+              - endpoint
+              - requests
+              - avgResponseTimeMs
+            properties:
+              endpoint:
+                type: string
+              requests:
+                type: integer
+              avgResponseTimeMs:
+                type: integer
+                nullable: true
+        byDay:
+          type: array
+          items:
+            type: object
+            required:
+              - day
+              - requests
+              - errors4xx
+              - errors5xx
+            properties:
+              day:
+                type: string
+                format: date
+              requests:
+                type: integer
+              errors4xx:
+                type: integer
+              errors5xx:
+                type: integer
+
+    CorridorCoverageResponse:
+      type: object
+      required:
+        - corridorId
+        - amountBucket
+        - providerCount
+        - providers
+        - confidence
+        - publishable
+        - publishGateReasons
+        - lastUpdated
+      properties:
+        corridorId:
+          type: string
+          example: US-MX-USD-MXN
+        amountBucket:
+          type: integer
+          example: 500
+        providerCount:
+          type: integer
+        providers:
+          type: array
+          items:
+            type: object
+            required:
+              - providerId
+              - providerName
+              - lastObservedAt
+              - ageMinutes
+            properties:
+              providerId:
+                type: string
+              providerName:
+                type: string
+                nullable: true
+              lastObservedAt:
+                type: string
+                format: date-time
+              ageMinutes:
+                type: integer
+        confidence:
+          type: string
+          enum: [high, medium, low, none]
+        publishable:
+          type: boolean
+        publishGateReasons:
+          type: array
+          items:
+            type: string
+        lastUpdated:
+          type: string
+          format: date-time
+          nullable: true
+
     QuotesResponse:
       type: object
       properties:
@@ -2577,42 +3088,263 @@ components:
               type: string
             email:
               type: string
+            name:
+              type: string
+              nullable: true
+            role:
+              type: string
+              nullable: true
+            app_role:
+              type: string
+              nullable: true
+            is_admin:
+              type: boolean
+            mfa_verified:
+              type: boolean
         plan:
-          type: object
-          properties:
-            plan_code:
-              type: string
-              enum: [free, plus, enterprise]
-            status:
-              type: string
-              enum: [active, cancelled, expired]
+          $ref: '#/components/schemas/MePlanResponse'
+        plan_effective:
+          $ref: '#/components/schemas/MePlanEffectiveResponse'
+        billing:
+          $ref: '#/components/schemas/MeBillingResponse'
         entitlements:
-          type: object
-          properties:
-            pulse_access:
-              type: string
-              enum: [none, lite, full]
-            exports_enabled:
-              type: boolean
-            alerts_max:
-              type: integer
-              nullable: true
-            history_max_days:
-              type: integer
-              nullable: true
-            watchlist_items:
-              type: integer
-              nullable: true
-            api_access:
-              type: boolean
-            api_tier:
-              type: integer
-              nullable: true
-            api_cadence_hours:
-              type: integer
-              nullable: true
+          $ref: '#/components/schemas/MeEntitlementsResponse'
         usage:
           type: object
+          additionalProperties: true
+
+    PlanCode:
+      type: string
+      enum: [free, plus, enterprise]
+
+    PlanStatus:
+      type: string
+      enum: [active, trialing, past_due, canceled, unpaid, incomplete_expired, expired, inactive]
+
+    PlanLifecycleState:
+      type: string
+      enum: [active, trialing, scheduled_cancel, past_due, canceled, unpaid, incomplete_expired, expired, inactive]
+
+    PlanRecoveryAction:
+      type: string
+      enum: [none, billing_portal, upgrade]
+
+    MePlanResponse:
+      type: object
+      properties:
+        plan_code:
+          $ref: '#/components/schemas/PlanCode'
+        status:
+          $ref: '#/components/schemas/PlanStatus'
+
+    MePlanEffectiveResponse:
+      type: object
+      properties:
+        plan_code:
+          $ref: '#/components/schemas/PlanCode'
+        is_active:
+          type: boolean
+        lifecycle_state:
+          $ref: '#/components/schemas/PlanLifecycleState'
+        source:
+          type: string
+          enum: [internal_admin_override, stored_plan, inactive_or_default]
+        recovery_available:
+          type: boolean
+        recovery_action:
+          $ref: '#/components/schemas/PlanRecoveryAction'
+
+    MeBillingResponse:
+      type: object
+      properties:
+        next_billing_date:
+          type: string
+          format: date-time
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_at_period_end:
+          type: boolean
+        amount:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        payment_method:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              nullable: true
+            last4:
+              type: string
+              nullable: true
+            brand:
+              type: string
+              nullable: true
+            exp_month:
+              type: integer
+              nullable: true
+            exp_year:
+              type: integer
+              nullable: true
+
+    MeEntitlementsResponse:
+      type: object
+      properties:
+        pulse_access:
+          type: string
+          enum: [none, lite, full]
+        exports_enabled:
+          type: boolean
+        exports_max_days:
+          type: integer
+          nullable: true
+        alerts_max:
+          type: integer
+          nullable: true
+        history_max_days:
+          type: integer
+          nullable: true
+        watchlist_items:
+          type: integer
+          nullable: true
+        api_access:
+          type: boolean
+        api_tier:
+          type: integer
+          nullable: true
+        bulk_export:
+          type: boolean
+        indices_api:
+          type: boolean
+        daily_alerts_enabled:
+          type: boolean
+        smart_alerts_enabled:
+          type: boolean
+        index_threshold_alerts_enabled:
+          type: boolean
+        indices_exports_enabled:
+          type: boolean
+        pulse_embeds_enabled:
+          type: boolean
+        indices_embeds_enabled:
+          type: boolean
+        api_key_max:
+          type: integer
+        api_rate_limit_rpm:
+          type: integer
+
+    BillingInvoice:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date-time
+          nullable: true
+        amount:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        invoice_url:
+          type: string
+          format: uri
+          nullable: true
+
+    BillingHistoryResponse:
+      type: object
+      properties:
+        invoices:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingInvoice'
+
+    VerifyCheckoutSessionResponse:
+      type: object
+      properties:
+        verified:
+          type: boolean
+        session_id:
+          type: string
+        status:
+          type: string
+          nullable: true
+        payment_status:
+          type: string
+          nullable: true
+
+    ExportJobSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        jobType:
+          type: string
+        status:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    MeExportJobsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportJobSummary'
+
+    MeExportJobCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        job:
+          type: object
+          properties:
+            id:
+              type: string
+            jobType:
+              type: string
+            status:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
 
     ApiKeyRecord:
       type: object
@@ -2683,12 +3415,33 @@ components:
       properties:
         error:
           type: string
+        code:
+          type: string
         message:
           type: string
         details:
-          type: array
-          items:
-            type: object
+          oneOf:
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+            - type: object
+              properties:
+                plan_failure:
+                  type: string
+                required_plan:
+                  $ref: '#/components/schemas/PlanCode'
+                capability:
+                  type: string
+                lifecycle_state:
+                  $ref: '#/components/schemas/PlanLifecycleState'
+                recovery_action:
+                  $ref: '#/components/schemas/PlanRecoveryAction'
+                purchased_plan:
+                  $ref: '#/components/schemas/PlanCode'
+                effective_plan:
+                  $ref: '#/components/schemas/PlanCode'
+              additionalProperties: true
 
   responses:
     BadRequest:
@@ -2698,13 +3451,13 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
     Unauthorized:
-      description: Unauthorized - Missing or invalid authentication
+      description: Unauthorized - Missing or invalid authentication. API-key callers may receive `invalid_api_key` or `revoked_api_key`.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
     Forbidden:
-      description: Forbidden - Insufficient permissions
+      description: Forbidden - Insufficient permissions. API-key callers may receive `api_key_route_not_allowed`, `insufficient_scope`, `corridor_not_allowed`, `institutional_inactive`, or `institutional_only`.
       content:
         application/json:
           schema:
@@ -2727,6 +3480,10 @@ tags:
     description: User account and plan endpoints
   - name: Billing
     description: Billing and subscription endpoints
+  - name: Exports
+    description: User and enterprise export endpoints
+  - name: Institutions
+    description: Institutional launch, usage, and corridor coverage endpoints
   - name: Pulse
     description: Pulse analytics endpoints (Plus only)
   - name: Operations

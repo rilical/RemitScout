@@ -201,6 +201,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { setSeo } from '~/composables/useSeo'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -272,7 +273,7 @@ const loadAds = async () => {
     ads.value = response.ads ?? []
   }
   catch (err: any) {
-    error.value = err?.message || 'Failed to load ads.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to load ads.')
   }
   finally {
     loading.value = false
@@ -317,7 +318,7 @@ const handleCreate = async () => {
     await loadAds()
   }
   catch (err: any) {
-    formError.value = err?.message || 'Failed to create ad.'
+    formError.value = getAdminApiErrorMessage(err, 'Failed to create ad.')
   }
   finally {
     saving.value = false
@@ -336,7 +337,7 @@ const toggleStatus = async (ad: AdminAd) => {
     await loadAds()
   }
   catch (err: any) {
-    error.value = err?.message || 'Failed to update status.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to update status.')
   }
 }
 

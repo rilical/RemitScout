@@ -9,15 +9,17 @@ import { config } from '../shared/config'
 import { recordCloudWatchMetric } from '../shared/cloudwatch-metrics'
 import {
   loadModuleCatalog,
-  type ModuleCatalogEntry,
   type ModuleVolumePolicy,
   type ModuleVolumeStrategy,
 } from '../shared/module-catalog'
+import { syncModuleRegistry } from '../shared/module-registry-sync'
+import { getProviderVolumePolicy } from '../shared/provider-volume-policy'
 import {
   DEFAULT_WEIGHT_MODEL,
   GLOBAL_WEIGHT_CORRIDOR_ID,
 } from '../shared/weighting-model'
 import { buildB2bEffectiveRateSql } from '../shared/quote-rate'
+import { buildRightsMatrixCorridorEligibilitySql } from '../shared/rights-matrix-corridor'
 
 const logger = createLogger('script.provider-weighting-job')
 initTracing('provider-weighting-job')
@@ -46,6 +48,42 @@ const DEFAULT_FALLBACK_CHAIN: ModuleVolumeStrategy[] = [
   'equal_weight',
 ]
 
+const METHOD_PROFILES = [
+  'standard_bank',
+  'standard_card',
+  'cash_pickup',
+  'mobile_wallet',
+  'airtime_topup',
+  'card_delivery',
+  'home_delivery',
+] as const
+
+const methodProfileSql = `
+CASE
+  WHEN qr.payout = 'cash_pickup'
+    AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+    THEN 'cash_pickup'
+  WHEN qr.payout = 'bank_deposit' AND qr.payin = 'bank_transfer'
+    THEN 'standard_bank'
+  WHEN qr.payout = 'bank_deposit'
+    AND qr.payin IN ('debit_card', 'credit_card', 'apple_pay', 'google_pay')
+    THEN 'standard_card'
+  WHEN qr.payout = 'mobile_wallet'
+    AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+    THEN 'mobile_wallet'
+  WHEN qr.payout = 'airtime'
+    AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+    THEN 'airtime_topup'
+  WHEN qr.payout = 'debit_card'
+    AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay')
+    THEN 'card_delivery'
+  WHEN qr.payout = 'home_delivery'
+    AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
+    THEN 'home_delivery'
+  ELSE NULL
+END
+`
+
 const STRATEGY_MODEL_VERSION_DEFAULTS: Record<ModuleVolumeStrategy, string> = {
   synthetic_seed: 'synthetic_seed_v1',
   reported: 'reported_v1',
@@ -54,12 +92,17 @@ const STRATEGY_MODEL_VERSION_DEFAULTS: Record<ModuleVolumeStrategy, string> = {
 }
 
 const b2bEffectiveRateSql = buildB2bEffectiveRateSql('qr')
+const rightsMatrixCorridorEligibilitySql = buildRightsMatrixCorridorEligibilitySql({
+  rightsAlias: 'rm',
+  corridorIdSql: 'qr.corridor_id',
+})
 
 const providerStatsQuery = `
 WITH base AS (
   SELECT
     qr.corridor_id,
     lower(qr.provider_id) AS provider_id,
+    ${methodProfileSql} AS method_profile,
     ${b2bEffectiveRateSql} AS rate,
     qr.collected_at
   FROM silver.quote_record qr
@@ -82,11 +125,14 @@ WITH base AS (
     AND rm.allowed_resell_b2b = true
     AND rm.status = 'production'
     AND rm.stoplist_status = 'active'
+    AND ${rightsMatrixCorridorEligibilitySql}
     AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
+    AND (${methodProfileSql}) IS NOT NULL
 ),
 corridor_stats AS (
   SELECT
     corridor_id,
+    method_profile,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY rate)::double precision AS median_rate,
     stddev_pop(rate)::double precision AS std_rate,
     COUNT(*)::int AS quote_count,
@@ -94,22 +140,24 @@ corridor_stats AS (
     MIN(collected_at) AS min_ts,
     MAX(collected_at) AS max_ts
   FROM base
-  GROUP BY corridor_id
+  GROUP BY corridor_id, method_profile
 ),
 provider_stats AS (
   SELECT
     corridor_id,
     provider_id,
+    method_profile,
     AVG(rate)::double precision AS avg_rate,
     COUNT(*)::int AS provider_quotes,
     MAX(collected_at) AS last_collected,
     COUNT(DISTINCT date_trunc('hour', collected_at))::int AS active_hours
   FROM base
-  GROUP BY corridor_id, provider_id
+  GROUP BY corridor_id, provider_id, method_profile
 )
 SELECT
   ps.corridor_id,
   ps.provider_id,
+  ps.method_profile,
   ps.avg_rate,
   ps.provider_quotes,
   ps.last_collected,
@@ -123,12 +171,14 @@ SELECT
 FROM provider_stats ps
 JOIN corridor_stats cs
   ON cs.corridor_id = ps.corridor_id
+ AND cs.method_profile = ps.method_profile
 `
 
 const globalStatsQuery = `
 WITH base AS (
   SELECT
     lower(qr.provider_id) AS provider_id,
+    ${methodProfileSql} AS method_profile,
     ${b2bEffectiveRateSql} AS rate,
     qr.collected_at
   FROM silver.quote_record qr
@@ -151,10 +201,13 @@ WITH base AS (
     AND rm.allowed_resell_b2b = true
     AND rm.status = 'production'
     AND rm.stoplist_status = 'active'
+    AND ${rightsMatrixCorridorEligibilitySql}
     AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
+    AND (${methodProfileSql}) IS NOT NULL
 ),
 global_stats AS (
   SELECT
+    method_profile,
     percentile_cont(0.5) WITHIN GROUP (ORDER BY rate)::double precision AS median_rate,
     stddev_pop(rate)::double precision AS std_rate,
     COUNT(*)::int AS quote_count,
@@ -162,19 +215,22 @@ global_stats AS (
     MIN(collected_at) AS min_ts,
     MAX(collected_at) AS max_ts
   FROM base
+  GROUP BY method_profile
 ),
 global_provider AS (
   SELECT
     provider_id,
+    method_profile,
     AVG(rate)::double precision AS avg_rate,
     COUNT(*)::int AS provider_quotes,
     MAX(collected_at) AS last_collected,
     COUNT(DISTINCT date_trunc('hour', collected_at))::int AS active_hours
   FROM base
-  GROUP BY provider_id
+  GROUP BY provider_id, method_profile
 )
 SELECT
   gp.provider_id,
+  gp.method_profile,
   gp.avg_rate,
   gp.provider_quotes,
   gp.last_collected,
@@ -186,7 +242,8 @@ SELECT
   gs.min_ts,
   gs.max_ts
 FROM global_provider gp
-CROSS JOIN global_stats gs
+JOIN global_stats gs
+  ON gs.method_profile = gp.method_profile
 `
 
 const eligibleProvidersByCorridorQuery = `
@@ -202,6 +259,10 @@ WHERE pcc.is_supported = true
   AND rm.allowed_resell_b2b = true
   AND rm.status = 'production'
   AND rm.stoplist_status = 'active'
+  AND ${buildRightsMatrixCorridorEligibilitySql({
+    rightsAlias: 'rm',
+    corridorIdSql: 'pcc.corridor_id',
+  })}
   AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
 `
 
@@ -209,17 +270,25 @@ const eligibleGlobalProvidersQuery = `
 SELECT DISTINCT
   lower(rm.provider_id) AS provider_id
 FROM silver.rights_matrix rm
+JOIN silver.provider_corridor_capability pcc
+  ON pcc.provider_id = rm.provider_id
 WHERE rm.allowed_collect = true
   AND rm.allowed_b2b = true
   AND rm.allowed_resell_b2b = true
   AND rm.status = 'production'
   AND rm.stoplist_status = 'active'
+  AND pcc.is_supported = true
+  AND ${buildRightsMatrixCorridorEligibilitySql({
+    rightsAlias: 'rm',
+    corridorIdSql: 'pcc.corridor_id',
+  })}
   AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
 `
 
 type ProviderStatRow = {
   corridor_id: string
   provider_id: string
+  method_profile: string
   avg_rate: number | null
   provider_quotes: number
   last_collected: Date | string | null
@@ -234,6 +303,7 @@ type ProviderStatRow = {
 
 type GlobalStatRow = {
   provider_id: string
+  method_profile: string
   avg_rate: number | null
   provider_quotes: number
   last_collected: Date | string | null
@@ -577,16 +647,16 @@ const defaultVolumePolicy = (
 
 const buildModulePolicyMap = () => {
   const catalog = loadModuleCatalog()
-  const productionModules = catalog.modules.filter((module) => module.status === 'production')
-  const byProvider = new Map<string, ModuleCatalogEntry>()
+  const productionModules = catalog.modules.filter(
+    (module) => module.status === 'production' && module.owner_kind === 'provider',
+  )
+  const providerIds = new Set<string>()
   for (const module of productionModules) {
-    if (!byProvider.has(module.provider_id)) {
-      byProvider.set(module.provider_id, module)
-    }
+    providerIds.add(module.provider_id)
   }
   return {
-    byProvider,
-    productionProviderCount: byProvider.size,
+    providerIds,
+    productionProviderCount: providerIds.size,
   }
 }
 
@@ -599,11 +669,14 @@ export const providerWeightingInternals = {
 export const providerWeightingSql = {
   providerStatsQuery,
   globalStatsQuery,
+  eligibleProvidersByCorridorQuery,
+  eligibleGlobalProvidersQuery,
 }
 
 const buildUpsertPayload = (rows: {
   corridorId: string
   providerId: string
+  methodProfile: string
   weight: number
   modelVersion: string
   windowDays: number
@@ -614,6 +687,7 @@ const buildUpsertPayload = (rows: {
   const now = new Date()
   const corridorIds: string[] = []
   const providerIds: string[] = []
+  const methodProfiles: string[] = []
   const weights: number[] = []
   const modelVersions: string[] = []
   const windowDays: number[] = []
@@ -625,6 +699,7 @@ const buildUpsertPayload = (rows: {
   for (const row of rows) {
     corridorIds.push(row.corridorId)
     providerIds.push(row.providerId)
+    methodProfiles.push(row.methodProfile)
     weights.push(row.weight)
     modelVersions.push(row.modelVersion)
     windowDays.push(row.windowDays)
@@ -637,6 +712,7 @@ const buildUpsertPayload = (rows: {
   return {
     corridorIds,
     providerIds,
+    methodProfiles,
     weights,
     modelVersions,
     windowDays,
@@ -650,6 +726,7 @@ const buildUpsertPayload = (rows: {
 const upsertWeights = async (pool: Pool, rows: {
   corridorId: string
   providerId: string
+  methodProfile: string
   weight: number
   modelVersion: string
   windowDays: number
@@ -676,7 +753,7 @@ const upsertWeights = async (pool: Pool, rows: {
       SELECT
         corridor_id,
         provider_id,
-        NULL::method_profile,
+        method_profile::method_profile,
         weight,
         model_version,
         window_days,
@@ -687,16 +764,18 @@ const upsertWeights = async (pool: Pool, rows: {
       FROM UNNEST(
         $1::text[],
         $2::text[],
-        $3::double precision[],
-        $4::text[],
-        $5::int[],
+        $3::text[],
+        $4::double precision[],
+        $5::text[],
         $6::int[],
         $7::int[],
-        $8::double precision[],
-        $9::timestamptz[]
+        $8::int[],
+        $9::double precision[],
+        $10::timestamptz[]
       ) AS t(
         corridor_id,
         provider_id,
+        method_profile,
         weight,
         model_version,
         window_days,
@@ -719,6 +798,7 @@ const upsertWeights = async (pool: Pool, rows: {
     [
       payload.corridorIds,
       payload.providerIds,
+      payload.methodProfiles,
       payload.weights,
       payload.modelVersions,
       payload.windowDays,
@@ -757,6 +837,8 @@ export const runProviderWeightingJob = async (): Promise<void> => {
   let success = false
   let upserted = 0
   try {
+    await syncModuleRegistry(pool)
+
     const providerResult = await query<ProviderStatRow>(providerStatsQuery, [lookbackDays], pool)
     const globalResult = await query<GlobalStatRow>(globalStatsQuery, [lookbackDays], pool)
     const eligibleCorridorResult = await query<EligibleCorridorRow>(eligibleProvidersByCorridorQuery, [], pool)
@@ -775,81 +857,85 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       return
     }
 
-    const { byProvider: moduleByProvider, productionProviderCount } = buildModulePolicyMap()
+    const { providerIds: productionProviderIds, productionProviderCount } = buildModulePolicyMap()
     const strategyCounters: StrategyResolutionCounters = {
       resolved: new Map<string, number>(),
       fallback: new Map<string, number>(),
       missing: new Map<string, number>(),
     }
 
-    const globalMetaRow = globalRows[0] ?? null
-    const globalMin = toDate(globalMetaRow?.min_ts ?? null)
-    const globalMax = toDate(globalMetaRow?.max_ts ?? null)
-    const globalWindowDays = globalMetaRow
-      ? computeWindowDays(globalMin, globalMax)
-      : 0
-    const globalAvailableHours = globalMetaRow
-      ? computeAvailableHours(globalMin, globalMax)
-      : 1
-    const globalQuoteCount = globalMetaRow?.quote_count ?? 0
-    const globalProviderCount = globalMetaRow?.provider_count ?? 0
-    const globalConfidence = computeConfidence(globalWindowDays, globalQuoteCount, globalProviderCount)
-
-    const tierMultiplierByProvider = new Map<string, number>()
-    for (const row of globalRows) {
-      const persistence = globalAvailableHours > 0 ? row.active_hours / globalAvailableHours : 0
-      tierMultiplierByProvider.set(row.provider_id, computeTierMultiplier(persistence))
+    const eligibleProvidersByCorridor = new Map<string, Set<string>>()
+    for (const row of eligibleCorridorRows) {
+      const providers = eligibleProvidersByCorridor.get(row.corridor_id) ?? new Set<string>()
+      providers.add(row.provider_id)
+      eligibleProvidersByCorridor.set(row.corridor_id, providers)
     }
 
-    const globalLiveRaw = new Map<string, number>()
+    const globalMetaByMethod = new Map<string, CorridorMeta>()
+    const globalTierMultiplierByMethodProvider = new Map<string, number>()
+    const globalLiveScoresByMethod = new Map<string, Map<string, number>>()
+    const globalSeenProvidersByMethod = new Map<string, Set<string>>()
+
     for (const row of globalRows) {
-      const lastCollected = toDate(row.last_collected)
-      const ageMinutes = lastCollected ? (Date.now() - lastCollected.getTime()) / 60000 : halfLifeMinutes
-      const tierMultiplier = tierMultiplierByProvider.get(row.provider_id) ?? 1
-      const raw = computeWeightRaw({
-        avgRate: row.avg_rate,
-        medianRate: row.median_rate,
-        stdRate: row.std_rate,
-        providerQuotes: row.provider_quotes,
-        availableHours: globalAvailableHours,
-        ageMinutes,
-        tierMultiplier,
-      })
-      globalLiveRaw.set(row.provider_id, raw)
+      const minTs = toDate(row.min_ts)
+      const maxTs = toDate(row.max_ts)
+      const windowDays = Math.min(lookbackDays, computeWindowDays(minTs, maxTs))
+      const availableHours = computeAvailableHours(minTs, maxTs)
+      if (!globalMetaByMethod.has(row.method_profile)) {
+        globalMetaByMethod.set(row.method_profile, {
+          quoteCount: row.quote_count,
+          providerCount: row.provider_count,
+          windowDays,
+          weightConfidence: computeConfidence(windowDays, row.quote_count, row.provider_count),
+          availableHours,
+        })
+      }
+      const seenProviders = globalSeenProvidersByMethod.get(row.method_profile) ?? new Set<string>()
+      seenProviders.add(row.provider_id)
+      globalSeenProvidersByMethod.set(row.method_profile, seenProviders)
     }
-    const globalLiveRawSum = Array.from(globalLiveRaw.values()).reduce((a, b) => a + b, 0)
-    const globalLiveScores = new Map<string, number>()
-    for (const [providerId, raw] of globalLiveRaw.entries()) {
-      const normalized = globalLiveRawSum > 0
-        ? raw / globalLiveRawSum
-        : (globalLiveRaw.size > 0 ? 1 / globalLiveRaw.size : 0)
-      globalLiveScores.set(providerId, normalized)
+
+    for (const methodProfile of METHOD_PROFILES) {
+      const meta = globalMetaByMethod.get(methodProfile)
+      const availableHours = meta?.availableHours ?? 1
+      const globalLiveRaw = new Map<string, number>()
+      for (const row of globalRows.filter((candidate) => candidate.method_profile === methodProfile)) {
+        const persistence = availableHours > 0 ? row.active_hours / availableHours : 0
+        const tierMultiplier = computeTierMultiplier(persistence)
+        globalTierMultiplierByMethodProvider.set(`${methodProfile}:${row.provider_id}`, tierMultiplier)
+
+        const lastCollected = toDate(row.last_collected)
+        const ageMinutes = lastCollected ? (Date.now() - lastCollected.getTime()) / 60000 : halfLifeMinutes
+        const raw = computeWeightRaw({
+          avgRate: row.avg_rate,
+          medianRate: row.median_rate,
+          stdRate: row.std_rate,
+          providerQuotes: row.provider_quotes,
+          availableHours,
+          ageMinutes,
+          tierMultiplier,
+        })
+        globalLiveRaw.set(row.provider_id, raw)
+      }
+
+      const globalLiveRawSum = Array.from(globalLiveRaw.values()).reduce((a, b) => a + b, 0)
+      const globalLiveScores = new Map<string, number>()
+      for (const [providerId, raw] of globalLiveRaw.entries()) {
+        const normalized = globalLiveRawSum > 0
+          ? raw / globalLiveRawSum
+          : (globalLiveRaw.size > 0 ? 1 / globalLiveRaw.size : 0)
+        globalLiveScores.set(providerId, normalized)
+      }
+      globalLiveScoresByMethod.set(methodProfile, globalLiveScores)
     }
 
     const corridors = new Map<string, {
+      corridorId: string
+      methodProfile: string
       meta: CorridorMeta
       eligibleProviders: Set<string>
       liveRows: Map<string, ProviderStatRow>
     }>()
-
-    for (const row of eligibleCorridorRows) {
-      const existing = corridors.get(row.corridor_id)
-      if (existing) {
-        existing.eligibleProviders.add(row.provider_id)
-        continue
-      }
-      corridors.set(row.corridor_id, {
-        meta: {
-          quoteCount: 0,
-          providerCount: 0,
-          windowDays: 0,
-          weightConfidence: 0,
-          availableHours: 1,
-        },
-        eligibleProviders: new Set([row.provider_id]),
-        liveRows: new Map(),
-      })
-    }
 
     for (const row of providerRows) {
       const minTs = toDate(row.min_ts)
@@ -863,16 +949,23 @@ export const runProviderWeightingJob = async (): Promise<void> => {
         weightConfidence: computeConfidence(windowDays, row.quote_count, row.provider_count),
         availableHours,
       }
-      const entry = corridors.get(row.corridor_id)
+      const corridorKey = `${row.corridor_id}:${row.method_profile}`
+      const eligibleProviders = new Set(eligibleProvidersByCorridor.get(row.corridor_id) ?? [])
+      eligibleProviders.add(row.provider_id)
+      const entry = corridors.get(corridorKey)
       if (!entry) {
-        corridors.set(row.corridor_id, {
+        corridors.set(corridorKey, {
+          corridorId: row.corridor_id,
+          methodProfile: row.method_profile,
           meta,
-          eligibleProviders: new Set([row.provider_id]),
+          eligibleProviders,
           liveRows: new Map([[row.provider_id, row]]),
         })
       } else {
         entry.liveRows.set(row.provider_id, row)
-        entry.eligibleProviders.add(row.provider_id)
+        for (const providerId of eligibleProviders) {
+          entry.eligibleProviders.add(providerId)
+        }
         entry.meta = meta
       }
     }
@@ -880,6 +973,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
     const rowsToUpsert: {
       corridorId: string
       providerId: string
+      methodProfile: string
       weight: number
       modelVersion: string
       windowDays: number
@@ -888,9 +982,9 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       weightConfidence: number
     }[] = []
 
-    for (const [corridorId, entry] of corridors.entries()) {
+    for (const entry of corridors.values()) {
       if (isShutdownRequested()) break
-      const { meta } = entry
+      const { corridorId, methodProfile, meta } = entry
       const providerIds = Array.from(entry.eligibleProviders)
       if (providerIds.length === 0) continue
 
@@ -901,7 +995,8 @@ export const runProviderWeightingJob = async (): Promise<void> => {
         if (!row) continue
         const lastCollected = toDate(row.last_collected)
         const ageMinutes = lastCollected ? (Date.now() - lastCollected.getTime()) / 60000 : halfLifeMinutes
-        const tierMultiplier = tierMultiplierByProvider.get(row.provider_id) ?? 1
+        const tierMultiplier =
+          globalTierMultiplierByMethodProvider.get(`${methodProfile}:${row.provider_id}`) ?? 1
         const raw = computeWeightRaw({
           avgRate: row.avg_rate,
           medianRate: row.median_rate,
@@ -924,8 +1019,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
       }
 
       const resolved = providerIds.map((providerId) => {
-        const module = moduleByProvider.get(providerId)
-        const policy = module?.volume ?? defaultVolumePolicy(providerIds.length)
+        const policy = getProviderVolumePolicy(providerId) ?? defaultVolumePolicy(providerIds.length)
         return resolveStrategyAwareWeight(
           {
             policy,
@@ -947,6 +1041,7 @@ export const runProviderWeightingJob = async (): Promise<void> => {
         rowsToUpsert.push({
           corridorId,
           providerId: row.providerId,
+          methodProfile,
           weight: normalized,
           modelVersion: row.modelVersion,
           windowDays: meta.windowDays,
@@ -959,45 +1054,57 @@ export const runProviderWeightingJob = async (): Promise<void> => {
 
     const globalProviderSet = new Set<string>(eligibleGlobalRows.map((row) => row.provider_id))
     if (globalProviderSet.size === 0) {
-      for (const providerId of moduleByProvider.keys()) {
+      for (const providerId of productionProviderIds.values()) {
         globalProviderSet.add(providerId)
       }
     }
-    for (const providerId of globalLiveScores.keys()) {
-      globalProviderSet.add(providerId)
+    for (const providers of globalSeenProvidersByMethod.values()) {
+      for (const providerId of providers) {
+        globalProviderSet.add(providerId)
+      }
     }
 
     const globalProviderIds = Array.from(globalProviderSet)
     if (globalProviderIds.length > 0) {
-      const equalWeightRaw = 1 / globalProviderIds.length
-      const resolvedGlobal = globalProviderIds.map((providerId) => {
-        const module = moduleByProvider.get(providerId)
-        const policy = module?.volume ?? defaultVolumePolicy(globalProviderIds.length)
-        return resolveStrategyAwareWeight(
-          {
-            policy,
-            providerId,
-            corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
-            liveScore: globalLiveScores.get(providerId) ?? null,
-            liveConfidence: globalConfidence,
-            equalWeightRaw,
-          },
-          strategyCounters,
-        )
-      })
-      const globalResolvedRawSum = resolvedGlobal.reduce((sum, row) => sum + row.rawScore, 0)
-      const normalizedFallback = resolvedGlobal.length > 0 ? 1 / resolvedGlobal.length : 1
-      for (const row of resolvedGlobal) {
-        rowsToUpsert.push({
-          corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
-          providerId: row.providerId,
-          weight: globalResolvedRawSum > 0 ? row.rawScore / globalResolvedRawSum : normalizedFallback,
-          modelVersion: row.modelVersion,
-          windowDays: Math.min(lookbackDays, globalWindowDays),
-          quoteCount: globalQuoteCount,
+      for (const methodProfile of METHOD_PROFILES) {
+        const globalMeta = globalMetaByMethod.get(methodProfile) ?? {
+          quoteCount: 0,
           providerCount: globalProviderIds.length,
-          weightConfidence: clamp01(row.confidence, globalConfidence),
+          windowDays: 0,
+          weightConfidence: 0,
+          availableHours: 1,
+        }
+        const globalLiveScores = globalLiveScoresByMethod.get(methodProfile) ?? new Map<string, number>()
+        const equalWeightRaw = 1 / globalProviderIds.length
+        const resolvedGlobal = globalProviderIds.map((providerId) => {
+          const policy = getProviderVolumePolicy(providerId) ?? defaultVolumePolicy(globalProviderIds.length)
+          return resolveStrategyAwareWeight(
+            {
+              policy,
+              providerId,
+              corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
+              liveScore: globalLiveScores.get(providerId) ?? null,
+              liveConfidence: globalMeta.weightConfidence,
+              equalWeightRaw,
+            },
+            strategyCounters,
+          )
         })
+        const globalResolvedRawSum = resolvedGlobal.reduce((sum, row) => sum + row.rawScore, 0)
+        const normalizedFallback = resolvedGlobal.length > 0 ? 1 / resolvedGlobal.length : 1
+        for (const row of resolvedGlobal) {
+          rowsToUpsert.push({
+            corridorId: GLOBAL_WEIGHT_CORRIDOR_ID,
+            providerId: row.providerId,
+            methodProfile,
+            weight: globalResolvedRawSum > 0 ? row.rawScore / globalResolvedRawSum : normalizedFallback,
+            modelVersion: row.modelVersion,
+            windowDays: Math.min(lookbackDays, globalMeta.windowDays),
+            quoteCount: globalMeta.quoteCount,
+            providerCount: globalProviderIds.length,
+            weightConfidence: clamp01(row.confidence, globalMeta.weightConfidence),
+          })
+        }
       }
     }
 

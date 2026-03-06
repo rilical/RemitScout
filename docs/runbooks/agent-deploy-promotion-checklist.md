@@ -86,7 +86,9 @@ Execution:
 - [ ] Validate authenticated API path (not only public path):
   - Supabase token exchange/login works
   - `/api/v1/me` works
-  - admin gating works for allowlisted admin users
+  - staging authenticated smoke asserts `omar@remit-scout.com` resolves to `app_role=super_admin` and `plan_effective.plan_code=enterprise`
+  - staging admin surface smoke exchanges `/api/v1/sessions/admin/exchange`, reads `/api/v1/ops/observer/summary` + `/api/v1/audit/logs`, grants enterprise to `support@remit-scout.com`, then revokes it back to free
+  - admin gating works for allowlisted admin users and allowlisted runner IPs
 - [ ] Verify queue workers and refresh paths are operational:
   - corridor/provider data returns non-empty for known supported lanes
   - no sustained queue backlog or DLQ growth
@@ -94,6 +96,10 @@ Execution:
   - `agent_heal_attempt_count`, `agent_heal_success_count`, `agent_heal_blocked_count`
   - `agent_llm_latency_ms`, `agent_prompt_schema_validation_failures`
   - Per-provider evidence in the canary window (`agent_provider_healable_event`) covers all 24 canonical providers.
+- [ ] Verify provider onboarding loop telemetry and review payload routing:
+  - CloudWatch namespace `RemitScout/Onboarding` contains `provider_onboarding_run_count`, `provider_onboarding_provider_count`, `provider_onboarding_provider_status`, `provider_onboarding_remit_score`.
+  - Latest onboarding artifact `artifacts/provider-onboarding/<run_id>/provider-onboarding-run.json` has non-empty `ci_ref`, `review_card`, and `reason_codes`.
+  - Blocker reason mapping is visible in admin observer and triage flow (`provider_onboarding.input_invalid`, `provider_onboarding.scaffold_fail`, `provider_onboarding.probe_timeout`, `provider_onboarding.smoke_fail`, `provider_onboarding.score_below_threshold`, `provider_onboarding.review_blocked`).
 - [ ] Verify frontend staging host + TLS + API base are correct.
 - [ ] Verify New Relic staging observability:
   - `node ops/newrelic/bootstrap-dashboards.mjs`
@@ -103,6 +109,9 @@ Execution:
   - Confirm New Relic dashboard pages include `Indices (TEER/RCI/RVI)`, `Exports Health`, `API Health`, and `Provider Health (Per Provider)`.
   - Note: deploy/readiness workflows now run this as a hard gate; this manual run is for incident/debug confirmation.
 - [ ] Re-run staging smoke after migration/user seeding.
+- [ ] Upload/review staged admin smoke artifacts:
+  - `staging-omar-entitlement-smoke.log`
+  - `staging-admin-surface-smoke.log`
 - [ ] Re-check critical alarms are still clear.
 
 Exit criteria:

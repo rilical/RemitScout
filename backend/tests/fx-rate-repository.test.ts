@@ -4,13 +4,21 @@ import * as dbModule from '../shared/db'
 import { resetRedisState } from '../shared/redis'
 import { resetCircuitBreakers } from '../shared/repository-retry'
 
+const mockFetchRate = vi.fn()
+
 const mockConfig = vi.hoisted(() => ({
   redis: { url: '' },
-  fxRates: { oandaFallbackEnabled: false },
+  fxRates: { oandaFallbackEnabled: false, refreshEnabled: false, dbFreshnessHours: 1 },
   observability: { cloudwatch: { enabled: false } },
 }))
 
 vi.mock('../shared/config', () => ({ config: mockConfig }))
+
+vi.mock('../plane-a/src/services/oanda-rate-fetcher', () => ({
+  OandaRateFetcher: vi.fn().mockImplementation(() => ({
+    fetchRate: (...args: any[]) => mockFetchRate(...args),
+  })),
+}))
 
 import { FxRateRepository } from '../plane-a/src/repositories/implementations/fx-rate-repository'
 
@@ -26,6 +34,7 @@ describe('FxRateRepository', () => {
     vi.clearAllMocks()
     resetRedisState()
     resetCircuitBreakers()
+    mockFetchRate.mockResolvedValue({ success: false, data: null })
     mockPool = {} as Pool
     repository = new FxRateRepository(mockPool)
   })
@@ -33,7 +42,7 @@ describe('FxRateRepository', () => {
   describe('getRate', () => {
     it('returns rate when found', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: 1.25 }],
+        rows: [{ rate: 1.25, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -60,7 +69,7 @@ describe('FxRateRepository', () => {
 
     it('returns null when rate is null in database', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: null }],
+        rows: [{ rate: null, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -71,7 +80,7 @@ describe('FxRateRepository', () => {
 
     it('returns null when rate is undefined', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: undefined }],
+        rows: [{ rate: undefined, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -82,7 +91,7 @@ describe('FxRateRepository', () => {
 
     it('returns null when rate is not finite', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: Infinity }],
+        rows: [{ rate: Infinity, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -93,7 +102,7 @@ describe('FxRateRepository', () => {
 
     it('returns null when rate is NaN', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: NaN }],
+        rows: [{ rate: NaN, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -104,7 +113,7 @@ describe('FxRateRepository', () => {
 
     it('converts string rate to number', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: '1.25' }],
+        rows: [{ rate: '1.25', last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -116,7 +125,7 @@ describe('FxRateRepository', () => {
 
     it('handles various currency pairs', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: 0.85 }],
+        rows: [{ rate: 0.85, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -132,7 +141,7 @@ describe('FxRateRepository', () => {
 
     it('handles zero rate', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: 0 }],
+        rows: [{ rate: 0, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -143,7 +152,7 @@ describe('FxRateRepository', () => {
 
     it('handles negative rate', async () => {
       vi.mocked(dbModule.query).mockResolvedValue({
-        rows: [{ rate: -1.25 }],
+        rows: [{ rate: -1.25, last_updated: new Date().toISOString() }],
         rowCount: 1,
       } as any)
 
@@ -153,4 +162,3 @@ describe('FxRateRepository', () => {
     })
   })
 })
-

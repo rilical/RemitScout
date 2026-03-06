@@ -35,7 +35,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv } from './env-utils'
-import { resolveTracingEnv } from './newrelic-observability'
+import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
 
 export type ApiOptions = {
   envName: string
@@ -138,6 +138,51 @@ export type ApiResources = {
   planeAWaf?: CfnWebACL
 }
 
+export const PLANE_A_EXPLICIT_EDGE_ROUTE_PATHS = [
+  '/healthz',
+  '/readyz',
+  '/api',
+  '/api/v1/quotes/current',
+  '/api/v1/providers',
+  '/api/v1/providers/metadata',
+  '/api/v1/providers/metadata/{id}',
+  '/api/v1/quotes/refresh-status',
+  '/api/v1/sessions/track',
+  '/api/v1/billing/webhook',
+  '/api/v1/billing/pricing',
+  '/api/v1/corridor-currencies',
+  '/api/v1/corridor-limits',
+  '/api/v1/rates/spot',
+  '/api/v1/rates/providers',
+  '/api/v1/rates/history',
+  '/api/v1/geo',
+  '/api/v1/popular-corridors',
+  '/api/v1/contact',
+  '/api/v1/pulse/teaser',
+  '/api/v1/bank-vs-specialist',
+  '/api/v1/alerts/unsubscribe',
+  '/api/v1/newsletter/subscribe',
+  '/api/v1/newsletter/confirm',
+  '/api/v1/newsletter/unsubscribe',
+  '/api/v1/newsletter/status',
+  '/api/v1/telemetry/search',
+  '/api/v1/telemetry/click',
+  '/api/v1/telemetry/conversion',
+  '/api/v1/telemetry/session',
+  '/api/v1/marketing/meta',
+  '/api/v1/marketing/tiktok',
+  '/api/v1/ads/placement',
+  '/api/v1/ads/click',
+  '/api/v1/compliance/status',
+  '/api/v1/indices/latest',
+  '/api/v1/indices/series',
+  '/api/v1/indices/corridors',
+  '/api/v1/indices/triangulated/{corridorId}',
+  '/api/v1/indices/health',
+  '/api/v1/usage',
+  '/api/v1/corridors/{corridorId}/coverage',
+] as const
+
 export const createApi = (scope: Construct, options: ApiOptions): ApiResources => {
   const completeSecretArnPattern =
     /^arn:aws[a-zA-Z-]*:secretsmanager:[^:]+:\d{12}:secret:[^:]+-[A-Za-z0-9]{6}$/
@@ -158,7 +203,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const isProd = options.envName === 'prod'
   const enablePlaneCIamAuth =
     options.enablePlaneCIamAuth ?? (options.envName === 'prod' || options.envName === 'staging')
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
+  const cloudwatchMetricsEnabled = resolveCloudWatchMetricsEnabled(options.envName)
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',
@@ -714,53 +759,14 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   const publicMetricsEnabled = options.envName === 'dev'
     || process.env.PLANE_A_PUBLIC_METRICS === '1'
   const publicRoutes = [
-    '/healthz',
-    '/readyz',
+    ...PLANE_A_EXPLICIT_EDGE_ROUTE_PATHS,
     ...(publicMetricsEnabled ? ['/metrics'] : []),
-    // Legacy tombstones
-    '/api',
-    // Public web experience (no auth)
-    '/api/v1/quotes/current',
-    '/api/v1/providers',
-    '/api/v1/providers/metadata',
-    '/api/v1/providers/metadata/{id}',
-    '/api/v1/quotes/refresh-status',
-    '/api/v1/sessions/track',
-    '/api/v1/billing/webhook',
-    '/api/v1/billing/pricing',
-    '/api/v1/corridor-currencies',
-    '/api/v1/corridor-limits',
-    '/api/v1/rates/spot',
-    '/api/v1/rates/providers',
-    '/api/v1/rates/history',
-    '/api/v1/geo',
-    '/api/v1/popular-corridors',
-    '/api/v1/contact',
-    '/api/v1/pulse/teaser',
-    '/api/v1/bank-vs-specialist',
-    '/api/v1/alerts/unsubscribe',
     ...(isDev
       ? [
           '/api/v1/alerts/corridor-eligibility',
           '/api/v1/alerts/macro-corridors',
         ]
       : []),
-    '/api/v1/newsletter/subscribe',
-    '/api/v1/newsletter/confirm',
-    '/api/v1/newsletter/unsubscribe',
-    '/api/v1/newsletter/status',
-    '/api/v1/telemetry/search',
-    '/api/v1/telemetry/click',
-    '/api/v1/telemetry/conversion',
-    '/api/v1/telemetry/session',
-    '/api/v1/marketing/meta',
-    '/api/v1/marketing/tiktok',
-    '/api/v1/ads/placement',
-    '/api/v1/ads/click',
-    '/api/v1/indices/latest',
-    '/api/v1/indices/series',
-    '/api/v1/indices/corridors',
-    '/api/v1/indices/health',
   ]
 
   for (const path of publicRoutes) {

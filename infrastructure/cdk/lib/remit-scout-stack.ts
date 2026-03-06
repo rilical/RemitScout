@@ -771,11 +771,11 @@ export class RemitScoutStack extends Stack {
     const stressResponderServiceEnabled = toOptionalBool(
       this.node.tryGetContext('stressResponderServiceEnabled') ??
         process.env.STRESS_RESPONDER_SERVICE_ENABLED,
-    ) ?? (envName === 'prod')
+    ) ?? (envName === 'prod' || envName === 'staging')
     const normalizationServiceEnabled = toOptionalBool(
       this.node.tryGetContext('normalizationServiceEnabled') ??
         process.env.NORMALIZATION_SERVICE_ENABLED,
-    ) ?? (envName === 'prod')
+    ) ?? (envName === 'prod' || envName === 'staging')
     const agentOrchestratorDesiredCount = toOptionalNumber(
       this.node.tryGetContext('agentOrchestratorDesiredCount') ??
         process.env.AGENT_ORCHESTRATOR_DESIRED_COUNT,
@@ -783,11 +783,11 @@ export class RemitScoutStack extends Stack {
     const stressResponderDesiredCount = toOptionalNumber(
       this.node.tryGetContext('stressResponderDesiredCount') ??
         process.env.STRESS_RESPONDER_DESIRED_COUNT,
-    ) ?? (envName === 'prod' ? 1 : 0)
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
     const normalizationWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('normalizationWorkerDesiredCount') ??
         process.env.NORMALIZATION_WORKER_DESIRED_COUNT,
-    ) ?? (envName === 'prod' ? 1 : 0)
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
     const rawPlaneBQueueWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBQueueWorkerDesiredCount') ??
         process.env.PLANE_B_QUEUE_WORKER_DESIRED_COUNT,

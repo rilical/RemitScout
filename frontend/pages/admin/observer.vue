@@ -74,8 +74,16 @@
               Merged observer + ops-health view with full provider drill-down.
             </p>
           </div>
-          <div class="text-body-sm text-rs-muted">
-            {{ providerHealthSummary?.healthy_providers ?? 0 }}/{{ providerHealthSummary?.total_providers ?? 24 }} healthy
+          <div class="flex items-center gap-3">
+            <NuxtLink
+              to="/admin/discovery"
+              class="rounded-lg border border-rs-border bg-rs-bg px-3 py-2 text-body-sm font-semibold text-rs-fg hover:bg-rs-surface-2"
+            >
+              Open provider control plane
+            </NuxtLink>
+            <div class="text-body-sm text-rs-muted">
+              {{ providerHealthSummary?.healthy_providers ?? 0 }}/{{ providerHealthSummary?.total_providers ?? 24 }} healthy
+            </div>
           </div>
         </div>
 
@@ -841,6 +849,7 @@ import {
   getServiceHealth,
   type ServiceHealthEntry,
 } from '~/lib/opsApi'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -1008,6 +1017,33 @@ type ObserverSummaryResponse = {
     }>
   }
 }
+
+type BatchAlertEvaluationResponse = {
+  success: true
+  mode: 'batch'
+  run_mode?: 'dry_run' | 'execute'
+  triggered?: number
+  total?: number
+  message?: string
+}
+
+type SingleAlertEvaluationResponse = {
+  success: true
+  mode: 'single'
+  run_mode?: 'dry_run' | 'execute'
+  alertId?: string
+  triggered?: boolean
+  message?: string
+}
+
+type FailedAlertEvaluationResponse = {
+  success?: false
+  mode?: string
+  run_mode?: 'dry_run' | 'execute'
+  message?: string
+}
+
+type AlertEvaluationResponse = BatchAlertEvaluationResponse | SingleAlertEvaluationResponse | FailedAlertEvaluationResponse
 
 const { request } = useApi()
 
@@ -1215,7 +1251,7 @@ const ensureAuditTable = async () => {
     }
   }
   catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to ensure email audit table.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to ensure email audit table.')
   }
   finally {
     ensuring.value = false
@@ -1235,7 +1271,7 @@ const runAlertEvaluation = async () => {
       : null
     const isExecute = (typed || '').trim().toUpperCase() === 'RUN'
     const mode = isExecute ? 'execute' as const : 'dry_run' as const
-    const result = await request<any>('/ops/alerts/evaluate', {
+    const result = await request<AlertEvaluationResponse>('/ops/alerts/evaluate', {
       method: 'POST',
       body: {
         frequency: 'daily',
@@ -1264,7 +1300,7 @@ const runAlertEvaluation = async () => {
     }
   }
   catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Alert evaluation failed.'
+    error.value = getAdminApiErrorMessage(err, 'Alert evaluation failed.')
   }
   finally {
     evaluating.value = false
@@ -1325,7 +1361,7 @@ const loadObserver = async () => {
       if (result.status !== 'rejected') return null
       const err = result.reason as { statusCode?: number, message?: string }
       if (err?.statusCode === 404) return '404 — check BFF proxy allowlist'
-      return err?.message || 'unknown error'
+      return getAdminApiErrorMessage(result.reason, 'unknown error')
     }
     const failures = [
       indicesResult.status === 'rejected' ? `indices health (${extractReason(indicesResult)})` : null,
@@ -1342,7 +1378,7 @@ const loadObserver = async () => {
     void loadPlatformData()
   }
   catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to load observer status.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to load observer status.')
   }
   finally {
     loading.value = false

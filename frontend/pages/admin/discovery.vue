@@ -1,0 +1,540 @@
+<template>
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <AdminPageShell
+      title="Provider Control Plane"
+      subtitle="Discovery review, transactional apply, and provider certification in one operator surface."
+      :loading="loading"
+      :error="error"
+      :meta="lastUpdated ? `Last updated: ${formatDateTime(lastUpdated)}` : undefined"
+    >
+      <template #actions>
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="inline-flex items-center gap-2 text-body-sm text-rs-muted">
+            <input
+              v-model="autoRefresh"
+              type="checkbox"
+              class="h-4 w-4 rounded border-rs-border text-brand-600"
+            >
+            Auto-refresh
+            <span
+              v-if="autoRefresh"
+              class="tabular-nums font-semibold text-rs-fg"
+            >{{ countdown }}s</span>
+          </label>
+          <button
+            class="h-10 rounded-lg border border-rs-border bg-rs-surface px-4 text-body-sm font-semibold text-rs-fg hover:bg-rs-surface-2 disabled:opacity-60"
+            :disabled="loading || runningCertification"
+            @click="runCertification"
+          >
+            {{ runningCertification ? 'Running certification…' : 'Run certification' }}
+          </button>
+          <button
+            class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+            :disabled="loading"
+            @click="load"
+          >
+            {{ loading ? 'Refreshing…' : 'Refresh' }}
+          </button>
+        </div>
+      </template>
+    </AdminPageShell>
+
+    <section class="grid gap-4 xl:grid-cols-[1.2fr_1.8fr]">
+      <article class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Pending discovery reviews</h2>
+            <p class="text-body-sm text-rs-muted">
+              Scans with unresolved review/apply state.
+            </p>
+          </div>
+          <div class="rounded-full bg-rs-surface-2 px-3 py-1 text-body-sm font-semibold text-rs-fg">
+            {{ pendingReviews.length }}
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <input
+            v-model.trim="providerFilter"
+            type="text"
+            placeholder="Filter provider"
+            class="h-10 rounded-lg border border-rs-border bg-rs-bg px-3 text-body-sm text-rs-fg focus:border-brand-500 focus:outline-none"
+          >
+          <input
+            v-model.trim="certProviderIdsInput"
+            type="text"
+            placeholder="Certification providers (csv)"
+            class="h-10 min-w-[14rem] rounded-lg border border-rs-border bg-rs-bg px-3 text-body-sm text-rs-fg focus:border-brand-500 focus:outline-none"
+          >
+          <select
+            v-model="certMethod"
+            class="h-10 rounded-lg border border-rs-border bg-rs-bg px-3 text-body-sm text-rs-fg focus:border-brand-500 focus:outline-none"
+          >
+            <option value="bank">Bank</option>
+            <option value="cash">Cash</option>
+            <option value="wallet">Wallet</option>
+            <option value="airtime">Airtime</option>
+            <option value="home">Home</option>
+            <option value="card">Card</option>
+          </select>
+        </div>
+
+        <div class="mt-4 overflow-hidden rounded-xl border border-rs-border">
+          <table class="min-w-full text-body-sm">
+            <thead class="bg-rs-surface-2 text-left text-rs-muted">
+              <tr>
+                <th class="px-4 py-3 font-medium">Provider</th>
+                <th class="px-4 py-3 font-medium">Review</th>
+                <th class="px-4 py-3 font-medium">Apply</th>
+                <th class="px-4 py-3 font-medium">Scan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="scan in filteredPendingReviews"
+                :key="scan.id"
+                class="cursor-pointer border-t border-rs-border hover:bg-rs-surface-2/60"
+                :class="selectedScan?.id === scan.id ? 'bg-brand-50/60' : ''"
+                @click="openScan(scan.id)"
+              >
+                <td class="px-4 py-3 align-top">
+                  <div class="font-semibold text-rs-fg">{{ scan.provider_id }}</div>
+                  <div class="text-rs-muted">{{ scan.triggered_by || 'manual' }}</div>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="reviewBadgeClass(scan.review_status)">
+                    {{ scan.review_status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="applyBadgeClass(scan.apply_status)">
+                    {{ scan.apply_status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 align-top text-rs-muted">
+                  {{ formatDateTime(scan.completed_at || scan.started_at) }}
+                </td>
+              </tr>
+              <tr v-if="filteredPendingReviews.length === 0">
+                <td colspan="4" class="px-4 py-8 text-center text-rs-muted">
+                  No pending discovery reviews.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Selected scan</h2>
+            <p class="text-body-sm text-rs-muted">
+              Review state is explicit. Apply is separate and retryable.
+            </p>
+          </div>
+          <div
+            v-if="selectedScan"
+            class="flex flex-wrap gap-2"
+          >
+            <button
+              class="h-10 rounded-lg border border-rs-border bg-rs-bg px-4 text-body-sm font-semibold text-rs-fg hover:bg-rs-surface-2 disabled:opacity-60"
+              :disabled="actionBusy || selectedScan.review_status === 'approved' || selectedScan.apply_status === 'applied'"
+              @click="approveSelectedScan"
+            >
+              Approve
+            </button>
+            <button
+              class="h-10 rounded-lg bg-brand-600 px-4 text-body-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              :disabled="actionBusy || selectedScan.review_status === 'dismissed' || selectedScan.apply_status === 'applied'"
+              @click="applySelectedScan"
+            >
+              Apply
+            </button>
+            <button
+              class="h-10 rounded-lg border border-rs-border bg-rs-bg px-4 text-body-sm font-semibold text-rs-fg hover:bg-rs-surface-2 disabled:opacity-60"
+              :disabled="actionBusy || selectedScan.apply_status === 'applied'"
+              @click="dismissSelectedScan"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-if="actionMessage"
+          class="mt-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-body-sm text-brand-800"
+        >
+          {{ actionMessage }}
+        </div>
+
+        <div v-if="selectedScan" class="mt-4 space-y-4">
+          <div class="grid gap-3 md:grid-cols-4">
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <div class="text-xs uppercase tracking-wide text-rs-muted">Provider</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ selectedScan.provider_id }}</div>
+            </div>
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <div class="text-xs uppercase tracking-wide text-rs-muted">Review</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ selectedScan.review_status }}</div>
+            </div>
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <div class="text-xs uppercase tracking-wide text-rs-muted">Apply</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ selectedScan.apply_status }}</div>
+            </div>
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <div class="text-xs uppercase tracking-wide text-rs-muted">Completed</div>
+              <div class="mt-1 text-body-lg font-semibold text-rs-fg">{{ formatDateTime(selectedScan.completed_at) }}</div>
+            </div>
+          </div>
+
+          <div class="grid gap-4 xl:grid-cols-2">
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <h3 class="text-body-sm font-semibold text-rs-fg">Diff evidence</h3>
+              <pre class="mt-3 max-h-[28rem] overflow-auto rounded-lg bg-slate-950/95 p-4 text-xs text-slate-100">{{ prettyJson(selectedScan.diff_json) }}</pre>
+            </div>
+            <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
+              <h3 class="text-body-sm font-semibold text-rs-fg">Apply state</h3>
+              <pre class="mt-3 max-h-[28rem] overflow-auto rounded-lg bg-slate-950/95 p-4 text-xs text-slate-100">{{ prettyJson({
+                apply_result_json: selectedScan.apply_result_json,
+                apply_errors_json: selectedScan.apply_errors_json,
+                result_json: selectedScan.result_json,
+              }) }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="mt-4 rounded-xl border border-dashed border-rs-border bg-rs-bg px-4 py-8 text-center text-rs-muted"
+        >
+          Select a discovery scan to review lifecycle state and evidence.
+        </div>
+      </article>
+    </section>
+
+    <section class="grid gap-4 xl:grid-cols-[1.1fr_1.9fr]">
+      <article class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Certification runs</h2>
+            <p class="text-body-sm text-rs-muted">
+              Canonical 24-provider certification history.
+            </p>
+          </div>
+          <div class="rounded-full bg-rs-surface-2 px-3 py-1 text-body-sm font-semibold text-rs-fg">
+            {{ certificationRuns.length }}
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          <button
+            v-for="run in certificationRuns"
+            :key="run.run_id"
+            type="button"
+            class="w-full rounded-xl border px-4 py-3 text-left transition-colors"
+            :class="selectedRun?.run_id === run.run_id ? 'border-brand-300 bg-brand-50' : 'border-rs-border bg-rs-bg hover:bg-rs-surface-2'"
+            @click="openRun(run.run_id)"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="font-semibold text-rs-fg">{{ run.run_id }}</div>
+                <div class="text-body-sm text-rs-muted">
+                  {{ formatDateTime(run.created_at) }} · {{ run.triggered_by }}
+                </div>
+              </div>
+              <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="runStatusClass(run.status)">
+                {{ run.status }}
+              </span>
+            </div>
+            <div class="mt-2 grid grid-cols-3 gap-2 text-xs text-rs-muted">
+              <div>Certified {{ run.certified_count }}</div>
+              <div>Degraded {{ run.degraded_count }}</div>
+              <div>Blocked {{ run.blocked_count }}</div>
+            </div>
+          </button>
+          <div
+            v-if="certificationRuns.length === 0"
+            class="rounded-xl border border-dashed border-rs-border bg-rs-bg px-4 py-8 text-center text-rs-muted"
+          >
+            No certification runs yet.
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-body-lg font-semibold text-rs-fg">Certification detail</h2>
+            <p class="text-body-sm text-rs-muted">
+              Providers that stay on static fallback or unresolved drift do not reach certified.
+            </p>
+          </div>
+          <div v-if="selectedRun" class="grid grid-cols-3 gap-2 text-body-sm text-rs-muted">
+            <div>Certified {{ selectedRun.certified_count }}</div>
+            <div>Degraded {{ selectedRun.degraded_count }}</div>
+            <div>Blocked {{ selectedRun.blocked_count }}</div>
+          </div>
+        </div>
+
+        <div v-if="selectedRun" class="mt-4 overflow-hidden rounded-xl border border-rs-border">
+          <table class="min-w-full text-body-sm">
+            <thead class="bg-rs-surface-2 text-left text-rs-muted">
+              <tr>
+                <th class="px-4 py-3 font-medium">Provider</th>
+                <th class="px-4 py-3 font-medium">Status</th>
+                <th class="px-4 py-3 font-medium">Evidence lane</th>
+                <th class="px-4 py-3 font-medium">Drift reasons</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="result in selectedRunResults"
+                :key="`${selectedRun.run_id}:${result.provider_id}`"
+                class="border-t border-rs-border align-top"
+              >
+                <td class="px-4 py-3">
+                  <div class="font-semibold text-rs-fg">{{ result.provider_id }}</div>
+                  <div class="text-xs text-rs-muted">{{ result.summary }}</div>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" :class="runStatusClass(result.status)">
+                    {{ result.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-rs-fg">{{ result.evidence_lane }}</td>
+                <td class="px-4 py-3 text-rs-muted">
+                  {{ result.drift_reasons?.length ? result.drift_reasons.join(', ') : 'clean' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          v-else
+          class="mt-4 rounded-xl border border-dashed border-rs-border bg-rs-bg px-4 py-8 text-center text-rs-muted"
+        >
+          Select a certification run to inspect provider outcomes.
+        </div>
+      </article>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+import {
+  approveDiscoveryReview,
+  applyDiscoveryReview,
+  dismissDiscoveryReview,
+  getDiscoveryCertificationRun,
+  getDiscoveryScan,
+  listDiscoveryCertificationRuns,
+  listDiscoveryScans,
+  listPendingDiscoveryReviews,
+  triggerDiscoveryCertification,
+  type AdminDiscoveryCertificationResult,
+  type AdminDiscoveryCertificationRun,
+  type AdminDiscoveryScanDetail,
+  type AdminDiscoveryScanSummary,
+} from '~/lib/opsApi'
+
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
+
+useAdminPage({
+  title: 'Provider Control Plane | Remit-Scout',
+  description: 'Operator workflow for discovery review, transactional apply, and provider certification.',
+})
+
+const { formatDateTime } = useAdminFormat()
+
+const loading = ref(false)
+const error = ref<string | null>(null)
+const actionMessage = ref<string | null>(null)
+const lastUpdated = ref<string | null>(null)
+const actionBusy = ref(false)
+const runningCertification = ref(false)
+const autoRefresh = ref(false)
+const countdown = ref(60)
+const providerFilter = ref('')
+const certProviderIdsInput = ref('')
+const certMethod = ref<'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'>('bank')
+
+const pendingReviews = ref<AdminDiscoveryScanSummary[]>([])
+const recentScans = ref<AdminDiscoveryScanSummary[]>([])
+const selectedScan = ref<AdminDiscoveryScanDetail | null>(null)
+const certificationRuns = ref<AdminDiscoveryCertificationRun[]>([])
+const selectedRun = ref<AdminDiscoveryCertificationRun | null>(null)
+const selectedRunResults = ref<AdminDiscoveryCertificationResult[]>([])
+
+let timer: ReturnType<typeof setInterval> | null = null
+
+watch(autoRefresh, (enabled) => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+  if (!enabled) return
+  countdown.value = 60
+  timer = setInterval(() => {
+    countdown.value -= 1
+    if (countdown.value <= 0) {
+      countdown.value = 60
+      void load()
+    }
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+
+const filteredPendingReviews = computed(() => {
+  const token = providerFilter.value.trim().toLowerCase()
+  if (!token) return pendingReviews.value
+  return pendingReviews.value.filter((scan) => scan.provider_id.toLowerCase().includes(token))
+})
+
+const prettyJson = (value: unknown) => JSON.stringify(value ?? null, null, 2)
+
+const reviewBadgeClass = (status: string) => {
+  if (status === 'approved' || status === 'automation_approved') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'dismissed') return 'bg-slate-200 text-slate-700'
+  if (status === 'not_required') return 'bg-sky-100 text-sky-700'
+  return 'bg-amber-100 text-amber-700'
+}
+
+const applyBadgeClass = (status: string) => {
+  if (status === 'applied') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'failed') return 'bg-red-100 text-red-700'
+  if (status === 'pending_apply' || status === 'applying') return 'bg-amber-100 text-amber-700'
+  if (status === 'dismissed' || status === 'not_applicable') return 'bg-slate-200 text-slate-700'
+  return 'bg-sky-100 text-sky-700'
+}
+
+const runStatusClass = (status: string) => {
+  if (status === 'certified' || status === 'completed') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'blocked' || status === 'failed') return 'bg-red-100 text-red-700'
+  return 'bg-amber-100 text-amber-700'
+}
+
+const openScan = async (scanId: number) => {
+  const response = await getDiscoveryScan(scanId)
+  selectedScan.value = response.scan
+}
+
+const openRun = async (runId: string) => {
+  const response = await getDiscoveryCertificationRun(runId)
+  selectedRun.value = response.run
+  selectedRunResults.value = response.results
+}
+
+const load = async () => {
+  if (loading.value) return
+  loading.value = true
+  error.value = null
+
+  try {
+    const [pending, scans, runs] = await Promise.all([
+      listPendingDiscoveryReviews(50),
+      listDiscoveryScans({ limit: 25 }),
+      listDiscoveryCertificationRuns(12),
+    ])
+
+    pendingReviews.value = pending.scans
+    recentScans.value = scans.scans
+    certificationRuns.value = runs.runs
+
+    if (selectedScan.value) {
+      await openScan(selectedScan.value.id)
+    } else if (pending.scans[0]) {
+      await openScan(pending.scans[0].id)
+    } else if (scans.scans[0]) {
+      await openScan(scans.scans[0].id)
+    }
+
+    if (selectedRun.value) {
+      await openRun(selectedRun.value.run_id)
+    } else if (runs.runs[0]) {
+      await openRun(runs.runs[0].run_id)
+    }
+
+    lastUpdated.value = new Date().toISOString()
+  }
+  catch (e: any) {
+    error.value = e?.message ?? 'Failed to load provider control plane.'
+  }
+  finally {
+    loading.value = false
+  }
+}
+
+const mutateSelectedScan = async (operation: 'approve' | 'apply' | 'dismiss') => {
+  if (!selectedScan.value || actionBusy.value) return
+  actionBusy.value = true
+  actionMessage.value = null
+
+  try {
+    if (operation === 'approve') {
+      const response = await approveDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
+      actionMessage.value = `Scan ${response.scan.id} approved.`
+    } else if (operation === 'apply') {
+      const response = await applyDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
+      actionMessage.value = response.applied
+        ? `Scan ${response.scan.id} applied.`
+        : `Apply failed for scan ${response.scan.id}; retry is available.`
+    } else {
+      const response = await dismissDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
+      actionMessage.value = `Scan ${response.scan.id} dismissed.`
+    }
+
+    await load()
+  }
+  catch (e: any) {
+    actionMessage.value = e?.message ?? 'Action failed.'
+  }
+  finally {
+    actionBusy.value = false
+  }
+}
+
+const approveSelectedScan = async () => mutateSelectedScan('approve')
+const applySelectedScan = async () => mutateSelectedScan('apply')
+const dismissSelectedScan = async () => mutateSelectedScan('dismiss')
+
+const runCertification = async () => {
+  if (runningCertification.value) return
+  runningCertification.value = true
+  actionMessage.value = null
+
+  try {
+    const providerIds = certProviderIdsInput.value
+      .split(',')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter(Boolean)
+
+    const run = await triggerDiscoveryCertification({
+      providerIds: providerIds.length ? providerIds : undefined,
+      method: certMethod.value,
+      reviewOnly: true,
+    })
+
+    actionMessage.value = `Certification run ${run.run_id} completed with status ${run.status}.`
+    await load()
+    await openRun(run.run_id)
+  }
+  catch (e: any) {
+    actionMessage.value = e?.message ?? 'Certification run failed.'
+  }
+  finally {
+    runningCertification.value = false
+  }
+}
+
+onMounted(() => {
+  void load()
+})
+</script>

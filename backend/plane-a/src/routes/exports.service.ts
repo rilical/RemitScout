@@ -57,6 +57,8 @@ export const resolveActor = (
   request: FastifyRequest,
   reply: FastifyReply,
 ): ExportActor | null => {
+  const userApiKey = request.userApiKey ?? request.apiKey
+
   if (request.user) {
     return {
       userId: request.user.user_id,
@@ -65,11 +67,11 @@ export const resolveActor = (
     }
   }
 
-  if (request.apiKey) {
+  if (userApiKey) {
     return {
-      userId: request.apiKey.user_id,
+      userId: userApiKey.user_id,
       actorType: 'api_key',
-      apiKeyId: request.apiKey.key_id,
+      apiKeyId: userApiKey.key_id,
     }
   }
 
@@ -145,7 +147,7 @@ export const resolveCreateExport = (
 
     if (!isParquetEnabled) {
       logger.warn('parquet_format_requested_but_not_enabled', {
-        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+        user_id: request.user?.user_id ?? request.userApiKey?.user_id ?? request.apiKey?.user_id ?? 'unknown',
         message: 'Parquet export was requested but EXPORTS_PARQUET_ENABLED is not set to true. '
           + 'Enable it via the EXPORTS_PARQUET_ENABLED env var once the export worker has parquet support.',
       })
@@ -158,7 +160,7 @@ export const resolveCreateExport = (
     }
     if (!hasBulkExportEntitlement) {
       logger.info('parquet_format_requested_without_entitlement', {
-        user_id: request.user?.user_id ?? request.apiKey?.user_id ?? 'unknown',
+        user_id: request.user?.user_id ?? request.userApiKey?.user_id ?? request.apiKey?.user_id ?? 'unknown',
       })
       throw new ValidationError('Parquet export requires a plan with bulk export access', {
         details: { error: 'parquet_not_allowed' },
@@ -221,8 +223,8 @@ export const resolveCreateExport = (
     format: payload.format,
   }
 
-  if (request.apiKey) {
-    params.exportAudience = 'institutional'
+  if (request.userApiKey || request.apiKey) {
+    params.exportAudience = 'retail_api_key'
   }
   if (dateFrom) {
     params.dateFrom = dateFrom.toISOString()

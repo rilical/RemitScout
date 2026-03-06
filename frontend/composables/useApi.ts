@@ -79,6 +79,8 @@ export const createApiClient = (deps: ApiClientDeps) => {
       || normalized.startsWith('/ops')
       || normalized.startsWith('/analytics')
       || normalized.startsWith('/audit')
+      || normalized.startsWith('/indices/corrections')
+      || normalized === '/telemetry/analytics'
     )
   }
 
@@ -147,14 +149,13 @@ export const createApiClient = (deps: ApiClientDeps) => {
       const accessToken = deps.getAccessToken?.()
       const adminAccessToken = deps.getAdminAccessToken?.()
 
-      // Prefer the primary user session token when present.
-      // Only fall back to the short-lived Plane A admin token for admin surfaces
-      // when there is no primary user token available.
-      if (accessToken && !hasAuthHeader) {
-        headers.authorization = `Bearer ${accessToken}`
-      }
-      else if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
+      // Privileged admin surfaces should use the short-lived Plane A admin token
+      // when it exists so revoked admin sessions fail deterministically.
+      if (adminAccessToken && !hasAuthHeader && isAdminSurfacePath(path)) {
         headers.authorization = `Bearer ${adminAccessToken}`
+      }
+      else if (accessToken && !hasAuthHeader) {
+        headers.authorization = `Bearer ${accessToken}`
       }
 
       if (cloudfrontRequestId) {

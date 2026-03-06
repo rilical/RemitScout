@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { config, type RuntimeConfigRequirements } from './config'
+import { resolveIngestFanoutQueueState } from './ingest-fanout-queues'
 
 const nonEmptyString = z.string()
 const booleanSchema = z.boolean()
@@ -157,11 +158,20 @@ const shouldRequire = (
   defaultValue: boolean,
 ) => overrideValue ?? defaultValue
 
+const toOptionalString = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined
+
 const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
   baseConfigSchema.superRefine((cfg, ctx) => {
     const runtimeEnv = (cfg.envName || cfg.env || '').trim().toLowerCase()
     const isProdLike = runtimeEnv === 'staging' || runtimeEnv === 'prod' || runtimeEnv === 'production'
     const agentLlmEnabled = cfg.agent.enabled || cfg.agent.orchestratorEnabled || requirements.requireAgentLlm === true
+    const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+      mode: toOptionalString(cfg.queues.ingestFanout.mode) || 'off',
+      url: cfg.queues.ingestFanout.url,
+      tier1Url: toOptionalString(cfg.queues.ingestFanout.tier1Url),
+      tier2Url: toOptionalString(cfg.queues.ingestFanout.tier2Url),
+    })
 
     if (requirements.requirePlaneA && !cfg.db.planeAUrl) {
       addMissing(ctx, 'DATABASE_URL_PLANE_A', ['db', 'planeAUrl'])
@@ -230,8 +240,11 @@ const buildStartupSchema = (requirements: RuntimeConfigRequirements) =>
       if (requireExportJobQueue && !cfg.queues.exports.url) {
         addMissing(ctx, 'EXPORT_JOB_QUEUE_URL', ['queues', 'exports', 'url'])
       }
-      if (requireIngestFanoutQueue && !cfg.queues.ingestFanout.url) {
-        addMissing(ctx, 'PLANE_B_INGEST_FANOUT_QUEUE_URL', ['queues', 'ingestFanout', 'url'])
+      if (requireIngestFanoutQueue && !ingestFanoutQueueState.enabled) {
+        addMissing(ctx, 'PLANE_B_INGEST_FANOUT_QUEUE_URL or tiered pair', ['queues', 'ingestFanout'])
+      }
+      if (requireIngestFanoutQueue && ingestFanoutQueueState.tierMisconfigured) {
+        addMissing(ctx, 'PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL + PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL', ['queues', 'ingestFanout'])
       }
       if (requireNotificationsQueue && !cfg.queues.notifications.url) {
         addMissing(ctx, 'PLANE_B_NOTIFICATIONS_QUEUE_URL', ['queues', 'notifications', 'url'])

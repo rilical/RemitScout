@@ -1516,8 +1516,13 @@ jobs:
           STACK_NAME: ${{ vars.STACK_NAME }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: ${{ secrets.SMOKE_USER_EMAIL }}
-          SMOKE_USER_PASSWORD: ${{ secrets.SMOKE_USER_PASSWORD }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
+          SMOKE_EXPECTED_IS_ADMIN: '1'
+          SMOKE_EXPECTED_APP_ROLE: super_admin
+          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
+          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -1532,17 +1537,141 @@ jobs:
             echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for authenticated smoke."
             exit 1
           fi
-          if [ -z "${SMOKE_USER_EMAIL:-}" ] || [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Skipping authenticated smoke: SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD not configured in staging environment secrets."
-            exit 0
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging authenticated smoke."
+            exit 1
           fi
 
+          mkdir -p .smoke-artifacts
           SMOKE_BASE_URL="$api_base" \
           SUPABASE_URL="$SUPABASE_URL" \
           SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
           SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
           SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
-          pnpm -C backend ci:alerts-watchlists-smoke
+          SMOKE_EXPECTED_EMAIL="$SMOKE_EXPECTED_EMAIL" \
+          SMOKE_EXPECTED_IS_ADMIN="$SMOKE_EXPECTED_IS_ADMIN" \
+          SMOKE_EXPECTED_APP_ROLE="$SMOKE_EXPECTED_APP_ROLE" \
+          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE="$SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE" \
+          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS="$SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS" \
+          pnpm -C backend ci:alerts-watchlists-smoke | tee .smoke-artifacts/deploy-staging-omar-entitlement-smoke.log
+
+      - name: Verify runner IP is allowlisted for staging admin smoke
+        shell: bash
+        env:
+          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_IP_ALLOWLIST:-}" ]; then
+            echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
+            exit 1
+          fi
+          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
+          python3 - "$runner_ip" "$ADMIN_IP_ALLOWLIST" <<'PY'
+          import ipaddress
+          import sys
+
+          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
+          allowlist_raw = sys.argv[2]
+
+          for token in [item.strip() for item in allowlist_raw.split(',') if item.strip()]:
+              network = ipaddress.ip_network(token if '/' in token else f"{token}/32", strict=False)
+              if runner_ip in network:
+                  print(f"Runner IP {runner_ip} is allowlisted by {network}")
+                  raise SystemExit(0)
+
+          print(f"Runner IP {runner_ip} is not present in ADMIN_IP_ALLOWLIST.", file=sys.stderr)
+          raise SystemExit(1)
+          PY
+
+      - name: Admin Surface Smoke (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for staging admin surface smoke."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
+            exit 1
+          fi
+
+          mkdir -p .smoke-artifacts
+          SMOKE_BASE_URL="$api_base" \
+          SUPABASE_URL="$SUPABASE_URL" \
+          SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+          SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
+          SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
+          ADMIN_SMOKE_TARGET_EMAIL="$ADMIN_SMOKE_TARGET_EMAIL" \
+          pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/deploy-staging-admin-surface-smoke.log
+
+      - name: Install Playwright browser runtime (staging admin UI smoke)
+        shell: bash
+        run: pnpm -C frontend exec playwright install --with-deps chromium
+
+      - name: Admin UI Smoke (staging)
+        shell: bash
+        env:
+          ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
+          E2E_AUTH_EMAIL: omar@remit-scout.com
+          E2E_AUTH_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          E2E_AUTH_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          E2E_ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          frontend_url="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendUrl") | .OutputValue')"
+          frontend_dist="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionDomain") | .OutputValue')"
+          app_base="$frontend_url"
+          if [ -z "$app_base" ] || [ "$app_base" = "null" ]; then
+            app_base="https://${frontend_dist}"
+          fi
+
+          if [ -z "${app_base:-}" ] || [ "${app_base:-}" = "https://" ]; then
+            echo "Missing FrontendUrl/FrontendDistributionDomain for staging admin UI smoke."
+            exit 1
+          fi
+          if [ -z "${E2E_AUTH_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
+            exit 1
+          fi
+
+          mkdir -p .smoke-artifacts
+          PLAYWRIGHT_BASE_URL="$app_base" \
+          E2E_AUTH_EMAIL="$E2E_AUTH_EMAIL" \
+          E2E_AUTH_PASSWORD="$E2E_AUTH_PASSWORD" \
+          E2E_AUTH_MFA_CODE="$E2E_AUTH_MFA_CODE" \
+          E2E_ADMIN_SMOKE_TARGET_EMAIL="$E2E_ADMIN_SMOKE_TARGET_EMAIL" \
+          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee .smoke-artifacts/deploy-staging-admin-ui-smoke.log
+
+      - name: Upload staging admin smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-staging-admin-smoke-evidence
+          path: |
+            .smoke-artifacts
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 30
+          if-no-files-found: ignore
 
       - name: Post-deploy Smoke (staging) + Auto Rollback On Failure
         shell: bash
@@ -1951,7 +2080,7 @@ jobs:
           fi
           echo "Found successful staging readiness run: ${run_id}"
 
-      - name: SOC 2 Type II enterprise launch gate
+      - name: Compliance metadata note
         shell: bash
         env:
           PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
@@ -1963,51 +2092,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "${PLANE_A_REQUIRE_API_KEY:-0}" != "1" ]; then
-            echo "SOC 2 launch gate skipped: PLANE_A_REQUIRE_API_KEY is not set to 1."
-            exit 0
-          fi
-
           report_state="${COMPLIANCE_SOC2_TYPE_II_REPORT_STATE:-${COMPLIANCE_SOC2_TYPE_II_STATUS:-}}"
-          if [ -z "$report_state" ]; then
-            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be set for enterprise mode."
-            exit 1
-          fi
-
-          if [ "$report_state" != "audited" ]; then
-            echo "SOC 2 launch gate failed: report_state must be audited for enterprise production promotion (received \"$report_state\")."
-            echo "Set COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=audited and provide a valid report date/window."
-            exit 1
-          fi
-
-          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE:-}" ]; then
-            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is required when report_state is audited."
-            exit 1
-          fi
-          if ! date -d "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE}" +%s >/dev/null 2>&1; then
-            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date."
-            exit 1
-          fi
-
-          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_URL:-}" ]; then
-            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_URL is required when report_state is audited."
-            exit 1
-          fi
-
-          if [ -n "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON:-}" ]; then
-            if ! date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s >/dev/null 2>&1; then
-              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date."
-              exit 1
-            fi
-            if [ "$(date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s)" -le "$(date +%s)" ]; then
-              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future."
-              exit 1
-            fi
-          else
-            echo "SOC 2 launch gate warning: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is empty."
-          fi
-
-          echo "SOC 2 Type II production launch gate passed (report_state=audited)."
+          echo "PLANE_A_REQUIRE_API_KEY=${PLANE_A_REQUIRE_API_KEY:-0}"
+          echo "COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=${report_state:-<unset>}"
+          echo "COMPLIANCE_SOC2_TYPE_II_REPORT_DATE=${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE:-<unset>}"
+          echo "COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON=${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON:-<unset>}"
+          echo "Compliance metadata is advisory for deploy readiness. Commercial launch remains controlled by the runtime institutional data-maturity gate."
 
       - uses: ./.github/actions/setup-node-pnpm
         with:

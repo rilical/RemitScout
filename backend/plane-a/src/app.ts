@@ -246,6 +246,9 @@ export const buildApp = async (options?: {
     if (request.method === 'OPTIONS') {
       return
     }
+    if (request.apiKeyPresented) {
+      return
+    }
     const path = request.url.split('?')[0]
     if (authBypassPaths.has(path)) {
       return
@@ -294,7 +297,7 @@ export const buildApp = async (options?: {
     }
 
     const path = request.url.split('?')[0] || ''
-    if (path.startsWith('/api/v1') && (request.user || request.apiKey || request.institutionalClient)) {
+    if (path.startsWith('/api/v1') && (request.user || request.userApiKey || request.apiKey || request.institutionalClient)) {
       reply.header('Cache-Control', 'no-store, no-cache, must-revalidate')
       reply.header('Pragma', 'no-cache')
       reply.header('Expires', '0')
@@ -374,7 +377,9 @@ export const buildApp = async (options?: {
       max: maxRequestsForPath,
       keyGenerator: (request) => {
         if (request.institutionalClient) return `inst:${request.institutionalClient.id}`
-        if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
+        if (request.userApiKey || request.apiKey) {
+          return `apiKey:${(request.userApiKey ?? request.apiKey)!.key_id}`
+        }
         if (request.user) return `user:${request.user.user_id}`
         return `ip:${request.ip}`
       },
@@ -388,7 +393,9 @@ export const buildApp = async (options?: {
       max: maxRequestsForPath,
       keyGenerator: (request) => {
         if (request.institutionalClient) return `inst:${request.institutionalClient.id}`
-        if (request.apiKey) return `apiKey:${request.apiKey.key_id}`
+        if (request.userApiKey || request.apiKey) {
+          return `apiKey:${(request.userApiKey ?? request.apiKey)!.key_id}`
+        }
         if (request.user) return `user:${request.user.user_id}`
         return `ip:${request.ip}`
       },

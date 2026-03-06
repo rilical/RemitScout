@@ -59,22 +59,32 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
   getUserPlan: (...args: any[]) => mockGetUserPlan(...args),
 }))
 
-vi.mock('../plane-a/src/repositories', () => ({
-  AlertRepository: class {
-    countByUserId = alertRepo.countByUserId
-    listByUserId = alertRepo.listByUserId
-    findById = alertRepo.findById
-    findByWatchlistItemAndRule = alertRepo.findByWatchlistItemAndRule
-    create = alertRepo.create
-    update = alertRepo.update
-  },
-  WatchlistRepository: class {
-    findById = watchlistRepo.findById
-  },
-  RightsMatrixRepository: class {
-    listActiveB2cProvidersByCountry = vi.fn().mockResolvedValue([])
-  },
-}))
+vi.mock('../plane-a/src/repositories', async () => {
+  const actual = await vi.importActual<typeof import('../plane-a/src/repositories')>(
+    '../plane-a/src/repositories',
+  )
+  return {
+    ...actual,
+    AlertRepository: class {
+      countByUserId = alertRepo.countByUserId
+      listByUserId = alertRepo.listByUserId
+      findById = alertRepo.findById
+      findByWatchlistItemAndRule = alertRepo.findByWatchlistItemAndRule
+      create = alertRepo.create
+      update = alertRepo.update
+    },
+    DailyUsageCounterRepository: class {
+      incrementAndGet = vi.fn().mockResolvedValue(0)
+      getCount = vi.fn().mockResolvedValue(0)
+    },
+    WatchlistRepository: class {
+      findById = watchlistRepo.findById
+    },
+    RightsMatrixRepository: class {
+      listActiveB2cProvidersByCountry = vi.fn().mockResolvedValue([])
+    },
+  }
+})
 
 vi.mock('../plane-a/src/container', () => ({
   planeAContainer: {

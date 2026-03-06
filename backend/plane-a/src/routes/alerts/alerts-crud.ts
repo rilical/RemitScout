@@ -7,26 +7,27 @@ import { SMART_ALERT_MIN_CONFIDENCE, SMART_ALERT_MIN_SAMPLE_DAYS } from '../../.
 import { AppError, ValidationError, NotFoundError } from '../../../../shared/errors'
 import { requireAuth } from '../../plugins/auth-plugin'
 import { getUserPlan } from '../../services/user-plan'
+import { resolveEffectiveEntitlements } from '../../services/effective-entitlements'
 import { getRequestContext, logAuditEvent } from '../../services/audit-log'
 import { getErrorMessage } from '../../types/errors'
+import { createCapabilityAccessDeniedResponse } from '../../services/plan-state'
 import {
   checkCorridorSignalData,
   computeQuoteCoverage,
   createAlertSchema,
   getAlertCount,
   getSupportedAlertMetricsForTargetType,
-  isPlanActiveStatus,
-  isPlusEntitled,
   isMetricSupportedForTarget,
   isValidSendScore,
   logger,
   normalizeFrequency,
   REGULAR_ALERT_SUPPORTED_METRICS,
-  resolveAlertLimit,
+  resolveAlertLimitForEntitlements,
   resolveBucketForEligibility,
   resolveCooldownMinutes,
   resolveCorridorIdFromWatchlist,
   resolveMethodForEligibility,
+  resolvePlanLabel,
   SMART_ALERT_NOT_OFFERED_MESSAGE,
   toPositiveNumberOrNull,
   updateAlertSchema,
@@ -40,6 +41,29 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
   const alertRepository = repositories.alert
   const watchlistRepository = repositories.watchlist
   const rightsMatrixRepository = repositories.rightsMatrix
+  const denyAlertCapability = (
+    reply: { code: (statusCode: number) => unknown },
+    effective: Awaited<ReturnType<typeof resolveEffectiveEntitlements>>,
+    input: {
+      capability: string
+      requiredPlan: 'plus' | 'enterprise'
+      insufficientLegacyError: string
+      insufficientMessage: string
+      inactiveMessage: string
+      insufficientPlanFailure?: string
+    },
+  ) => {
+    reply.code(403)
+    return createCapabilityAccessDeniedResponse({
+      context: effective,
+      capability: input.capability,
+      requiredPlan: input.requiredPlan,
+      insufficientLegacyError: input.insufficientLegacyError,
+      insufficientMessage: input.insufficientMessage,
+      inactiveMessage: input.inactiveMessage,
+      insufficientPlanFailure: input.insufficientPlanFailure,
+    })
+  }
 
   app.get('/alerts', { preHandler: requireAuth() }, async (request, reply) => {
     const startTime = Date.now()
@@ -158,44 +182,51 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       }
 
       const plan = await getUserPlan(pool, user.user_id)
-      const isEnterpriseActive = !!plan && plan.plan_code === 'enterprise' && isPlanActiveStatus(plan.status)
+      const effective = await resolveEffectiveEntitlements({
+        pool,
+        userId: user.user_id,
+        email: user.email ?? null,
+        supabaseRole: user.role ?? null,
+        plan,
+      })
 
       if (INDEX_THRESHOLD_METRICS.has(body.rule.metric)) {
         const durationSeconds = (Date.now() - startTime) / 1000
-        if (!isEnterpriseActive) {
+        if (!effective.entitlements.index_threshold_alerts_enabled) {
           recordRequest('POST', '/alerts', 403, durationSeconds)
-          reply.code(403)
-          return {
-            success: false,
-            error: 'forbidden',
-            message: 'Index threshold alerts are available for Enterprise members only.',
-          }
+          return denyAlertCapability(reply, effective, {
+            capability: 'index_threshold_alerts_enabled',
+            requiredPlan: 'enterprise',
+            insufficientLegacyError: 'enterprise_required',
+            insufficientMessage: 'Index threshold alerts are available for Enterprise members only.',
+            inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use index threshold alerts.',
+          })
         }
       }
 
-      if (body.frequency === 'daily' && !isPlusEntitled(plan)) {
+      if (body.frequency === 'daily' && !effective.entitlements.daily_alerts_enabled) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('POST', '/alerts', 403, durationSeconds)
-
-        reply.code(403)
-        return {
-          success: false,
-          error: 'forbidden',
-          message: 'Daily alerts are available for Plus members only.',
-        }
+        return denyAlertCapability(reply, effective, {
+          capability: 'daily_alerts_enabled',
+          requiredPlan: 'plus',
+          insufficientLegacyError: 'plus_required',
+          insufficientMessage: 'Daily alerts are available for Plus members only.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use daily alerts.',
+        })
       }
 
       if (body.rule.metric === 'sendScore') {
-        if (!isPlusEntitled(plan)) {
+        if (!effective.entitlements.smart_alerts_enabled) {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('POST', '/alerts', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'forbidden',
-            message: 'Smart alerts are available for Plus members only.',
-          }
+          return denyAlertCapability(reply, effective, {
+            capability: 'smart_alerts_enabled',
+            requiredPlan: 'plus',
+            insufficientLegacyError: 'plus_required',
+            insufficientMessage: 'Smart alerts are available for Plus members only.',
+            inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use Smart Alerts.',
+          })
         }
 
         if (!isValidSendScore(body.rule.value)) {
@@ -311,17 +342,11 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       }
 
       // Check quota
-      const limit = resolveAlertLimit(plan)
+      const limit = resolveAlertLimitForEntitlements(effective.entitlements)
       if (limit !== 'unlimited') {
         const count = await getAlertCount(alertRepository, user.user_id)
         if (count >= limit) {
-          const effectivePlanCode = plan && isPlanActiveStatus(plan.status) ? plan.plan_code : 'free'
-          const planLabel =
-            effectivePlanCode === 'plus'
-              ? 'Plus'
-              : effectivePlanCode === 'enterprise'
-                ? 'Enterprise'
-                : 'Free'
+          const planLabel = resolvePlanLabel(effective.effectivePlanCode)
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('POST', '/alerts', 403, durationSeconds)
 
@@ -504,7 +529,6 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
       const nextFrequency = body.frequency ?? existing.frequency
       const normalizedFrequency = normalizeFrequency(nextFrequency)
       const resolvedFrequency = nextMetric === 'sendScore' ? 'weekly' : normalizedFrequency
-      const requiresPlus = nextMetric === 'sendScore' || resolvedFrequency === 'daily'
       const supportedMetricsForTarget = getSupportedAlertMetricsForTargetType(watchlistItem.target_type)
 
       if (!isMetricSupportedForTarget(watchlistItem.target_type, nextMetric)) {
@@ -520,48 +544,52 @@ export const registerAlertsCrudRoutes = async (app: FastifyInstance) => {
         } })
       }
 
-      const plan = requiresPlus ? await getUserPlan(pool, user.user_id) : null
-      const planForMetric = plan ?? await getUserPlan(pool, user.user_id)
-      const isEnterpriseActive = !!planForMetric
-        && planForMetric.plan_code === 'enterprise'
-        && isPlanActiveStatus(planForMetric.status)
+      const plan = await getUserPlan(pool, user.user_id)
+      const effective = await resolveEffectiveEntitlements({
+        pool,
+        userId: user.user_id,
+        email: user.email ?? null,
+        supabaseRole: user.role ?? null,
+        plan,
+      })
 
       if (INDEX_THRESHOLD_METRICS.has(nextMetric)) {
         const durationSeconds = (Date.now() - startTime) / 1000
-        if (!isEnterpriseActive) {
+        if (!effective.entitlements.index_threshold_alerts_enabled) {
           recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
-          reply.code(403)
-          return {
-            success: false,
-            error: 'forbidden',
-            message: 'Index threshold alerts are available for Enterprise members only.',
-          }
+          return denyAlertCapability(reply, effective, {
+            capability: 'index_threshold_alerts_enabled',
+            requiredPlan: 'enterprise',
+            insufficientLegacyError: 'enterprise_required',
+            insufficientMessage: 'Index threshold alerts are available for Enterprise members only.',
+            inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use index threshold alerts.',
+          })
         }
       }
 
-      if (resolvedFrequency === 'daily' && !isPlusEntitled(plan)) {
+      if (resolvedFrequency === 'daily' && !effective.entitlements.daily_alerts_enabled) {
         const durationSeconds = (Date.now() - startTime) / 1000
         recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
-
-        reply.code(403)
-        return {
-          success: false,
-          error: 'forbidden',
-          message: 'Daily alerts are available for Plus members only.',
-        }
+        return denyAlertCapability(reply, effective, {
+          capability: 'daily_alerts_enabled',
+          requiredPlan: 'plus',
+          insufficientLegacyError: 'plus_required',
+          insufficientMessage: 'Daily alerts are available for Plus members only.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use daily alerts.',
+        })
       }
 
       if (nextMetric === 'sendScore') {
-        if (!isPlusEntitled(plan)) {
+        if (!effective.entitlements.smart_alerts_enabled) {
           const durationSeconds = (Date.now() - startTime) / 1000
           recordRequest('PATCH', '/alerts/:id', 403, durationSeconds)
-
-          reply.code(403)
-          return {
-            success: false,
-            error: 'forbidden',
-            message: 'Smart alerts are available for Plus members only.',
-          }
+          return denyAlertCapability(reply, effective, {
+            capability: 'smart_alerts_enabled',
+            requiredPlan: 'plus',
+            insufficientLegacyError: 'plus_required',
+            insufficientMessage: 'Smart alerts are available for Plus members only.',
+            inactiveMessage: 'Your paid plan is inactive. Reactivate billing to use Smart Alerts.',
+          })
         }
 
         if (!isValidSendScore(nextThreshold)) {

@@ -24,10 +24,14 @@ test('legal + legacy redirects exist', async ({ page }) => {
   await expect(page).toHaveURL(/\/learn\/providers/)
 })
 
-test('dashboard + plus + pulse surfaces load (logged out)', async ({ page }) => {
-  await page.goto('/dashboard')
-  await expect(page).toHaveURL(/\/sign-in\?redirect=\/dashboard/)
+test('dashboard entry remains auth-linked when logged out', async ({ page }) => {
+  await page.goto('/')
+  await expect(
+    page.getByRole('link', { name: 'Dashboard' }).first(),
+  ).toHaveAttribute('href', '/sign-in?redirect=/dashboard')
+})
 
+test('plus + pulse surfaces load (logged out)', async ({ page }) => {
   await page.goto('/plus')
   await expect(page.getByRole('heading', { name: /never miss a great rate/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /choose your plan/i })).toBeVisible()

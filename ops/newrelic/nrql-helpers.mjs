@@ -58,6 +58,7 @@ const METRIC_NAMESPACE_BY_NAME = Object.freeze({
 })
 
 const escapeNrqlValue = (value) => String(value).replace(/'/g, "\\'")
+const escapeNrqlIdentifier = (value) => String(value).replace(/`/g, '\\`')
 
 export const normalizeEnvName = (value) => {
   const normalized = String(value || '').trim().toLowerCase()
@@ -124,6 +125,57 @@ export const buildEnvScopeClause = ({ envName, nameToken, awsAccountId, allowMis
 
   return scope
 }
+
+export const buildAwsIntegrationScopeClause = ({ envName, nameToken, awsAccountId }) => {
+  if (awsAccountId) {
+    const escapedAccountId = escapeNrqlValue(awsAccountId)
+    return `(
+      aws.accountId = '${escapedAccountId}'
+      OR newrelic.cloudIntegrations.providerAccountId = '${escapedAccountId}'
+      OR awsAccountId = '${escapedAccountId}'
+      OR providerAccountId = '${escapedAccountId}'
+    )`
+  }
+
+  const tokenPredicates = getEnvTokens(nameToken, envName)
+    .flatMap((token) => {
+      const escaped = escapeNrqlValue(token)
+      return [
+        `entity.name LIKE '%${escaped}%'`,
+        `entityName LIKE '%${escaped}%'`,
+        `displayName LIKE '%${escaped}%'`,
+        `aws.Arn LIKE '%${escaped}%'`,
+        `aws.arn LIKE '%${escaped}%'`,
+        `providerAccountName LIKE '%${escaped}%'`,
+        `newrelic.cloudIntegrations.providerAccountName LIKE '%${escaped}%'`,
+      ]
+    })
+
+  return `(${tokenPredicates.join('\n      OR ')})`
+}
+
+export const quoteNrqlIdentifier = (value) => `\`${escapeNrqlIdentifier(value)}\``
+
+export const buildNamedMetricSelect = (name, aggregator = 'sum') =>
+  `${aggregator}(${quoteNrqlIdentifier(name)})`
+
+export const buildNamedMetricFilterExpression = (name, aggregator = 'sum') =>
+  `filter(${buildNamedMetricSelect(name, aggregator)}, WHERE ${buildMetricNameFilter(name)})`
+
+export const buildNamedMetricFilterSelect = (name, aggregator = 'sum', alias = name) =>
+  `${buildNamedMetricFilterExpression(name, aggregator)} AS '${escapeNrqlValue(alias)}'`
+
+export const buildAwsSummaryField = (name, field = 'max') =>
+  `getField(${quoteNrqlIdentifier(name)}, ${field})`
+
+export const buildAwsSummarySelect = (name, field = 'max', aggregator = 'max') =>
+  `${aggregator}(${buildAwsSummaryField(name, field)})`
+
+export const buildAwsSummaryFilterExpression = (name, field = 'max', aggregator = 'max') =>
+  `filter(${buildAwsSummarySelect(name, field, aggregator)}, WHERE metricName = '${escapeNrqlValue(name)}')`
+
+export const buildAwsSummaryFilterSelect = (name, field = 'max', aggregator = 'max', alias = name) =>
+  `${buildAwsSummaryFilterExpression(name, field, aggregator)} AS '${escapeNrqlValue(alias)}'`
 
 export const buildMetricNameVariants = (name) => {
   const escaped = escapeNrqlValue(name)

@@ -17,6 +17,7 @@ import {
   INDICES_METHODOLOGY_VERSION,
 } from '../shared/weighting-model'
 import { buildB2bEffectiveRateSql } from '../shared/quote-rate'
+import { buildRightsMatrixCorridorEligibilitySql } from '../shared/rights-matrix-corridor'
 
 const logger = createLogger('script.gold-indices-live')
 
@@ -35,12 +36,17 @@ const rateRatioMax = Math.max(rateRatioMin, toNumber(process.env.GOLD_INDICES_RA
 const weightModel = process.env.PROVIDER_WEIGHT_MODEL || DEFAULT_WEIGHT_MODEL
 const methodologyVersion = process.env.INDICES_METHODOLOGY_VERSION || INDICES_METHODOLOGY_VERSION
 const b2bEffectiveRateSql = buildB2bEffectiveRateSql('qr')
+const rightsMatrixCorridorEligibilitySql = buildRightsMatrixCorridorEligibilitySql({
+  rightsAlias: 'rm',
+  corridorIdSql: 'qr.corridor_id',
+})
 
 const buildIndicesQuery = () => `
 WITH weight_snapshot AS (
   SELECT
     corridor_id,
     provider_id,
+    method_profile,
     weight,
     model_version,
     window_days,
@@ -52,26 +58,31 @@ corridor_weights AS (
   SELECT
     corridor_id,
     provider_id,
+    method_profile,
     weight,
     window_days,
     weight_confidence
   FROM weight_snapshot
   WHERE corridor_id <> $9
+    AND method_profile IS NOT NULL
 ),
 global_weights AS (
   SELECT
     provider_id,
+    method_profile,
     weight
   FROM weight_snapshot
   WHERE corridor_id = $9
+    AND method_profile IS NOT NULL
 ),
 weight_meta AS (
   SELECT
     corridor_id,
+    method_profile,
     MAX(window_days)::int AS window_days,
     MAX(weight_confidence)::double precision AS weight_confidence
   FROM corridor_weights
-  GROUP BY corridor_id
+  GROUP BY corridor_id, method_profile
 ),
 base_raw AS (
   SELECT
@@ -138,6 +149,7 @@ base_raw AS (
     AND rm.allowed_resell_b2b = true
     AND rm.status = 'production'
     AND rm.stoplist_status = 'active'
+    AND ${rightsMatrixCorridorEligibilitySql}
     AND (rm.allowed_in_rvi = true OR rm.allowed_in_rci = true OR rm.allowed_in_teer = true)
 ),
 base AS (
@@ -303,8 +315,10 @@ weighted_inputs AS (
   LEFT JOIN corridor_weights cw
     ON cw.corridor_id = l.corridor_id
    AND cw.provider_id = l.provider_id
+   AND cw.method_profile = l.method_profile
   LEFT JOIN global_weights gw
     ON gw.provider_id = l.provider_id
+   AND gw.method_profile = l.method_profile
 ),
 weighted_agg AS (
   SELECT
@@ -400,6 +414,7 @@ prepared_base AS (
    AND wm.method_profile = wv.method_profile
   LEFT JOIN weight_meta wmeta
     ON wmeta.corridor_id = wv.corridor_id
+   AND wmeta.method_profile = wv.method_profile
 )
 ,
 prepared_with_prev AS (
@@ -605,6 +620,10 @@ DO UPDATE SET
   methodology_version = EXCLUDED.methodology_version
 RETURNING 1
 `
+
+export const goldIndicesLiveSql = {
+  buildIndicesQuery,
+}
 
 type IndicesRow = {
   corridor_id: string

@@ -1,4 +1,24 @@
 import type { Pool, PoolClient } from 'pg'
+import { describe } from 'vitest'
+
+export const dbIntegrationEnabled = process.env.ENABLE_DB_INTEGRATION_TESTS === '1'
+export const describeDbIntegration = dbIntegrationEnabled ? describe : describe.skip
+
+export const isDatabaseUnavailableError = (error: unknown): boolean => {
+  const aggregateError = error as AggregateError & {
+    code?: string
+    errors?: Array<{ code?: string }>
+    message?: string
+  }
+  const message = String(aggregateError?.message || '').toLowerCase()
+  return (
+    aggregateError?.code === 'ECONNREFUSED'
+    || aggregateError?.errors?.some((entry) => entry?.code === 'ECONNREFUSED')
+    || message.includes('authentication failed')
+    || message.includes('password authentication failed')
+    || message.includes('connect econnrefused')
+  )
+}
 
 /**
  * Runs test logic inside a transaction and always rolls back afterwards.

@@ -406,6 +406,7 @@ const cardBorderClass = (source: string) => {
 
 const adminLinks = [
   { label: 'Operations Center', description: 'Merged observer + full provider ops view', to: '/admin/observer' },
+  { label: 'Provider Control Plane', description: 'Discovery approval, apply state, and certification', to: '/admin/discovery' },
   { label: 'Module Registry', description: 'Signal module health, quarantine status, and cadence', to: '/admin/modules' },
   { label: 'Delivery Progress', description: 'Module readiness and deployment progress by domain', to: '/admin/delivery-progress' },
   { label: 'Self-Healing Pipeline', description: 'Agent actions, failure bundles, and repair metrics', to: '/admin/agents' },

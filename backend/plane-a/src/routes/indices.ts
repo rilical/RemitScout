@@ -16,6 +16,9 @@ import { DEFAULT_WEIGHT_MODEL, INDICES_METHODOLOGY_VERSION } from '../../../shar
 import { DEFAULT_AMOUNT_BUCKET } from '../../../shared/constants'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
+import { apiKeyAccessConfig } from './api-key-access'
+import { getRequestContext, logAuditEvent } from '../services/audit-log'
+import { buildPublishedEmbedListItem } from '../services/published-embeds'
 
 const logger = createLogger('plane-a.indices')
 const indicesCache = createTtlCache<IndicesSeriesResponse>({ namespace: 'plane_a:indices' })
@@ -29,6 +32,14 @@ const isVitestRuntime = Boolean(process.env.VITEST_WORKER_ID || process.env.VITE
 const allowUnauthedIndices =
   !isVitestRuntime && (envName === 'dev' || config.env === 'development')
 const apiAccessGuard = allowUnauthedIndices ? undefined : requireEntitlement('api_access')
+const indicesApiKeyRouteOptions = apiAccessGuard
+  ? {
+      preHandler: apiAccessGuard,
+      config: apiKeyAccessConfig({ audience: 'both', requiredScope: 'indices:read' }),
+    }
+  : {
+      config: apiKeyAccessConfig({ audience: 'both', requiredScope: 'indices:read' }),
+    }
 
 const METHOD_PROFILES = ['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery'] as const
 
@@ -46,6 +57,10 @@ const embedSnapshotBodySchema = z.object({
   amount_bucket: z.coerce.number().int().positive().optional(),
   method_profile: z.enum(METHOD_PROFILES).optional(),
   days: z.coerce.number().int().positive().max(365).optional(),
+})
+
+const publishedEmbedBodySchema = embedSnapshotBodySchema.extend({
+  theme: z.enum(['dark', 'light']).default('dark'),
 })
 
 type IndicesSeriesPoint = {
@@ -103,6 +118,16 @@ type IndicesEmbedSnapshotResponse = {
   dataWindow: DataWindowInfo
   createdAt: string
   expiresAt: string
+}
+
+type IndicesPublishedEmbedPayload = IndicesSeriesResponse & {
+  theme: 'dark' | 'light'
+}
+
+type IndicesPublishedEmbedResponse = IndicesPublishedEmbedPayload & {
+  publishedId: string
+  createdAt: string
+  publishedAt: string
 }
 
 type IndicesLatestPoint = {
@@ -208,6 +233,7 @@ const mapSuppressionFields = (reason: string | null) => {
   }
 }
 const embedSnapshotIdPattern = /^[a-f0-9]{32}$/i
+const publishedEmbedIdSchema = z.string().uuid()
 
 /**
  * Get tier info for API responses.
@@ -247,7 +273,148 @@ export const indicesRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
   const goldIndicesRepository = repositories.goldIndices
 
-  app.get('/indices/series', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+  const buildIndicesEmbedPayload = async (input: z.infer<typeof embedSnapshotBodySchema>) => {
+    const corridorId = input.corridor_id
+    const corridorParts = parseCorridorId(corridorId)
+    if (!corridorParts) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_corridor_id',
+          message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)',
+        },
+      })
+    }
+
+    const normalizedCorridorId = formatCorridorId({
+      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
+      destCountry: corridorParts.destCountry.toUpperCase(),
+      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
+      destCurrency: corridorParts.destCurrency.toUpperCase(),
+    })
+    const amountBucket = input.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
+    const methodProfile = input.method_profile ?? 'standard_bank'
+    const requestedWindowDays = Math.min(Math.max(input.days ?? 30, 1), 365)
+
+    const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
+    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } = tierInfo
+    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
+
+    const existsResult = await query<{ count: number }>(
+      `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
+      [normalizedCorridorId],
+      planeAPool,
+    )
+    const corridorTracked = (existsResult.rows[0]?.count ?? 0) > 0
+    if (!corridorTracked) {
+      return {
+        error: {
+          statusCode: 404,
+          body: {
+            error: 'corridor_not_tracked',
+            message: `Corridor ${normalizedCorridorId} is not available in Gold export.`,
+          },
+        },
+      } as const
+    }
+
+    const availabilityRow = await goldIndicesRepository.getAvailability({
+      corridorId: normalizedCorridorId,
+      amountBucket,
+      methodProfile,
+    })
+    const minDate = availabilityRow?.min_date ? new Date(availabilityRow.min_date) : null
+    const maxDate = availabilityRow?.max_date ? new Date(availabilityRow.max_date) : null
+    const availableDays = (minDate && maxDate)
+      ? Math.max(1, Math.floor((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000)) + 1)
+      : null
+
+    const now = new Date()
+    const effectiveEndDate = (maxDate && maxDate < now) ? maxDate : now
+    const effectiveWindowDays = availableDays && availableDays > 0
+      ? Math.min(requestedWindowDays, availableDays)
+      : requestedWindowDays
+
+    const startDate = new Date(effectiveEndDate)
+    startDate.setUTCDate(startDate.getUTCDate() - (effectiveWindowDays - 1))
+    if (minDate && startDate < minDate) {
+      startDate.setTime(minDate.getTime())
+    }
+
+    const rows = await goldIndicesRepository.getIndicesSeries({
+      corridorId: normalizedCorridorId,
+      amountBucket,
+      methodProfile,
+      startDate,
+      endDate: effectiveEndDate,
+    })
+
+    if (rows.length === 0) {
+      return {
+        error: {
+          statusCode: 404,
+          body: {
+            error: 'no_data',
+            message: `No data available for ${normalizedCorridorId} in the requested time range.`,
+          },
+        },
+      } as const
+    }
+
+    const lastUpdated = rows.reduce<Date | null>((latest, row) => {
+      if (!row.created_at) return latest
+      if (!latest || row.created_at > latest) return row.created_at
+      return latest
+    }, null)
+
+    const weightingModel = rows.find((row) => row.weighting_model)?.weighting_model || DEFAULT_WEIGHT_MODEL
+    const methodologyVersion = rows.find((row) => row.methodology_version)?.methodology_version || INDICES_METHODOLOGY_VERSION
+
+    return {
+      payload: {
+        corridorId: normalizedCorridorId,
+        amountBucket,
+        methodProfile,
+        weightingModel,
+        methodologyVersion,
+        weightConfidence: rows.at(-1)?.weight_confidence ?? null,
+        weightWindowDays: rows.at(-1)?.weight_window_days ?? null,
+        lastUpdated: lastUpdated ? lastUpdated.toISOString() : null,
+        dataTier,
+        cadenceMinutes: collectionCadenceMinutes,
+        exportCadenceMinutes,
+        collectionCadenceMinutes,
+        collectionTier,
+        isUsdOrigin,
+        series: rows.map((row) => ({
+          date: row.date instanceof Date ? toDateOnly(row.date) : String(row.date),
+          teer: row.teer_rate ?? null,
+          rci: row.rci_ratio ?? null,
+          rvi_bps: row.rvi_bps ?? null,
+          providerCountBinned: row.provider_count_binned ?? null,
+          providerCount: row.provider_count ?? null,
+          suppressionFlag: row.suppression_flag,
+          suppressionReason: row.suppression_reason ?? null,
+          ...mapSuppressionFields(row.suppression_reason ?? null),
+          midMarketRate: row.mid_market_rate ?? null,
+          weightConfidence: row.weight_confidence ?? null,
+          weightWindowDays: row.weight_window_days ?? null,
+        })),
+        dataWindow: {
+          requestedDays: requestedWindowDays,
+          availableDays,
+          availableStartDate: minDate ? toDateOnly(minDate) : null,
+          availableEndDate: maxDate ? toDateOnly(maxDate) : null,
+          startDate: toDateOnly(startDate),
+          endDate: toDateOnly(effectiveEndDate),
+          returnedDays: rows.length,
+          capped: Boolean(availableDays && availableDays < requestedWindowDays),
+        },
+      } satisfies IndicesSeriesResponse,
+      title: `TEER / RCI / RVI · ${normalizedCorridorId}`,
+    } as const
+  }
+
+  app.get('/indices/series', indicesApiKeyRouteOptions, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
@@ -610,166 +777,40 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/indices/embed-snapshots', { preHandler: requireEntitlement('pulse_full') }, async (request, reply) => {
+  app.post('/indices/embed-snapshots', { preHandler: requireEntitlement('indices_embed') }, async (request, reply) => {
     const parsed = embedSnapshotBodySchema.safeParse(request.body)
     if (!parsed.success) {
       throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
     }
 
-    const corridorId = parsed.data.corridor_id
-    const corridorParts = parseCorridorId(corridorId)
-    if (!corridorParts) {
-      throw new ValidationError('Invalid request', {
-        details: {
-          error: 'invalid_corridor_id',
-          message: 'Corridor ID must be in format: XX-YY-AAA-BBB (e.g., US-MX-USD-MXN)',
-        },
-      })
+    const prepared = await buildIndicesEmbedPayload(parsed.data)
+    if ('error' in prepared && prepared.error) {
+      reply.code(prepared.error.statusCode)
+      return prepared.error.body
     }
 
-    const normalizedCorridorId = formatCorridorId({
-      sourceCountry: corridorParts.sourceCountry.toUpperCase(),
-      destCountry: corridorParts.destCountry.toUpperCase(),
-      sourceCurrency: corridorParts.sourceCurrency.toUpperCase(),
-      destCurrency: corridorParts.destCurrency.toUpperCase(),
-    })
-    const amountBucket = parsed.data.amount_bucket ?? DEFAULT_AMOUNT_BUCKET
-    const methodProfile = parsed.data.method_profile ?? 'standard_bank'
-    const requestedWindowDays = Math.min(Math.max(parsed.data.days ?? 30, 1), 365)
+    const createdAt = new Date().toISOString()
+    const expiresAt = new Date(Date.now() + INDICES_EMBED_SNAPSHOT_TTL_MS).toISOString()
+    const snapshotId = randomUUID().replace(/-/g, '')
 
-    const tierInfo = getDataTierForCorridor(normalizedCorridorId, 2)
-    const { tier: dataTier, cadenceMinutes: exportCadenceMinutes, collectionTier, isUsdOrigin } = tierInfo
-    const collectionCadenceMinutes = getCollectionCadenceMinutes(collectionTier)
+    const snapshot: IndicesEmbedSnapshotResponse = {
+      snapshotId,
+      ...prepared.payload,
+      createdAt,
+      expiresAt,
+    }
 
-    try {
-      const existsResult = await query<{ count: number }>(
-        `SELECT COUNT(*)::int AS count FROM gold_export.cdp_daily WHERE corridor_id = $1 LIMIT 1`,
-        [normalizedCorridorId],
-        planeAPool,
-      )
-      const corridorTracked = (existsResult.rows[0]?.count ?? 0) > 0
-      if (!corridorTracked) {
-        reply.code(404)
-        return {
-          error: 'corridor_not_tracked',
-          message: `Corridor ${normalizedCorridorId} is not available in Gold export.`,
-        }
-      }
+    await indicesEmbedSnapshotCache.set(snapshotId, snapshot, INDICES_EMBED_SNAPSHOT_TTL_MS)
 
-      const availabilityRow = await goldIndicesRepository.getAvailability({
-        corridorId: normalizedCorridorId,
-        amountBucket,
-        methodProfile,
-      })
-      const minDate = availabilityRow?.min_date ? new Date(availabilityRow.min_date) : null
-      const maxDate = availabilityRow?.max_date ? new Date(availabilityRow.max_date) : null
-      const availableDays = (minDate && maxDate)
-        ? Math.max(1, Math.floor((maxDate.getTime() - minDate.getTime()) / (24 * 60 * 60 * 1000)) + 1)
-        : null
-
-      const now = new Date()
-      const effectiveEndDate = (maxDate && maxDate < now) ? maxDate : now
-      const effectiveWindowDays = availableDays && availableDays > 0
-        ? Math.min(requestedWindowDays, availableDays)
-        : requestedWindowDays
-
-      const startDate = new Date(effectiveEndDate)
-      startDate.setUTCDate(startDate.getUTCDate() - (effectiveWindowDays - 1))
-      if (minDate && startDate < minDate) {
-        startDate.setTime(minDate.getTime())
-      }
-
-      const rows = await goldIndicesRepository.getIndicesSeries({
-        corridorId: normalizedCorridorId,
-        amountBucket,
-        methodProfile,
-        startDate,
-        endDate: effectiveEndDate,
-      })
-
-      if (rows.length === 0) {
-        reply.code(404)
-        return {
-          error: 'no_data',
-          message: `No data available for ${normalizedCorridorId} in the requested time range.`,
-        }
-      }
-
-      const lastUpdated = rows.reduce<Date | null>((latest, row) => {
-        if (!row.created_at) return latest
-        if (!latest || row.created_at > latest) return row.created_at
-        return latest
-      }, null)
-
-      const weightingModel = rows.find((row) => row.weighting_model)?.weighting_model || DEFAULT_WEIGHT_MODEL
-      const methodologyVersion = rows.find((row) => row.methodology_version)?.methodology_version || INDICES_METHODOLOGY_VERSION
-      const createdAt = new Date().toISOString()
-      const expiresAt = new Date(Date.now() + INDICES_EMBED_SNAPSHOT_TTL_MS).toISOString()
-      const snapshotId = randomUUID().replace(/-/g, '')
-
-      const snapshot: IndicesEmbedSnapshotResponse = {
-        snapshotId,
-        corridorId: normalizedCorridorId,
-        amountBucket,
-        methodProfile,
-        weightingModel,
-        methodologyVersion,
-        weightConfidence: rows.at(-1)?.weight_confidence ?? null,
-        weightWindowDays: rows.at(-1)?.weight_window_days ?? null,
-        lastUpdated: lastUpdated ? lastUpdated.toISOString() : null,
-        dataTier,
-        cadenceMinutes: collectionCadenceMinutes,
-        exportCadenceMinutes,
-        collectionCadenceMinutes,
-        collectionTier,
-        isUsdOrigin,
-        series: rows.map((row) => ({
-          date: row.date instanceof Date ? toDateOnly(row.date) : String(row.date),
-          teer: row.teer_rate ?? null,
-          rci: row.rci_ratio ?? null,
-          rvi_bps: row.rvi_bps ?? null,
-          providerCountBinned: row.provider_count_binned ?? null,
-          providerCount: row.provider_count ?? null,
-          suppressionFlag: row.suppression_flag,
-          suppressionReason: row.suppression_reason ?? null,
-          ...mapSuppressionFields(row.suppression_reason ?? null),
-          midMarketRate: row.mid_market_rate ?? null,
-          weightConfidence: row.weight_confidence ?? null,
-          weightWindowDays: row.weight_window_days ?? null,
-        })),
-        dataWindow: {
-          requestedDays: requestedWindowDays,
-          availableDays,
-          availableStartDate: minDate ? toDateOnly(minDate) : null,
-          availableEndDate: maxDate ? toDateOnly(maxDate) : null,
-          startDate: toDateOnly(startDate),
-          endDate: toDateOnly(effectiveEndDate),
-          returnedDays: rows.length,
-          capped: Boolean(availableDays && availableDays < requestedWindowDays),
-        },
-        createdAt,
-        expiresAt,
-      }
-
-      await indicesEmbedSnapshotCache.set(snapshotId, snapshot, INDICES_EMBED_SNAPSHOT_TTL_MS)
-
-      return {
-        success: true,
-        snapshotId,
-        createdAt,
-        expiresAt,
-        corridorId: normalizedCorridorId,
-        amountBucket,
-        methodProfile,
-        returnedDays: rows.length,
-      }
-    } catch (error) {
-      logger.error('indices_embed_snapshot_create_failed', {
-        corridor_id: normalizedCorridorId,
-        error: error instanceof Error ? error.message : String(error),
-      })
-      reply.code(500)
-      return { error: 'internal_error', message: 'Failed to create embed snapshot.' }
+    return {
+      success: true,
+      snapshotId,
+      createdAt,
+      expiresAt,
+      corridorId: prepared.payload.corridorId,
+      amountBucket: prepared.payload.amountBucket,
+      methodProfile: prepared.payload.methodProfile,
+      returnedDays: prepared.payload.series.length,
     }
   })
 
@@ -796,7 +837,138 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     return snapshot
   })
 
-  app.get('/indices/latest', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+  app.post('/indices/published-embeds', { preHandler: requireEntitlement('indices_embed') }, async (request, reply) => {
+    const parsed = publishedEmbedBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const user = request.user
+    if (!user) {
+      reply.code(401)
+      return { error: 'unauthorized' }
+    }
+
+    const prepared = await buildIndicesEmbedPayload(parsed.data)
+    if ('error' in prepared && prepared.error) {
+      reply.code(prepared.error.statusCode)
+      return prepared.error.body
+    }
+
+    const publishedEmbedRepository = app.container.repositories.publishedEmbed
+    const activeCount = await publishedEmbedRepository.countActiveByOwnerUserId(user.user_id)
+    if (activeCount >= config.planeA.enterprisePublishedEmbedMax) {
+      reply.code(409)
+      return {
+        error: 'published_embed_limit_reached',
+        maxPublishedEmbeds: config.planeA.enterprisePublishedEmbedMax,
+        message: 'Revoke an existing published embed before publishing another one.',
+      }
+    }
+
+    const row = await publishedEmbedRepository.create({
+      owner_user_id: user.user_id,
+      surface_kind: 'indices',
+      index_key: 'bundle',
+      title: prepared.title,
+      theme: parsed.data.theme,
+      filters_json: {
+        corridorId: prepared.payload.corridorId,
+        amountBucket: prepared.payload.amountBucket,
+        methodProfile: prepared.payload.methodProfile,
+        days: parsed.data.days ?? 30,
+      },
+      payload_json: {
+        ...prepared.payload,
+        theme: parsed.data.theme,
+      } satisfies IndicesPublishedEmbedPayload,
+    })
+
+    try {
+      await logAuditEvent(planeAPool, {
+        actorId: user.user_id,
+        actorType: 'user',
+        actorRole: user.role ?? undefined,
+        action: 'published_embed.create',
+        entityType: 'published_embed',
+        entityId: row.id,
+        afterSnapshot: {
+          surface_kind: row.surface_kind,
+          title: row.title,
+          corridor_id: prepared.payload.corridorId,
+          theme: row.theme,
+        },
+        category: 'user_action',
+        severity: 'info',
+        ...getRequestContext(request),
+      })
+    } catch (error) {
+      logger.warn('published_embed_audit_log_failed', {
+        user_id: user.user_id,
+        embed_id: row.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
+    const published = buildPublishedEmbedListItem(row)
+    return {
+      success: true,
+      publishedId: row.id,
+      title: row.title,
+      theme: row.theme,
+      publicUrl: published.publicUrl,
+      embedCode: published.embedCode,
+      variants: published.variants,
+      createdAt: row.created_at.toISOString(),
+      publishedAt: row.published_at.toISOString(),
+      corridorId: prepared.payload.corridorId,
+      amountBucket: prepared.payload.amountBucket,
+      methodProfile: prepared.payload.methodProfile,
+    }
+  })
+
+  app.get('/public/indices/published-embeds/:id', async (request, reply) => {
+    const rawId = String((request.params as { id?: string }).id || '').trim()
+    const parsedId = publishedEmbedIdSchema.safeParse(rawId)
+    if (!parsedId.success) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_published_id',
+        },
+      })
+    }
+
+    const publishedEmbedRepository = app.container.repositories.publishedEmbed
+    const row = await publishedEmbedRepository.getById(parsedId.data)
+    if (!row || row.surface_kind !== 'indices') {
+      reply.code(404)
+      return {
+        error: 'not_found',
+        message: 'Published embed not found.',
+      }
+    }
+
+    if (row.revoked_at) {
+      reply.code(410)
+      return {
+        error: 'published_embed_revoked',
+        message: 'Published embed has been removed by the publisher.',
+      }
+    }
+
+    const payload = row.payload_json as IndicesPublishedEmbedPayload
+    const response: IndicesPublishedEmbedResponse = {
+      publishedId: row.id,
+      ...payload,
+      createdAt: row.created_at.toISOString(),
+      publishedAt: row.published_at.toISOString(),
+    }
+
+    reply.header('Cache-Control', 'public, max-age=600')
+    return response
+  })
+
+  app.get('/indices/latest', indicesApiKeyRouteOptions, async (request, reply) => {
     const parsed = querySchema.safeParse(request.query)
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
@@ -925,7 +1097,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/indices/corridors', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+  app.get('/indices/corridors', indicesApiKeyRouteOptions, async (request, reply) => {
     try {
       const corridorsAllowed = request.institutionalClient?.corridors_allowed ?? null
       const filterByAllowed = corridorsAllowed !== null
@@ -1004,7 +1176,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/indices/triangulated/:corridorId', apiAccessGuard ? { preHandler: apiAccessGuard } : {}, async (request, reply) => {
+  app.get('/indices/triangulated/:corridorId', indicesApiKeyRouteOptions, async (request, reply) => {
     const { corridorId } = request.params as { corridorId: string }
     const qs = request.query as {
       amount_bucket?: string
@@ -1018,27 +1190,45 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       throw new ValidationError('Invalid amount_bucket', { details: { error: 'bad_request' } })
     }
 
-    const methodProfile = qs.method_profile ?? 'bank_transfer:bank_deposit'
+    const methodProfile = qs.method_profile ?? 'standard_bank'
     const asOf = qs.as_of ?? new Date().toISOString().slice(0, 10)
-    const methodology = qs.methodology ?? 'triangulation_v1'
+    const methodology = qs.methodology ?? 'triangulation_v2_corridor_composite'
 
     const result = await query<{
       corridor_id: string
       amount_bucket: number
       method_profile: string
       date: string
-      leg1_corridor: string
-      leg2_corridor: string
-      leg1_teer: number | null
-      leg2_teer: number | null
       triangulated_teer: number | null
       triangulated_rci: number | null
+      composite_rvi_bps: number | null
       stress_score: number | null
       confidence: string
+      contributing_signals: Array<{
+        signalKey?: string
+        signalLayer?: string
+        source?: string
+        value?: number | null
+        confidence?: number
+        weightedContribution?: number
+      }> | null
       methodology_version: string
       created_at: Date
     }>(
-      `SELECT * FROM gold_export.triangulated_index
+      `SELECT
+         corridor_id,
+         amount_bucket,
+         method_profile,
+         date::text AS date,
+         triangulated_teer::double precision AS triangulated_teer,
+         triangulated_rci::double precision AS triangulated_rci,
+         composite_rvi_bps::double precision AS composite_rvi_bps,
+         stress_score::double precision AS stress_score,
+         confidence,
+         contributing_signals,
+         methodology_version,
+         created_at
+       FROM gold_export.triangulated_index
        WHERE corridor_id = $1
          AND amount_bucket = $2
          AND method_profile = $3
@@ -1058,14 +1248,12 @@ export const indicesRoutes = async (app: FastifyInstance) => {
       asOf,
       series: result.rows.map((r) => ({
         date: r.date,
-        leg1Corridor: r.leg1_corridor,
-        leg2Corridor: r.leg2_corridor,
-        leg1Teer: r.leg1_teer,
-        leg2Teer: r.leg2_teer,
-        triangulatedTeer: r.triangulated_teer,
-        triangulatedRci: r.triangulated_rci,
+        teer: r.triangulated_teer,
+        rci: r.triangulated_rci,
+        rviBps: r.composite_rvi_bps,
         stressScore: r.stress_score,
         confidence: r.confidence,
+        contributingSignals: Array.isArray(r.contributing_signals) ? r.contributing_signals : [],
       })),
     }
   })

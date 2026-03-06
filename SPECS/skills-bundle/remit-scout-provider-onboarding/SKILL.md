@@ -1,260 +1,197 @@
 ---
 name: remit-scout-provider-onboarding
-description: Automated provider onboarding workflow — add a new remittance provider (B2B or B2C) with rights-matrix, collector scaffolding, probe Lambda, CDK wiring, tests, and Gold/export integration. Horizontal scaling made repeatable.
+description: Zero-touch provider onboarding loop for Codex/Claude. Ingests provider curl specs + coverage, scaffolds provider artifacts, runs probes/evidence/smoke, computes Remit-Score, and emits review-ready run artifacts with reason codes.
+contract_version: v1
 ---
 
-# Remit-Scout Provider Onboarding
+# Zero-Touch Provider Loop (Execution Spec)
 
-## Overview
-
-Step-by-step automation for onboarding a new remittance provider into Remit-Scout. Given just the provider name and type (B2B/B2C), this skill scaffolds all code, configuration, infrastructure, and tests needed to start collecting data and publishing it through Gold indices and exports.
-
-## Inputs (required)
-
-| Parameter | Example | Description |
-|-----------|---------|-------------|
-| `PROVIDER_NAME` | `moneygram` | Lowercase slug, no spaces |
-| `PROVIDER_TYPE` | `b2b` or `b2c` or `both` | Collection mode |
-| `PROVIDER_URL` | `https://www.moneygram.com` | Provider's public URL |
-| `SEND_COUNTRIES` | `US,GB,CA` | Comma-separated ISO-2 codes |
-| `RECEIVE_COUNTRIES` | `MX,PH,IN` | Comma-separated ISO-2 codes |
-| `METHODS` | `bank_transfer,cash_pickup` | Supported payout methods |
-
-## Onboarding checklist (13 steps)
-
-### Phase 1: Collector scaffolding
-
-#### Step 1. Create provider directory
+This skill is executable via:
 
 ```bash
-mkdir -p backend/plane-b/src/providers/${PROVIDER_NAME}
+pnpm -C backend provider:onboarding-orchestrator --input <payload.json>
 ```
 
-Files to create:
-- `index.ts` — Provider entry (implements `ProviderCollector` interface)
-- `parser.ts` — Response parser (raw → Bronze → Silver normalization)
-- `config.ts` — Provider-specific config (URLs, rate limits, headers)
-- `types.ts` — Provider-specific response types
+Primary implementation:
+- `backend/scripts/provider-onboarding-orchestrator.ts`
 
-Reference existing provider for structure:
+## 1) Input Contract (v1)
+
+Required top-level fields:
+- `providers`: array of provider onboarding jobs
+
+Optional top-level fields:
+- `execution_env`: `dev|staging|prod` (default `staging`)
+- `ci_ref`: commit/context ref (fallback order: `--ci_ref` -> payload -> `GITHUB_SHA` -> `GITHUB_RUN_ID` -> generated token)
+- `operator_notes`: free-form context
+- `dry_run`: boolean (default `false`)
+- `staging_only`: boolean (default `false`)
+- `auto_merge`: boolean (default `false`)
+- `continue_on_error`: boolean (default `true`)
+- `corridor_limit`: integer (default `10`, bounded)
+- `score_threshold`: number (default `7.0`)
+- `command_timeout_ms`: integer (default `90000`)
+- `smoke_base_url`: URL for B2C smoke (`API_BASE_URL` fallback)
+
+Each provider entry must include:
+- `provider_slug`
+- `provider_name`
+- `provider_type`: `B2B|B2C|BOTH`
+- `curl_requests[]`: `{ method, url, headers, body, assertions }`
+- `supported_countries[]`: ISO2 list
+- `supported_currencies[]`: ISO4217 list
+
+Optional provider fields:
+- `corridors[]`: `SEND-RECV-SENDCUR-RECVCUR`
+- `operator_notes`
+
+### Hard input validation rules
+- Missing/invalid required fields -> `provider_onboarding.input_invalid`
+- Missing auth header in curl templates (`authorization`, `x-api-key`, `apikey`, `x-auth-token`, `proxy-authorization`) -> `provider_onboarding.input_invalid`
+- Invalid country/currency codes -> `provider_onboarding.input_invalid`
+
+## 2) Deterministic Step Order
+
+Per run:
+1. Parse + validate payload
+1. Enforce environment rules (`staging_only` gate)
+1. Derive synthetic corridors where `corridors` is empty
+1. Persist synthetic catalog artifacts
+1. For each provider, execute in order:
+   - `provider:scaffold`
+   - `probe:provider`
+   - `evidence:provider-health`
+   - `ci:api-smoke` (B2C/BOTH only)
+1. Global capability validation:
+   - `capability:seed-canary`
+   - `capability:probe`
+   - `evidence:provider-capability-probe`
+1. Compute Remit-Score + review card
+1. Emit consolidated run output + per-provider artifacts + reason codes
+
+## 3) Branch-Aware Behavior
+
+- `dry_run=true`
+  - No scaffold/probe/evidence/smoke commands are executed.
+  - Synthetic catalogs + score/review artifacts are still emitted.
+
+- `staging_only=true`
+  - Hard stop unless `execution_env=staging`.
+
+- `auto_merge=true`
+  - No merge is executed by this skill.
+  - Review card `next_action` is set to auto-merge-aware promotion text.
+
+- `continue_on_error=false`
+  - First blocked provider halts execution for remaining providers in the batch.
+  - Remaining providers are emitted as blocked/skip artifacts with explicit reason context.
+
+## 4) Blockers vs Warnings
+
+Hard blockers (review becomes `blocked`):
+- `provider_onboarding.input_invalid`
+- `provider_onboarding.scaffold_fail`
+- `provider_onboarding.probe_timeout`
+- `provider_onboarding.smoke_fail`
+- `provider_onboarding.score_below_threshold`
+
+Warnings:
+- Non-blocking evidence anomalies inherited from evidence payloads
+- Dry-run notice
+
+Blocked runs must include:
+- `provider_onboarding.review_blocked`
+
+## 5) Remit-Score Contract
+
+Remit-Score is computed using frontend-aligned fixed weights:
+- Delivered Value: `40`
+- Reliability/Success: `20`
+- Friction/Speed: `15`
+- Support/Refunds: `15`
+- Trust/Safety: `10`
+
+Source alignment:
+- `frontend/pages/methodology.vue`
+- `frontend/pages/learn/how-remit-score-works.vue`
+
+Output includes:
+- `remit_score.total` (0-10)
+- `remit_score.threshold`
+- `remit_score.breakdown` with per-dimension `weight`, `score`, `note`
+
+## 6) Output Contract (Canonical)
+
+Top-level run artifact (`artifacts/provider-onboarding/<run_id>/provider-onboarding-run.json`):
+- `run_id`
+- `stage`
+- `ci_ref`
+- `execution_env`
+- `status`
+- `artifact_paths[]`
+- `evidence_paths[]`
+- `reason_codes[]`
+- `remit_score` (aggregate)
+- `review_card` (single gate state)
+- `next_skill_ids[]`
+- `providers[]` (per-provider outputs)
+
+Per-provider output contract:
+- `run_id`
+- `stage`
+- `ci_ref`
+- `provider_slug`
+- `status`
+- `artifact_paths[]`
+- `evidence_paths[]`
+- `reason_codes[]`
+- `remit_score`
+- `review_card`
+- `next_skill_ids[]`
+
+## 7) Reason-Code Coverage
+
+Required onboarding reason codes:
+- `provider_onboarding.input_invalid`
+- `provider_onboarding.scaffold_fail`
+- `provider_onboarding.probe_timeout`
+- `provider_onboarding.smoke_fail`
+- `provider_onboarding.score_below_threshold`
+- `provider_onboarding.review_blocked`
+
+## 8) Evidence + Review Integration
+
+The run emits:
+- One consolidated run artifact
+- Per-provider artifacts/logs
+- Provider health evidence payloads
+- Capability probe evidence payload
+- Review card object with blockers/warnings for admin consumption
+
+## 9) Metrics + Ops Hooks
+
+The orchestrator emits CloudWatch metrics under `RemitScout/Onboarding`:
+- `provider_onboarding_run_count`
+- `provider_onboarding_provider_count`
+- `provider_onboarding_provider_status`
+- `provider_onboarding_remit_score`
+
+## 10) Example Invocation
 
 ```bash
-# Use an existing B2B provider as template
-ls backend/plane-b/src/providers/remitly/
+pnpm -C backend provider:onboarding-orchestrator \
+  --input artifacts/provider-onboarding-input.json \
+  --execution_env staging \
+  --ci_ref 97862e7 \
+  --corridor_limit 10 \
+  --score_threshold 7
 ```
 
-#### Step 2. Register in provider index
+## 11) Expected Acceptance Signals
 
-File: `backend/plane-b/src/providers/index.ts`
-
-Add the new provider to the registry map.
-
-#### Step 3. Add provider config
-
-File: `backend/shared/config.ts`
-
-Add a new section under provider configs:
-
-```typescript
-${PROVIDER_NAME}: {
-  baseUrl: process.env.PROVIDER_${PROVIDER_NAME_UPPER}_BASE_URL || '',
-  apiKey: process.env.PROVIDER_${PROVIDER_NAME_UPPER}_API_KEY || '',
-  rateLimit: parseInt(process.env.PROVIDER_${PROVIDER_NAME_UPPER}_RPM || '60', 10),
-  timeout: parseInt(process.env.PROVIDER_${PROVIDER_NAME_UPPER}_TIMEOUT_MS || '15000', 10),
-  enabled: process.env.PROVIDER_${PROVIDER_NAME_UPPER}_ENABLED !== 'false',
-},
-```
-
-### Phase 2: Rights matrix and database
-
-#### Step 4. Create migration
-
-File: `backend/db/migrations/XXX_add_provider_${PROVIDER_NAME}.sql`
-
-```sql
--- Insert provider
-INSERT INTO silver.provider (slug, name, website_url, logo_url)
-VALUES ('${PROVIDER_NAME}', '${PROVIDER_DISPLAY_NAME}', '${PROVIDER_URL}', NULL)
-ON CONFLICT (slug) DO NOTHING;
-
--- Insert rights-matrix entries (one per corridor)
--- Status starts as 'candidate' until validated
-INSERT INTO silver.rights_matrix (
-  provider_id, corridor_id, status, stoplist_status,
-  allowed_collect, allowed_b2b, allowed_b2c,
-  allowed_resell_b2b,
-  allowed_in_teer, allowed_in_rci, allowed_in_rvi
-)
-SELECT
-  p.id,
-  c.id,
-  'candidate',
-  'active',
-  true,
-  ${PROVIDER_TYPE === 'b2b' || PROVIDER_TYPE === 'both'},
-  ${PROVIDER_TYPE === 'b2c' || PROVIDER_TYPE === 'both'},
-  false,
-  false, false, false  -- indices disabled until validated
-FROM silver.provider p
-CROSS JOIN silver.corridor c
-WHERE p.slug = '${PROVIDER_NAME}'
-  AND c.send_country IN (${SEND_COUNTRIES_QUOTED})
-  AND c.receive_country IN (${RECEIVE_COUNTRIES_QUOTED});
-```
-
-#### Step 5. Add provider capability entries
-
-```sql
-INSERT INTO silver.provider_corridor_capability (
-  provider_id, corridor_id, method, last_verified
-)
-SELECT
-  p.id, rm.corridor_id, m.method, NOW()
-FROM silver.provider p
-JOIN silver.rights_matrix rm ON rm.provider_id = p.id
-CROSS JOIN (VALUES ${METHODS_AS_VALUES}) AS m(method)
-WHERE p.slug = '${PROVIDER_NAME}';
-```
-
-### Phase 3: Infrastructure (CDK)
-
-#### Step 6. Add probe Lambda
-
-File: `infrastructure/cdk/lib/scheduled-jobs.ts`
-
-Add a new probe rule following the existing pattern:
-
-```typescript
-createProbeRule(this, '${PROVIDER_NAME}', {
-  schedule: isProd ? events.Schedule.rate(cdk.Duration.minutes(5)) : events.Schedule.rate(cdk.Duration.minutes(30)),
-  // ... standard probe config
-});
-```
-
-#### Step 7. Add secrets to Secrets Manager
-
-```bash
-aws secretsmanager create-secret \
-  --name "${STACK_PREFIX}/provider/${PROVIDER_NAME}/api-key" \
-  --secret-string "<api-key-value>" \
-  --profile ${AWS_PROFILE}
-```
-
-Wire in CDK via `infrastructure/cdk/lib/remit-scout-stack.ts`.
-
-#### Step 8. Add environment variables to ECS task definition
-
-File: `infrastructure/cdk/lib/ecs-tasks.ts`
-
-Add `PROVIDER_${PROVIDER_NAME_UPPER}_*` env vars to the Plane B task definition.
-
-### Phase 4: Tests
-
-#### Step 9. Create collector tests
-
-File: `backend/tests/${PROVIDER_NAME}-collector.test.ts`
-
-Test:
-- Parser handles valid response
-- Parser handles empty/error response
-- Rate limiting respected
-- Corridors filtered by rights-matrix
-
-#### Step 10. Create parser tests
-
-File: `backend/tests/${PROVIDER_NAME}-parser.test.ts`
-
-Test:
-- Normalizes to Silver schema correctly
-- Handles missing fields gracefully
-- Amount bucket normalization ($500 USD equivalent)
-
-### Phase 5: Validation and promotion
-
-#### Step 11. Run provider in candidate mode
-
-Deploy with `status='candidate'` in rights-matrix. Verify:
-- Probe Lambda executes without errors
-- Silver receives quotes for expected corridors
-- Quote count and freshness meet minimum thresholds
-
-```sql
-SELECT
-  COUNT(*) AS quotes,
-  COUNT(DISTINCT corridor_id) AS corridors,
-  MIN(created_at) AS first_quote,
-  MAX(created_at) AS latest_quote
-FROM silver.quote_record qr
-JOIN silver.provider p ON p.id = qr.provider_id
-WHERE p.slug = '${PROVIDER_NAME}'
-  AND qr.created_at > NOW() - INTERVAL '24 hours';
-```
-
-#### Step 12. Promote to production
-
-```sql
-UPDATE silver.rights_matrix
-SET
-  status = 'production',
-  allowed_in_teer = true,
-  allowed_in_rci = true,
-  allowed_in_rvi = true
-WHERE provider_id = (SELECT id FROM silver.provider WHERE slug = '${PROVIDER_NAME}');
-```
-
-#### Step 13. Verify Gold integration
-
-After promotion, verify the provider appears in indices:
-
-```sql
-SELECT
-  pws.provider_id,
-  p.slug,
-  COUNT(*) AS weight_rows,
-  AVG(pws.raw_weight) AS avg_weight
-FROM gold.provider_weight_snapshot pws
-JOIN silver.provider p ON p.id = pws.provider_id
-WHERE p.slug = '${PROVIDER_NAME}'
-  AND pws.snapshot_date >= CURRENT_DATE - 1
-GROUP BY pws.provider_id, p.slug;
-```
-
-## Post-onboarding verification
-
-Run these skills to confirm end-to-end health:
-1. `remit-scout-provider-health-probe` — Verify new provider appears as FRESH
-2. `remit-scout-gold-indices-integrity` — Verify provider contributes to indices
-3. `remit-scout-smoke` — Verify API returns data for new provider corridors
-
-## Output template
-
-```
-## Provider Onboarding — ${PROVIDER_NAME} (${PROVIDER_TYPE})
-Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-Environment: ${ENV}
-
-### Checklist
-- [ ] Collector scaffolded (backend/plane-b/src/providers/${PROVIDER_NAME}/)
-- [ ] Registered in provider index
-- [ ] Config added to shared/config.ts
-- [ ] Migration created (XXX_add_provider_${PROVIDER_NAME}.sql)
-- [ ] Capabilities seeded
-- [ ] Probe Lambda added to CDK
-- [ ] Secrets created in Secrets Manager
-- [ ] ECS env vars wired
-- [ ] Collector tests written
-- [ ] Parser tests written
-- [ ] Candidate mode deployed + verified
-- [ ] Promoted to production
-- [ ] Gold integration verified
-
-### Corridors: <n> (send: ${SEND_COUNTRIES}, receive: ${RECEIVE_COUNTRIES})
-### Methods: ${METHODS}
-### Status: ONBOARDED | IN_PROGRESS | BLOCKED (<reason>)
-```
-
-## Scaling notes
-- Each new provider adds ~1 probe Lambda (5–30 min cadence)
-- Rights-matrix entries scale with corridor count
-- Provider weighting job automatically picks up new production providers
-- No changes needed to Gold indices or export jobs — they query rights-matrix dynamically
+- Invalid payload fails early with `provider_onboarding.input_invalid`
+- Derived corridors are logged when `corridors[]` omitted
+- B2C smoke failures map to `provider_onboarding.smoke_fail`
+- Timeout paths map to `provider_onboarding.probe_timeout`
+- Every provider gets isolated artifacts and review status
+- `ci_ref` is always non-empty in emitted artifacts

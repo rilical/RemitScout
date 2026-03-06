@@ -24,7 +24,12 @@ export const billingPortalRoutes = async (app: FastifyInstance) => {
       await ensureUserPlan(planeAPool, user.user_id)
       const plan = await getUserPlan(planeAPool, user.user_id)
       if (!plan || !plan.stripe_customer_id) {
-        throw new ValidationError('Invalid request', { details: { error: 'customer_not_found' } })
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'customer_not_found',
+            message: 'No Stripe customer was found for this account.',
+          },
+        })
       }
 
       const stripe = getStripeClient()
@@ -46,6 +51,9 @@ export const billingPortalRoutes = async (app: FastifyInstance) => {
         }
       }
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error
+      }
       logger.warn('billing_portal_failed', {
         user_id: user.user_id,
         error: error instanceof Error ? error.message : String(error),

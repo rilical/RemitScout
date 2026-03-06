@@ -117,6 +117,18 @@ describe('tracing', () => {
       })
     })
 
+    it('unwraps JSON-wrapped api-key headers before creating the exporter', () => {
+      process.env.OTEL_EXPORTER_OTLP_HEADERS = 'api-key={\"LicenseKey\":\"json-wrapped-key\"}'
+      initTracing('test-service')
+
+      expect(vi.mocked(OTLPTraceExporter)).toHaveBeenCalledWith({
+        url: 'http://otel.local/v1/traces',
+        headers: {
+          'api-key': 'json-wrapped-key',
+        },
+      })
+    })
+
     it('uses NEW_RELIC_INGEST_KEY when OTLP headers are not explicitly set', () => {
       process.env.NEW_RELIC_INGEST_KEY = 'nr-ingest-key'
       initTracing('test-service')
@@ -125,6 +137,18 @@ describe('tracing', () => {
         url: 'http://otel.local/v1/traces',
         headers: {
           'api-key': 'nr-ingest-key',
+        },
+      })
+    })
+
+    it('unwraps a JSON-wrapped NEW_RELIC_INGEST_KEY fallback', () => {
+      process.env.NEW_RELIC_INGEST_KEY = '{"LicenseKey":"json-ingest-key"}'
+      initTracing('test-service')
+
+      expect(vi.mocked(OTLPTraceExporter)).toHaveBeenCalledWith({
+        url: 'http://otel.local/v1/traces',
+        headers: {
+          'api-key': 'json-ingest-key',
         },
       })
     })

@@ -685,8 +685,6 @@ export class ToolGateway {
    *
    * Supported params:
    * - providerId (string, optional): Scan a specific provider. If omitted, scans all.
-   * - applyResults (boolean, optional): Whether to auto-apply discovered corridors
-   *   and delivery methods to rights_matrix + capability tables (default: false).
    * - correlationId (string, optional): Correlation ID for tracing.
    *
    * Rate limiting is inherent from the agent policy (patch-proposer: 30 RPM).
@@ -697,12 +695,10 @@ export class ToolGateway {
       await import('../discovery/discovery-runner')
 
     const providerId = params.providerId as string | undefined
-    const applyResults = (params.applyResults as boolean) ?? false
     const correlationId = params.correlationId as string | undefined
 
     const options = {
       triggeredBy: 'agent' as const,
-      applyResults,
       correlationId,
     }
 

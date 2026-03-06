@@ -185,3 +185,119 @@ jobs:
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_TRACES_HEADERS || secrets.OTEL_EXPORTER_OTLP_HEADERS }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
         run: pnpm -C backend ci:config-validate
+
+      - name: Authenticated launch-user entitlement smoke (staging)
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
+          SMOKE_EXPECTED_IS_ADMIN: '1'
+          SMOKE_EXPECTED_APP_ROLE: super_admin
+          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
+          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
+        run: |
+          set -euo pipefail
+          if [ -z "${SMOKE_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_API_BASE for staging authenticated entitlement smoke."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY for staging authenticated entitlement smoke."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging authenticated entitlement smoke."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          pnpm -C backend ci:alerts-watchlists-smoke | tee .smoke-artifacts/staging-omar-entitlement-smoke.log
+
+      - name: Verify runner IP is allowlisted for staging admin smoke
+        env:
+          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_IP_ALLOWLIST:-}" ]; then
+            echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
+            exit 1
+          fi
+          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
+          python3 - "$runner_ip" "$ADMIN_IP_ALLOWLIST" <<'PY'
+          import ipaddress
+          import sys
+
+          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
+          allowlist_raw = sys.argv[2]
+
+          for token in [item.strip() for item in allowlist_raw.split(',') if item.strip()]:
+              network = ipaddress.ip_network(token if '/' in token else f"{token}/32", strict=False)
+              if runner_ip in network:
+                  print(f"Runner IP {runner_ip} is allowlisted by {network}")
+                  raise SystemExit(0)
+
+          print(f"Runner IP {runner_ip} is not present in ADMIN_IP_ALLOWLIST.", file=sys.stderr)
+          raise SystemExit(1)
+          PY
+
+      - name: Admin surface smoke (staging)
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          if [ -z "${SMOKE_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_API_BASE for staging admin surface smoke."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY for staging admin surface smoke."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/staging-admin-surface-smoke.log
+
+      - name: Install Playwright browser runtime (staging admin UI smoke)
+        run: pnpm -C frontend exec playwright install --with-deps chromium
+
+      - name: Admin UI smoke (staging)
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          E2E_AUTH_EMAIL: omar@remit-scout.com
+          E2E_AUTH_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          E2E_AUTH_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          E2E_ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAYWRIGHT_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_SITE_URL for staging admin UI smoke."
+            exit 1
+          fi
+          if [ -z "${E2E_AUTH_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee .smoke-artifacts/staging-admin-ui-smoke.log
+
+      - name: Upload staging admin smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-readiness-admin-smoke-evidence
+          path: |
+            .smoke-artifacts
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 30
+          if-no-files-found: ignore

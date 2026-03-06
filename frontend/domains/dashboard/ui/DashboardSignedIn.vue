@@ -667,7 +667,7 @@ fill-opacity="0.2"
                         Set Alert
                       </button>
                     <button
-                      v-if="isPlus"
+                      v-if="exportsEnabled"
                       type="button"
                         class="inline-flex items-center gap-2 px-3 py-1.5 text-body-sm font-medium text-neutral-700 hover:text-rs-fg hover:bg-neutral-200 rounded-lg transition-colors"
                         @click="showExportModal = true"
@@ -1955,9 +1955,9 @@ class="mt-6 bg-neutral-900 rounded-xl p-6 text-white"
                 </button>
               </div>
 
-              <!-- Plus-only gate -->
+              <!-- Paid-plan gate -->
               <div
-v-if="!isPlus"
+v-if="!exportsEnabled"
 class="text-center py-6"
 >
                 <div class="w-14 h-14 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
@@ -1968,9 +1968,9 @@ class="text-center py-6"
                     class="text-brand-600"
                   />
                 </div>
-                <h4 class="text-body font-semibold text-rs-fg mb-2">Plus Feature</h4>
+                <h4 class="text-body font-semibold text-rs-fg mb-2">Paid Feature</h4>
                 <p class="text-body-sm text-rs-muted mb-6">
-                  Export your comparison history and watchlist data to CSV or PDF with Plus.
+                  Export your comparison history, watchlist data, and alerts on a paid plan.
                 </p>
                   <NuxtLink
                     to="/plus/checkout"
@@ -2049,6 +2049,7 @@ class="space-y-6"
                       </div>
                     </label>
                     <label
+                      v-if="indicesExportsEnabled || exportSettings.dataType === 'indices'"
                       class="flex items-center gap-3 p-3.5 border-2 rounded-xl cursor-pointer transition-all"
                       :class="exportSettings.dataType === 'indices' ? 'border-primary-500 bg-primary-50 shadow-sm' : 'border-rs-border hover:border-neutral-300 hover:bg-neutral-50'"
                     >
@@ -3557,17 +3558,17 @@ class="space-y-6"
                   <div class="flex items-center justify-between mb-6">
                     <div>
                       <h3 class="font-medium text-rs-fg">Current Plan</h3>
-                      <p class="text-body-sm text-rs-muted">{{ isPlus ? 'Billed monthly' : 'Free forever' }}</p>
+                      <p class="text-body-sm text-rs-muted">{{ billingPlanDescription }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                       <div
                         class="px-3 py-1.5 rounded-full text-body-sm font-semibold"
-                        :class="isPlus ? 'bg-primary-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'"
+                        :class="hasStoredPaidPlan ? 'bg-primary-100 text-brand-700' : 'bg-neutral-100 text-neutral-600'"
                       >
-                        {{ isPlus ? 'Plus' : 'Free' }}
+                        {{ billingPlanLabel }}
                       </div>
                       <div
-                        v-if="isPlus"
+                        v-if="hasStoredPaidPlan"
                         class="px-3 py-1.5 rounded-full text-body-sm font-semibold"
                         :class="billingStatusBadge.classes"
                       >
@@ -3578,11 +3579,11 @@ class="space-y-6"
 
                   <div class="bg-neutral-50 rounded-lg p-4 mb-6">
                     <div class="flex items-baseline justify-between mb-2">
-                      <span class="text-body-sm text-neutral-600">{{ isPlus ? 'Next billing date' : 'Plan type' }}</span>
-                      <span class="text-body-sm font-medium text-rs-fg">{{ isPlus ? formatBillingDate(billingSummary?.next_billing_date) : 'No billing' }}</span>
+                      <span class="text-body-sm text-neutral-600">{{ billingRenewalLabel }}</span>
+                      <span class="text-body-sm font-medium text-rs-fg">{{ billingRenewalValue }}</span>
                     </div>
                     <div
-v-if="isPlus"
+v-if="hasStoredPaidPlan"
 class="flex items-baseline justify-between"
 >
                       <span class="text-body-sm text-neutral-600">Amount</span>
@@ -3593,7 +3594,7 @@ class="flex items-baseline justify-between"
                   </div>
 
                   <div
-v-if="!isPlus"
+v-if="showBillingUpgradeButton"
 class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border border-primary-100"
 >
                       <div class="flex items-start gap-3">
@@ -3606,8 +3607,8 @@ class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border bord
                           />
                         </div>
                       <div class="flex-1">
-                        <h4 class="text-body-sm font-semibold text-rs-fg">Upgrade to Plus</h4>
-                        <p class="text-body-sm text-neutral-600 mt-0.5">{{ sidebarUpgradeText }}</p>
+                        <h4 class="text-body-sm font-semibold text-rs-fg">{{ hasStoredPaidPlan ? 'Restore paid access' : 'Upgrade to Plus' }}</h4>
+                        <p class="text-body-sm text-neutral-600 mt-0.5">{{ billingRecoveryMessage || sidebarUpgradeText }}</p>
                       </div>
                       <button
                         type="button"
@@ -3615,13 +3616,13 @@ class="bg-gradient-to-r from-primary-50 to-primary-50 rounded-lg p-4 border bord
                         :disabled="billingCheckoutLoading"
                         @click="startCheckout"
                       >
-                        {{ billingCheckoutLoading ? 'Starting…' : 'Upgrade' }}
+                        {{ billingCheckoutLoading ? 'Starting…' : billingUpgradeLabel }}
                       </button>
                     </div>
                   </div>
 
                   <div
-v-if="isPlus"
+v-if="showBillingPortalButton"
 class="flex gap-3"
 >
                     <button
@@ -3630,13 +3631,20 @@ class="flex gap-3"
                       :disabled="billingPortalLoading"
                       @click="openBillingPortal"
                     >
-                      {{ billingPortalLoading ? 'Opening…' : 'Manage Subscription' }}
+                      {{ billingPortalLoading ? 'Opening…' : billingPrimaryActionLabel }}
                     </button>
                   </div>
+
+                  <p
+                    v-if="billingRecoveryMessage && showBillingPortalButton"
+                    class="mt-4 text-body-sm text-warning-700"
+                  >
+                    {{ billingRecoveryMessage }}
+                  </p>
                 </div>
 
                 <div
-v-if="isPlus"
+v-if="hasStoredPaidPlan"
 class="bg-surface rounded-xl border border-rs-border p-6"
 >
                   <h3 class="font-medium text-rs-fg mb-4">Payment Method</h3>
@@ -3672,7 +3680,7 @@ class="text-body-sm text-rs-muted"
                 </div>
 
                 <div
-v-if="isPlus"
+v-if="hasStoredPaidPlan"
 class="bg-surface rounded-xl border border-rs-border p-6"
 >
                   <h3 class="font-medium text-rs-fg mb-4">Billing History</h3>
@@ -4379,6 +4387,37 @@ function extractErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback
 }
 
+function extractErrorCode(error: unknown): string {
+  const candidate = error as { data?: { error?: unknown } }
+  return typeof candidate?.data?.error === 'string' ? candidate.data.error : ''
+}
+
+function extractNestedErrorMessage(error: unknown): string | null {
+  const candidate = error as { data?: { message?: unknown }, message?: unknown }
+  if (typeof candidate?.data?.message === 'string' && candidate.data.message.trim().length > 0) {
+    return candidate.data.message
+  }
+  if (typeof candidate?.message === 'string' && candidate.message.trim().length > 0 && candidate.message !== 'fetch failed') {
+    return candidate.message
+  }
+  return null
+}
+
+function resolveExportErrorMessage(error: unknown, fallback: string): string {
+  switch (extractErrorCode(error)) {
+    case 'indices_export_enterprise_only':
+      return 'Indices exports are available on Enterprise only.'
+    case 'export_limit_reached':
+      return extractNestedErrorMessage(error) || 'Your current plan export queue is full. Try again after existing jobs finish.'
+    case 'plan_inactive':
+      return 'Your paid plan is inactive. Reactivate billing to export data.'
+    case 'forbidden':
+      return 'Your current plan does not include this export.'
+    default:
+      return extractNestedErrorMessage(error) || fallback
+  }
+}
+
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AbortError'
 }
@@ -4401,8 +4440,24 @@ const {
   revokeAllSessions,
 } = useSessions()
 const { updateProfile } = useMe()
-const { isPlus, isEnterprise, apiAccess, apiTier, limits, billing, refreshPlan } = useEntitlements()
+const {
+  isPlus,
+  isEnterprise,
+  storedPlanCode,
+  planStatus,
+  planLifecycleState,
+  recoveryAvailable,
+  recoveryAction,
+  hasPaidAccess,
+  apiAccess,
+  apiTier,
+  limits,
+  billing,
+  refreshPlan,
+  indicesExportsEnabled,
+} = useEntitlements()
 const { pulseEnabled } = useFeatureFlags()
+const exportsEnabled = computed(() => limits.value.exports)
 
 const upgradeBannerText = computed(() =>
   pulseEnabled.value
@@ -6284,7 +6339,61 @@ const billingHistoryError = ref<string | null>(null)
 const billingActionMessage = ref<string | null>(null)
 
 const billingSummary = computed(() => billing.value)
-const billingStatus = computed(() => billingSummary.value?.status ?? (isPlus.value ? 'active' : 'free'))
+const hasStoredPaidPlan = computed(() => storedPlanCode.value === 'plus' || storedPlanCode.value === 'enterprise')
+const billingPlanLabel = computed(() => {
+  if (storedPlanCode.value === 'enterprise') return 'Enterprise'
+  if (storedPlanCode.value === 'plus') return 'Plus'
+  return 'Free'
+})
+const billingPlanDescription = computed(() => {
+  if (storedPlanCode.value === 'enterprise') return 'Custom billing'
+  if (storedPlanCode.value === 'plus') {
+    if (planLifecycleState.value === 'scheduled_cancel') return 'Scheduled to end at period close'
+    if (hasPaidAccess.value) return 'Paid subscription'
+    return 'Billing needs attention'
+  }
+  return 'Free forever'
+})
+const billingStatus = computed(() => {
+  if (!hasStoredPaidPlan.value) return 'free'
+  return planLifecycleState.value || billingSummary.value?.status || planStatus.value || 'inactive'
+})
+const billingRenewalLabel = computed(() => {
+  if (!hasStoredPaidPlan.value) return 'Plan type'
+  return billingSummary.value?.cancel_at_period_end ? 'Access ends on' : 'Next billing date'
+})
+const billingRenewalValue = computed(() => {
+  if (!hasStoredPaidPlan.value) return 'No billing'
+  return formatBillingDate(billingSummary.value?.current_period_end || billingSummary.value?.next_billing_date)
+})
+const billingUpgradeLabel = computed(() => (
+  hasStoredPaidPlan.value ? 'Upgrade again' : 'Upgrade'
+))
+const showBillingPortalButton = computed(() => (
+  hasStoredPaidPlan.value && (hasPaidAccess.value || recoveryAction.value === 'billing_portal')
+))
+const showBillingUpgradeButton = computed(() => !hasStoredPaidPlan.value || recoveryAction.value === 'upgrade')
+const billingPrimaryActionLabel = computed(() => {
+  if (planLifecycleState.value === 'scheduled_cancel') return 'Keep plan active'
+  if (!hasPaidAccess.value && recoveryAvailable.value) return 'Reactivate billing'
+  return 'Manage subscription'
+})
+const billingRecoveryMessage = computed(() => {
+  if (!hasStoredPaidPlan.value) return null
+  if (planLifecycleState.value === 'scheduled_cancel') {
+    return 'Your plan is set to cancel at the end of the current period. Open billing to keep it active.'
+  }
+  if (planLifecycleState.value === 'past_due') {
+    return 'Billing needs attention. Paid features are paused until you reactivate.'
+  }
+  if (!hasPaidAccess.value && recoveryAvailable.value && recoveryAction.value === 'billing_portal') {
+    return 'Your paid access is inactive. Open billing to reactivate.'
+  }
+  if (!hasPaidAccess.value && recoveryAvailable.value && recoveryAction.value === 'upgrade') {
+    return 'Your paid access has ended. Upgrade again to restore paid features.'
+  }
+  return null
+})
 
 const formatBillingDate = (value: string | null | undefined) => {
   if (!value) return 'Unavailable'
@@ -6300,13 +6409,16 @@ const formatBillingAmount = (amount: number | null | undefined, currency: string
 
 const billingStatusBadge = computed(() => {
   const status = billingStatus.value
+  if (status === 'scheduled_cancel') {
+    return { label: 'Scheduled to cancel', classes: 'bg-warning-100 text-warning-700' }
+  }
   if (status === 'active' || status === 'trialing') {
     return { label: 'Active', classes: 'bg-success-100 text-success-700' }
   }
   if (status === 'past_due') {
     return { label: 'Past due', classes: 'bg-warning-100 text-warning-700' }
   }
-  if (status === 'canceled' || status === 'incomplete_expired') {
+  if (status === 'canceled' || status === 'incomplete_expired' || status === 'unpaid' || status === 'expired' || status === 'inactive') {
     return { label: 'Canceled', classes: 'bg-neutral-100 text-neutral-600' }
   }
   return { label: status ? status.replace(/_/g, ' ') : 'Free', classes: 'bg-neutral-100 text-neutral-600' }
@@ -6375,7 +6487,7 @@ watch(
 watch(
   () => activeAccountSection.value,
   (section) => {
-    if (section === 'billing' && isPlus.value) {
+    if (section === 'billing' && hasStoredPaidPlan.value) {
       void fetchBillingHistory()
     }
     if (section === 'security' && isAuthenticated.value) {
@@ -6391,7 +6503,7 @@ watch(
 )
 
 watch(
-  () => isPlus.value,
+  () => hasStoredPaidPlan.value,
   (value) => {
     if (value && activeAccountSection.value === 'billing') {
       void fetchBillingHistory(true)
@@ -6746,7 +6858,7 @@ const pollExportStatus = async (jobId: string) => {
       }
     }
     catch (error: unknown) {
-      exportErrorMessage.value = extractErrorMessage(error, 'Failed to check export status.')
+      exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to check export status.')
       isExporting.value = false
       clearExportPolling()
     }
@@ -6788,6 +6900,11 @@ const pollExportStatus = async (jobId: string) => {
 watch(
   () => exportSettings.value.dataType,
   (dataType) => {
+    if (dataType === 'indices' && !indicesExportsEnabled.value) {
+      exportSettings.value.dataType = 'history'
+      exportSettings.value.includeCorridorHistory = false
+      return
+    }
     if (dataType === 'indices') {
       exportSettings.value.includeCorridorHistory = true
       return
@@ -6854,7 +6971,7 @@ async function handleExport() {
     await pollExportStatus(response.job.id)
   }
   catch (error: unknown) {
-    exportErrorMessage.value = extractErrorMessage(error, 'Failed to start export.')
+    exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to start export.')
     isExporting.value = false
   }
 }

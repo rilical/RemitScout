@@ -3,10 +3,11 @@ import type Stripe from 'stripe'
 import { z } from 'zod'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
+import type { AuthUser } from '../auth/types'
 import { requireAuth } from '../plugins/auth-plugin'
 import { upsertUserAccount } from '../services/user-account'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
-import { getEntitlementsForPlan } from '../services/entitlements'
+import { resolveEffectiveEntitlements } from '../services/effective-entitlements'
 import { getUsageForUser } from '../services/plan-usage'
 import { countActiveApiKeys, createApiKey, listApiKeys, revokeApiKey, rotateApiKey } from '../services/api-keys'
 import { getStripeClient, isStripeConfigured } from '../services/stripe-client'
@@ -14,11 +15,14 @@ import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage, getErrorStack } from '../types/errors'
 import { config } from '../../../shared/config'
 import { AuthenticationError, ValidationError, NotFoundError } from '../../../shared/errors'
+import { RETAIL_API_KEY_SCOPES, isRetailApiKeyScope } from './api-key-access'
+import { createCapabilityAccessDeniedResponse } from '../services/plan-state'
 import {
   enqueueExportJob,
   getExportPipelineStatus,
   getSignedExportDownload,
 } from './exports.service'
+import { buildPublishedEmbedListItem } from '../services/published-embeds'
 
 const logger = createLogger('plane-a.me')
 
@@ -41,10 +45,13 @@ const exportJobCreateSchema = z.object({
   format: z.enum(['csv', 'pdf']).default('csv'),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
+  corridorIds: z.array(z.string().min(1)).max(50).optional(),
 })
 
 type BillingInfo = {
   next_billing_date: string | null
+  current_period_end: string | null
+  cancel_at_period_end: boolean
   amount: number | null
   currency: string | null
   status: string | null
@@ -66,9 +73,11 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
   if (!plan || !isStripeConfigured() || !plan.stripe_customer_id) {
     return {
       next_billing_date: null,
+      current_period_end: plan?.current_period_end ?? null,
+      cancel_at_period_end: false,
       amount: null,
       currency: null,
-      status: null,
+      status: plan?.status ?? null,
       payment_method: null,
     }
   }
@@ -94,10 +103,12 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
 
     if (!subscription) {
       return {
-        next_billing_date: null,
+        next_billing_date: plan.current_period_end ?? null,
+        current_period_end: plan.current_period_end ?? null,
+        cancel_at_period_end: false,
         amount: null,
         currency: null,
-        status: null,
+        status: plan.status ?? null,
         payment_method: null,
       }
     }
@@ -107,7 +118,7 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
     const currency = price?.currency ? price.currency.toUpperCase() : null
     const subscriptionWithPeriodEnd =
       subscription as Stripe.Subscription & { current_period_end?: number | null }
-    const nextBillingDate = toIsoFromSeconds(subscriptionWithPeriodEnd.current_period_end ?? null)
+    const currentPeriodEnd = toIsoFromSeconds(subscriptionWithPeriodEnd.current_period_end ?? null)
 
     const paymentMethod = subscription.default_payment_method
     const paymentMethodDetails =
@@ -122,10 +133,12 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
         : null
 
     return {
-      next_billing_date: nextBillingDate,
+      next_billing_date: currentPeriodEnd,
+      current_period_end: currentPeriodEnd,
+      cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
       amount: unitAmount,
       currency,
-      status: subscription.status ?? null,
+      status: subscription.status ?? plan.status ?? null,
       payment_method: paymentMethodDetails,
     }
   } catch (error: unknown) {
@@ -134,10 +147,12 @@ const buildBillingInfo = async (plan: Awaited<ReturnType<typeof getUserPlan>>): 
       error: getErrorMessage(error),
     })
     return {
-      next_billing_date: null,
+      next_billing_date: plan?.current_period_end ?? null,
+      current_period_end: plan?.current_period_end ?? null,
+      cancel_at_period_end: false,
       amount: null,
       currency: null,
-      status: null,
+      status: plan?.status ?? null,
       payment_method: null,
     }
   }
@@ -152,14 +167,20 @@ const parseBearerToken = (header?: string) => {
   return token
 }
 
-const isEnterprisePlan = (plan?: Awaited<ReturnType<typeof getUserPlan>> | null) => {
-  if (!plan) return false
-  return plan.plan_code === 'enterprise' && (plan.status === 'active' || plan.status === 'trialing')
-}
-
 const hasTierOneScope = (scopes?: string[]) => {
   if (!scopes || scopes.length === 0) return false
   return scopes.some((scope) => scope.trim().toLowerCase() === 'tier:1')
+}
+
+const findUnsupportedApiKeyScopes = (scopes?: string[]) => {
+  if (!scopes || scopes.length === 0) return []
+  return Array.from(
+    new Set(
+      scopes
+        .map((scope) => scope.trim().toLowerCase())
+        .filter((scope) => scope && scope !== 'tier:1' && !isRetailApiKeyScope(scope)),
+    ),
+  )
 }
 
 const verifySupabasePassword = async (email: string, password: string): Promise<boolean> => {
@@ -215,37 +236,87 @@ export const meRoutes = async (app: FastifyInstance) => {
   const userAccountRepository = repositories.userAccount
   const exportJobRepository = repositories.exportJob
 
+  const loadUserPlan = async (user: AuthUser) => {
+    await upsertUserAccount(planeAPool, user)
+    await ensureUserPlan(planeAPool, user.user_id)
+
+    const plan = await getUserPlan(planeAPool, user.user_id)
+    if (!plan) {
+      logger.error('plan_not_found', {
+        user_id: user.user_id,
+      })
+      throw new Error('plan_not_found')
+    }
+
+    return plan
+  }
+
+  const resolveEffectiveUserAccess = async (
+    user: AuthUser,
+    options?: { cancelAtPeriodEnd?: boolean | null; currentPeriodEnd?: string | null },
+  ) => {
+    const plan = await loadUserPlan(user)
+
+    const effective = await resolveEffectiveEntitlements({
+      pool: planeAPool,
+      userId: user.user_id,
+      email: user.email ?? null,
+      supabaseRole: user.role ?? null,
+      plan,
+      cancelAtPeriodEnd: options?.cancelAtPeriodEnd,
+      currentPeriodEnd: options?.currentPeriodEnd,
+    })
+
+    return {
+      plan,
+      effective,
+    }
+  }
+
+  const denyCapability = (
+    reply: { code: (statusCode: number) => unknown },
+    effective: Awaited<ReturnType<typeof resolveEffectiveEntitlements>>,
+    input: {
+      capability: string
+      requiredPlan?: 'plus' | 'enterprise'
+      insufficientLegacyError: string
+      insufficientMessage: string
+      inactiveMessage: string
+      insufficientPlanFailure?: string
+      extraDetails?: Record<string, unknown>
+    },
+  ) => {
+    reply.code(403)
+    return createCapabilityAccessDeniedResponse({
+      context: effective,
+      capability: input.capability,
+      requiredPlan: input.requiredPlan,
+      insufficientLegacyError: input.insufficientLegacyError,
+      insufficientMessage: input.insufficientMessage,
+      inactiveMessage: input.inactiveMessage,
+      insufficientPlanFailure: input.insufficientPlanFailure,
+      extraDetails: input.extraDetails,
+    })
+  }
+
   app.get('/me', { preHandler: requireAuth() }, async (request, reply) => {
     const user = request.user!
 
     try {
-      await upsertUserAccount(planeAPool, user)
-      await ensureUserPlan(planeAPool, user.user_id)
-
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!plan) {
-        logger.error('plan_not_found', {
-          user_id: user.user_id,
-        })
-        reply.code(500)
-        return { error: 'plan_not_found' }
-      }
-
-      const isPlanActive = plan.status === 'active' || plan.status === 'trialing'
-      const normalizedPlanCode =
-        plan.plan_code === 'free' || plan.plan_code === 'plus' || plan.plan_code === 'enterprise'
-          ? plan.plan_code
-          : 'free'
-      const effectivePlanCode = isPlanActive ? normalizedPlanCode : 'free'
-      const usage = await getUsageForUser(planeAPool, user.user_id)
+      const plan = await loadUserPlan(user)
       const billing = await buildBillingInfo(plan)
+      const effective = await resolveEffectiveEntitlements({
+        pool: planeAPool,
+        userId: user.user_id,
+        email: user.email ?? null,
+        supabaseRole: user.role ?? null,
+        plan,
+        cancelAtPeriodEnd: billing.cancel_at_period_end,
+        currentPeriodEnd: billing.current_period_end ?? plan.current_period_end,
+      })
+      const usage = await getUsageForUser(planeAPool, user.user_id)
       const profile = await userAccountRepository.getProfile(user.user_id)
-      const appRoleResult = await query<{ app_role: string | null }>(
-        `SELECT app_role FROM silver.user_account WHERE user_id = $1`,
-        [user.user_id],
-        planeAPool,
-      )
-      const appRole = appRoleResult.rows[0]?.app_role ?? null
+      const appRole = effective.adminAccess.appRole
       const claims = user.claims as Record<string, unknown> | undefined
       const amr = Array.isArray(claims?.amr)
         ? claims.amr as Array<{ method?: string; mfa?: boolean }>
@@ -258,16 +329,11 @@ export const meRoutes = async (app: FastifyInstance) => {
       const mfaVerified = claims?.mfa_verified === true || hasTotpMfa
 
       const supabaseRole = user.role ?? null
-      const isAdmin = appRole === 'admin' || appRole === 'super_admin'
-
-      // Internal admin accounts can be treated as enterprise (feature access) even when Stripe isn't wired yet.
-      const internalEnterpriseOverride = Boolean(isAdmin && config.planeA.internalUsersGetEnterprise)
-      const effectivePlanCodeForEntitlements = internalEnterpriseOverride ? 'enterprise' : effectivePlanCode
       logger.debug('me_request_success', {
         user_id: user.user_id,
         plan_code: plan.plan_code,
         status: plan.status,
-        internal_enterprise_override: internalEnterpriseOverride,
+        internal_enterprise_override: effective.internalEnterpriseOverride,
       })
 
       return {
@@ -279,7 +345,7 @@ export const meRoutes = async (app: FastifyInstance) => {
           name: profile?.name ?? null,
           role: supabaseRole,
           app_role: appRole,
-          is_admin: Boolean(isAdmin),
+          is_admin: Boolean(effective.adminAccess.allowed),
           mfa_verified: Boolean(mfaVerified),
         },
         plan: {
@@ -287,12 +353,15 @@ export const meRoutes = async (app: FastifyInstance) => {
           status: plan.status,
         },
         plan_effective: {
-          plan_code: effectivePlanCodeForEntitlements,
-          is_active: internalEnterpriseOverride ? true : isPlanActive,
-          source: internalEnterpriseOverride ? 'internal_admin_override' : 'stripe_or_default',
+          plan_code: effective.effectivePlanCode,
+          is_active: effective.internalEnterpriseOverride ? true : effective.isPlanActive,
+          lifecycle_state: effective.lifecycleState,
+          source: effective.source,
+          recovery_available: effective.recoveryAvailable,
+          recovery_action: effective.recoveryAction,
         },
         billing,
-        entitlements: getEntitlementsForPlan(effectivePlanCodeForEntitlements),
+        entitlements: effective.entitlements,
         usage,
       }
     } catch (error: unknown) {
@@ -313,12 +382,15 @@ export const meRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
-      await upsertUserAccount(planeAPool, user)
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.api_access) {
+        return denyCapability(reply, effective, {
+          capability: 'api_access',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise API access is required for API keys.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage API keys.',
+        })
       }
 
       const keys = await listApiKeys(planeAPool, user.user_id)
@@ -352,12 +424,26 @@ export const meRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      await upsertUserAccount(planeAPool, user)
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.api_access) {
+        return denyCapability(reply, effective, {
+          capability: 'api_access',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise API access is required for API keys.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage API keys.',
+        })
+      }
+
+      const unsupportedScopes = findUnsupportedApiKeyScopes(parsed.data.scopes)
+      if (unsupportedScopes.length > 0) {
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'unsupported_scope',
+            scopes: unsupportedScopes,
+            supportedScopes: [...RETAIL_API_KEY_SCOPES],
+          },
+        })
       }
 
       if (hasTierOneScope(parsed.data.scopes)) {
@@ -365,7 +451,9 @@ export const meRoutes = async (app: FastifyInstance) => {
       }
 
       const activeCount = await countActiveApiKeys(planeAPool, user.user_id)
-      const maxKeys = config.planeA.enterpriseApiKeyMax
+      const maxKeys = effective.entitlements.api_key_max > 0
+        ? effective.entitlements.api_key_max
+        : config.planeA.enterpriseApiKeyMax
       if (activeCount >= maxKeys) {
         reply.code(429)
         return { error: 'api_key_limit_reached', maxKeys }
@@ -412,6 +500,9 @@ export const meRoutes = async (app: FastifyInstance) => {
         token: record.token,
       }
     } catch (error: unknown) {
+      if (error instanceof ValidationError) {
+        throw error
+      }
       logger.error('api_key_create_failed', {
         user_id: user.user_id,
         error: getErrorMessage(error),
@@ -426,11 +517,15 @@ export const meRoutes = async (app: FastifyInstance) => {
     const keyId = String((request.params as { keyId: string }).keyId)
 
     try {
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.api_access) {
+        return denyCapability(reply, effective, {
+          capability: 'api_access',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise API access is required for API keys.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage API keys.',
+        })
       }
 
       const rotated = await rotateApiKey(planeAPool, user.user_id, keyId)
@@ -473,6 +568,9 @@ export const meRoutes = async (app: FastifyInstance) => {
         token: rotated.token,
       }
     } catch (error: unknown) {
+      if (error instanceof NotFoundError) {
+        throw error
+      }
       logger.error('api_key_rotate_failed', {
         user_id: user.user_id,
         key_id: keyId,
@@ -488,11 +586,15 @@ export const meRoutes = async (app: FastifyInstance) => {
     const keyId = String((request.params as { keyId: string }).keyId)
 
     try {
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.api_access) {
+        return denyCapability(reply, effective, {
+          capability: 'api_access',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise API access is required for API keys.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage API keys.',
+        })
       }
 
       const revoked = await revokeApiKey(planeAPool, user.user_id, keyId)
@@ -521,9 +623,92 @@ export const meRoutes = async (app: FastifyInstance) => {
 
       return { success: true }
     } catch (error: unknown) {
+      if (error instanceof NotFoundError) {
+        throw error
+      }
       logger.error('api_key_revoke_failed', {
         user_id: user.user_id,
         key_id: keyId,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.get('/me/published-embeds', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+
+    try {
+      const limit = Math.min(Number((request.query as { limit?: unknown } | undefined)?.limit) || 100, 200)
+      const publishedEmbeds = await app.container.repositories.publishedEmbed.listByOwnerUserId(user.user_id, limit)
+      return {
+        success: true,
+        embeds: publishedEmbeds.map((row) => buildPublishedEmbedListItem(row)),
+      }
+    } catch (error: unknown) {
+      logger.error('published_embed_list_failed', {
+        user_id: user.user_id,
+        error: getErrorMessage(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
+  app.post('/me/published-embeds/:id/revoke', { preHandler: requireAuth() }, async (request, reply) => {
+    const user = request.user!
+    const id = String((request.params as { id?: string }).id || '').trim()
+    const parsedId = z.string().uuid().safeParse(id)
+    if (!parsedId.success) {
+      throw new ValidationError('Invalid request', {
+        details: {
+          error: 'invalid_published_id',
+        },
+      })
+    }
+
+    try {
+      const revoked = await app.container.repositories.publishedEmbed.revoke(parsedId.data, user.user_id)
+      if (!revoked) {
+        throw new NotFoundError('Not found', { details: { error: 'not_found' } })
+      }
+
+      try {
+        await logAuditEvent(planeAPool, {
+          actorId: user.user_id,
+          actorType: 'user',
+          actorRole: user.role ?? undefined,
+          action: 'published_embed.revoke',
+          entityType: 'published_embed',
+          entityId: revoked.id,
+          afterSnapshot: {
+            revoked_at: revoked.revoked_at ? revoked.revoked_at.toISOString() : null,
+            surface_kind: revoked.surface_kind,
+            title: revoked.title,
+          },
+          category: 'user_action',
+          severity: 'info',
+          ...getRequestContext(request),
+        })
+      } catch (error) {
+        logger.warn('audit_log_failed', {
+          user_id: user.user_id,
+          error: getErrorMessage(error),
+        })
+      }
+
+      return {
+        success: true,
+        embed: buildPublishedEmbedListItem(revoked),
+      }
+    } catch (error: unknown) {
+      if (error instanceof NotFoundError) {
+        throw error
+      }
+      logger.error('published_embed_revoke_failed', {
+        user_id: user.user_id,
+        embed_id: parsedId.data,
         error: getErrorMessage(error),
       })
       reply.code(500)
@@ -535,11 +720,15 @@ export const meRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.bulk_export) {
+        return denyCapability(reply, effective, {
+          capability: 'bulk_export',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise bulk export access is required.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage export jobs.',
+        })
       }
 
       const limit = Math.min(Number((request.query as any)?.limit) || 20, 100)
@@ -577,11 +766,33 @@ export const meRoutes = async (app: FastifyInstance) => {
     }
 
     try {
-      await ensureUserPlan(planeAPool, user.user_id)
-      const plan = await getUserPlan(planeAPool, user.user_id)
-      if (!isEnterprisePlan(plan)) {
-        reply.code(403)
-        return { error: 'enterprise_required' }
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.bulk_export) {
+        return denyCapability(reply, effective, {
+          capability: 'bulk_export',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise bulk export access is required.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to manage export jobs.',
+        })
+      }
+      if (parsed.data.jobType === 'indices' && !effective.entitlements.indices_exports_enabled) {
+        return denyCapability(reply, effective, {
+          capability: 'indices_exports_enabled',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'indices_export_enterprise_only',
+          insufficientPlanFailure: 'indices_export_enterprise_only',
+          insufficientMessage: 'TEER, RCI, and RVI exports require an Enterprise plan.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to create TEER, RCI, and RVI exports.',
+        })
+      }
+      if (parsed.data.jobType === 'indices' && (!parsed.data.corridorIds || parsed.data.corridorIds.length === 0)) {
+        throw new ValidationError('Invalid request', {
+          details: {
+            error: 'indices_corridor_required',
+            message: 'Corridor IDs are required for TEER/RCI/RVI exports.',
+          },
+        })
       }
 
       const pipeline = getExportPipelineStatus()
@@ -595,7 +806,7 @@ export const meRoutes = async (app: FastifyInstance) => {
          FROM silver.export_job
          WHERE user_id = $1
            AND created_at >= NOW() - INTERVAL '24 hours'
-           AND job_type != 'gdpr_export'`,
+          AND job_type != 'gdpr_export'`,
         [user.user_id],
         planeAPool,
       )
@@ -613,6 +824,7 @@ export const meRoutes = async (app: FastifyInstance) => {
           format: parsed.data.format,
           dateFrom: parsed.data.dateFrom || null,
           dateTo: parsed.data.dateTo || null,
+          corridorIds: parsed.data.corridorIds ?? null,
         },
       })
 
@@ -660,6 +872,17 @@ export const meRoutes = async (app: FastifyInstance) => {
     const jobId = String((request.params as { jobId: string }).jobId)
 
     try {
+      const { effective } = await resolveEffectiveUserAccess(user)
+      if (!effective.entitlements.bulk_export) {
+        return denyCapability(reply, effective, {
+          capability: 'bulk_export',
+          requiredPlan: 'enterprise',
+          insufficientLegacyError: 'enterprise_required',
+          insufficientMessage: 'Enterprise bulk export access is required.',
+          inactiveMessage: 'Your paid plan is inactive. Reactivate billing to download export jobs.',
+        })
+      }
+
       const job = await exportJobRepository.getById(jobId)
       if (!job || job.user_id !== user.user_id) {
         throw new NotFoundError('Not found', { details: { error: 'not_found' } })

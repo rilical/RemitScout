@@ -603,6 +603,10 @@ export interface paths {
                             availableMethodsByProvider?: {
                                 [key: string]: string[];
                             };
+                            supportedMethods?: string[];
+                            supportedMethodsByProvider?: {
+                                [key: string]: string[];
+                            };
                             excludedProviders?: ({
                                 provider: string;
                                 reason: string;

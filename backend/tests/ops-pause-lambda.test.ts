@@ -18,6 +18,7 @@ vi.mock('@aws-sdk/client-ecs', () => ({
   ECSClient: vi.fn().mockImplementation(() => ({ send: mockEcsSend })),
   DescribeServicesCommand: vi.fn().mockImplementation((input) => ({ __name: 'DescribeServicesCommand', input })),
   DescribeTasksCommand: vi.fn().mockImplementation((input) => ({ __name: 'DescribeTasksCommand', input })),
+  ListServicesCommand: vi.fn().mockImplementation((input) => ({ __name: 'ListServicesCommand', input })),
   ListTasksCommand: vi.fn().mockImplementation((input) => ({ __name: 'ListTasksCommand', input })),
   StopTaskCommand: vi.fn().mockImplementation((input) => ({ __name: 'StopTaskCommand', input })),
   UpdateServiceCommand: vi.fn().mockImplementation((input) => ({ __name: 'UpdateServiceCommand', input })),
@@ -150,6 +151,13 @@ const setupRuntimeMocks = (options: RuntimeMocksOptions = {}): void => {
         desiredCounts[command.input.service] = command.input.desiredCount
       }
       return {}
+    }
+    if (command.__name === 'ListServicesCommand') {
+      return {
+        serviceArns: Object.keys(desiredCounts).map(
+          (serviceName) => `arn:aws:ecs:us-east-1:123456789012:service/${command.input.cluster}/${serviceName}`,
+        ),
+      }
     }
     if (command.__name === 'DescribeServicesCommand') {
       return {

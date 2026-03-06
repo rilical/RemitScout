@@ -4,13 +4,7 @@ import { dirname, resolve } from 'path'
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { createLogger } from '../shared/logger'
-
-type LaunchUserSpec = {
-  email: string
-  appRole: 'user' | 'admin' | 'super_admin'
-  planCode: 'free' | 'plus' | 'enterprise'
-  passwordEnvKey: string
-}
+import { LAUNCH_USERS, type LaunchUserSpec } from '../shared/launch-users'
 
 type ScriptArgs = {
   force: boolean
@@ -25,40 +19,6 @@ type SupabaseUser = {
 }
 
 const logger = createLogger('script.seed-launch-users')
-
-const launchUsers: LaunchUserSpec[] = [
-  {
-    email: 'omar@remit-scout.com',
-    appRole: 'super_admin',
-    planCode: 'enterprise',
-    passwordEnvKey: 'LAUNCH_PASSWORD_OMAR',
-  },
-  {
-    email: 'developer@remit-scout.com',
-    appRole: 'admin',
-    // Give developers enterprise access for testing without relying on Stripe wiring.
-    planCode: 'enterprise',
-    passwordEnvKey: 'LAUNCH_PASSWORD_DEVELOPER',
-  },
-  {
-    email: 'austrilic@gmail.com',
-    appRole: 'user',
-    planCode: 'enterprise',
-    passwordEnvKey: 'LAUNCH_PASSWORD_AUSTRILIC',
-  },
-  {
-    email: 'ghabayenedu@gmail.com',
-    appRole: 'user',
-    planCode: 'plus',
-    passwordEnvKey: 'LAUNCH_PASSWORD_GHABAYENEDU',
-  },
-  {
-    email: 'support@remit-scout.com',
-    appRole: 'user',
-    planCode: 'free',
-    passwordEnvKey: 'LAUNCH_PASSWORD_SUPPORT',
-  },
-]
 
 const usage = () => {
   console.log(`
@@ -419,7 +379,7 @@ const main = async () => {
 
   const pool = args.supabaseOnly ? null : createPool(config.db.planeAUrl)
   try {
-    for (const user of launchUsers) {
+    for (const user of LAUNCH_USERS) {
       const password = resolvePassword(user)
       const supabase = await createOrUpdateSupabaseUser(user, password.value)
 

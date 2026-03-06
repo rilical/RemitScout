@@ -1,4 +1,4 @@
-export const EXPORTS_MAX_WINDOW_DAYS_HARD_CAP = 30
+export const EXPORTS_MAX_WINDOW_DAYS_HARD_CAP = 365
 
 export const clampExportDays = (days: number) => {
   if (!Number.isFinite(days)) return EXPORTS_MAX_WINDOW_DAYS_HARD_CAP

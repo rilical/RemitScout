@@ -1,5 +1,5 @@
-import { parseCorridorId } from '../../../shared/corridor'
 import { createLogger } from '../../../shared/logger'
+import { isRightsMatrixCorridorEligible } from '../../../shared/rights-matrix-corridor'
 
 export type RightsMatrixCountryFilter = {
   sourceCountries?: string[] | null
@@ -21,27 +21,10 @@ const normalizeCountryList = (countries?: string[] | null): string[] => {
     .filter((code): code is string => Boolean(code))
 }
 
-const isCountryAllowed = (list: string[], code: string): boolean => {
-  return list.length > 0 && list.includes(code.toUpperCase())
-}
-
 const filterCorridors = (
   corridors: string[],
   rights: RightsMatrixCountryFilter,
-): string[] => {
-  const sourceCountries = normalizeCountryList(rights.sourceCountries)
-  const destinationCountries = normalizeCountryList(rights.destinationCountries)
-  if (sourceCountries.length === 0 || destinationCountries.length === 0) {
-    return []
-  }
-
-  return corridors.filter((corridorId) => {
-    const parsed = parseCorridorId(corridorId)
-    if (!parsed) return false
-    return isCountryAllowed(sourceCountries, parsed.sourceCountry)
-      && isCountryAllowed(destinationCountries, parsed.destCountry)
-  })
-}
+): string[] => corridors.filter((corridorId) => isRightsMatrixCorridorEligible(corridorId, rights))
 
 export const filterQueuesByRightsMatrix = (
   queues: PriorityQueues,

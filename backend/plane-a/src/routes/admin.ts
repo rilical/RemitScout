@@ -5,7 +5,7 @@ import { createLogger } from '../../../shared/logger'
 import { requireAdmin, requireSuperAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { sendAdminWebhook } from '../services/admin-webhooks'
-import { ValidationError, NotFoundError } from '../../../shared/errors'
+import { AppError, ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.admin')
 
@@ -50,10 +50,26 @@ type UserWithPlan = {
   enterprise_notes: string | null
 }
 
+type PlanMutationResult = {
+  user_id: string
+  email: string | null
+  plan_code: string
+  status: string
+}
+
+type UserRoleRecord = {
+  user_id: string
+  email: string | null
+  app_role: string
+  created_at: string
+  last_seen_at: string | null
+  privacy_analytics_enabled: boolean
+  privacy_personalization_enabled: boolean
+}
+
 export const adminRoutes = async (app: FastifyInstance) => {
   const planeAPool = app.container.pool
   const userAccountRepository = app.container.repositories.userAccount
-  const userPlanRepository = app.container.repositories.userPlan
 
   app.get('/admin/users', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
@@ -68,6 +84,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
       )
       return { users }
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('admin_users_fetch_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -152,6 +169,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
         users: result.rows,
       }
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('admin_plans_fetch_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -170,80 +188,101 @@ export const adminRoutes = async (app: FastifyInstance) => {
     const adminId = request.user?.user_id ?? 'unknown'
 
     try {
-      let targetUserId = userId
-      let targetEmail = email
-
-      if (!targetUserId && targetEmail) {
-        const userResult = await query<{ user_id: string }>(
-          `SELECT user_id FROM silver.user_account WHERE LOWER(email) = LOWER($1)`,
-          [targetEmail],
-          planeAPool,
-        )
-        if (!userResult.rows[0]) {
-                    throw new NotFoundError('Not found', { details: { error: 'user_not_found', message: `No user found with email: ${targetEmail}` } })
-        }
-        targetUserId = userResult.rows[0].user_id
-      }
-
-      if (!targetUserId) {
-                throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
-      }
-
-      await userPlanRepository.ensureUserPlan(targetUserId)
-
-      const isEnterprise = planCode === 'enterprise'
-      await query(
-        `
-        UPDATE silver.user_plan
-        SET plan_code = $2,
-            status = 'active',
-            enterprise_granted_at = CASE WHEN $3 THEN NOW() ELSE NULL END,
-            enterprise_granted_by = CASE WHEN $3 THEN $4::uuid ELSE NULL END,
-            enterprise_notes = CASE WHEN $3 THEN $5 ELSE NULL END,
-            updated_at = NOW()
-        WHERE user_id = $1
-        `,
-        [targetUserId, planCode, isEnterprise, adminId, notes ?? null],
-        planeAPool,
-      )
-
-      const updatedPlan = await userPlanRepository.getUserPlan(targetUserId)
-      if (!targetEmail) {
-        const userResult = await query<{ email: string }>(
-          `SELECT email FROM silver.user_account WHERE user_id = $1`,
-          [targetUserId],
-          planeAPool,
-        )
-        targetEmail = userResult.rows[0]?.email ?? null
-      }
+      const client = await planeAPool.connect()
+      let updatedPlan: PlanMutationResult | null = null
 
       try {
-        await logAuditEvent(planeAPool, {
+        await client.query('BEGIN')
+
+        let targetUserResult
+        if (userId) {
+          targetUserResult = await query<{ user_id: string; email: string | null }>(
+            `SELECT user_id, email FROM silver.user_account WHERE user_id = $1`,
+            [userId],
+            client,
+          )
+        } else if (email) {
+          targetUserResult = await query<{ user_id: string; email: string | null }>(
+            `SELECT user_id, email FROM silver.user_account WHERE LOWER(email) = LOWER($1)`,
+            [email],
+            client,
+          )
+        } else {
+          throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
+        }
+
+        const targetUser = targetUserResult.rows[0]
+        if (!targetUser) {
+          throw new NotFoundError('Not found', {
+            details: {
+              error: 'user_not_found',
+              message: email ? `No user found with email: ${email}` : undefined,
+            },
+          })
+        }
+
+        const isEnterprise = planCode === 'enterprise'
+        await query(
+          `
+          INSERT INTO silver.user_plan (user_id, plan_code, status)
+          VALUES ($1, 'free', 'active')
+          ON CONFLICT (user_id) DO NOTHING
+          `,
+          [targetUser.user_id],
+          client,
+        )
+
+        const updateResult = await query<PlanMutationResult>(
+          `
+          UPDATE silver.user_plan p
+          SET plan_code = $2,
+              status = 'active',
+              enterprise_granted_at = CASE WHEN $3 THEN NOW() ELSE NULL END,
+              enterprise_granted_by = CASE WHEN $3 THEN $4::uuid ELSE NULL END,
+              enterprise_notes = CASE WHEN $3 THEN $5 ELSE NULL END,
+              updated_at = NOW()
+          FROM silver.user_account u
+          WHERE p.user_id = $1
+            AND u.user_id = p.user_id
+          RETURNING p.user_id, u.email, p.plan_code, p.status
+          `,
+          [targetUser.user_id, planCode, isEnterprise, adminId, notes ?? null],
+          client,
+        )
+        updatedPlan = updateResult.rows[0] ?? null
+        if (!updatedPlan) {
+          throw new NotFoundError('Not found', { details: { error: 'user_not_found' } })
+        }
+
+        await logAuditEvent(client, {
           actorId: adminId,
           actorType: 'admin',
           actorRole: request.user?.role ?? undefined,
           action: 'admin.plan.granted',
           entityType: 'user_plan',
-          entityId: targetUserId,
+          entityId: updatedPlan.user_id,
           category: 'admin',
           severity: 'info',
           metadata: {
-            plan_code: planCode,
-            email: targetEmail,
+            plan_code: updatedPlan.plan_code,
+            email: updatedPlan.email,
             notes: notes ?? null,
           },
           ...getRequestContext(request),
         })
-      } catch (auditError) {
-        logger.warn('admin_plan_grant_audit_failed', {
-          error: auditError instanceof Error ? auditError.message : String(auditError),
-        })
+
+        await client.query('COMMIT')
+      } catch (error) {
+        await client.query('ROLLBACK')
+        throw error
+      } finally {
+        client.release()
       }
 
       logger.info('admin_plan_granted', {
         admin_id: adminId,
-        target_user_id: targetUserId,
-        target_email: targetEmail,
+        target_user_id: updatedPlan?.user_id,
+        target_email: updatedPlan?.email,
         plan_code: planCode,
       })
       if (planCode === 'enterprise') {
@@ -252,8 +291,8 @@ export const adminRoutes = async (app: FastifyInstance) => {
           event: 'enterprise_access_granted',
           actorId: adminId,
           metadata: {
-            user_id: targetUserId,
-            email: targetEmail,
+            user_id: updatedPlan?.user_id,
+            email: updatedPlan?.email,
             plan_code: planCode,
           },
         })
@@ -262,13 +301,14 @@ export const adminRoutes = async (app: FastifyInstance) => {
       return {
         success: true,
         user: {
-          user_id: targetUserId,
-          email: targetEmail,
+          user_id: updatedPlan?.user_id,
+          email: updatedPlan?.email,
           plan_code: updatedPlan?.plan_code,
           status: updatedPlan?.status,
         },
       }
     } catch (error) {
+      if (error instanceof ValidationError || error instanceof NotFoundError) throw error
       logger.error('admin_plan_grant_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -294,67 +334,95 @@ export const adminRoutes = async (app: FastifyInstance) => {
     const adminId = request.user?.user_id ?? 'unknown'
 
     try {
-      let targetUserId = userId
-      const targetEmail = email
-
-      if (!targetUserId && targetEmail) {
-        const userResult = await query<{ user_id: string }>(
-          `SELECT user_id FROM silver.user_account WHERE LOWER(email) = LOWER($1)`,
-          [targetEmail],
-          planeAPool,
-        )
-        if (!userResult.rows[0]) {
-                    throw new NotFoundError('Not found', { details: { error: 'user_not_found' } })
-        }
-        targetUserId = userResult.rows[0].user_id
-      }
-
-      if (!targetUserId) {
-                throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
-      }
-
-      await query(
-        `
-        UPDATE silver.user_plan
-        SET plan_code = 'free',
-            status = 'active',
-            enterprise_granted_at = NULL,
-            enterprise_granted_by = NULL,
-            enterprise_notes = NULL,
-            stripe_subscription_id = NULL,
-            updated_at = NOW()
-        WHERE user_id = $1
-        `,
-        [targetUserId],
-        planeAPool,
-      )
+      const client = await planeAPool.connect()
+      let updatedPlan: PlanMutationResult | null = null
 
       try {
-        await logAuditEvent(planeAPool, {
+        await client.query('BEGIN')
+
+        let targetUserResult
+        if (userId) {
+          targetUserResult = await query<{ user_id: string; email: string | null }>(
+            `SELECT user_id, email FROM silver.user_account WHERE user_id = $1`,
+            [userId],
+            client,
+          )
+        } else if (email) {
+          targetUserResult = await query<{ user_id: string; email: string | null }>(
+            `SELECT user_id, email FROM silver.user_account WHERE LOWER(email) = LOWER($1)`,
+            [email],
+            client,
+          )
+        } else {
+          throw new ValidationError('Invalid request', { details: { error: 'user_id_required' } })
+        }
+
+        const targetUser = targetUserResult.rows[0]
+        if (!targetUser) {
+          throw new NotFoundError('Not found', { details: { error: 'user_not_found' } })
+        }
+
+        await query(
+          `
+          INSERT INTO silver.user_plan (user_id, plan_code, status)
+          VALUES ($1, 'free', 'active')
+          ON CONFLICT (user_id) DO NOTHING
+          `,
+          [targetUser.user_id],
+          client,
+        )
+
+        const updateResult = await query<PlanMutationResult>(
+          `
+          UPDATE silver.user_plan p
+          SET plan_code = 'free',
+              status = 'active',
+              enterprise_granted_at = NULL,
+              enterprise_granted_by = NULL,
+              enterprise_notes = NULL,
+              stripe_subscription_id = NULL,
+              updated_at = NOW()
+          FROM silver.user_account u
+          WHERE p.user_id = $1
+            AND u.user_id = p.user_id
+          RETURNING p.user_id, u.email, p.plan_code, p.status
+          `,
+          [targetUser.user_id],
+          client,
+        )
+        updatedPlan = updateResult.rows[0] ?? null
+        if (!updatedPlan) {
+          throw new NotFoundError('Not found', { details: { error: 'user_not_found' } })
+        }
+
+        await logAuditEvent(client, {
           actorId: adminId,
           actorType: 'admin',
           actorRole: request.user?.role ?? undefined,
           action: 'admin.plan.revoked',
           entityType: 'user_plan',
-          entityId: targetUserId,
+          entityId: updatedPlan.user_id,
           category: 'admin',
           severity: 'warning',
           metadata: {
-            email: targetEmail,
+            email: updatedPlan.email,
             reason: reason ?? null,
           },
           ...getRequestContext(request),
         })
-      } catch (auditError) {
-        logger.warn('admin_plan_revoke_audit_failed', {
-          error: auditError instanceof Error ? auditError.message : String(auditError),
-        })
+
+        await client.query('COMMIT')
+      } catch (error) {
+        await client.query('ROLLBACK')
+        throw error
+      } finally {
+        client.release()
       }
 
       logger.info('admin_plan_revoked', {
         admin_id: adminId,
-        target_user_id: targetUserId,
-        target_email: targetEmail,
+        target_user_id: updatedPlan?.user_id,
+        target_email: updatedPlan?.email,
         reason,
       })
       void sendAdminWebhook({
@@ -362,8 +430,8 @@ export const adminRoutes = async (app: FastifyInstance) => {
         event: 'enterprise_access_revoked',
         actorId: adminId,
         metadata: {
-          user_id: targetUserId,
-          email: targetEmail,
+          user_id: updatedPlan?.user_id,
+          email: updatedPlan?.email,
           reason: reason ?? null,
         },
       })
@@ -371,13 +439,14 @@ export const adminRoutes = async (app: FastifyInstance) => {
       return {
         success: true,
         user: {
-          user_id: targetUserId,
-          email: targetEmail,
+          user_id: updatedPlan?.user_id,
+          email: updatedPlan?.email,
           plan_code: 'free',
           status: 'active',
         },
       }
     } catch (error) {
+      if (error instanceof ValidationError || error instanceof NotFoundError) throw error
       logger.error('admin_plan_revoke_failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -393,19 +462,57 @@ export const adminRoutes = async (app: FastifyInstance) => {
     }
 
     const { user_id: userId, email, role } = parsed.data
+    const adminId = request.user?.user_id ?? 'unknown'
 
     try {
-      const updated = userId
-        ? await userAccountRepository.updateUserRole({ user_id: userId, app_role: role })
-        : await userAccountRepository.updateUserRoleByEmail(email!, role)
-
-      if (!updated) {
-                throw new NotFoundError('Not found', { details: { error: 'not_found' } })
-      }
+      const client = await planeAPool.connect()
+      let updated: UserRoleRecord | null = null
 
       try {
-        await logAuditEvent(planeAPool, {
-          actorId: request.user?.user_id ?? 'unknown',
+        await client.query('BEGIN')
+
+        updated = userId
+          ? (await query<UserRoleRecord>(
+              `
+              UPDATE silver.user_account
+              SET app_role = $2,
+                  last_seen_at = NOW()
+              WHERE user_id = $1
+              RETURNING user_id,
+                        email,
+                        app_role,
+                        created_at::text,
+                        last_seen_at::text,
+                        privacy_analytics_enabled,
+                        privacy_personalization_enabled
+              `,
+              [userId, role],
+              client,
+            )).rows[0] ?? null
+          : (await query<UserRoleRecord>(
+              `
+              UPDATE silver.user_account
+              SET app_role = $2,
+                  last_seen_at = NOW()
+              WHERE LOWER(email) = LOWER($1)
+              RETURNING user_id,
+                        email,
+                        app_role,
+                        created_at::text,
+                        last_seen_at::text,
+                        privacy_analytics_enabled,
+                        privacy_personalization_enabled
+              `,
+              [email!, role],
+              client,
+            )).rows[0] ?? null
+
+        if (!updated) {
+          throw new NotFoundError('Not found', { details: { error: 'not_found' } })
+        }
+
+        await logAuditEvent(client, {
+          actorId: adminId,
           actorType: 'admin',
           actorRole: request.user?.role ?? undefined,
           action: 'admin.role.updated',
@@ -419,14 +526,18 @@ export const adminRoutes = async (app: FastifyInstance) => {
           },
           ...getRequestContext(request),
         })
-      } catch (auditError) {
-        logger.warn('admin_role_audit_failed', {
-          error: auditError instanceof Error ? auditError.message : String(auditError),
-        })
+
+        await client.query('COMMIT')
+      } catch (error) {
+        await client.query('ROLLBACK')
+        throw error
+      } finally {
+        client.release()
       }
 
       return { user: updated }
     } catch (error) {
+      if (error instanceof AppError) throw error
       logger.error('admin_role_update_failed', {
         error: error instanceof Error ? error.message : String(error),
       })

@@ -24,6 +24,8 @@ describe('pulse screener route', () => {
 
     app = {
       get: vi.fn(),
+      post: vi.fn(),
+      delete: vi.fn(),
       container: {
         pool: {},
         repositories: {
@@ -45,6 +47,7 @@ describe('pulse screener route', () => {
 
   it('returns rows with dataAvailable=false when cache entries are missing', async () => {
     mockGetEntries.mockResolvedValue([])
+    mockQuery.mockResolvedValue({ rows: [] })
 
     const handler = vi
       .mocked(app.get)
@@ -62,7 +65,8 @@ describe('pulse screener route', () => {
     expect(result.rows[0].updatedAt).toBeNull()
     expect(result.rows[0].bestProvider).toBeNull()
     expect(result.rows[0].smartSendLevel).toBeNull()
-    expect(mockQuery).not.toHaveBeenCalled()
+    expect(mockQuery).toHaveBeenCalledTimes(1)
+    expect(mockQuery.mock.calls[0][0]).toContain('FROM gold_export.triangulated_index')
   })
 
   it('returns parsed screener metrics when all required cache entries exist', async () => {
@@ -159,4 +163,3 @@ describe('pulse screener route', () => {
     expect(sql).toContain('corridor_id = ANY($1)')
   })
 })
-

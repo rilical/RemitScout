@@ -57,6 +57,22 @@ describe('admin layout', () => {
       },
     })
 
+  it('bootstraps an admin session on mount', async () => {
+    mountLayout()
+    await nextTick()
+
+    expect(ensureAdminSession).toHaveBeenCalledTimes(1)
+  })
+
+  it('redirects to sign-in when admin session bootstrap fails', async () => {
+    ensureAdminSession.mockResolvedValueOnce(false)
+
+    mountLayout()
+    await nextTick()
+
+    expect(navigateTo).toHaveBeenCalledWith('/sign-in')
+  })
+
   it('signs out and redirects to sign-in', async () => {
     const wrapper = mountLayout()
     await nextTick()

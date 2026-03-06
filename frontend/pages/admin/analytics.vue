@@ -460,6 +460,7 @@ unit="number"
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import type { ChartSeries } from '~/types/pulse'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -701,14 +702,14 @@ const loadAnalytics = async () => {
     const failures = results.filter(r => r.status === 'rejected')
     if (failures.length === results.length) {
       const reason = (failures[0] as PromiseRejectedResult).reason
-      error.value = reason?.message || 'All analytics endpoints failed to load.'
+      error.value = getAdminApiErrorMessage(reason, 'All analytics endpoints failed to load.')
     }
     else if (failures.length > 0) {
       error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
     }
   }
   catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Failed to load analytics.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to load analytics.')
   }
   finally {
     isLoading.value = false

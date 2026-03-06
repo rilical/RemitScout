@@ -29,6 +29,7 @@ import { VolatilityService } from './services/volatility-service'
 import { runStartupChecks } from '../../shared/startup'
 import { recordCloudWatchMetric } from '../../shared/cloudwatch-metrics'
 import { emitOpsEvent } from '../../shared/ops-events'
+import { resolveIngestFanoutQueueState } from '../../shared/ingest-fanout-queues'
 
 initErrorTracking('plane-b')
 initTracing('plane-b')
@@ -45,11 +46,15 @@ const ingestFanoutQueueUrl = config.queues.ingestFanout.url
 const ingestFanoutQueueTier1Url = config.queues.ingestFanout.tier1Url
 const ingestFanoutQueueTier2Url = config.queues.ingestFanout.tier2Url
 const disableTier1 = config.planeB.disableTier1
-const ingestFanoutTiered = Boolean(ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url)
-const ingestFanoutTierMisconfigured =
-  (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
-  && !ingestFanoutTiered
-const ingestFanoutEnabled = ingestFanoutMode !== 'off' && Boolean(ingestFanoutQueueUrl)
+const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+  mode: ingestFanoutMode,
+  url: ingestFanoutQueueUrl,
+  tier1Url: ingestFanoutQueueTier1Url,
+  tier2Url: ingestFanoutQueueTier2Url,
+})
+const ingestFanoutTiered = ingestFanoutQueueState.tieredConfigured
+const ingestFanoutTierMisconfigured = ingestFanoutQueueState.tierMisconfigured
+const ingestFanoutEnabled = ingestFanoutQueueState.enabled
 const VALID_FANOUT_MESSAGE_MODES = ['corridor', 'provider'] as const
 type FanoutMessageMode = (typeof VALID_FANOUT_MESSAGE_MODES)[number]
 const rawFanoutMessageMode = process.env.PLANE_B_INGEST_FANOUT_MESSAGE_MODE
@@ -846,8 +851,10 @@ export const runIngestion = async (options: IngestOptions = {}) => {
 
         logger.info('ingestion_start', { mode: 'collector' })
         if (ingestFanoutMode !== 'off') {
-          if (!ingestFanoutQueueUrl) {
-            logger.warn('ingest_fanout_disabled', { reason: 'missing_queue_url' })
+          if (!ingestFanoutEnabled) {
+            logger.warn('ingest_fanout_disabled', {
+              reason: ingestFanoutTierMisconfigured ? 'missing_tier_queues' : 'missing_queue_url',
+            })
           } else {
             logger.info('ingest_fanout_enabled', {
               mode: ingestFanoutMode,

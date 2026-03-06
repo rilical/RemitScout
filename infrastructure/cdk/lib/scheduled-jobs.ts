@@ -18,7 +18,7 @@ import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
 import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
-import { resolveTracingEnv } from './newrelic-observability'
+import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
 
 type ProviderCatalogFile = {
   version: number
@@ -308,7 +308,7 @@ export const createScheduledJobs = (
   const logRetention = options.envName === 'prod'
     ? RetentionDays.ONE_MONTH
     : (isDev ? RetentionDays.THREE_DAYS : RetentionDays.TWO_WEEKS)
-  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
+  const cloudwatchMetricsEnabled = resolveCloudWatchMetricsEnabled(options.envName)
   const resolvedTracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',

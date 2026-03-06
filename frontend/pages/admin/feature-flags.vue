@@ -203,6 +203,7 @@
 import { computed } from 'vue'
 import { DataTable } from '~/ui'
 import type { DataTableColumn } from '~/ui'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -342,7 +343,7 @@ const loadFlags = async () => {
     }
   }
   catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load feature flags.'
+    error.value = getAdminApiErrorMessage(err, 'Failed to load feature flags.')
   }
   finally {
     loading.value = false
@@ -387,7 +388,7 @@ const createFlag = async () => {
     await loadFlags()
   }
   catch (err) {
-    createMessage.value = err instanceof Error ? err.message : 'Failed to create feature flag.'
+    createMessage.value = getAdminApiErrorMessage(err, 'Failed to create feature flag.')
     createSuccess.value = false
   }
   finally {
@@ -420,7 +421,7 @@ const saveSelectedFlag = async () => {
     await loadFlags()
   }
   catch (err) {
-    saveMessage.value = err instanceof Error ? err.message : 'Failed to update feature flag.'
+    saveMessage.value = getAdminApiErrorMessage(err, 'Failed to update feature flag.')
     saveSuccess.value = false
   }
   finally {

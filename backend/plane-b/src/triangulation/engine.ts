@@ -1,19 +1,30 @@
 import type { Pool } from 'pg'
 import { randomUUID } from 'node:crypto'
-import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { parseCorridorId } from '../../../shared/corridor'
+import { CorridorStressCalculator } from './corridor-stress'
 
 const logger = createLogger('plane-b.triangulation.engine')
 
 /**
- * Triangulated index result for a corridor.
+ * Corridor-level composite signal used by the triangulation API/job.
  */
+export type TriangulatedSignal = {
+  signalKey: string
+  signalLayer: 'price' | 'friction' | 'volatility' | 'stress'
+  source: string
+  value: number | null
+  confidence: number
+  weightedContribution: number
+}
+
 export type TriangulatedResult = {
   corridorId: string
   amountBucket: number
   methodProfile: string
   date: string
+  teer: number | null
+  rci: number | null
+  rviBps: number | null
   leg1Corridor: string
   leg2Corridor: string
   leg1Teer: number | null
@@ -22,12 +33,9 @@ export type TriangulatedResult = {
   triangulatedRci: number | null
   stressScore: number | null
   confidence: 'high' | 'medium' | 'low'
+  contributingSignals: TriangulatedSignal[]
   methodologyVersion: string
 }
-
-// ---------------------------------------------------------------------------
-// Stress Signal types for adaptive probing
-// ---------------------------------------------------------------------------
 
 /**
  * Signal type categories indicating the nature of the stress source.
@@ -65,40 +73,115 @@ export type StressSignal = {
   source: string
 }
 
-/**
- * Triangulation leg — a direct corridor used in the two-leg computation.
- */
-type TriangulationLeg = {
-  corridorId: string
-  teer: number | null
-  rci: number | null
-  providerCount: number
-  freshness: number // minutes since last quote
+
+type CompositeIndexRow = {
+  corridor_id: string
+  amount_bucket: number
+  method_profile: string
+  date: string
+  teer_rate: number | null
+  rci_ratio: number | null
+  rvi_bps: number | null
+  provider_count: number
+  suppression_flag: boolean
+  suppression_reason: string | null
+  weight_confidence: number | null
+}
+
+type FactorRow = {
+  name: string
+  source: string
+  value: number
+  confidence: string
+  observed_at: string
+}
+
+const clamp01 = (value: number): number => Math.max(0, Math.min(1, value))
+
+const resolveUtcDayBounds = (date: string) => {
+  const start = new Date(`${date}T00:00:00.000Z`)
+  if (Number.isNaN(start.getTime())) {
+    throw new Error(`Invalid triangulation date: ${date}`)
+  }
+  return {
+    start,
+    end: new Date(start.getTime() + 86_400_000 - 1),
+  }
+}
+
+const factorConfidenceToScore = (confidence: string): number => {
+  switch (confidence) {
+    case 'authoritative':
+      return 1
+    case 'high':
+      return 0.85
+    case 'medium':
+      return 0.65
+    case 'low':
+      return 0.35
+    case 'estimated':
+      return 0.2
+    default:
+      return 0.25
+  }
+}
+
+const classifyFactorLayer = (
+  source: string,
+): TriangulatedSignal['signalLayer'] | null => {
+  if (source === 'fx_mid_market' || source === 'fx_card_network' || source === 'fx_interbank') {
+    return 'price'
+  }
+  if (source === 'regulatory' || source === 'infrastructure' || source === 'economic_indicator') {
+    return 'friction'
+  }
+  if (source === 'geopolitical') {
+    return 'stress'
+  }
+  return null
+}
+
+export const computeCompositeConfidenceScore = (input: {
+  weightConfidence: number | null
+  suppressionFlag: boolean
+  stressScore: number
+  hasPriceSignal: boolean
+  hasFrictionSignal: boolean
+  hasVolatilitySignal: boolean
+  hasStressSignal: boolean
+}): number => {
+  const base = clamp01(input.weightConfidence ?? 0.5)
+  const layerCoverage =
+    (input.hasPriceSignal ? 0.35 : 0) +
+    (input.hasFrictionSignal ? 0.25 : 0) +
+    (input.hasVolatilitySignal ? 0.25 : 0) +
+    (input.hasStressSignal ? 0.15 : 0)
+  const suppressionPenalty = input.suppressionFlag ? 0.2 : 0
+  const stressPenalty = clamp01(input.stressScore) * 0.2
+  return clamp01((base * 0.55) + (layerCoverage * 0.45) - suppressionPenalty - stressPenalty)
+}
+
+const confidenceLevelFromScore = (
+  score: number,
+): TriangulatedResult['confidence'] => {
+  if (score >= 0.75) return 'high'
+  if (score >= 0.45) return 'medium'
+  return 'low'
 }
 
 /**
- * Triangulation Engine — computes synthetic corridor indices via two-leg paths.
+ * Triangulation Engine — persists corridor-level composite outputs for the
+ * triangulated index API surface.
  *
- * For corridors without enough direct provider coverage, the engine:
- * 1. Finds two-leg paths through a common intermediary (e.g., USD)
- * 2. Combines TEER/RCI from each leg weighted by provider coverage and freshness
- * 3. Produces triangulated index values with confidence scoring
- * 4. Persists results to `gold_export.triangulated_index`
- *
- * Example: GBP→KES can be triangulated via GBP→USD + USD→KES
+ * The persisted row keeps the legacy table shape but no longer treats
+ * currency-pair legs as corridor legs. Instead it reads the canonical daily
+ * corridor indices plus factor/stress context and stores a composite result
+ * with explicit contributing signals.
  */
 export class TriangulationEngine {
   private readonly pool: Pool
-  private readonly methodologyVersion = 'triangulation_v1'
-
-  // Intermediary currencies for triangulation paths (configurable via TRIANGULATION_INTERMEDIARIES)
-  private readonly intermediaries = config.triangulation.intermediaries
-
-  // Minimum provider count per leg for meaningful triangulation
-  private readonly minProvidersPerLeg = 2
-
-  // Maximum freshness in minutes for a leg to be considered valid
-  private readonly maxFreshnessMinutes = 120
+  private readonly methodologyVersion = 'triangulation_v2_corridor_composite'
+  private readonly stressCalculator: CorridorStressCalculator
 
   // ---------------------------------------------------------------------------
   // In-memory stress signal store (keyed by signalId)
@@ -111,6 +194,7 @@ export class TriangulationEngine {
 
   constructor(pool: Pool) {
     this.pool = pool
+    this.stressCalculator = new CorridorStressCalculator(pool)
   }
 
   // ---------------------------------------------------------------------------
@@ -322,13 +406,18 @@ export class TriangulationEngine {
    * Get all non-expired active signals for a corridor.
    */
   getActiveSignalsForCorridor(corridorId: string): StressSignal[] {
-    const now = Date.now()
+    return this.getSignalsActiveAt(corridorId, new Date())
+  }
+
+  private getSignalsActiveAt(corridorId: string, asOf: Date): StressSignal[] {
+    const asOfMs = asOf.getTime()
     const result: StressSignal[] = []
 
     for (const signal of this.activeSignals.values()) {
       if (signal.corridorId !== corridorId) continue
+      const detectedAtMs = new Date(signal.detectedAt).getTime()
       const expiresAt = new Date(signal.detectedAt).getTime() + signal.ttlSeconds * 1000
-      if (now < expiresAt) {
+      if (detectedAtMs <= asOfMs && asOfMs < expiresAt) {
         result.push(signal)
       }
     }
@@ -359,7 +448,7 @@ export class TriangulationEngine {
   }
 
   /**
-   * Run triangulation for all eligible corridors.
+   * Run corridor-level composite generation for the selected amount buckets.
    */
   async triangulate(options: {
     date?: string
@@ -368,15 +457,13 @@ export class TriangulationEngine {
   } = {}): Promise<TriangulatedResult[]> {
     const date = options.date ?? new Date().toISOString().slice(0, 10)
     const amountBuckets = options.amountBuckets ?? [500]
-    const methodProfile = options.methodProfile ?? 'bank_transfer:bank_deposit'
+    const methodProfile = options.methodProfile ?? 'standard_bank'
     const results: TriangulatedResult[] = []
 
-    // Find corridors that need triangulation (low direct coverage)
-    const eligibleCorridors = await this.findEligibleCorridors(date, amountBuckets[0], methodProfile)
-
-    for (const corridor of eligibleCorridors) {
-      for (const amountBucket of amountBuckets) {
-        const result = await this.triangulateCorridor(corridor, amountBucket, methodProfile, date)
+    for (const amountBucket of amountBuckets) {
+      const baseRows = await this.loadCompositeRows(date, amountBucket, methodProfile)
+      for (const row of baseRows) {
+        const result = await this.buildCompositeResult(row)
         if (result) {
           await this.persistResult(result)
           results.push(result)
@@ -386,7 +473,7 @@ export class TriangulationEngine {
 
     logger.info('triangulation_complete', {
       date,
-      corridorsProcessed: eligibleCorridors.length,
+      corridorsProcessed: results.length,
       resultsProduced: results.length,
     })
 
@@ -394,243 +481,215 @@ export class TriangulationEngine {
   }
 
   /**
-   * Find corridors eligible for triangulation (insufficient direct data).
+   * Load the most recent corridor-level Gold rows on or before the requested date.
    */
-  private async findEligibleCorridors(
+  private async loadCompositeRows(
     date: string,
     amountBucket: number,
     methodProfile: string,
-  ): Promise<string[]> {
-    // Get all known corridors
-    const { rows: allCorridors } = await this.pool.query<{ corridor_id: string }>(
-      `SELECT DISTINCT corridor_id FROM silver.observation
-       WHERE type = 'quote' AND observed_at >= $1::date - INTERVAL '7 days'`,
-      [date],
+  ): Promise<CompositeIndexRow[]> {
+    const { rows } = await this.pool.query<CompositeIndexRow>(
+      `SELECT DISTINCT ON (corridor_id)
+              corridor_id,
+              amount_bucket::int AS amount_bucket,
+              method_profile,
+              date::text AS date,
+              teer_rate::double precision AS teer_rate,
+              rci_ratio::double precision AS rci_ratio,
+              rvi_bps::double precision AS rvi_bps,
+              provider_count::int AS provider_count,
+              suppression_flag,
+              suppression_reason,
+              weight_confidence::double precision AS weight_confidence
+         FROM gold_export.cdp_daily
+        WHERE amount_bucket = $1
+          AND method_profile = $2
+          AND date <= $3::date
+        ORDER BY corridor_id, date DESC`,
+      [amountBucket, methodProfile, date],
     )
-
-    // Get corridors with sufficient direct coverage
-    const { rows: coveredCorridors } = await this.pool.query<{ corridor_id: string; provider_count: number }>(
-      `SELECT corridor_id, COUNT(DISTINCT provider_id) as provider_count
-       FROM silver.observation
-       WHERE type = 'quote' AND observed_at >= $1::date - INTERVAL '1 day'
-         AND amount_bucket = $2
-       GROUP BY corridor_id
-       HAVING COUNT(DISTINCT provider_id) >= 3`,
-      [date, amountBucket],
-    )
-
-    const coveredSet = new Set(coveredCorridors.map((r) => r.corridor_id))
-    return allCorridors
-      .map((r) => r.corridor_id)
-      .filter((c) => !coveredSet.has(c))
+    return rows
   }
 
   /**
-   * Triangulate a single corridor via two-leg paths.
+   * Build a corridor-level composite result using Gold indices, factor signals,
+   * and active stress signals.
    */
-  private async triangulateCorridor(
-    corridorId: string,
-    amountBucket: number,
-    methodProfile: string,
-    date: string,
+  private async buildCompositeResult(
+    row: CompositeIndexRow,
   ): Promise<TriangulatedResult | null> {
-    // Corridor ID is 4-part: sourceCountry-destCountry-sourceCurrency-destCurrency
-    // e.g. "US-PH-USD-PHP" — extract currency codes at positions 2 and 3
-    const parsed = parseCorridorId(corridorId)
-    if (!parsed) return null
-    const { sourceCurrency: sendCurrency, destCurrency: receiveCurrency } = parsed
+    const asOf = resolveUtcDayBounds(row.date).end
+    const asOfIso = asOf.toISOString()
+    const [factorRows, dbStressRows] = await Promise.all([
+      this.loadFactors(row.corridor_id, row.date),
+      this.pool.query<{
+        signal_id: string
+        corridor_id: string
+        signal_type: string
+        intensity: string
+        source: string
+        detected_at: string
+        expires_at: string
+      }>(
+        `SELECT signal_id, corridor_id, signal_type, intensity, source, detected_at, expires_at
+           FROM silver.stress_signal
+          WHERE corridor_id = $1
+            AND detected_at <= $2
+            AND expires_at > $2
+          ORDER BY detected_at DESC`,
+        [row.corridor_id, asOfIso],
+      ),
+    ])
 
-    let bestResult: TriangulatedResult | null = null
-    let bestConfidenceScore = 0
+    const activeSignals = [
+      ...this.getSignalsActiveAt(row.corridor_id, asOf),
+      ...dbStressRows.rows.map((signal) => {
+        const detectedAt = new Date(signal.detected_at)
+        const expiresAt = new Date(signal.expires_at)
+        return {
+          signalId: signal.signal_id,
+          corridorId: signal.corridor_id,
+          signalType: signal.signal_type as StressSignalType,
+          intensity: parseFloat(signal.intensity),
+          detectedAt: detectedAt.toISOString(),
+          ttlSeconds: Math.max(0, Math.round((expiresAt.getTime() - detectedAt.getTime()) / 1000)),
+          source: signal.source,
+        } satisfies StressSignal
+      }),
+    ]
 
-    for (const intermediary of this.intermediaries) {
-      if (intermediary === sendCurrency || intermediary === receiveCurrency) continue
+    const seenStressSignals = new Set<string>()
+    const dedupedSignals = activeSignals.filter((signal) => {
+      if (seenStressSignals.has(signal.signalId)) return false
+      seenStressSignals.add(signal.signalId)
+      return true
+    })
 
-      const leg1Id = `${sendCurrency}-${intermediary}`
-      const leg2Id = `${intermediary}-${receiveCurrency}`
-
-      const leg1 = await this.loadLeg(leg1Id, amountBucket, date)
-      const leg2 = await this.loadLeg(leg2Id, amountBucket, date)
-
-      if (!leg1 || !leg2) continue
-      if (leg1.providerCount < this.minProvidersPerLeg || leg2.providerCount < this.minProvidersPerLeg) continue
-      if (leg1.freshness > this.maxFreshnessMinutes || leg2.freshness > this.maxFreshnessMinutes) continue
-
-      // Combine legs
-      const triangulatedTeer = leg1.teer !== null && leg2.teer !== null
-        ? this.combineTeer(leg1.teer, leg2.teer)
-        : null
-
-      const triangulatedRci = leg1.rci !== null && leg2.rci !== null
-        ? this.combineRci(leg1.rci, leg2.rci, leg1.providerCount, leg2.providerCount)
-        : null
-
-      const stressScore = this.computeStressScore(corridorId, leg1, leg2)
-      const confidence = this.assessConfidence(corridorId, leg1, leg2)
-      const confidenceScore = confidence === 'high' ? 3 : confidence === 'medium' ? 2 : 1
-
-      if (confidenceScore > bestConfidenceScore) {
-        bestConfidenceScore = confidenceScore
-        bestResult = {
-          corridorId,
-          amountBucket,
-          methodProfile,
-          date,
-          leg1Corridor: leg1Id,
-          leg2Corridor: leg2Id,
-          leg1Teer: leg1.teer,
-          leg2Teer: leg2.teer,
-          triangulatedTeer,
-          triangulatedRci,
-          stressScore,
-          confidence,
-          methodologyVersion: this.methodologyVersion,
-        }
-      }
-    }
-
-    return bestResult
-  }
-
-  /**
-   * Load index data for a single leg identified by a currency pair.
-   *
-   * The legId is a 2-part string like "USD-EUR" (sourceCurrency-destCurrency).
-   * Since corridor_id in the database is 4-part ("US-GB-USD-GBP"), we join
-   * through silver.corridor to match by source_currency and dest_currency.
-   */
-  private async loadLeg(legId: string, amountBucket: number, date: string): Promise<TriangulationLeg | null> {
-    const legParts = legId.split('-')
-    if (legParts.length !== 2 || !legParts[0] || !legParts[1]) return null
-    const [legSourceCurrency, legDestCurrency] = legParts
-
-    const { rows } = await this.pool.query<{
-      teer: string | null
-      rci: string | null
-      provider_count: string
-      max_observed: string
-    }>(
-      `SELECT
-         AVG(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END) as teer,
-         STDDEV(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END)
-           / NULLIF(AVG(CASE WHEN (payload->>'exchange_rate')::numeric > 0 THEN (payload->>'exchange_rate')::numeric END), 0) as rci,
-         COUNT(DISTINCT o.provider_id) as provider_count,
-         MAX(o.observed_at) as max_observed
-       FROM silver.observation o
-       JOIN silver.corridor c ON c.corridor_id = o.corridor_id
-       WHERE c.source_currency = $1 AND c.dest_currency = $2
-         AND o.type = 'quote' AND o.amount_bucket = $3
-         AND o.observed_at >= $4::date - INTERVAL '1 day'
-         AND o.confidence IN ('high', 'medium')`,
-      [legSourceCurrency, legDestCurrency, amountBucket, date],
+    const stressAssessment = this.stressCalculator.computeMultiSignalStress(
+      row.corridor_id,
+      dedupedSignals,
+      { asOf },
     )
+    const stressScore = stressAssessment.compositeScore
 
-    if (rows.length === 0 || !rows[0].provider_count || rows[0].provider_count === '0') {
-      return null
+    const contributingSignals: TriangulatedSignal[] = []
+    if (row.teer_rate !== null) {
+      contributingSignals.push({
+        signalKey: 'teer_baseline',
+        signalLayer: 'price',
+        source: 'gold_export.cdp_daily',
+        value: row.teer_rate,
+        confidence: clamp01(row.weight_confidence ?? 0.5),
+        weightedContribution: 0.35,
+      })
+    }
+    if (row.rci_ratio !== null) {
+      contributingSignals.push({
+        signalKey: 'rci_baseline',
+        signalLayer: 'friction',
+        source: 'gold_export.cdp_daily',
+        value: row.rci_ratio,
+        confidence: clamp01(row.weight_confidence ?? 0.5),
+        weightedContribution: 0.25,
+      })
+    }
+    if (row.rvi_bps !== null) {
+      contributingSignals.push({
+        signalKey: 'rvi_baseline',
+        signalLayer: 'volatility',
+        source: 'gold_export.cdp_daily',
+        value: row.rvi_bps,
+        confidence: clamp01(row.weight_confidence ?? 0.5),
+        weightedContribution: 0.25,
+      })
     }
 
-    const maxObserved = rows[0].max_observed ? new Date(rows[0].max_observed) : null
-    const freshness = maxObserved ? (Date.now() - maxObserved.getTime()) / 60_000 : Infinity
+    for (const factor of factorRows) {
+      const layer = classifyFactorLayer(factor.source)
+      if (!layer) continue
+      const confidence = factorConfidenceToScore(factor.confidence)
+      contributingSignals.push({
+        signalKey: `${factor.source}:${factor.name}`,
+        signalLayer: layer,
+        source: factor.source,
+        value: factor.value,
+        confidence,
+        weightedContribution: layer === 'price' ? confidence * 0.1 : layer === 'friction' ? confidence * 0.08 : confidence * 0.05,
+      })
+    }
+
+    for (const signal of stressAssessment.contributingSignals) {
+      contributingSignals.push({
+        signalKey: `stress:${signal.signalType}`,
+        signalLayer: 'stress',
+        source: 'silver.stress_signal',
+        value: signal.intensity,
+        confidence: clamp01(signal.weight),
+        weightedContribution: clamp01(signal.weightedContribution),
+      })
+    }
+
+    const confidenceScore = computeCompositeConfidenceScore({
+      weightConfidence: row.weight_confidence,
+      suppressionFlag: row.suppression_flag,
+      stressScore,
+      hasPriceSignal: contributingSignals.some((signal) => signal.signalLayer === 'price'),
+      hasFrictionSignal: contributingSignals.some((signal) => signal.signalLayer === 'friction'),
+      hasVolatilitySignal: contributingSignals.some((signal) => signal.signalLayer === 'volatility'),
+      hasStressSignal: contributingSignals.some((signal) => signal.signalLayer === 'stress'),
+    })
 
     return {
-      corridorId: legId,
-      teer: rows[0].teer ? parseFloat(rows[0].teer) : null,
-      rci: rows[0].rci ? parseFloat(rows[0].rci) : null,
-      providerCount: parseInt(rows[0].provider_count, 10),
-      freshness,
+      corridorId: row.corridor_id,
+      amountBucket: row.amount_bucket,
+      methodProfile: row.method_profile,
+      date: row.date,
+      teer: row.teer_rate,
+      rci: row.rci_ratio,
+      rviBps: row.rvi_bps,
+      leg1Corridor: row.corridor_id,
+      leg2Corridor: row.corridor_id,
+      leg1Teer: row.teer_rate,
+      leg2Teer: null,
+      triangulatedTeer: row.teer_rate,
+      triangulatedRci: row.rci_ratio,
+      stressScore,
+      confidence: confidenceLevelFromScore(confidenceScore),
+      contributingSignals: contributingSignals.sort((a, b) => b.weightedContribution - a.weightedContribution),
+      methodologyVersion: this.methodologyVersion,
     }
   }
 
-  /**
-   * Combine TEER from two legs (multiply exchange rates).
-   */
-  private combineTeer(leg1Teer: number, leg2Teer: number): number {
-    return leg1Teer * leg2Teer
+  private async loadFactors(corridorId: string, date: string): Promise<FactorRow[]> {
+    const { rows } = await this.pool.query<FactorRow>(
+      `SELECT
+         name,
+         source,
+         value::double precision AS value,
+         confidence,
+         observed_at::text AS observed_at
+       FROM gold_export.factor
+       WHERE corridor_id = $1
+         AND observed_at >= $2::date - INTERVAL '3 days'
+         AND observed_at < $2::date + INTERVAL '1 day'
+       ORDER BY observed_at DESC
+       LIMIT 25`,
+      [corridorId, date],
+    )
+    return rows
   }
 
   /**
-   * Combine RCI from two legs (root-sum-square weighted by provider count).
-   */
-  private combineRci(leg1Rci: number, leg2Rci: number, leg1Providers: number, leg2Providers: number): number {
-    const totalProviders = leg1Providers + leg2Providers
-    const w1 = leg1Providers / totalProviders
-    const w2 = leg2Providers / totalProviders
-    return Math.sqrt(w1 * leg1Rci * leg1Rci + w2 * leg2Rci * leg2Rci)
-  }
-
-  /**
-   * Compute corridor stress score from leg metrics and active stress signals.
-   *
-   * The score combines three components:
-   * 1. RCI volatility from each leg (up to 0.3 each)
-   * 2. Data freshness from each leg (up to 0.1 each)
-   * 3. Active stress signals for the corridor and its legs (up to 0.2)
-   */
-  private computeStressScore(corridorId: string, leg1: TriangulationLeg, leg2: TriangulationLeg): number {
-    let score = 0
-
-    // RCI contribution (higher RCI = more volatile = more stress)
-    if (leg1.rci !== null) score += Math.min(leg1.rci * 2, 0.3)
-    if (leg2.rci !== null) score += Math.min(leg2.rci * 2, 0.3)
-
-    // Freshness contribution (staler data = more uncertain = more stress)
-    score += Math.min(leg1.freshness / this.maxFreshnessMinutes, 1) * 0.1
-    score += Math.min(leg2.freshness / this.maxFreshnessMinutes, 1) * 0.1
-
-    // Active stress signal contribution
-    const corridorSignals = this.getActiveSignalsForCorridor(corridorId)
-    const leg1Signals = this.getActiveSignalsForCorridor(leg1.corridorId)
-    const leg2Signals = this.getActiveSignalsForCorridor(leg2.corridorId)
-    const allSignals = [...corridorSignals, ...leg1Signals, ...leg2Signals]
-
-    if (allSignals.length > 0) {
-      // Take the max intensity across all related signals, capped at 0.2
-      const maxIntensity = Math.max(...allSignals.map((s) => s.intensity))
-      score += Math.min(maxIntensity * 0.2, 0.2)
-    }
-
-    return Math.min(score, 1)
-  }
-
-  /**
-   * Assess confidence in the triangulated result.
-   *
-   * Confidence is downgraded when active stress signals indicate
-   * corridor instability (e.g. provider dropouts or rate deviations).
-   */
-  private assessConfidence(corridorId: string, leg1: TriangulationLeg, leg2: TriangulationLeg): 'high' | 'medium' | 'low' {
-    const minProviders = Math.min(leg1.providerCount, leg2.providerCount)
-    const maxFreshness = Math.max(leg1.freshness, leg2.freshness)
-
-    let confidence: 'high' | 'medium' | 'low'
-    if (minProviders >= 5 && maxFreshness <= 30) confidence = 'high'
-    else if (minProviders >= 3 && maxFreshness <= 60) confidence = 'medium'
-    else confidence = 'low'
-
-    // Downgrade confidence if high-intensity stress signals are active
-    const signals = [
-      ...this.getActiveSignalsForCorridor(corridorId),
-      ...this.getActiveSignalsForCorridor(leg1.corridorId),
-      ...this.getActiveSignalsForCorridor(leg2.corridorId),
-    ]
-    const highIntensityCount = signals.filter((s) => s.intensity >= 0.7).length
-    if (highIntensityCount >= 2 && confidence === 'high') confidence = 'medium'
-    if (highIntensityCount >= 3) confidence = 'low'
-
-    return confidence
-  }
-
-  /**
-   * Persist a triangulated result to the database.
+   * Persist a corridor-level composite result to the database.
    */
   private async persistResult(result: TriangulatedResult): Promise<void> {
     await this.pool.query(
       `INSERT INTO gold_export.triangulated_index
        (corridor_id, amount_bucket, method_profile, date,
         leg1_corridor, leg2_corridor, leg1_teer, leg2_teer,
-        triangulated_teer, triangulated_rci, stress_score,
-        confidence, methodology_version)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        triangulated_teer, triangulated_rci, composite_rvi_bps, stress_score,
+        confidence, contributing_signals, lineage, methodology_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15::jsonb, $16)
        ON CONFLICT (corridor_id, amount_bucket, method_profile, date)
        DO UPDATE SET
          leg1_corridor = EXCLUDED.leg1_corridor,
@@ -639,14 +698,22 @@ export class TriangulationEngine {
          leg2_teer = EXCLUDED.leg2_teer,
          triangulated_teer = EXCLUDED.triangulated_teer,
          triangulated_rci = EXCLUDED.triangulated_rci,
+         composite_rvi_bps = EXCLUDED.composite_rvi_bps,
          stress_score = EXCLUDED.stress_score,
          confidence = EXCLUDED.confidence,
+         contributing_signals = EXCLUDED.contributing_signals,
+         lineage = EXCLUDED.lineage,
          methodology_version = EXCLUDED.methodology_version`,
       [
         result.corridorId, result.amountBucket, result.methodProfile, result.date,
         result.leg1Corridor, result.leg2Corridor, result.leg1Teer, result.leg2Teer,
-        result.triangulatedTeer, result.triangulatedRci, result.stressScore,
-        result.confidence, result.methodologyVersion,
+        result.triangulatedTeer, result.triangulatedRci, result.rviBps, result.stressScore,
+        result.confidence, JSON.stringify(result.contributingSignals), JSON.stringify({
+          source: 'gold_export.cdp_daily',
+          corridor_id: result.corridorId,
+          method_profile: result.methodProfile,
+          methodology_version: result.methodologyVersion,
+        }), result.methodologyVersion,
       ],
     )
   }

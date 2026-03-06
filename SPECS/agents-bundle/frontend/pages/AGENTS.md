@@ -2,7 +2,7 @@
 entrypoints:
   - "frontend/pages/send-money/[from]-to-[to].vue"
   - "frontend/pages/providers.vue"
-  - "frontend/pages/pulse.vue"
+  - "frontend/pages/pulse/index.vue"
 evidence_skills:
   - "evidence.http_latency.github_actions"
 common_reason_codes:
@@ -16,7 +16,7 @@ Nuxt route pages for public UI flows (send money, pulse, providers, indices, etc
 Entrypoints:
 - `frontend/pages/send-money/[from]-to-[to].vue`
 - `frontend/pages/providers.vue`
-- `frontend/pages/pulse.vue`
+- `frontend/pages/pulse/index.vue`
 
 Common failure modes:
 - Unbounded client-side computations on large payloads.
@@ -27,4 +27,3 @@ Evidence skills to run:
 
 Do-not-break rules:
 - Keep pages resilient to partial API failures (bounded fallbacks, clear empty states).
-

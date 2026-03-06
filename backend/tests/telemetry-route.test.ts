@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { ValidationError } from '../shared/errors'
 
 const mockCreateOrUpdateSession = vi.fn()
+const mockIncrementDailyUsage = vi.fn()
 const mockRecordOutboundClick = vi.fn()
 const mockRecordProviderVisit = vi.fn()
 
@@ -15,6 +16,10 @@ vi.mock('../shared/redis', () => ({
 }))
 
 vi.mock('../plane-a/src/repositories', () => ({
+  DailyUsageCounterRepository: vi.fn().mockImplementation(() => ({
+    incrementAndGet: mockIncrementDailyUsage,
+    getCount: vi.fn().mockResolvedValue(0),
+  })),
   TelemetryRepository: vi.fn().mockImplementation(() => ({
     createOrUpdateSession: mockCreateOrUpdateSession,
     recordOutboundClick: mockRecordOutboundClick,
@@ -33,6 +38,7 @@ describe('telemetry click route', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    mockIncrementDailyUsage.mockResolvedValue(1)
     mockCreateOrUpdateSession.mockResolvedValue({
       session_id: 'session-12345678',
       anon_id: null,

@@ -1,6 +1,7 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockQuery = vi.fn()
+const mockValidateInstitutionalClientApiKey = vi.fn()
 const mockValidateApiKey = vi.fn()
 
 vi.mock('../shared/db', () => ({
@@ -16,11 +17,19 @@ vi.mock('../shared/redis', () => ({
 
 vi.mock('../plane-a/src/services/api-keys', () => ({
   validateApiKey: (...args: any[]) => mockValidateApiKey(...args),
+  validateApiKeyToken: (...args: any[]) => mockValidateApiKey(...args),
+  hashApiKey: vi.fn((token: string) => token),
   createApiKey: vi.fn(),
   listApiKeys: vi.fn(),
   revokeApiKey: vi.fn(),
   rotateApiKey: vi.fn(),
   countActiveApiKeys: vi.fn(),
+}))
+
+vi.mock('../plane-a/src/services/institutional-clients', () => ({
+  validateInstitutionalClientApiKey: (...args: any[]) => mockValidateInstitutionalClientApiKey(...args),
+  getInstitutionalClientScopes: vi.fn(() => ['indices:read', 'corridors:read']),
+  isInstitutionalClientActive: vi.fn(() => true),
 }))
 
 vi.mock('../plane-a/src/services/user-plan', () => ({
@@ -36,22 +45,44 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
   updatePlanFromStripe: vi.fn(),
 }))
 
-import { buildApp } from '../plane-a/src/app'
 import { getExportTierInfo, TIER_1_CADENCE_SECONDS, TIER_2_CADENCE_SECONDS } from '../shared/corridor-tiers'
 
+const loadIndicesSeriesApp = async () => {
+  vi.resetModules()
+  const { buildApp } = await import('../plane-a/src/app')
+  return buildApp
+}
+
 describe('GET /api/indices/series', () => {
+  const originalCorsOrigins = process.env.PLANE_A_CORS_ORIGINS
+
   beforeEach(() => {
     mockQuery.mockReset()
     mockValidateApiKey.mockReset()
+    mockValidateInstitutionalClientApiKey.mockReset()
+    process.env.PLANE_A_CORS_ORIGINS = 'http://localhost:3000'
+    mockValidateInstitutionalClientApiKey.mockResolvedValue(null)
+  })
+
+  afterAll(() => {
+    if (originalCorsOrigins == null) {
+      delete process.env.PLANE_A_CORS_ORIGINS
+      return
+    }
+    process.env.PLANE_A_CORS_ORIGINS = originalCorsOrigins
   })
 
   it('returns Gold indices for enterprise API keys', async () => {
+    const buildApp = await loadIndicesSeriesApp()
     mockValidateApiKey.mockResolvedValue({
-      key_id: 'key-1',
-      user_id: 'user-123',
-      key_prefix: 'abc12345',
-      name: 'test-key',
-      scopes: ['tier:2', 'indices:read'],
+      status: 'active',
+      apiKey: {
+        key_id: 'key-1',
+        user_id: 'user-123',
+        key_prefix: 'abc12345',
+        name: 'test-key',
+        scopes: ['tier:2', 'indices:read'],
+      },
     })
     mockQuery.mockResolvedValue({
       rows: [
@@ -100,13 +131,14 @@ describe('GET /api/indices/series', () => {
     expect(payload.series[0].teer).toBe(1.23)
     expect(payload.series[0].rvi_bps).toBe(12.34)
     expect(mockQuery).toHaveBeenCalled()
-    const sql = mockQuery.mock.calls[0][0] as string
-    expect(sql).toContain('FROM gold_export.cdp_daily')
+    const executedSql = mockQuery.mock.calls.map(([sql]) => String(sql))
+    expect(executedSql.some((sql) => sql.includes('FROM gold_export.cdp_daily'))).toBe(true)
 
     await app.close()
   })
 
   it('rejects unauthenticated requests', async () => {
+    const buildApp = await loadIndicesSeriesApp()
     const app = await buildApp()
     const response = await app.inject({
       method: 'GET',

@@ -24,6 +24,21 @@ vi.mock('../plane-a/src/services/institutional-clients', () => ({
   getInstitutionalClientScopes: vi.fn().mockReturnValue(['quotes:read', 'indices:read']),
 }))
 
+const mockGetInstitutionalLaunchGate = vi.fn().mockResolvedValue({
+  ready: true,
+  requiredDays: 180,
+  availableDays: 180,
+  reason: 'ready',
+  updatedAt: '2026-03-05T00:00:00.000Z',
+  enforced: false,
+  blocked: false,
+  message: 'Institutional launch gate is open with 180 days of sellable Gold history.',
+})
+
+vi.mock('../plane-a/src/services/institutional-launch', () => ({
+  getInstitutionalLaunchGate: (...args: any[]) => mockGetInstitutionalLaunchGate(...args),
+}))
+
 const makeApp = () =>
   ({
     get: vi.fn(),
@@ -49,6 +64,16 @@ describe('admin-institutional route', () => {
     const { generateApiKeyToken, hashApiKey } = await import('../plane-a/src/services/api-keys')
     vi.mocked(generateApiKeyToken).mockReturnValue('rsk_test_token_abc123')
     vi.mocked(hashApiKey).mockReturnValue('hashed_key_abc123')
+    mockGetInstitutionalLaunchGate.mockResolvedValue({
+      ready: true,
+      requiredDays: 180,
+      availableDays: 180,
+      reason: 'ready',
+      updatedAt: '2026-03-05T00:00:00.000Z',
+      enforced: false,
+      blocked: false,
+      message: 'Institutional launch gate is open with 180 days of sellable Gold history.',
+    })
   })
 
   it('list clients registers admin preHandler', async () => {
@@ -109,6 +134,10 @@ describe('admin-institutional route', () => {
     expect(result).toMatchObject({
       success: true,
       api_key: 'rsk_test_token_abc123',
+      launch_gate: expect.objectContaining({
+        ready: true,
+        blocked: false,
+      }),
     })
 
     const insertCall = mockedQuery.mock.calls.find((c) => typeof c[0] === 'string' && c[0].includes('INSERT'))
@@ -207,6 +236,9 @@ describe('admin-institutional route', () => {
       usage: expect.objectContaining({ total_requests_30d: 42 }),
       exports: expect.arrayContaining([expect.objectContaining({ id: 'e-1' })]),
       scopes: expect.any(Array),
+      launch_gate: expect.objectContaining({
+        ready: true,
+      }),
     })
 
     // Verify usage + export queries were called
@@ -214,5 +246,86 @@ describe('admin-institutional route', () => {
     const exportCall = mockedQuery.mock.calls.find((c) => typeof c[0] === 'string' && c[0].includes('institutional_export_log'))
     expect(usageCall).toBeTruthy()
     expect(exportCall).toBeTruthy()
+  })
+
+  it('creates prod clients as suspended when the launch gate is blocked', async () => {
+    const { query } = await import('../shared/db')
+    const mockedQuery = vi.mocked(query)
+    mockGetInstitutionalLaunchGate.mockResolvedValue({
+      ready: false,
+      requiredDays: 180,
+      availableDays: 45,
+      reason: 'accumulating_history',
+      updatedAt: '2026-03-05T00:00:00.000Z',
+      enforced: true,
+      blocked: true,
+      message: 'Institutional launch is blocked until 180 days of sellable Gold history are available (45 currently available).',
+    })
+    mockedQuery.mockResolvedValue({
+      rows: [{ id: 'c-1', name: 'Acme', client_prefix: 'acme', tier: 'trial', status: 'suspended' }],
+    } as any)
+
+    const app = makeApp()
+    const { adminInstitutionalRoutes } = await import('../plane-a/src/routes/admin-institutional')
+    await adminInstitutionalRoutes(app)
+
+    const handler = getHandler(app, 'post', '/admin/institutional/clients')
+    const reply = { code: vi.fn().mockReturnThis(), send: vi.fn() }
+
+    const result = await handler(
+      {
+        user: { user_id: 'u-1', role: 'admin' },
+        body: {
+          name: 'Acme',
+          client_prefix: 'acme',
+          tier: 'trial',
+          rate_limit_rpm: 60,
+          rate_limit_daily: 10000,
+          report_schedule: 'none',
+        },
+      },
+      reply,
+    )
+
+    expect(result).toMatchObject({
+      success: true,
+      client: expect.objectContaining({ status: 'suspended' }),
+      launch_gate: expect.objectContaining({ blocked: true }),
+    })
+
+    const insertCall = mockedQuery.mock.calls.find((c) => typeof c[0] === 'string' && c[0].includes('INSERT INTO public.institutional_client'))
+    expect(insertCall?.[1]).toContain('suspended')
+  })
+
+  it('blocks activation when the launch gate is closed in prod', async () => {
+    mockGetInstitutionalLaunchGate.mockResolvedValue({
+      ready: false,
+      requiredDays: 180,
+      availableDays: 45,
+      reason: 'accumulating_history',
+      updatedAt: '2026-03-05T00:00:00.000Z',
+      enforced: true,
+      blocked: true,
+      message: 'Institutional launch is blocked until 180 days of sellable Gold history are available (45 currently available).',
+    })
+
+    const app = makeApp()
+    const { adminInstitutionalRoutes } = await import('../plane-a/src/routes/admin-institutional')
+    await adminInstitutionalRoutes(app)
+
+    const handler = getHandler(app, 'post', '/admin/institutional/clients/:id/status')
+    const reply = { code: vi.fn().mockReturnThis(), send: vi.fn() }
+
+    const result = await handler(
+      { params: { id: 'c-1' }, user: { user_id: 'u-1' }, body: { status: 'active' } },
+      reply,
+    )
+
+    expect(reply.code).toHaveBeenCalledWith(409)
+    expect(result).toMatchObject({
+      error: 'institutional_launch_blocked',
+      code: 'institutional_launch_blocked',
+      launch_gate: expect.objectContaining({ blocked: true }),
+    })
   })
 })

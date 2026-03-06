@@ -22,6 +22,26 @@ mode="card"
 :on-retry="loadClients"
 />
 
+      <div
+        v-if="launchGate"
+        class="rounded-2xl border p-5"
+        :class="launchGate.ready ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'"
+      >
+        <div class="text-body-sm font-semibold" :class="launchGate.ready ? 'text-emerald-800' : 'text-amber-900'">
+          {{ launchGate.ready ? 'Institutional launch gate open' : launchGate.enforced ? 'Prod launch hold active' : 'Prod launch hold tracked' }}
+        </div>
+        <p class="mt-1 text-body-sm" :class="launchGate.ready ? 'text-emerald-700' : 'text-amber-800'">
+          {{ launchGateMessage }}
+        </p>
+        <p
+          v-if="launchGate.updated_at"
+          class="mt-2 text-xs"
+          :class="launchGate.ready ? 'text-emerald-600' : 'text-amber-700'"
+        >
+          Latest Gold update: {{ launchGate.updated_at }}
+        </p>
+      </div>
+
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="rounded-2xl bg-surface p-6 shadow-sm">
@@ -250,7 +270,10 @@ class="grid gap-4 md:grid-cols-2"
                 </button>
                 <button
                   v-if="clientFromRow((row as any).raw).status === 'suspended'"
-                  class="text-xs font-medium text-success-600 hover:text-success-700"
+                  :disabled="isActivationBlocked"
+                  class="text-xs font-medium disabled:cursor-not-allowed disabled:text-neutral-400"
+                  :class="isActivationBlocked ? '' : 'text-success-600 hover:text-success-700'"
+                  :title="isActivationBlocked ? launchGate?.message : undefined"
                   @click="changeStatus(clientFromRow((row as any).raw), 'active')"
                 >
                   Reactivate
@@ -510,6 +533,7 @@ import { ref, reactive, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { DataTable } from '~/ui'
 import type { DataTableColumn } from '~/ui'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -542,6 +566,17 @@ type InstitutionalClient = {
   updated_at: string
 }
 
+type LaunchGate = {
+  ready: boolean
+  required_days: number
+  available_days: number
+  reason: string
+  updated_at: string | null
+  enforced?: boolean
+  blocked?: boolean
+  message?: string
+}
+
 type ClientDetail = {
   client: InstitutionalClient
   usage: {
@@ -550,11 +585,13 @@ type ClientDetail = {
   }
   exports: { id: string, export_date: string, export_kind: string, row_count: number, created_at: string }[]
   scopes: string[]
+  launch_gate?: LaunchGate
 }
 
 const loading = ref(true)
 const error = ref<string | null>(null)
 const clients = ref<InstitutionalClient[]>([])
+const launchGate = ref<LaunchGate | null>(null)
 const summaryData = reactive({ active: 0, suspended: 0, revoked: 0, trial: 0, standard: 0, premium: 0 })
 const statusFilter = ref('')
 
@@ -581,6 +618,15 @@ const expandedId = ref<string | null>(null)
 const detailLoading = ref(false)
 const clientDetail = ref<ClientDetail | null>(null)
 const expandedClient = computed(() => clients.value.find(client => client.id === expandedId.value) ?? null)
+const isActivationBlocked = computed(() => Boolean(launchGate.value?.blocked))
+const launchGateMessage = computed(() => {
+  if (!launchGate.value) return ''
+  if (launchGate.value.message) return launchGate.value.message
+  if (launchGate.value.ready) {
+    return `Institutional launch gate is open with ${launchGate.value.available_days} days of sellable Gold history.`
+  }
+  return `Institutional launch stays blocked until ${launchGate.value.required_days} days of sellable Gold history are available (${launchGate.value.available_days} currently available).`
+})
 
 const editingClient = ref<InstitutionalClient | null>(null)
 const editForm = reactive({
@@ -658,17 +704,19 @@ const loadClients = async () => {
     const data = await request<{
       clients?: InstitutionalClient[]
       summary?: typeof summaryData
+      launch_gate?: LaunchGate
     }>('/admin/institutional/clients', { query })
 
     if (data) {
       clients.value = data.clients || []
+      launchGate.value = data.launch_gate || null
       if (data.summary) {
         Object.assign(summaryData, data.summary)
       }
     }
   }
  catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load institutional clients'
+    error.value = getAdminApiErrorMessage(err, 'Failed to load institutional clients.')
     log.error('Failed to load clients', err)
   }
  finally {
@@ -683,7 +731,7 @@ const createClient = async () => {
   newApiKey.value = ''
 
   try {
-    const data = await request<{ success?: boolean, client?: InstitutionalClient, api_key?: string }>(
+    const data = await request<{ success?: boolean, client?: InstitutionalClient, api_key?: string, launch_gate?: LaunchGate }>(
       '/admin/institutional/clients',
       {
         method: 'POST',
@@ -702,7 +750,10 @@ const createClient = async () => {
     )
 
     if (data?.success) {
-      createMessage.value = `Client "${createForm.name}" created successfully.`
+      launchGate.value = data.launch_gate || launchGate.value
+      createMessage.value = data.client?.status === 'suspended'
+        ? `Client "${createForm.name}" created in suspended state while the prod launch hold remains active.`
+        : `Client "${createForm.name}" created successfully.`
       createSuccess.value = true
       newApiKey.value = data.api_key || ''
       createForm.name = ''
@@ -721,7 +772,7 @@ const createClient = async () => {
     }
   }
  catch (err) {
-    createMessage.value = 'Failed to create client.'
+    createMessage.value = getAdminApiErrorMessage(err, 'Failed to create client.')
     createSuccess.value = false
   }
  finally {
@@ -750,8 +801,10 @@ const toggleDetail = async (id: string) => {
   try {
     const data = await request<ClientDetail>(`/admin/institutional/clients/${id}`)
     clientDetail.value = data
+    launchGate.value = data.launch_gate || launchGate.value
   }
  catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to load client detail.')
     log.error('Failed to load client detail', err)
   }
  finally {
@@ -796,6 +849,7 @@ const saveEdit = async () => {
     await loadClients()
   }
  catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to update client.')
     log.error('Failed to update client', err)
   }
  finally {
@@ -804,6 +858,11 @@ const saveEdit = async () => {
 }
 
 const changeStatus = async (client: InstitutionalClient, newStatus: string) => {
+  if (newStatus === 'active' && isActivationBlocked.value) {
+    error.value = launchGateMessage.value
+    return
+  }
+
   const action = newStatus === 'revoked' ? 'revoke' : newStatus === 'suspended' ? 'suspend' : 'reactivate'
   if (!confirm(`Are you sure you want to ${action} "${client.name}"?`)) return
 
@@ -818,6 +877,7 @@ const changeStatus = async (client: InstitutionalClient, newStatus: string) => {
     await loadClients()
   }
  catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to change client status.')
     log.error('Failed to change status', err)
   }
 }
@@ -836,6 +896,7 @@ const rotateKey = async (client: InstitutionalClient) => {
     }
   }
  catch (err) {
+    error.value = getAdminApiErrorMessage(err, 'Failed to rotate API key.')
     log.error('Failed to rotate key', err)
   }
 }

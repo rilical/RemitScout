@@ -21,7 +21,7 @@
  */
 
 import {
-  buildAwsMetricLikeFilter,
+  buildAwsIntegrationScopeClause,
   buildEnvScopeClause,
   buildEnvironmentFilter,
   buildMetricNamesFilter,
@@ -156,27 +156,16 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
     awsAccountId,
     allowMissingAwsAccount: true,
   })
-  const awsMetricScope = buildEnvScopeClause({
+  const awsMetricScope = buildAwsIntegrationScopeClause({
     envName,
     nameToken: token,
     awsAccountId,
-    allowMissingAwsAccount: false,
   })
   const apiGatewaySampleAccountScope = awsAccountId
-    ? `(awsAccountId = '${awsAccountId}' OR providerAccountId = '${awsAccountId}' OR providerAccountName LIKE '%${awsAccountId}%')`
+    ? ` AND (aws.accountId = '${awsAccountId}' OR providerAccountName LIKE '%${awsAccountId}%')`
     : ''
   const since = `${WINDOW_MINUTES} minutes ago`
   const queuePrefix = `remit-scout-${envName}-`
-  const accountMetricScope = awsAccountId
-    ? `aws.accountId = '${awsAccountId}'`
-    : runtimeScope
-  const apiGatewayMetricScope = awsAccountId
-    ? `aws.accountId = '${awsAccountId}'`
-    : awsMetricScope
-  const apiGatewaySampleScope = `(${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%')`
-  const apiGatewaySampleWhere = apiGatewaySampleAccountScope
-    ? `${apiGatewaySampleScope} AND ${apiGatewaySampleAccountScope}`
-    : apiGatewaySampleScope
   const customMetricFamilies = [
     {
       name: 'core_slo_indices',
@@ -242,7 +231,7 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
   for (const family of customMetricFamilies) {
     familyCounts[family.name] = await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE ${buildMetricNamesFilter(family.metricNames)} AND ${accountMetricScope} SINCE ${since}`,
+        `WHERE ${buildMetricNamesFilter(family.metricNames)} AND ${runtimeScope} SINCE ${since}`,
       'value',
     )
   }
@@ -263,20 +252,20 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
     ),
     apiGatewayMetricCount: await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
-        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${apiGatewayMetricScope} ` +
-        `AND (${buildAwsMetricLikeFilter('apigateway.Count')} OR ${buildAwsMetricLikeFilter('apigateway.Latency')} OR ${buildAwsMetricLikeFilter('apigateway.5XXError')}) ` +
+        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsMetricScope} ` +
+        `AND metricName IN ('aws.apigateway.Count', 'aws.apigateway.Latency.byStage', 'aws.apigateway.5xx') ` +
         `SINCE ${since}`,
       'value',
     ),
     apiGatewaySampleCount: await nrqlValue(
-      `FROM ApiGatewaySample SELECT count(*) AS value WHERE ${apiGatewaySampleWhere} SINCE ${since}`,
+      `FROM ApiGatewaySample SELECT count(*) AS value WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%')${apiGatewaySampleAccountScope} SINCE ${since}`,
       'value',
     ),
     sqsMetricCount: await nrqlValue(
       `FROM Metric SELECT count(*) AS value ` +
         `WHERE aws.Namespace = 'AWS/SQS' ` +
         `AND aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
-        `AND ${buildAwsMetricLikeFilter('Approximate')} ` +
+        `AND metricName LIKE 'aws.sqs.Approximate%' ` +
         `AND ${awsMetricScope} ` +
         `SINCE ${since}`,
       'value',

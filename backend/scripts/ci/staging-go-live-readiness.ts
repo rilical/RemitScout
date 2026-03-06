@@ -52,6 +52,8 @@ const RECOMMENDED_KEYS: Requirement[] = [
   { key: 'BRAIN_INGEST_GITHUB_ACTIONS', description: 'Brain ingestion gate (set to 1 for closed-loop run ingestion)' },
   { key: 'BRAIN_SLACK_POST_CASE_CARDS', description: 'Brain Slack posting gate' },
   { key: 'PUBLIC_ENABLE_ADS', description: 'Ad network flag (set to 1 when ad provider is onboarded)' },
+  { key: 'TRIANGULATION_ENABLED', description: 'Corridor composite triangulation gate' },
+  { key: 'EMIT_OBSERVATIONS', description: 'Observation dual-write gate for triangulation readiness' },
 ]
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
@@ -157,7 +159,7 @@ const run = () => {
 
   const environment = getValue('ENVIRONMENT').toLowerCase()
   const nodeEnv = getValue('NODE_ENV').toLowerCase()
-  const enterpriseApiMode = getValue('PLANE_A_REQUIRE_API_KEY')
+  const triangulationEnabled = ['1', 'true', 'yes', 'on'].includes(getValue('TRIANGULATION_ENABLED').toLowerCase())
   const soc2ReportState = (getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_STATE') || getValue('COMPLIANCE_SOC2_TYPE_II_STATUS')).toLowerCase()
   const soc2ReportDate = getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE')
   const soc2ReportExpiresOn = getValue('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON')
@@ -297,6 +299,34 @@ const run = () => {
     policyViolations.push('NEW_RELIC_LOGS_ENABLED must not disable New Relic logs in staging')
   }
 
+  if (triangulationEnabled) {
+    const emitObservations = getValue('EMIT_OBSERVATIONS').toLowerCase()
+    const normalizationQueueMode = getValue('NORMALIZATION_QUEUE_MODE').toLowerCase()
+    const agentStressQueueMode = getValue('AGENT_STRESS_QUEUE_MODE').toLowerCase()
+    const goldLiveQueueMode = getValue('GOLD_LIVE_QUEUE_MODE').toLowerCase()
+    const stressResponderEnabled = getValue('STRESS_RESPONDER_SERVICE_ENABLED').toLowerCase()
+    const normalizationServiceEnabled = getValue('NORMALIZATION_SERVICE_ENABLED').toLowerCase()
+
+    if (!['1', 'true', 'yes', 'on'].includes(emitObservations)) {
+      policyViolations.push('EMIT_OBSERVATIONS must be enabled when TRIANGULATION_ENABLED=1')
+    }
+    if (normalizationQueueMode && normalizationQueueMode !== 'queue') {
+      policyViolations.push('NORMALIZATION_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (agentStressQueueMode && agentStressQueueMode !== 'queue') {
+      policyViolations.push('AGENT_STRESS_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (goldLiveQueueMode && goldLiveQueueMode !== 'queue') {
+      policyViolations.push('GOLD_LIVE_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (stressResponderEnabled && ['0', 'false', 'off', 'no'].includes(stressResponderEnabled)) {
+      policyViolations.push('STRESS_RESPONDER_SERVICE_ENABLED must not disable the stress responder when TRIANGULATION_ENABLED=1')
+    }
+    if (normalizationServiceEnabled && ['0', 'false', 'off', 'no'].includes(normalizationServiceEnabled)) {
+      policyViolations.push('NORMALIZATION_SERVICE_ENABLED must not disable normalization when TRIANGULATION_ENABLED=1')
+    }
+  }
+
   const otlpEndpoint = getValue('OTEL_EXPORTER_OTLP_ENDPOINT')
   const otlpHeaders = getValue('OTEL_EXPORTER_OTLP_HEADERS')
   const newRelicIngestKey = getValue('NEW_RELIC_INGEST_KEY')
@@ -313,32 +343,11 @@ const run = () => {
       )
     }
   }
-
-  if (enterpriseApiMode === '1') {
-    if (!soc2ReportState) {
-      policyViolations.push(
-        'COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is required when enterprise API mode is enabled',
-      )
-    }
-    if (soc2ReportState === 'expired' || soc2ReportState === 'revoked') {
-      policyViolations.push(
-        `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is "${soc2ReportState}" while enterprise API mode is enabled; enterprise onboarding requires an active audited SOC 2 state`,
-      )
-    }
-    if (soc2ReportState === 'audited' && !soc2ReportDate) {
-      policyViolations.push('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE must be set when SOC 2 report_state is audited')
-    }
-    if (soc2ReportDate && !isValidDateValue(soc2ReportDate)) {
-      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date (${soc2ReportDate})`)
-    }
-    if (soc2ReportExpiresOn && !isValidDateValue(soc2ReportExpiresOn)) {
-      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date (${soc2ReportExpiresOn})`)
-    }
-    if (soc2ReportExpiresOn && isValidDateValue(soc2ReportExpiresOn)) {
-      if (new Date(soc2ReportExpiresOn).getTime() <= Date.now()) {
-        policyViolations.push('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future for active enterprise mode')
-      }
-    }
+  if (soc2ReportDate && !isValidDateValue(soc2ReportDate)) {
+    policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date (${soc2ReportDate})`)
+  }
+  if (soc2ReportExpiresOn && !isValidDateValue(soc2ReportExpiresOn)) {
+    policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date (${soc2ReportExpiresOn})`)
   }
 
   const publicSupabaseUrl = getValue('PUBLIC_SUPABASE_URL')

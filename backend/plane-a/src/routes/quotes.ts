@@ -578,10 +578,6 @@ export const quotesRoutes = async (app: FastifyInstance) => {
       for (const row of result.rows) {
         if (row.payout) methodSet.add(row.payout)
       }
-      // If no rows returned, fall back to the requested payout method
-      if (methodSet.size === 0 && payout) {
-        methodSet.add(payout)
-      }
       const availableMethods = Array.from(methodSet).sort()
       const quotesWithAffiliate = result.rows.map((row) => ({
         ...row,

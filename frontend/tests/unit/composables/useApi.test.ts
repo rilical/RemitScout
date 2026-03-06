@@ -38,7 +38,7 @@ describe('createApiClient', () => {
     expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
-  it('prefers user token over admin token on admin surface paths', async () => {
+  it('prefers Plane A admin token over user token on admin surface paths', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true })
     const client = createApiClient({
       base: '/api/v1',
@@ -51,7 +51,7 @@ describe('createApiClient', () => {
     await client.request('/admin/plans')
 
     const [, init] = fetcher.mock.calls[0] as any[]
-    expect(init.headers.authorization).toBe('Bearer supabase_token')
+    expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
   it('uses default user token for non-admin paths', async () => {
@@ -68,6 +68,25 @@ describe('createApiClient', () => {
 
     const [, init] = fetcher.mock.calls[0] as any[]
     expect(init.headers.authorization).toBe('Bearer supabase_token')
+  })
+
+  it('treats telemetry analytics and index corrections as admin-surface paths for auth selection', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin_exact_paths',
+    })
+
+    await client.request('/telemetry/analytics')
+    await client.request('/indices/corrections')
+
+    const first = fetcher.mock.calls[0]?.[1] as any
+    const second = fetcher.mock.calls[1]?.[1] as any
+    expect(first.headers.authorization).toBe('Bearer plane_a_admin_token')
+    expect(second.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
   it('request() retries on 5xx and succeeds', async () => {

@@ -3,6 +3,11 @@ import path from 'node:path'
 
 import moduleCatalogJson from '../../.remit-scout/modules/catalog.json'
 import type { ProviderId } from './provider-catalog'
+import type {
+  ModuleOwnerKind,
+  ModuleRolloutState,
+  ModuleSignalLayer,
+} from './types/module-spec'
 
 export type ModuleVolumeStrategy =
   | 'synthetic_seed'
@@ -54,11 +59,31 @@ export type ModuleVolumePolicy = {
 
 export type ModuleCatalogEntry = {
   module_id: string
+  owner_kind: ModuleOwnerKind
+  owner_id: string
   provider_id: ProviderId
   collector_type: string
+  display_name: string
   status: 'candidate' | 'sandbox' | 'beta' | 'production' | 'deprecated' | 'quarantined'
+  signal_layer: ModuleSignalLayer
+  capture_method: string
+  rollout_state: ModuleRolloutState
   spec_version: number
-  volume: ModuleVolumePolicy
+  schema_version: number
+  supported_corridors: string[]
+  supported_amount_buckets: number[]
+  payin_method: string | null
+  payout_method: string | null
+  policy_flags: {
+    auto_heal_enabled: boolean
+    emit_observations: boolean
+    include_in_gold: boolean
+  }
+  lineage: {
+    schema_ref: string | null
+    source_ref: string | null
+  }
+  volume?: ModuleVolumePolicy
 }
 
 export type ModuleCatalog = {
@@ -75,6 +100,9 @@ const ALL_STRATEGIES: ModuleVolumeStrategy[] = [
   'equal_weight',
 ]
 
+const DEFAULT_CAPTURE_METHOD = 'http'
+const DEFAULT_ROLLOUT_STATE: ModuleRolloutState = 'enabled'
+
 const clamp01 = (value: number, fallback: number): number => {
   if (!Number.isFinite(value)) return fallback
   return Math.max(0, Math.min(1, value))
@@ -87,7 +115,27 @@ const asString = (value: unknown, fallback: string): string => {
 
 const asInteger = (value: unknown, fallback: number): number => {
   const n = Number(value)
-  return Number.isInteger(n) && n > 0 ? n : fallback
+  return Number.isInteger(n) && n >= 0 ? n : fallback
+}
+
+const asStringOrNull = (value: unknown): string | null => {
+  if (value === null || value === undefined) return null
+  const out = String(value).trim()
+  return out || null
+}
+
+const asStringArray = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => String(entry ?? '').trim())
+    .filter(Boolean)
+}
+
+const asNumberArray = (value: unknown): number[] => {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => Number(entry))
+    .filter((entry) => Number.isFinite(entry))
 }
 
 const isModuleVolumeStrategy = (value: string): value is ModuleVolumeStrategy => {
@@ -133,7 +181,7 @@ export const getModuleCatalogPath = (): string => {
   return path.join(getRepoRoot(), '.remit-scout', 'modules', 'catalog.json')
 }
 
-const defaultVolumePolicy = (): ModuleVolumePolicy => ({
+export const defaultModuleVolumePolicy = (): ModuleVolumePolicy => ({
   strategy: 'synthetic_seed',
   model_version: 'synthetic_seed_v1',
   fallback_chain: [...ALL_STRATEGIES],
@@ -164,8 +212,8 @@ const parseFallbackChain = (value: unknown): ModuleVolumeStrategy[] => {
   return Array.from(new Set(ordered))
 }
 
-const parseVolumePolicy = (raw: unknown): ModuleVolumePolicy => {
-  const base = defaultVolumePolicy()
+export const parseModuleVolumePolicy = (raw: unknown): ModuleVolumePolicy => {
+  const base = defaultModuleVolumePolicy()
   if (!raw || typeof raw !== 'object') return base
   const value = raw as Record<string, unknown>
 
@@ -232,6 +280,33 @@ const parseVolumePolicy = (raw: unknown): ModuleVolumePolicy => {
   }
 }
 
+const normalizeRolloutState = (
+  value: unknown,
+  status: ModuleCatalogEntry['status'],
+): ModuleRolloutState => {
+  const normalized = asString(value, '')
+  if (normalized === 'enabled' || normalized === 'shadow' || normalized === 'disabled') {
+    return normalized
+  }
+  if (status === 'sandbox') return 'shadow'
+  if (status === 'deprecated' || status === 'quarantined') return 'disabled'
+  return DEFAULT_ROLLOUT_STATE
+}
+
+const normalizeSignalLayer = (value: unknown, ownerKind: ModuleOwnerKind): ModuleSignalLayer => {
+  const normalized = asString(value, '')
+  if (
+    normalized === 'quote' ||
+    normalized === 'factor' ||
+    normalized === 'stress' ||
+    normalized === 'health' ||
+    normalized === 'event'
+  ) {
+    return normalized
+  }
+  return ownerKind === 'provider' ? 'quote' : 'factor'
+}
+
 let cached: ModuleCatalog | null = null
 
 const unwrapBundledCatalog = (raw: unknown): unknown => {
@@ -267,23 +342,52 @@ const parseCatalog = (raw: unknown, catalogPath: string): ModuleCatalog => {
     const entry = entryRaw as Record<string, unknown>
     const moduleId = asString(entry.module_id, '')
     const providerId = asString(entry.provider_id, '')
+    const ownerKind = asString(entry.owner_kind, providerId ? 'provider' : 'signal_source') as ModuleOwnerKind
+    const ownerId = asString(entry.owner_id, providerId || '')
     const collectorType = asString(entry.collector_type, '')
     const status = asString(entry.status, 'candidate')
     const specVersion = asInteger(entry.spec_version, 1)
+    const signalLayer = normalizeSignalLayer(entry.signal_layer, ownerKind)
 
     if (!moduleId) throw new Error(`Module catalog entry missing module_id: ${catalogPath}`)
-    if (!providerId) throw new Error(`Module catalog entry missing provider_id: ${catalogPath}`)
+    if (!ownerId) throw new Error(`Module catalog entry missing owner_id/provider_id: ${catalogPath}`)
     if (!collectorType) throw new Error(`Module catalog entry missing collector_type: ${catalogPath}`)
     if (seen.has(moduleId)) throw new Error(`Module catalog duplicate module_id='${moduleId}': ${catalogPath}`)
     seen.add(moduleId)
 
     return {
       module_id: moduleId,
-      provider_id: providerId as ProviderId,
+      owner_kind: ownerKind,
+      owner_id: ownerId,
+      provider_id: (providerId || ownerId) as ProviderId,
       collector_type: collectorType,
+      display_name: asString(entry.display_name, moduleId),
       status: status as ModuleCatalogEntry['status'],
+      signal_layer: signalLayer,
+      capture_method: asString(entry.capture_method, collectorType || DEFAULT_CAPTURE_METHOD),
+      rollout_state: normalizeRolloutState(entry.rollout_state, status as ModuleCatalogEntry['status']),
       spec_version: specVersion,
-      volume: parseVolumePolicy(entry.volume),
+      schema_version: asInteger(entry.schema_version, 1),
+      supported_corridors: asStringArray(entry.supported_corridors),
+      supported_amount_buckets: asNumberArray(entry.supported_amount_buckets),
+      payin_method: signalLayer === 'quote' ? asStringOrNull(entry.payin_method) ?? 'bank_transfer' : null,
+      payout_method: signalLayer === 'quote' ? asStringOrNull(entry.payout_method) ?? 'bank_deposit' : null,
+      policy_flags: {
+        auto_heal_enabled: Boolean((entry.policy_flags as Record<string, unknown> | undefined)?.auto_heal_enabled),
+        emit_observations:
+          (entry.policy_flags as Record<string, unknown> | undefined)?.emit_observations === undefined
+            ? true
+            : Boolean((entry.policy_flags as Record<string, unknown>).emit_observations),
+        include_in_gold:
+          (entry.policy_flags as Record<string, unknown> | undefined)?.include_in_gold === undefined
+            ? signalLayer !== 'health'
+            : Boolean((entry.policy_flags as Record<string, unknown>).include_in_gold),
+      },
+      lineage: {
+        schema_ref: asStringOrNull((entry.lineage as Record<string, unknown> | undefined)?.schema_ref),
+        source_ref: asStringOrNull((entry.lineage as Record<string, unknown> | undefined)?.source_ref),
+      },
+      ...(entry.volume === undefined ? {} : { volume: parseModuleVolumePolicy(entry.volume) }),
     }
   })
 
@@ -335,4 +439,3 @@ export const getProductionModuleByProviderId = (
   const modules = loadModuleCatalog().modules
   return modules.find((module) => module.provider_id === providerId && module.status === 'production') ?? null
 }
-

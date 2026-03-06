@@ -8,6 +8,30 @@ const logger = createLogger('shared.db')
 const activePools = new Set<Pool>()
 let cleanupHandlersRegistered = false
 
+const runtimeConfig = {
+  isLambda: config.runtime?.isLambda ?? false,
+  isEcs: config.runtime?.isEcs ?? false,
+}
+
+const dbPoolConfig = {
+  applicationName: config.dbPool?.applicationName,
+  connectionTimeoutMs: config.dbPool?.connectionTimeoutMs ?? 10_000,
+  disablePoolSignalCleanup: config.dbPool?.disablePoolSignalCleanup ?? false,
+  disableStatementTimeoutExplicit: config.dbPool?.disableStatementTimeoutExplicit ?? false,
+  idleTimeoutMs: config.dbPool?.idleTimeoutMs ?? 30_000,
+  keepAliveEnabled: config.dbPool?.keepAliveEnabled ?? true,
+  keepAliveInitialDelayMs: config.dbPool?.keepAliveInitialDelayMs ?? 0,
+  maxOverride: config.dbPool?.maxOverride,
+  maxUses: config.dbPool?.maxUses ?? 0,
+  minOverride: config.dbPool?.minOverride,
+  proxyQueryTimeoutMs: config.dbPool?.proxyQueryTimeoutMs ?? 30_000,
+  queryTimeoutEnabled: config.dbPool?.queryTimeoutEnabled ?? true,
+  queryTimeoutMs: config.dbPool?.queryTimeoutMs ?? 30_000,
+  sslMode: config.dbPool?.sslMode,
+}
+
+const appEnv = config.env ?? 'dev'
+
 const isProxyConnectionString = (connectionString: string): boolean => {
   if (!connectionString) return false
   try {
@@ -62,7 +86,7 @@ const registerPoolForCleanup = (pool: Pool) => {
   }
 
   process.once('exit', cleanup)
-  if (!config.dbPool.disablePoolSignalCleanup) {
+  if (!dbPoolConfig.disablePoolSignalCleanup) {
     process.once('SIGTERM', cleanup)
     process.once('SIGINT', cleanup)
   }
@@ -72,15 +96,15 @@ const registerPoolForCleanup = (pool: Pool) => {
  * Gets pool size limits based on runtime environment.
  */
 const getPoolSizeLimits = (): { max: number; min: number } => {
-  const isLambda = config.runtime.isLambda
-  const isECS = config.runtime.isEcs
+  const isLambda = runtimeConfig.isLambda
+  const isECS = runtimeConfig.isEcs
 
   const defaultLimits = (() => {
     if (isLambda) {
       return { max: 20, min: 1 }
     }
     if (isECS) {
-      return config.env === 'production' ? { max: 50, min: 2 } : { max: 8, min: 1 }
+      return appEnv === 'production' ? { max: 50, min: 2 } : { max: 8, min: 1 }
     }
     return { max: 10, min: 1 }
   })()
@@ -92,11 +116,11 @@ const getPoolSizeLimits = (): { max: number; min: number } => {
     return Math.max(0, Math.floor(parsed))
   }
 
-  const envMax = Number.isFinite(config.dbPool.maxOverride)
-    ? resolveOverride(String(config.dbPool.maxOverride))
+  const envMax = Number.isFinite(dbPoolConfig.maxOverride)
+    ? resolveOverride(String(dbPoolConfig.maxOverride))
     : null
-  const envMin = Number.isFinite(config.dbPool.minOverride)
-    ? resolveOverride(String(config.dbPool.minOverride))
+  const envMin = Number.isFinite(dbPoolConfig.minOverride)
+    ? resolveOverride(String(dbPoolConfig.minOverride))
     : null
 
   let max = envMax ?? defaultLimits.max
@@ -143,23 +167,23 @@ export const normalizeConnectionStringForSslMode = (
 }
 
 export const createPool = (connectionString?: string) => {
-  const sslMode = config.dbPool.sslMode
+  const sslMode = dbPoolConfig.sslMode
   const sslEnabled = sslMode === 'require' || sslMode === 'verify-full' || sslMode === 'verify-ca'
-  const queryTimeoutEnabled = config.dbPool.queryTimeoutEnabled
-  const queryTimeoutMs = config.dbPool.queryTimeoutMs
-  const connectionTimeoutMs = config.dbPool.connectionTimeoutMs
-  const idleTimeoutMs = config.dbPool.idleTimeoutMs
-  const keepAliveEnabled = config.dbPool.keepAliveEnabled
-  const keepAliveInitialDelayMs = config.dbPool.keepAliveInitialDelayMs
-  const maxUses = config.dbPool.maxUses
-  const isProduction = config.env === 'production'
+  const queryTimeoutEnabled = dbPoolConfig.queryTimeoutEnabled
+  const queryTimeoutMs = dbPoolConfig.queryTimeoutMs
+  const connectionTimeoutMs = dbPoolConfig.connectionTimeoutMs
+  const idleTimeoutMs = dbPoolConfig.idleTimeoutMs
+  const keepAliveEnabled = dbPoolConfig.keepAliveEnabled
+  const keepAliveInitialDelayMs = dbPoolConfig.keepAliveInitialDelayMs
+  const maxUses = dbPoolConfig.maxUses
+  const isProduction = appEnv === 'production'
   const poolLimits = getPoolSizeLimits()
   const resolvedConnectionString = connectionString || config.db.url
   const normalizedConnectionString = normalizeConnectionStringForSslMode(
     resolvedConnectionString,
     sslMode,
   )
-  const applicationName = config.dbPool.applicationName?.trim()
+  const applicationName = dbPoolConfig.applicationName?.trim()
   const connectionStringWithAppName = (() => {
     if (!normalizedConnectionString || !applicationName) return normalizedConnectionString
     if (normalizedConnectionString.includes('application_name=')) return normalizedConnectionString
@@ -176,20 +200,20 @@ export const createPool = (connectionString?: string) => {
     ? 'proxy'
     : 'direct'
   const disableStatementTimeout = (() => {
-    if (config.dbPool.disableStatementTimeoutExplicit) return true
+    if (dbPoolConfig.disableStatementTimeoutExplicit) return true
     return connectionRoute === 'proxy'
   })()
   const validateConnectionOnCheckout = connectionRoute === 'proxy'
   const statementTimeoutPolicy: StatementTimeoutPolicy = (() => {
-    if (config.dbPool.disableStatementTimeoutExplicit) return 'disabled'
+    if (dbPoolConfig.disableStatementTimeoutExplicit) return 'disabled'
     if (connectionRoute === 'proxy') return 'proxy-guarded'
     return 'server-statement-timeout'
   })()
 
   // Safety: if someone disables statement_timeout explicitly in production, make it visible in logs.
-  if (config.dbPool.disableStatementTimeoutExplicit && config.env === 'production') {
+  if (dbPoolConfig.disableStatementTimeoutExplicit && appEnv === 'production') {
     logger.warn('db_statement_timeout_disabled', {
-      env: config.env,
+      env: appEnv,
       reason: 'DB_DISABLE_STATEMENT_TIMEOUT=1',
     })
   }
@@ -344,25 +368,25 @@ export const query = async <T extends QueryResultRow = QueryResultRow>(
     const shouldUseConnect = canConnect && !isMockedQuery && !isPoolClient
     const skipStatementTimeout =
       Boolean((poolInstance as PoolWithPolicy).__skipStatementTimeout)
-      || config.dbPool.disableStatementTimeoutExplicit
+      || dbPoolConfig.disableStatementTimeoutExplicit
     const connectionRoute = (poolInstance as PoolWithPolicy).__connectionRoute ?? 'direct'
     const statementTimeoutPolicy =
       (poolInstance as PoolWithPolicy).__statementTimeoutPolicy
       ?? (skipStatementTimeout ? 'disabled' : 'server-statement-timeout')
     const shouldSetSessionStatementTimeout =
-      config.dbPool.queryTimeoutEnabled && statementTimeoutPolicy !== 'disabled'
+      dbPoolConfig.queryTimeoutEnabled && statementTimeoutPolicy !== 'disabled'
     const queryTimeoutDefault = skipStatementTimeout
-      ? config.dbPool.proxyQueryTimeoutMs
-      : config.dbPool.queryTimeoutMs
+      ? dbPoolConfig.proxyQueryTimeoutMs
+      : dbPoolConfig.queryTimeoutMs
     const queryTimeout = Math.max(
       1,
-      Math.floor(timeoutMs ?? queryTimeoutDefault ?? config.dbPool.queryTimeoutMs),
+      Math.floor(timeoutMs ?? queryTimeoutDefault ?? dbPoolConfig.queryTimeoutMs),
     )
     const queryConfig: { text: string; values: unknown[]; query_timeout?: number } = {
       text,
       values: params,
     }
-    if (config.dbPool.queryTimeoutEnabled) {
+    if (dbPoolConfig.queryTimeoutEnabled) {
       queryConfig.query_timeout = queryTimeout
     }
     if (shouldUseConnect) {

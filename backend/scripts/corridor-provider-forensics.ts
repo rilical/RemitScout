@@ -8,7 +8,7 @@
  * Inputs:
  * - CORRIDOR_ID (required): e.g. US-JO-USD-JOD
  * - AMOUNT (optional, default 100): used to compute amount bucket selection
- * - METHOD (optional, default bank): bank|cash|wallet|airtime
+ * - METHOD (optional, default bank): bank|cash|wallet|airtime|home|card
  */
 
 import { createPool, query } from '../shared/db'
@@ -74,7 +74,28 @@ type QuoteRefreshRequestRow = {
   created_at: string | null
 }
 
-type RequestedMethod = 'bank' | 'cash' | 'wallet' | 'airtime'
+type RequestedMethod = 'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'
+
+export type CorridorProviderForensicsInput = {
+  corridorId?: string
+  amount?: number
+  method?: RequestedMethod
+  pool?: ReturnType<typeof createPool>
+}
+
+export type CorridorProviderForensicsPayload = {
+  success: boolean
+  findings: Array<{ reason_code: string; message: string; details?: unknown }>
+  recommended_next_skill_ids: string[]
+  environment: string
+  corridor_id: string
+  source_country: string
+  dest_country: string
+  amount: number
+  amount_bucket: number
+  requested_method: RequestedMethod
+  providers: Array<Record<string, unknown>>
+}
 
 const normalizeToken = (value: string): string => {
   if (!value || typeof value !== 'string') return ''
@@ -105,19 +126,26 @@ const toAvailableMethod = (value?: string | null): RequestedMethod | null => {
   if (token === 'cash_pickup' || token === 'cash' || token.includes('cash')) {
     return 'cash'
   }
+  if (token === 'home_delivery' || token === 'home' || token.includes('home_delivery')) {
+    return 'home'
+  }
+  if (
+    token === 'debit_card'
+    || token === 'card_delivery'
+    || token === 'card_deposit'
+    || token === 'card'
+    || token === 'credit_card'
+  ) {
+    return 'card'
+  }
   if (
     token === 'bank_deposit'
     || token === 'bank_transfer'
     || token === 'bank_account'
     || token === 'bank'
     || token === 'account'
-    || token === 'card'
-    || token === 'card_deposit'
-    || token === 'debit_card'
-    || token === 'credit_card'
     || token.includes('bank')
     || token.includes('account')
-    || token.includes('card')
   ) {
     return 'bank'
   }
@@ -129,6 +157,8 @@ const parseMethod = (value: string | undefined): RequestedMethod => {
   if (token === 'cash') return 'cash'
   if (token === 'wallet') return 'wallet'
   if (token === 'airtime') return 'airtime'
+  if (token === 'home') return 'home'
+  if (token === 'card') return 'card'
   return 'bank'
 }
 
@@ -138,18 +168,20 @@ const includesCountry = (list: string[] | null, code: string): boolean => {
   return list.some((c) => c && c.trim().toUpperCase() === upper)
 }
 
-export const runCorridorProviderForensics = async () => {
-  const corridorId = (process.env.CORRIDOR_ID || '').trim().toUpperCase()
+export const runCorridorProviderForensics = async (
+  input: CorridorProviderForensicsInput = {},
+): Promise<CorridorProviderForensicsPayload> => {
+  const corridorId = String(input.corridorId || process.env.CORRIDOR_ID || '').trim().toUpperCase()
   if (!corridorId || !parseCorridorId(corridorId)) {
     throw new Error(`Invalid CORRIDOR_ID: ${corridorId || '(missing)'}`)
   }
 
-  const amount = Number(process.env.AMOUNT ?? '100')
+  const amount = Number(input.amount ?? process.env.AMOUNT ?? '100')
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`Invalid AMOUNT: ${process.env.AMOUNT ?? '(missing)'}`)
   }
 
-  const requestedMethod = parseMethod(process.env.METHOD)
+  const requestedMethod = input.method ?? parseMethod(process.env.METHOD)
   const bucketSelection = computeBucketSelection(amount)
   const amountBucket = bucketSelection.bucket_used
 
@@ -157,7 +189,8 @@ export const runCorridorProviderForensics = async () => {
   const sourceCountry = parts.sourceCountry.toUpperCase()
   const destCountry = parts.destCountry.toUpperCase()
 
-  const pool = createPool(config.db.planeBUrl)
+  const pool = input.pool ?? createPool(config.db.planeBUrl)
+  const ownsPool = !input.pool
   try {
     const [rightsResult, capResult, quoteResult, refreshResult] = await Promise.all([
       query<RightsRow>(
@@ -374,7 +407,7 @@ export const runCorridorProviderForensics = async () => {
       })
     }
 
-    const payload = {
+    const payload: CorridorProviderForensicsPayload = {
       success: true,
       findings: (() => {
         const verdictCounts: Record<string, number> = {}
@@ -439,20 +472,23 @@ export const runCorridorProviderForensics = async () => {
       providers,
     }
 
-    // Print to stdout for quick copy/paste into incident reports.
-    // (Artifacts can be added later if needed.)
-     
-    console.log(JSON.stringify(payload, null, 2))
+    return payload
   } finally {
-    await pool.end()
+    if (ownsPool) {
+      await pool.end()
+    }
   }
 }
 
 if (require.main === module) {
-  runCorridorProviderForensics().catch((error) => {
+  runCorridorProviderForensics()
+    .then((payload) => {
+      console.log(JSON.stringify(payload, null, 2))
+    })
+    .catch((error) => {
     logger.error('corridor_forensics_failed', {
       error: error instanceof Error ? error.message : String(error),
     })
     process.exit(1)
-  })
+    })
 }

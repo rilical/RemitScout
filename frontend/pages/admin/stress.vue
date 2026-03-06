@@ -245,6 +245,7 @@ import {
   applyStressOverride,
   activateStressKillSwitch,
 } from '~/lib/opsApi'
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -293,7 +294,7 @@ const load = async () => {
     lastUpdated.value = res.updatedAt ?? new Date().toISOString()
   }
   catch (e: any) {
-    error.value = e?.message ?? 'Failed to load stress data.'
+    error.value = getAdminApiErrorMessage(e, 'Failed to load stress data.')
   }
   finally {
     loading.value = false
@@ -313,7 +314,7 @@ const togglePauseProbing = async () => {
     const status = e?.statusCode ?? e?.response?.status
     pauseProbingError.value = status === 404
       ? 'Endpoint not implemented yet (404).'
-      : (e?.message ?? 'Failed to update pause state.')
+      : getAdminApiErrorMessage(e, 'Failed to update pause state.')
   }
   finally {
     pauseProbingLoading.value = false
@@ -331,7 +332,7 @@ const applyOverride = async () => {
     const status = e?.statusCode ?? e?.response?.status
     overrideError.value = status === 404
       ? 'Endpoint not implemented yet (404).'
-      : (e?.message ?? 'Failed to apply override.')
+      : getAdminApiErrorMessage(e, 'Failed to apply override.')
   }
   finally {
     overrideLoading.value = false
@@ -349,7 +350,7 @@ const activateKillSwitch = async () => {
     const status = e?.statusCode ?? e?.response?.status
     killSwitchError.value = status === 404
       ? 'Endpoint not implemented yet (404).'
-      : (e?.message ?? 'Failed to activate kill switch.')
+      : getAdminApiErrorMessage(e, 'Failed to activate kill switch.')
   }
   finally {
     killSwitchLoading.value = false

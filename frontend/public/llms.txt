@@ -1,6 +1,6 @@
 # Remit-Scout
 
-> Remit-Scout is an independent comparison platform for international money transfers. We aggregate live quotes from 25+ licensed providers (Wise, Remitly, Western Union, etc.) and rank them by total cost, speed, and trust score across 200+ corridors worldwide.
+> Remit-Scout is an independent comparison platform for international money transfers. We aggregate live quotes from 24 licensed providers (Wise, Remitly, Western Union, etc.) and rank them by total cost, speed, and trust score across 200+ corridors worldwide.
 
 ## Key Pages
 

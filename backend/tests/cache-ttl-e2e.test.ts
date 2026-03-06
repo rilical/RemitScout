@@ -1,11 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
+import { expect, it, beforeEach, afterEach } from 'vitest'
 import type { Pool } from 'pg'
 
 import { createPool, query } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
 import { CorridorVolatilityRepository } from '../plane-b/src/repositories/implementations/corridor-volatility-repository'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
 const planeBUrl =
   process.env.DATABASE_URL_PLANE_B ||
@@ -14,7 +14,7 @@ const planeBUrl =
 
 process.env.DATABASE_URL_PLANE_B = process.env.DATABASE_URL_PLANE_B || planeBUrl
 
-describe('Cache TTL End-to-End', () => {
+describeDbIntegration('Cache TTL End-to-End', () => {
   let pool: Pool
   let volatilityService: VolatilityService
   let volatilityRepo: CorridorVolatilityRepository

@@ -6,6 +6,7 @@ import { requireAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { generateApiKeyToken, hashApiKey } from '../services/api-keys'
 import { getInstitutionalClientScopes } from '../services/institutional-clients'
+import { getInstitutionalLaunchGate } from '../services/institutional-launch'
 import { sendAdminWebhook } from '../services/admin-webhooks'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 
@@ -61,6 +62,17 @@ type InstitutionalClientRow = {
   updated_at: string
 }
 
+const toLaunchGatePayload = (launchGate: Awaited<ReturnType<typeof getInstitutionalLaunchGate>>) => ({
+  ready: launchGate.ready,
+  required_days: launchGate.requiredDays,
+  available_days: launchGate.availableDays,
+  reason: launchGate.reason,
+  updated_at: launchGate.updatedAt,
+  enforced: launchGate.enforced,
+  blocked: launchGate.blocked,
+  message: launchGate.message,
+})
+
 export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
   const planeAPool = app.container.pool
 
@@ -72,6 +84,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
     }
 
     try {
+      const launchGate = await getInstitutionalLaunchGate(planeAPool)
       const filters: string[] = []
       const params: unknown[] = []
       let paramIndex = 1
@@ -140,6 +153,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           premium: tierCounts.premium ?? 0,
         },
         clients: result.rows,
+        launch_gate: toLaunchGatePayload(launchGate),
       }
     } catch (error) {
       logger.error('admin_institutional_list_failed', {
@@ -155,6 +169,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
     const { id } = request.params as { id: string }
 
     try {
+      const launchGate = await getInstitutionalLaunchGate(planeAPool)
       const clientResult = await query<InstitutionalClientRow>(
         `
         SELECT
@@ -220,6 +235,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         },
         exports: exportResult.rows,
         scopes,
+        launch_gate: toLaunchGatePayload(launchGate),
       }
     } catch (error) {
       if (error instanceof NotFoundError) throw error
@@ -243,8 +259,10 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
     const data = parsed.data
 
     try {
+      const launchGate = await getInstitutionalLaunchGate(planeAPool)
       const token = generateApiKeyToken(32)
       const keyHash = hashApiKey(token)
+      const initialStatus = launchGate.blocked ? 'suspended' : 'active'
 
       const result = await query<InstitutionalClientRow>(
         `
@@ -253,7 +271,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           corridors_allowed, rate_limit_rpm, rate_limit_daily,
           status, nda_signed_at, contract_start, contract_end, report_schedule
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, $9, $10, $11)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
@@ -268,6 +286,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           data.corridors_allowed ?? null,
           data.rate_limit_rpm,
           data.rate_limit_daily,
+          initialStatus,
           data.nda_signed_at ?? null,
           data.contract_start ?? null,
           data.contract_end ?? null,
@@ -292,6 +311,8 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
             name: data.name,
             client_prefix: data.client_prefix,
             tier: data.tier,
+            initial_status: initialStatus,
+            launch_gate_blocked: launchGate.blocked,
           },
           ...getRequestContext(request),
         })
@@ -314,6 +335,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           client_id: client.id,
           client_prefix: data.client_prefix,
           tier: data.tier,
+          initial_status: initialStatus,
         },
       })
 
@@ -321,6 +343,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         success: true,
         client,
         api_key: token,
+        launch_gate: toLaunchGatePayload(launchGate),
       }
     } catch (error) {
       logger.error('admin_institutional_create_failed', {
@@ -457,6 +480,17 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
     const { status, reason } = parsed.data
 
     try {
+      const launchGate = await getInstitutionalLaunchGate(planeAPool)
+      if (status === 'active' && launchGate.blocked) {
+        reply.code(409)
+        return {
+          error: 'institutional_launch_blocked',
+          code: 'institutional_launch_blocked',
+          message: launchGate.message,
+          launch_gate: toLaunchGatePayload(launchGate),
+        }
+      }
+
       const result = await query<InstitutionalClientRow>(
         `
         UPDATE public.institutional_client
@@ -511,7 +545,11 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         },
       })
 
-      return { success: true, client: result.rows[0] }
+      return {
+        success: true,
+        client: result.rows[0],
+        launch_gate: toLaunchGatePayload(launchGate),
+      }
     } catch (error) {
       if (error instanceof NotFoundError) throw error
       logger.error('admin_institutional_status_change_failed', {

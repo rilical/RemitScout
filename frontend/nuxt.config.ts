@@ -193,6 +193,10 @@ const analyticsEnabled = (() => {
   // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
   return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
 })()
+const buildTimeTypeCheckEnabled = (() => {
+  const flag = resolveEnvValue('NUXT_BUILD_TYPECHECK')
+  return flag !== undefined ? parseEnvFlag(flag) : true
+})()
 
 const sentryEnabled = (() => {
   const flag = resolveEnvValue('NUXT_PUBLIC_SENTRY_ENABLED', 'PUBLIC_SENTRY_ENABLED')
@@ -593,7 +597,7 @@ export default defineNuxtConfig({
 
   // TypeScript
   typescript: {
-    typeCheck: 'build',
+    typeCheck: buildTimeTypeCheckEnabled ? 'build' : false,
   },
   hooks: {
     'build:before': async () => {

@@ -14,6 +14,13 @@ type ComplianceStatusResponse = {
       expires_on?: string | null
     }
   }
+  institutional_data_maturity?: {
+    ready?: boolean
+    required_days?: number
+    available_days?: number
+    reason?: string
+    updated_at?: string | null
+  }
 }
 
 const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
@@ -29,6 +36,12 @@ const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
             status: 'in_progress',
           },
         },
+        institutional_data_maturity: {
+          ready: false,
+          required_days: 180,
+          available_days: 0,
+          reason: 'accumulating_history',
+        },
       }
     }
   },
@@ -38,6 +51,12 @@ const { data: complianceStatus } = await useAsyncData<ComplianceStatusResponse>(
         soc2_type_ii: {
           status: 'in_progress',
         },
+      },
+      institutional_data_maturity: {
+        ready: false,
+        required_days: 180,
+        available_days: 0,
+        reason: 'accumulating_history',
       },
     }),
   },
@@ -55,11 +74,23 @@ const soc2StatusLabel = computed(() => {
   return 'SOC 2 Type II status: in progress.'
 })
 
+const maturityLabel = computed(() => {
+  const maturity = complianceStatus.value?.institutional_data_maturity
+  const requiredDays = maturity?.required_days || 180
+  const availableDays = maturity?.available_days || 0
+
+  if (maturity?.ready) {
+    return `Institutional data-maturity gate: open with ${availableDays} days of live sellable history.`
+  }
+
+  return `Institutional data-maturity gate: waitlist only until ${requiredDays} days of live sellable history are available (${availableDays} currently available).`
+})
+
 const mailtoHref = 'mailto:support@remit-scout.com?subject=Institutional%20inquiry'
 
 setSeo({
   title: 'Security & Compliance (NDA) | Remit-Scout',
-  description: 'Security and compliance documentation available upon request.',
+  description: 'Security, compliance, and institutional launch-readiness status.',
   canonical: `${siteUrl}/institutions/compliance`,
   noindex: true,
   ogImage: false,
@@ -90,6 +121,9 @@ const breadcrumbItems = [
           </p>
           <p class="text-body text-neutral-700 leading-relaxed mb-8">
             {{ soc2StatusLabel }}
+          </p>
+          <p class="text-body text-neutral-700 leading-relaxed mb-8">
+            {{ maturityLabel }}
           </p>
 
           <div class="flex flex-wrap gap-3">

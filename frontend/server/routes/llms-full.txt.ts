@@ -91,7 +91,7 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   // ── Header ──
   lines.push('# Remit-Scout')
   lines.push('')
-  lines.push('> Remit-Scout is an independent comparison platform for international money transfers. We aggregate live quotes from 25+ licensed providers (Wise, Remitly, Western Union, etc.) and rank them by total cost, speed, and trust score across 200+ corridors worldwide.')
+  lines.push('> Remit-Scout is an independent comparison platform for international money transfers. We aggregate provider quotes across supported corridors and rank available results by total cost, speed, and trust score.')
   lines.push('')
 
   // ── Key Pages ──
@@ -188,7 +188,7 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   lines.push('')
 
   lines.push('### What is Remit-Scout?')
-  lines.push('Remit-Scout is a free, independent comparison platform for international money transfers. We collect live quotes from 25+ licensed remittance providers and rank them by total delivered cost, speed, and trust score so users can find the cheapest way to send money abroad.')
+  lines.push('Remit-Scout is a free, independent comparison platform for international money transfers. We collect provider quotes across supported corridors and rank available results by total delivered cost, speed, and trust score so users can compare options before sending money abroad.')
   lines.push('')
 
   lines.push('### How does Remit-Scout make money?')
@@ -200,15 +200,15 @@ export const buildLlmsFullTxt = (siteUrl: string) => {
   lines.push('')
 
   lines.push('### How many providers does Remit-Scout compare?')
-  lines.push('We currently compare 25+ licensed money transfer providers including Wise, Remitly, Western Union, Xoom, WorldRemit, RIA, Sendwave, TransferGo, and others. Each provider is monitored in real time across all supported corridors.')
+  lines.push('We compare licensed money transfer providers including Wise, Remitly, Western Union, Xoom, WorldRemit, RIA, Sendwave, TransferGo, and others. Coverage varies by corridor, amount, and delivery method.')
   lines.push('')
 
   lines.push('### How often are quotes updated?')
-  lines.push('Quotes are refreshed continuously throughout the day. Exchange rates and fees change frequently, which is why we recommend comparing before every transfer. Our data pipeline ingests fresh quotes from each provider multiple times per hour.')
+  lines.push('Quotes are refreshed throughout the day on supported live corridors. Freshness varies by provider, corridor, and current warming state, so we recommend comparing before every transfer.')
   lines.push('')
 
   lines.push('### What corridors does Remit-Scout cover?')
-  lines.push('We cover 200+ corridors worldwide, with deep coverage of major send markets (United States, United Kingdom, Canada, Australia, UAE, Germany) and top receive markets (India, Mexico, Philippines, Nigeria, Pakistan, Bangladesh, and more). See /corridors for the full list.')
+  lines.push('We cover a broad set of corridors worldwide, with deep coverage of major send markets (United States, United Kingdom, Canada, Australia, UAE, Germany) and top receive markets (India, Mexico, Philippines, Nigeria, Pakistan, Bangladesh, and more). See /corridors for the current list.')
   lines.push('')
 
   lines.push('### Is Remit-Scout free to use?')

@@ -5,6 +5,7 @@ import { NotFoundError, ValidationError } from '../../../shared/errors'
 import { requireEntitlement } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { getErrorMessage } from '../types/errors'
+import { apiKeyAccessConfig } from './api-key-access'
 import {
   enqueueExportJob,
   getAuditActorId,
@@ -25,12 +26,15 @@ import {
 } from './exports-limit'
 
 const logger = createLogger('plane-a.exports')
+const retailExportsApiKeyConfig = {
+  config: apiKeyAccessConfig({ audience: 'retail', requiredScope: 'exports:read' }),
+}
 
 export const exportsRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool, repositories } = app.container
   const exportJobRepository = repositories.exportJob
 
-  app.post('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
+  app.post('/exports', { preHandler: requireEntitlement('exports'), ...retailExportsApiKeyConfig }, async (request, reply) => {
     const parsed = exportCreateSchema.safeParse(request.body)
     if (!parsed.success) {
       throw new ValidationError('Invalid request', {
@@ -40,7 +44,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
 
     if (parsed.data.dataType === 'indices') {
       const entitlements = request.entitlementsContext?.entitlements
-      if (!entitlements?.indices_api) {
+      if (!entitlements?.indices_exports_enabled) {
         reply.code(403)
         return {
           error: 'indices_export_enterprise_only',
@@ -154,7 +158,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/exports', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
+  app.get('/exports', { preHandler: requireEntitlement('exports'), ...retailExportsApiKeyConfig }, async (request, reply) => {
     const parsed = exportListSchema.safeParse(request.query)
     if (!parsed.success) {
       throw new ValidationError('Invalid request', {
@@ -188,7 +192,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/exports/:id', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
+  app.get('/exports/:id', { preHandler: requireEntitlement('exports'), ...retailExportsApiKeyConfig }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
 
@@ -221,7 +225,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/exports/:id/download', { preHandler: requireEntitlement('exports') }, async (request, reply) => {
+  app.get('/exports/:id/download', { preHandler: requireEntitlement('exports'), ...retailExportsApiKeyConfig }, async (request, reply) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
 

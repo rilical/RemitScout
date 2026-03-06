@@ -2,14 +2,22 @@
   <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-4">
     <div class="mb-2 flex items-center justify-between gap-3">
       <h2 class="text-body font-semibold text-white">
-        AI Narrative Summary
+        Market Narrative
       </h2>
-      <span
-        v-if="generatedLabel"
-        class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
-      >
-        {{ generatedLabel }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span
+          v-if="sourceLabel"
+          class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+        >
+          {{ sourceLabel }}
+        </span>
+        <span
+          v-if="generatedLabel"
+          class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500"
+        >
+          {{ generatedLabel }}
+        </span>
+      </div>
     </div>
 
     <div
@@ -56,16 +64,25 @@ import { formatUpdatedLabel } from '~/shared/lib/format'
 interface Props {
   summary?: string | null
   generatedAt?: string | null
+  source?: string | null
   loading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   summary: '',
   generatedAt: null,
+  source: null,
   loading: false,
 })
 
 const summaryText = computed(() => (props.summary || '').trim())
+const sourceLabel = computed(() => {
+  const normalized = (props.source || '').trim().toLowerCase()
+  if (!normalized) return null
+  if (normalized === 'rule_based') return 'Rule-based'
+  if (normalized === 'ai') return 'AI-assisted'
+  return normalized.replace(/_/g, ' ')
+})
 const generatedLabel = computed(() => {
   if (!props.generatedAt) return null
   return formatUpdatedLabel(props.generatedAt)

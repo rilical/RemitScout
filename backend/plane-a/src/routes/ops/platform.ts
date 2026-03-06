@@ -351,7 +351,7 @@ export const platformOpsRoutes = (app: FastifyInstance) => {
            corridor_id, amount_bucket, method_profile, date,
            leg1_corridor, leg2_corridor, stress_score, confidence,
            methodology_version
-         ) VALUES ($1, 500, 'bank_transfer:bank_deposit', CURRENT_DATE, $1, $1, $2, 'manual_override', 'manual_override_v1')
+         ) VALUES ($1, 500, 'standard_bank', CURRENT_DATE, $1, $1, $2, 'manual_override', 'manual_override_v1')
          ON CONFLICT (corridor_id, amount_bucket, method_profile, date)
          DO UPDATE SET stress_score = $2, confidence = 'manual_override', methodology_version = 'manual_override_v1'`,
         [body.corridorId, stressScore],
