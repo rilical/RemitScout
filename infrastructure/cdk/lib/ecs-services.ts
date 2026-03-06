@@ -181,9 +181,9 @@ export const createEcsServices = (
   const minHealthyPercent = isProd ? undefined : 50
   const maxHealthyPercent = isProd ? undefined : 200
   const circuitBreaker: DeploymentCircuitBreaker = {
-    enable: true,
-    // Only auto-rollback in prod — in staging, let CDK succeed even if
-    // some worker tasks can't start (avoids CloudFormation stack rollback).
+    // In non-prod, disable the breaker entirely so transient task startup
+    // failures do not hard-fail CloudFormation deploys.
+    enable: isProd,
     rollback: isProd,
   }
   const tagManaged = (service: FargateService): void => {
