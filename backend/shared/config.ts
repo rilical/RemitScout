@@ -1368,12 +1368,22 @@ const rawConfig = {
   },
   auth: {
     supabase: {
-      url: process.env.SUPABASE_URL || '',
-      publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || '',
+      url: process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL || '',
+      publishableKey:
+        process.env.SUPABASE_PUBLISHABLE_KEY ||
+        process.env.PUBLIC_SUPABASE_ANON_KEY ||
+        '',
       serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-      jwksUrl: toSupabaseJwksUrl(process.env.SUPABASE_URL, process.env.SUPABASE_JWKS_URL),
-      jwtIssuer: process.env.SUPABASE_JWT_ISSUER || '',
-      jwtAudience: process.env.SUPABASE_JWT_AUDIENCE || process.env.SUPABASE_JWT_AUD || '',
+      jwksUrl: toSupabaseJwksUrl(
+        process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_JWKS_URL,
+      ),
+      jwtIssuer: process.env.SUPABASE_JWT_ISSUER || process.env.PLANE_A_JWT_ISSUER || '',
+      jwtAudience:
+        process.env.SUPABASE_JWT_AUDIENCE ||
+        process.env.SUPABASE_JWT_AUD ||
+        process.env.PLANE_A_JWT_AUDIENCES ||
+        '',
       verifyMode: toVerifyMode(process.env.SUPABASE_AUTH_VERIFY_MODE),
       remoteVerifyCacheTtlSeconds: toNumber(process.env.SUPABASE_AUTH_REMOTE_VERIFY_CACHE_TTL_SECONDS, 120),
     },
