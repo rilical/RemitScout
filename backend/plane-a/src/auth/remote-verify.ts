@@ -2,7 +2,10 @@ import { config } from '../../../shared/config'
 import { AuthUser } from './types'
 
 export const remoteVerify = async (token: string): Promise<AuthUser | null> => {
-  if (!config.auth.supabase.url || !config.auth.supabase.publishableKey) {
+  const apiKey =
+    config.auth.supabase.serviceRoleKey ||
+    config.auth.supabase.publishableKey
+  if (!config.auth.supabase.url || !apiKey) {
     return null
   }
 
@@ -10,7 +13,7 @@ export const remoteVerify = async (token: string): Promise<AuthUser | null> => {
     const response = await fetch(`${config.auth.supabase.url.replace(/\/$/, '')}/auth/v1/user`, {
       method: 'GET',
       headers: {
-        apikey: config.auth.supabase.publishableKey,
+        apikey: apiKey,
         Authorization: `Bearer ${token}`,
       },
     })

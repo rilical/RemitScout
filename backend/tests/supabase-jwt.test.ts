@@ -62,11 +62,21 @@ describe('verifySupabaseJwt', () => {
     expect('user_id' in result && result.user_id).toBe('u2')
   })
 
-  it('fails closed when jwks keys exist but signature verification fails', async () => {
+  it('falls back to remote when jwks signature verification fails in auto mode', async () => {
     mockConfig.auth.supabase.verifyMode = 'auto'
     vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
     vi.mocked(verifyWithJwks).mockResolvedValue(null)
     vi.mocked(remoteVerify).mockResolvedValue({ user_id: 'u2', claims: {} })
+
+    const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
+    expect('user_id' in result && result.user_id).toBe('u2')
+    expect(remoteVerify).toHaveBeenCalled()
+  })
+
+  it('fails closed in jwks-only mode when signature verification fails', async () => {
+    mockConfig.auth.supabase.verifyMode = 'jwks'
+    vi.mocked(getCachedJwks).mockReturnValue([{ kid: '1' }])
+    vi.mocked(verifyWithJwks).mockResolvedValue(null)
 
     const result = await verifySupabaseJwt(`Bearer ${createUnsignedJwt()}`)
     expect('code' in result && result.code).toBe('invalid_token')

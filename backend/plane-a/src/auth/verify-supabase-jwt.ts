@@ -101,7 +101,9 @@ export const verifySupabaseJwt = async (authorizationHeader?: string): Promise<A
       logger.warn('supabase_jwt_signature_verification_failed', {
         mode,
       })
-      return makeError('invalid_token', 'JWT signature verification failed')
+      if (!allowRemote) {
+        return makeError('invalid_token', 'JWT signature verification failed')
+      }
     }
 
     if (!allowRemote) {
