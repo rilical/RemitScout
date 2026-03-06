@@ -1558,6 +1558,8 @@ export class RemitScoutStack extends Stack {
         stripeSecretArn,
         stripeSsmName,
         communicationsSecretArn,
+        planeAAdminEmails:
+          planeAAdminEmails.length > 0 ? planeAAdminEmails.join(',') : undefined,
         planeAAdminIpAllowlist:
           planeAAdminIpAllowlist.length > 0 ? planeAAdminIpAllowlist.join(',') : undefined,
         b2cQueueInSweep,

@@ -73,6 +73,7 @@ export type EcsTaskOptions = {
   stripeSecretArn?: string
   stripeSsmName?: string
   communicationsSecretArn?: string
+  planeAAdminEmails?: string
   planeAAdminIpAllowlist?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
@@ -272,6 +273,7 @@ export const createEcsTasks = (
   const supabaseSsmName = options.supabaseSsmName
   const stripeSecretArn = options.stripeSecretArn
   const stripeSsmName = options.stripeSsmName
+  const planeAAdminEmails = options.planeAAdminEmails
   const planeAJwtSecretJsonKey = options.planeAJwtSecretJsonKey
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
@@ -1514,6 +1516,9 @@ export const createEcsTasks = (
   const planeAWorkerEnv: Record<string, string> = {
     ...sharedEnv,
   }
+  if (planeAAdminEmails) {
+    planeAWorkerEnv.PLANE_A_ADMIN_EMAILS = planeAAdminEmails
+  }
   if (planeADbHost) {
     planeAWorkerEnv.PLANE_A_DB_HOST = planeADbHost
   }
@@ -2035,4 +2040,3 @@ export const createEcsTasks = (
     discoveryTask,
   }
 }
-
