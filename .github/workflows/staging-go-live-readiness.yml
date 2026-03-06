@@ -33,10 +33,12 @@ jobs:
 
       - name: Validate requested deploy SHA
         if: ${{ inputs.deploy_sha != '' }}
+        env:
+          EXPECTED_DEPLOY_SHA: ${{ inputs.deploy_sha }}
         shell: bash
         run: |
           set -euo pipefail
-          expected_sha="${{ inputs.deploy_sha }}"
+          expected_sha="${EXPECTED_DEPLOY_SHA}"
           actual_sha="$(git rev-parse HEAD)"
 
           if [ "${actual_sha}" != "${expected_sha}" ]; then
