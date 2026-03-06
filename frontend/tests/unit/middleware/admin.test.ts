@@ -48,7 +48,9 @@ describe('admin middleware', () => {
     ensureAdminSession.mockResolvedValue(true)
 
     const middleware = await loadMiddleware()
-    const result = await middleware()
+    const to = {} as Parameters<typeof middleware>[0]
+    const from = {} as Parameters<typeof middleware>[1]
+    const result = await middleware(to, from)
 
     expect(ensureHydrated).toHaveBeenCalledTimes(1)
     expect(ensureAdminSession).toHaveBeenCalledTimes(1)
@@ -59,7 +61,9 @@ describe('admin middleware', () => {
 
   it('redirects to sign-in when neither Supabase auth nor admin bootstrap is available', async () => {
     const middleware = await loadMiddleware()
-    const result = await middleware()
+    const to = {} as Parameters<typeof middleware>[0]
+    const from = {} as Parameters<typeof middleware>[1]
+    const result = await middleware(to, from)
 
     expect(ensureHydrated).toHaveBeenCalledTimes(1)
     expect(ensureAdminSession).toHaveBeenCalledTimes(1)
@@ -73,7 +77,9 @@ describe('admin middleware', () => {
     ensureAdminSession.mockResolvedValue(false)
 
     const middleware = await loadMiddleware()
-    const result = await middleware()
+    const to = {} as Parameters<typeof middleware>[0]
+    const from = {} as Parameters<typeof middleware>[1]
+    const result = await middleware(to, from)
 
     expect(ensureHydrated).toHaveBeenCalledTimes(1)
     expect(ensureAdminSession).toHaveBeenCalledTimes(1)
