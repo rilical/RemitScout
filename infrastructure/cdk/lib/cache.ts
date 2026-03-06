@@ -33,13 +33,24 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const redisAuthMode = options.redisAuthMode ?? (isProtectedEnv ? 'required' : 'legacy')
   const authEnabled = redisAuthMode === 'required'
   const cacheNodeType = isProd ? (options.nodeType ?? 'cache.t4g.small') : 'cache.t4g.micro'
-  const replicasPerNodeGroup = isProd ? (options.replicasPerNodeGroup ?? 1) : undefined
+  const replicasPerNodeGroup = isProtectedEnv ? (options.replicasPerNodeGroup ?? 1) : undefined
   const automaticFailoverEnabled = isProd
     ? (options.automaticFailoverEnabled ?? true)
+    : isStaging
+      ? (options.automaticFailoverEnabled ?? true)
     : undefined
   const multiAzEnabled = isProd
     ? (options.multiAzEnabled ?? true)
+    : isStaging
+      ? (options.multiAzEnabled ?? false)
     : undefined
+
+  if ((replicasPerNodeGroup ?? 0) === 0 && automaticFailoverEnabled) {
+    throw new Error('automaticFailoverEnabled requires replicasPerNodeGroup > 0')
+  }
+  if (multiAzEnabled && !automaticFailoverEnabled) {
+    throw new Error('multiAzEnabled requires automaticFailoverEnabled')
+  }
 
   const redisSnapshottingClusterIdRaw = process.env.REDIS_SNAPSHOTTING_CLUSTER_ID?.trim()
   const redisSnapshottingClusterId =
