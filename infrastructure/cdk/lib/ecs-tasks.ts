@@ -1576,6 +1576,7 @@ export const createEcsTasks = (
     'PLANE_A_ENABLE_JWT_AUTH',
     'PLANE_A_REQUIRE_JWT',
     'PLANE_A_REQUIRE_API_KEY',
+    'ADMIN_MFA_REQUIRED',
     'PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED',
   ] as const
   for (const key of planeARuntimePassthroughKeys) {

@@ -415,6 +415,10 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       ? '1'
       : '0'
   }
+  const adminMfaRequired = process.env.ADMIN_MFA_REQUIRED
+  if (adminMfaRequired !== undefined && adminMfaRequired !== '') {
+    planeAEnvironment.ADMIN_MFA_REQUIRED = adminMfaRequired
+  }
   if (options.frontendBaseUrl) {
     planeAEnvironment.FRONTEND_BASE_URL = options.frontendBaseUrl
   }
