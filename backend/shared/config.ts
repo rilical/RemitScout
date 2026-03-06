@@ -432,8 +432,9 @@ const rawConfig = {
     requireEmailConfirmation: toBoolean(process.env.PLANE_A_REQUIRE_EMAIL_CONFIRMATION, true),
     adminMfaRequired: (() => {
       const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
-      if (isProdLikeEnvironment) return true
+      if (envName === 'prod' || envName === 'production') return true
       if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+      if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true
       return true
     })(),
     apiKeyRotationGraceSeconds: toNumber(process.env.API_KEY_ROTATION_GRACE_SECONDS, 300),
