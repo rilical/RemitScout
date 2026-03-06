@@ -13,6 +13,11 @@ on:
         required: true
         type: boolean
         default: true
+      skip_duplicate_admin_smoke:
+        description: Skip duplicate admin smoke when deploy workflow already produced deploy-time admin evidence
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -289,16 +294,18 @@ jobs:
           pnpm -C backend ci:alerts-watchlists-smoke | tee .smoke-artifacts/staging-omar-entitlement-smoke.log
 
       - name: Verify runner IP is allowlisted for staging admin smoke
+        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
-          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
+          DEFAULT_ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
         run: |
           set -euo pipefail
-          if [ -z "${ADMIN_IP_ALLOWLIST:-}" ]; then
+          admin_allowlist="${ADMIN_IP_ALLOWLIST:-${WAF_ADMIN_ALLOWLIST_IPS:-${DEFAULT_ADMIN_IP_ALLOWLIST:-}}}"
+          if [ -z "${admin_allowlist:-}" ]; then
             echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
             exit 1
           fi
           runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
-          python3 - "$runner_ip" "$ADMIN_IP_ALLOWLIST" <<'PY'
+          python3 - "$runner_ip" "$admin_allowlist" <<'PY'
           import ipaddress
           import sys
 
@@ -316,6 +323,7 @@ jobs:
           PY
 
       - name: Admin surface smoke (staging)
+        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
           SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
@@ -341,9 +349,11 @@ jobs:
           pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/staging-admin-surface-smoke.log
 
       - name: Install Playwright browser runtime (staging admin UI smoke)
+        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         run: pnpm -C frontend exec playwright install --with-deps chromium
 
       - name: Admin UI smoke (staging)
+        if: ${{ !inputs.skip_duplicate_admin_smoke }}
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
           E2E_AUTH_EMAIL: omar@remit-scout.com

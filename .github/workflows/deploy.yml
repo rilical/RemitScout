@@ -1201,6 +1201,49 @@ jobs:
             --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
             "${IMAGE_URI}"
 
+      - name: Extend staging admin allowlists for runner-backed smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
+          python3 - "$runner_ip" "${ADMIN_IP_ALLOWLIST:-}" "${WAF_ADMIN_ALLOWLIST_IPS:-}" "$GITHUB_ENV" <<'PY'
+          import ipaddress
+          import pathlib
+          import sys
+
+          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
+          admin_allowlist_raw = sys.argv[2]
+          waf_allowlist_raw = sys.argv[3]
+          github_env_path = pathlib.Path(sys.argv[4])
+          runner_cidr = f"{runner_ip}/{32 if runner_ip.version == 4 else 128}"
+
+          def ensure_runner_allowlisted(raw: str) -> tuple[str, bool]:
+              entries = [item.strip() for item in raw.split(",") if item.strip()]
+              for entry in entries:
+                  network = ipaddress.ip_network(entry if "/" in entry else f"{entry}/32", strict=False)
+                  if runner_ip in network:
+                      return ",".join(entries), False
+              entries.append(runner_cidr)
+              return ",".join(entries), True
+
+          updated_admin, admin_added = ensure_runner_allowlisted(admin_allowlist_raw)
+          updated_waf, waf_added = ensure_runner_allowlisted(waf_allowlist_raw)
+
+          with github_env_path.open("a", encoding="utf-8") as handle:
+              handle.write(f"STAGING_ADMIN_SMOKE_RUNNER_IP={runner_ip}\n")
+              handle.write(f"STAGING_ADMIN_SMOKE_RUNNER_CIDR={runner_cidr}\n")
+              handle.write(f"ADMIN_IP_ALLOWLIST={updated_admin}\n")
+              handle.write(f"WAF_ADMIN_ALLOWLIST_IPS={updated_waf}\n")
+
+          if admin_added or waf_added:
+              print(
+                  f"Appended {runner_cidr} to staging admin allowlists for this deployment "
+                  f"(runner IP {runner_ip})."
+              )
+          else:
+              print(f"Runner IP {runner_ip} is already covered by the staging admin allowlists.")
+          PY
+
       - name: CDK Diff (staging)
         shell: bash
         env:
@@ -1665,16 +1708,15 @@ jobs:
 
       - name: Verify runner IP is allowlisted for staging admin smoke
         shell: bash
-        env:
-          ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST || vars.WAF_ADMIN_ALLOWLIST_IPS }}
         run: |
           set -euo pipefail
-          if [ -z "${ADMIN_IP_ALLOWLIST:-}" ]; then
+          admin_allowlist="${ADMIN_IP_ALLOWLIST:-${WAF_ADMIN_ALLOWLIST_IPS:-}}"
+          if [ -z "${admin_allowlist:-}" ]; then
             echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
             exit 1
           fi
-          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
-          python3 - "$runner_ip" "$ADMIN_IP_ALLOWLIST" <<'PY'
+          runner_ip="${STAGING_ADMIN_SMOKE_RUNNER_IP:-$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')}"
+          python3 - "$runner_ip" "$admin_allowlist" <<'PY'
           import ipaddress
           import sys
 
@@ -1829,7 +1871,10 @@ jobs:
 
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true -f deploy_sha="${deploy_sha}"
+          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" \
+            -f run_runtime_config_validation=true \
+            -f skip_duplicate_admin_smoke=true \
+            -f deploy_sha="${deploy_sha}"
 
           run_id=""
           for i in $(seq 1 60); do
