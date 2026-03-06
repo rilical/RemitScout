@@ -1742,6 +1742,7 @@ jobs:
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
           ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
         run: |
           set -euo pipefail
@@ -1768,6 +1769,7 @@ jobs:
           SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
           SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
           SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
+          SMOKE_USER_MFA_CODE="$SMOKE_USER_MFA_CODE" \
           ADMIN_SMOKE_TARGET_EMAIL="$ADMIN_SMOKE_TARGET_EMAIL" \
           pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/deploy-staging-admin-surface-smoke.log
 

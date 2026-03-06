@@ -16,6 +16,36 @@ type SupabasePasswordSignInResponse = {
   error_description?: string
 }
 
+type SupabaseUserFactor = {
+  id?: string
+  factor_type?: string
+  status?: string
+}
+
+type SupabaseUserResponse = {
+  id?: string
+  email?: string
+  factors?: SupabaseUserFactor[]
+  error?: string
+  message?: string
+}
+
+type SupabaseMfaChallengeResponse = {
+  id?: string
+  error?: string
+  message?: string
+}
+
+type SupabaseMfaVerifyResponse = {
+  access_token?: string
+  expires_in?: number
+  refresh_token?: string
+  token_type?: string
+  error?: string
+  error_description?: string
+  message?: string
+}
+
 type AdminExchangeResponse = {
   access_token?: string
   expires_in?: number
@@ -80,6 +110,34 @@ export const findPlanForEmail = (
   return body.users?.find((user) => user.email?.trim().toLowerCase() === normalized) ?? null
 }
 
+export const readSmokeUserMfaCode = (
+  env: NodeJS.ProcessEnv = process.env,
+): string => env.SMOKE_USER_MFA_CODE?.trim() || env.E2E_AUTH_MFA_CODE?.trim() || ''
+
+export const findVerifiedTotpFactor = (
+  body: SupabaseUserResponse,
+): SupabaseUserFactor | null => body.factors?.find((factor) =>
+  factor.factor_type === 'totp' && factor.status === 'verified',
+) ?? null
+
+export const hasTotpMfaAmr = (accessToken: string): boolean => {
+  const [, payload = ''] = accessToken.split('.')
+  if (!payload) return false
+
+  try {
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const normalized = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
+    const parsed = JSON.parse(Buffer.from(normalized, 'base64').toString('utf8')) as {
+      amr?: Array<{ method?: string; mfa?: boolean }>
+    }
+    const amr = Array.isArray(parsed?.amr) ? parsed.amr : []
+    return amr.some((entry) => entry?.mfa === true || entry?.method === 'totp')
+  }
+  catch {
+    return false
+  }
+}
+
 const mustEnv = (key: string): string => {
   const value = process.env[key]
   if (!value || !value.trim()) {
@@ -98,6 +156,82 @@ const jsonFetch = async <T = unknown>(
     ? await res.json().catch(() => ({}))
     : await res.text().catch(() => '')
   return { status: res.status, body: body as T }
+}
+
+const buildSupabaseHeaders = (apiKey: string, accessToken?: string): HeadersInit => ({
+  apikey: apiKey,
+  ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+  'Content-Type': 'application/json',
+})
+
+const maybeVerifySupabaseMfa = async (
+  supabaseUrl: string,
+  apiKey: string,
+  accessToken: string,
+): Promise<string> => {
+  if (hasTotpMfaAmr(accessToken)) {
+    return accessToken
+  }
+
+  const { status: userStatus, body: userBody } = await jsonFetch<SupabaseUserResponse>(
+    `${supabaseUrl.replace(/\/$/, '')}/auth/v1/user`,
+    {
+      headers: buildSupabaseHeaders(apiKey, accessToken),
+    },
+  )
+
+  if (userStatus >= 400) {
+    throw new Error(`Supabase getUser failed status=${userStatus} body=${JSON.stringify(userBody)}`)
+  }
+
+  const verifiedTotpFactor = findVerifiedTotpFactor(userBody)
+  if (!verifiedTotpFactor?.id) {
+    return accessToken
+  }
+
+  const mfaCode = readSmokeUserMfaCode()
+  if (!mfaCode) {
+    throw new Error('Missing SMOKE_USER_MFA_CODE for smoke user with verified TOTP MFA factor.')
+  }
+
+  const { status: challengeStatus, body: challengeBody } = await jsonFetch<SupabaseMfaChallengeResponse>(
+    `${supabaseUrl.replace(/\/$/, '')}/auth/v1/factors/${verifiedTotpFactor.id}/challenge`,
+    {
+      method: 'POST',
+      headers: buildSupabaseHeaders(apiKey, accessToken),
+      body: JSON.stringify({ factorId: verifiedTotpFactor.id }),
+    },
+  )
+
+  const challengeId = typeof challengeBody?.id === 'string' ? challengeBody.id : ''
+  if (challengeStatus >= 400 || !challengeId) {
+    throw new Error(
+      `Supabase MFA challenge failed status=${challengeStatus} body=${JSON.stringify(challengeBody)}`,
+    )
+  }
+
+  const { status: verifyStatus, body: verifyBody } = await jsonFetch<SupabaseMfaVerifyResponse>(
+    `${supabaseUrl.replace(/\/$/, '')}/auth/v1/factors/${verifiedTotpFactor.id}/verify`,
+    {
+      method: 'POST',
+      headers: buildSupabaseHeaders(apiKey, accessToken),
+      body: JSON.stringify({
+        challenge_id: challengeId,
+        code: mfaCode,
+      }),
+    },
+  )
+
+  const verifiedAccessToken = typeof verifyBody?.access_token === 'string'
+    ? verifyBody.access_token
+    : ''
+  if (verifyStatus >= 400 || !verifiedAccessToken) {
+    throw new Error(
+      `Supabase MFA verify failed status=${verifyStatus} body=${JSON.stringify(verifyBody)}`,
+    )
+  }
+
+  return verifiedAccessToken
 }
 
 const signInSupabase = async (): Promise<string> => {
@@ -129,7 +263,7 @@ const signInSupabase = async (): Promise<string> => {
   if (status >= 400 || !token) {
     throw new Error(`Supabase sign-in failed status=${status} body=${JSON.stringify(body)}`)
   }
-  return token
+  return await maybeVerifySupabaseMfa(supabaseUrl, apiKey, token)
 }
 
 const printResultsAndExit = (checks: Check[]) => {

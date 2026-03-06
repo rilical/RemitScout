@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   findPlanForEmail,
+  findVerifiedTotpFactor,
+  hasTotpMfaAmr,
   readAdminSmokeConfig,
+  readSmokeUserMfaCode,
 } from '../scripts/ci/admin-surface-smoke'
 
 describe('admin surface smoke helpers', () => {
@@ -28,5 +31,41 @@ describe('admin surface smoke helpers', () => {
       plan_code: 'enterprise',
       plan_status: 'active',
     })
+  })
+
+  it('reads the smoke MFA code from dedicated or shared env vars', () => {
+    expect(readSmokeUserMfaCode({
+      SMOKE_USER_MFA_CODE: ' 654321 ',
+    })).toBe('654321')
+
+    expect(readSmokeUserMfaCode({
+      E2E_AUTH_MFA_CODE: ' 123456 ',
+    })).toBe('123456')
+  })
+
+  it('finds a verified TOTP factor when present', () => {
+    expect(findVerifiedTotpFactor({
+      factors: [
+        { id: 'phone-1', factor_type: 'phone', status: 'verified' },
+        { id: 'totp-1', factor_type: 'totp', status: 'verified' },
+      ],
+    })).toEqual({
+      id: 'totp-1',
+      factor_type: 'totp',
+      status: 'verified',
+    })
+  })
+
+  it('detects TOTP MFA proof in Supabase access-token amr claims', () => {
+    const payload = Buffer.from(JSON.stringify({
+      amr: [
+        { method: 'password' },
+        { method: 'totp', mfa: true },
+      ],
+    })).toString('base64url')
+    const token = `header.${payload}.signature`
+
+    expect(hasTotpMfaAmr(token)).toBe(true)
+    expect(hasTotpMfaAmr('header.e30.signature')).toBe(false)
   })
 })
