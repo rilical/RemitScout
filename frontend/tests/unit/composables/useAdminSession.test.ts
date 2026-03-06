@@ -153,7 +153,8 @@ describe('useAdminSession', () => {
 
     expect(mockRequest).toHaveBeenCalledTimes(1)
 
-    resolveExchange?.({
+    expect(resolveExchange).toBeTypeOf('function')
+    resolveExchange!({
       access_token: makeAdminToken(),
       expires_in: 3600,
       token_type: 'Bearer',
