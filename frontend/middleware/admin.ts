@@ -2,10 +2,20 @@ export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) return
 
   const { ensureHydrated, isAuthenticated } = useAuth()
+  const { ensureAdminSession } = useAdminSession()
   const { request } = useApi()
 
   await ensureHydrated()
-  if (!isAuthenticated.value) {
+
+  let adminSessionReady = false
+  try {
+    adminSessionReady = await ensureAdminSession()
+  }
+  catch {
+    adminSessionReady = false
+  }
+
+  if (!isAuthenticated.value && !adminSessionReady) {
     return navigateTo('/sign-in')
   }
 
@@ -17,6 +27,9 @@ export default defineNuxtRouteMiddleware(async () => {
     }
   }
   catch {
+    if (!isAuthenticated.value && !adminSessionReady) {
+      return navigateTo('/sign-in')
+    }
     return navigateTo('/')
   }
 })
