@@ -1527,6 +1527,9 @@ export const createEcsTasks = (
   if (planeAAdminEmails) {
     planeAWorkerEnv.PLANE_A_ADMIN_EMAILS = planeAAdminEmails
   }
+  if (planeAAdminIpAllowlist) {
+    planeAWorkerEnv.ADMIN_IP_ALLOWLIST = planeAAdminIpAllowlist
+  }
   if (planeACorsOrigins) {
     planeAWorkerEnv.PLANE_A_CORS_ORIGINS = planeACorsOrigins
   }
@@ -1553,6 +1556,26 @@ export const createEcsTasks = (
   }
   if (planeADbName) {
     planeAWorkerEnv.PLANE_A_DB_NAME = planeADbName
+  }
+  const planeARuntimePassthroughKeys = [
+    'WAF_ADMIN_ALLOWLIST_IPS',
+    'WAF_ALLOWLIST_IPS',
+    'PRIVACY_HASH_SALT',
+    'PRIVACY_SESSION_SALT',
+    'PUBLIC_SITE_URL',
+    'FRONTEND_BASE_URL',
+    'PLANE_A_JWT_ISSUER',
+    'PLANE_A_JWT_AUDIENCES',
+    'PLANE_A_ENABLE_JWT_AUTH',
+    'PLANE_A_REQUIRE_JWT',
+    'PLANE_A_REQUIRE_API_KEY',
+    'PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED',
+  ] as const
+  for (const key of planeARuntimePassthroughKeys) {
+    const value = process.env[key]
+    if (value !== undefined && value !== '' && planeAWorkerEnv[key] === undefined) {
+      planeAWorkerEnv[key] = value
+    }
   }
 
   const alertEvaluationTask = new FargateTaskDefinition(
