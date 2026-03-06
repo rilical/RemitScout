@@ -422,12 +422,12 @@ const main = async () => {
          FROM silver.user_account ua
          LEFT JOIN silver.user_plan up ON ua.user_id = up.user_id
          WHERE LOWER(ua.email) = ANY($1::text[])`,
-        [launchUsers.map((u) => u.email.toLowerCase())],
+        [LAUNCH_USERS.map((u) => u.email.toLowerCase())],
         pool,
       )
 
       let mismatches = 0
-      for (const user of launchUsers) {
+      for (const user of LAUNCH_USERS) {
         const row = verifyResult.rows.find((r) => r.email?.toLowerCase() === user.email.toLowerCase())
         if (!row) {
           logger.error('seed_verify_missing', { email: user.email })
@@ -446,7 +446,7 @@ const main = async () => {
       if (mismatches > 0) {
         throw new Error(`Seed verification failed: ${mismatches} user(s) have incorrect roles/plans`)
       }
-      logger.info('seed_verify_passed', { count: launchUsers.length })
+      logger.info('seed_verify_passed', { count: LAUNCH_USERS.length })
     }
   } finally {
     if (pool) {
