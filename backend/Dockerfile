@@ -19,7 +19,9 @@ RUN if [ "$SKIP_BACKEND_BUILD" != "1" ]; then pnpm -C backend build; else echo "
 FROM public.ecr.aws/docker/library/node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates \
+ && rm -rf /usr/local/lib/node_modules/npm \
+ && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 ARG BUILD_VERSION=dev
 LABEL org.opencontainers.image.revision=$BUILD_VERSION
 
