@@ -138,6 +138,14 @@ export const hasTotpMfaAmr = (accessToken: string): boolean => {
   }
 }
 
+export const isAdminMfaRequiredResponse = (
+  status: number,
+  body: AdminExchangeResponse | null | undefined,
+): boolean => status === 403 && (
+  body?.error === 'mfa_required' ||
+  body?.code === 'mfa_required'
+)
+
 const mustEnv = (key: string): string => {
   const value = process.env[key]
   if (!value || !value.trim()) {
@@ -234,7 +242,13 @@ const maybeVerifySupabaseMfa = async (
   return verifiedAccessToken
 }
 
-const signInSupabase = async (): Promise<string> => {
+type SupabaseSession = {
+  supabaseUrl: string
+  apiKey: string
+  accessToken: string
+}
+
+const signInSupabase = async (): Promise<SupabaseSession> => {
   const supabaseUrl = mustEnv('SUPABASE_URL')
   const apiKey =
     process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ||
@@ -263,8 +277,23 @@ const signInSupabase = async (): Promise<string> => {
   if (status >= 400 || !token) {
     throw new Error(`Supabase sign-in failed status=${status} body=${JSON.stringify(body)}`)
   }
-  return await maybeVerifySupabaseMfa(supabaseUrl, apiKey, token)
+
+  return {
+    supabaseUrl,
+    apiKey,
+    accessToken: token,
+  }
 }
+
+const exchangeAdminSession = async (
+  apiBase: string,
+  supabaseAccessToken: string,
+) => await jsonFetch<AdminExchangeResponse>(`${apiBase}/sessions/admin/exchange`, {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${supabaseAccessToken}`,
+  },
+})
 
 const printResultsAndExit = (checks: Check[]) => {
   const failures = checks.filter((check) => !check.ok)
@@ -285,18 +314,21 @@ const main = async () => {
   const apiBase = resolveSmokeApiBaseUrl(smokeBaseUrl)
   const rootBase = resolveSmokeRootBaseUrl(smokeBaseUrl)
   const adminConfig = readAdminSmokeConfig()
-  const supabaseAccessToken = await signInSupabase()
-  const supabaseAuthHeaders = {
-    Authorization: `Bearer ${supabaseAccessToken}`,
+  const supabaseSession = await signInSupabase()
+  let exchange = await exchangeAdminSession(apiBase, supabaseSession.accessToken)
+  let supabaseAccessToken = supabaseSession.accessToken
+
+  if (isAdminMfaRequiredResponse(exchange.status, exchange.body)) {
+    supabaseAccessToken = await maybeVerifySupabaseMfa(
+      supabaseSession.supabaseUrl,
+      supabaseSession.apiKey,
+      supabaseSession.accessToken,
+    )
+    exchange = await exchangeAdminSession(apiBase, supabaseAccessToken)
   }
 
   const checks: Check[] = []
   const record = (check: Check) => checks.push(check)
-
-  const exchange = await jsonFetch<AdminExchangeResponse>(`${apiBase}/sessions/admin/exchange`, {
-    method: 'POST',
-    headers: supabaseAuthHeaders,
-  })
 
   const adminAccessToken = typeof exchange.body?.access_token === 'string'
     ? exchange.body.access_token

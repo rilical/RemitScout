@@ -3,6 +3,7 @@ import {
   findPlanForEmail,
   findVerifiedTotpFactor,
   hasTotpMfaAmr,
+  isAdminMfaRequiredResponse,
   readAdminSmokeConfig,
   readSmokeUserMfaCode,
 } from '../scripts/ci/admin-surface-smoke'
@@ -67,5 +68,23 @@ describe('admin surface smoke helpers', () => {
 
     expect(hasTotpMfaAmr(token)).toBe(true)
     expect(hasTotpMfaAmr('header.e30.signature')).toBe(false)
+  })
+
+  it('only treats admin exchange mfa_required responses as MFA challenges', () => {
+    expect(isAdminMfaRequiredResponse(403, {
+      error: 'mfa_required',
+    })).toBe(true)
+
+    expect(isAdminMfaRequiredResponse(403, {
+      code: 'mfa_required',
+    })).toBe(true)
+
+    expect(isAdminMfaRequiredResponse(403, {
+      error: 'forbidden',
+    })).toBe(false)
+
+    expect(isAdminMfaRequiredResponse(200, {
+      error: 'mfa_required',
+    })).toBe(false)
   })
 })
