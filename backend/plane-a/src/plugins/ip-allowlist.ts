@@ -22,6 +22,16 @@ const parseForwardedIps = (value: string | string[] | undefined): string[] => {
     .filter(Boolean)
 }
 
+const parseViewerAddress = (value: string | string[] | undefined): string | null => {
+  const raw = Array.isArray(value) ? value[0] : value
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  const candidate = raw.trim()
+  const portSeparator = candidate.lastIndexOf(':')
+  if (portSeparator <= 0) return candidate
+  const ipCandidate = candidate.slice(0, portSeparator)
+  return ipCandidate || candidate
+}
+
 const isCloudFrontForwardedRequest = (request: FastifyRequest): boolean => {
   const headers = request.headers ?? {}
   const cfId = headers['x-amz-cf-id']
@@ -39,11 +49,15 @@ export const resolveClientIp = (request: FastifyRequest): string | null => {
   }
 
   const headers = request.headers ?? {}
+  const viewerAddress = parseViewerAddress(headers['cloudfront-viewer-address'])
+  if (viewerAddress) {
+    return viewerAddress
+  }
   const forwarded = headers['x-forwarded-for']
   const forwardedIps = parseForwardedIps(forwarded)
-  const lastForwardedIp = forwardedIps.at(-1) || null
-  if (lastForwardedIp) {
-    return lastForwardedIp
+  const firstForwardedIp = forwardedIps[0] || null
+  if (firstForwardedIp) {
+    return firstForwardedIp
   }
 
   return remoteIp

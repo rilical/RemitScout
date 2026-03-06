@@ -53,7 +53,7 @@ describe('admin IP allowlist', () => {
     expect(allowed.statusCode).toBe(200)
   })
 
-  it('uses the last forwarded IP when the request is coming through CloudFront', async () => {
+  it('uses the original viewer IP when the request is coming through CloudFront', async () => {
     const app = await createApp(['203.0.113.10/32'])
 
     const allowed = await app.inject({
@@ -62,7 +62,24 @@ describe('admin IP allowlist', () => {
       remoteAddress: '54.239.1.10',
       headers: {
         'x-amz-cf-id': 'cf-request-id',
-        'x-forwarded-for': '198.51.100.50, 203.0.113.10',
+        'x-forwarded-for': '203.0.113.10, 54.239.1.10',
+      },
+    })
+
+    expect(allowed.statusCode).toBe(200)
+  })
+
+  it('prefers the CloudFront viewer address when the header is available', async () => {
+    const app = await createApp(['203.0.113.10/32'])
+
+    const allowed = await app.inject({
+      method: 'GET',
+      url: '/api/v1/admin/test',
+      remoteAddress: '54.239.1.10',
+      headers: {
+        'x-amz-cf-id': 'cf-request-id',
+        'cloudfront-viewer-address': '203.0.113.10:43124',
+        'x-forwarded-for': '198.51.100.50, 54.239.1.10',
       },
     })
 

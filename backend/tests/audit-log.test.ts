@@ -29,11 +29,11 @@ describe('audit-log', () => {
     })
   })
 
-  it('uses the final forwarded hop for CloudFront-proxied requests', () => {
+  it('uses the original viewer IP for CloudFront-proxied requests', () => {
     const context = getRequestContext({
       headers: {
         'x-amz-cf-id': 'cf-request-id',
-        'x-forwarded-for': '198.51.100.20, 203.0.113.10',
+        'x-forwarded-for': '203.0.113.10, 54.239.1.10',
         'user-agent': 'test-agent',
       },
       id: 'req-2',
@@ -44,6 +44,26 @@ describe('audit-log', () => {
       ipAddress: '203.0.113.10',
       userAgent: 'test-agent',
       requestId: 'req-2',
+      sessionId: undefined,
+    })
+  })
+
+  it('prefers cloudfront-viewer-address when present', () => {
+    const context = getRequestContext({
+      headers: {
+        'x-amz-cf-id': 'cf-request-id',
+        'cloudfront-viewer-address': '203.0.113.10:43124',
+        'x-forwarded-for': '198.51.100.20, 54.239.1.10',
+        'user-agent': 'test-agent',
+      },
+      id: 'req-3',
+      ip: '54.239.1.10',
+    } as RequestContextInput)
+
+    expect(context).toEqual({
+      ipAddress: '203.0.113.10',
+      userAgent: 'test-agent',
+      requestId: 'req-3',
       sessionId: undefined,
     })
   })
