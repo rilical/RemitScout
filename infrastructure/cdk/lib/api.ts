@@ -728,13 +728,25 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
     options.enablePlaneAJwtAuth ??
     (options.envName === 'prod' || options.envName === 'staging')
   const planeJwtAuthorizerIssuer = options.planeAJwtIssuer ?? jwtIssuer
+  const supabaseIssuerPattern = /^https:\/\/[a-z0-9-]+\.supabase\.co\/auth\/v1\/?$/i
+  const planeAEdgeJwtAuthorizerSupported = !(
+    planeJwtAuthorizerIssuer && supabaseIssuerPattern.test(planeJwtAuthorizerIssuer.trim())
+  )
+  if (enablePlaneAJwtAuth && !planeAEdgeJwtAuthorizerSupported) {
+    Annotations.of(scope).addWarning(
+      'Plane A edge JWT authorizer disabled for Supabase issuer. AWS HTTP API JWT authorizers require RSA keys, while the current Supabase project publishes ES256 keys. Fastify remains the active JWT enforcement layer.',
+    )
+  }
   const resolvedJwtAudiences = dedupJwtAudiences
-  const planeAJwtAuthorizer = enablePlaneAJwtAuth && planeJwtAuthorizerIssuer && dedupJwtAudiences.length > 0
+  const planeAJwtAuthorizer = enablePlaneAJwtAuth
+    && planeAEdgeJwtAuthorizerSupported
+    && planeJwtAuthorizerIssuer
+    && dedupJwtAudiences.length > 0
     ? new HttpJwtAuthorizer('PlaneAJwtAuthorizer', planeJwtAuthorizerIssuer, {
       jwtAudience: resolvedJwtAudiences,
     })
     : undefined
-  if (enablePlaneAJwtAuth && !planeAJwtAuthorizer) {
+  if (enablePlaneAJwtAuth && planeAEdgeJwtAuthorizerSupported && !planeAJwtAuthorizer) {
     const jwtError =
       'Plane A JWT auth enabled but issuer/audience missing. Set planeAJwtIssuer and planeAJwtAudiences.'
     if (options.envName === 'prod' || options.envName === 'staging') {
