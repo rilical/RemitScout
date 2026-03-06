@@ -61,6 +61,9 @@ type SmokeWatchlistResponse = {
   success?: boolean
   status?: string
   error?: string
+  details?: {
+    error?: string
+  }
   item?: {
     id?: string
   }
@@ -79,6 +82,9 @@ type SmokeAlertResponse = {
   success?: boolean
   status?: string
   error?: string
+  details?: {
+    error?: string
+  }
   alert?: {
     id?: string
   }
@@ -88,6 +94,13 @@ type SmokeCorridorEligibilityResponse = {
   success?: boolean
   smartAlerts?: {
     status?: 'available' | 'rolling_out' | 'not_offered'
+  }
+}
+
+type SmokeApiErrorBody = {
+  error?: string
+  details?: {
+    error?: string
   }
 }
 
@@ -186,7 +199,7 @@ export const evaluateMeChecks = (
         && body.entitlements?.exports_enabled === true
         && body.entitlements?.watchlist_items === null
         && body.entitlements?.alerts_max === null
-        && body.entitlements?.history_max_days === null
+        && body.entitlements?.history_max_days === 365
         && body.entitlements?.api_access === true
         && body.entitlements?.api_tier === 2,
       note: `pulse=${String(body.entitlements?.pulse_access)} exports=${String(body.entitlements?.exports_enabled)} watchlist=${String(body.entitlements?.watchlist_items)} alerts=${String(body.entitlements?.alerts_max)} history=${String(body.entitlements?.history_max_days)} api_access=${String(body.entitlements?.api_access)} api_tier=${String(body.entitlements?.api_tier)}`,
@@ -194,6 +207,12 @@ export const evaluateMeChecks = (
   }
 
   return checks
+}
+
+export const resolveSmokeErrorCode = (body?: SmokeApiErrorBody | null) => {
+  const nestedError = typeof body?.details?.error === 'string' ? body.details.error : ''
+  if (nestedError) return nestedError
+  return typeof body?.error === 'string' ? body.error : ''
 }
 
 const mustEnv = (key: string): string => {
@@ -370,7 +389,7 @@ const main = async () => {
       ok: quoteAlert.status < 500, // may be blocked by quote coverage; we only require a clean error
       note: quoteAlert.body?.success === true
         ? 'created'
-        : `rejected (${String(quoteAlert.body?.error || quoteAlert.status)})`,
+        : `rejected (${String(resolveSmokeErrorCode(quoteAlert.body) || quoteAlert.status)})`,
     })
   } else {
     record({
@@ -388,8 +407,8 @@ const main = async () => {
     })
     record({
       name: 'POST /alerts recipientGets (corridor BO→AR) rejects with quote_not_supported',
-      ok: quoteAlert.status === 400 && quoteAlert.body?.error === 'quote_not_supported',
-      note: `status=${quoteAlert.status} error=${String(quoteAlert.body?.error)}`,
+      ok: quoteAlert.status === 400 && resolveSmokeErrorCode(quoteAlert.body) === 'quote_not_supported',
+      note: `status=${quoteAlert.status} error=${String(resolveSmokeErrorCode(quoteAlert.body))}`,
     })
 
     const smartAlert = await createAlert(corridorBoArId, {
@@ -399,8 +418,8 @@ const main = async () => {
     })
     record({
       name: 'POST /alerts sendScore (corridor BO→AR) rejects with smart_not_offered',
-      ok: smartAlert.status === 400 && smartAlert.body?.error === 'smart_not_offered',
-      note: `status=${smartAlert.status} error=${String(smartAlert.body?.error)}`,
+      ok: smartAlert.status === 400 && resolveSmokeErrorCode(smartAlert.body) === 'smart_not_offered',
+      note: `status=${smartAlert.status} error=${String(resolveSmokeErrorCode(smartAlert.body))}`,
     })
   } else {
     record({

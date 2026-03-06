@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   evaluateMeChecks,
   readSmokeMeExpectations,
+  resolveSmokeErrorCode,
   resolveSmokeApiBaseUrl,
   resolveSmokeRootBaseUrl,
 } from '../scripts/ci/alerts-watchlists-smoke'
@@ -54,7 +55,7 @@ describe('alerts/watchlists smoke helpers', () => {
         exports_enabled: true,
         watchlist_items: null,
         alerts_max: null,
-        history_max_days: null,
+        history_max_days: 365,
         api_access: true,
         api_tier: 2,
       },
@@ -67,5 +68,14 @@ describe('alerts/watchlists smoke helpers', () => {
     })
 
     expect(checks.every(check => check.ok)).toBe(true)
+  })
+
+  it('prefers nested validation detail error codes for alert smoke assertions', () => {
+    expect(resolveSmokeErrorCode({
+      error: 'validation_error',
+      details: {
+        error: 'smart_not_offered',
+      },
+    })).toBe('smart_not_offered')
   })
 })

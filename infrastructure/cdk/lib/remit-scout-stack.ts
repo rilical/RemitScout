@@ -1065,8 +1065,8 @@ export class RemitScoutStack extends Stack {
       return []
     })()
     const planeAAdminEmailsRaw = toList(
-      this.node.tryGetContext('planeAAdminEmails') ??
-      process.env.PLANE_A_ADMIN_EMAILS,
+      process.env.PLANE_A_ADMIN_EMAILS ??
+      this.node.tryGetContext('planeAAdminEmails'),
     )
     const planeAAdminEmails =
       planeAAdminEmailsRaw.length > 0
