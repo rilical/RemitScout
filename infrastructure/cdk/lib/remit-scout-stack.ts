@@ -1555,7 +1555,11 @@ export class RemitScoutStack extends Stack {
         exportsPrefix,
         supabaseSecretArn,
         supabaseSsmName,
+        stripeSecretArn,
+        stripeSsmName,
         communicationsSecretArn,
+        planeAAdminIpAllowlist:
+          planeAAdminIpAllowlist.length > 0 ? planeAAdminIpAllowlist.join(',') : undefined,
         b2cQueueInSweep,
         b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
         fxRateRefreshLoopEnabled: fxRateRefreshServiceEnabled,

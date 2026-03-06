@@ -32,6 +32,16 @@ const ensureCorsOrigins = () => {
 }
 
 export const handler = async (): Promise<void> => {
+  const sharedSecretArn = process.env.SHARED_SECRET_ARN?.trim()
+  if (!process.env.SUPABASE_SECRET_ARN && sharedSecretArn) {
+    process.env.SUPABASE_SECRET_ARN = sharedSecretArn
+  }
+  if (!process.env.STRIPE_SECRET_ARN && sharedSecretArn) {
+    process.env.STRIPE_SECRET_ARN = sharedSecretArn
+  }
+  const envName = (process.env.ENVIRONMENT || '').trim().toLowerCase()
+  const requireProtectedConfig = envName === 'staging' || envName === 'prod'
+
   await resolveDatabaseUrl({
     envVar: 'DATABASE_URL_PLANE_A',
     secretArnEnv: 'PLANE_A_DB_SECRET_ARN',
@@ -191,6 +201,36 @@ export const handler = async (): Promise<void> => {
         'stripe_trial_days',
         'trial_days',
       ],
+    },
+    {
+      envVar: 'HASH_SALT',
+      secretArnEnv: 'SHARED_SECRET_ARN',
+      jsonKeys: [
+        'HASH_SALT',
+        'hash_salt',
+        'privacy_hash_salt',
+      ],
+      required: true,
+    },
+    {
+      envVar: 'SESSION_SALT',
+      secretArnEnv: 'SHARED_SECRET_ARN',
+      jsonKeys: [
+        'SESSION_SALT',
+        'session_salt',
+        'privacy_session_salt',
+      ],
+      required: true,
+    },
+    {
+      envVar: 'ADMIN_IP_ALLOWLIST',
+      secretArnEnv: 'SHARED_SECRET_ARN',
+      jsonKeys: [
+        'ADMIN_IP_ALLOWLIST',
+        'admin_ip_allowlist',
+        'plane_a_admin_ip_allowlist',
+      ],
+      required: requireProtectedConfig,
     },
   ])
 

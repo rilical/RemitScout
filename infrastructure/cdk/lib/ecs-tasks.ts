@@ -70,7 +70,10 @@ export type EcsTaskOptions = {
   exportsPrefix?: string
   supabaseSecretArn?: string
   supabaseSsmName?: string
+  stripeSecretArn?: string
+  stripeSsmName?: string
   communicationsSecretArn?: string
+  planeAAdminIpAllowlist?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
   planeCDbHost?: string
@@ -263,7 +266,12 @@ export const createEcsTasks = (
   const planeCDbHost = options.planeCDbHost ?? options.planeBDbHost
   const planeCDbPort = options.planeCDbPort ?? options.planeBDbPort
   const planeCDbName = options.planeCDbName ?? options.planeBDbName
+  const planeAAdminIpAllowlist = options.planeAAdminIpAllowlist
   const sharedSecretArn = options.sharedSecretArn
+  const supabaseSecretArn = options.supabaseSecretArn
+  const supabaseSsmName = options.supabaseSsmName
+  const stripeSecretArn = options.stripeSecretArn
+  const stripeSsmName = options.stripeSsmName
   const planeAJwtSecretJsonKey = options.planeAJwtSecretJsonKey
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
@@ -513,6 +521,21 @@ export const createEcsTasks = (
     AGENT_LLM_TEMPERATURE: agentLlmTemperature,
     AGENT_LLM_PROMPT_VERSION: agentLlmPromptVersion,
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
+  }
+  if (sharedSecretArn) {
+    sharedEnv.SHARED_SECRET_ARN = sharedSecretArn
+  }
+  if (supabaseSecretArn) {
+    sharedEnv.SUPABASE_SECRET_ARN = supabaseSecretArn
+  }
+  if (supabaseSsmName) {
+    sharedEnv.SUPABASE_SSM_NAME = supabaseSsmName
+  }
+  if (stripeSecretArn) {
+    sharedEnv.STRIPE_SECRET_ARN = stripeSecretArn
+  }
+  if (stripeSsmName) {
+    sharedEnv.STRIPE_SSM_NAME = stripeSsmName
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
   const planeBDbPoolMax = options.planeBDbPoolMax ?? '2'
@@ -1799,6 +1822,9 @@ export const createEcsTasks = (
     PLANE_A_PORT: '4000',
     HEALTH_PORT: '4000',
   }
+  if (planeAAdminIpAllowlist) {
+    planeAApiEnv.ADMIN_IP_ALLOWLIST = planeAAdminIpAllowlist
+  }
   const planeAApiContainer = planeATask.addContainer('PlaneAApiContainer', {
     image,
     readonlyRootFilesystem: true,
@@ -2009,5 +2035,4 @@ export const createEcsTasks = (
     discoveryTask,
   }
 }
-
 
