@@ -5,10 +5,25 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   await ensureHydrated()
 
-  if (!isAuthenticated.value) {
-    return navigateTo({
-      path: '/sign-in',
-      query: { redirect: to.fullPath },
-    })
+  if (isAuthenticated.value) {
+    return
   }
+
+  if (to.path.startsWith('/admin')) {
+    const { ensureAdminSession } = useAdminSession()
+
+    try {
+      if (await ensureAdminSession()) {
+        return
+      }
+    }
+    catch {
+      // Fall through to the regular sign-in redirect when admin bootstrap fails.
+    }
+  }
+
+  return navigateTo({
+    path: '/sign-in',
+    query: { redirect: to.fullPath },
+  })
 })
