@@ -1562,6 +1562,16 @@ export class RemitScoutStack extends Stack {
           planeAAdminEmails.length > 0 ? planeAAdminEmails.join(',') : undefined,
         planeAAdminIpAllowlist:
           planeAAdminIpAllowlist.length > 0 ? planeAAdminIpAllowlist.join(',') : undefined,
+        planeACorsOrigins:
+          planeACorsOrigins.length > 0 ? planeACorsOrigins.join(',') : undefined,
+        planeACorsAllowedHeaders:
+          planeACorsAllowedHeaders.length > 0 ? planeACorsAllowedHeaders.join(',') : undefined,
+        planeACorsAllowedMethods:
+          planeACorsAllowedMethods.length > 0 ? planeACorsAllowedMethods.join(',') : undefined,
+        planeACorsAllowCredentials:
+          planeACorsAllowCredentials === undefined
+            ? undefined
+            : (planeACorsAllowCredentials ? '1' : '0'),
         b2cQueueInSweep,
         b2cRefreshLoopEnabled: b2cRefreshServiceEnabled,
         fxRateRefreshLoopEnabled: fxRateRefreshServiceEnabled,

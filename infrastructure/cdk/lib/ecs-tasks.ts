@@ -75,6 +75,10 @@ export type EcsTaskOptions = {
   communicationsSecretArn?: string
   planeAAdminEmails?: string
   planeAAdminIpAllowlist?: string
+  planeACorsOrigins?: string
+  planeACorsAllowedHeaders?: string
+  planeACorsAllowedMethods?: string
+  planeACorsAllowCredentials?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
   planeCDbHost?: string
@@ -275,6 +279,10 @@ export const createEcsTasks = (
   const stripeSsmName = options.stripeSsmName
   const planeAAdminEmails = options.planeAAdminEmails
   const planeAJwtSecretJsonKey = options.planeAJwtSecretJsonKey
+  const planeACorsOrigins = options.planeACorsOrigins
+  const planeACorsAllowedHeaders = options.planeACorsAllowedHeaders
+  const planeACorsAllowedMethods = options.planeACorsAllowedMethods
+  const planeACorsAllowCredentials = options.planeACorsAllowCredentials
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
   const redisSsmName = options.redisSsmName
@@ -1518,6 +1526,18 @@ export const createEcsTasks = (
   }
   if (planeAAdminEmails) {
     planeAWorkerEnv.PLANE_A_ADMIN_EMAILS = planeAAdminEmails
+  }
+  if (planeACorsOrigins) {
+    planeAWorkerEnv.PLANE_A_CORS_ORIGINS = planeACorsOrigins
+  }
+  if (planeACorsAllowedHeaders) {
+    planeAWorkerEnv.PLANE_A_CORS_ALLOWED_HEADERS = planeACorsAllowedHeaders
+  }
+  if (planeACorsAllowedMethods) {
+    planeAWorkerEnv.PLANE_A_CORS_ALLOWED_METHODS = planeACorsAllowedMethods
+  }
+  if (planeACorsAllowCredentials) {
+    planeAWorkerEnv.PLANE_A_CORS_ALLOW_CREDENTIALS = planeACorsAllowCredentials
   }
   if (planeADbHost) {
     planeAWorkerEnv.PLANE_A_DB_HOST = planeADbHost
