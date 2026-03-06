@@ -89,6 +89,40 @@ describe('createApiClient', () => {
     expect(second.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
+  it('routes admin-surface paths to the direct admin base when configured', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      adminBase: 'https://plane-a.example.com/api/v1',
+      fetcher,
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin_direct',
+    })
+
+    await client.request('/admin/plans')
+
+    const [url, init] = fetcher.mock.calls[0] as any[]
+    expect(url).toBe('https://plane-a.example.com/api/v1/admin/plans')
+    expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+  })
+
+  it('keeps session exchange on the primary base even when a direct admin base is configured', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      adminBase: 'https://plane-a.example.com/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      makeRequestId: () => 'req_exchange_base',
+    })
+
+    await client.request('/sessions/admin/exchange')
+
+    const [url, init] = fetcher.mock.calls[0] as any[]
+    expect(url).toBe('/api/v1/sessions/admin/exchange')
+    expect(init.headers.authorization).toBe('Bearer supabase_token')
+  })
+
   it('request() retries on 5xx and succeeds', async () => {
     vi.useFakeTimers()
     try {

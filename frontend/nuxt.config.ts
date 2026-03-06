@@ -104,6 +104,27 @@ const resolvePublicApiBase = () => {
   // Default: BFF proxy in SSR mode, direct /api/v1 in static mode.
   return staticFallback
 }
+const resolvePublicAdminApiBase = () => {
+  const publicBase = readEnvValue('PUBLIC_API_BASE')
+  if (publicBase) {
+    const normalized = normalizeApiBase(publicBase) || publicBase
+    if (isAbsoluteUrl(normalized)) {
+      return normalized
+    }
+  }
+
+  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+  if (planeACloudFront) {
+    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`
+  }
+
+  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+  if (planeAEndpoint) {
+    return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`
+  }
+
+  return ''
+}
 const resolveServerApiBase = () => {
   const apiBase = readEnvValue('API_BASE')
   if (apiBase) return normalizeApiBase(apiBase) || apiBase
@@ -380,6 +401,7 @@ export default defineNuxtConfig({
           ? cloudfrontPublicOrigin
           : 'https://Remit-Scout.com'),
       apiBase: resolvePublicApiBase(),
+      apiBaseDirect: resolvePublicAdminApiBase(),
       mediaKitPressKitUrl: process.env.PUBLIC_MEDIA_KIT_PRESS_KIT_URL || '',
       mediaKitBrandAssetsUrl: process.env.PUBLIC_MEDIA_KIT_BRAND_ASSETS_URL || '',
       mediaKitFactSheetUrl: process.env.PUBLIC_MEDIA_KIT_FACT_SHEET_URL || '',

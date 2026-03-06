@@ -50,6 +50,7 @@ export function joinBase(base: string, path: string) {
 
 type ApiClientDeps = {
   base: string
+  adminBase?: string
   fetcher: (input: string, init?: FetchOptions) => Promise<unknown>
   getAccessToken?: () => string | null
   getAdminAccessToken?: () => string | null
@@ -127,7 +128,10 @@ export const createApiClient = (deps: ApiClientDeps) => {
   }
 
   async function request<T = unknown>(path: string, options: ApiFetchOptions = {}) {
-    const url = joinBase(deps.base, path)
+    const requestBase = isAdminSurfacePath(path) && deps.adminBase
+      ? deps.adminBase
+      : deps.base
+    const url = joinBase(requestBase, path)
     const requestId = options.headers?.['x-request-id'] || makeRequestId()
     const cloudfrontRequestId = deps.getCloudFrontRequestId?.()
     const serverHeaders = deps.getServerHeaders?.() || {}
@@ -274,6 +278,7 @@ export const useApi = () => {
 
   return createApiClient({
     base,
+    adminBase: config.public.apiBaseDirect || undefined,
     fetcher: $fetch as unknown as ApiClientDeps['fetcher'],
     getAccessToken: () => session.value?.access_token ?? null,
     getAdminAccessToken: () => {
