@@ -1,12 +1,6 @@
-import { CloudWatchClient, PutMetricDataCommand, type MetricDatum, StandardUnit } from '@aws-sdk/client-cloudwatch'
-import { config } from './config'
-import { createLogger } from './logger'
+import { StandardUnit } from '@aws-sdk/client-cloudwatch'
+import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { enqueueNewRelicMetric, isNewRelicMetricExportEnabled } from './newrelic-metric-exporter'
-import { formatError } from './utils/error-handling'
-
-const logger = createLogger('shared.worker-metrics')
-
-let cloudWatchClient: CloudWatchClient | null = null
 const environmentDimension = process.env.ENVIRONMENT || process.env.NODE_ENV || 'development'
 
 const enqueueNewRelicMirror = (
@@ -25,13 +19,6 @@ const enqueueNewRelicMirror = (
       namespace,
     },
   })
-}
-
-const getCloudWatchClient = (): CloudWatchClient => {
-  if (!cloudWatchClient) {
-    cloudWatchClient = new CloudWatchClient({})
-  }
-  return cloudWatchClient
 }
 
 /**
@@ -59,33 +46,13 @@ export const recordWorkerMetric = async (
   }
 
   enqueueNewRelicMirror(operation, count, 'RemitScout/Workers', dimensions)
-
-  try {
-    if (!config.observability.cloudwatch.enabled) return
-
-    const client = getCloudWatchClient()
-    const metricData: MetricDatum[] = [
-      {
-        MetricName: operation,
-        Value: count,
-        Unit: StandardUnit.Count,
-        Timestamp: new Date(),
-        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
-      },
-    ]
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/Workers',
-        MetricData: metricData,
-      }),
-    )
-  } catch (error: unknown) {
-    logger.warn('worker_metric_failed', {
-      worker_name: workerName,
-      operation,
-      error: formatError(error).message,
-    })
-  }
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Workers',
+    name: operation,
+    value: count,
+    unit: StandardUnit.Count,
+    dimensions,
+  })
 }
 
 /**
@@ -110,42 +77,20 @@ export const recordBatchJobMetric = async (
   if (durationSeconds !== undefined) {
     enqueueNewRelicMirror('job_duration', durationSeconds, 'RemitScout/BatchJobs', dimensions)
   }
-
-  try {
-    if (!config.observability.cloudwatch.enabled) return
-
-    const client = getCloudWatchClient()
-    const metricData: MetricDatum[] = [
-      {
-        MetricName: operation,
-        Value: 1,
-        Unit: StandardUnit.Count,
-        Timestamp: new Date(),
-        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
-      },
-    ]
-
-    if (durationSeconds !== undefined) {
-      metricData.push({
-        MetricName: 'job_duration',
-        Value: durationSeconds,
-        Unit: StandardUnit.Seconds,
-        Timestamp: new Date(),
-        Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value })),
-      })
-    }
-
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/BatchJobs',
-        MetricData: metricData,
-      }),
-    )
-  } catch (error: unknown) {
-    logger.warn('batch_job_metric_failed', {
-      job_name: jobName,
-      operation,
-      error: formatError(error).message,
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/BatchJobs',
+    name: operation,
+    value: 1,
+    unit: StandardUnit.Count,
+    dimensions,
+  })
+  if (durationSeconds !== undefined) {
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/BatchJobs',
+      name: 'job_duration',
+      value: durationSeconds,
+      unit: StandardUnit.Seconds,
+      dimensions,
     })
   }
 }
@@ -157,40 +102,16 @@ export const recordQueueDepthMetric = async (
   queueName: string,
   depth: number,
 ): Promise<void> => {
-  enqueueNewRelicMirror(
-    'queue_depth',
-    depth,
-    'RemitScout/Queues',
-    { QueueName: queueName, environment: environmentDimension },
-  )
-
-  try {
-    if (!config.observability.cloudwatch.enabled) return
-
-    const client = getCloudWatchClient()
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/Queues',
-        MetricData: [
-          {
-            MetricName: 'queue_depth',
-            Value: depth,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'QueueName', Value: queueName },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-        ],
-      }),
-    )
-  } catch (error: unknown) {
-    logger.warn('queue_depth_metric_failed', {
-      queue_name: queueName,
-      error: formatError(error).message,
-    })
-  }
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Queues',
+    name: 'queue_depth',
+    value: depth,
+    unit: StandardUnit.Count,
+    dimensions: {
+      QueueName: queueName,
+      environment: environmentDimension,
+    },
+  })
 }
 
 /**
@@ -201,39 +122,15 @@ export const recordDLQMessageCount = async (
   dlqName: string,
   count: number,
 ): Promise<void> => {
-  enqueueNewRelicMirror(
-    'dlq_message_count',
-    count,
-    'RemitScout/Queues',
-    { QueueName: queueName, DLQName: dlqName, environment: environmentDimension },
-  )
-
-  try {
-    if (!config.observability.cloudwatch.enabled) return
-
-    const client = getCloudWatchClient()
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/Queues',
-        MetricData: [
-          {
-            MetricName: 'dlq_message_count',
-            Value: count,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'QueueName', Value: queueName },
-              { Name: 'DLQName', Value: dlqName },
-              { Name: 'environment', Value: environmentDimension },
-            ],
-          },
-        ],
-      }),
-    )
-  } catch (error: unknown) {
-    logger.warn('dlq_message_count_metric_failed', {
-      queue_name: queueName,
-      error: formatError(error).message,
-    })
-  }
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Queues',
+    name: 'dlq_message_count',
+    value: count,
+    unit: StandardUnit.Count,
+    dimensions: {
+      QueueName: queueName,
+      DLQName: dlqName,
+      environment: environmentDimension,
+    },
+  })
 }

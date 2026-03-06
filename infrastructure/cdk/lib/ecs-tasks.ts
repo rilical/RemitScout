@@ -1803,8 +1803,8 @@ export const createEcsTasks = (
     image,
     readonlyRootFilesystem: true,
     command: resolveCommand(
-      'plane-a/src/server.js',
-      'plane-a/src/server.ts',
+      'scripts/aws/plane-a-api-ecs.js',
+      'scripts/aws/plane-a-api-ecs.ts',
     ),
     environment: planeAApiEnv,
     ...secretsConfig,
@@ -1864,8 +1864,8 @@ export const createEcsTasks = (
     image,
     readonlyRootFilesystem: true,
     command: resolveCommand(
-      'plane-c/src/server.js',
-      'plane-c/src/server.ts',
+      'scripts/aws/plane-c-api-ecs.js',
+      'scripts/aws/plane-c-api-ecs.ts',
     ),
     environment: planeCApiEnv,
     ...goldLiveSecretsConfig,
@@ -2009,6 +2009,5 @@ export const createEcsTasks = (
     discoveryTask,
   }
 }
-
 
 

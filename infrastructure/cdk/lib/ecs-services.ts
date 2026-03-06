@@ -64,6 +64,7 @@ export type EcsServiceOptions = {
   agentOrchestratorServiceEnabled?: boolean
   stressResponderServiceEnabled?: boolean
   normalizationServiceEnabled?: boolean
+  planeADesiredCount?: number
   planeBIngestDesiredCount?: number
   queueWorkerDesiredCount?: number
   queueWorkerMaxCount?: number
@@ -111,6 +112,9 @@ export const createEcsServices = (
   const baseQueueDesired = isProd ? 1 : 0
   const baseB2cRefreshDesired = isProd ? 1 : 0
   const baseFxRateRefreshDesired = isProd ? 1 : 0
+  const planeADesired = isPaused
+    ? 0
+    : Math.max(0, options.planeADesiredCount ?? 1)
 
   const planeBIngestDesired = isPaused
     ? 0
@@ -261,7 +265,7 @@ export const createEcsServices = (
   const planeAService = new FargateService(scope, 'PlaneAService', {
     cluster: options.cluster,
     taskDefinition: options.planeATask,
-    desiredCount: isPaused ? 0 : 1,
+    desiredCount: planeADesired,
     assignPublicIp: usePublicSubnets,
     vpcSubnets: { subnetType },
     securityGroups: [options.planeASecurityGroup],
@@ -525,8 +529,8 @@ export const createEcsServices = (
   // prod:     min=1, max=4, target CPU=60%
   // non-prod: min=1, max=2, target CPU=60%
   if (!isPaused) {
-    const planeAMinCapacity = 1
-    const planeAMaxCapacity = isProd ? 4 : 2
+    const planeAMinCapacity = isPaused ? 0 : planeADesired
+    const planeAMaxCapacity = Math.max(isProd ? 4 : 2, planeADesired)
     const planeAScaling = planeAService.autoScaleTaskCount({
       minCapacity: planeAMinCapacity,
       maxCapacity: planeAMaxCapacity,

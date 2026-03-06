@@ -79,6 +79,18 @@ const resolveOriginDomain = (value: string): string => {
   return trimmed.split('/')[0]
 }
 
+const resolveFrontendAliases = (envName: string, frontendDomainName?: string): string[] => {
+  const trimmed = frontendDomainName?.trim()
+  if (!trimmed) return []
+
+  const aliases = [trimmed]
+  if (envName === 'prod' && trimmed.split('.').length === 2) {
+    aliases.push(`www.${trimmed}`)
+  }
+
+  return [...new Set(aliases)]
+}
+
 export const createFrontend = (
   scope: Construct,
   options: FrontendOptions,
@@ -153,6 +165,9 @@ export const createFrontend = (
         options.frontendCertificateArn,
       )
     : undefined
+  const frontendAliases = certificate
+    ? resolveFrontendAliases(options.envName, options.frontendDomainName)
+    : []
 
   const distribution = new Distribution(scope, 'FrontendDistribution', {
     defaultBehavior: {
@@ -261,10 +276,7 @@ export const createFrontend = (
         compress: true,
       },
     },
-    domainNames:
-      certificate && options.frontendDomainName
-        ? [options.frontendDomainName]
-        : undefined,
+    domainNames: frontendAliases.length > 0 ? frontendAliases : undefined,
     certificate,
     errorResponses: [
       {
@@ -303,11 +315,13 @@ export const createFrontend = (
       },
     )
 
-    new ARecord(scope, 'FrontendARecord', {
-      zone: hostedZone,
-      recordName: options.frontendDomainName,
-      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
-    })
+    for (const [index, recordName] of frontendAliases.entries()) {
+      new ARecord(scope, `FrontendAliasRecord${index + 1}`, {
+        zone: hostedZone,
+        recordName,
+        target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      })
+    }
   }
 
   new CfnOutput(scope, 'FrontendBucketName', {

@@ -217,6 +217,40 @@ jobs:
           echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
           exit 1
 
+      - name: Warn on non-prod security drift (dev)
+        shell: bash
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ENV_NAME: dev
+        run: |
+          set -uo pipefail
+
+          account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
+          if [ -z "${account_id}" ] || [ "${account_id}" = "None" ]; then
+            echo "::warning::Unable to resolve AWS account ID for ${ENV_NAME}; skipping GuardDuty/Inspector drift check."
+            exit 0
+          fi
+
+          detector_ids="$(aws guardduty list-detectors --region "${AWS_REGION}" --query 'DetectorIds' --output text 2>/dev/null || true)"
+          if [ -n "${detector_ids}" ] && [ "${detector_ids}" != "None" ]; then
+            echo "::warning::GuardDuty remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+          fi
+
+          inspector_json="$(aws inspector2 batch-get-account-status --account-ids "${account_id}" --region "${AWS_REGION}" --output json 2>/dev/null || true)"
+          if [ -z "${inspector_json}" ]; then
+            exit 0
+          fi
+
+          inspector_state="$(printf '%s' "${inspector_json}" | jq -r '.accounts[0].state.status // empty')"
+          enabled_resources="$(printf '%s' "${inspector_json}" | jq -r '[.accounts[0].resourceState | to_entries[]? | select(.value.status == "ENABLED") | .key] | join(",")')"
+          if [ "${inspector_state}" = "ENABLED" ]; then
+            if [ -n "${enabled_resources}" ] && [ "${enabled_resources}" != "null" ]; then
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id} for: ${enabled_resources}. Disable it unless non-prod coverage is intentional."
+            else
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+            fi
+          fi
+
       - name: Validate Required Secrets (dev)
         shell: bash
         run: |
@@ -365,8 +399,10 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
+            -c devNightlyPauseEnabled=false \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutTier1DesiredCount=0 \
             -c planeBIngestFanoutTier2DesiredCount=0 \
             -c goldLiveDesiredCount=0 \
@@ -494,8 +530,10 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
+            -c devNightlyPauseEnabled=false \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutTier1DesiredCount=0 \
             -c planeBIngestFanoutTier2DesiredCount=0 \
             -c goldLiveDesiredCount=0 \
@@ -653,6 +691,8 @@ jobs:
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+      NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -895,6 +935,40 @@ jobs:
           echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
           exit 1
 
+      - name: Warn on non-prod security drift (staging)
+        shell: bash
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ENV_NAME: staging
+        run: |
+          set -uo pipefail
+
+          account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
+          if [ -z "${account_id}" ] || [ "${account_id}" = "None" ]; then
+            echo "::warning::Unable to resolve AWS account ID for ${ENV_NAME}; skipping GuardDuty/Inspector drift check."
+            exit 0
+          fi
+
+          detector_ids="$(aws guardduty list-detectors --region "${AWS_REGION}" --query 'DetectorIds' --output text 2>/dev/null || true)"
+          if [ -n "${detector_ids}" ] && [ "${detector_ids}" != "None" ]; then
+            echo "::warning::GuardDuty remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+          fi
+
+          inspector_json="$(aws inspector2 batch-get-account-status --account-ids "${account_id}" --region "${AWS_REGION}" --output json 2>/dev/null || true)"
+          if [ -z "${inspector_json}" ]; then
+            exit 0
+          fi
+
+          inspector_state="$(printf '%s' "${inspector_json}" | jq -r '.accounts[0].state.status // empty')"
+          enabled_resources="$(printf '%s' "${inspector_json}" | jq -r '[.accounts[0].resourceState | to_entries[]? | select(.value.status == "ENABLED") | .key] | join(",")')"
+          if [ "${inspector_state}" = "ENABLED" ]; then
+            if [ -n "${enabled_resources}" ] && [ "${enabled_resources}" != "null" ]; then
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id} for: ${enabled_resources}. Disable it unless non-prod coverage is intentional."
+            else
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+            fi
+          fi
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/setup-qemu-action@v3
@@ -942,12 +1016,16 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
@@ -978,6 +1056,8 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
@@ -1132,20 +1212,32 @@ jobs:
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
-            -c providerProbeMode=per_provider \
+            -c providerProbeMode=fan_in \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
+            -c enableSynthetics=false \
             -c enableWaf=false \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c stagingBusinessHoursEnabled=true \
+            -c stagingPauseCron="cron(0 18 ? * MON-FRI *)" \
+            -c stagingResumeCron="cron(0 9 ? * MON-FRI *)" \
+            -c stagingTimezone="America/New_York" \
+            -c stagingNatGateways=1 \
+            -c stagingInterfaceEndpointsMode=minimal \
             -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c planeBIngestFanoutTier1DesiredCount=0 \
+            -c planeBIngestFanoutTier2DesiredCount=0 \
+            -c goldLiveDesiredCount=0 \
+            -c planeBNotificationsDesiredCount=0 \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c alertEvaluationDesiredCount=0 \
+            -c exportWorkerDesiredCount=0 \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
@@ -1271,20 +1363,32 @@ jobs:
             -c importExistingBackendRepository=true \
             -c minimalInfra=false \
             -c enableDbProxy=false \
-            -c providerProbeMode=per_provider \
+            -c providerProbeMode=fan_in \
             -c enableComplianceServices=false \
             -c enableCostGuardrails=false \
             -c pinpointEnabled=false \
+            -c enableSynthetics=false \
             -c enableWaf=false \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c stagingBusinessHoursEnabled=true \
+            -c stagingPauseCron="cron(0 18 ? * MON-FRI *)" \
+            -c stagingResumeCron="cron(0 9 ? * MON-FRI *)" \
+            -c stagingTimezone="America/New_York" \
+            -c stagingNatGateways=1 \
+            -c stagingInterfaceEndpointsMode=minimal \
             -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=0 \
+            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c planeBIngestFanoutTier1DesiredCount=0 \
+            -c planeBIngestFanoutTier2DesiredCount=0 \
+            -c goldLiveDesiredCount=0 \
+            -c planeBNotificationsDesiredCount=0 \
+            -c planeBOpsAlertsDesiredCount=0 \
+            -c alertEvaluationDesiredCount=0 \
+            -c exportWorkerDesiredCount=0 \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
@@ -1775,6 +1879,8 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -1789,8 +1895,12 @@ jobs:
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           set +e
@@ -1920,6 +2030,8 @@ jobs:
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+      NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
+      NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -1956,6 +2068,14 @@ jobs:
       COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
       COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+      FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
+      FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
+      FRONTEND_HOSTED_ZONE_ID: ${{ vars.FRONTEND_HOSTED_ZONE_ID }}
+      FRONTEND_HOSTED_ZONE_NAME: ${{ vars.FRONTEND_HOSTED_ZONE_NAME }}
+      PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
+      PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
+      PLANE_A_HOSTED_ZONE_ID: ${{ vars.PLANE_A_HOSTED_ZONE_ID }}
+      PLANE_A_HOSTED_ZONE_NAME: ${{ vars.PLANE_A_HOSTED_ZONE_NAME }}
       PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
       PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
@@ -2219,6 +2339,22 @@ jobs:
             echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)."
             exit 1
           fi
+          if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
+            echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
+          if [ -z "${FRONTEND_HOSTED_ZONE_ID:-}" ] || [ -z "${FRONTEND_HOSTED_ZONE_NAME:-}" ]; then
+            echo "Missing FRONTEND_HOSTED_ZONE_ID / FRONTEND_HOSTED_ZONE_NAME (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
+          if [ -z "${PLANE_A_DOMAIN_NAME:-}" ] || [ -z "${PLANE_A_CERT_ARN:-}" ]; then
+            echo "Missing PLANE_A_DOMAIN_NAME / PLANE_A_CERT_ARN (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
+          if [ -z "${PLANE_A_HOSTED_ZONE_ID:-}" ] || [ -z "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
+            echo "Missing PLANE_A_HOSTED_ZONE_ID / PLANE_A_HOSTED_ZONE_NAME (configure in GitHub environment vars: prod)."
+            exit 1
+          fi
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
             exit 1
@@ -2245,12 +2381,16 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
+            exit 1
+          fi
+          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
@@ -2281,6 +2421,8 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
@@ -2439,11 +2581,35 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c frontendDomainName="${FRONTEND_DOMAIN_NAME}" \
+            -c frontendCertificateArn="${FRONTEND_CERT_ARN}" \
+            -c frontendHostedZoneId="${FRONTEND_HOSTED_ZONE_ID}" \
+            -c frontendHostedZoneName="${FRONTEND_HOSTED_ZONE_NAME}" \
+            -c planeADomainName="${PLANE_A_DOMAIN_NAME}" \
+            -c planeACertificateArn="${PLANE_A_CERT_ARN}" \
+            -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}" \
+            -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}" \
             -c minimalInfra=false \
-            -c providerProbeMode=per_provider \
+            -c enableWaf=true \
+            -c wafEnableBotControl=false \
+            -c enableDbProxy=false \
+            -c providerProbeMode=fan_in \
+            -c prodNatGateways=1 \
+            -c prodInterfaceEndpointsMode=minimal \
+            -c planeADesiredCount=2 \
+            -c prodDatabaseInstances=1 \
+            -c prodRedisNodeType=cache.t4g.small \
+            -c prodRedisReplicasPerNodeGroup=0 \
+            -c prodRedisAutomaticFailoverEnabled=false \
+            -c prodRedisMultiAzEnabled=false \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c alertEvaluationServiceEnabled=true \
+            -c exportServiceEnabled=true \
+            -c agentOrchestratorServiceEnabled=true \
+            -c stressResponderServiceEnabled=true \
+            -c normalizationServiceEnabled=true \
             -c planeBIngestFanoutMode=queue \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
@@ -2452,6 +2618,17 @@ jobs:
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c goldLiveDesiredCount=1 \
+            -c planeBNotificationsDesiredCount=1 \
+            -c planeBOpsAlertsDesiredCount=1 \
+            -c alertEvaluationDesiredCount=1 \
+            -c exportWorkerDesiredCount=1 \
+            -c agentOrchestratorDesiredCount=1 \
+            -c stressResponderDesiredCount=1 \
+            -c normalizationWorkerDesiredCount=1 \
+            -c planeBQueueWorkerDesiredCount=1 \
+            -c planeBQueueWorkerMaxCount=3 \
+            -c planeBQueueWorkerSpotOnly=true \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -2569,11 +2746,35 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
+            -c frontendDomainName="${FRONTEND_DOMAIN_NAME}" \
+            -c frontendCertificateArn="${FRONTEND_CERT_ARN}" \
+            -c frontendHostedZoneId="${FRONTEND_HOSTED_ZONE_ID}" \
+            -c frontendHostedZoneName="${FRONTEND_HOSTED_ZONE_NAME}" \
+            -c planeADomainName="${PLANE_A_DOMAIN_NAME}" \
+            -c planeACertificateArn="${PLANE_A_CERT_ARN}" \
+            -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}" \
+            -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}" \
             -c minimalInfra=false \
-            -c providerProbeMode=per_provider \
+            -c enableWaf=true \
+            -c wafEnableBotControl=false \
+            -c enableDbProxy=false \
+            -c providerProbeMode=fan_in \
+            -c prodNatGateways=1 \
+            -c prodInterfaceEndpointsMode=minimal \
+            -c planeADesiredCount=2 \
+            -c prodDatabaseInstances=1 \
+            -c prodRedisNodeType=cache.t4g.small \
+            -c prodRedisReplicasPerNodeGroup=0 \
+            -c prodRedisAutomaticFailoverEnabled=false \
+            -c prodRedisMultiAzEnabled=false \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
+            -c alertEvaluationServiceEnabled=true \
+            -c exportServiceEnabled=true \
+            -c agentOrchestratorServiceEnabled=true \
+            -c stressResponderServiceEnabled=true \
+            -c normalizationServiceEnabled=true \
             -c planeBIngestFanoutMode=queue \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
@@ -2582,10 +2783,93 @@ jobs:
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c goldLiveDesiredCount=1 \
+            -c planeBNotificationsDesiredCount=1 \
+            -c planeBOpsAlertsDesiredCount=1 \
+            -c alertEvaluationDesiredCount=1 \
+            -c exportWorkerDesiredCount=1 \
+            -c agentOrchestratorDesiredCount=1 \
+            -c stressResponderDesiredCount=1 \
+            -c normalizationWorkerDesiredCount=1 \
+            -c planeBQueueWorkerDesiredCount=1 \
+            -c planeBQueueWorkerMaxCount=3 \
+            -c planeBQueueWorkerSpotOnly=true \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             --require-approval broadening
+
+      - name: Verify WAF attachment (prod)
+        shell: bash
+        env:
+          STACK_NAME: ${{ vars.STACK_NAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "${STACK_NAME:-}" ]; then
+            echo "::error::STACK_NAME is required for WAF verification."
+            exit 1
+          fi
+
+          plane_a_domain="$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='PlaneACloudFrontDomain'].OutputValue | [0]" \
+            --output text)"
+          frontend_distribution_id="$(aws cloudformation describe-stacks \
+            --stack-name "${STACK_NAME}" \
+            --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue | [0]" \
+            --output text)"
+
+          if [ -z "${plane_a_domain}" ] || [ "${plane_a_domain}" = "None" ]; then
+            echo "::error::Plane A CloudFront domain output is missing."
+            exit 1
+          fi
+          if [ -z "${frontend_distribution_id}" ] || [ "${frontend_distribution_id}" = "None" ]; then
+            echo "::error::Frontend CloudFront distribution output is missing."
+            exit 1
+          fi
+
+          plane_a_waf_arn="$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?DomainName=='${plane_a_domain}'].WebACLId | [0]" \
+            --output text)"
+          frontend_waf_arn="$(aws cloudfront get-distribution-config \
+            --id "${frontend_distribution_id}" \
+            --query 'DistributionConfig.WebACLId' \
+            --output text)"
+
+          if [ -z "${plane_a_waf_arn}" ] || [ "${plane_a_waf_arn}" = "None" ]; then
+            echo "::error::Plane A distribution is missing a WAF association."
+            exit 1
+          fi
+          if [ -z "${frontend_waf_arn}" ] || [ "${frontend_waf_arn}" = "None" ]; then
+            echo "::error::Frontend distribution is missing a WAF association."
+            exit 1
+          fi
+          if [ "${plane_a_waf_arn}" != "${frontend_waf_arn}" ]; then
+            echo "::error::Plane A and frontend distributions are attached to different WAF ACLs."
+            exit 1
+          fi
+
+          waf_json="$(aws wafv2 list-web-acls --scope CLOUDFRONT --region us-east-1 --output json)"
+          web_acl_name="$(printf '%s' "${waf_json}" | jq -r --arg arn "${plane_a_waf_arn}" '.WebACLs[] | select(.ARN == $arn) | .Name' | head -n1)"
+          web_acl_id="$(printf '%s' "${waf_json}" | jq -r --arg arn "${plane_a_waf_arn}" '.WebACLs[] | select(.ARN == $arn) | .Id' | head -n1)"
+
+          if [ -z "${web_acl_name}" ] || [ -z "${web_acl_id}" ]; then
+            echo "::error::Unable to resolve the attached CloudFront WAF ACL."
+            exit 1
+          fi
+
+          bot_control_rules="$(aws wafv2 get-web-acl \
+            --name "${web_acl_name}" \
+            --id "${web_acl_id}" \
+            --scope CLOUDFRONT \
+            --region us-east-1 \
+            --query "length(WebACL.Rules[?Statement.ManagedRuleGroupStatement.Name=='AWSManagedRulesBotControlRuleSet'])" \
+            --output text)"
+
+          if [ "${bot_control_rules}" != "0" ]; then
+            echo "::error::Bot Control is enabled in prod WAF, which violates the launch-cost posture."
+            exit 1
+          fi
 
       - name: Deploy Frontend (prod)
         shell: bash
@@ -2806,6 +3090,8 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2820,9 +3106,11 @@ jobs:
           node ops/newrelic/sync-cloud-links.mjs
           cloud_links_ec=$?
           NEW_RELIC_TARGET_ENV=prod \
-          REQUIRE_ACCOUNT_PINNING=1 \
+          REQUIRE_ACCOUNT_PINNING=0 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
+          REQUIRE_API_GW_METRICS=0 \
+          REQUIRE_SQS_METRICS=0 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e

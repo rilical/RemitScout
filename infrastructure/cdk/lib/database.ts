@@ -29,6 +29,7 @@ export type DatabaseOptions = {
   dbSecurityGroup: SecurityGroup
   proxySecurityGroup?: SecurityGroup
   enableProxy?: boolean
+  instanceCount?: number
 }
 
 export const createDatabase = (scope: Construct, options: DatabaseOptions): DatabaseResources => {
@@ -112,7 +113,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
       })
     : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
-        instances: isProd ? 2 : 1,
+        instances: isProd ? (options.instanceCount ?? 2) : 1,
         instanceProps: {
           vpc: options.vpc,
           vpcSubnets: { subnetType: dbSubnetType },

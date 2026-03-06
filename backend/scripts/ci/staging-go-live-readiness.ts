@@ -1,3 +1,5 @@
+export {}
+
 type Requirement = {
   key: string
   description: string
@@ -80,6 +82,15 @@ const getValue = (key: string) => String(process.env[key] || '').trim()
 
 const isMissing = (value: string) => value.length === 0
 
+const normalizeNewRelicAwsMode = (value: string) => {
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return 'push_pull'
+  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
+  if (['push_only', 'push'].includes(normalized)) return 'push_only'
+  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
+  return 'push_pull'
+}
+
 const looksLikeSlackWebhookPlaceholder = (value: string) =>
   /hooks\.slack\.com\/services\/T0{8,}\/B0{8,}\/A{10,}/i.test(value)
 
@@ -122,13 +133,27 @@ const run = () => {
   const requireNewRelicGates = !['0', 'false', 'off', 'no'].includes(
     getValue('REQUIRE_NEW_RELIC_GATES').toLowerCase(),
   )
+  const stagingNewRelicAwsMode = normalizeNewRelicAwsMode(getValue('NEW_RELIC_STAGING_AWS_MODE'))
+  const prodNewRelicAwsMode = normalizeNewRelicAwsMode(getValue('NEW_RELIC_PROD_AWS_MODE'))
+  const shouldSoftenNewRelicRequirement = (key: string) => {
+    if (key === 'NEW_RELIC_USER_API_KEY') {
+      return !requireNewRelicGates
+    }
+    if (key === 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID' || key === 'NEW_RELIC_STAGING_AWS_ROLE_ARN') {
+      return !requireNewRelicGates || stagingNewRelicAwsMode === 'otlp_only'
+    }
+    if (key === 'NEW_RELIC_PROD_AWS_ACCOUNT_ID' || key === 'NEW_RELIC_PROD_AWS_ROLE_ARN') {
+      return prodNewRelicAwsMode === 'otlp_only' || (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(key))
+    }
+    return !requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(key)
+  }
 
   for (const requirement of REQUIRED_KEYS) {
     const value = getValue(requirement.key)
     if (isMissing(value)) {
-      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+      if (shouldSoftenNewRelicRequirement(requirement.key)) {
         missingRecommended.push(
-          `${requirement.key}: ${requirement.description} (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+          `${requirement.key}: ${requirement.description} (non-blocking in current New Relic mode)`,
         )
         continue
       }
@@ -136,9 +161,9 @@ const run = () => {
       continue
     }
     if (looksLikePlaceholder(value)) {
-      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+      if (shouldSoftenNewRelicRequirement(requirement.key)) {
         missingRecommended.push(
-          `${requirement.key}: looks like placeholder value (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+          `${requirement.key}: looks like placeholder value (non-blocking in current New Relic mode)`,
         )
         continue
       }

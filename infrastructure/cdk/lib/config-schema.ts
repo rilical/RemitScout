@@ -126,6 +126,7 @@ const cdkContextShape = {
   stagingInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
   stagingInterfaceEndpointAllowlist: optionalStringList,
   prodInterfaceEndpointsMode: interfaceEndpointsMode.optional(),
+  prodRedisNodeType: z.string().optional(),
 
   // Queue / worker mode controls
   planeBIngestFanoutMode: queueMode.optional(),
@@ -146,10 +147,15 @@ const cdkContextShape = {
   devNatGateways: optionalNumber,
   stagingNatGateways: optionalNumber,
   prodNatGateways: optionalNumber,
+  prodDatabaseInstances: optionalNumber,
+  prodRedisReplicasPerNodeGroup: optionalNumber,
+  prodRedisAutomaticFailoverEnabled: optionalBool,
+  prodRedisMultiAzEnabled: optionalBool,
   costBudgetAmountUsd: optionalNumber,
   costAnomalyThresholdUsd: optionalNumber,
   planeBB2bTargetMinutes: optionalNumber,
   planeBB2bMaxQueueDepth: optionalNumber,
+  planeADesiredCount: optionalNumber,
   planeBIngestDesiredCount: optionalNumber,
   planeBB2cRefreshDesiredCount: optionalNumber,
   planeBFxRateRefreshDesiredCount: optionalNumber,

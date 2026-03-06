@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Usage: ./apply-profile.sh <profile-name>
-# Example: ./apply-profile.sh prod-lean
+# Example: ./apply-profile.sh prod-launch
 # Example: ./apply-profile.sh prod-ha
 #
 # Merges profile values into cdk.json context.
 # Run before `cdk deploy` to switch configurations.
 
 set -euo pipefail
-PROFILE_NAME="${1:?Usage: $0 <dev|staging|prod-lean|prod-ha>}"
+PROFILE_NAME="${1:?Usage: $0 <dev|staging|prod-launch|prod-lean|prod-ha>}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROFILE_FILE="$SCRIPT_DIR/profiles/${PROFILE_NAME}.json"
 CDK_JSON="$SCRIPT_DIR/cdk.json"

@@ -28,6 +28,50 @@ jobs:
           node_version: 20.19.6
           pnpm_version: 10.19.0
 
+      - name: Configure AWS credentials (staging readiness, optional)
+        id: aws_creds
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 3600
+          retry-max-attempts: 2
+
+      - name: Warn on non-prod security drift (staging readiness)
+        shell: bash
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          ENV_NAME: staging
+        run: |
+          set -uo pipefail
+
+          account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
+          if [ -z "${account_id}" ] || [ "${account_id}" = "None" ]; then
+            echo "::warning::Unable to resolve AWS account ID for ${ENV_NAME}; skipping GuardDuty/Inspector drift check."
+            exit 0
+          fi
+
+          detector_ids="$(aws guardduty list-detectors --region "${AWS_REGION}" --query 'DetectorIds' --output text 2>/dev/null || true)"
+          if [ -n "${detector_ids}" ] && [ "${detector_ids}" != "None" ]; then
+            echo "::warning::GuardDuty remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+          fi
+
+          inspector_json="$(aws inspector2 batch-get-account-status --account-ids "${account_id}" --region "${AWS_REGION}" --output json 2>/dev/null || true)"
+          if [ -z "${inspector_json}" ]; then
+            exit 0
+          fi
+
+          inspector_state="$(printf '%s' "${inspector_json}" | jq -r '.accounts[0].state.status // empty')"
+          enabled_resources="$(printf '%s' "${inspector_json}" | jq -r '[.accounts[0].resourceState | to_entries[]? | select(.value.status == "ENABLED") | .key] | join(",")')"
+          if [ "${inspector_state}" = "ENABLED" ]; then
+            if [ -n "${enabled_resources}" ] && [ "${enabled_resources}" != "null" ]; then
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id} for: ${enabled_resources}. Disable it unless non-prod coverage is intentional."
+            else
+              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
+            fi
+          fi
+
       - name: Staging go-live readiness (integrations + policy)
         env:
           ENVIRONMENT: staging
@@ -91,6 +135,8 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -114,7 +160,7 @@ jobs:
           pnpm -C frontend exec sentry-cli releases delete "$release" --org "$SENTRY_ORG" --project "$SENTRY_PROJECT"
 
       - name: Observability prereq gate (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}
         env:
           ENVIRONMENT: staging
           NODE_ENV: staging
@@ -128,16 +174,20 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
         run: pnpm -C backend ci:observability
 
       - name: New Relic sync + verify (staging hard gate)
-        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' && vars.NEW_RELIC_STAGING_AWS_ROLE_ARN != '' && vars.NEW_RELIC_PROD_AWS_ROLE_ARN != '' }}
+        if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}
         env:
           NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
           NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
+          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}

@@ -37,6 +37,12 @@ const toOptionalNumber = (value: string | number | undefined): number | undefine
   return undefined
 }
 
+const toOptionalString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
 const toList = (value: string | string[] | undefined): string[] => {
   if (!value) return []
   if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean)
@@ -166,6 +172,72 @@ export class RemitScoutStack extends Stack {
         this.node.tryGetContext('enableDbProxy') ??
           process.env.ENABLE_DB_PROXY,
       ) ?? envName !== 'dev'
+    const prodDatabaseInstances = envName === 'prod'
+      ? toOptionalNumber(
+          this.node.tryGetContext('prodDatabaseInstances') ??
+            process.env.PROD_DATABASE_INSTANCES,
+        )
+      : undefined
+    if (envName === 'prod' && prodDatabaseInstances !== undefined && prodDatabaseInstances < 1) {
+      throw new Error('prodDatabaseInstances must be >= 1 in prod.')
+    }
+    const prodRedisNodeType = envName === 'prod'
+      ? toOptionalString(
+          this.node.tryGetContext('prodRedisNodeType') ??
+            process.env.PROD_REDIS_NODE_TYPE,
+        )
+      : undefined
+    const prodRedisReplicasPerNodeGroup = envName === 'prod'
+      ? toOptionalNumber(
+          this.node.tryGetContext('prodRedisReplicasPerNodeGroup') ??
+            process.env.PROD_REDIS_REPLICAS_PER_NODE_GROUP,
+        )
+      : undefined
+    if (
+      envName === 'prod'
+      && prodRedisReplicasPerNodeGroup !== undefined
+      && prodRedisReplicasPerNodeGroup < 0
+    ) {
+      throw new Error('prodRedisReplicasPerNodeGroup must be >= 0 in prod.')
+    }
+    const prodRedisAutomaticFailoverEnabled = envName === 'prod'
+      ? toOptionalBool(
+          this.node.tryGetContext('prodRedisAutomaticFailoverEnabled') ??
+            process.env.PROD_REDIS_AUTOMATIC_FAILOVER_ENABLED,
+        )
+      : undefined
+    const prodRedisMultiAzEnabled = envName === 'prod'
+      ? toOptionalBool(
+          this.node.tryGetContext('prodRedisMultiAzEnabled') ??
+            process.env.PROD_REDIS_MULTI_AZ_ENABLED,
+        )
+      : undefined
+    const resolvedProdRedisNodeType = envName === 'prod'
+      ? (prodRedisNodeType ?? 'cache.t4g.small')
+      : undefined
+    const resolvedProdRedisReplicasPerNodeGroup = envName === 'prod'
+      ? (prodRedisReplicasPerNodeGroup ?? 1)
+      : undefined
+    const resolvedProdRedisAutomaticFailover = envName === 'prod'
+      ? (prodRedisAutomaticFailoverEnabled ?? ((resolvedProdRedisReplicasPerNodeGroup ?? 0) > 0))
+      : undefined
+    const resolvedProdRedisMultiAz = envName === 'prod'
+      ? (prodRedisMultiAzEnabled ?? ((resolvedProdRedisReplicasPerNodeGroup ?? 0) > 0))
+      : undefined
+    if (
+      envName === 'prod'
+      && (resolvedProdRedisReplicasPerNodeGroup ?? 0) === 0
+      && (resolvedProdRedisAutomaticFailover || resolvedProdRedisMultiAz)
+    ) {
+      throw new Error(
+        'prodRedisAutomaticFailoverEnabled/prodRedisMultiAzEnabled require prodRedisReplicasPerNodeGroup > 0.',
+      )
+    }
+    if (envName === 'prod' && resolvedProdRedisMultiAz && !resolvedProdRedisAutomaticFailover) {
+      throw new Error(
+        'prodRedisMultiAzEnabled requires prodRedisAutomaticFailoverEnabled in prod.',
+      )
+    }
     const redisAuthMode =
       toRedisAuthMode(
         this.node.tryGetContext('redisAuthMode') ??
@@ -386,6 +458,11 @@ export class RemitScoutStack extends Stack {
       sesIdentityArns,
       snsTopicArns,
       enableDbProxy,
+      prodDatabaseInstances,
+      prodRedisNodeType: resolvedProdRedisNodeType,
+      prodRedisReplicasPerNodeGroup: resolvedProdRedisReplicasPerNodeGroup,
+      prodRedisAutomaticFailoverEnabled: resolvedProdRedisAutomaticFailover,
+      prodRedisMultiAzEnabled: resolvedProdRedisMultiAz,
       enableGithubActionsOidc,
       githubRepoOwner: String(githubRepoOwner),
       githubRepoName: String(githubRepoName),
@@ -627,6 +704,13 @@ export class RemitScoutStack extends Stack {
     const agentBedrockSecretArn =
       this.node.tryGetContext('agentBedrockSecretArn') ??
       process.env.AGENT_BEDROCK_SECRET_ARN
+    const planeADesiredCount = toOptionalNumber(
+      this.node.tryGetContext('planeADesiredCount') ??
+        process.env.PLANE_A_DESIRED_COUNT,
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : envName === 'dev' ? 1 : undefined)
+    if (envName !== 'dev' && planeADesiredCount !== undefined && planeADesiredCount < 1) {
+      throw new Error('planeADesiredCount must be >= 1 outside dev.')
+    }
     const planeBIngestDesiredCount = toOptionalNumber(
       this.node.tryGetContext('planeBIngestDesiredCount') ??
         process.env.PLANE_B_INGEST_DESIRED_COUNT,
@@ -1507,6 +1591,7 @@ export class RemitScoutStack extends Stack {
         agentOrchestratorServiceEnabled,
         stressResponderServiceEnabled,
         normalizationServiceEnabled,
+        planeADesiredCount,
         b2cRefreshDesiredCount: b2cRefreshServiceEnabled ? (b2cRefreshDesiredCount ?? 0) : 0,
         fxRateRefreshDesiredCount: fxRateRefreshServiceEnabled ? (fxRateRefreshDesiredCount ?? 0) : 0,
         planeBIngestDesiredCount,
@@ -1844,12 +1929,20 @@ export class RemitScoutStack extends Stack {
         redisReplicationGroupId: cache.replicationGroup.ref,
         redisSubnetGroupName: cache.subnetGroup.cacheSubnetGroupName ?? cache.subnetGroup.ref,
         redisSecurityGroupIds: [networking.redisSecurityGroup.securityGroupId],
-        redisNodeType: envName === 'prod' ? 'cache.t4g.small' : 'cache.t4g.micro',
+        redisNodeType: envName === 'prod'
+          ? (resolvedProdRedisNodeType ?? 'cache.t4g.small')
+          : 'cache.t4g.micro',
         redisEngineVersion: '7.1',
         redisNumNodeGroups: 1,
-        redisReplicasPerNodeGroup: envName === 'prod' ? 1 : 0,
-        redisAutomaticFailover: envName === 'prod',
-        redisMultiAz: envName === 'prod',
+        redisReplicasPerNodeGroup: envName === 'prod'
+          ? (resolvedProdRedisReplicasPerNodeGroup ?? 1)
+          : 0,
+        redisAutomaticFailover: envName === 'prod'
+          ? Boolean(resolvedProdRedisAutomaticFailover ?? true)
+          : false,
+        redisMultiAz: envName === 'prod'
+          ? Boolean(resolvedProdRedisMultiAz ?? true)
+          : false,
         redisTransitEncryption: true,
         redisAtRestEncryption: true,
         redisAutoMinorVersionUpgrade: true,

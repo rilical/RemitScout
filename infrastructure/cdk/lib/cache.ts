@@ -19,6 +19,10 @@ export type CacheOptions = {
   vpc: Vpc
   redisSecurityGroup: SecurityGroup
   redisAuthMode?: 'legacy' | 'required'
+  nodeType?: string
+  replicasPerNodeGroup?: number
+  automaticFailoverEnabled?: boolean
+  multiAzEnabled?: boolean
 }
 
 export const createCache = (scope: Construct, options: CacheOptions): CacheResources => {
@@ -28,6 +32,14 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const subnets = options.vpc.privateSubnets
   const redisAuthMode = options.redisAuthMode ?? (isProtectedEnv ? 'required' : 'legacy')
   const authEnabled = redisAuthMode === 'required'
+  const cacheNodeType = isProd ? (options.nodeType ?? 'cache.t4g.small') : 'cache.t4g.micro'
+  const replicasPerNodeGroup = isProd ? (options.replicasPerNodeGroup ?? 1) : undefined
+  const automaticFailoverEnabled = isProd
+    ? (options.automaticFailoverEnabled ?? true)
+    : undefined
+  const multiAzEnabled = isProd
+    ? (options.multiAzEnabled ?? true)
+    : undefined
 
   const redisSnapshottingClusterIdRaw = process.env.REDIS_SNAPSHOTTING_CLUSTER_ID?.trim()
   const redisSnapshottingClusterId =
@@ -61,13 +73,13 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     authEnabled ? 'RedisReplicationGroupAuth' : 'RedisReplicationGroup',
     {
       replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
-      cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
+      cacheNodeType,
       engine: 'redis',
       engineVersion: '7.1',
       numNodeGroups: 1,
-      replicasPerNodeGroup: isProd ? 1 : undefined,
-      automaticFailoverEnabled: isProd,
-      multiAzEnabled: isProd,
+      replicasPerNodeGroup,
+      automaticFailoverEnabled,
+      multiAzEnabled,
       atRestEncryptionEnabled: true,
       transitEncryptionEnabled: true,
       cacheSubnetGroupName: subnetGroup.ref,

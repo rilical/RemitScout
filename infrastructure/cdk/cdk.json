@@ -6,7 +6,7 @@
       "admin@example.com"
     ],
     "sharedSecretArn": "arn:aws:secretsmanager:us-east-1:111111111111:secret:remit-scout/dev/communications-AbCdEf",
-    "devPaused": false,
+    "devPaused": true,
     "devMinimalInfra": false,
     "planeBB2bMaxQueueDepth": 5000,
     "planeBIngestDesiredCount": 0,
@@ -25,11 +25,11 @@
     "enableGithubActionsOidc": false,
     "enableSynthetics": false,
     "stagingBusinessHoursEnabled": true,
-    "stagingPauseCron": "cron(0 22 ? * * *)",
-    "stagingResumeCron": "cron(0 8 ? * MON-FRI *)",
+    "stagingPauseCron": "cron(0 18 ? * MON-FRI *)",
+    "stagingResumeCron": "cron(0 9 ? * MON-FRI *)",
     "stagingTimezone": "America/New_York",
     "providerProbeMode": "fan_in",
-    "stagingInterfaceEndpointsMode": "none",
+    "stagingInterfaceEndpointsMode": "minimal",
     "opsResumeRuleAllowlist": [
       "b2c-retry-failed",
       "alert-evaluation-worker",

@@ -53,6 +53,7 @@ export class FoundationNestedStack extends NestedStack {
       vpc: networking.vpc,
       dbSecurityGroup: networking.dbSecurityGroup,
       enableProxy: props.enableDbProxy,
+      instanceCount: props.prodDatabaseInstances,
     })
 
     const cache = createCache(this, {
@@ -60,6 +61,10 @@ export class FoundationNestedStack extends NestedStack {
       vpc: networking.vpc,
       redisSecurityGroup: networking.redisSecurityGroup,
       redisAuthMode: props.redisAuthMode,
+      nodeType: props.prodRedisNodeType,
+      replicasPerNodeGroup: props.prodRedisReplicasPerNodeGroup,
+      automaticFailoverEnabled: props.prodRedisAutomaticFailoverEnabled,
+      multiAzEnabled: props.prodRedisMultiAzEnabled,
     })
 
     const storage = createStorage(this, {

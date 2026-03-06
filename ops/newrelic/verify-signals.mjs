@@ -12,6 +12,8 @@
  * - NEW_RELIC_WINDOW_MINUTES (default 60)
  * - NEW_RELIC_STAGING_AWS_ACCOUNT_ID (optional AWS account scoping)
  * - NEW_RELIC_PROD_AWS_ACCOUNT_ID (optional AWS account scoping)
+ * - NEW_RELIC_STAGING_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
+ * - NEW_RELIC_PROD_AWS_MODE (push_pull|push_only|otlp_only, default push_pull)
  * - REQUIRE_ACCOUNT_PINNING (0|1, default 1)
  * - REQUIRE_LOGS (0|1, default 1)
  * - REQUIRE_SPANS (0|1, default 1)
@@ -35,6 +37,16 @@ const TARGET_ENV = normalizeEnvName((process.env.NEW_RELIC_TARGET_ENV || 'all').
 const WINDOW_MINUTES = Number.parseInt(process.env.NEW_RELIC_WINDOW_MINUTES || '60', 10)
 const NEW_RELIC_STAGING_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID || '').trim()
 const NEW_RELIC_PROD_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID || '').trim()
+const normalizeNewRelicAwsMode = (value, fallback = 'push_pull') => {
+  const normalized = String(value || '').trim().toLowerCase()
+  if (!normalized) return fallback
+  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
+  if (['push_only', 'push'].includes(normalized)) return 'push_only'
+  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
+  throw new Error(`Unsupported New Relic AWS mode: ${value}`)
+}
+const NEW_RELIC_STAGING_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
+const NEW_RELIC_PROD_AWS_MODE = normalizeNewRelicAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
 
 const requireAccountPinning = process.env.REQUIRE_ACCOUNT_PINNING !== '0'
 const requireLogs = process.env.REQUIRE_LOGS !== '0'
@@ -148,7 +160,7 @@ const nrqlRows = async (query) => {
   return data.actor.account.nrql.results || []
 }
 
-const verifyTarget = async ({ envName, token, awsAccountId }) => {
+const verifyTarget = async ({ envName, token, awsAccountId, awsMode }) => {
   const runtimeScope = buildEnvironmentFilter(envName)
   const scope = buildEnvScopeClause({
     envName,
@@ -166,6 +178,9 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
     : ''
   const since = `${WINDOW_MINUTES} minutes ago`
   const queuePrefix = `remit-scout-${envName}-`
+  const requireAwsAccountPin = awsMode !== 'otlp_only'
+  const requireApiGatewaySignals = requireApiGatewayMetrics && requireAwsAccountPin
+  const requireSqsSignals = requireSqsMetrics && requireAwsAccountPin
   const customMetricFamilies = [
     {
       name: 'core_slo_indices',
@@ -250,26 +265,32 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
       `FROM Span SELECT count(*) AS value WHERE ${scope} SINCE ${since}`,
       'value',
     ),
-    apiGatewayMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value ` +
-        `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsMetricScope} ` +
-        `AND metricName IN ('aws.apigateway.Count', 'aws.apigateway.Latency.byStage', 'aws.apigateway.5xx') ` +
-        `SINCE ${since}`,
-      'value',
-    ),
-    apiGatewaySampleCount: await nrqlValue(
-      `FROM ApiGatewaySample SELECT count(*) AS value WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%')${apiGatewaySampleAccountScope} SINCE ${since}`,
-      'value',
-    ),
-    sqsMetricCount: await nrqlValue(
-      `FROM Metric SELECT count(*) AS value ` +
-        `WHERE aws.Namespace = 'AWS/SQS' ` +
-        `AND aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
-        `AND metricName LIKE 'aws.sqs.Approximate%' ` +
-        `AND ${awsMetricScope} ` +
-        `SINCE ${since}`,
-      'value',
-    ),
+    apiGatewayMetricCount: requireApiGatewaySignals
+      ? await nrqlValue(
+          `FROM Metric SELECT count(*) AS value ` +
+            `WHERE aws.Namespace = 'AWS/ApiGateway' AND ${awsMetricScope} ` +
+            `AND metricName IN ('aws.apigateway.Count', 'aws.apigateway.Latency.byStage', 'aws.apigateway.5xx') ` +
+            `SINCE ${since}`,
+          'value',
+        )
+      : 0,
+    apiGatewaySampleCount: requireApiGatewaySignals
+      ? await nrqlValue(
+          `FROM ApiGatewaySample SELECT count(*) AS value WHERE (${scope} OR providerAccountName LIKE 'remit-scout-${envName}-%')${apiGatewaySampleAccountScope} SINCE ${since}`,
+          'value',
+        )
+      : 0,
+    sqsMetricCount: requireSqsSignals
+      ? await nrqlValue(
+          `FROM Metric SELECT count(*) AS value ` +
+            `WHERE aws.Namespace = 'AWS/SQS' ` +
+            `AND aws.sqs.QueueName LIKE '${queuePrefix}%' ` +
+            `AND metricName LIKE 'aws.sqs.Approximate%' ` +
+            `AND ${awsMetricScope} ` +
+            `SINCE ${since}`,
+          'value',
+        )
+      : 0,
     customMetricCount,
     customMetricFamilies: familyCounts,
   }
@@ -278,10 +299,10 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
   if (checks.metricCount <= 0) failures.push('metricCount')
   if (requireLogs && checks.logCount <= 0) failures.push('logCount')
   if (requireSpans && checks.spanCount <= 0) failures.push('spanCount')
-  if (requireApiGatewayMetrics && checks.apiGatewayMetricCount <= 0 && checks.apiGatewaySampleCount <= 0) {
+  if (requireApiGatewaySignals && checks.apiGatewayMetricCount <= 0 && checks.apiGatewaySampleCount <= 0) {
     failures.push('apiGatewayMetricCount')
   }
-  if (requireSqsMetrics && checks.sqsMetricCount <= 0) failures.push('sqsMetricCount')
+  if (requireSqsSignals && checks.sqsMetricCount <= 0) failures.push('sqsMetricCount')
   if (requireCustomMetrics && checks.customMetricCount <= 0) failures.push('customMetricCount')
   if (requireCustomMetrics) {
     for (const family of customMetricFamilies) {
@@ -314,6 +335,7 @@ const verifyTarget = async ({ envName, token, awsAccountId }) => {
 
   return {
     envName,
+    awsMode,
     checks,
     failures,
     diagnostics,
@@ -326,11 +348,13 @@ const main = async () => {
       envName: 'staging',
       token: 'remit-scout-staging',
       awsAccountId: NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
+      awsMode: NEW_RELIC_STAGING_AWS_MODE,
     },
     {
       envName: 'prod',
       token: 'remit-scout-prod',
       awsAccountId: NEW_RELIC_PROD_AWS_ACCOUNT_ID,
+      awsMode: NEW_RELIC_PROD_AWS_MODE,
     },
   ].filter((target) => TARGET_ENV === 'all' || TARGET_ENV === target.envName)
 
@@ -340,7 +364,7 @@ const main = async () => {
 
   if (requireAccountPinning) {
     const missingPins = targets
-      .filter((target) => !target.awsAccountId)
+      .filter((target) => target.awsMode !== 'otlp_only' && !target.awsAccountId)
       .map((target) => target.envName)
     if (missingPins.length > 0) {
       throw new Error(
