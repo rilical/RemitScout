@@ -28,6 +28,7 @@ overrides:
   serialize-javascript: 7.0.3
   fast-xml-parser: 5.3.8
   esbuild: 0.25.0
+  '@aws-cdk/asset-awscli-v1': 2.2.268
   underscore: 1.13.8
   tmp: 0.2.4
   eslint>ajv: 6.14.0
@@ -398,10 +399,10 @@ importers:
     dependencies:
       aws-cdk-lib:
         specifier: ^2.240.0
-        version: 2.240.0(constructs@10.4.5)
+        version: 2.241.0(constructs@10.5.1)
       constructs:
         specifier: ^10.3.0
-        version: 10.4.5
+        version: 10.5.1
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -448,14 +449,14 @@ packages:
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
 
-  '@aws-cdk/asset-awscli-v1@2.2.263':
-    resolution: {integrity: sha512-X9JvcJhYcb7PHs8R7m4zMablO5C9PGb/hYfLnxds9h/rKJu6l7MiXE/SabCibuehxPnuO/vk+sVVJiUWrccarQ==}
+  '@aws-cdk/asset-awscli-v1@2.2.268':
+    resolution: {integrity: sha512-rlkMTjaJM2PoBXXBKvYCXRPGibzPDMfVilZgREWJW1GmU5jys9BUe7PAlEwjCfNAOXTkxJM+vTZVYKvQ59Lz/w==}
 
-  '@aws-cdk/asset-node-proxy-agent-v6@2.1.0':
-    resolution: {integrity: sha512-7bY3J8GCVxLupn/kNmpPc5VJz8grx+4RKfnnJiO1LG+uxkZfANZG3RMHhE+qQxxwkyQ9/MfPtTpf748UhR425A==}
+  '@aws-cdk/asset-node-proxy-agent-v6@2.1.1':
+    resolution: {integrity: sha512-We4bmHaowOPHr+IQR4/FyTGjRfjgBj4ICMjtqmJeBDWad3Q/6St12NT07leNtyuukv2qMhtSZJQorD8KpKTwRA==}
 
-  '@aws-cdk/cloud-assembly-schema@50.4.0':
-    resolution: {integrity: sha512-9Cplwc5C+SNe3hMfqZET7gXeM68tiH2ytQytCi+zz31Bn7O3GAgAnC2dYe+HWnZAgVH788ZkkBwnYXkeqx7v4g==}
+  '@aws-cdk/cloud-assembly-schema@52.2.0':
+    resolution: {integrity: sha512-ourZjixQ/UfsZc7gdk3vt1eHBODMUjQTYYYCY3ZX8fiXyHtWNDAYZPrXUK96jpCC2fLP+tfHTJrBjZ563pmcEw==}
     engines: {node: '>= 18.0.0'}
     bundledDependencies:
       - jsonschema
@@ -4612,8 +4613,8 @@ packages:
   avvio@9.2.0:
     resolution: {integrity: sha512-2t/sy01ArdHHE0vRH5Hsay+RtCZt3dLPji7W7/MMOCEgze5b7SNDC4j5H6FnVgPkI1MTNFGzHdHrVXDDl7QSSQ==}
 
-  aws-cdk-lib@2.240.0:
-    resolution: {integrity: sha512-3dXmUnPB5kK0VgrNHOlV3jiQM4Dungukk/CV91nclO2lgNcrGyigauJdzmz9sOmI1gbKJJ2SRAotaXityzZMRw==}
+  aws-cdk-lib@2.241.0:
+    resolution: {integrity: sha512-v0uDNDqJt6oJ/ZHRp+KIn4xzhF518uKpZxY8fi12bO+dt505t6fCqCaqXuadznokrAyWwIae6q3ByWJfmZzQjA==}
     engines: {node: '>= 18.0.0'}
     peerDependencies:
       constructs: ^10.5.0
@@ -5011,8 +5012,8 @@ packages:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
 
-  constructs@10.4.5:
-    resolution: {integrity: sha512-fOoP70YLevMZr5avJHx2DU3LNYmC6wM8OwdrNewMZou1kZnPGOeVzBrRjZNgFDHUlulYUjkpFRSpTE3D+n+ZSg==}
+  constructs@10.5.1:
+    resolution: {integrity: sha512-f/TfFXiS3G/yVIXDjOQn9oTlyu9Wo7Fxyjj7lb8r92iO81jR2uST+9MstxZTmDGx/CgIbxCXkFXgupnLTNxQZg==}
 
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
@@ -9217,11 +9218,11 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
-  '@aws-cdk/asset-awscli-v1@2.2.263': {}
+  '@aws-cdk/asset-awscli-v1@2.2.268': {}
 
-  '@aws-cdk/asset-node-proxy-agent-v6@2.1.0': {}
+  '@aws-cdk/asset-node-proxy-agent-v6@2.1.1': {}
 
-  '@aws-cdk/cloud-assembly-schema@50.4.0': {}
+  '@aws-cdk/cloud-assembly-schema@52.2.0': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -15448,12 +15449,12 @@ snapshots:
       '@fastify/error': 4.2.0
       fastq: 1.20.1
 
-  aws-cdk-lib@2.240.0(constructs@10.4.5):
+  aws-cdk-lib@2.241.0(constructs@10.5.1):
     dependencies:
-      '@aws-cdk/asset-awscli-v1': 2.2.263
-      '@aws-cdk/asset-node-proxy-agent-v6': 2.1.0
-      '@aws-cdk/cloud-assembly-schema': 50.4.0
-      constructs: 10.4.5
+      '@aws-cdk/asset-awscli-v1': 2.2.268
+      '@aws-cdk/asset-node-proxy-agent-v6': 2.1.1
+      '@aws-cdk/cloud-assembly-schema': 52.2.0
+      constructs: 10.5.1
 
   aws-cdk@2.1106.0: {}
 
@@ -15838,7 +15839,7 @@ snapshots:
 
   consola@3.4.2: {}
 
-  constructs@10.4.5: {}
+  constructs@10.5.1: {}
 
   content-disposition@0.5.4:
     dependencies:
