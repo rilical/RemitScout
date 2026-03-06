@@ -3,6 +3,11 @@ name: staging/go-live-readiness
 on:
   workflow_dispatch:
     inputs:
+      deploy_sha:
+        description: Optional exact deployed commit SHA to validate during readiness
+        required: false
+        type: string
+        default: ''
       run_runtime_config_validation:
         description: Also run backend runtime config schema validation
         required: true
@@ -22,6 +27,22 @@ jobs:
       NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.deploy_sha != '' && inputs.deploy_sha || github.sha }}
+
+      - name: Validate requested deploy SHA
+        if: ${{ inputs.deploy_sha != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_sha="${{ inputs.deploy_sha }}"
+          actual_sha="$(git rev-parse HEAD)"
+
+          if [ "${actual_sha}" != "${expected_sha}" ]; then
+            echo "::error::Readiness workflow checked out ${actual_sha}, expected ${expected_sha}."
+            exit 1
+          fi
 
       - uses: ./.github/actions/setup-node-pnpm
         with:

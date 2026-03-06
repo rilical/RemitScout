@@ -1817,18 +1817,19 @@ jobs:
           set -euo pipefail
           dispatch_ref="${{ steps.resolve_ref.outputs.requested_ref }}"
           if [[ "${dispatch_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            dispatch_ref="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
+            dispatch_ref="staging"
           fi
           if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
-            dispatch_ref="${GITHUB_REF_NAME:-staging}"
+            dispatch_ref="staging"
           fi
 
+          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true
+          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true -f deploy_sha="${deploy_sha}"
 
           run_id=""
           for i in $(seq 1 60); do
-            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt -q ".[] | select(.event==\"workflow_dispatch\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
+            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,headBranch -q ".[] | select(.event==\"workflow_dispatch\" and .headBranch==\"${dispatch_ref}\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
             if [ -n "$run_id" ]; then
               break
             fi
@@ -1841,7 +1842,7 @@ jobs:
           fi
 
           for i in $(seq 1 240); do
-            run_payload="$(gh run view "$run_id" --json status,conclusion,headSha 2>/dev/null || true)"
+            run_payload="$(gh run view "$run_id" --json status,conclusion 2>/dev/null || true)"
             if [ -z "${run_payload}" ]; then
               sleep 5
               continue
@@ -1849,12 +1850,7 @@ jobs:
 
             run_status="$(echo "$run_payload" | jq -r '.status')"
             run_conclusion="$(echo "$run_payload" | jq -r '.conclusion // ""')"
-            run_head_sha="$(echo "$run_payload" | jq -r '.headSha // ""')"
             if [ "$run_status" = "completed" ]; then
-              if [ "$run_head_sha" != "${{ steps.resolve_ref.outputs.sha }}" ]; then
-                echo "Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${{ steps.resolve_ref.outputs.sha }}."
-                exit 1
-              fi
               if [ "$run_conclusion" = "success" ]; then
                 echo "Staging readiness workflow run ${run_id} succeeded."
                 exit 0
