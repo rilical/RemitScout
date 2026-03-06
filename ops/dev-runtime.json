@@ -21,7 +21,7 @@
     "fx-rate-refresh"
   ],
   "nightlyAutoPause": {
-    "enabled": false,
+    "enabled": true,
     "timezone": "America/New_York",
     "cron": "cron(0 0 * * ? *)"
   }
