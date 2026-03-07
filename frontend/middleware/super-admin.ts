@@ -2,7 +2,7 @@ export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) return
 
   const { ensureHydrated, isAuthenticated } = useAuth()
-  const { ensureAdminSession } = useAdminSession()
+  const { ensureAdminSession, accessToken: adminAccessToken } = useAdminSession()
   const { request } = useApi()
 
   await ensureHydrated()
@@ -26,7 +26,12 @@ export default defineNuxtRouteMiddleware(async () => {
         role?: string | null
         app_role?: string | null
       }
-    }>('/me', { retries: 0 })
+    }>('/me', {
+      retries: 0,
+      headers: adminAccessToken.value
+        ? { authorization: `Bearer ${adminAccessToken.value}` }
+        : undefined,
+    })
 
     const role = me?.user?.role ?? null
     const appRole = me?.user?.app_role ?? null

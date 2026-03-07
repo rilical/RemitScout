@@ -27,8 +27,47 @@ vi.mock('../shared/redis', () => ({
 }))
 
 describe('feature flags cache behavior', () => {
+  const originalPlaneAPublicPulseEnabled = process.env.PLANE_A_PUBLIC_PULSE_ENABLED
+  const originalPlaneAPublicPulseScreenerEnabled = process.env.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED
+  const originalPlaneAPublicEnterpriseEnabled = process.env.PLANE_A_PUBLIC_ENTERPRISE_ENABLED
+  const originalPlaneAPublicAdsEnabled = process.env.PLANE_A_PUBLIC_ADS_ENABLED
+
   beforeEach(() => {
     vi.clearAllMocks()
+    delete process.env.PLANE_A_PUBLIC_PULSE_ENABLED
+    delete process.env.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED
+    delete process.env.PLANE_A_PUBLIC_ENTERPRISE_ENABLED
+    delete process.env.PLANE_A_PUBLIC_ADS_ENABLED
+  })
+
+  afterEach(() => {
+    if (originalPlaneAPublicPulseEnabled === undefined) {
+      delete process.env.PLANE_A_PUBLIC_PULSE_ENABLED
+    }
+    else {
+      process.env.PLANE_A_PUBLIC_PULSE_ENABLED = originalPlaneAPublicPulseEnabled
+    }
+
+    if (originalPlaneAPublicPulseScreenerEnabled === undefined) {
+      delete process.env.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED
+    }
+    else {
+      process.env.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED = originalPlaneAPublicPulseScreenerEnabled
+    }
+
+    if (originalPlaneAPublicEnterpriseEnabled === undefined) {
+      delete process.env.PLANE_A_PUBLIC_ENTERPRISE_ENABLED
+    }
+    else {
+      process.env.PLANE_A_PUBLIC_ENTERPRISE_ENABLED = originalPlaneAPublicEnterpriseEnabled
+    }
+
+    if (originalPlaneAPublicAdsEnabled === undefined) {
+      delete process.env.PLANE_A_PUBLIC_ADS_ENABLED
+    }
+    else {
+      process.env.PLANE_A_PUBLIC_ADS_ENABLED = originalPlaneAPublicAdsEnabled
+    }
   })
 
   it('caches feature flags with 60s TTL', async () => {
@@ -110,5 +149,22 @@ describe('feature flags cache behavior', () => {
     expect(runtime.flags).toHaveLength(4)
     expect(runtime.flags.every((flag) => flag.plan_code === 'free')).toBe(true)
     expect(runtime.flags.every((flag) => flag.pulse_access === 'none')).toBe(true)
+  })
+
+  it('prefers mirrored Plane A rollout env vars when resolving runtime definitions', async () => {
+    const { getRuntimeFlagDefinitions } = await import('../plane-a/src/services/feature-flags')
+
+    process.env.PLANE_A_PUBLIC_PULSE_ENABLED = '1'
+    process.env.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED = '0'
+    process.env.PLANE_A_PUBLIC_ENTERPRISE_ENABLED = '1'
+    process.env.PLANE_A_PUBLIC_ADS_ENABLED = '1'
+
+    const definitions = getRuntimeFlagDefinitions()
+    const byKey = new Map(definitions.map((definition) => [definition.key, definition]))
+
+    expect(byKey.get('pulse.public')?.hardGateEnabled).toBe(true)
+    expect(byKey.get('pulse.screener')?.hardGateEnabled).toBe(false)
+    expect(byKey.get('enterprise.public')?.hardGateEnabled).toBe(true)
+    expect(byKey.get('ads.public')?.hardGateEnabled).toBe(true)
   })
 })

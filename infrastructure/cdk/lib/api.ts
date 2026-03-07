@@ -68,6 +68,10 @@ export type ApiOptions = {
   planeACorsAllowedMethods?: string[]
   planeACorsAllowCredentials?: boolean
   frontendBaseUrl?: string
+  publicAdsEnabled?: string
+  publicPulseEnabled?: string
+  publicPulseScreenerEnabled?: string
+  publicEnterpriseEnabled?: string
   planeAB2cMaxBucketDeltaPct?: number
   planeCDbSecretArn?: string
   planeCDbSecretJsonKey?: string
@@ -251,6 +255,23 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
   }
   if (privacySessionSalt) {
     planeAEnvironment.PRIVACY_SESSION_SALT = privacySessionSalt
+  }
+  if (options.publicAdsEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_ADS_ENABLED = options.publicAdsEnabled
+    planeAEnvironment.PUBLIC_ENABLE_ADS = options.publicAdsEnabled
+    planeAEnvironment.PUBLIC_ADS_ENABLED = options.publicAdsEnabled
+  }
+  if (options.publicPulseEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_PULSE_ENABLED = options.publicPulseEnabled
+    planeAEnvironment.PUBLIC_PULSE_ENABLED = options.publicPulseEnabled
+  }
+  if (options.publicPulseScreenerEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED = options.publicPulseScreenerEnabled
+    planeAEnvironment.PUBLIC_PULSE_SCREENER_ENABLED = options.publicPulseScreenerEnabled
+  }
+  if (options.publicEnterpriseEnabled !== undefined) {
+    planeAEnvironment.PLANE_A_PUBLIC_ENTERPRISE_ENABLED = options.publicEnterpriseEnabled
+    planeAEnvironment.PUBLIC_ENTERPRISE_ENABLED = options.publicEnterpriseEnabled
   }
   const enforceJwtAuth =
     options.enablePlaneAJwtAuth ??

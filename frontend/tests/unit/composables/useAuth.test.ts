@@ -2,7 +2,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   extractStoredSupabaseSession,
-  extractSupabaseSessionFromHash,
   isEmailConfirmed,
   mapSupabaseUser,
 } from '~/composables/useAuth';
@@ -49,15 +48,6 @@ describe('useAuth helpers', () => {
           },
         })
       )
-    ).toEqual({
-      access_token: 'access-token',
-      refresh_token: 'refresh-token',
-    });
-  });
-
-  it('extractSupabaseSessionFromHash returns access and refresh tokens', () => {
-    expect(
-      extractSupabaseSessionFromHash('#access_token=access-token&refresh_token=refresh-token')
     ).toEqual({
       access_token: 'access-token',
       refresh_token: 'refresh-token',
