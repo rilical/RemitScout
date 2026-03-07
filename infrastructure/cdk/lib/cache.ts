@@ -19,6 +19,10 @@ export type CacheOptions = {
   vpc: Vpc
   redisSecurityGroup: SecurityGroup
   redisAuthMode?: 'legacy' | 'required'
+  nodeType?: string
+  replicasPerNodeGroup?: number
+  automaticFailoverEnabled?: boolean
+  multiAzEnabled?: boolean
 }
 
 export const createCache = (scope: Construct, options: CacheOptions): CacheResources => {
@@ -61,13 +65,17 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
     'RedisReplicationGroupAuth',
     {
       replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
-      cacheNodeType: isProd ? 'cache.t4g.small' : 'cache.t4g.micro',
+      cacheNodeType: isProd ? (options.nodeType ?? 'cache.t4g.small') : 'cache.t4g.micro',
       engine: 'redis',
       engineVersion: '7.1',
       numNodeGroups: 1,
-      replicasPerNodeGroup: isProd ? 1 : undefined,
-      automaticFailoverEnabled: isProd,
-      multiAzEnabled: isProd,
+      replicasPerNodeGroup: isProtectedEnv ? (options.replicasPerNodeGroup ?? 1) : undefined,
+      automaticFailoverEnabled: isProd
+        ? (options.automaticFailoverEnabled ?? true)
+        : isStaging
+          ? (options.automaticFailoverEnabled ?? true)
+          : false,
+      multiAzEnabled: isProd ? (options.multiAzEnabled ?? true) : false,
       atRestEncryptionEnabled: true,
       transitEncryptionEnabled: true,
       cacheSubnetGroupName: subnetGroup.ref,

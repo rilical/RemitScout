@@ -45,6 +45,11 @@ export type FoundationNestedStackProps = NestedStackProps & {
   sesIdentityArns: string[]
   snsTopicArns: string[]
   enableDbProxy: boolean
+  prodDatabaseInstances?: number
+  prodRedisNodeType?: string
+  prodRedisReplicasPerNodeGroup?: number
+  prodRedisAutomaticFailoverEnabled?: boolean
+  prodRedisMultiAzEnabled?: boolean
   enableGithubActionsOidc: boolean
   githubRepoOwner: string
   githubRepoName: string
