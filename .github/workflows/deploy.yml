@@ -1789,11 +1789,11 @@ jobs:
           ENV_NAME: staging
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: omar@remit-scout.com
-          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
-          SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
-          SMOKE_EXPECTED_IS_ADMIN: '1'
-          SMOKE_EXPECTED_APP_ROLE: super_admin
+          SMOKE_USER_EMAIL: austrilic@gmail.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_EXPECTED_EMAIL: austrilic@gmail.com
+          SMOKE_EXPECTED_IS_ADMIN: '0'
+          SMOKE_EXPECTED_APP_ROLE: user
           SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
           SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
         run: |
@@ -1803,7 +1803,7 @@ jobs:
             exit 1
           fi
           if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging enterprise smoke."
+            echo "Missing LAUNCH_PASSWORD_AUSTRILIC or DEFAULT_LAUNCH_PASSWORD for staging enterprise smoke."
             exit 1
           fi
           if [ -z "${PUBLIC_API_BASE:-}" ]; then
