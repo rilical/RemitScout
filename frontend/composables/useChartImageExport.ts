@@ -1,219 +1,258 @@
-/**
- * Chart-to-image export composable.
- *
- * Captures any container element (typically containing an SVG chart) as a
- * high-resolution branded PNG with Remit-Scout attribution, source metadata,
- * and a backlink watermark — optimized for blog embeds and social sharing.
- */
-import { ref } from 'vue'
+import { ref } from 'vue';
+
+export const CHART_VISUAL_EXPORT_FORMATS = ['png', 'svg', 'pdf'] as const;
+export type ChartVisualExportFormat = (typeof CHART_VISUAL_EXPORT_FORMATS)[number];
+
+export type ChartImageExportTarget = HTMLElement | HTMLIFrameElement;
 
 export type ChartImageExportOptions = {
-  /** Title shown in the branded header */
-  title: string
-  /** Subtitle / corridor description */
-  subtitle?: string
-  /** Source attribution line */
-  source?: string
-  /** Scale factor for retina output (default 2) */
-  scale?: number
-  /** Background color (default #171717 — neutral-900) */
-  bgColor?: string
-  /** Brand accent color (default #2563EB — brand-600) */
-  accentColor?: string
-  /** Filename without extension */
-  filename?: string
-}
+  /** Legacy metadata retained for compatibility with existing callers. */
+  title?: string;
+  subtitle?: string;
+  source?: string;
+  /** Scale factor for raster outputs. */
+  scale?: number;
+  /** Export background color override. */
+  bgColor?: string;
+  /** Legacy brand color field retained for compatibility. */
+  accentColor?: string;
+  /** Filename without extension. */
+  filename?: string;
+  /** Output format. Defaults to png. */
+  format?: ChartVisualExportFormat;
+  /** Optional selector to locate the exact export root within the target. */
+  rootSelector?: string;
+};
 
-const PADDING = 32
-const HEADER_HEIGHT = 72
-const FOOTER_HEIGHT = 48
-const BRAND_FONT = '600 16px Inter, system-ui, sans-serif'
-const SUBTITLE_FONT = '400 12px Inter, system-ui, sans-serif'
-const FOOTER_FONT = '500 11px Inter, system-ui, sans-serif'
-const WATERMARK_FONT = '600 10px Inter, system-ui, sans-serif'
+const DEFAULT_EXPORT_ROOT_SELECTOR = '[data-chart-export-root]';
+const DEFAULT_BACKGROUND = '#0a0a0a';
+const DEFAULT_SCALE = 2;
+
+type ResolvedExportTarget = {
+  node: HTMLElement;
+  width: number;
+  height: number;
+};
 
 export function useChartImageExport() {
-  const exporting = ref(false)
+  const exporting = ref(false);
 
-  /**
-   * Render an element to a branded PNG and trigger download.
-   *
-   * @param el - The container element to capture (should contain the SVG chart)
-   * @param options - Branding and metadata options
-   */
-  async function exportAsImage(
-    el: HTMLElement,
-    options: ChartImageExportOptions,
+  async function exportVisual(
+    target: ChartImageExportTarget,
+    options: ChartImageExportOptions = {}
   ): Promise<void> {
-    if (exporting.value) return
-    exporting.value = true
+    if (exporting.value) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      throw new Error('Visual export is only available in the browser.');
+    }
+
+    exporting.value = true;
 
     try {
-      const scale = options.scale ?? 2
-      const bgColor = options.bgColor ?? '#171717'
-      const accentColor = options.accentColor ?? '#2563EB'
+      const format = options.format ?? 'png';
+      const resolved = await resolveExportTarget(target, options.rootSelector);
+      const filename = `${sanitizeFilename(options.filename || options.title || 'remit-scout-chart')}.${format}`;
+      const backgroundColor = options.bgColor || resolveBackgroundColor(resolved.node);
+      const scale = normalizeScale(options.scale);
 
-      // Find the SVG inside the element
-      const svg = el.querySelector('svg')
-      if (!svg) throw new Error('No SVG chart found in the container.')
+      const htmlToImage = await import('html-to-image');
+      const renderOptions = {
+        backgroundColor,
+        cacheBust: true,
+        pixelRatio: scale,
+        skipAutoScale: true,
+      };
 
-      // Clone the SVG and inline computed styles for a self-contained snapshot
-      const clonedSvg = svg.cloneNode(true) as SVGSVGElement
-      inlineComputedStyles(svg, clonedSvg)
-
-      // Resolve the intrinsic SVG size from the viewBox
-      const viewBox = clonedSvg.getAttribute('viewBox')?.split(/\s+/).map(Number)
-      const svgW = viewBox?.[2] ?? svg.clientWidth ?? 800
-      const svgH = viewBox?.[3] ?? svg.clientHeight ?? 320
-
-      // Canvas dimensions
-      const chartW = svgW
-      const chartH = svgH
-      const canvasW = chartW + PADDING * 2
-      const canvasH = HEADER_HEIGHT + chartH + FOOTER_HEIGHT + PADDING
-      const scaledW = canvasW * scale
-      const scaledH = canvasH * scale
-
-      // Set the cloned SVG to the exact render size
-      clonedSvg.setAttribute('width', String(chartW))
-      clonedSvg.setAttribute('height', String(chartH))
-      clonedSvg.removeAttribute('class')
-
-      // Serialize the SVG to a data URL
-      const svgData = new XMLSerializer().serializeToString(clonedSvg)
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const svgUrl = URL.createObjectURL(svgBlob)
-
-      const img = new Image()
-      img.width = chartW * scale
-      img.height = chartH * scale
-
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject(new Error('Failed to rasterize SVG.'))
-        img.src = svgUrl
-      })
-
-      // Create the canvas
-      const canvas = document.createElement('canvas')
-      canvas.width = scaledW
-      canvas.height = scaledH
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Canvas context unavailable.')
-
-      ctx.scale(scale, scale)
-
-      // Background
-      ctx.fillStyle = bgColor
-      ctx.fillRect(0, 0, canvasW, canvasH)
-
-      // --- Header ---
-      // Brand accent bar
-      ctx.fillStyle = accentColor
-      ctx.fillRect(0, 0, canvasW, 4)
-
-      // Title
-      ctx.fillStyle = '#FFFFFF'
-      ctx.font = BRAND_FONT
-      ctx.textBaseline = 'top'
-      ctx.fillText(options.title, PADDING, 20)
-
-      // Subtitle
-      if (options.subtitle) {
-        ctx.fillStyle = '#A3A3A3'
-        ctx.font = SUBTITLE_FONT
-        ctx.fillText(options.subtitle, PADDING, 42)
+      if (format === 'svg') {
+        const svgDataUrl = await htmlToImage.toSvg(resolved.node, renderOptions);
+        triggerDownload(dataUrlToBlob(svgDataUrl), filename);
+        return;
       }
 
-      // Remit-Scout logo text (right-aligned)
-      ctx.fillStyle = accentColor
-      ctx.font = BRAND_FONT
-      const logoText = 'Remit-Scout'
-      const logoW = ctx.measureText(logoText).width
-      ctx.fillText(logoText, canvasW - PADDING - logoW, 20)
+      const canvas = await htmlToImage.toCanvas(resolved.node, renderOptions);
+      if (format === 'pdf') {
+        const { jsPDF } = await import('jspdf');
+        const pdf = new jsPDF({
+          orientation: resolved.width >= resolved.height ? 'landscape' : 'portrait',
+          unit: 'px',
+          format: [resolved.width, resolved.height],
+          compress: true,
+        });
+        pdf.addImage(
+          canvas.toDataURL('image/png'),
+          'PNG',
+          0,
+          0,
+          resolved.width,
+          resolved.height,
+          undefined,
+          'FAST'
+        );
+        pdf.save(filename);
+        return;
+      }
 
-      // Date (right-aligned under logo)
-      ctx.fillStyle = '#737373'
-      ctx.font = SUBTITLE_FONT
-      const dateText = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-      const dateW = ctx.measureText(dateText).width
-      ctx.fillText(dateText, canvasW - PADDING - dateW, 42)
-
-      // --- Chart area ---
-      ctx.drawImage(img, PADDING, HEADER_HEIGHT, chartW, chartH)
-      URL.revokeObjectURL(svgUrl)
-
-      // --- Footer ---
-      const footerY = HEADER_HEIGHT + chartH + 12
-
-      // Source attribution
-      const sourceText = options.source ?? 'Source: remit-scout.com'
-      ctx.fillStyle = '#A3A3A3'
-      ctx.font = FOOTER_FONT
-      ctx.fillText(sourceText, PADDING, footerY)
-
-      // Backlink watermark (right)
-      ctx.fillStyle = '#525252'
-      ctx.font = WATERMARK_FONT
-      const watermark = 'remit-scout.com/pulse'
-      const wmW = ctx.measureText(watermark).width
-      ctx.fillText(watermark, canvasW - PADDING - wmW, footerY)
-
-      // Divider line above footer
-      ctx.strokeStyle = '#404040'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(PADDING, footerY - 8)
-      ctx.lineTo(canvasW - PADDING, footerY - 8)
-      ctx.stroke()
-
-      // --- Download ---
-      const filename = (options.filename ?? sanitizeFilename(options.title)) + '.png'
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => {
-          if (b) resolve(b)
-          else reject(new Error('Failed to generate PNG.'))
-        }, 'image/png')
-      })
-
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    }
- finally {
-      exporting.value = false
+      const blob = await canvasToBlob(canvas, 'image/png');
+      triggerDownload(blob, filename);
+    } finally {
+      exporting.value = false;
     }
   }
 
-  return { exportAsImage, exporting }
+  async function exportAsImage(
+    target: ChartImageExportTarget,
+    options: ChartImageExportOptions = {}
+  ): Promise<void> {
+    await exportVisual(target, { ...options, format: 'png' });
+  }
+
+  return {
+    exportAsImage,
+    exportVisual,
+    exporting,
+  };
 }
 
-/** Recursively copy computed styles from source to clone so the SVG renders self-contained. */
-function inlineComputedStyles(source: Element, clone: Element) {
-  const computed = window.getComputedStyle(source)
-  const importantProps = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-opacity', 'font-size', 'font-family', 'font-weight', 'opacity', 'color']
-  for (const prop of importantProps) {
-    const val = computed.getPropertyValue(prop)
-    if (val) {
-      ;(clone as HTMLElement).style.setProperty(prop, val)
-    }
+async function resolveExportTarget(
+  target: ChartImageExportTarget,
+  rootSelector = DEFAULT_EXPORT_ROOT_SELECTOR
+): Promise<ResolvedExportTarget> {
+  if (target instanceof HTMLIFrameElement) {
+    const iframeRoot = await resolveIframeRoot(target, rootSelector);
+    return buildResolvedTarget(iframeRoot);
   }
-  const sourceChildren = source.children
-  const cloneChildren = clone.children
-  for (let i = 0; i < sourceChildren.length && i < cloneChildren.length; i++) {
-    inlineComputedStyles(sourceChildren[i], cloneChildren[i])
-  }
+
+  const root = resolveElementRoot(target, rootSelector);
+  return buildResolvedTarget(root);
 }
 
-function sanitizeFilename(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60) || 'remit-scout-chart'
+function resolveElementRoot(target: HTMLElement, rootSelector: string): HTMLElement {
+  if (target.matches(rootSelector)) return target;
+  const nestedRoot = target.querySelector<HTMLElement>(rootSelector);
+  return nestedRoot || target;
+}
+
+async function resolveIframeRoot(
+  iframe: HTMLIFrameElement,
+  rootSelector: string
+): Promise<HTMLElement> {
+  await waitForIframeDocument(iframe);
+
+  const doc = iframe.contentDocument;
+  if (!doc) {
+    throw new Error('Embed preview is not ready yet.');
+  }
+
+  const root =
+    doc.querySelector<HTMLElement>(rootSelector) ||
+    doc.body?.firstElementChild ||
+    doc.documentElement;
+
+  if (!(root instanceof HTMLElement)) {
+    throw new Error('Unable to find a renderable embed root.');
+  }
+
+  return root;
+}
+
+async function waitForIframeDocument(iframe: HTMLIFrameElement): Promise<void> {
+  const doc = iframe.contentDocument;
+  if (doc?.readyState === 'complete' || doc?.readyState === 'interactive') {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const onLoad = () => {
+      cleanup();
+      resolve();
+    };
+    const onError = () => {
+      cleanup();
+      reject(new Error('Embed preview failed to load.'));
+    };
+    const cleanup = () => {
+      iframe.removeEventListener('load', onLoad);
+      iframe.removeEventListener('error', onError);
+    };
+
+    iframe.addEventListener('load', onLoad, { once: true });
+    iframe.addEventListener('error', onError, { once: true });
+  });
+}
+
+function buildResolvedTarget(node: HTMLElement): ResolvedExportTarget {
+  const rect = node.getBoundingClientRect();
+  const width = Math.max(Math.round(rect.width || node.scrollWidth || node.offsetWidth || 0), 1);
+  const height = Math.max(
+    Math.round(rect.height || node.scrollHeight || node.offsetHeight || 0),
+    1
+  );
+
+  if (width <= 1 || height <= 1) {
+    throw new Error('Rendered chart is not ready for export yet.');
+  }
+
+  return { node, width, height };
+}
+
+function resolveBackgroundColor(node: HTMLElement): string {
+  const win = node.ownerDocument.defaultView;
+  const background = win?.getComputedStyle(node).backgroundColor || '';
+  if (!background || background === 'rgba(0, 0, 0, 0)' || background === 'transparent') {
+    return DEFAULT_BACKGROUND;
+  }
+  return background;
+}
+
+function normalizeScale(scale?: number): number {
+  if (typeof scale === 'number' && Number.isFinite(scale) && scale > 0) {
+    return Math.min(Math.max(scale, 1), 4);
+  }
+  return DEFAULT_SCALE;
+}
+
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [meta, payload] = dataUrl.split(',');
+  if (!meta || !payload) {
+    throw new Error('Invalid SVG export payload.');
+  }
+  const mime = /data:(.*?)(;|$)/.exec(meta)?.[1] || 'image/svg+xml';
+  if (meta.includes(';base64')) {
+    const bytes = Uint8Array.from(atob(payload), char => char.charCodeAt(0));
+    return new Blob([bytes], { type: mime });
+  }
+  return new Blob([decodeURIComponent(payload)], { type: mime });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error('Failed to generate image export.'));
+    }, type);
+  });
+}
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function sanitizeFilename(value: string): string {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 80) || 'remit-scout-chart'
+  );
 }

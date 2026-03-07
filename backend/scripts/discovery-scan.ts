@@ -5,8 +5,6 @@
  *
  * Environment variables:
  *   DISCOVERY_PROVIDERS       — Comma-separated provider IDs to scan (optional; defaults to all)
- *   DISCOVERY_APPLY_RESULTS   — "1" or "true" to auto-apply discovered corridors/methods
- *
  * Scheduled via ECS Fargate (Sundays 3am UTC) or triggered manually.
  */
 
@@ -24,12 +22,6 @@ import type { DiscoveryRunOptions, DiscoveryResult } from '../plane-b/src/discov
 
 const logger = createLogger('script.discovery-scan')
 initTracing('discovery-scan')
-
-const parseApplyResults = (): boolean => {
-  const raw = process.env.DISCOVERY_APPLY_RESULTS
-  const lower = raw?.toLowerCase()
-  return lower === '1' || lower === 'true' || lower === 'yes'
-}
 
 const parseProviderFilter = (): string[] | null => {
   const raw = process.env.DISCOVERY_PROVIDERS
@@ -63,18 +55,15 @@ const run = async () => {
   const correlationId = randomUUID()
 
   try {
-    const applyResults = parseApplyResults()
     const providerFilter = parseProviderFilter()
 
     const options: DiscoveryRunOptions = {
       triggeredBy: 'schedule',
       correlationId,
-      applyResults,
     }
 
     logger.info('discovery_scan_start', {
       correlationId,
-      applyResults,
       providerFilter: providerFilter ?? 'all',
       registeredCount: getRegisteredDiscoveryProviders().length,
     })
@@ -126,7 +115,6 @@ const run = async () => {
       totalDeliveryMethods,
       totalPromotions,
       totalErrors,
-      applyResults,
     })
   } finally {
     await pool.end()

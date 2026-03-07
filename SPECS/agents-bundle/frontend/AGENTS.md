@@ -1,7 +1,7 @@
 ---
 entrypoints:
   - "frontend/pages/send-money/[from]-to-[to].vue"
-  - "frontend/pages/pulse.vue"
+  - "frontend/pages/pulse/index.vue"
   - "frontend/server/api/health.get.ts"
 evidence_skills:
   - "evidence.http_latency.github_actions"
@@ -15,7 +15,7 @@ Nuxt frontend for the public product and admin surfaces.
 
 Entrypoints:
 - `frontend/pages/send-money/[from]-to-[to].vue`
-- `frontend/pages/pulse.vue`
+- `frontend/pages/pulse/index.vue`
 - `frontend/server/api/health.get.ts`
 
 Common failure modes:
@@ -27,4 +27,3 @@ Evidence skills to run:
 
 Do-not-break rules:
 - Keep API contracts snapshot-able and stable (avoid silent shape changes).
-

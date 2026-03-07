@@ -27,6 +27,11 @@ const readSource = (relativePath: string): string => {
 }
 
 describe('Gold export guardrails', () => {
+  const allowedSqlInterpolations = new Set([
+    '${b2bEffectiveRateSql}',
+    '${rightsMatrixCorridorEligibilitySql}',
+  ])
+
   it.each(GOLD_EXPORT_FILES)(
     '%s does not reference bronze schema directly',
     (filePath) => {
@@ -52,7 +57,8 @@ describe('Gold export guardrails', () => {
     const sqlBlockMatch = source.match(/buildIndicesQuery\s*=\s*\(\)\s*=>\s*`([\s\S]*?)`/)
     if (sqlBlockMatch) {
       const sqlBody = sqlBlockMatch[1]
-      const interpolations = sqlBody.match(/\$\{[^}]+\}/g) ?? []
+      const interpolations = (sqlBody.match(/\$\{[^}]+\}/g) ?? [])
+        .filter((token) => !allowedSqlInterpolations.has(token))
       expect(
         interpolations,
         `Found unsafe interpolations in SQL query: ${interpolations.join(', ')}`,

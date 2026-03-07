@@ -1,12 +1,12 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest'
+import { expect, it, beforeEach, afterEach } from 'vitest'
 import type { Pool } from 'pg'
 
 import { createPool } from '../shared/db'
 import { config } from '../shared/config'
 import { VolatilityService } from '../plane-b/src/services/volatility-service'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
-describe('VolatilityService', () => {
+describeDbIntegration('VolatilityService', () => {
   let pool: Pool
   let service: VolatilityService
 

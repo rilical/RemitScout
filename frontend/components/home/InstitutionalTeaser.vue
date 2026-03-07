@@ -12,7 +12,7 @@
               research and risk teams
             </h2>
             <p class="text-body-lg text-neutral-600 leading-relaxed max-w-xl">
-              Real-time corridor pricing, proprietary cost and volatility indexes, and historical datasets — shared with qualified clients under NDA.
+              Join the institutional waitlist while we build toward 180 days of live sellable history for corridor pricing, proprietary cost indexes, and historical datasets.
             </p>
           </div>
         </div>

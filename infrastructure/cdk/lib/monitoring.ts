@@ -1339,6 +1339,31 @@ export const createMonitoring = (
     alarm.addAlarmAction(opsAction)
   })
 
+  ;(['tier_1', 'tier_2'] as const).forEach((priorityTier) => {
+    const alarm = new Alarm(scope, `B2bSweepCompletionOverdue-${priorityTier}`, {
+      alarmName: useExplicitAlarmNames
+        ? `remit-scout-${options.envName}-b2b-sweep-${priorityTier}-completion-overdue`
+        : undefined,
+      metric: new Metric({
+        namespace: 'RemitScout',
+        metricName: 'b2b_sweep_completion_overdue',
+        statistic: 'Maximum',
+        period: Duration.minutes(1),
+        dimensionsMap: {
+          priority_tier: priorityTier,
+          environment: options.envName,
+        },
+      }),
+      threshold: 1,
+      evaluationPeriods: 15,
+      datapointsToAlarm: 15,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: `B2B ${priorityTier} sweep completion is overdue for 15 consecutive minutes`,
+    })
+    alarm.addAlarmAction(opsAction)
+  })
+
   // Ingest fanout worker backpressure alarm — fires when BackpressureDetected
   // sum > 0 for 3 consecutive 1-minute periods, indicating sustained queue
   // depth exceeding the backpressure threshold.

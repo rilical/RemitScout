@@ -12,58 +12,7 @@ import catalogJson from '../../.remit-scout/providers/catalog.json'
  * The Docker image must include `.remit-scout/` (see backend/Dockerfile).
  */
 
-export type ProviderId =
-  | 'alansari'
-  | 'bossmoney'
-  | 'dahabshiil'
-  | 'instarem'
-  | 'intermex'
-  | 'koronapay'
-  | 'mukuru'
-  | 'orbitremit'
-  | 'pangea'
-  | 'paysend'
-  | 'placid'
-  | 'remitbee'
-  | 'remitly'
-  | 'ria'
-  | 'sendwave'
-  | 'singx'
-  | 'transfergo'
-  | 'wellsfargo'
-  | 'westernunion'
-  | 'wirebarley'
-  | 'wise'
-  | 'worldremit'
-  | 'xe'
-  | 'xoom'
-
-const PROVIDER_ID_SET = new Set<string>([
-  'alansari',
-  'bossmoney',
-  'dahabshiil',
-  'instarem',
-  'intermex',
-  'koronapay',
-  'mukuru',
-  'orbitremit',
-  'pangea',
-  'paysend',
-  'placid',
-  'remitbee',
-  'remitly',
-  'ria',
-  'sendwave',
-  'singx',
-  'transfergo',
-  'wellsfargo',
-  'westernunion',
-  'wirebarley',
-  'wise',
-  'worldremit',
-  'xe',
-  'xoom',
-])
+export type ProviderId = string
 
 const CATALOG_PATH_SEGMENTS = path.join('.remit-scout', 'providers', 'catalog.json')
 
@@ -128,7 +77,10 @@ export const getProviderCatalogPath = (): string => {
   return path.join(getRepoRoot(), '.remit-scout', 'providers', 'catalog.json')
 }
 
-const isProviderId = (value: string): value is ProviderId => PROVIDER_ID_SET.has(value)
+const PROVIDER_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,63}$/
+
+const isProviderId = (value: string): value is ProviderId =>
+  PROVIDER_ID_PATTERN.test(value)
 
 let cached: ProviderCatalog | null = null
 

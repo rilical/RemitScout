@@ -37,6 +37,7 @@ Frontend auth entry points:
 
 Config:
 - `backend/shared/config.ts` (auth/plan envs, admin emails)
+- `docs/security/admin-surface-control-matrix.md` (guard + smoke source of truth)
 
 ## Responsibilities (core)
 - Verify JWT validation, JWKS fetching/caching, and token audience/issuer.
@@ -58,6 +59,7 @@ Config:
 3) **Entitlements**: plan -> entitlements -> route gating.
 4) **Admin gating**: allowlist or role claims.
 5) **Email verification**: enforce verified users when required.
+6) **Admin session bootstrap**: `/api/v1/sessions/admin/exchange` and `/api/v1/sessions/admin/refresh`.
 
 ## File map to inspect (priority order)
 1) `backend/plane-a/src/plugins/auth-plugin.ts`
@@ -144,6 +146,7 @@ Config:
 - `/api/v1/exports`: paid plan only.
 - `/api/v1/alerts`: authenticated user only.
 - `/api/v1/admin`: admin only.
+- `/api/v1/sessions/admin/*`: authenticated admin bootstrap only, not a public session shortcut.
 
 ## Email verification policy
 - If verification is required, block login for unverified users.
@@ -188,6 +191,7 @@ Config:
 ## Release gates
 - Any unauthenticated admin access blocks release.
 - Any plan enforcement missing blocks release.
+- Staging promotion must prove Omar can exchange an admin session and complete the reversible admin-surface smoke in `backend/scripts/ci/admin-surface-smoke.ts`.
 
 ## Red-flags (immediate stop)
 - Service role keys present in client bundle.

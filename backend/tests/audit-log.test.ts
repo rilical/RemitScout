@@ -8,7 +8,9 @@ vi.mock('../shared/db', () => ({
 }))
 
 describe('audit-log', () => {
-  it('extracts request context from forwarded headers', () => {
+  type RequestContextInput = Parameters<typeof getRequestContext>[0]
+
+  it('prefers the trusted runtime source IP for direct requests', () => {
     const context = getRequestContext({
       headers: {
         'x-forwarded-for': '203.0.113.10, 127.0.0.1',
@@ -17,13 +19,52 @@ describe('audit-log', () => {
       },
       id: 'req-1',
       ip: '10.0.0.1',
-    } as any)
+    } as RequestContextInput)
+
+    expect(context).toEqual({
+      ipAddress: '10.0.0.1',
+      userAgent: 'test-agent',
+      requestId: 'req-1',
+      sessionId: 'session-123',
+    })
+  })
+
+  it('uses the original viewer IP for CloudFront-proxied requests', () => {
+    const context = getRequestContext({
+      headers: {
+        'x-amz-cf-id': 'cf-request-id',
+        'x-forwarded-for': '203.0.113.10, 54.239.1.10',
+        'user-agent': 'test-agent',
+      },
+      id: 'req-2',
+      ip: '54.239.1.10',
+    } as RequestContextInput)
 
     expect(context).toEqual({
       ipAddress: '203.0.113.10',
       userAgent: 'test-agent',
-      requestId: 'req-1',
-      sessionId: 'session-123',
+      requestId: 'req-2',
+      sessionId: undefined,
+    })
+  })
+
+  it('prefers cloudfront-viewer-address when present', () => {
+    const context = getRequestContext({
+      headers: {
+        'x-amz-cf-id': 'cf-request-id',
+        'cloudfront-viewer-address': '203.0.113.10:43124',
+        'x-forwarded-for': '198.51.100.20, 54.239.1.10',
+        'user-agent': 'test-agent',
+      },
+      id: 'req-3',
+      ip: '54.239.1.10',
+    } as RequestContextInput)
+
+    expect(context).toEqual({
+      ipAddress: '203.0.113.10',
+      userAgent: 'test-agent',
+      requestId: 'req-3',
+      sessionId: undefined,
     })
   })
 

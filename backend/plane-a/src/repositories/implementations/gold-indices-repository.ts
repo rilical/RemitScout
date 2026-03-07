@@ -23,7 +23,7 @@ export class GoldIndicesRepository implements IGoldIndicesRepository {
          FROM gold_export.cdp_daily
         WHERE corridor_id = $1
           AND amount_bucket = $2
-          AND method_profile = $3`,
+          AND method_profile = $3::method_profile`,
       [input.corridorId, input.amountBucket, input.methodProfile],
       this.pool,
     )
@@ -59,7 +59,7 @@ export class GoldIndicesRepository implements IGoldIndicesRepository {
          FROM gold_export.cdp_daily
         WHERE corridor_id = $1
           AND amount_bucket = $2
-          AND method_profile = $3
+          AND method_profile = $3::method_profile
           AND date >= $4
           AND date <= $5
         ORDER BY date ASC`,
@@ -102,7 +102,7 @@ export class GoldIndicesRepository implements IGoldIndicesRepository {
          FROM gold_export.cdp_daily
         WHERE corridor_id = $1
           AND amount_bucket = $2
-          AND method_profile = $3
+          AND method_profile = $3::method_profile
         ORDER BY date DESC, created_at DESC
         LIMIT 1`,
       [input.corridorId, input.amountBucket, input.methodProfile],

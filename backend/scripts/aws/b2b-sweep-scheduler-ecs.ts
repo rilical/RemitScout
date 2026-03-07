@@ -8,6 +8,7 @@
 import { createLogger } from '../../shared/logger'
 import { resolveDatabaseUrl } from '../../shared/aws-params'
 import { formatError } from '../../shared/utils/error-handling'
+import { resolveIngestFanoutQueueState } from '../../shared/ingest-fanout-queues'
 
 const logger = createLogger('script.b2b-sweep-scheduler-ecs')
 
@@ -62,12 +63,17 @@ export const handler = async (): Promise<number> => {
   })
 
   const ingestMode = process.env.PLANE_B_INGEST_FANOUT_QUEUE_MODE || 'off'
-  const ingestUrl =
-    process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL ||
-    process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL ||
-    ''
-  if (ingestMode === 'queue' && !ingestUrl) {
-    throw new Error('PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL (or PLANE_B_INGEST_FANOUT_QUEUE_URL) required when PLANE_B_INGEST_FANOUT_QUEUE_MODE=queue')
+  const queueState = resolveIngestFanoutQueueState({
+    mode: ingestMode,
+    url: process.env.PLANE_B_INGEST_FANOUT_QUEUE_URL,
+    tier1Url: process.env.PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL,
+    tier2Url: process.env.PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL,
+  })
+  if (ingestMode === 'queue' && queueState.tierMisconfigured) {
+    throw new Error('PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL and PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL must both be set when using tiered ingest fanout queues')
+  }
+  if (ingestMode === 'queue' && !queueState.enabledForQueueProducer) {
+    throw new Error('PLANE_B_INGEST_FANOUT_QUEUE_URL or the full tiered pair (PLANE_B_INGEST_FANOUT_TIER1_QUEUE_URL + PLANE_B_INGEST_FANOUT_TIER2_QUEUE_URL) is required when PLANE_B_INGEST_FANOUT_QUEUE_MODE=queue')
   }
 
   try {

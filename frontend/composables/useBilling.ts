@@ -1,4 +1,5 @@
 import type { Plan } from '~/composables/useEntitlements'
+import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
 
 export type BillingCheckoutResult = {
   ok: boolean
@@ -12,11 +13,10 @@ export const useBilling = () => {
   const { refreshPlan } = useEntitlements()
 
   const getErrorMessage = (error: unknown, fallback: string) => {
-    if (error && typeof error === 'object' && 'message' in error) {
-      const message = (error as Record<string, unknown>).message
-      if (typeof message === 'string' && message.trim()) return message
-    }
-    return fallback
+    return mapPlanStateFailureMessage(error, fallback, {
+      customer_not_found: 'No billing profile was found for this account yet. Start checkout to create one.',
+      unsupported_plan_code: 'That plan cannot be purchased in self-serve checkout.',
+    })
   }
 
   const isSafeBillingRedirect = (value: string): boolean => {

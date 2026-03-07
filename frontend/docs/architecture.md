@@ -28,7 +28,7 @@ Top offenders (non-exhaustive, generated from `wc -l` on tracked files):
 1. `frontend/pages/dashboard.vue` (~6134)
 2. `frontend/pages/send-money/[from]-to-[to].vue` (~4231)
 3. `frontend/pages/methodology.vue` (~1937)
-4. `frontend/pages/pulse.vue` (~1801)
+4. `frontend/pages/pulse/index.vue` (~1801)
 5. `frontend/pages/partnerships.vue` (~1791)
 6. `frontend/pages/learn/providers/placid.vue` (~1590)
 7. `frontend/pages/learn/providers/singx.vue` (~1578)

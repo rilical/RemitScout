@@ -32,7 +32,7 @@ These are the files that will cost the most to change safely because they combin
 | 1 | `frontend/pages/dashboard.vue` | 6134 | “God page”: signed-out marketing + signed-in app + account management + ops + enterprise; inline SVG components; local formatting helpers; cache state; too many concerns to QA confidently. Also contains inline DOM injection in `img onerror` (see below). | Split by tab into `components/dashboard/*` and/or child routes; move formatting to shared formatters; enforce shared empty/loading/error states; remove DOM injection. |
 | 2 | `frontend/pages/send-money/[from]-to-[to].vue` | 4231 | Corridor page is doing UI + quote-refresh orchestration + polling/timers + chart rendering + watchlist/alerts hooks. Reactive surface is huge (`computed`~107, `watch`~18). | Extract “quote refresh state machine” to a composable/service; extract chart into a single chart component; centralize corridor formatting + validation. |
 | 3 | `frontend/pages/methodology.vue` | 1937 | Long-form content page with lots of bespoke inline SVG and layout; likely SEO content but still coded as a giant Vue file. | Move content to a content system (MD/JSON) + a single article template component. |
-| 4 | `frontend/pages/pulse.vue` | 1801 | Plus gating UX + feature explanation + dashboard UI in one file; repeated icon/copy patterns with `dashboard.vue` and `plus.vue`. | Create a reusable “PlusGate/Upsell” component; standardize feature list patterns. |
+| 4 | `frontend/pages/pulse/index.vue` | 1801 | Plus gating UX + feature explanation + dashboard UI in one file; repeated icon/copy patterns with `dashboard.vue` and `plus.vue`. | Create a reusable “PlusGate/Upsell” component; standardize feature list patterns. |
 | 5 | `frontend/pages/partnerships.vue` | 1791 | Large marketing/sales page; high chance of copy drift and inconsistent CTA patterns. | Move to content + a shared “marketing page” layout; centralize CTA components. |
 | 6 | `frontend/components/home/HeroDualTab.vue` | 1322 | Heavy animated SVG + form logic + stepper UX; likely fragile; lots of embedded UI tokens and repeated input patterns. | Split: `HeroMap` (visual), `CompareForm` (logic), `HeroCopy` (content). |
 | 7 | `frontend/pages/send-money/index.vue` | 1213 | Country/corridor selection + routing logic + marketing copy + layout. | Use shared form components and a single routing helper; keep page thin. |
@@ -176,4 +176,3 @@ Recommendation:
 3) **Standardize icons**: remove inline SVG paths from pages; use one icon wrapper.
 4) **Standardize shared states**: empty/loading/error banners and “Plus gate” upsell panels.
 5) **Clamp unsafe HTML**: sanitize or remove `v-html` and remove dashboard DOM injection.
-

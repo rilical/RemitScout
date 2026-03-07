@@ -57,6 +57,13 @@ import {
   type PayoutMethod,
 } from '../shared/macro-corridors'
 import { normalizeMacroLanesForSweep } from './b2b-sweep-plan'
+import { isRightsMatrixCorridorEligible } from '../shared/rights-matrix-corridor'
+import {
+  getCompletedSweepReferenceTime,
+  getSweepCadenceDriftMinutes,
+  isSweepTierDue,
+} from '../shared/b2b-sweep-cadence'
+import { resolveIngestFanoutQueueState } from '../shared/ingest-fanout-queues'
 
 type _PriorityQueues = {
   tier1: string[]
@@ -135,11 +142,15 @@ const ingestFanoutMode = config.queues.ingestFanout.mode
 const ingestFanoutQueueUrl = config.queues.ingestFanout.url
 const ingestFanoutQueueTier1Url = config.queues.ingestFanout.tier1Url
 const ingestFanoutQueueTier2Url = config.queues.ingestFanout.tier2Url
-const ingestFanoutTiered = Boolean(ingestFanoutQueueTier1Url && ingestFanoutQueueTier2Url)
-const ingestFanoutTierMisconfigured =
-  (Boolean(ingestFanoutQueueTier1Url) || Boolean(ingestFanoutQueueTier2Url))
-  && !ingestFanoutTiered
-const ingestFanoutEnabled = ingestFanoutMode === 'queue' && (Boolean(ingestFanoutQueueUrl) || ingestFanoutTiered)
+const ingestFanoutQueueState = resolveIngestFanoutQueueState({
+  mode: ingestFanoutMode,
+  url: ingestFanoutQueueUrl,
+  tier1Url: ingestFanoutQueueTier1Url,
+  tier2Url: ingestFanoutQueueTier2Url,
+})
+const ingestFanoutTiered = ingestFanoutQueueState.tieredConfigured
+const ingestFanoutTierMisconfigured = ingestFanoutQueueState.tierMisconfigured
+const ingestFanoutEnabled = ingestFanoutQueueState.enabledForQueueProducer
 
 const b2bAmountByProvider: Record<string, number> = {
   remitly: config.planeB.remitly.b2bAmount,
@@ -848,28 +859,13 @@ const filterProvidersByRights = (
   providerIds: string[],
   corridorId: string,
   rightsByProvider: Map<string, ProviderRightsForScheduler>,
-): string[] => {
-  const parsed = parseCorridorId(corridorId)
-  if (!parsed) return []
-
-  return providerIds.filter(providerId => {
-    const rights = rightsByProvider.get(providerId)
-    if (!rights) return false
-    if (!rights.allowedCollect || !rights.allowedB2b) return false
-    if (rights.stoplistStatus !== 'active') return false
-
-    if (!rights.sourceCountries?.length || !rights.destinationCountries?.length) {
-      return false
-    }
-
-    const sourceCountries = rights.sourceCountries.map(country => country.toUpperCase())
-    const destinationCountries = rights.destinationCountries.map(country => country.toUpperCase())
-    if (!sourceCountries.includes(parsed.sourceCountry.toUpperCase())) return false
-    if (!destinationCountries.includes(parsed.destCountry.toUpperCase())) return false
-
-    return true
-  })
-}
+): string[] => providerIds.filter((providerId) => {
+  const rights = rightsByProvider.get(providerId)
+  if (!rights) return false
+  if (!rights.allowedCollect || !rights.allowedB2b) return false
+  if (rights.stoplistStatus !== 'active') return false
+  return isRightsMatrixCorridorEligible(corridorId, rights)
+})
 
 const tierConfig = {
   tier_1: {
@@ -887,6 +883,44 @@ const tierConfig = {
     rpm: 6,
   },
 } as const
+
+const recordSweepCadenceMetrics = (
+  tier: CorridorTier,
+  cadenceSeconds: number,
+  latestCompletedRun: {
+    createdAt?: Date | string | null
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+  } | null,
+) => {
+  const driftMinutes = getSweepCadenceDriftMinutes({
+    latestCompletedRun,
+    cadenceSeconds,
+  })
+  const overdue = driftMinutes !== null && driftMinutes > 0
+  const dimensions = {
+    environment: config.envName || config.env,
+    priority_tier: tier,
+  }
+
+  recordCloudWatchMetric({
+    name: 'b2b_sweep_completion_overdue',
+    value: overdue ? 1 : 0,
+    unit: 'Count',
+    dimensions,
+  })
+
+  if (driftMinutes !== null) {
+    recordCloudWatchMetric({
+      name: 'b2b_sweep_completion_drift_minutes',
+      value: Math.max(0, driftMinutes),
+      unit: 'Count',
+      dimensions,
+    })
+  }
+
+  return driftMinutes
+}
 
 export const runB2bSweepScheduler = async (): Promise<number> => {
   if (!ingestFanoutEnabled) {
@@ -999,18 +1033,6 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
           emitBackpressure('queue_age', { tier: 'tier_2', queue_age_seconds: tier2Age, max_queue_age_seconds: maxQueueAgeSecondsTier2 })
         }
       }
-      if (!allowTier1 && !allowTier2) {
-        recordCloudWatchMetric({
-          name: 'worker_backpressure_active',
-          value: 1,
-          unit: 'Count',
-          dimensions: {
-            worker: 'b2b-sweep-scheduler',
-            environment: config.envName || config.env,
-          },
-        })
-        return 0
-      }
     } else if (ingestFanoutQueueUrl) {
       const queueStats = await getQueueStats(ingestFanoutQueueUrl)
       if (maxQueueDepth > 0 && queueStats.total >= maxQueueDepth) {
@@ -1020,16 +1042,8 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
           max_queue_depth: maxQueueDepth,
         })
         emitBackpressure('queue_depth', { queue_depth: queueStats.total, max_queue_depth: maxQueueDepth })
-        recordCloudWatchMetric({
-          name: 'worker_backpressure_active',
-          value: 1,
-          unit: 'Count',
-          dimensions: {
-            worker: 'b2b-sweep-scheduler',
-            environment: config.envName || config.env,
-          },
-        })
-        return 0
+        allowTier1 = false
+        allowTier2 = false
       }
       if (maxQueueAgeSecondsCombined > 0) {
         const queueAgeSeconds = await getQueueAgeSeconds(ingestFanoutQueueUrl)
@@ -1040,16 +1054,8 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
             max_queue_age_seconds: maxQueueAgeSecondsCombined,
           })
           emitBackpressure('queue_age', { queue_age_seconds: queueAgeSeconds, max_queue_age_seconds: maxQueueAgeSecondsCombined })
-          recordCloudWatchMetric({
-            name: 'worker_backpressure_active',
-            value: 1,
-            unit: 'Count',
-            dimensions: {
-              worker: 'b2b-sweep-scheduler',
-              environment: config.envName || config.env,
-            },
-          })
-          return 0
+          allowTier1 = false
+          allowTier2 = false
         }
       }
     }
@@ -1164,78 +1170,95 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     const tier1Lanes = macroLanes.filter(lane => lane.tier === 'tier_1')
     const tier2Lanes = macroLanes.filter(lane => lane.tier === 'tier_2')
 
-	    const checkTierDue = async (tier: CorridorTier): Promise<boolean> => {
-	      const config = tierConfig[tier]
-	      const activeRun = await sweepRepo.getActiveRunByTier(tier)
-		      if (activeRun) {
-	        const activeCreatedAtMs = activeRun.createdAt
-	          ? new Date(activeRun.createdAt).getTime()
-	          : (activeRun.startedAt ? new Date(activeRun.startedAt).getTime() : NaN)
-	        const ageMs = Number.isFinite(activeCreatedAtMs) ? Date.now() - activeCreatedAtMs : NaN
-	        const defaultStaleAfterMs = Math.max(60 * 60 * 1000, config.cadenceSeconds * 1000 * 2)
-	        const staleAfterMs = Number.isFinite(staleRunMaxAgeMsOverride)
-	          ? Math.max(60 * 1000, staleRunMaxAgeMsOverride)
-	          : defaultStaleAfterMs
+    const checkTierDue = async (tier: CorridorTier): Promise<boolean> => {
+      const tierSettings = tierConfig[tier]
+      const effectiveCadenceSeconds =
+        canaryModeEnabled && canaryForceDue && tier === 'tier_2'
+          ? canaryIntervalSeconds
+          : tierSettings.cadenceSeconds
+      const [activeRun, latestCompletedRun] = await Promise.all([
+        sweepRepo.getActiveRunByTier(tier),
+        sweepRepo.getLatestCompletedRunByTier(tier),
+      ])
+      const driftMinutes = recordSweepCadenceMetrics(
+        tier,
+        effectiveCadenceSeconds,
+        latestCompletedRun,
+      )
 
-	        if (Number.isFinite(ageMs) && ageMs > staleAfterMs) {
-	          logger.warn('active_run_stale', {
-	            tier,
-	            run_id: activeRun.runId,
-	            age_seconds: Math.round(ageMs / 1000),
-	            stale_after_seconds: Math.round(staleAfterMs / 1000),
-	          })
-	          // Self-heal: a stuck 'running' sweep should not wedge the cadence forever.
-            let markedFailed = false
-            try {
-              await sweepRepo.updateSweepRunStatus(activeRun.runId, 'failed', new Date())
-              markedFailed = true
-            } catch (error) {
-              logger.warn('stale_run_mark_failed_failed', {
-                tier,
-                run_id: activeRun.runId,
-                error: error instanceof Error ? error.message : String(error),
-              })
-            }
-            if (markedFailed) {
-              logger.warn('active_run_stale_recovered', {
-                tier,
-                run_id: activeRun.runId,
-                age_seconds: Math.round(ageMs / 1000),
-                stale_after_seconds: Math.round(staleAfterMs / 1000),
-                status_set: 'failed',
-              })
-            }
-	        } else {
-	          logger.info('tier_skipped', { tier, reason: 'active_run', run_id: activeRun.runId })
-	          return false
-		        }
-		      }
+      if (activeRun) {
+        const activeCreatedAtMs = activeRun.createdAt
+          ? new Date(activeRun.createdAt).getTime()
+          : (activeRun.startedAt ? new Date(activeRun.startedAt).getTime() : NaN)
+        const ageMs = Number.isFinite(activeCreatedAtMs) ? Date.now() - activeCreatedAtMs : NaN
+        const defaultStaleAfterMs = Math.max(60 * 60 * 1000, tierSettings.cadenceSeconds * 1000 * 2)
+        const staleAfterMs = Number.isFinite(staleRunMaxAgeMsOverride)
+          ? Math.max(60 * 1000, staleRunMaxAgeMsOverride)
+          : defaultStaleAfterMs
 
-			      const latestRun = await sweepRepo.getLatestRunByTier(tier)
-		      if (latestRun?.createdAt) {
-		        const ageMs = Date.now() - new Date(latestRun.createdAt).getTime()
-	        const effectiveCadenceSeconds =
-	          canaryModeEnabled && canaryForceDue && tier === 'tier_2'
-	            ? canaryIntervalSeconds
-	            : config.cadenceSeconds
-	        const cadenceMs = effectiveCadenceSeconds * 1000
-	        if (ageMs < cadenceMs) {
-	          logger.debug('tier_not_due', {
-	            tier,
-	            last_run_at: latestRun.createdAt,
-	            cadence_seconds: effectiveCadenceSeconds,
-	            age_seconds: Math.round(ageMs / 1000),
-	          })
-	          return false
-	        }
+        if (Number.isFinite(ageMs) && ageMs > staleAfterMs) {
+          logger.warn('active_run_stale', {
+            tier,
+            run_id: activeRun.runId,
+            age_seconds: Math.round(ageMs / 1000),
+            stale_after_seconds: Math.round(staleAfterMs / 1000),
+          })
+          let markedFailed = false
+          try {
+            await sweepRepo.updateSweepRunStatus(activeRun.runId, 'failed', new Date())
+            markedFailed = true
+          } catch (error) {
+            logger.warn('stale_run_mark_failed_failed', {
+              tier,
+              run_id: activeRun.runId,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+          if (markedFailed) {
+            logger.warn('active_run_stale_recovered', {
+              tier,
+              run_id: activeRun.runId,
+              age_seconds: Math.round(ageMs / 1000),
+              stale_after_seconds: Math.round(staleAfterMs / 1000),
+              status_set: 'failed',
+            })
+          }
+        } else {
+          logger.info('tier_skipped', {
+            tier,
+            reason: 'active_run',
+            run_id: activeRun.runId,
+            cadence_seconds: effectiveCadenceSeconds,
+            drift_minutes: driftMinutes,
+          })
+          return false
+        }
+      }
+
+      const due = isSweepTierDue({
+        latestCompletedRun,
+        cadenceSeconds: effectiveCadenceSeconds,
+      })
+      if (!due) {
+        logger.debug('tier_not_due', {
+          tier,
+          last_completed_at: getCompletedSweepReferenceTime(latestCompletedRun)?.toISOString() ?? null,
+          cadence_seconds: effectiveCadenceSeconds,
+          drift_minutes: driftMinutes,
+        })
+        return false
       }
       return true
     }
 
-    const [tier1Due, tier2Due] = await Promise.all([
-      allowTier1 ? checkTierDue('tier_1') : Promise.resolve(false),
-      allowTier2 ? checkTierDue('tier_2') : Promise.resolve(false),
+    const [tier1DueRaw, tier2DueRaw] = await Promise.all([
+      !config.planeB.disableTier1 && !canaryModeEnabled
+        ? checkTierDue('tier_1')
+        : Promise.resolve(false),
+      checkTierDue('tier_2'),
     ])
+    const tier1Due = allowTier1 && tier1DueRaw
+    const tier2Due = allowTier2 && tier2DueRaw
 
     const dueLanes = [
       ...(tier1Due ? tier1Lanes : []),
@@ -1307,8 +1330,9 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     const createSweepRunForTier = async (tier: CorridorTier, tierTasks: LaneTask[]) => {
       if (tierTasks.length === 0) return undefined
       const cfg = tierConfig[tier]
+      let runId: string | undefined
       try {
-        return (await sweepRepo.createSweepRun({
+        runId = (await sweepRepo.createSweepRun({
           priorityTier: tier,
           cadenceMinutes: Math.ceil(cfg.cadenceSeconds / 60),
           targetMinutes: cfg.sloMinutes,
@@ -1317,11 +1341,37 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
           providersTotal: tierTasks.reduce((sum, t) => sum + t.providers.length, 0),
           status: 'running',
         })) ?? undefined
+        if (!runId) {
+          return undefined
+        }
+
+        const taskRows = tierTasks.flatMap((task) =>
+          task.providers.map((providerId) => ({
+            corridorId: task.corridorId,
+            providerId,
+            collectorType: cfg.collectorType,
+            priorityTier: cfg.label,
+            amountBucket: task.amountBucket,
+            payinMethod: resolveB2bPayinMethod(providerId),
+            payoutMethod: task.payoutMethod,
+          })),
+        )
+        await sweepRepo.insertSweepTasks(runId, taskRows, { enqueuedAt: null })
+        return runId
       } catch (error) {
-        logger.warn('sweep_run_create_failed', {
+        logger.warn('sweep_run_prepare_failed', {
           tier,
           error: error instanceof Error ? error.message : String(error),
         })
+        if (runId) {
+          await sweepRepo.updateSweepRunStatus(runId, 'failed', new Date()).catch((statusError) => {
+            logger.warn('sweep_run_prepare_failed_status_update_failed', {
+              tier,
+              sweep_run_id: runId,
+              error: statusError instanceof Error ? statusError.message : String(statusError),
+            })
+          })
+        }
         return undefined
       }
     }
@@ -1331,14 +1381,27 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       tier2Due ? createSweepRunForTier('tier_2', tier2Tasks) : undefined,
     ])
 
+    const dispatchableTasks = tasks.filter((task) => {
+      if (task.tier === 'tier_1') return Boolean(tier1RunId)
+      return Boolean(tier2RunId)
+    })
+
     const nowIso = new Date().toISOString()
     const messagePayloadsByQueue = new Map<string, Array<{
       id: string
       payload: unknown
+      runId?: string
+      taskKeys: Array<{
+        providerId: string
+        corridorId: string
+        amountBucket: number
+        payinMethod: string
+        payoutMethod: string
+      }>
     }>>()
 
-    for (let idx = 0; idx < tasks.length; idx += 1) {
-      const task = tasks[idx]
+    for (let idx = 0; idx < dispatchableTasks.length; idx += 1) {
+      const task = dispatchableTasks[idx]
       const cfg = tierConfig[task.tier]
       const queueUrl = resolveIngestFanoutQueueUrl(cfg.label)
       if (!queueUrl) {
@@ -1349,18 +1412,26 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
         continue
       }
       const sweepRunId = task.tier === 'tier_1' ? tier1RunId : tier2RunId
+      const providers = task.providers.map((providerId) => ({
+        providerId,
+        collectorType: cfg.collectorType,
+        amountBuckets: [task.amountBucket],
+        payinMethod: resolveB2bPayinMethod(providerId),
+        payoutMethod: task.payoutMethod,
+        priorityTier: cfg.label,
+        freshnessSloMinutes: cfg.sloMinutes,
+      }))
+      const taskKeys = providers.map((provider) => ({
+        providerId: provider.providerId,
+        corridorId: task.corridorId,
+        amountBucket: task.amountBucket,
+        payinMethod: provider.payinMethod,
+        payoutMethod: provider.payoutMethod,
+      }))
       const rawPayload = {
         version: 'corridor_v1' as const,
         corridorId: task.corridorId,
-        providers: task.providers.map(providerId => ({
-          providerId,
-          collectorType: cfg.collectorType,
-          amountBuckets: [task.amountBucket],
-          payinMethod: resolveB2bPayinMethod(providerId),
-          payoutMethod: task.payoutMethod,
-          priorityTier: cfg.label,
-          freshnessSloMinutes: cfg.sloMinutes,
-        })),
+        providers,
         requestedAt: nowIso,
         sweepRunId,
       }
@@ -1374,9 +1445,9 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
       )
       const bucket = messagePayloadsByQueue.get(queueUrl)
       if (bucket) {
-        bucket.push({ id: `${idx}-${task.tier}`, payload })
+        bucket.push({ id: `${idx}-${task.tier}`, payload, runId: sweepRunId, taskKeys })
       } else {
-        messagePayloadsByQueue.set(queueUrl, [{ id: `${idx}-${task.tier}`, payload }])
+        messagePayloadsByQueue.set(queueUrl, [{ id: `${idx}-${task.tier}`, payload, runId: sweepRunId, taskKeys }])
       }
     }
 
@@ -1387,33 +1458,67 @@ export const runB2bSweepScheduler = async (): Promise<number> => {
     for (const [queueUrl, messages] of messagePayloadsByQueue.entries()) {
       for (let i = 0; i < messages.length; i += batchSize) {
         const batch = messages.slice(i, i + batchSize)
-        const results = await sendBatchJsonMessages(queueUrl, batch)
+        const messageMeta = new Map(batch.map((message) => [message.id, message]))
+        const results = await sendBatchJsonMessages(
+          queueUrl,
+          batch.map(({ id, payload }) => ({ id, payload })),
+        )
+        const enqueuedByRun = new Map<string, typeof batch[number]['taskKeys']>()
+        const failedByRun = new Map<string, typeof batch[number]['taskKeys']>()
         for (const r of results) {
-          r.success ? enqueued++ : failed++
+          const meta = messageMeta.get(r.id)
+          if (!meta) {
+            continue
+          }
+          if (r.success) {
+            enqueued += 1
+            if (meta.runId) {
+              const existing = enqueuedByRun.get(meta.runId) ?? []
+              existing.push(...meta.taskKeys)
+              enqueuedByRun.set(meta.runId, existing)
+            }
+            continue
+          }
+
+          failed += 1
+          if (meta.runId) {
+            const existing = failedByRun.get(meta.runId) ?? []
+            existing.push(...meta.taskKeys)
+            failedByRun.set(meta.runId, existing)
+          }
+          logger.warn('scheduler_enqueue_failed', {
+            queue_url: queueUrl,
+            priority_tier: meta.runId === tier2RunId ? 'tier_2' : 'tier_1',
+            error: r.error ?? 'unknown',
+          })
+        }
+
+        await Promise.all([
+          ...Array.from(enqueuedByRun.entries()).map(([runId, taskKeys]) =>
+            sweepRepo.markTasksEnqueued(runId, taskKeys)),
+          ...Array.from(failedByRun.entries()).map(([runId, taskKeys]) =>
+            sweepRepo.markTasksFinishedBatch(runId, taskKeys, 'failed', 'enqueue_failed')),
+        ])
+
+        for (const runId of failedByRun.keys()) {
+          const summary = await sweepRepo.getRunSummary(runId)
+          if (summary.remaining === 0) {
+            const status = summary.failed > 0 ? 'failed' : 'completed'
+            await sweepRepo.updateSweepRunStatus(runId, status, new Date()).catch((error) => {
+              logger.warn('sweep_status_update_failed', {
+                sweep_run_id: runId,
+                status,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            })
+          }
         }
       }
     }
 
-    const finalizeSweepRun = async (runId: string | undefined) => {
-      if (!runId) return
-      const status = failed > 0 ? 'failed' : 'completed'
-      await sweepRepo.updateSweepRunStatus(runId, status, new Date()).catch((error) => {
-        logger.warn('sweep_status_update_failed', {
-          sweep_run_id: runId,
-          status,
-          error: error instanceof Error ? error.message : String(error),
-        })
-      })
-    }
-
-    await Promise.all([
-      finalizeSweepRun(tier1RunId),
-      finalizeSweepRun(tier2RunId),
-    ])
-
     const durationMs = Date.now() - startTime
     logger.info('scheduler_complete', {
-      tasks: tasks.length,
+      tasks: dispatchableTasks.length,
       tier1_tasks: tier1Tasks.length,
       tier2_tasks: tier2Tasks.length,
       queue_urls: Array.from(messagePayloadsByQueue.keys()),

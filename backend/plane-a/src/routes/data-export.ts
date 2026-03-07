@@ -21,7 +21,7 @@ export const dataExportRoutes = async (app: FastifyInstance) => {
     const user = request.user!
 
     try {
-      const pipeline = getExportPipelineStatus()
+      const pipeline = await getExportPipelineStatus()
       if (!pipeline.ok) {
         reply.code(503)
         return {

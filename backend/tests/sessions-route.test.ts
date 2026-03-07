@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance } from 'fastify'
-import { NotFoundError, ValidationError } from '../shared/errors'
 
 const mockRepo = {
   getUserSessions: vi.fn(),
@@ -19,6 +18,35 @@ const mockGetRefreshCookieHeader = vi.hoisted(() => vi.fn(() => 'plane_a_admin_r
 const mockGetClearRefreshCookieHeader = vi.hoisted(() => vi.fn(() => 'plane_a_admin_refresh=; Max-Age=0'))
 const mockGetRequestContext = vi.hoisted(() => vi.fn().mockReturnValue({}))
 const mockLogAuditEvent = vi.hoisted(() => vi.fn())
+const mockDeriveSessionId = vi.hoisted(() => vi.fn(() => null))
+const mockDeriveRotatingSessionId = vi.hoisted(() => vi.fn(() => 'a'.repeat(64)))
+const mockDetectDeviceType = vi.hoisted(() => vi.fn(() => 'desktop'))
+const mockGetLocationFromHeaders = vi.hoisted(() => vi.fn(() => null))
+const mockAnonymizeIpAddress = vi.hoisted(() =>
+  vi.fn(() => ({
+    normalizedIp: '198.51.100.41',
+    truncatedIp: '198.51.100.0',
+    ipHash: 'b'.repeat(64),
+    ipVersion: 4,
+  })),
+)
+const mockExtractBrowserFamily = vi.hoisted(() => vi.fn(() => 'chrome'))
+
+vi.mock('../shared/config', () => ({
+  config: {
+    planeA: {
+      adminMfaRequired: true,
+    },
+    geo: {
+      countryHeader: 'x-country-code',
+    },
+    privacy: {
+      hashSalt: 'test-privacy-salt',
+      sessionSalt: 'test-privacy-session-salt',
+      sessionRotationHours: 24,
+    },
+  },
+}))
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireAuth: () => () => undefined,
@@ -60,6 +88,18 @@ vi.mock('../plane-a/src/services/audit-log', () => ({
   logAuditEvent: (...args: unknown[]) => mockLogAuditEvent(...args),
 }))
 
+vi.mock('../plane-a/src/services/session-utils', () => ({
+  deriveSessionId: (...args: unknown[]) => mockDeriveSessionId(...args),
+  deriveRotatingSessionId: (...args: unknown[]) => mockDeriveRotatingSessionId(...args),
+  detectDeviceType: (...args: unknown[]) => mockDetectDeviceType(...args),
+  getLocationFromHeaders: (...args: unknown[]) => mockGetLocationFromHeaders(...args),
+}))
+
+vi.mock('../plane-a/src/services/privacy-utils', () => ({
+  anonymizeIpAddress: (...args: unknown[]) => mockAnonymizeIpAddress(...args),
+  extractBrowserFamily: (...args: unknown[]) => mockExtractBrowserFamily(...args),
+}))
+
 const makeApp = () =>
   ({
     get: vi.fn(),
@@ -81,6 +121,7 @@ const getHandler = (app: FastifyInstance, method: 'get' | 'delete' | 'post', url
 describe('sessions route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.resetModules()
     mockRepo.getUserSessions.mockResolvedValue([])
     mockRepo.revokeSession.mockResolvedValue(undefined)
     mockRepo.revokeAllUserSessions.mockResolvedValue(0)
@@ -98,6 +139,23 @@ describe('sessions route', () => {
     mockGetRequestContext.mockReset()
     mockGetRequestContext.mockReturnValue({})
     mockLogAuditEvent.mockReset()
+    mockDeriveSessionId.mockReset()
+    mockDeriveSessionId.mockReturnValue(null)
+    mockDeriveRotatingSessionId.mockReset()
+    mockDeriveRotatingSessionId.mockReturnValue('a'.repeat(64))
+    mockDetectDeviceType.mockReset()
+    mockDetectDeviceType.mockReturnValue('desktop')
+    mockGetLocationFromHeaders.mockReset()
+    mockGetLocationFromHeaders.mockReturnValue(null)
+    mockAnonymizeIpAddress.mockReset()
+    mockAnonymizeIpAddress.mockReturnValue({
+      normalizedIp: '198.51.100.41',
+      truncatedIp: '198.51.100.0',
+      ipHash: 'b'.repeat(64),
+      ipVersion: 4,
+    })
+    mockExtractBrowserFamily.mockReset()
+    mockExtractBrowserFamily.mockReturnValue('chrome')
   })
 
   const makeReply = () => ({
@@ -111,7 +169,10 @@ describe('sessions route', () => {
     await sessionsRoutes(app)
 
     const handler = getHandler(app, 'delete', '/sessions/:id')
-    await expect(handler({ user: { user_id: 'u-1' }, params: {} }, {} as any)).rejects.toBeInstanceOf(ValidationError)
+    await expect(handler({ user: { user_id: 'u-1' }, params: {} }, {} as any)).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
   })
 
   it('returns not found when session does not exist', async () => {
@@ -122,7 +183,10 @@ describe('sessions route', () => {
     const handler = getHandler(app, 'delete', '/sessions/:id')
     await expect(
       handler({ user: { user_id: 'u-1' }, params: { id: 's-1' }, headers: {} }, {} as any),
-    ).rejects.toBeInstanceOf(NotFoundError)
+    ).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'not_found',
+    })
   })
 
   it('requires anon id for unauthenticated tracking', async () => {
@@ -133,7 +197,10 @@ describe('sessions route', () => {
     const handler = getHandler(app, 'post', '/sessions/track')
     await expect(
       handler({ body: { session_id: 'session-12345678' }, headers: {}, ip: '127.0.0.1' }, {} as any),
-    ).rejects.toBeInstanceOf(ValidationError)
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
   })
 
   it('stores anonymized identifiers when tracking session', async () => {
@@ -156,10 +223,10 @@ describe('sessions route', () => {
     expect(mockRepo.createSession).toHaveBeenCalledWith(
       expect.objectContaining({
         sessionId: expect.stringMatching(/^[a-f0-9]{64}$/),
-        ipHash: expect.stringMatching(/^[a-f0-9]{64}$/),
         userAgent: 'chrome',
       }),
     )
+    expect(mockAnonymizeIpAddress).toHaveBeenCalledWith('198.51.100.41')
   })
 
   it('exchanges authorization header token for Plane A admin session and sets refresh cookie', async () => {
@@ -223,7 +290,47 @@ describe('sessions route', () => {
         },
         makeReply() as any,
       ),
-    ).rejects.toBeInstanceOf(ValidationError)
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'validation_error',
+    })
+  })
+
+  it('returns a stable deny code when admin exchange is blocked by the allowlist', async () => {
+    const app = makeApp()
+    const { sessionsRoutes } = await import('../plane-a/src/routes/sessions')
+    await sessionsRoutes(app)
+
+    mockVerifySupabaseJwt.mockResolvedValue({
+      user_id: '00000000-0000-4000-8000-000000000111',
+      email: 'ops@remit-scout.com',
+      role: 'admin',
+      claims: {
+        amr: [{ method: 'totp', mfa: true }],
+      },
+    })
+    mockResolveAdminAccess.mockResolvedValue({
+      allowed: false,
+      appRole: 'admin',
+      denyReason: 'admin_allowlist_denied',
+    })
+
+    const handler = getHandler(app, 'post', '/sessions/admin/exchange')
+    const reply = makeReply()
+    const response = await handler(
+      {
+        body: {},
+        headers: { authorization: 'Bearer supabase.jwt.token' },
+        ip: '127.0.0.1',
+      },
+      reply as any,
+    )
+
+    expect(reply.code).toHaveBeenCalledWith(403)
+    expect(response).toEqual({
+      error: 'forbidden',
+      code: 'admin_allowlist_denied',
+    })
   })
 
   it('refreshes admin session from refresh cookie when body token is absent', async () => {

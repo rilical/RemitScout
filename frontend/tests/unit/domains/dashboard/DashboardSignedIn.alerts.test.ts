@@ -4,6 +4,20 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardSignedIn from '~/domains/dashboard/ui/DashboardSignedIn.vue'
 
+vi.mock('~/composables/useFeatureFlags', async () => {
+  const { ref } = await import('vue')
+  return {
+    useFeatureFlags: () => ({
+      enterpriseEnabled: ref(false),
+      pulseEnabled: ref(true),
+      runtimeFlags: ref(null),
+      loading: ref(false),
+      hydrated: ref(true),
+      fetchRuntimeFlags: vi.fn().mockResolvedValue(undefined),
+    }),
+  }
+})
+
 describe('DashboardSignedIn alerts tab', () => {
   const route = reactive({
     query: { tab: 'alerts' },
@@ -14,10 +28,17 @@ describe('DashboardSignedIn alerts tab', () => {
   const openAlertModal = vi.fn()
   const isPlusRef = ref(false)
   const isEnterpriseRef = ref(false)
+  const storedPlanCodeRef = ref<'free' | 'plus' | 'enterprise'>('free')
+  const planStatusRef = ref('active')
+  const planLifecycleStateRef = ref('active')
+  const recoveryAvailableRef = ref(false)
+  const recoveryActionRef = ref<'none' | 'billing_portal' | 'upgrade'>('none')
   const limitsRef = ref({
     watchlistItems: 3,
     alerts: 1,
     historyDays: 30,
+    exports: false,
+    exportsMaxDays: 0,
   })
 
   beforeEach(() => {
@@ -25,16 +46,24 @@ describe('DashboardSignedIn alerts tab', () => {
     route.query.tab = 'alerts'
     isPlusRef.value = false
     isEnterpriseRef.value = false
+    storedPlanCodeRef.value = 'free'
+    planStatusRef.value = 'active'
+    planLifecycleStateRef.value = 'active'
+    recoveryAvailableRef.value = false
+    recoveryActionRef.value = 'none'
     limitsRef.value = {
       watchlistItems: 3,
       alerts: 1,
       historyDays: 30,
+      exports: false,
+      exportsMaxDays: 0,
     }
 
     ;(globalThis as any).useRoute = () => route
     ;(globalThis as any).ref = ref
     ;(globalThis as any).computed = computed
     ;(globalThis as any).watch = watch
+    ;(globalThis as any).useState = vi.fn((_: string, init: () => unknown) => ref(init()))
     ;(globalThis as any).onMounted = onMounted
     ;(globalThis as any).onBeforeUnmount = onBeforeUnmount
     ;(globalThis as any).onUnmounted = onUnmounted
@@ -76,12 +105,19 @@ describe('DashboardSignedIn alerts tab', () => {
     ;(globalThis as any).useEntitlements = () => ({
       isPlus: isPlusRef,
       isEnterprise: isEnterpriseRef,
+      storedPlanCode: storedPlanCodeRef,
+      planStatus: planStatusRef,
+      planLifecycleState: planLifecycleStateRef,
+      recoveryAvailable: recoveryAvailableRef,
+      recoveryAction: recoveryActionRef,
+      hasPaidAccess: computed(() => isPlusRef.value || isEnterpriseRef.value),
       apiAccess: ref(false),
       apiTier: ref(2),
       limits: limitsRef,
       billing: ref({ status: 'inactive', next_billing_date: null }),
       refreshPlan: vi.fn().mockResolvedValue(undefined),
       pulseLevel: ref('none'),
+      indicesExportsEnabled: ref(false),
     })
     ;(globalThis as any).useBilling = () => ({
       checkoutLoading: ref(false),
@@ -180,6 +216,7 @@ describe('DashboardSignedIn alerts tab', () => {
     delete (globalThis as any).ref
     delete (globalThis as any).computed
     delete (globalThis as any).watch
+    delete (globalThis as any).useState
     delete (globalThis as any).onMounted
     delete (globalThis as any).onBeforeUnmount
     delete (globalThis as any).onUnmounted
@@ -271,6 +308,8 @@ describe('DashboardSignedIn alerts tab', () => {
       watchlistItems: 16,
       alerts: 16,
       historyDays: 90,
+      exports: true,
+      exportsMaxDays: 30,
     }
 
     const wrapper = await mountDashboard()
@@ -291,6 +330,8 @@ describe('DashboardSignedIn alerts tab', () => {
       watchlistItems: 16,
       alerts: 16,
       historyDays: 'unlimited' as any,
+      exports: true,
+      exportsMaxDays: 30,
     }
 
     const wrapper = await mountDashboard()
@@ -300,5 +341,67 @@ describe('DashboardSignedIn alerts tab', () => {
     expect(buttonLabels.some(label => label.startsWith('1M'))).toBe(true)
     expect(buttonLabels.some(label => label.startsWith('3M'))).toBe(true)
     expect(buttonLabels.some(label => label.startsWith('6M'))).toBe(true)
+  })
+
+  it('shows a paid-plan export lock for free users on the history tab', async () => {
+    route.query.tab = 'history'
+
+    const wrapper = await mountDashboard()
+    const exportButton = wrapper.findAll('button').find(button => button.text().trim() === 'Export Data')
+    expect(exportButton).toBeTruthy()
+
+    await exportButton!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Paid Feature')
+    expect(wrapper.text()).toContain('Export your comparison history, watchlist data, and alerts on a paid plan.')
+    expect(wrapper.text()).not.toContain('Data to Export')
+  })
+
+  it('shows the export form when exports are enabled', async () => {
+    route.query.tab = 'history'
+    isPlusRef.value = true
+    storedPlanCodeRef.value = 'plus'
+    limitsRef.value = {
+      watchlistItems: 16,
+      alerts: 16,
+      historyDays: 90,
+      exports: true,
+      exportsMaxDays: 30,
+    }
+
+    const wrapper = await mountDashboard()
+    const exportButton = wrapper.findAll('button').find(button => button.text().trim() === 'Export Data')
+    expect(exportButton).toBeTruthy()
+
+    await exportButton!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Data to Export')
+    expect(wrapper.text()).not.toContain('Paid Feature')
+  })
+
+  it('shows billing recovery copy for inactive paid plans on the account tab', async () => {
+    route.query.tab = 'account'
+    ;(route.query as any).section = 'billing'
+    route.fullPath = '/dashboard?tab=account&section=billing'
+    storedPlanCodeRef.value = 'plus'
+    planStatusRef.value = 'past_due'
+    planLifecycleStateRef.value = 'past_due'
+    recoveryAvailableRef.value = true
+    recoveryActionRef.value = 'billing_portal'
+    limitsRef.value = {
+      watchlistItems: 3,
+      alerts: 1,
+      historyDays: 30,
+      exports: false,
+      exportsMaxDays: 0,
+    }
+
+    const wrapper = await mountDashboard()
+
+    expect(wrapper.text()).toContain('Billing needs attention')
+    expect(wrapper.text()).toContain('Billing needs attention. Paid features are paused until you reactivate.')
+    expect(wrapper.text()).toContain('Reactivate billing')
   })
 })

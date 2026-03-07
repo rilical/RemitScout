@@ -247,7 +247,7 @@ describe('providers indices gating', () => {
     expect(mockGetIndicesLatest).not.toHaveBeenCalled()
   })
 
-  it('returns indicesReason unsupported_method for wallet payouts', async () => {
+  it('computes search-derived indices for wallet payouts', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([
       buildQuote({
         payout: 'WALLET',
@@ -271,8 +271,9 @@ describe('providers indices gating', () => {
 
     const result = await handler(mockRequest, mockReply)
 
-    expect(result.indicesReason).toBe('unsupported_method')
-    expect(result.indices).toBeUndefined()
+    expect(result.indicesReason).toBe('computed_from_quotes')
+    expect(result.indices?.source).toBe('search_estimate')
+    expect(result.indices?.methodProfile).toBe('mobile_wallet')
   })
 
   it('prefers search-derived indices when Gold indices are suppressed for insufficient providers', async () => {
@@ -396,6 +397,14 @@ describe('providers indices gating', () => {
 
   it('returns schema-complete quotes_unavailable payload when no quotes exist', async () => {
     mockListLatestByCorridorAllMethods.mockResolvedValue([])
+    mockListByCorridor.mockResolvedValue([
+      {
+        provider_id: 'wise',
+        corridor_id: 'US-PH-USD-PHP',
+        payout_methods: ['bank_deposit', 'mobile_wallet'],
+        is_supported: true,
+      },
+    ])
 
     const handler = (vi
       .mocked(app.get)
@@ -417,6 +426,12 @@ describe('providers indices gating', () => {
     expect(typeof result.comparisonId).toBe('string')
     expect(typeof result.start).toBe('string')
     expect(result.data).toEqual([])
+    expect(result.availableMethods).toEqual([])
+    expect(result.availableMethodsByProvider).toEqual({})
+    expect(result.supportedMethods).toEqual(['bank', 'wallet'])
+    expect(result.supportedMethodsByProvider).toEqual({
+      wise: ['bank', 'wallet'],
+    })
     expect(result.cache).toEqual(
       expect.objectContaining({
         ttl_seconds: expect.any(Number),
@@ -425,5 +440,47 @@ describe('providers indices gating', () => {
       }),
     )
     expect(result.indicesReason).toBe('quotes_unavailable')
+  })
+
+  it('keeps availableMethodsByProvider quote-backed even when capability knows more methods', async () => {
+    mockListByCorridor.mockResolvedValue([
+      {
+        provider_id: 'wise',
+        corridor_id: 'US-PH-USD-PHP',
+        payout_methods: ['bank_deposit', 'mobile_wallet'],
+        is_supported: true,
+      },
+    ])
+    mockListLatestByCorridorAllMethods.mockResolvedValue([
+      buildQuote({
+        payout: 'BANK',
+        payout_method: 'bank_deposit',
+      }),
+    ])
+
+    const handler = (vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/providers')?.[2]
+      ?? vi.mocked(app.get).mock.calls.find((call) => call[0] === '/providers')?.[1]) as any
+
+    const mockRequest: Partial<FastifyRequest> = {
+      query: {
+        corridor_id: 'US-PH-USD-PHP',
+        amount_bucket: 500,
+        method: 'bank',
+        live: true,
+      },
+    }
+
+    const result = await handler(mockRequest, mockReply)
+
+    expect(result.availableMethods).toEqual(['bank'])
+    expect(result.availableMethodsByProvider).toEqual({
+      wise: ['bank'],
+    })
+    expect(result.supportedMethodsByProvider).toEqual({
+      wise: ['bank', 'wallet'],
+    })
+    expect(result.data[0]?.methods).toEqual(['bank'])
   })
 })

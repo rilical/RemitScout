@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const baseUrl = process.env.PLAYWRIGHT_BASE_URL || ''
+const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3002'
 const canRun = /^https?:\/\//.test(baseUrl)
 
 test.describe('reset password flow', () => {
@@ -76,9 +76,7 @@ test.describe('reset password flow', () => {
     await page.goto('/reset-password?token_hash=valid-token-hash')
 
     const missingConfig = await page.getByText('Supabase is not configured.').isVisible({ timeout: 2000 }).catch(() => false)
-    if (missingConfig) {
-      test.skip(true, 'Supabase not configured in this environment')
-    }
+    test.skip(missingConfig, 'Supabase not configured in this environment')
 
     await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Update password' })).toBeDisabled()

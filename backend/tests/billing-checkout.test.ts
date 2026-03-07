@@ -8,6 +8,24 @@ const mockEnsureUserPlan = vi.fn()
 const mockGetUserPlan = vi.fn()
 const mockUpdatePlanFromStripe = vi.fn()
 
+vi.mock('../shared/config', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/config')>()
+  return {
+    ...actual,
+    config: {
+      ...actual.config,
+      billing: {
+        ...actual.config.billing,
+        stripe: {
+          ...actual.config.billing.stripe,
+          priceIdPlus: 'price_plus_month',
+          priceIdPlusAnnual: 'price_plus_year',
+        },
+      },
+    },
+  }
+})
+
 vi.mock('../shared/db', () => ({
   getPool: vi.fn().mockReturnValue({}),
 }))
@@ -73,6 +91,44 @@ describe('billing checkout route', () => {
     await expect(
       handler({ user: { user_id: 'u-1' }, body: { plan_code: 'plus', billing_interval: 'month' } }, {} as any),
     ).rejects.toBeInstanceOf(AppError)
+  })
+
+  it('rejects unsupported enterprise checkout requests', async () => {
+    const app = makeApp()
+    const { checkoutSessionRoutes } = await import('../plane-a/src/routes/billing/checkout-session')
+    await checkoutSessionRoutes(app)
+
+    const handler = getHandler(app, '/billing/checkout-session')
+    await expect(
+      handler({ user: { user_id: 'u-1' }, body: { plan_code: 'enterprise', billing_interval: 'month' } }, {} as any),
+    ).rejects.toMatchObject({
+      details: {
+        error: 'unsupported_plan_code',
+        plan_code: 'enterprise',
+      },
+    })
+  })
+
+  it('rejects duplicate checkout for trialing Plus subscriptions', async () => {
+    mockGetUserPlan.mockResolvedValueOnce({
+      user_id: 'u-1',
+      stripe_customer_id: 'cus_1',
+      stripe_subscription_id: 'sub_trialing',
+      plan_code: 'plus',
+      status: 'trialing',
+    })
+
+    const app = makeApp()
+    const { checkoutSessionRoutes } = await import('../plane-a/src/routes/billing/checkout-session')
+    await checkoutSessionRoutes(app)
+
+    const handler = getHandler(app, '/billing/checkout-session')
+    await expect(
+      handler({ user: { user_id: 'u-1', email: 'user@example.com' }, body: { plan_code: 'plus', billing_interval: 'month' } }, {} as any),
+    ).rejects.toMatchObject({
+      name: 'ConflictError',
+      message: 'User already has an active subscription',
+    })
   })
 
   it('registers auth preHandler', async () => {

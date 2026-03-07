@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getPool, query } from '../../../shared/db'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { requireAdmin } from '../plugins/auth-plugin'
+import { requireAdmin, requireSuperAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { ValidationError } from '../../../shared/errors'
@@ -110,6 +110,24 @@ const listSchema = z.object({
   status: z.enum(['active', 'inactive']).optional(),
 })
 
+const booleanishSchema = z.preprocess((value) => {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (['true', '1', 'yes', 'on'].includes(normalized)) return true
+    if (['false', '0', 'no', 'off'].includes(normalized)) return false
+  }
+  return value
+}, z.boolean())
+
+const previewSchema = z.object({
+  placement: z.string().trim().min(1).max(64),
+  seed: z.string().trim().min(1).max(128).default('admin-preview'),
+  simulate_plan: z.enum(['free', 'plus', 'enterprise']).default('free'),
+  marketing_consent: booleanishSchema.default(true),
+  ignore_runtime_disabled: booleanishSchema.default(false),
+})
+
 const hashString = (value: string) => {
   let hash = 0
   for (let i = 0; i < value.length; i += 1) {
@@ -128,6 +146,94 @@ const pickWeighted = <T extends { weight?: number | null }>(ads: T[], seed: stri
     if (target < cursor) return ad
   }
   return ads[0]
+}
+
+const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
+  if (value === undefined) return fallback
+  const normalized = value.trim().toLowerCase()
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false
+  return fallback
+}
+
+const getAdsRuntimeState = () => {
+  const envValue = (
+    process.env.PLANE_A_PUBLIC_ADS_ENABLED
+    ?? process.env.PUBLIC_ENABLE_ADS
+    ?? process.env.PUBLIC_ADS_ENABLED
+  )
+  const enabled = parseBooleanEnv(envValue, false)
+  return {
+    runtime_enabled: enabled,
+    source: envValue === undefined ? 'default_false' : 'env',
+    mode: enabled ? 'live' : 'preview_only',
+    reason: enabled
+      ? 'Ads runtime is enabled for eligible free users.'
+      : 'Ads runtime is disabled. Admin preview remains available for QA only.',
+  }
+}
+
+type EligibleAdRow = {
+  id: string
+  name: string
+  tagline: string
+  brand_color: string
+  url: string
+  cta_text: string | null
+  rating: number | null
+  review_count: string | null
+  logo_letter: string | null
+  weight: number | null
+  label: string | null
+  is_affiliate: boolean | null
+  provider_id: string | null
+  kind: string
+  placement: string
+  layout: string | null
+}
+
+const fetchEligibleAdsForPlacement = async (placement: string) =>
+  await query<EligibleAdRow>(
+    `SELECT ai.id,
+            ai.name,
+            ai.tagline,
+            ai.brand_color,
+            ai.url,
+            ai.cta_text,
+            ai.rating,
+            ai.review_count,
+            ai.logo_letter,
+            ai.weight,
+            ai.label,
+            ai.is_affiliate,
+            ai.provider_id,
+            ai.kind,
+            ap.placement,
+            ap.layout
+     FROM silver.ad_inventory ai
+     JOIN silver.ad_placement ap ON ap.ad_id = ai.id
+     WHERE ap.placement = $1
+       AND ai.status = 'active'
+       AND (ai.start_at IS NULL OR ai.start_at <= NOW())
+       AND (ai.end_at IS NULL OR ai.end_at >= NOW())
+     ORDER BY ap.priority DESC, ai.created_at DESC`,
+    [placement],
+    pool,
+  )
+
+const selectEligibleAd = async (
+  placement: string,
+  seed: string,
+) => {
+  const result = await fetchEligibleAdsForPlacement(placement)
+  if (result.rows.length === 0) {
+    return { picked: null, eligibleCount: 0 }
+  }
+
+  return {
+    picked: pickWeighted(result.rows, seed),
+    eligibleCount: result.rows.length,
+  }
 }
 
 type AdminAdSnapshot = {
@@ -260,57 +366,20 @@ export const adsRoutes = async (app: FastifyInstance) => {
 
     const input = parsed.data
     try {
-      const result = await query<{
-        id: string
-        name: string
-        tagline: string
-        brand_color: string
-        url: string
-        cta_text: string | null
-        rating: number | null
-        review_count: string | null
-        logo_letter: string | null
-        weight: number | null
-        label: string | null
-        is_affiliate: boolean | null
-        provider_id: string | null
-        kind: string
-        placement: string
-        layout: string | null
-      }>(
-        `SELECT ai.id,
-                ai.name,
-                ai.tagline,
-                ai.brand_color,
-                ai.url,
-                ai.cta_text,
-                ai.rating,
-                ai.review_count,
-                ai.logo_letter,
-                ai.weight,
-                ai.label,
-                ai.is_affiliate,
-                ai.provider_id,
-                ai.kind,
-                ap.placement,
-                ap.layout
-         FROM silver.ad_inventory ai
-         JOIN silver.ad_placement ap ON ap.ad_id = ai.id
-         WHERE ap.placement = $1
-           AND ai.status = 'active'
-           AND (ai.start_at IS NULL OR ai.start_at <= NOW())
-           AND (ai.end_at IS NULL OR ai.end_at >= NOW())
-         ORDER BY ap.priority DESC, ai.created_at DESC`,
-        [input.placement],
-        pool,
-      )
-
-      if (result.rows.length === 0) {
-        return { ad: null }
+      const runtime = getAdsRuntimeState()
+      if (!runtime.runtime_enabled) {
+        return { ad: null, runtime }
       }
 
-      const seed = input.session_id || input.anon_id || input.placement
-      const picked = pickWeighted(result.rows, seed)
+      const selection = await selectEligibleAd(
+        input.placement,
+        input.session_id || input.anon_id || input.placement,
+      )
+
+      if (!selection.picked) {
+        return { ad: null }
+      }
+      const picked = selection.picked
 
       if (!isHttpUrl(picked.url)) {
         logger.warn('ad_invalid_url_blocked', {
@@ -423,6 +492,91 @@ export const adsRoutes = async (app: FastifyInstance) => {
     }
   })
 
+  app.get('/admin/ads/preview', { preHandler: requireAdmin() }, async (request, reply) => {
+    const parsed = previewSchema.safeParse(request.query ?? {})
+    if (!parsed.success) {
+      throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
+    }
+
+    const runtime = getAdsRuntimeState()
+    const input = parsed.data
+    const simulatePaidPlan = input.simulate_plan === 'plus' || input.simulate_plan === 'enterprise'
+
+    if (!input.marketing_consent) {
+      return {
+        ad: null,
+        eligible_count: 0,
+        runtime,
+        simulation: input,
+        reason: 'marketing_consent_disabled',
+      }
+    }
+
+    if (simulatePaidPlan) {
+      return {
+        ad: null,
+        eligible_count: 0,
+        runtime,
+        simulation: input,
+        reason: 'paid_plan_is_ad_free',
+      }
+    }
+
+    if (!runtime.runtime_enabled && !input.ignore_runtime_disabled) {
+      return {
+        ad: null,
+        eligible_count: 0,
+        runtime,
+        simulation: input,
+        reason: 'runtime_disabled',
+      }
+    }
+
+    try {
+      const selection = await selectEligibleAd(input.placement, input.seed)
+      if (!selection.picked) {
+        return {
+          ad: null,
+          eligible_count: 0,
+          runtime,
+          simulation: input,
+          reason: 'no_inventory',
+        }
+      }
+
+      const picked = selection.picked
+      return {
+        runtime,
+        simulation: input,
+        eligible_count: selection.eligibleCount,
+        reason: input.ignore_runtime_disabled && !runtime.runtime_enabled ? 'preview_override' : 'eligible',
+        ad: {
+          id: picked.id,
+          name: picked.name,
+          tagline: picked.tagline,
+          brandColor: picked.brand_color,
+          url: picked.url,
+          ctaText: picked.cta_text ?? undefined,
+          rating: picked.rating ?? undefined,
+          reviewCount: picked.review_count ?? undefined,
+          logoLetter: picked.logo_letter ?? undefined,
+          label: picked.label ?? undefined,
+          isAffiliate: picked.is_affiliate ?? false,
+          providerId: picked.provider_id ?? undefined,
+          kind: picked.kind,
+          placement: picked.placement,
+          layout: picked.layout ?? undefined,
+        },
+      }
+    } catch (error) {
+      logger.error('admin_ads_preview_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      reply.code(500)
+      return { error: 'internal_error' }
+    }
+  })
+
   app.get('/admin/ads', { preHandler: requireAdmin() }, async (request, reply) => {
     const parsed = listSchema.safeParse(request.query ?? {})
     if (!parsed.success) {
@@ -507,7 +661,19 @@ export const adsRoutes = async (app: FastifyInstance) => {
         })
       }
 
+      const runtime = getAdsRuntimeState()
+      const activeCount = adsResult.rows.filter((row) => row.status === 'active').length
+      const inactiveCount = adsResult.rows.length - activeCount
+
       return {
+        runtime,
+        summary: {
+          total: adsResult.rows.length,
+          active: activeCount,
+          inactive: inactiveCount,
+          impressions_30d: adsResult.rows.reduce((sum, row) => sum + row.impression_count, 0),
+          clicks_30d: adsResult.rows.reduce((sum, row) => sum + row.click_count, 0),
+        },
         ads: adsResult.rows.map((row) => ({
           id: row.id,
           name: row.name,
@@ -542,7 +708,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.post('/admin/ads', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/ads', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = createAdSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
@@ -648,7 +814,7 @@ export const adsRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.patch('/admin/ads/:id', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.patch('/admin/ads/:id', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = updateAdSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
             throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })

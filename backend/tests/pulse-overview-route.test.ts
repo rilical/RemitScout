@@ -104,11 +104,40 @@ describe('pulse overview route', () => {
     })
   })
 
-  it('shows suppressed status when latest Gold row is suppressed', async () => {
+  it('shows RCI value when export-suppressed but display-eligible (>=2 providers)', async () => {
     mockGetIndicesLatest.mockResolvedValue({
       rci_ratio: 0.024,
       suppression_flag: true,
       provider_count: 2,
+      method_profile: 'standard_bank',
+    })
+
+    const handler = vi
+      .mocked(app.get)
+      .mock.calls.find((call) => call[0] === '/pulse/overview')?.[2] as any
+
+    const result = await handler({
+      query: {
+        corridor: 'usd-php',
+        corridor_id: 'US-PH-USD-PHP',
+      },
+    } as Partial<FastifyRequest>)
+
+    const rciTile = result.tiles.find((tile: any) => tile.id === 'indices-rci')
+    expect(rciTile).toMatchObject({
+      id: 'indices-rci',
+      value: '2.40%',
+      delta: '2 providers',
+      deltaType: 'neutral',
+      deltaLabel: 'bank',
+    })
+  })
+
+  it('shows suppressed status when below display threshold (<2 providers)', async () => {
+    mockGetIndicesLatest.mockResolvedValue({
+      rci_ratio: 0.024,
+      suppression_flag: true,
+      provider_count: 1,
       method_profile: 'standard_bank',
     })
 

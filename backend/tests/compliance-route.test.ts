@@ -1,17 +1,33 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 
+const mockGetInstitutionalDataMaturity = vi.fn().mockResolvedValue({
+  ready: false,
+  requiredDays: 180,
+  availableDays: 45,
+  reason: 'accumulating_history',
+  updatedAt: '2026-03-05T00:00:00.000Z',
+})
+
+vi.mock('../plane-a/src/services/institutional-launch', () => ({
+  getInstitutionalDataMaturity: (...args: any[]) => mockGetInstitutionalDataMaturity(...args),
+}))
+
 const makeApp = () => ({
   get: vi.fn(),
+  container: {
+    pool: {},
+  },
 }) as unknown as FastifyInstance
 
 describe('compliance route', () => {
-  it('returns compliance certification and privacy control metadata', async () => {
+  it('returns compliance certification, maturity, and privacy control metadata', async () => {
     const app = makeApp()
     const { complianceRoutes } = await import('../plane-a/src/routes/compliance')
     await complianceRoutes(app)
 
     const call = vi.mocked(app.get).mock.calls.find((entry) => entry[0] === '/compliance/status')
+    expect(call).toHaveLength(2)
     const handler = call?.[call.length - 1] as (() => Promise<any>)
 
     const response = await handler()
@@ -27,6 +43,13 @@ describe('compliance route', () => {
           report_url: expect.any(String),
           expires_on: expect.any(String),
         },
+      },
+      institutional_data_maturity: {
+        ready: false,
+        required_days: 180,
+        available_days: 45,
+        reason: 'accumulating_history',
+        updated_at: '2026-03-05T00:00:00.000Z',
       },
       privacy_controls: {
         data_minimization: 'enforced',

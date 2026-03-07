@@ -77,6 +77,28 @@ export class ApiKeyRepository implements IApiKeyRepository {
     return result.rows
   }
 
+  async getKeyById(keyId: string): Promise<ApiKeyRecord | null> {
+    const result = await query<ApiKeyRecord>(
+      `
+      SELECT key_id,
+             user_id,
+             key_prefix,
+             key_hash,
+             name,
+             scopes,
+             created_at,
+             last_used_at,
+             revoked_at
+        FROM silver.api_key
+       WHERE key_id = $1
+       LIMIT 1
+      `,
+      [keyId],
+      this.pool,
+    )
+    return result.rows[0] ?? null
+  }
+
   async getKeyByHash(keyHash: string): Promise<ApiKeyRecord | null> {
     const result = await query<ApiKeyRecord>(
       `
@@ -98,6 +120,27 @@ export class ApiKeyRepository implements IApiKeyRepository {
       this.pool,
     )
     return result.rows[0] ?? null
+  }
+
+  async listKeysByPrefix(keyPrefix: string): Promise<ApiKeyRecord[]> {
+    const result = await query<ApiKeyRecord>(
+      `
+      SELECT key_id,
+             user_id,
+             key_prefix,
+             key_hash,
+             name,
+             scopes,
+             created_at,
+             last_used_at,
+             revoked_at
+        FROM silver.api_key
+       WHERE key_prefix = $1
+      `,
+      [keyPrefix],
+      this.pool,
+    )
+    return result.rows
   }
 
   async listActiveKeysByPrefix(keyPrefix: string): Promise<ApiKeyRecord[]> {

@@ -14,6 +14,12 @@ vi.mock('../shared/config', () => ({
     db: {
       planeAUrl: '',
     },
+    planeA: {
+      maxTokenAgeSeconds: 86400,
+      cors: {
+        origins: ['http://localhost:3000'],
+      },
+    },
     queues: {
       exports: {
         mode: 'queue',
@@ -46,6 +52,9 @@ vi.mock('../plane-a/src/repositories', () => ({
     create: mockCreate,
     listByUserId: vi.fn(),
     getById: vi.fn(),
+  })),
+  DailyUsageCounterRepository: vi.fn().mockImplementation(() => ({
+    incrementAndGet: vi.fn().mockResolvedValue(1),
   })),
 }))
 
@@ -155,13 +164,13 @@ describe('exports route plan window enforcement', () => {
       entitlementsContext: {
         planCode: 'enterprise',
         entitlements: {
-          exports_max_days: null,
+          exports_max_days: 365,
         },
       },
       body: {
         dataType: 'history',
         format: 'csv',
-        dateFrom: '2025-01-01',
+        dateFrom: '2024-01-01',
         dateTo: '2025-02-15',
       },
     } as any
@@ -169,8 +178,8 @@ describe('exports route plan window enforcement', () => {
     await expect(handler(request, mockReply)).rejects.toMatchObject({
       details: {
         error: 'export_window_exceeds_plan_limit',
-        allowedDays: 30,
-        windowDays: 46,
+        allowedDays: 365,
+        windowDays: 412,
       },
     })
     expect(mockCreate).not.toHaveBeenCalled()

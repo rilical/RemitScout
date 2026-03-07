@@ -53,10 +53,10 @@ describe('rankWithinDimension', () => {
     expect(result.get('C')).toBe(100)
   })
 
-  it('returns percentile 100 for a single corridor', () => {
+  it('returns the neutral percentile for a single corridor', () => {
     const scores = new Map([['A', 42]])
     const result = aggregator.rankWithinDimension(scores)
-    expect(result.get('A')).toBe(100)
+    expect(result.get('A')).toBe(50)
   })
 
   it('returns empty map for empty input', () => {

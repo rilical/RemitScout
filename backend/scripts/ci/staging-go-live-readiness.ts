@@ -3,6 +3,13 @@ type Requirement = {
   description: string
 }
 
+export type StagingReadinessEvaluation = {
+  missingRequired: string[]
+  missingRecommended: string[]
+  placeholderViolations: string[]
+  policyViolations: string[]
+}
+
 const REQUIRED_KEYS: Requirement[] = [
   { key: 'ENVIRONMENT', description: 'Runtime environment selector' },
   { key: 'NODE_ENV', description: 'Node runtime mode' },
@@ -52,6 +59,10 @@ const RECOMMENDED_KEYS: Requirement[] = [
   { key: 'BRAIN_INGEST_GITHUB_ACTIONS', description: 'Brain ingestion gate (set to 1 for closed-loop run ingestion)' },
   { key: 'BRAIN_SLACK_POST_CASE_CARDS', description: 'Brain Slack posting gate' },
   { key: 'PUBLIC_ENABLE_ADS', description: 'Ad network flag (set to 1 when ad provider is onboarded)' },
+  { key: 'TRIANGULATION_ENABLED', description: 'Corridor composite triangulation gate' },
+  { key: 'EMIT_OBSERVATIONS', description: 'Observation dual-write gate for triangulation readiness' },
+  { key: 'PLANE_A_DOMAIN_NAME', description: 'Plane A staging custom-domain host (optional until staging API edge is provisioned)' },
+  { key: 'PLANE_A_CERT_ARN', description: 'Plane A staging ACM certificate ARN (optional until staging API edge is provisioned)' },
 ]
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
@@ -73,10 +84,20 @@ const NEW_RELIC_GATE_KEYS = new Set([
   'NEW_RELIC_STAGING_AWS_ROLE_ARN',
   'NEW_RELIC_PROD_AWS_ROLE_ARN',
 ])
+const FALSE_VALUES = new Set(['0', 'false', 'off', 'no'])
 
-const getValue = (key: string) => String(process.env[key] || '').trim()
+const readEnvValue = (env: NodeJS.ProcessEnv, key: string) => String(env[key] || '').trim()
 
 const isMissing = (value: string) => value.length === 0
+
+export const normalizeNewRelicAwsMode = (value: string) => {
+  const normalized = value.trim().toLowerCase()
+  if (!normalized) return 'push_pull'
+  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
+  if (['push_only', 'push'].includes(normalized)) return 'push_only'
+  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
+  return 'push_pull'
+}
 
 const looksLikeSlackWebhookPlaceholder = (value: string) =>
   /hooks\.slack\.com\/services\/T0{8,}\/B0{8,}\/A{10,}/i.test(value)
@@ -84,7 +105,7 @@ const looksLikeSlackWebhookPlaceholder = (value: string) =>
 const looksLikePlaceholder = (value: string) =>
   PLACEHOLDER_PATTERNS.some(pattern => pattern.test(value)) || looksLikeSlackWebhookPlaceholder(value)
 
-const hasStagingMarker = (value: string) => /staging/i.test(value)
+export const hasStagingMarker = (value: string) => /staging/i.test(value)
 
 const isValidDateValue = (value: string) => {
   if (!value) return false
@@ -98,9 +119,21 @@ const splitCsv = (value: string) =>
     .map(item => item.trim())
     .filter(Boolean)
 
-const toOrigin = (value: string): string | null => {
+export const toOrigin = (value: string): string | null => {
   try {
     return new URL(value).origin.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
+const toHttpsUrl = (value: string): URL | null => {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'https:') {
+      return null
+    }
+    return url
   } catch {
     return null
   }
@@ -112,21 +145,36 @@ const printGroup = (title: string, lines: string[]) => {
   for (const line of lines) console.log(`- ${line}`)
 }
 
-const run = () => {
+export const evaluateStagingGoLiveReadiness = (
+  env: NodeJS.ProcessEnv = process.env,
+): StagingReadinessEvaluation => {
   const missingRequired: string[] = []
   const missingRecommended: string[] = []
   const placeholderViolations: string[] = []
   const policyViolations: string[] = []
-  const requireNewRelicGates = !['0', 'false', 'off', 'no'].includes(
-    getValue('REQUIRE_NEW_RELIC_GATES').toLowerCase(),
-  )
+
+  const requireNewRelicGates = !FALSE_VALUES.has(readEnvValue(env, 'REQUIRE_NEW_RELIC_GATES').toLowerCase())
+  const stagingNewRelicAwsMode = normalizeNewRelicAwsMode(readEnvValue(env, 'NEW_RELIC_STAGING_AWS_MODE'))
+  const prodNewRelicAwsMode = normalizeNewRelicAwsMode(readEnvValue(env, 'NEW_RELIC_PROD_AWS_MODE'))
+  const shouldSoftenNewRelicRequirement = (key: string) => {
+    if (key === 'NEW_RELIC_USER_API_KEY') {
+      return !requireNewRelicGates
+    }
+    if (key === 'NEW_RELIC_STAGING_AWS_ACCOUNT_ID' || key === 'NEW_RELIC_STAGING_AWS_ROLE_ARN') {
+      return !requireNewRelicGates || stagingNewRelicAwsMode === 'otlp_only'
+    }
+    if (key === 'NEW_RELIC_PROD_AWS_ACCOUNT_ID' || key === 'NEW_RELIC_PROD_AWS_ROLE_ARN') {
+      return prodNewRelicAwsMode === 'otlp_only' || (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(key))
+    }
+    return !requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(key)
+  }
 
   for (const requirement of REQUIRED_KEYS) {
-    const value = getValue(requirement.key)
+    const value = readEnvValue(env, requirement.key)
     if (isMissing(value)) {
-      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+      if (shouldSoftenNewRelicRequirement(requirement.key)) {
         missingRecommended.push(
-          `${requirement.key}: ${requirement.description} (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+          `${requirement.key}: ${requirement.description} (non-blocking in current New Relic mode)`,
         )
         continue
       }
@@ -134,9 +182,9 @@ const run = () => {
       continue
     }
     if (looksLikePlaceholder(value)) {
-      if (!requireNewRelicGates && NEW_RELIC_GATE_KEYS.has(requirement.key)) {
+      if (shouldSoftenNewRelicRequirement(requirement.key)) {
         missingRecommended.push(
-          `${requirement.key}: looks like placeholder value (non-blocking while REQUIRE_NEW_RELIC_GATES=0)`,
+          `${requirement.key}: looks like placeholder value (non-blocking in current New Relic mode)`,
         )
         continue
       }
@@ -145,7 +193,7 @@ const run = () => {
   }
 
   for (const requirement of RECOMMENDED_KEYS) {
-    const value = getValue(requirement.key)
+    const value = readEnvValue(env, requirement.key)
     if (isMissing(value)) {
       missingRecommended.push(`${requirement.key}: ${requirement.description}`)
       continue
@@ -155,12 +203,17 @@ const run = () => {
     }
   }
 
-  const environment = getValue('ENVIRONMENT').toLowerCase()
-  const nodeEnv = getValue('NODE_ENV').toLowerCase()
-  const enterpriseApiMode = getValue('PLANE_A_REQUIRE_API_KEY')
-  const soc2ReportState = (getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_STATE') || getValue('COMPLIANCE_SOC2_TYPE_II_STATUS')).toLowerCase()
-  const soc2ReportDate = getValue('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE')
-  const soc2ReportExpiresOn = getValue('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON')
+  const environment = readEnvValue(env, 'ENVIRONMENT').toLowerCase()
+  const nodeEnv = readEnvValue(env, 'NODE_ENV').toLowerCase()
+  const triangulationEnabled = ['1', 'true', 'yes', 'on'].includes(
+    readEnvValue(env, 'TRIANGULATION_ENABLED').toLowerCase(),
+  )
+  const soc2ReportState = (
+    readEnvValue(env, 'COMPLIANCE_SOC2_TYPE_II_REPORT_STATE')
+    || readEnvValue(env, 'COMPLIANCE_SOC2_TYPE_II_STATUS')
+  ).toLowerCase()
+  const soc2ReportDate = readEnvValue(env, 'COMPLIANCE_SOC2_TYPE_II_REPORT_DATE')
+  const soc2ReportExpiresOn = readEnvValue(env, 'COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON')
 
   if (environment !== 'staging') {
     policyViolations.push(`ENVIRONMENT must be "staging" (received "${environment || '<empty>'}")`)
@@ -169,32 +222,60 @@ const run = () => {
     policyViolations.push(`NODE_ENV must be "staging" (received "${nodeEnv || '<empty>'}")`)
   }
 
-  const stackName = getValue('STACK_NAME')
+  const stackName = readEnvValue(env, 'STACK_NAME')
   if (stackName && !hasStagingMarker(stackName)) {
     policyViolations.push('STACK_NAME must include "staging" to keep env isolation explicit')
   }
 
-  const publicSiteUrl = getValue('PUBLIC_SITE_URL')
+  const publicSiteUrl = readEnvValue(env, 'PUBLIC_SITE_URL')
   if (publicSiteUrl && !hasStagingMarker(publicSiteUrl)) {
     policyViolations.push('PUBLIC_SITE_URL must contain a staging hostname')
   }
+  if (publicSiteUrl && !toHttpsUrl(publicSiteUrl)) {
+    policyViolations.push('PUBLIC_SITE_URL must be an absolute https URL')
+  }
 
-  const publicApiBase = getValue('PUBLIC_API_BASE')
+  const publicApiBase = readEnvValue(env, 'PUBLIC_API_BASE')
   if (publicApiBase && !hasStagingMarker(publicApiBase)) {
     policyViolations.push('PUBLIC_API_BASE must contain a staging hostname')
   }
+  const publicApiUrl = publicApiBase ? toHttpsUrl(publicApiBase) : null
+  if (publicApiBase && !publicApiUrl) {
+    policyViolations.push('PUBLIC_API_BASE must be an absolute https URL')
+  }
 
-  const readOnlyMode = getValue('READ_ONLY_MODE') || '0'
+  const planeADomainName = readEnvValue(env, 'PLANE_A_DOMAIN_NAME').toLowerCase()
+  const planeACertArn = readEnvValue(env, 'PLANE_A_CERT_ARN')
+  if (planeADomainName && !hasStagingMarker(planeADomainName)) {
+    policyViolations.push('PLANE_A_DOMAIN_NAME must contain a staging hostname')
+  }
+  if ((planeADomainName && !planeACertArn) || (!planeADomainName && planeACertArn)) {
+    policyViolations.push('PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together')
+  }
+  if (publicApiUrl && planeADomainName && publicApiUrl.host.toLowerCase() !== planeADomainName) {
+    policyViolations.push(
+      `PUBLIC_API_BASE host ${publicApiUrl.host.toLowerCase()} must match PLANE_A_DOMAIN_NAME ${planeADomainName}`,
+    )
+  }
+
+  const adminMfaRequired = readEnvValue(env, 'ADMIN_MFA_REQUIRED').toLowerCase()
+  if (adminMfaRequired && FALSE_VALUES.has(adminMfaRequired)) {
+    missingRecommended.push(
+      'ADMIN_MFA_REQUIRED: enable admin MFA in staging before enforcing production-parity admin smoke',
+    )
+  }
+
+  const readOnlyMode = readEnvValue(env, 'READ_ONLY_MODE') || '0'
   if (readOnlyMode !== '0') {
     policyViolations.push(`READ_ONLY_MODE must be "0" for staging (received "${readOnlyMode}")`)
   }
 
-  const e2eMockApi = getValue('E2E_MOCK_API')
+  const e2eMockApi = readEnvValue(env, 'E2E_MOCK_API')
   if (e2eMockApi === '1') {
     policyViolations.push('E2E_MOCK_API must not be enabled in staging')
   }
 
-  const corsMethodsRaw = getValue('PLANE_A_CORS_ALLOWED_METHODS')
+  const corsMethodsRaw = readEnvValue(env, 'PLANE_A_CORS_ALLOWED_METHODS')
   if (corsMethodsRaw) {
     const methods = new Set(splitCsv(corsMethodsRaw).map(value => value.toUpperCase()))
     const requiredMethods = ['POST', 'PATCH', 'DELETE', 'OPTIONS']
@@ -206,7 +287,7 @@ const run = () => {
     }
   }
 
-  const corsHeadersRaw = getValue('PLANE_A_CORS_ALLOWED_HEADERS')
+  const corsHeadersRaw = readEnvValue(env, 'PLANE_A_CORS_ALLOWED_HEADERS')
   if (corsHeadersRaw) {
     const headers = new Set(splitCsv(corsHeadersRaw).map(value => value.toLowerCase()))
     const requiredHeaders = ['authorization', 'content-type']
@@ -218,7 +299,7 @@ const run = () => {
     }
   }
 
-  const corsOriginsRaw = getValue('PLANE_A_CORS_ORIGINS')
+  const corsOriginsRaw = readEnvValue(env, 'PLANE_A_CORS_ORIGINS')
   const siteOrigin = toOrigin(publicSiteUrl)
   if (siteOrigin && corsOriginsRaw) {
     const corsOrigins = new Set(splitCsv(corsOriginsRaw).map(value => value.toLowerCase().replace(/\/$/, '')))
@@ -227,31 +308,31 @@ const run = () => {
     }
   }
 
-  const wafAdminAllowlist = getValue('WAF_ADMIN_ALLOWLIST_IPS')
-  const adminIpAllowlist = getValue('ADMIN_IP_ALLOWLIST')
+  const wafAdminAllowlist = readEnvValue(env, 'WAF_ADMIN_ALLOWLIST_IPS')
+  const adminIpAllowlist = readEnvValue(env, 'ADMIN_IP_ALLOWLIST')
   if (!wafAdminAllowlist && !adminIpAllowlist) {
     policyViolations.push('Either WAF_ADMIN_ALLOWLIST_IPS or ADMIN_IP_ALLOWLIST must be set for admin route protection')
   }
 
-  const stripeSecret = getValue('STRIPE_SECRET_KEY')
+  const stripeSecret = readEnvValue(env, 'STRIPE_SECRET_KEY')
   if (stripeSecret && !stripeSecret.startsWith('sk_test_')) {
     policyViolations.push('STRIPE_SECRET_KEY must be Stripe test-mode key (sk_test_*) for staging')
   }
 
-  const ga4 = getValue('PUBLIC_GA4_MEASUREMENT_ID')
+  const ga4 = readEnvValue(env, 'PUBLIC_GA4_MEASUREMENT_ID')
   if (ga4 && !ga4.startsWith('G-')) {
     policyViolations.push('PUBLIC_GA4_MEASUREMENT_ID should start with "G-"')
   }
 
-  const ads = getValue('PUBLIC_GOOGLE_ADS_CONVERSION_ID')
+  const ads = readEnvValue(env, 'PUBLIC_GOOGLE_ADS_CONVERSION_ID')
   if (ads && !ads.startsWith('AW-')) {
     policyViolations.push('PUBLIC_GOOGLE_ADS_CONVERSION_ID should start with "AW-"')
   }
 
-  const adFlag = getValue('PUBLIC_ENABLE_ADS').toLowerCase()
+  const adFlag = readEnvValue(env, 'PUBLIC_ENABLE_ADS').toLowerCase()
   if (adFlag === 'true' || adFlag === '1') {
     for (const key of AD_PLACEMENT_ID_KEYS) {
-      const raw = getValue(key)
+      const raw = readEnvValue(env, key)
       if (!raw) {
         policyViolations.push(`${key} must be set when PUBLIC_ENABLE_ADS=1`)
         continue
@@ -269,7 +350,7 @@ const run = () => {
     }
   }
 
-  const alertSlackWebhook = getValue('ALERT_SLACK_WEBHOOK_URL')
+  const alertSlackWebhook = readEnvValue(env, 'ALERT_SLACK_WEBHOOK_URL')
   if (alertSlackWebhook && !/^https:\/\/hooks\.slack\.com\/services\//i.test(alertSlackWebhook)) {
     policyViolations.push('ALERT_SLACK_WEBHOOK_URL must be a valid Slack incoming webhook URL')
   }
@@ -277,12 +358,12 @@ const run = () => {
     policyViolations.push('ALERT_SLACK_WEBHOOK_URL is still a placeholder webhook value')
   }
 
-  const sentryOrg = getValue('SENTRY_ORG')
+  const sentryOrg = readEnvValue(env, 'SENTRY_ORG')
   if (sentryOrg && sentryOrg !== 'remit-scout') {
     policyViolations.push(`SENTRY_ORG must be remit-scout (received "${sentryOrg}")`)
   }
 
-  const tracingExporter = getValue('TRACING_EXPORTER').toLowerCase()
+  const tracingExporter = readEnvValue(env, 'TRACING_EXPORTER').toLowerCase()
   if (
     tracingExporter &&
     !tracingExporter.includes('otlp') &&
@@ -292,83 +373,108 @@ const run = () => {
     policyViolations.push('TRACING_EXPORTER must include otlp in staging for New Relic span export')
   }
 
-  const logsEnabled = getValue('NEW_RELIC_LOGS_ENABLED').toLowerCase()
-  if (logsEnabled && ['0', 'false', 'off', 'no'].includes(logsEnabled)) {
+  const logsEnabled = readEnvValue(env, 'NEW_RELIC_LOGS_ENABLED').toLowerCase()
+  if (logsEnabled && FALSE_VALUES.has(logsEnabled)) {
     policyViolations.push('NEW_RELIC_LOGS_ENABLED must not disable New Relic logs in staging')
   }
 
-  const otlpEndpoint = getValue('OTEL_EXPORTER_OTLP_ENDPOINT')
-  const otlpHeaders = getValue('OTEL_EXPORTER_OTLP_HEADERS')
-  const newRelicIngestKey = getValue('NEW_RELIC_INGEST_KEY')
+  if (triangulationEnabled) {
+    const emitObservations = readEnvValue(env, 'EMIT_OBSERVATIONS').toLowerCase()
+    const normalizationQueueMode = readEnvValue(env, 'NORMALIZATION_QUEUE_MODE').toLowerCase()
+    const agentStressQueueMode = readEnvValue(env, 'AGENT_STRESS_QUEUE_MODE').toLowerCase()
+    const goldLiveQueueMode = readEnvValue(env, 'GOLD_LIVE_QUEUE_MODE').toLowerCase()
+    const stressResponderEnabled = readEnvValue(env, 'STRESS_RESPONDER_SERVICE_ENABLED').toLowerCase()
+    const normalizationServiceEnabled = readEnvValue(env, 'NORMALIZATION_SERVICE_ENABLED').toLowerCase()
+
+    if (!['1', 'true', 'yes', 'on'].includes(emitObservations)) {
+      policyViolations.push('EMIT_OBSERVATIONS must be enabled when TRIANGULATION_ENABLED=1')
+    }
+    if (normalizationQueueMode && normalizationQueueMode !== 'queue') {
+      policyViolations.push('NORMALIZATION_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (agentStressQueueMode && agentStressQueueMode !== 'queue') {
+      policyViolations.push('AGENT_STRESS_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (goldLiveQueueMode && goldLiveQueueMode !== 'queue') {
+      policyViolations.push('GOLD_LIVE_QUEUE_MODE must be "queue" when TRIANGULATION_ENABLED=1')
+    }
+    if (stressResponderEnabled && FALSE_VALUES.has(stressResponderEnabled)) {
+      policyViolations.push('STRESS_RESPONDER_SERVICE_ENABLED must not disable the stress responder when TRIANGULATION_ENABLED=1')
+    }
+    if (normalizationServiceEnabled && FALSE_VALUES.has(normalizationServiceEnabled)) {
+      policyViolations.push('NORMALIZATION_SERVICE_ENABLED must not disable normalization when TRIANGULATION_ENABLED=1')
+    }
+  }
+
+  const otlpEndpoint = readEnvValue(env, 'OTEL_EXPORTER_OTLP_ENDPOINT')
+  const otlpHeaders = readEnvValue(env, 'OTEL_EXPORTER_OTLP_HEADERS')
+  const newRelicIngestKey = readEnvValue(env, 'NEW_RELIC_INGEST_KEY')
   if (otlpEndpoint.includes('nr-data.net') && !otlpHeaders && !newRelicIngestKey) {
     policyViolations.push(
       'OTEL_EXPORTER_OTLP_HEADERS or NEW_RELIC_INGEST_KEY is required for New Relic OTLP endpoint',
     )
   }
 
-  if (soc2ReportState) {
-    if (!VALID_SOC2_REPORT_STATES.has(soc2ReportState)) {
-      policyViolations.push(
-        `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be in_progress|audited|expired|revoked (received "${soc2ReportState}")`,
-      )
-    }
+  if (soc2ReportState && !VALID_SOC2_REPORT_STATES.has(soc2ReportState)) {
+    policyViolations.push(
+      `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be in_progress|audited|expired|revoked (received "${soc2ReportState}")`,
+    )
+  }
+  if (soc2ReportDate && !isValidDateValue(soc2ReportDate)) {
+    policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date (${soc2ReportDate})`)
+  }
+  if (soc2ReportExpiresOn && !isValidDateValue(soc2ReportExpiresOn)) {
+    policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date (${soc2ReportExpiresOn})`)
   }
 
-  if (enterpriseApiMode === '1') {
-    if (!soc2ReportState) {
-      policyViolations.push(
-        'COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is required when enterprise API mode is enabled',
-      )
-    }
-    if (soc2ReportState === 'expired' || soc2ReportState === 'revoked') {
-      policyViolations.push(
-        `COMPLIANCE_SOC2_TYPE_II_REPORT_STATE is "${soc2ReportState}" while enterprise API mode is enabled; enterprise onboarding requires an active audited SOC 2 state`,
-      )
-    }
-    if (soc2ReportState === 'audited' && !soc2ReportDate) {
-      policyViolations.push('COMPLIANCE_SOC2_TYPE_II_REPORT_DATE must be set when SOC 2 report_state is audited')
-    }
-    if (soc2ReportDate && !isValidDateValue(soc2ReportDate)) {
-      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date (${soc2ReportDate})`)
-    }
-    if (soc2ReportExpiresOn && !isValidDateValue(soc2ReportExpiresOn)) {
-      policyViolations.push(`COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date (${soc2ReportExpiresOn})`)
-    }
-    if (soc2ReportExpiresOn && isValidDateValue(soc2ReportExpiresOn)) {
-      if (new Date(soc2ReportExpiresOn).getTime() <= Date.now()) {
-        policyViolations.push('COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future for active enterprise mode')
-      }
-    }
-  }
-
-  const publicSupabaseUrl = getValue('PUBLIC_SUPABASE_URL')
-  const backendSupabaseUrl = getValue('SUPABASE_URL')
+  const publicSupabaseUrl = readEnvValue(env, 'PUBLIC_SUPABASE_URL')
+  const backendSupabaseUrl = readEnvValue(env, 'SUPABASE_URL')
   if (publicSupabaseUrl && backendSupabaseUrl && publicSupabaseUrl !== backendSupabaseUrl) {
     policyViolations.push('PUBLIC_SUPABASE_URL and SUPABASE_URL must match in staging')
   }
 
-  const publicSupabaseAnon = getValue('PUBLIC_SUPABASE_ANON_KEY')
-  const backendSupabaseAnon = getValue('SUPABASE_PUBLISHABLE_KEY')
+  const publicSupabaseAnon = readEnvValue(env, 'PUBLIC_SUPABASE_ANON_KEY')
+  const backendSupabaseAnon = readEnvValue(env, 'SUPABASE_PUBLISHABLE_KEY')
   if (publicSupabaseAnon && backendSupabaseAnon && publicSupabaseAnon !== backendSupabaseAnon) {
     policyViolations.push('PUBLIC_SUPABASE_ANON_KEY and SUPABASE_PUBLISHABLE_KEY must match in staging')
   }
 
-  printGroup('Missing required keys', missingRequired)
-  printGroup('Placeholder values detected', placeholderViolations)
-  printGroup('Policy violations', policyViolations)
-  printGroup('Missing recommended keys (non-blocking)', missingRecommended)
+  return {
+    missingRequired,
+    missingRecommended,
+    placeholderViolations,
+    policyViolations,
+  }
+}
 
-  if (missingRequired.length || placeholderViolations.length || policyViolations.length) {
-    console.error('\n❌ Staging go-live readiness failed')
-    process.exit(1)
+export const run = (env: NodeJS.ProcessEnv = process.env) => {
+  const evaluation = evaluateStagingGoLiveReadiness(env)
+
+  printGroup('Missing required keys', evaluation.missingRequired)
+  printGroup('Placeholder values detected', evaluation.placeholderViolations)
+  printGroup('Policy violations', evaluation.policyViolations)
+  printGroup('Missing recommended keys (non-blocking)', evaluation.missingRecommended)
+
+  if (
+    evaluation.missingRequired.length
+    || evaluation.placeholderViolations.length
+    || evaluation.policyViolations.length
+  ) {
+    throw new Error('Staging go-live readiness failed')
   }
 
   console.log('\n✅ Staging go-live readiness passed')
 }
 
-try {
-  run()
-} catch (error) {
-  console.error('Staging go-live readiness check failed:', error instanceof Error ? error.message : String(error))
-  process.exit(1)
+const isDirectExecution = /(^|[/\\])staging-go-live-readiness\.(ts|js)$/.test(process.argv[1] || '')
+
+if (isDirectExecution) {
+  try {
+    run()
+  } catch (error) {
+    console.error(
+      error instanceof Error ? error.message : 'Staging go-live readiness failed',
+    )
+    process.exit(1)
+  }
 }

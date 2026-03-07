@@ -3,9 +3,9 @@ import { computed, isRef, unref } from 'vue'
 import type { RecentSearch, CorridorPopularity, BankVsSpecialist, ProviderQuote, RatingWeights } from '~/types/remit'
 import type { paths } from '~/shared/lib/api/types'
 import { getProviderScore } from '~/lib/providerScores'
-import { applyProviderSourceVisibility } from '~/lib/providerVisibility'
 import { useApi } from '~/composables/useApi'
 import { getCountryByCode } from '~/utils/countries-currencies'
+import { shouldCacheProviderSuccess } from '~/utils/providerMethodSemantics'
 
 type ProviderIndices = {
   teer: number | null
@@ -78,6 +78,8 @@ type ProvidersResponse = {
   }
   availableMethods?: string[]
   availableMethodsByProvider?: Record<string, string[]>
+  supportedMethods?: string[]
+  supportedMethodsByProvider?: Record<string, string[]>
   excludedProviders?: ExcludedProvider[]
   excludedProvidersDetailed?: ExcludedProviderDetailed[]
   refresh?: ProvidersRefreshInfo
@@ -277,9 +279,10 @@ export const useRemittanceApi = () => {
               },
             },
           )
-          const normalizedResponse = applyProviderSourceVisibility(response, fromValue)
-          providersSuccessCache.set(resolvedKey.value, normalizedResponse)
-          return normalizedResponse
+          if (shouldCacheProviderSuccess(response)) {
+            providersSuccessCache.set(resolvedKey.value, response)
+          }
+          return response
         }
         catch (error: unknown) {
           if (import.meta.dev) useLogger('remittance').warn('providers unavailable', error)

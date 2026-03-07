@@ -10,6 +10,33 @@ type AdminExchangeResponse = {
 }
 
 const ADMIN_SESSION_SKEW_SECONDS = 60
+const ADMIN_SESSION_HINT_KEY = 'rs:admin-session-seeded'
+
+const isBrowser = () => typeof window !== 'undefined'
+
+const readAdminSessionHint = (): boolean => {
+  if (!isBrowser()) return false
+  try {
+    return window.localStorage.getItem(ADMIN_SESSION_HINT_KEY) === '1'
+  }
+  catch {
+    return false
+  }
+}
+
+const writeAdminSessionHint = (enabled: boolean) => {
+  if (!isBrowser()) return
+  try {
+    if (enabled) {
+      window.localStorage.setItem(ADMIN_SESSION_HINT_KEY, '1')
+      return
+    }
+    window.localStorage.removeItem(ADMIN_SESSION_HINT_KEY)
+  }
+  catch {
+    // Best-effort only; admin session bootstrap must not depend on localStorage access.
+  }
+}
 
 const decodeJwtExpiry = (token: string): number | null => {
   try {
@@ -37,11 +64,15 @@ export const useAdminSession = () => {
     accessToken: null,
     expiresAt: null,
   }))
+  const bootstrap = useState<Promise<boolean> | null>('auth:admin-session-bootstrap', () => null)
 
-  const clearAdminSession = () => {
+  const clearAdminSession = (options: { clearHint?: boolean } = {}) => {
     state.value = {
       accessToken: null,
       expiresAt: null,
+    }
+    if (options.clearHint) {
+      writeAdminSessionHint(false)
     }
   }
 
@@ -58,6 +89,7 @@ export const useAdminSession = () => {
       accessToken: payload.access_token,
       expiresAt: expFromToken ?? fallbackExp,
     }
+    writeAdminSessionHint(true)
 
     return payload.access_token
   }
@@ -88,29 +120,85 @@ export const useAdminSession = () => {
     return applyAdminToken(response)
   }
 
-  const ensureAdminSession = async () => {
-    await ensureHydrated()
+  const recoverSupabaseSession = async () => {
+    if (!isBrowser()) return null
 
+    try {
+      const supabase = useSupabaseClient()
+      if (!supabase) return null
+
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error || !data.session?.access_token) {
+        return null
+      }
+
+      session.value = data.session
+      return data.session.access_token
+    }
+    catch {
+      return null
+    }
+  }
+
+  const ensureAdminSession = async () => {
     if (isTokenUsable(state.value)) {
       return true
     }
 
-    try {
-      const refreshed = await refreshAdminSession()
-      if (refreshed) return true
-    }
-    catch {
-      // fall through to exchange flow
+    if (bootstrap.value) {
+      return await bootstrap.value
     }
 
-    try {
-      const exchanged = await exchangeAdminSession()
-      return Boolean(exchanged)
+    const tryRefresh = async () => {
+      try {
+        const refreshed = await refreshAdminSession()
+        return Boolean(refreshed)
+      }
+      catch {
+        return false
+      }
     }
-    catch {
+
+    const tryExchange = async () => {
+      try {
+        const exchanged = await exchangeAdminSession()
+        return Boolean(exchanged)
+      }
+      catch {
+        return false
+      }
+    }
+
+    bootstrap.value = (async () => {
+      await ensureHydrated()
+
+      if (isTokenUsable(state.value)) {
+        return true
+      }
+
+      const hasAdminHint = readAdminSessionHint()
+      let hasSupabaseToken = Boolean(session.value?.access_token)
+
+      if (!hasSupabaseToken && hasAdminHint) {
+        hasSupabaseToken = Boolean(await recoverSupabaseSession())
+      }
+
+      // On the first admin page after a fresh sign-in there is no refresh cookie yet,
+      // so start with exchange when we already have a Supabase session.
+      if (hasSupabaseToken && await tryExchange()) {
+        return true
+      }
+      if (await tryRefresh()) {
+        return true
+      }
+
       clearAdminSession()
       return false
-    }
+    })().finally(() => {
+      bootstrap.value = null
+    })
+
+    return await bootstrap.value
   }
 
   const signOutAdmin = async () => {
@@ -127,7 +215,7 @@ export const useAdminSession = () => {
       // continue local sign-out even when backend logout fails
     }
 
-    clearAdminSession()
+    clearAdminSession({ clearHint: true })
     await signOut()
   }
 

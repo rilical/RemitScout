@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { getPool } from '../../../../shared/db'
 import { config } from '../../../../shared/config'
 import { createLogger } from '../../../../shared/logger'
-import { requireAdmin } from '../../plugins/auth-plugin'
+import { requireSuperAdmin } from '../../plugins/auth-plugin'
 import { HEALTH_CORRIDORS } from '../../../../shared/health-corridors'
 
 const logger = createLogger('plane-a.ops.indices-health')
@@ -22,7 +22,7 @@ const VALID_METHOD_PROFILES = new Set([
 ])
 
 export const indicesHealthRoutes = (app: FastifyInstance) => {
-  app.get('/ops/indices/health', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.get('/ops/indices/health', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     if (tier0Corridors.length === 0) {
       reply.code(500)
       return {
@@ -57,7 +57,7 @@ export const indicesHealthRoutes = (app: FastifyInstance) => {
            FROM gold_export.cdp_daily
            WHERE corridor_id = ANY($1::text[])
              AND amount_bucket = $2
-             AND method_profile = $3
+             AND method_profile = $3::method_profile
            ORDER BY corridor_id, date DESC
          )
          SELECT

@@ -1,22 +1,32 @@
 <template>
-  <div class="relative">
+  <div
+ref="rootRef"
+class="relative"
+>
     <div class="relative">
       <input
         :id="resolvedId"
+        ref="inputRef"
         v-model="searchQuery"
         type="text"
-        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed"
+        class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-black focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400"
         :class="selectClass"
         :placeholder="placeholder"
         :aria-label="props.label"
+        role="combobox"
+        aria-autocomplete="list"
         autocomplete="off"
         :disabled="disabled"
         :aria-invalid="error ? 'true' : 'false'"
         :aria-describedby="error ? errorId : undefined"
+        :aria-expanded="isOpen ? 'true' : 'false'"
+        :aria-controls="listboxId"
+        :aria-activedescendant="activeDescendant"
         @input="handleSearch"
         @focus="handleFocus"
         @blur="handleBlur"
-        @click="handleFocus"
+        @click="handleClick"
+        @keydown="handleKeydown"
       >
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <svg
@@ -40,44 +50,58 @@
     </div>
 
     <Teleport
-      v-if="isMounted"
-      to="body"
-    >
+v-if="isMounted"
+to="body"
+>
       <div
-        v-show="isOpen && filteredCountries.length > 0"
+        v-if="isOpen"
+        :id="listboxId"
         ref="dropdownRef"
+        role="listbox"
         :class="[
           'fixed z-dropdown overflow-y-auto rounded-lg border-2 py-1 shadow-2xl',
           props.theme === 'dark'
             ? 'border-neutral-700 bg-neutral-800'
             : 'border-neutral-300 bg-surface',
         ]"
-        style="max-height: 400px;"
         :style="dropdownStyle"
       >
         <div
           v-if="filteredCountries.length === 0"
           :class="[
-            'px-4 py-2 text-body-sm',
+            'text-body-sm px-4 py-3',
             props.theme === 'dark' ? 'text-neutral-400' : 'text-neutral-500',
           ]"
         >
           No countries found
         </div>
         <button
-          v-for="country in filteredCountries"
+          v-for="(country, index) in filteredCountries"
+          :id="getOptionId(country.value)"
           :key="country.value"
+          :data-option-index="index"
           type="button"
+          role="option"
+          :aria-selected="highlightedIndex === index ? 'true' : 'false'"
           :class="[
-            'w-full px-4 py-2.5 text-left text-body-sm transition-colors focus:outline-none',
+            'text-body-sm w-full px-4 py-2.5 text-left transition-colors focus:outline-none',
             props.theme === 'dark'
               ? 'text-white hover:bg-neutral-700 hover:text-white focus:bg-neutral-700 active:bg-neutral-600'
               : 'text-black hover:bg-primary-50 hover:text-primary-700 focus:bg-primary-50 active:bg-primary-100',
+            highlightedIndex === index
+              && (props.theme === 'dark'
+                ? 'bg-neutral-700 text-white'
+                : 'bg-primary-50 text-primary-700'),
           ]"
+          @mouseenter="setHighlightedIndex(index)"
+          @mousemove="handleOptionHover(index)"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
         >
-          {{ country.label }}
+          <span class="inline-flex items-center gap-2">
+            <span class="text-lg leading-none">{{ country.flag }}</span>
+            <span>{{ country.name }}</span>
+          </span>
         </button>
       </div>
     </Teleport>
@@ -86,7 +110,7 @@
       <p
         v-if="error"
         :id="errorId"
-        class="mt-1 text-body-sm text-danger-600"
+        class="text-body-sm mt-1 text-danger-600"
         role="alert"
         aria-live="polite"
       >
@@ -97,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, useId } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { COUNTRIES, SUPPORTED_COUNTRY_CODES } from '~/utils/countries-currencies'
 
 interface Props {
@@ -112,6 +136,16 @@ interface Props {
   theme?: 'light' | 'dark'
   excludeCountry?: string
   supportedOnly?: boolean
+}
+
+interface CountryOption {
+  value: string
+  label: string
+  flag: string
+  name: string
+  code: string
+  searchText: string
+  currency: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -129,6 +163,7 @@ const props = withDefaults(defineProps<Props>(), {
 const fallbackId = useId()
 const resolvedId = computed(() => props.id ?? `country-select-${fallbackId}`)
 const errorId = computed(() => `${resolvedId.value}-error`)
+const listboxId = computed(() => `${resolvedId.value}-listbox`)
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
@@ -139,146 +174,369 @@ const sourceCountries = props.supportedOnly
   ? COUNTRIES.filter(c => SUPPORTED_COUNTRY_CODES.has(c.code))
   : COUNTRIES
 
-const allCountries = sourceCountries.map(country => ({
+const allCountries: CountryOption[] = sourceCountries.map(country => ({
   value: country.code,
-  label: `${country.flag} ${country.name}`, // Full label with emoji for dropdown display
-  name: country.name, // Country name only (no emoji) for input field
-  searchText: country.name.toLowerCase(), // Searchable text without emoji
+  label: country.name,
+  flag: country.flag,
+  name: country.name,
+  code: country.code,
+  searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
   currency: country.currency,
 }))
 
+const rootRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLInputElement | null>(null)
+const dropdownRef = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const isOpen = ref(false)
 const isMounted = ref(false)
-const dropdownRef = ref<HTMLElement | null>(null)
-const filteredCountries = ref(allCountries)
-const dropdownStyle = ref({})
+const highlightedIndex = ref(-1)
+const filteredCountries = ref<CountryOption[]>([])
+const dropdownStyle = ref<Record<string, string>>({})
 
-const filterCountries = () => {
-  let countries = allCountries
+const activeDescendant = computed(() => {
+  if (highlightedIndex.value < 0) return undefined
+  const option = filteredCountries.value[highlightedIndex.value]
+  return option ? getOptionId(option.value) : undefined
+})
 
-  // Exclude the specified country if provided
-  if (props.excludeCountry) {
-    countries = countries.filter(country => country.value !== props.excludeCountry)
-  }
+const getOptionId = (value: string) => `${resolvedId.value}-option-${value.toLowerCase()}`
 
-  if (!searchQuery.value) {
+const getSelectedCountry = () => allCountries.find(country => country.value === props.modelValue)
+
+const getAvailableCountries = () => {
+  if (!props.excludeCountry) return allCountries
+  return allCountries.filter(country => country.value !== props.excludeCountry)
+}
+
+const restoreSelectedValue = () => {
+  searchQuery.value = getSelectedCountry()?.name ?? ''
+}
+
+const matchCountry = (country: CountryOption, query: string) => {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return 0
+
+  if (country.code.toLowerCase() === normalized) return 0
+  if (country.name.toLowerCase() === normalized) return 0
+  if (country.name.toLowerCase().startsWith(normalized)) return 1
+  if (country.code.toLowerCase().startsWith(normalized)) return 1
+  if (
+    country.name
+      .toLowerCase()
+      .split(/\s+/)
+      .some(part => part.startsWith(normalized))
+  )
+    return 2
+  if (country.searchText.includes(normalized)) return 3
+  return Number.POSITIVE_INFINITY
+}
+
+const updateFilteredCountries = (preferSelected: boolean = false) => {
+  const countries = getAvailableCountries()
+
+  const query = searchQuery.value.trim()
+  if (!query) {
     filteredCountries.value = countries
   }
-  else {
-    const query = searchQuery.value.toLowerCase().trim()
-    // Filter by searchText (name only, no emoji) for lookup
-    filteredCountries.value = countries.filter(country =>
-      country.searchText.includes(query),
+ else {
+    filteredCountries.value = countries
+      .map(country => ({ country, rank: matchCountry(country, query) }))
+      .filter(item => Number.isFinite(item.rank))
+      .sort((a, b) => a.rank - b.rank || a.country.name.localeCompare(b.country.name))
+      .map(item => item.country)
+  }
+
+  if (filteredCountries.value.length === 0) {
+    highlightedIndex.value = -1
+    return
+  }
+
+  if (preferSelected) {
+    const selectedIndex = filteredCountries.value.findIndex(
+      country => country.value === props.modelValue,
     )
+    highlightedIndex.value = selectedIndex >= 0 ? selectedIndex : 0
+    return
+  }
+
+  if (highlightedIndex.value < 0 || highlightedIndex.value >= filteredCountries.value.length) {
+    highlightedIndex.value = 0
   }
 }
 
-watch(searchQuery, filterCountries)
-watch(() => props.excludeCountry, filterCountries)
+const setHighlightedIndex = (index: number) => {
+  if (!filteredCountries.value.length) {
+    highlightedIndex.value = -1
+    return
+  }
+  highlightedIndex.value = Math.min(Math.max(index, 0), filteredCountries.value.length - 1)
+}
 
-const selectCountry = (country: typeof allCountries[0]) => {
+const scrollHighlightedOptionIntoView = () => {
+  if (!dropdownRef.value || highlightedIndex.value < 0) return
+  const option = dropdownRef.value.querySelector<HTMLElement>(
+    `[data-option-index="${highlightedIndex.value}"]`,
+  )
+  option?.scrollIntoView({ block: 'nearest' })
+}
+
+const closeDropdown = (restoreSelection: boolean = true) => {
+  isOpen.value = false
+  highlightedIndex.value = -1
+  if (restoreSelection) {
+    restoreSelectedValue()
+  }
+}
+
+const updateDropdownPosition = () => {
+  if (!inputRef.value || !isOpen.value) return
+
+  const rect = inputRef.value.getBoundingClientRect()
+  const viewportPadding = 12
+  const gutter = 4
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const width = Math.min(rect.width, viewportWidth - viewportPadding * 2)
+  const spaceBelow = viewportHeight - rect.bottom - viewportPadding
+  const spaceAbove = rect.top - viewportPadding
+  const openAbove = spaceBelow < 220 && spaceAbove > spaceBelow
+  const availableSpace = openAbove ? spaceAbove : spaceBelow
+  const maxHeight = Math.max(140, Math.min(360, availableSpace - gutter))
+  let left = rect.left
+
+  if (left + width + viewportPadding > viewportWidth) {
+    left = viewportWidth - width - viewportPadding
+  }
+  left = Math.max(viewportPadding, left)
+
+  const top = openAbove
+    ? Math.max(viewportPadding, rect.top - maxHeight - gutter)
+    : rect.bottom + gutter
+
+  dropdownStyle.value = {
+    top: `${Math.round(top)}px`,
+    left: `${Math.round(left)}px`,
+    width: `${Math.round(width)}px`,
+    maxHeight: `${Math.round(maxHeight)}px`,
+  }
+}
+
+const openDropdown = async (resetSearch: boolean) => {
+  if (props.disabled) return
+  isOpen.value = true
+  if (resetSearch) {
+    searchQuery.value = ''
+  }
+  updateFilteredCountries(true)
+  await nextTick()
+  updateDropdownPosition()
+  scrollHighlightedOptionIntoView()
+}
+
+const selectCountry = (country: CountryOption) => {
   emit('update:modelValue', country.value)
   emit('country-selected', country.value, country.currency)
-  searchQuery.value = country.label
+  searchQuery.value = country.name
   isOpen.value = false
+  highlightedIndex.value = -1
 }
 
-const handleSearch = (event: Event) => {
+const resolveExactCountryMatch = (query: string) => {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return null
+
+  return (
+    getAvailableCountries().find(country =>
+      country.code.toLowerCase() === normalized || country.name.toLowerCase() === normalized,
+    ) ?? null
+  )
+}
+
+const commitTypedCountry = () => {
+  const match = resolveExactCountryMatch(searchQuery.value)
+  if (!match) return false
+
+  if (match.value === props.modelValue) {
+    searchQuery.value = match.name
+    isOpen.value = false
+    highlightedIndex.value = -1
+    return true
+  }
+
+  selectCountry(match)
+  return true
+}
+
+const handleSearch = async (event: Event) => {
   const target = event.target as HTMLInputElement
-  const value = target.value
-
-  // If user is typing and there's a selected country, allow free typing for search
-  // But preserve emoji if they're just editing the selected country name
-  if (props.modelValue && value && !isOpen.value) {
-    // User started typing - allow free search
-    searchQuery.value = value
-    isOpen.value = true
+  searchQuery.value = target.value
+  if (commitTypedCountry()) {
+    return
   }
-  else {
-    searchQuery.value = value
-    isOpen.value = true
-  }
-
+  isOpen.value = true
+  updateFilteredCountries(false)
+  await nextTick()
   updateDropdownPosition()
 }
 
 const handleFocus = async () => {
-  isOpen.value = true
+  if (isOpen.value) return
+  await openDropdown(true)
+}
 
-  searchQuery.value = ''
-
-  await nextTick()
-  filteredCountries.value = props.excludeCountry
-    ? allCountries.filter(c => c.value !== props.excludeCountry)
-    : [...allCountries]
-
-  updateDropdownPosition()
+const handleClick = async () => {
+  if (isOpen.value) return
+  await openDropdown(true)
 }
 
 const handleBlur = () => {
-  setTimeout(() => {
-    isOpen.value = false
-    // Restore to previous selection if no country was selected
-    if (props.modelValue) {
-      const country = allCountries.find(c => c.value === props.modelValue)
-      if (country) {
-        // Show full label with emoji
-        searchQuery.value = country.label
-      }
+  window.setTimeout(() => {
+    if (!isOpen.value) return
+    const activeElement = document.activeElement
+    if (
+      activeElement
+      && (rootRef.value?.contains(activeElement) || dropdownRef.value?.contains(activeElement))
+    ) {
+      return
     }
-    else {
-      searchQuery.value = ''
+    if (commitTypedCountry()) {
+      return
     }
-  }, 200)
+    closeDropdown(true)
+  }, 0)
 }
 
-const updateDropdownPosition = async () => {
+const moveHighlight = async (delta: number) => {
+  if (!filteredCountries.value.length) return
+  if (!isOpen.value) {
+    await openDropdown(true)
+    return
+  }
+  if (highlightedIndex.value < 0) {
+    updateFilteredCountries(true)
+  }
+ else {
+    const next
+      = (highlightedIndex.value + delta + filteredCountries.value.length)
+        % filteredCountries.value.length
+    highlightedIndex.value = next
+  }
   await nextTick()
-  const input = document.getElementById(props.id || '')
-  if (input) {
-    const rect = input.getBoundingClientRect()
-    dropdownStyle.value = {
-      top: `${rect.bottom + 4}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}px`,
+  scrollHighlightedOptionIntoView()
+}
+
+const handleKeydown = async (event: KeyboardEvent) => {
+  if (props.disabled) return
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    await moveHighlight(1)
+    return
+  }
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    if (!isOpen.value) {
+      await openDropdown(true)
+      return
     }
+    await moveHighlight(-1)
+    return
+  }
+
+  if (event.key === 'Home' && isOpen.value) {
+    event.preventDefault()
+    setHighlightedIndex(0)
+    await nextTick()
+    scrollHighlightedOptionIntoView()
+    return
+  }
+
+  if (event.key === 'End' && isOpen.value) {
+    event.preventDefault()
+    setHighlightedIndex(filteredCountries.value.length - 1)
+    await nextTick()
+    scrollHighlightedOptionIntoView()
+    return
+  }
+
+  if (event.key === 'Enter' && isOpen.value) {
+    if (highlightedIndex.value >= 0 && filteredCountries.value[highlightedIndex.value]) {
+      event.preventDefault()
+      selectCountry(filteredCountries.value[highlightedIndex.value])
+    }
+    return
+  }
+
+  if (event.key === 'Escape' && isOpen.value) {
+    event.preventDefault()
+    closeDropdown(true)
+    inputRef.value?.blur()
+    return
+  }
+
+  if (event.key === 'Tab' && isOpen.value) {
+    closeDropdown(true)
   }
 }
 
+const handleOptionHover = (index: number) => {
+  if (highlightedIndex.value !== index) {
+    highlightedIndex.value = index
+  }
+}
+
+const handleOutsidePointer = (event: MouseEvent | TouchEvent) => {
+  const target = event.target as Node | null
+  if (!target) return
+  if (rootRef.value?.contains(target) || dropdownRef.value?.contains(target)) return
+  if (isOpen.value && commitTypedCountry()) {
+    return
+  }
+  closeDropdown(true)
+}
+
+watch(
+  () => props.excludeCountry,
+  () => {
+    updateFilteredCountries(true)
+    if (isOpen.value) {
+      void nextTick().then(() => {
+        updateDropdownPosition()
+        scrollHighlightedOptionIntoView()
+      })
+    }
+  },
+)
+
 watch(
   () => props.modelValue,
-  (newValue) => {
-    if (newValue && !isOpen.value) {
-      const country = allCountries.find(c => c.value === newValue)
-      if (country) {
-        searchQuery.value = country.label
-      }
+  () => {
+    if (!isOpen.value) {
+      restoreSelectedValue()
+      return
     }
-    else if (!newValue) {
-      searchQuery.value = ''
-    }
+    updateFilteredCountries(true)
   },
   { immediate: true },
 )
 
 onMounted(() => {
   isMounted.value = true
+  restoreSelectedValue()
+  updateFilteredCountries(true)
 
-  if (props.modelValue) {
-    const country = allCountries.find(c => c.value === props.modelValue)
-    if (country) {
-      // Show full label with emoji
-      searchQuery.value = country.label
-    }
-  }
-
-  window.addEventListener('scroll', updateDropdownPosition)
+  document.addEventListener('mousedown', handleOutsidePointer)
+  document.addEventListener('touchstart', handleOutsidePointer)
+  window.addEventListener('scroll', updateDropdownPosition, true)
   window.addEventListener('resize', updateDropdownPosition)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', updateDropdownPosition)
+  document.removeEventListener('mousedown', handleOutsidePointer)
+  document.removeEventListener('touchstart', handleOutsidePointer)
+  window.removeEventListener('scroll', updateDropdownPosition, true)
   window.removeEventListener('resize', updateDropdownPosition)
 })
 </script>

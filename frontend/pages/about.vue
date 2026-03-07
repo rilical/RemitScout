@@ -351,7 +351,7 @@ class="w-5 h-5 text-brand-400"
           </div>
 
           <p class="text-body-sm leading-relaxed text-white/50 max-w-3xl">
-            Quotes are refreshed continuously across all monitored corridors, benchmarked against independent FX rate sources, and verified through periodic spot-check transfers on selected routes. Discrepancies reported by users are investigated and corrected within 24 hours.
+            Quotes are refreshed throughout the day across monitored corridors, benchmarked against independent FX rate sources, and verified through periodic spot-check transfers on selected routes. Freshness varies by provider and route, and discrepancies reported by users are investigated and corrected.
           </p>
         </div>
       </div>

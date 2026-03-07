@@ -99,8 +99,17 @@ export class CorridorStressCalculator {
    * Compute a composite stress assessment from multiple StressSignal instances
    * for a single corridor. Applies type-specific weights and hysteresis.
    */
-  computeMultiSignalStress(corridorId: string, signals: StressSignal[]): MultiSignalStressResult {
-    const now = Date.now()
+  computeMultiSignalStress(
+    corridorId: string,
+    signals: StressSignal[],
+    options?: { asOf?: Date | string | number },
+  ): MultiSignalStressResult {
+    const now = (() => {
+      const value = options?.asOf
+      if (value == null) return Date.now()
+      const parsed = value instanceof Date ? value.getTime() : new Date(value).getTime()
+      return Number.isFinite(parsed) ? parsed : Date.now()
+    })()
     const contributions: MultiSignalStressResult['contributingSignals'] = []
 
     let weightedSum = 0

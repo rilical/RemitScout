@@ -34,6 +34,10 @@ describe('Gold indices SQL regression', () => {
     expect(typeof sql).toBe('string')
     expect(sql).toContain('WITH weight_snapshot AS')
     expect(sql).toContain('AS prev_teer_rate')
+    expect(sql).toContain('cw.method_profile = l.method_profile')
+    expect(sql).toContain('gw.method_profile = l.method_profile')
+    expect(sql).toContain('wmeta.method_profile = wv.method_profile')
+    expect(sql).toMatch(/END\s*\)::method_profile AS method_profile/)
     expect(sql).toContain('abs(teer_rate - prev_teer_rate) / prev_teer_rate > $5')
     expect(sql).not.toContain('${')
 

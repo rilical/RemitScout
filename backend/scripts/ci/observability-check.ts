@@ -1,3 +1,5 @@
+export {}
+
 const normalizeEnvName = (value: string): string => {
   const normalized = value.trim().toLowerCase()
   if (normalized === 'production') return 'prod'
@@ -27,19 +29,35 @@ const boolFromEnv = (value: string | undefined, fallback: boolean): boolean => {
   return normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no'
 }
 
+const normalizeNewRelicAwsMode = (value: string | undefined, fallback: 'push_pull' | 'push_only' | 'otlp_only') => {
+  const normalized = (value || '').trim().toLowerCase()
+  if (!normalized) return fallback
+  if (['push_pull', 'push+pull', 'all'].includes(normalized)) return 'push_pull'
+  if (['push_only', 'push'].includes(normalized)) return 'push_only'
+  if (['otlp_only', 'otlp', 'none', 'disabled'].includes(normalized)) return 'otlp_only'
+  missing.push(`Unsupported New Relic AWS mode: ${value}`)
+  return fallback
+}
+
 if (isStrictEnv) {
+  const newRelicAwsMode = runtimeEnv === 'staging'
+    ? normalizeNewRelicAwsMode(process.env.NEW_RELIC_STAGING_AWS_MODE, 'push_pull')
+    : runtimeEnv === 'prod'
+      ? normalizeNewRelicAwsMode(process.env.NEW_RELIC_PROD_AWS_MODE, 'push_pull')
+      : 'push_pull'
+
   requireValue(process.env.SENTRY_DSN, 'SENTRY_DSN')
   requireValue(process.env.NEW_RELIC_ACCOUNT_ID, 'NEW_RELIC_ACCOUNT_ID')
   requireValue(process.env.NEW_RELIC_REGION, 'NEW_RELIC_REGION')
   requireValue(process.env.NEW_RELIC_INGEST_KEY, 'NEW_RELIC_INGEST_KEY')
   requireValue(process.env.NEW_RELIC_USER_API_KEY, 'NEW_RELIC_USER_API_KEY (required for verify-signals hard gate)')
 
-  if (runtimeEnv === 'staging') {
+  if (runtimeEnv === 'staging' && newRelicAwsMode !== 'otlp_only') {
     requireValue(
       process.env.NEW_RELIC_STAGING_AWS_ACCOUNT_ID,
       'NEW_RELIC_STAGING_AWS_ACCOUNT_ID',
     )
-  } else if (runtimeEnv === 'prod') {
+  } else if (runtimeEnv === 'prod' && newRelicAwsMode !== 'otlp_only') {
     requireValue(
       process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID,
       'NEW_RELIC_PROD_AWS_ACCOUNT_ID',

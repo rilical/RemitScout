@@ -1,18 +1,9 @@
-import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch'
-import { config } from './config'
+import { StandardUnit } from '@aws-sdk/client-cloudwatch'
+import { recordCloudWatchMetric } from './cloudwatch-metrics'
 import { createLogger } from './logger'
 import { formatError } from './utils/error-handling'
 
 const logger = createLogger('shared.repository-metrics')
-
-let cloudWatchClient: CloudWatchClient | null = null
-
-const getCloudWatchClient = (): CloudWatchClient => {
-  if (!cloudWatchClient) {
-    cloudWatchClient = new CloudWatchClient({})
-  }
-  return cloudWatchClient
-}
 
 export type RepositoryOperation = 
   | 'query'
@@ -33,47 +24,27 @@ export const recordRepositoryMetric = async (
   success: boolean,
   errorType?: string,
 ): Promise<void> => {
-  try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
-    const client = getCloudWatchClient()
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/Repositories',
-        MetricData: [
-          {
-            MetricName: 'operation_duration',
-            Value: durationMs,
-            Unit: 'Milliseconds',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'Repository', Value: repository },
-              { Name: 'Operation', Value: operation },
-            ],
-          },
-          {
-            MetricName: success ? 'operation_success' : 'operation_failure',
-            Value: 1,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [
-              { Name: 'Repository', Value: repository },
-              { Name: 'Operation', Value: operation },
-              ...(errorType ? [{ Name: 'ErrorType', Value: errorType }] : []),
-            ],
-          },
-        ],
-      }),
-    )
-  } catch (error: unknown) {
-    // Silently fail metrics - don't break repository operations
-    logger.debug('repository_metric_failed', {
-      repository,
-      operation,
-      error: formatError(error).message,
-    })
-  }
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Repositories',
+    name: 'operation_duration',
+    value: durationMs,
+    unit: StandardUnit.Milliseconds,
+    dimensions: {
+      Repository: repository,
+      Operation: operation,
+    },
+  })
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Repositories',
+    name: success ? 'operation_success' : 'operation_failure',
+    value: 1,
+    unit: StandardUnit.Count,
+    dimensions: {
+      Repository: repository,
+      Operation: operation,
+      ...(errorType ? { ErrorType: errorType } : {}),
+    },
+  })
 }
 
 /**
@@ -83,31 +54,15 @@ export const recordQueueDepthMetric = async (
   queueName: string,
   depth: number,
 ): Promise<void> => {
-  try {
-    if (!config.observability.cloudwatch.enabled) {
-      return
-    }
-    const client = getCloudWatchClient()
-    await client.send(
-      new PutMetricDataCommand({
-        Namespace: 'RemitScout/Queues',
-        MetricData: [
-          {
-            MetricName: 'queue_depth',
-            Value: depth,
-            Unit: 'Count',
-            Timestamp: new Date(),
-            Dimensions: [{ Name: 'QueueName', Value: queueName }],
-          },
-        ],
-      }),
-    )
-  } catch (error: unknown) {
-    logger.debug('queue_depth_metric_failed', {
-      queue_name: queueName,
-      error: formatError(error).message,
-    })
-  }
+  recordCloudWatchMetric({
+    namespace: 'RemitScout/Queues',
+    name: 'queue_depth',
+    value: depth,
+    unit: StandardUnit.Count,
+    dimensions: {
+      QueueName: queueName,
+    },
+  })
 }
 
 /**
@@ -121,26 +76,16 @@ export const recordFxRateChange = async (
 ): Promise<void> => {
   try {
     const changePercent = Math.abs((newRate - oldRate) / oldRate) * 100
-    if (config.observability.cloudwatch.enabled) {
-      const client = getCloudWatchClient()
-      await client.send(
-        new PutMetricDataCommand({
-          Namespace: 'RemitScout/FX',
-          MetricData: [
-            {
-              MetricName: 'rate_change_percent',
-              Value: changePercent,
-              Unit: 'Percent',
-              Timestamp: new Date(),
-              Dimensions: [
-                { Name: 'BaseCurrency', Value: baseCurrency },
-                { Name: 'QuoteCurrency', Value: quoteCurrency },
-              ],
-            },
-          ],
-        }),
-      )
-    }
+    recordCloudWatchMetric({
+      namespace: 'RemitScout/FX',
+      name: 'rate_change_percent',
+      value: changePercent,
+      unit: StandardUnit.Percent,
+      dimensions: {
+        BaseCurrency: baseCurrency,
+        QuoteCurrency: quoteCurrency,
+      },
+    })
 
     // Trigger SNS notification if change > 5%
     if (changePercent > 5) {
@@ -206,6 +151,5 @@ const notifyFxRateChange = async (
     })
   }
 }
-
 
 

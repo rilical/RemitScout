@@ -29,6 +29,18 @@ on:
         description: Lookback window hours (default 6)
         required: false
         type: string
+      orchestrator_run_id:
+        description: Optional provider onboarding orchestrator run id
+        required: false
+        type: string
+      ci_ref:
+        description: Optional commit/context reference from orchestrator contract
+        required: false
+        type: string
+      run_contract_json:
+        description: Optional serialized run contract payload for traceability
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -51,6 +63,9 @@ jobs:
           DISPATCH_ID: ${{ inputs.dispatch_id }}
           PROVIDER_ID: ${{ inputs.provider_id }}
           WINDOW_HOURS: ${{ inputs.window_hours }}
+          ORCHESTRATOR_RUN_ID: ${{ inputs.orchestrator_run_id }}
+          CI_REF: ${{ inputs.ci_ref }}
+          RUN_CONTRACT_JSON: ${{ inputs.run_contract_json }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           EVIDENCE_OUTPUT_FILE: evidence.json
         run: pnpm -C backend exec tsx scripts/evidence/provider-health-evidence.ts

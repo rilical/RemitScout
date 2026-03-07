@@ -50,6 +50,55 @@ reason_codes:
       - "probe.provider.github_actions"
     domain: "provider_health"
 
+  - code: "provider_onboarding.input_invalid"
+    default_severity: "sev2"
+    description: "Provider onboarding payload is invalid or missing required fields."
+    suggested_next_skill_ids:
+      - "provider.onboarding.local"
+      - "manual.human_triage"
+    domain: "provider_health"
+
+  - code: "provider_onboarding.scaffold_fail"
+    default_severity: "sev2"
+    description: "Provider scaffold or evidence execution failed during onboarding."
+    suggested_next_skill_ids:
+      - "provider.scaffold.local"
+      - "manual.human_triage"
+    domain: "provider_health"
+
+  - code: "provider_onboarding.probe_timeout"
+    default_severity: "sev2"
+    description: "Provider probe timed out or failed during onboarding validation."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+      - "manual.human_triage"
+    domain: "provider_health"
+
+  - code: "provider_onboarding.smoke_fail"
+    default_severity: "sev2"
+    description: "B2C smoke validation failed or could not run during onboarding."
+    suggested_next_skill_ids:
+      - "probe.provider.github_actions"
+      - "evidence.provider_health.github_actions"
+      - "manual.human_triage"
+    domain: "provider_health"
+
+  - code: "provider_onboarding.score_below_threshold"
+    default_severity: "sev2"
+    description: "Provider Remit-Score is below the required onboarding threshold."
+    suggested_next_skill_ids:
+      - "provider.onboarding.local"
+      - "manual.human_triage"
+    domain: "provider_health"
+
+  - code: "provider_onboarding.review_blocked"
+    default_severity: "sev2"
+    description: "Onboarding review card is blocked due to unresolved blockers."
+    suggested_next_skill_ids:
+      - "provider.onboarding.local"
+      - "manual.human_triage"
+    domain: "provider_health"
+
   - code: "queue.dlq_nonzero"
     default_severity: "sev3"
     description: "DLQ depth is non-zero."

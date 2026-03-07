@@ -7,8 +7,8 @@ set -euo pipefail
 export AWS_PROFILE AWS_REGION
 
 CLUSTER="remit-scout-dev"
-SVC_INGEST="remit-scout-dev-PlaneBIngestService1875B86C-GvPxzOjhVr3h"
-SVC_FANOUT_T2="remit-scout-dev-IngestFanoutTier2WorkerService1EAB902A-yE1wRlBaWy2A"
+SVC_INGEST="remit-scout-dev-PlaneBIngestService1875B86C-GvPxzOjhVr3h" # pragma: allowlist secret
+SVC_FANOUT_T2="remit-scout-dev-IngestFanoutTier2WorkerService1EAB902A-yE1wRlBaWy2A" # pragma: allowlist secret
 
 # Used for CloudWatch DatabaseConnections sampling (best-effort).
 DB_CLUSTER_ID="remit-scout-dev-remitscoutauroracluster4aa33bab-am3xjbcrzsnh"

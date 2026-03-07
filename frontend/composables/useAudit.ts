@@ -1,3 +1,5 @@
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
+
 type AuditLogFilters = {
   actor_id?: string
   actor_type?: string
@@ -31,6 +33,15 @@ export type AuditLogEntry = {
   entity_id?: string | null
   category?: string | null
   severity?: string | null
+  reason?: string | null
+  evidence_links?: string[] | null
+  before_snapshot?: Record<string, unknown> | null
+  after_snapshot?: Record<string, unknown> | null
+  changes?: Record<string, unknown> | null
+  ip_address?: string | null
+  user_agent?: string | null
+  request_id?: string | null
+  session_id?: string | null
   metadata?: Record<string, unknown> | null
 }
 
@@ -51,7 +62,7 @@ export const useAudit = () => {
       return await fn()
     }
     catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : 'Failed to load audit logs.'
+      error.value = getAdminApiErrorMessage(err, 'Failed to load audit logs.')
       throw err
     }
     finally {

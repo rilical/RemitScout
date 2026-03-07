@@ -14,6 +14,7 @@ const mockSendAdminWebhook = vi.hoisted(() => vi.fn())
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireAdmin: () => () => undefined,
+  requireSuperAdmin: () => () => undefined,
 }))
 
 vi.mock('../shared/health-corridors', () => ({

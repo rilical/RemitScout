@@ -2,11 +2,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..')
-const ABS_PREFIX = '/Users/omarghabyen/Desktop/Remit-Scout Production V2/'
 const MAX_AGENTS_LINES = 180
 const MAX_ENTRYPOINTS = 12
 const ROOT_AGENTS_PATH = 'AGENTS.md'
 const REMIT_SCOUT_AGENTS_PATH = '.remit-scout/AGENTS.md'
+const ABSOLUTE_REPO_MARKERS = [
+  'ARCHITECTURE.md',
+  'SPECS/',
+  'agents/',
+  'backend/',
+  'docs/',
+  'frontend/',
+  'infrastructure/',
+  'ops/',
+  '.remit-scout/',
+] as const
 
 const ROOT_LOAD_ORDER_PREFIX = [
   'ARCHITECTURE.md',
@@ -94,12 +104,18 @@ const resolvePathRef = (ref: string, fromFile: string): string | null => {
   const stripAnchor = raw.split('#')[0].split(':')[0]
   if (!stripAnchor) return null
 
-  if (stripAnchor.startsWith(ABS_PREFIX)) {
-    return path.join(repoRoot, stripAnchor.slice(ABS_PREFIX.length))
+  if (stripAnchor.startsWith('/')) {
+    for (const marker of ABSOLUTE_REPO_MARKERS) {
+      const markerIndex = stripAnchor.indexOf(`/${marker}`)
+      if (markerIndex >= 0) {
+        return path.join(repoRoot, stripAnchor.slice(markerIndex + 1))
+      }
+      if (stripAnchor.endsWith(`/${marker}`)) {
+        return path.join(repoRoot, marker)
+      }
+    }
+    return null
   }
-
-  // Ignore other absolute paths (not portable to CI).
-  if (stripAnchor.startsWith('/')) return null
 
   const looksLikePath =
     stripAnchor.includes('/')

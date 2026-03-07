@@ -6,6 +6,7 @@ import { requireCorridorId } from '../../../shared/corridor'
 import { getTracer } from '../../../shared/tracing'
 import { sendJsonMessage } from '../../../shared/sqs'
 import { wrapEnvelope } from '../../../shared/queue-staleness'
+import { getCurrentTraceCorrelation } from '../../../shared/types/correlation'
 import type { NormalizedQuote } from '../normalize/quote-normalizer'
 import { detectAnomaly } from '../signals/anomaly-detector'
 import {
@@ -111,6 +112,9 @@ const enqueueGoldLiveUpdate = async (
     return false
   }
 }
+
+const shouldDualWriteQuoteObservation = (): boolean =>
+  process.env.EMIT_OBSERVATIONS === 'true' || config.triangulation.enabled
 
 export type CollectorResumeStatus = {
   canCollect: boolean
@@ -517,6 +521,25 @@ export const persistNormalizedQuote = async (
   }
 
   try {
+    const trace = getCurrentTraceCorrelation()
+    const quoteObservationPayload = JSON.stringify({
+      provider_id: normalized.provider_id,
+      exchange_rate: normalized.implied_fx_rate,
+      implied_fx_rate: normalized.implied_fx_rate,
+      send_amount: normalized.send_amount,
+      receive_amount: normalized.receive_amount,
+      fee_amount: normalized.fee_amount,
+      total_debit_amount: normalized.total_debit_amount,
+      payin_method: normalized.payin,
+      payout_method: normalized.payout,
+      method_profile: normalized.method_profile,
+      delivery_time_min_minutes: normalized.delivery_time_min_minutes ?? null,
+      delivery_time_max_minutes: normalized.delivery_time_max_minutes ?? null,
+      quality_flags: normalized.quality_flags,
+      parser_version: normalized.parser_version ?? 'unknown',
+      bronze_object_key: normalized.bronze_object_key,
+    })
+
     const quoteRepo = new QuoteRecordRepository(pool)
     await quoteRepo.insertQuoteAndUpsertLatest({
     quote: {
@@ -568,6 +591,33 @@ export const persistNormalizedQuote = async (
       status: 'ok',
       qualityFlags,
     },
+    observation: shouldDualWriteQuoteObservation()
+      ? {
+          moduleId: `${normalized.provider_id}:${collectorType ?? 'collector'}`,
+          providerId: normalized.provider_id,
+          ownerKind: 'provider',
+          ownerId: normalized.provider_id,
+          signalLayer: 'quote',
+          captureMethod: collectorType ?? null,
+          parserVersion: normalized.parser_version ?? 'unknown',
+          sourceRef: normalized.bronze_object_key,
+          corridorId: normalized.corridor_id,
+          amountBucket: normalized.amount_bucket,
+          confidence: normalized.quality_flags.includes('parse_error') ? 'medium' : 'high',
+          observedAt: normalized.collected_at,
+          ingestionRunId: normalized.ingestion_run_id,
+          payload: quoteObservationPayload,
+          lineage: JSON.stringify({
+            bronze_object_key: normalized.bronze_object_key,
+            parser_version: normalized.parser_version ?? 'unknown',
+            collector_type: collectorType ?? null,
+            provider_id: normalized.provider_id,
+            method_profile: normalized.method_profile,
+          }),
+          traceId: trace?.traceId ?? null,
+          parentSpanId: trace?.parentSpanId ?? null,
+        }
+      : undefined,
     })
     logger.debug('quote_persisted', {
       provider_id: normalized.provider_id,

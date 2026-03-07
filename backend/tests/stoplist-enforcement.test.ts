@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { it, expect, beforeEach, afterEach } from 'vitest'
 import { Pool } from 'pg'
 import { createPool } from '../shared/db'
 import { resumeProviderIfCooldownExpired, pauseProviderForBlock } from '../plane-b/src/collectors/base'
 import { checkCircuitState } from '../plane-b/src/lib/redis-circuit-breaker'
 import { RightsMatrixRepository } from '../plane-b/src/repositories'
 import { CircuitBreakerRepository } from '../plane-b/src/repositories'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
 const dbUrl =
   process.env.DATABASE_URL_PLANE_B ||
   process.env.DATABASE_URL ||
   'postgres://remit:remit@localhost:5432/remit'
 
-describe('Stoplist enforcement guardrails', () => {
+describeDbIntegration('Stoplist enforcement guardrails', () => {
   let pool: Pool
   const testProviderId = 'test_stoplist_provider'
   const testCorridorId = 'us-ph'
@@ -106,6 +106,4 @@ describe('Stoplist enforcement guardrails', () => {
     })
   })
 })
-
-
 

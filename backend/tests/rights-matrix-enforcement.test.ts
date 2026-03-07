@@ -1,15 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { it, expect, beforeEach, afterEach } from 'vitest'
 import { Pool } from 'pg'
 import { createPool } from '../shared/db'
 import { RightsMatrixRepository } from '../plane-b/src/repositories'
-import { withTestTransaction } from './helpers/test-db'
+import { describeDbIntegration, withTestTransaction } from './helpers/test-db'
 
 const dbUrl =
   process.env.DATABASE_URL_PLANE_B ||
   process.env.DATABASE_URL ||
   'postgres://remit:remit@localhost:5432/remit'
-
-describe('Rights matrix enforcement guardrails', () => {
+describeDbIntegration('Rights matrix enforcement guardrails', () => {
   let pool: Pool
   const testProviderId = 'test_rights_provider'
 

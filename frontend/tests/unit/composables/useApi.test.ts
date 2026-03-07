@@ -38,7 +38,7 @@ describe('createApiClient', () => {
     expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
-  it('prefers user token over admin token on admin surface paths', async () => {
+  it('prefers Plane A admin token over user token on admin surface paths', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true })
     const client = createApiClient({
       base: '/api/v1',
@@ -51,7 +51,7 @@ describe('createApiClient', () => {
     await client.request('/admin/plans')
 
     const [, init] = fetcher.mock.calls[0] as any[]
-    expect(init.headers.authorization).toBe('Bearer supabase_token')
+    expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
   it('uses default user token for non-admin paths', async () => {
@@ -67,6 +67,86 @@ describe('createApiClient', () => {
     await client.request('/providers')
 
     const [, init] = fetcher.mock.calls[0] as any[]
+    expect(init.headers.authorization).toBe('Bearer supabase_token')
+  })
+
+  it('treats telemetry analytics and index corrections as admin-surface paths for auth selection', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin_exact_paths',
+    })
+
+    await client.request('/telemetry/analytics')
+    await client.request('/indices/corrections')
+
+    const first = fetcher.mock.calls[0]?.[1] as any
+    const second = fetcher.mock.calls[1]?.[1] as any
+    expect(first.headers.authorization).toBe('Bearer plane_a_admin_token')
+    expect(second.headers.authorization).toBe('Bearer plane_a_admin_token')
+  })
+
+  it('routes admin-surface paths to the direct admin base when configured', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      adminBase: 'https://plane-a.example.com/api/v1',
+      fetcher,
+      getAdminAccessToken: () => 'plane_a_admin_token',
+      makeRequestId: () => 'req_admin_direct',
+    })
+
+    await client.request('/admin/plans')
+
+    const [url, init] = fetcher.mock.calls[0] as any[]
+    expect(url).toBe('https://plane-a.example.com/api/v1/admin/plans')
+    expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+  })
+
+  it('falls back to the primary base for admin-surface paths when the direct admin base is cross-origin in the browser', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { location: { origin: 'https://staging.remit-scout.com' } },
+    })
+
+    try {
+      const client = createApiClient({
+        base: '/api/v1',
+        adminBase: 'https://plane-a.example.com/api/v1',
+        fetcher,
+        getAdminAccessToken: () => 'plane_a_admin_token',
+        makeRequestId: () => 'req_admin_cross_origin',
+      })
+
+      await client.request('/analytics/heatmap')
+
+      const [url, init] = fetcher.mock.calls[0] as any[]
+      expect(url).toBe('/api/v1/analytics/heatmap')
+      expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+    }
+    finally {
+      delete (globalThis as { window?: unknown }).window
+    }
+  })
+
+  it('keeps session exchange on the primary base even when a direct admin base is configured', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    const client = createApiClient({
+      base: '/api/v1',
+      adminBase: 'https://plane-a.example.com/api/v1',
+      fetcher,
+      getAccessToken: () => 'supabase_token',
+      makeRequestId: () => 'req_exchange_base',
+    })
+
+    await client.request('/sessions/admin/exchange')
+
+    const [url, init] = fetcher.mock.calls[0] as any[]
+    expect(url).toBe('/api/v1/sessions/admin/exchange')
     expect(init.headers.authorization).toBe('Bearer supabase_token')
   })
 

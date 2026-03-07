@@ -17,6 +17,18 @@ on:
         description: 'Optional: IssueOps case_id for traceability'
         required: false
         type: string
+      orchestrator_run_id:
+        description: 'Optional: provider onboarding orchestrator run id'
+        required: false
+        type: string
+      ci_ref:
+        description: 'Optional: commit/context reference'
+        required: false
+        type: string
+      run_contract_json:
+        description: 'Optional: serialized run contract payload'
+        required: false
+        type: string
   push:
     branches: [main]
     paths:
@@ -101,6 +113,9 @@ jobs:
           PROBE_OUTPUT_FILE: probe-results.json
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           PROVIDER_ID: ${{ matrix.provider }}
+          ORCHESTRATOR_RUN_ID: ${{ github.event.inputs.orchestrator_run_id }}
+          CI_REF: ${{ github.event.inputs.ci_ref }}
+          RUN_CONTRACT_JSON: ${{ github.event.inputs.run_contract_json }}
         run: pnpm -C backend probe:provider
       - name: Upload probe results
         if: always()

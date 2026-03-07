@@ -15,9 +15,13 @@ describe('module catalog contract', () => {
   const catalogPath = path.join(repoRoot, '.remit-scout', 'modules', 'catalog.json')
   const schemaPath = path.join(repoRoot, '.remit-scout', 'schema', 'module-catalog.schema.json')
   const providerCatalogPath = path.join(repoRoot, '.remit-scout', 'providers', 'catalog.json')
+  const providerVolumePath = path.join(repoRoot, '.remit-scout', 'providers', 'volume-policy.json')
+  const providerVolumeSchemaPath = path.join(repoRoot, '.remit-scout', 'schema', 'provider-volume-policy.schema.json')
   const catalog = JSON.parse(readFileSync(catalogPath, 'utf8')) as any
   const schema = JSON.parse(readFileSync(schemaPath, 'utf8')) as any
   const providerCatalog = JSON.parse(readFileSync(providerCatalogPath, 'utf8')) as ProviderCatalog
+  const providerVolumeCatalog = JSON.parse(readFileSync(providerVolumePath, 'utf8')) as any
+  const providerVolumeSchema = JSON.parse(readFileSync(providerVolumeSchemaPath, 'utf8')) as any
 
   it('validates against the module catalog schema', () => {
     const ajv = new Ajv2020({
@@ -46,19 +50,41 @@ describe('module catalog contract', () => {
     expect(moduleProviders).toEqual(providers)
   })
 
-  it('keeps release-cut strategy constraints on production modules', () => {
-    const productionModules = (catalog.modules || []).filter((entry: any) => entry.status === 'production')
-    for (const module of productionModules) {
-      expect(module.volume.strategy).toBe('synthetic_seed')
-      expect(module.volume.model_version).toBe('synthetic_seed_v1')
-      expect(module.volume.reported.enabled).toBe(false)
-      expect(module.volume.inferred_proxy.enabled).toBe(false)
-      expect(typeof module.volume.synthetic_seed.default_weight).toBe('number')
-      expect(module.volume.synthetic_seed.default_weight).toBeGreaterThanOrEqual(0)
-      expect(module.volume.synthetic_seed.default_weight).toBeLessThanOrEqual(1)
-      expect(typeof module.volume.synthetic_seed.default_confidence).toBe('number')
-      expect(module.volume.synthetic_seed.default_confidence).toBeGreaterThanOrEqual(0)
-      expect(module.volume.synthetic_seed.default_confidence).toBeLessThanOrEqual(1)
+  it('validates the provider volume policy catalog schema', () => {
+    const ajv = new Ajv2020({
+      allErrors: true,
+      strict: false,
+      allowUnionTypes: true,
+    })
+    const validate = ajv.compile(providerVolumeSchema)
+    const ok = validate(providerVolumeCatalog)
+    if (!ok) {
+      const details = (validate.errors || [])
+        .map((error) => `${error.instancePath || '(root)'}: ${error.message || 'invalid'}`)
+        .join('; ')
+      throw new Error(details)
+    }
+  })
+
+  it('keeps release-cut strategy constraints on provider volume policies', () => {
+    const policies = [
+      providerVolumeCatalog.default_policy,
+      ...(providerVolumeCatalog.providers || []).map((entry: any) => entry.volume),
+    ].filter(Boolean)
+
+    expect(policies.length).toBeGreaterThan(0)
+
+    for (const policy of policies) {
+      expect(policy.strategy).toBe('synthetic_seed')
+      expect(policy.model_version).toBe('synthetic_seed_v1')
+      expect(policy.reported.enabled).toBe(false)
+      expect(policy.inferred_proxy.enabled).toBe(false)
+      expect(typeof policy.synthetic_seed.default_weight).toBe('number')
+      expect(policy.synthetic_seed.default_weight).toBeGreaterThanOrEqual(0)
+      expect(policy.synthetic_seed.default_weight).toBeLessThanOrEqual(1)
+      expect(typeof policy.synthetic_seed.default_confidence).toBe('number')
+      expect(policy.synthetic_seed.default_confidence).toBeGreaterThanOrEqual(0)
+      expect(policy.synthetic_seed.default_confidence).toBeLessThanOrEqual(1)
     }
   })
 })

@@ -4,6 +4,7 @@ import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
 import { requireAdmin } from '../plugins/auth-plugin'
 import { ValidationError } from '../../../shared/errors'
+import { getRequestContext, logAuditEvent } from '../services/audit-log'
 
 const logger = createLogger('plane-a.index-corrections')
 
@@ -26,8 +27,25 @@ const createSchema = z.object({
 })
 
 const approveSchema = z.object({
-  approved_by: z.string().min(1),
-})
+  approved_by: z.unknown().optional(),
+}).passthrough()
+
+type IndexCorrectionRecord = {
+  correction_id: string
+  corridor_id: string
+  amount_bucket: number
+  method_profile: string
+  date: string
+  field_name: string
+  old_value: number | null
+  new_value: number | null
+  reason: string
+  corrected_by: string
+  methodology_version: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+}
 
 export const indexCorrectionRoutes = async (app: FastifyInstance) => {
   const { pool: planeAPool } = app.container
@@ -61,22 +79,7 @@ export const indexCorrectionRoutes = async (app: FastifyInstance) => {
       const limitParam = paramIndex++
       const offsetParam = paramIndex++
 
-      const result = await query<{
-        correction_id: string
-        corridor_id: string
-        amount_bucket: number
-        method_profile: string
-        date: string
-        field_name: string
-        old_value: number | null
-        new_value: number | null
-        reason: string
-        corrected_by: string
-        methodology_version: string | null
-        approved_by: string | null
-        approved_at: string | null
-        created_at: string
-      }>(
+      const result = await query<IndexCorrectionRecord>(
         `SELECT * FROM gold_export.index_correction
          ${whereClause}
          ORDER BY created_at DESC
@@ -126,41 +129,102 @@ export const indexCorrectionRoutes = async (app: FastifyInstance) => {
         })
       }
 
-      const correctedBy = request.user?.email ?? 'unknown'
+      const actorId = request.user?.user_id ?? 'unknown'
+      const correctedBy = request.user?.email ?? actorId
+      const client = await planeAPool.connect()
 
-      const result = await query<{ correction_id: string }>(
-        `INSERT INTO gold_export.index_correction
-         (corridor_id, amount_bucket, method_profile, date,
-          field_name, old_value, new_value, reason,
-          corrected_by, methodology_version)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         RETURNING correction_id`,
-        [
-          parsed.data.corridor_id,
-          parsed.data.amount_bucket,
-          parsed.data.method_profile,
-          parsed.data.date,
-          parsed.data.field_name,
-          parsed.data.old_value,
-          parsed.data.new_value,
-          parsed.data.reason,
+      try {
+        await client.query('BEGIN')
+
+        const result = await query<IndexCorrectionRecord>(
+          `INSERT INTO gold_export.index_correction
+           (corridor_id, amount_bucket, method_profile, date,
+            field_name, old_value, new_value, reason,
+            corrected_by, methodology_version)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           RETURNING correction_id,
+                     corridor_id,
+                     amount_bucket,
+                     method_profile,
+                     date::text,
+                     field_name,
+                     old_value,
+                     new_value,
+                     reason,
+                     corrected_by,
+                     methodology_version,
+                     approved_by,
+                     approved_at::text,
+                     created_at::text`,
+          [
+            parsed.data.corridor_id,
+            parsed.data.amount_bucket,
+            parsed.data.method_profile,
+            parsed.data.date,
+            parsed.data.field_name,
+            parsed.data.old_value,
+            parsed.data.new_value,
+            parsed.data.reason,
+            correctedBy,
+            parsed.data.methodology_version ?? null,
+          ],
+          client,
+        )
+
+        const created = result.rows[0]
+        await logAuditEvent(client, {
+          actorId,
+          actorType: 'admin',
+          actorRole: request.user?.role ?? undefined,
+          action: 'indices.correction.created',
+          entityType: 'index_correction',
+          entityId: created.correction_id,
+          resourceType: 'gold_index',
+          resourceId: created.corridor_id,
+          category: 'admin',
+          severity: 'warning',
+          reason: created.reason,
+          afterSnapshot: {
+            corridor_id: created.corridor_id,
+            amount_bucket: created.amount_bucket,
+            method_profile: created.method_profile,
+            date: created.date,
+            field_name: created.field_name,
+            old_value: created.old_value,
+            new_value: created.new_value,
+            corrected_by: created.corrected_by,
+            methodology_version: created.methodology_version,
+          },
+          metadata: {
+            approved_by: created.approved_by,
+            approved_at: created.approved_at,
+            created_at: created.created_at,
+          },
+          ...getRequestContext(request),
+        })
+
+        await client.query('COMMIT')
+
+        logger.info('index_correction_created', {
+          correctionId: created.correction_id,
+          corridorId: created.corridor_id,
+          fieldName: created.field_name,
           correctedBy,
-          parsed.data.methodology_version ?? null,
-        ],
-        planeAPool,
-      )
+        })
 
-      logger.info('index_correction_created', {
-        correctionId: result.rows[0]?.correction_id,
-        corridorId: parsed.data.corridor_id,
-        fieldName: parsed.data.field_name,
-        correctedBy,
-      })
-
-      reply.code(201)
-      return {
-        correctionId: result.rows[0]?.correction_id,
-        status: 'pending_approval',
+        reply.code(201)
+        return {
+          correctionId: created.correction_id,
+          status: 'pending_approval',
+        }
+      } catch (error) {
+        await client.query('ROLLBACK')
+        logger.error('index_correction_create_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      } finally {
+        client.release()
       }
     },
   )
@@ -177,31 +241,92 @@ export const indexCorrectionRoutes = async (app: FastifyInstance) => {
         })
       }
 
-      const result = await query<{ correction_id: string }>(
-        `UPDATE gold_export.index_correction
-         SET approved_by = $1, approved_at = NOW()
-         WHERE correction_id = $2 AND approved_by IS NULL
-         RETURNING correction_id`,
-        [parsed.data.approved_by, correctionId],
-        planeAPool,
-      )
+      const actorId = request.user?.user_id ?? 'unknown'
+      const approvedBy = request.user?.email ?? actorId
+      const client = await planeAPool.connect()
 
-      if (result.rows.length === 0) {
-        return {
-          error: 'not_found_or_already_approved',
-          message: 'Correction not found or already approved.',
+      try {
+        await client.query('BEGIN')
+
+        const result = await query<IndexCorrectionRecord>(
+          `UPDATE gold_export.index_correction
+           SET approved_by = $1, approved_at = NOW()
+           WHERE correction_id = $2 AND approved_by IS NULL
+           RETURNING correction_id,
+                     corridor_id,
+                     amount_bucket,
+                     method_profile,
+                     date::text,
+                     field_name,
+                     old_value,
+                     new_value,
+                     reason,
+                     corrected_by,
+                     methodology_version,
+                     approved_by,
+                     approved_at::text,
+                     created_at::text`,
+          [approvedBy, correctionId],
+          client,
+        )
+
+        if (result.rows.length === 0) {
+          await client.query('ROLLBACK')
+          return {
+            error: 'not_found_or_already_approved',
+            message: 'Correction not found or already approved.',
+          }
         }
-      }
 
-      logger.info('index_correction_approved', {
-        correctionId,
-        approvedBy: parsed.data.approved_by,
-      })
+        const approved = result.rows[0]
+        await logAuditEvent(client, {
+          actorId,
+          actorType: 'admin',
+          actorRole: request.user?.role ?? undefined,
+          action: 'indices.correction.approved',
+          entityType: 'index_correction',
+          entityId: approved.correction_id,
+          resourceType: 'gold_index',
+          resourceId: approved.corridor_id,
+          category: 'admin',
+          severity: 'warning',
+          reason: approved.reason,
+          beforeSnapshot: {
+            approved_by: null,
+            approved_at: null,
+          },
+          afterSnapshot: {
+            approved_by: approved.approved_by,
+            approved_at: approved.approved_at,
+          },
+          metadata: {
+            corridor_id: approved.corridor_id,
+            field_name: approved.field_name,
+            corrected_by: approved.corrected_by,
+          },
+          ...getRequestContext(request),
+        })
 
-      return {
-        correctionId,
-        status: 'approved',
-        approvedBy: parsed.data.approved_by,
+        await client.query('COMMIT')
+
+        logger.info('index_correction_approved', {
+          correctionId: approved.correction_id,
+          approvedBy: approved.approved_by,
+        })
+
+        return {
+          correctionId: approved.correction_id,
+          status: 'approved',
+          approvedBy: approved.approved_by,
+        }
+      } catch (error) {
+        await client.query('ROLLBACK')
+        logger.error('index_correction_approve_failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      } finally {
+        client.release()
       }
     },
   )

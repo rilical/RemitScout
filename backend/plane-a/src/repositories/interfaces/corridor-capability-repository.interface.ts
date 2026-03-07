@@ -3,6 +3,7 @@ export type CorridorCapabilityRecord = {
   payin_methods: string[] | null
   payout_methods: string[] | null
   is_supported: boolean
+  source?: string | null
 }
 
 export interface ICorridorCapabilityRepository {

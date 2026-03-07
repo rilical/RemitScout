@@ -8,12 +8,7 @@
             to="/pulse"
             class="flex items-center gap-2 text-neutral-400 hover:text-white motion-safe:transition-colors"
           >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -26,20 +21,17 @@
 
           <div class="flex items-center gap-3">
             <!-- View Mode Toggle -->
-            <div class="hidden sm:flex items-center gap-1 rounded-lg bg-neutral-700 p-1">
+            <div class="hidden items-center gap-1 rounded-lg bg-neutral-700 p-1 sm:flex">
               <button
-                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium motion-safe:transition-colors"
-                :class="store.viewMode === 'sender'
-                  ? 'bg-brand-600 text-white'
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-600'"
+                class="text-body-sm flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium motion-safe:transition-colors"
+                :class="
+                  store.viewMode === 'sender'
+                    ? 'bg-brand-600 text-white'
+                    : 'text-neutral-400 hover:bg-neutral-600 hover:text-white'
+                "
                 @click="store.setViewMode('sender')"
               >
-                <svg
-                  class="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -50,18 +42,15 @@
                 Sender
               </button>
               <button
-                class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-sm font-medium motion-safe:transition-colors"
-                :class="store.viewMode === 'analyst'
-                  ? 'bg-brand-600 text-white'
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-600'"
+                class="text-body-sm flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium motion-safe:transition-colors"
+                :class="
+                  store.viewMode === 'analyst'
+                    ? 'bg-brand-600 text-white'
+                    : 'text-neutral-400 hover:bg-neutral-600 hover:text-white'
+                "
                 @click="store.setViewMode('analyst')"
               >
-                <svg
-                  class="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -74,36 +63,11 @@
             </div>
 
             <button
-              v-if="isPro"
-              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
-              @click="showShareModal = true"
-            >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                />
-              </svg>
-              Share
-            </button>
-            <button
-              v-if="isPro"
-              class="flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm text-white hover:bg-neutral-600 motion-safe:transition-colors"
+              v-if="pulseEmbedsEnabled"
+              class="text-body-sm flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showEmbedModal = true"
             >
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -111,7 +75,7 @@
                   d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
                 />
               </svg>
-              Embed
+              Embed Snapshot
             </button>
           </div>
         </div>
@@ -119,49 +83,45 @@
     </div>
 
     <!-- Filter Header -->
-    <PulseFilterHeader
-      v-model="filters"
-      :last-updated="lastUpdated"
-    />
+    <PulseFilterHeader v-model="filters" :last-updated="lastUpdated" />
 
     <!-- Main Content -->
     <div class="mx-auto max-w-page px-page-x py-8">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <!-- Main Column -->
-        <div class="lg:col-span-8 space-y-8">
+        <div class="space-y-8 lg:col-span-8">
           <!-- Full Chart -->
-          <PulseChartFull
-            :chart-id="chartId"
-            :filters="filters"
-            :pulse-level="pulseLevel"
-            @share="showShareModal = true"
-            @embed="showEmbedModal = true"
-            @download="handleDownload"
-          />
+          <div ref="chartContainerRef">
+            <PulseChartFull
+              :chart-id="chartId"
+              :filters="filters"
+              :pulse-level="pulseLevel"
+              :can-embed="pulseEmbedsEnabled"
+              :initial-range="selectedChartRange"
+              @embed="pulseEmbedsEnabled && (showEmbedModal = true)"
+              @range-change="selectedChartRange = $event"
+            />
+          </div>
 
           <!-- Consumer Mode: Simple Takeaway -->
           <div
             v-if="store.viewMode === 'sender'"
             class="rounded-xl border border-neutral-700 bg-neutral-800 p-6"
           >
-            <h3 class="text-body-lg font-semibold text-white mb-2">
-              Key Takeaway
-            </h3>
+            <h3 class="text-body-lg mb-2 font-semibold text-white">Key Takeaway</h3>
             <p class="text-neutral-300">
-              This chart shows how transfer costs have changed over time. Use this data to identify the best times to send money and save on fees.
+              This chart shows how transfer costs have changed over time. Use this data to identify
+              the best times to send money and save on fees.
             </p>
           </div>
 
           <!-- Analyst Mode: Actionable Insight Panel -->
-          <div
-            v-else
-            class="rounded-xl border border-brand-600/30 bg-brand-600/5 overflow-hidden"
-          >
-            <div class="border-b border-brand-600/20 px-6 py-4 flex items-center justify-between">
+          <div v-else class="overflow-hidden rounded-xl border border-brand-600/30 bg-brand-600/5">
+            <div class="flex items-center justify-between border-b border-brand-600/20 px-6 py-4">
               <div class="flex items-center gap-3">
-                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-brand-600/20">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
                   <svg
-                    class="w-5 h-5 text-brand-600"
+                    class="h-5 w-5 text-brand-600"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -175,84 +135,83 @@
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-body-lg font-bold text-white">
-                    Actionable Insight
-                  </h3>
-                  <p class="text-body-sm text-neutral-400">
-                    AI-generated execution guidance
-                  </p>
+                  <h3 class="text-body-lg font-bold text-white">Execution Guidance</h3>
+                  <p class="text-body-sm text-neutral-400">Scenario guidance for this chart</p>
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-body-sm font-mono text-neutral-500">Confidence:</span>
-                <span class="text-body-sm font-bold text-brand-600">{{ actionableInsight.confidence }}%</span>
+                <span class="text-body-sm font-mono text-neutral-500">Signal strength:</span>
+                <span class="text-body-sm font-bold text-brand-600"
+                  >{{ actionableInsight.confidence }}%</span
+                >
               </div>
             </div>
             <div class="p-6">
               <div class="mb-4">
-                <span class="inline-flex items-center rounded-full bg-brand-600/20 px-3 py-1 text-body-sm font-semibold text-brand-600">
+                <span
+                  class="text-body-sm inline-flex items-center rounded-full bg-brand-600/20 px-3 py-1 font-semibold text-brand-600"
+                >
                   {{ actionableInsight.signal }}
                 </span>
               </div>
-              <p class="text-neutral-300 leading-relaxed">
+              <p class="leading-relaxed text-neutral-300">
                 {{ actionableInsight.action }}
               </p>
 
               <!-- Export & Compliance Actions -->
-              <div class="mt-6 pt-4 border-t border-neutral-700 flex flex-wrap items-center justify-between gap-4">
+              <div
+                class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-700 pt-4"
+              >
                 <div class="flex items-center gap-3">
-                  <button
-                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
-                    :disabled="isExporting"
-                    @click="handleExportCSV"
-                  >
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <template v-if="indicesExportsEnabled">
+                    <button
+                      class="text-body-sm inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
+                      :disabled="isExporting"
+                      @click="handleExportCSV"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Export CSV
-                  </button>
-                  <button
-                    class="inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-body-sm font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
-                    :disabled="isExporting"
-                    @click="handleExportPDF"
-                  >
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Export CSV
+                    </button>
+                    <button
+                      class="text-body-sm inline-flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 font-medium text-white hover:bg-neutral-600 motion-safe:transition-colors"
+                      :disabled="isExporting"
+                      @click="handleExportPDF"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                      />
-                    </svg>
-                    Compliance PDF
-                  </button>
-                  <span
-                    v-if="exportStatusMessage"
-                    class="text-body-sm text-neutral-200 mt-1 sm:mt-0 sm:ml-3 sm:self-center"
-                  >
-                    {{ exportStatusMessage }}
-                  </span>
-                  <span
-                    v-if="exportErrorMessage"
-                    class="text-body-sm text-danger-300 mt-1 sm:mt-0 sm:ml-3 sm:self-center"
-                  >
-                    {{ exportErrorMessage }}
-                  </span>
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Compliance PDF
+                    </button>
+                    <span
+                      v-if="exportStatusMessage"
+                      class="text-body-sm mt-1 text-neutral-200 sm:ml-3 sm:mt-0 sm:self-center"
+                    >
+                      {{ exportStatusMessage }}
+                    </span>
+                    <span
+                      v-if="exportErrorMessage"
+                      class="text-body-sm mt-1 text-danger-300 sm:ml-3 sm:mt-0 sm:self-center"
+                    >
+                      {{ exportErrorMessage }}
+                    </span>
+                  </template>
+                  <p v-else class="text-body-sm max-w-xl text-neutral-300">
+                    Pulse chart exports are available on Enterprise only. Signed-out, free, and Plus
+                    users can view this page, but only Enterprise can generate compliance-ready
+                    Pulse exports.
+                  </p>
                 </div>
                 <NuxtLink
                   to="/contact?type=enterprise&topic=pulse"
@@ -264,29 +223,32 @@
             </div>
           </div>
 
-          <!-- Analyst Mode: Compliance Timestamp -->
+          <!-- Analyst Mode: Data provenance -->
           <div
             v-if="store.viewMode === 'analyst'"
-            class="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3 flex items-center justify-between"
+            class="flex items-center justify-between rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-3"
           >
-            <div class="flex items-center gap-4 text-body-sm text-neutral-500">
-              <span class="font-mono">{{ complianceTimestamp }}</span>
+            <div class="text-body-sm flex flex-wrap items-center gap-4 text-neutral-500">
+              <span class="font-semibold text-neutral-300">{{ provenanceLabel }}</span>
               <span>|</span>
-              <span class="font-mono">Hash: {{ complianceHash }}</span>
+              <span class="font-mono">{{ corridorContextLabel }}</span>
+              <span>|</span>
+              <span class="font-mono">{{ timeframeContextLabel }}</span>
             </div>
-            <button class="text-body-sm font-medium text-neutral-400 hover:text-white motion-safe:transition-colors">
-              Audit Log
-            </button>
+            <NuxtLink
+              to="/methodology"
+              class="text-body-sm font-medium text-neutral-400 hover:text-white motion-safe:transition-colors"
+            >
+              Methodology
+            </NuxtLink>
           </div>
-</div>
+        </div>
 
         <!-- Sidebar -->
-        <div class="lg:col-span-4 space-y-6">
+        <div class="space-y-6 lg:col-span-4">
           <!-- Related Charts -->
           <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-            <h3 class="text-body-lg font-semibold text-white mb-4">
-              Related Charts
-            </h3>
+            <h3 class="text-body-lg mb-4 font-semibold text-white">Related Charts</h3>
             <div class="space-y-4">
               <NuxtLink
                 v-for="chart in relatedCharts"
@@ -294,31 +256,26 @@
                 :to="`/pulse/charts/${chart.id}?${queryString}`"
                 class="block rounded-lg border border-neutral-700 bg-neutral-800 p-4 hover:border-brand-600 motion-safe:transition-colors"
               >
-                <div class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                <div
+                  class="text-body-sm mb-1 font-semibold uppercase tracking-wider text-neutral-500"
+                >
                   {{ chart.categoryLabel }}
                 </div>
                 <div class="font-medium text-white">{{ chart.title }}</div>
-                <div class="mt-1 text-body-sm text-neutral-400">{{ chart.description }}</div>
+                <div class="text-body-sm mt-1 text-neutral-400">{{ chart.description }}</div>
               </NuxtLink>
             </div>
           </div>
 
           <!-- Quick Actions -->
           <div class="rounded-xl border border-neutral-700 bg-neutral-800 p-6">
-            <h3 class="text-body-lg font-semibold text-white mb-4">
-              Quick Actions
-            </h3>
+            <h3 class="text-body-lg mb-4 font-semibold text-white">Quick Actions</h3>
             <div class="space-y-3">
               <NuxtLink
-                :to="`/send-money/${corridorSlug}`"
+                :to="compareRatesUrl"
                 class="flex items-center gap-3 rounded-lg bg-brand-600 px-4 py-3 text-white hover:bg-brand-700 motion-safe:transition-colors"
               >
-                <svg
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -332,12 +289,7 @@
                 class="flex w-full items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-3 text-white hover:bg-neutral-600 motion-safe:transition-colors"
                 @click="handleSetAlert"
               >
-                <svg
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -351,17 +303,9 @@
           </div>
 
           <!-- Enterprise Upsell -->
-          <div
-            v-if="!isPro"
-            class="rounded-xl border border-brand-600/30 bg-brand-600/10 p-6"
-          >
-            <div class="flex items-center gap-2 text-brand-600 mb-3">
-              <svg
-                class="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+          <div v-if="!isPro" class="rounded-xl border border-brand-600/30 bg-brand-600/10 p-6">
+            <div class="mb-3 flex items-center gap-2 text-brand-600">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -371,20 +315,15 @@
               </svg>
               <span class="font-semibold">Remit-Scout Enterprise</span>
             </div>
-            <p class="text-body-sm text-neutral-300 mb-4">
+            <p class="text-body-sm mb-4 text-neutral-300">
               Pulse chart access and static public embeds are available on Enterprise.
             </p>
             <NuxtLink
               to="/contact?type=enterprise&topic=pulse"
-              class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-body-sm font-medium text-white hover:bg-brand-700 motion-safe:transition-colors"
+              class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700 motion-safe:transition-colors"
             >
               Contact Sales
-              <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -398,28 +337,19 @@
       </div>
     </div>
 
-    <!-- Share Modal -->
-    <PulseShareModal
-      v-if="showShareModal"
-      :chart-id="chartId"
-      :filters="filters"
-      mode="share"
-      @close="showShareModal = false"
-    />
-
-    <!-- Embed Modal -->
     <PulseShareModal
       v-if="showEmbedModal"
       :chart-id="chartId"
       :filters="filters"
-      mode="embed"
+      :range="selectedChartRange"
+      :chart-container-ref="chartContainerRef as unknown as HTMLElement | null"
       @close="showEmbedModal = false"
     />
 
     <AuthPromptModal
       v-if="authModalOpen"
       :is-open="authModalOpen"
-      :feature="authModalFeature"
+      feature="alert"
       title="Sign in to set alerts"
       message="Create a free account to set price alerts and get notified when conditions improve."
       @close="authModalOpen = false"
@@ -428,38 +358,72 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
-import { useRoute } from 'vue-router'
-import type { PulseFilters, AmountBucket } from '~/types/pulse'
-import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
-import { getPulseOverview } from '~/lib/pulseApi'
-import { usePulseStore } from '~/stores/pulse'
-import { useFeatureFlags } from '~/composables/useFeatureFlags'
-import { useEntitlements } from '~/composables/useEntitlements'
-import { useExports } from '~/composables/useExports'
-import { setSeo } from '~/composables/useSeo'
-import { useStructuredData } from '~/composables/useStructuredData'
+import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import type { PulseFilters, AmountBucket, TimeRange } from '~/types/pulse';
+import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry';
+import { getPulseOverview } from '~/lib/pulseApi';
+import { usePulseStore } from '~/stores/pulse';
+import { useFeatureFlags } from '~/composables/useFeatureFlags';
+import { useEntitlements } from '~/composables/useEntitlements';
+import { useExports } from '~/composables/useExports';
+import { setSeo } from '~/composables/useSeo';
+import { useStructuredData } from '~/composables/useStructuredData';
+import { getCorridorUrl } from '~/utils/country-slugs';
 
-const AuthPromptModal = defineAsyncComponent(() => import('~/components/shared/AuthPromptModal.vue'))
-const PulseShareModal = defineAsyncComponent(() => import('~/components/pulse/PulseShareModal.vue'))
-const PulseChartFull = defineAsyncComponent(() => import('~/components/pulse/PulseChartFull.vue'))
+const AuthPromptModal = defineAsyncComponent(
+  () => import('~/components/shared/AuthPromptModal.vue')
+);
+const PulseShareModal = defineAsyncComponent(
+  () => import('~/components/pulse/PulseShareModal.vue')
+);
+const PulseChartFull = defineAsyncComponent(() => import('~/components/pulse/PulseChartFull.vue'));
 
-const { pulseEnabled } = useFeatureFlags()
+const { pulseEnabled } = useFeatureFlags();
 
 if (!pulseEnabled.value) {
-  await navigateTo('/plus', { redirectCode: 302 })
+  await navigateTo('/plus', { redirectCode: 302 });
 }
 
-const route = useRoute()
-const store = usePulseStore()
-const { isAuthenticated } = useAuth()
-const saveAlertModal = useSaveAlertModal()
-const { pulseLevel } = useEntitlements()
-const exportsApi = useExports()
+const route = useRoute();
+const store = usePulseStore();
+const { isAuthenticated } = useAuth();
+const saveAlertModal = useSaveAlertModal();
+const { pulseLevel, pulseEmbedsEnabled, indicesExportsEnabled } = useEntitlements();
+const exportsApi = useExports();
 
-const chartId = computed(() => route.params.chartId as string)
+const chartId = computed(() => route.params.chartId as string);
 
-const chartMeta = computed(() => getChartById(chartId.value))
+const chartMeta = computed(() => getChartById(chartId.value));
+
+const normalizeChartRange = (value: unknown): TimeRange | null => {
+  if (typeof value !== 'string') return null;
+
+  switch (value.trim().toLowerCase()) {
+    case '24h':
+    case '7d':
+      return '7d';
+    case '30d':
+      return '30d';
+    case '90d':
+      return '90d';
+    case '1y':
+    case '365d':
+    case 'max':
+      return '365d';
+    default:
+      return null;
+  }
+};
+
+const resolveInitialChartRange = (): TimeRange => {
+  return (
+    normalizeChartRange(route.query.range) ||
+    normalizeChartRange(route.query.timeframe) ||
+    chartMeta.value?.defaultRange ||
+    '30d'
+  );
+};
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
@@ -467,167 +431,242 @@ const filters = ref<PulseFilters>({
   amount: (Number.parseInt(route.query.amount as string, 10) as AmountBucket) || 200,
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
-})
+});
 
-const isPlus = computed(() => pulseLevel.value !== 'none')
-const isPro = computed(() => pulseLevel.value === 'full')
-const lastUpdated = ref<string>('')
-const showShareModal = ref(false)
-const showEmbedModal = ref(false)
-const authModalOpen = ref(false)
-const authModalFeature = ref<'watchlist' | 'alert'>('alert')
-const isExporting = ref(false)
-const exportStatusMessage = ref<string | null>(null)
-const exportErrorMessage = ref<string | null>(null)
-let exportPollTimer: ReturnType<typeof setInterval> | null = null
+const isPlus = computed(() => pulseLevel.value !== 'none');
+const isPro = computed(() => pulseLevel.value === 'full');
+const lastUpdated = ref<string>('');
+const showEmbedModal = ref(false);
+const authModalOpen = ref(false);
+const chartContainerRef = ref<HTMLElement | null>(null);
+const selectedChartRange = ref<TimeRange>(resolveInitialChartRange());
+const isExporting = ref(false);
+const exportStatusMessage = ref<string | null>(null);
+const exportErrorMessage = ref<string | null>(null);
+let exportPollTimer: ReturnType<typeof setInterval> | null = null;
+
+const CHART_RANGE_TO_WINDOW_DAYS: Record<TimeRange, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+  '365d': 365,
+};
+
+const CHART_RANGE_LABELS: Record<TimeRange, string> = {
+  '7d': '7D',
+  '30d': '30D',
+  '90d': '90D',
+  '365d': '1Y',
+};
+
+watch(
+  () => [chartId.value, route.query.timeframe, route.query.range],
+  () => {
+    selectedChartRange.value = resolveInitialChartRange();
+  },
+);
 
 const exportCorridorId = computed(() => {
-  return filters.value.corridorId || store.corridor?.corridorId || ''
-})
+  return filters.value.corridorId || store.corridor?.corridorId || '';
+});
 
-const toIsoDate = (value: Date) => value.toISOString().split('T')[0]
+const toIsoDate = (value: Date) => value.toISOString().split('T')[0];
 
 const buildExportDateWindow = () => {
-  const timeframeDaysByPulseMode: Record<string, number> = {
-    '24H': 1,
-    '7D': 7,
-    '30D': 30,
-    '1Y': 365,
-    'MAX': 365,
-  }
-  const requestedDays = timeframeDaysByPulseMode[store.timeframe] ?? 30
-  const windowDays = Math.max(1, requestedDays)
-  const dateToDate = new Date()
-  const dateFromDate = new Date()
-  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1))
+  const requestedDays = CHART_RANGE_TO_WINDOW_DAYS[selectedChartRange.value] ?? 30;
+  const windowDays = Math.max(1, requestedDays);
+  const dateToDate = new Date();
+  const dateFromDate = new Date();
+  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1));
   return {
     dateFrom: toIsoDate(dateFromDate),
     dateTo: toIsoDate(dateToDate),
-  }
-}
+  };
+};
 
 const clearExportPolling = () => {
   if (exportPollTimer) {
-    clearInterval(exportPollTimer)
-    exportPollTimer = null
+    clearInterval(exportPollTimer);
+    exportPollTimer = null;
   }
-}
+};
 
-const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3))
+const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3));
 
-const corridorSlug = computed(() => {
-  if (filters.value.corridor === 'global') return 'united-states-to-philippines'
-  return filters.value.corridor.replace(/-/g, '-to-').split('-to-')[0] + '-to-' + filters.value.corridor.split('-to-')[1]
-})
+const compareRatesUrl = computed(() => {
+  if (store.corridor?.fromCode && store.corridor?.toCode) {
+    return getCorridorUrl(store.corridor.fromCode, store.corridor.toCode);
+  }
+
+  const corridorParts = (filters.value.corridorId || '').split('-');
+  if (corridorParts.length >= 2 && corridorParts[0] && corridorParts[1]) {
+    return getCorridorUrl(corridorParts[0], corridorParts[1]);
+  }
+
+  const slug = (filters.value.corridor || '').trim();
+  if (slug && slug.includes('-to-')) {
+    return `/send-money/${slug}`;
+  }
+
+  return getCorridorUrl('US', 'PH');
+});
 
 const queryString = computed(() => {
-  const params = new URLSearchParams()
-  if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor)
-  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId)
-  if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount))
-  if (filters.value.fundingMethod !== 'bank') params.set('fund', filters.value.fundingMethod)
-  if (filters.value.payoutMethod !== 'bank') params.set('pay', filters.value.payoutMethod)
-  return params.toString()
-})
+  const params = new URLSearchParams();
+  if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor);
+  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId);
+  if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount));
+  if (filters.value.fundingMethod !== 'bank') params.set('fund', filters.value.fundingMethod);
+  if (filters.value.payoutMethod !== 'bank') params.set('pay', filters.value.payoutMethod);
+  return params.toString();
+});
 
-const complianceTimestamp = computed(() => {
-  const now = new Date()
-  return now.toISOString()
-})
+const formatUtcTimestamp = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Awaiting fresh Pulse data';
+  return date.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+};
 
-const complianceHash = computed(() => {
-  const base = `${chartId.value}-${filters.value.corridor}-${Date.now()}`
-  return btoa(base).substring(0, 12).toUpperCase()
-})
+const provenanceLabel = computed(() => {
+  if (!lastUpdated.value) return 'Awaiting fresh Pulse data';
+  return `Gold export updated ${formatUtcTimestamp(lastUpdated.value)}`;
+});
+
+const corridorContextLabel = computed(() => {
+  if (filters.value.corridorId) return filters.value.corridorId;
+  if (filters.value.corridor === 'global') return 'Global corridor view';
+  return filters.value.corridor.toUpperCase();
+});
+
+const timeframeContextLabel = computed(() => `${CHART_RANGE_LABELS[selectedChartRange.value]} window`);
 
 const actionableInsight = computed(() => {
-  const insights: Record<string, { signal: string, action: string, confidence: number }> = {
+  const insights: Record<string, { signal: string; action: string; confidence: number }> = {
     'true-cost-vs-mid': {
       signal: 'Spread Compression Detected',
-      action: 'True cost delta narrowing vs 7D avg. Execute within 2-4 hours for optimal pricing.',
+      action:
+        'True-cost delta is narrower than the 7D average. Monitor the next few refreshes for a favorable send window.',
       confidence: 87,
     },
-    'volatility': {
+    volatility: {
       signal: 'Low Volatility Window',
-      action: 'FX volatility at 30D low. Favorable execution conditions for large transfers.',
+      action:
+        'FX volatility is near the 30D low. Conditions look more stable than usual for larger transfers.',
       confidence: 92,
     },
     'provider-heatmap': {
       signal: 'Competitive Pressure Rising',
-      action: '3 providers improved rates in last 6 hours. Monitor for further compression.',
+      action:
+        'Several providers improved rates recently. Recheck offers before executing to capture any further compression.',
       confidence: 78,
     },
     'market-depth': {
       signal: 'Liquidity Stable',
-      action: 'No significant liquidity gaps detected. Standard execution recommended.',
+      action:
+        'No significant liquidity gaps were detected in the latest snapshots. Standard execution conditions appear stable.',
       confidence: 85,
     },
-  }
-  return insights[chartId.value] || {
-    signal: 'Market Neutral',
-    action: 'No significant signals detected. Continue monitoring.',
-    confidence: 75,
-  }
-})
+  };
+  return (
+    insights[chartId.value] || {
+      signal: 'Market Neutral',
+      action: 'No outsized signal is visible right now. Continue monitoring the latest refreshes.',
+      confidence: 75,
+    }
+  );
+});
 
-function handleDownload() {
-  // TODO: Implement chart download
+const extractApiErrorCode = (error: unknown): string => {
+  const candidate = error as { data?: { error?: unknown } };
+  return typeof candidate?.data?.error === 'string' ? candidate.data.error : '';
+};
+
+const extractApiErrorMessage = (error: unknown): string | null => {
+  const candidate = error as { data?: { message?: unknown }; message?: unknown };
+  if (typeof candidate?.data?.message === 'string' && candidate.data.message.trim().length > 0) {
+    return candidate.data.message;
+  }
+  if (
+    typeof candidate?.message === 'string' &&
+    candidate.message.trim().length > 0 &&
+    candidate.message !== 'fetch failed'
+  ) {
+    return candidate.message;
+  }
+  return null;
+};
+
+function resolveIndicesExportError(error: unknown, fallback: string): string {
+  switch (extractApiErrorCode(error)) {
+    case 'indices_export_enterprise_only':
+    case 'enterprise_required':
+    case 'forbidden':
+      return 'Pulse chart exports are available on Enterprise only.';
+    case 'plan_inactive':
+      return 'Your paid plan is inactive. Reactivate billing to export Pulse charts.';
+    case 'export_limit_reached':
+      return (
+        extractApiErrorMessage(error) ||
+        'Your current plan export queue is full. Try again after existing jobs finish.'
+      );
+    default:
+      return extractApiErrorMessage(error) || fallback;
+  }
 }
 
 const triggerExportDownload = (url: string) => {
   if (import.meta.client) {
-    window.open(url, '_blank', 'noopener')
+    window.open(url, '_blank', 'noopener');
   }
-}
+};
 
 const pollExportStatus = async (jobId: string) => {
-  clearExportPolling()
+  clearExportPolling();
   exportPollTimer = setInterval(async () => {
     try {
-      const status = await exportsApi.getExportStatus(jobId)
+      const status = await exportsApi.getExportStatus(jobId);
       if (status.job.status === 'failed') {
-        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.'
-        isExporting.value = false
-        clearExportPolling()
-        return
+        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.';
+        isExporting.value = false;
+        clearExportPolling();
+        return;
       }
       if (status.job.status === 'done') {
-        const download = await exportsApi.getExportDownloadUrl(jobId)
-        exportStatusMessage.value = 'Export ready. Downloading...'
-        triggerExportDownload(download.url)
-        isExporting.value = false
-        clearExportPolling()
-        return
+        const download = await exportsApi.getExportDownloadUrl(jobId);
+        exportStatusMessage.value = 'Export ready. Downloading...';
+        triggerExportDownload(download.url);
+        isExporting.value = false;
+        clearExportPolling();
+        return;
       }
-      exportStatusMessage.value = 'Export in progress...'
+      exportStatusMessage.value = 'Export in progress...';
+    } catch (error: any) {
+      exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to check export status.');
+      isExporting.value = false;
+      clearExportPolling();
     }
- catch (error: any) {
-      exportErrorMessage.value = error?.message || 'Failed to check export status.'
-      isExporting.value = false
-      clearExportPolling()
-    }
-  }, 2000)
-}
+  }, 2000);
+};
 
 const startIndicesExport = async (format: 'csv' | 'pdf') => {
-  if (isExporting.value) return
+  if (isExporting.value) return;
 
   if (!exportCorridorId.value) {
-    exportErrorMessage.value = 'Export is not available for this corridor. Select a corridor from the filter first.'
-    return
+    exportErrorMessage.value =
+      'Export is not available for this corridor. Select a corridor from the filter first.';
+    return;
   }
 
-  if (!isAuthenticated.value) {
-    authModalFeature.value = 'alert'
-    authModalOpen.value = true
-    return
+  if (!indicesExportsEnabled.value) {
+    exportErrorMessage.value = 'Pulse chart exports are available on Enterprise only.';
+    return;
   }
 
-  exportErrorMessage.value = null
-  exportStatusMessage.value = null
-  isExporting.value = true
+  exportErrorMessage.value = null;
+  exportStatusMessage.value = null;
+  isExporting.value = true;
 
-  const { dateFrom, dateTo } = buildExportDateWindow()
+  const { dateFrom, dateTo } = buildExportDateWindow();
   try {
     const response = await exportsApi.createExport({
       dataType: 'indices',
@@ -635,68 +674,69 @@ const startIndicesExport = async (format: 'csv' | 'pdf') => {
       dateFrom,
       dateTo,
       corridorIds: [exportCorridorId.value],
-    })
-    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
-    void pollExportStatus(response.job.id)
+    });
+    exportStatusMessage.value = 'Export queued. We will start processing shortly.';
+    void pollExportStatus(response.job.id);
+  } catch (error: any) {
+    exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to start export.');
+    isExporting.value = false;
   }
- catch (error: any) {
-    exportErrorMessage.value = error?.message || 'Failed to start export.'
-    isExporting.value = false
-  }
-}
+};
 
 function handleExportCSV() {
-  void startIndicesExport('csv')
+  void startIndicesExport('csv');
 }
 
 function handleExportPDF() {
-  void startIndicesExport('pdf')
+  void startIndicesExport('pdf');
 }
 
 function handleSetAlert() {
   if (!isAuthenticated.value) {
-    authModalFeature.value = 'alert'
-    authModalOpen.value = true
-    return
+    authModalOpen.value = true;
+    return;
   }
-  const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`
+  const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`;
   saveAlertModal.open({
     target: { type: 'pulseChart', chartId: chartId.value },
     label,
     source: 'pulse',
-  })
+  });
 }
 
 onMounted(async () => {
   if (isPlus.value) {
     try {
-      const overview = await getPulseOverview(filters.value)
-      lastUpdated.value = overview.lastUpdated
-    }
-    catch {
-      lastUpdated.value = ''
+      const overview = await getPulseOverview(filters.value);
+      lastUpdated.value = overview.lastUpdated;
+    } catch {
+      lastUpdated.value = '';
     }
   }
-  await store.initFromRoute(route.query as Record<string, string>)
-})
+  await store.initFromRoute(route.query as Record<string, string>);
+});
 
 onBeforeUnmount(() => {
-  clearExportPolling()
-})
+  clearExportPolling();
+});
 
-const chartSeoTitle = computed(() => chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse')
-const chartSeoDescription = computed(() => chartMeta.value?.description || 'Market data chart from Remit-Pulse')
+const chartSeoTitle = computed(() =>
+  chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse'
+);
+const chartSeoDescription = computed(
+  () => chartMeta.value?.description || 'Market data chart from Remit-Pulse'
+);
 
 useServerSeoMeta({
   title: chartSeoTitle,
   description: chartSeoDescription,
-})
+});
 
 setSeo({
   title: chartSeoTitle.value,
   description: chartSeoDescription.value,
   ogImage: false,
-})
+});
 
 defineOgImage({
   component: 'OgImageDefault',
@@ -704,14 +744,16 @@ defineOgImage({
     title: chartSeoTitle,
     description: chartSeoDescription,
   },
-})
+});
 
-const { public: { siteUrl } } = useRuntimeConfig()
-const { addBreadcrumbSchema } = useStructuredData()
+const {
+  public: { siteUrl },
+} = useRuntimeConfig();
+const { addBreadcrumbSchema } = useStructuredData();
 
 addBreadcrumbSchema([
   { name: 'Home', url: `${siteUrl}/` },
   { name: 'Pulse', url: `${siteUrl}/pulse` },
   { name: chartSeoTitle.value, url: `${siteUrl}/pulse/charts/${chartId.value}` },
-])
+]);
 </script>

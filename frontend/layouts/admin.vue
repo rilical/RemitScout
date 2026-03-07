@@ -3,8 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import AdminCommandPalette, { type AdminCommand } from '~/components/admin/AdminCommandPalette.vue'
 
 const route = useRoute()
-const { user } = useAuth()
+const { user, ensureHydrated, isAuthenticated } = useAuth()
 const { ensureAdminSession, signOutAdmin } = useAdminSession()
+const { request } = useApi()
 const runtimeConfig = useRuntimeConfig()
 const env = () => String(runtimeConfig.public.remitScoutEnv ?? 'dev').toLowerCase()
 
@@ -12,11 +13,13 @@ const sidebarCollapsed = ref(false)
 const mobileNavOpen = ref(false)
 const commandPaletteOpen = ref(false)
 const isSigningOut = ref(false)
+const adminProfileEmail = ref<string | null>(null)
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
 
 const adminLinks = [
   { to: '/admin', label: 'Overview', description: 'KPI summary + admin feed', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
   { to: '/admin/observer', label: 'Operations Center', description: 'Indices, sweeps, providers, queues', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
+  { to: '/admin/discovery', label: 'Provider Control Plane', description: 'Discovery review, apply, certification', icon: 'M4 7h16M4 12h16M4 17h10m4-7l3 3-3 3' },
   { to: '/admin/modules', label: 'Module Registry', description: 'Provider module health and status', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' },
   { to: '/admin/agents', label: 'Self-Healing', description: 'Agent actions, failure bundles, repairs', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   { to: '/admin/stress', label: 'Corridor Stress', description: 'Stress scores and manual intervention', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
@@ -33,7 +36,7 @@ const adminLinks = [
   { to: '/admin/newsletter', label: 'Newsletter', description: 'Compose and send campaigns', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
 ]
 
-const userEmail = computed(() => user.value?.email || 'Unknown')
+const userEmail = computed(() => user.value?.email || adminProfileEmail.value || 'Unknown')
 
 const environmentBadge = computed(() => {
   const e = env()
@@ -64,11 +67,49 @@ const commands = computed<AdminCommand[]>(() => [
 ])
 
 const ensureAdminSessionSafe = async () => {
-  const ok = await ensureAdminSession()
+  let ok = false
+  try {
+    ok = await ensureAdminSession()
+  }
+  catch {
+    ok = false
+  }
+
   if (!ok) {
+    await ensureHydrated()
+    if (isAuthenticated.value) {
+      return false
+    }
     await navigateTo('/sign-in')
   }
   return ok
+}
+
+const hydrateAdminProfile = async () => {
+  if (user.value?.email) {
+    adminProfileEmail.value = user.value.email
+    return
+  }
+
+  if (adminProfileEmail.value) {
+    return
+  }
+
+  await ensureHydrated()
+  if (!isAuthenticated.value) {
+    return
+  }
+
+  try {
+    const me = await request<{ user?: { email?: string | null } }>('/me', { retries: 0 })
+    const email = typeof me?.user?.email === 'string' ? me.user.email.trim() : ''
+    if (email) {
+      adminProfileEmail.value = email
+    }
+  }
+  catch {
+    // Keep the fallback label if the profile request fails; this must not block navigation.
+  }
 }
 
 const onGlobalKeydown = (event: KeyboardEvent) => {
@@ -123,6 +164,7 @@ watch(
     if (!route.path.startsWith('/admin')) return
     if (isBrowser()) {
       await ensureAdminSessionSafe()
+      await hydrateAdminProfile()
     }
     // Close mobile nav on route change
     mobileNavOpen.value = false
@@ -132,6 +174,7 @@ watch(
 onMounted(async () => {
   if (route.path.startsWith('/admin') && isBrowser()) {
     await ensureAdminSessionSafe()
+    await hydrateAdminProfile()
   }
   if (isBrowser()) {
     window.addEventListener('keydown', onGlobalKeydown)

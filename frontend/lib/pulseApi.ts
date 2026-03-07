@@ -252,6 +252,50 @@ export type PulseEmbedSnapshotResponse = {
   expiresAt: string
 }
 
+export type PublishedEmbedVariant = {
+  key: string
+  label: string
+  publicUrl: string
+  embedCode: string
+}
+
+export type PulsePublishedEmbedCreateParams = PulseEmbedSnapshotCreateParams & {
+  theme?: 'dark' | 'light'
+}
+
+export type PulsePublishedEmbedCreateResponse = {
+  success: true
+  publishedId: string
+  chartId: string
+  corridorId: string
+  title: string
+  theme: 'dark' | 'light'
+  publicUrl: string
+  embedCode: string
+  variants: PublishedEmbedVariant[]
+  createdAt: string
+  publishedAt: string
+}
+
+export type PulsePublishedEmbedResponse = {
+  publishedId: string
+  chartId: string
+  chart: ChartData
+  methodCoverage?: MethodCoverageRow[]
+  filters: {
+    corridor: string
+    corridorId: string
+    amount: number
+    fundingMethod: 'bank' | 'card' | 'cash'
+    payoutMethod: 'bank' | 'cash' | 'wallet'
+    range: TimeRange
+  }
+  corridorLabel: string
+  theme: 'dark' | 'light'
+  createdAt: string
+  publishedAt: string
+}
+
 export async function createPulseEmbedSnapshot(
   payload: PulseEmbedSnapshotCreateParams,
 ): Promise<PulseEmbedSnapshotCreateResponse> {
@@ -267,6 +311,23 @@ export async function getPublicPulseEmbedSnapshot(
 ): Promise<PulseEmbedSnapshotResponse> {
   const { request } = useApi()
   return await request<PulseEmbedSnapshotResponse>(`/public/pulse/embed-snapshots/${encodeURIComponent(snapshotId)}`)
+}
+
+export async function createPulsePublishedEmbed(
+  payload: PulsePublishedEmbedCreateParams,
+): Promise<PulsePublishedEmbedCreateResponse> {
+  const { request } = useApi()
+  return await request<PulsePublishedEmbedCreateResponse>('/pulse/published-embeds', {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function getPublicPulsePublishedEmbed(
+  publishedId: string,
+): Promise<PulsePublishedEmbedResponse> {
+  const { request } = useApi()
+  return await request<PulsePublishedEmbedResponse>(`/public/pulse/published-embeds/${encodeURIComponent(publishedId)}`)
 }
 
 export type PulseChartSource = 'gold_export' | 'gold_cache' | 'none'

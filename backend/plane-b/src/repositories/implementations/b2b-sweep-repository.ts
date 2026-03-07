@@ -94,6 +94,25 @@ export class B2bSweepRepository implements IB2bSweepRepository {
     return result.rows[0] ?? null
   }
 
+  async getLatestCompletedRunByTier(priorityTier: string): Promise<B2bSweepRunRecord | null> {
+    const result = await query<B2bSweepRunRecord>(
+      `SELECT run_id AS "runId",
+              priority_tier AS "priorityTier",
+              status,
+              created_at AS "createdAt",
+              started_at AS "startedAt",
+              finished_at AS "finishedAt"
+         FROM silver.b2b_sweep_run
+        WHERE priority_tier = $1
+          AND status = 'completed'
+        ORDER BY COALESCE(finished_at, started_at, created_at) DESC, created_at DESC
+        LIMIT 1`,
+      [priorityTier],
+      this.pool,
+    )
+    return result.rows[0] ?? null
+  }
+
   async getActiveRunByTier(priorityTier: string): Promise<B2bSweepRunRecord | null> {
     const result = await query<B2bSweepRunRecord>(
       `SELECT run_id AS "runId",
