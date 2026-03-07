@@ -100,21 +100,37 @@ const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
   return fallback
 }
 
+const readPlaneARuntimeEnv = (primaryKey: string, ...fallbackKeys: string[]) => {
+  for (const key of [primaryKey, ...fallbackKeys]) {
+    const value = process.env[key]
+    if (value !== undefined) return value
+  }
+  return undefined
+}
+
 const readRuntimeFlagDefinitions = (): RuntimeFlagDefinition[] => {
   const pulseHardGate = parseBooleanEnv(
-    process.env.PUBLIC_PULSE_ENABLED ?? process.env.NUXT_PUBLIC_PULSE_ENABLED,
+    readPlaneARuntimeEnv('PLANE_A_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED', 'NUXT_PUBLIC_PULSE_ENABLED'),
     false,
   )
   const pulseScreenerHardGate = parseBooleanEnv(
-    process.env.PUBLIC_PULSE_SCREENER_ENABLED ?? process.env.NUXT_PUBLIC_PULSE_SCREENER_ENABLED,
+    readPlaneARuntimeEnv(
+      'PLANE_A_PUBLIC_PULSE_SCREENER_ENABLED',
+      'PUBLIC_PULSE_SCREENER_ENABLED',
+      'NUXT_PUBLIC_PULSE_SCREENER_ENABLED',
+    ),
     true,
   )
   const enterpriseHardGate = parseBooleanEnv(
-    process.env.PUBLIC_ENTERPRISE_ENABLED ?? process.env.NUXT_PUBLIC_ENTERPRISE_ENABLED,
+    readPlaneARuntimeEnv(
+      'PLANE_A_PUBLIC_ENTERPRISE_ENABLED',
+      'PUBLIC_ENTERPRISE_ENABLED',
+      'NUXT_PUBLIC_ENTERPRISE_ENABLED',
+    ),
     false,
   )
   const adsHardGate = parseBooleanEnv(
-    process.env.PUBLIC_ENABLE_ADS ?? process.env.PUBLIC_ADS_ENABLED,
+    readPlaneARuntimeEnv('PLANE_A_PUBLIC_ADS_ENABLED', 'PUBLIC_ENABLE_ADS', 'PUBLIC_ADS_ENABLED'),
     false,
   )
 

@@ -73,24 +73,6 @@ export const extractStoredSupabaseSession = (raw: string | null): PersistedSessi
   }
 };
 
-export const extractSupabaseSessionFromHash = (hash: string): PersistedSessionTokens | null => {
-  const trimmed = hash.startsWith('#') ? hash.slice(1) : hash;
-  if (!trimmed) return null;
-
-  const params = new URLSearchParams(trimmed);
-  const accessToken = params.get('access_token')?.trim() ?? '';
-  const refreshToken = params.get('refresh_token')?.trim() ?? '';
-
-  if (!accessToken || !refreshToken) {
-    return null;
-  }
-
-  return {
-    access_token: accessToken,
-    refresh_token: refreshToken,
-  };
-};
-
 export const isEmailConfirmed = (supabaseUser: SupabaseUser | null): boolean => {
   if (!supabaseUser) return false;
   const confirmedAt =
@@ -174,20 +156,6 @@ export const useAuth = () => {
   const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
     let nextSession: Session | null = null;
 
-    const restoreSession = async (tokens: PersistedSessionTokens | null) => {
-      if (!tokens) return null;
-      try {
-        const { data, error } = await supabase.auth.setSession(tokens);
-        if (error) {
-          lastError.value = error.message;
-        }
-        return data.session ?? null;
-      } catch (error) {
-        lastError.value = error instanceof Error ? error.message : String(error);
-        return null;
-      }
-    };
-
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
@@ -213,17 +181,28 @@ export const useAuth = () => {
     }
 
     if (!nextSession && import.meta.client && typeof window !== 'undefined') {
-      nextSession = await restoreSession(extractSupabaseSessionFromHash(window.location.hash));
-      if (nextSession && window.location.hash.includes('access_token=')) {
+      if (
+        window.location.hash.includes('access_token=')
+        && window.location.hash.includes('refresh_token=')
+      ) {
         const sanitizedUrl = `${window.location.pathname}${window.location.search}`;
         window.history.replaceState({}, document.title, sanitizedUrl);
       }
     }
 
     if (!nextSession && import.meta.client && typeof window !== 'undefined') {
-      nextSession = await restoreSession(
-        extractStoredSupabaseSession(window.localStorage.getItem(AUTH_STORAGE_KEY))
-      );
+      const storedTokens = extractStoredSupabaseSession(window.localStorage.getItem(AUTH_STORAGE_KEY));
+      if (storedTokens) {
+        try {
+          const { data, error } = await supabase.auth.setSession(storedTokens);
+          if (error) {
+            lastError.value = error.message;
+          }
+          nextSession = data.session ?? null;
+        } catch (error) {
+          lastError.value = error instanceof Error ? error.message : String(error);
+        }
+      }
     }
 
     return nextSession;

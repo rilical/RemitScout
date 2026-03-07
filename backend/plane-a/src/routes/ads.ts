@@ -157,7 +157,11 @@ const parseBooleanEnv = (value: string | undefined, fallback: boolean) => {
 }
 
 const getAdsRuntimeState = () => {
-  const envValue = process.env.PUBLIC_ENABLE_ADS ?? process.env.PUBLIC_ADS_ENABLED
+  const envValue = (
+    process.env.PLANE_A_PUBLIC_ADS_ENABLED
+    ?? process.env.PUBLIC_ENABLE_ADS
+    ?? process.env.PUBLIC_ADS_ENABLED
+  )
   const enabled = parseBooleanEnv(envValue, false)
   return {
     runtime_enabled: enabled,

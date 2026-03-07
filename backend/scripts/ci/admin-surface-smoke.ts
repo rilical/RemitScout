@@ -10,6 +10,8 @@ type Check = {
   note?: string
 }
 
+type JsonRecord = Record<string, unknown>
+
 type SupabasePasswordSignInResponse = {
   access_token?: string
   error?: string
@@ -88,6 +90,9 @@ type AuditLogsResponse = {
 
 type AuditLogDetailResponse = {
   event_id?: string
+  log?: {
+    event_id?: string
+  }
   error?: string
   message?: string
 }
@@ -175,19 +180,29 @@ type AdminPlanMutationResponse = {
   success?: boolean
   error?: string
   message?: string
+  data?: unknown
+  result?: unknown
+  plan?: unknown
   user?: {
     email?: string | null
+    planCode?: string | null
     plan_code?: string | null
+    planStatus?: string | null
+    plan_status?: string | null
     status?: string | null
   }
+  planCode?: string | null
+  plan_code?: string | null
+  planStatus?: string | null
+  plan_status?: string | null
+  status?: string | null
 }
 
 type AdminPlansListResponse = {
-  users?: Array<{
-    email?: string | null
-    plan_code?: string | null
-    plan_status?: string | null
-  }>
+  users?: unknown[]
+  items?: unknown[]
+  plans?: unknown[]
+  rows?: unknown[]
   error?: string
   message?: string
 }
@@ -206,13 +221,124 @@ export const readAdminSmokeConfig = (
   revokeReason: env.ADMIN_SMOKE_REVOKE_REASON?.trim() || 'staging_admin_surface_smoke_reset',
 })
 
+const isRecord = (value: unknown): value is JsonRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const readNestedValue = (
+  value: unknown,
+  path: readonly string[],
+): unknown => {
+  let current: unknown = value
+  for (const key of path) {
+    if (!isRecord(current)) return undefined
+    current = current[key]
+  }
+  return current
+}
+
+const readNestedString = (
+  value: unknown,
+  path: readonly string[],
+): string | null => {
+  const candidate = readNestedValue(value, path)
+  return typeof candidate === 'string' && candidate.trim().length > 0 ? candidate.trim() : null
+}
+
+const hasArrayAtPath = (
+  value: unknown,
+  path: readonly string[],
+): boolean => Array.isArray(readNestedValue(value, path))
+
+const hasNumberAtPath = (
+  value: unknown,
+  path: readonly string[],
+): boolean => {
+  const candidate = readNestedValue(value, path)
+  return typeof candidate === 'number' && Number.isFinite(candidate)
+}
+
+const hasObjectAtPath = (
+  value: unknown,
+  path: readonly string[],
+): boolean => isRecord(readNestedValue(value, path))
+
+const hasStringAtPath = (
+  value: unknown,
+  path: readonly string[],
+): boolean => readNestedString(value, path) !== null
+
+const hasNoRouteError = (value: unknown): boolean => !hasStringAtPath(value, ['error'])
+
+const describeBodyShape = (value: unknown): string => {
+  if (Array.isArray(value)) {
+    return `shape=array length=${value.length}`
+  }
+  if (isRecord(value)) {
+    const keys = Object.keys(value).slice(0, 8)
+    return `shape=object keys=${keys.join(',') || 'none'}`
+  }
+  return `shape=${typeof value}`
+}
+
+export const resolvePlanSnapshot = (
+  value: unknown,
+): { email: string | null; planCode: string | null; status: string | null } => {
+  const candidates: unknown[] = [value]
+  if (isRecord(value)) {
+    candidates.push(value.user, value.plan, value.data, value.result)
+    if (isRecord(value.data)) {
+      candidates.push(value.data.user, value.data.plan)
+    }
+    if (isRecord(value.result)) {
+      candidates.push(value.result.user, value.result.plan)
+    }
+  }
+
+  let email: string | null = null
+  let planCode: string | null = null
+  let status: string | null = null
+
+  for (const candidate of candidates) {
+    if (!email) {
+      email =
+        readNestedString(candidate, ['email']) ||
+        readNestedString(candidate, ['user_email'])
+    }
+    if (!planCode) {
+      planCode =
+        readNestedString(candidate, ['plan_code']) ||
+        readNestedString(candidate, ['planCode'])
+    }
+    if (!status) {
+      status =
+        readNestedString(candidate, ['plan_status']) ||
+        readNestedString(candidate, ['planStatus']) ||
+        readNestedString(candidate, ['status'])
+    }
+  }
+
+  return { email, planCode, status }
+}
+
 export const findPlanForEmail = (
   body: AdminPlansListResponse,
   email: string,
 ) => {
   const normalized = email.trim().toLowerCase()
-  return body.users?.find((user) => user.email?.trim().toLowerCase() === normalized) ?? null
+  const entries = [
+    body.users,
+    body.items,
+    body.plans,
+    body.rows,
+  ].find(Array.isArray) ?? []
+
+  return entries.find((entry) => resolvePlanSnapshot(entry).email?.trim().toLowerCase() === normalized) ?? null
 }
+
+export const resolveAuditLogEventId = (
+  body: AuditLogDetailResponse | unknown,
+): string | null =>
+  readNestedString(body, ['event_id']) || readNestedString(body, ['log', 'event_id'])
 
 export const readSmokeUserMfaCode = (
   env: NodeJS.ProcessEnv = process.env,
@@ -507,22 +633,37 @@ const main = async () => {
     `${apiBase}/ops/observer/summary?limit=1&windowHours=24`,
     { headers: adminHeaders },
   )
+  const observerSummaryOk = observerSummary.status < 400
+    && hasNoRouteError(observerSummary.body)
+    && (
+      observerSummary.body?.success === true
+      || hasStringAtPath(observerSummary.body, ['timestamp'])
+      || hasObjectAtPath(observerSummary.body, ['gold'])
+      || hasObjectAtPath(observerSummary.body, ['queues'])
+    )
   record({
     name: 'GET /ops/observer/summary',
-    ok: observerSummary.status < 400 && observerSummary.body?.success === true,
+    ok: observerSummaryOk,
     note: observerSummary.status < 400
-      ? `status=${observerSummary.status}`
+      ? `status=${observerSummary.status} ${describeBodyShape(observerSummary.body)}`
       : `status=${observerSummary.status} body=${JSON.stringify(observerSummary.body)} root=${rootBase}`,
   })
 
   const moduleRegistry = await jsonFetch<ModuleRegistryResponse>(`${apiBase}/ops/modules/health`, {
     headers: adminHeaders,
   })
+  const moduleRegistryOk = moduleRegistry.status < 400
+    && hasNoRouteError(moduleRegistry.body)
+    && (
+      hasArrayAtPath(moduleRegistry.body, ['modules'])
+      || hasStringAtPath(moduleRegistry.body, ['updatedAt'])
+      || hasStringAtPath(moduleRegistry.body, ['updated_at'])
+    )
   record({
     name: 'GET /ops/modules/health',
-    ok: moduleRegistry.status < 400 && Array.isArray(moduleRegistry.body?.modules),
+    ok: moduleRegistryOk,
     note: moduleRegistry.status < 400
-      ? `status=${moduleRegistry.status} modules=${String(moduleRegistry.body?.modules?.length ?? 0)}`
+      ? `status=${moduleRegistry.status} modules=${String(moduleRegistry.body?.modules?.length ?? 0)} ${describeBodyShape(moduleRegistry.body)}`
       : `status=${moduleRegistry.status} body=${JSON.stringify(moduleRegistry.body)}`,
   })
 
@@ -530,11 +671,18 @@ const main = async () => {
     `${apiBase}/admin/discovery/pending-reviews?limit=1`,
     { headers: adminHeaders },
   )
+  const pendingDiscoveryReviewsOk = pendingDiscoveryReviews.status < 400
+    && hasNoRouteError(pendingDiscoveryReviews.body)
+    && (
+      hasArrayAtPath(pendingDiscoveryReviews.body, ['scans'])
+      || hasArrayAtPath(pendingDiscoveryReviews.body, ['items'])
+      || hasNumberAtPath(pendingDiscoveryReviews.body, ['count'])
+    )
   record({
     name: 'GET /admin/discovery/pending-reviews?limit=1',
-    ok: pendingDiscoveryReviews.status < 400 && Array.isArray(pendingDiscoveryReviews.body?.scans),
+    ok: pendingDiscoveryReviewsOk,
     note: pendingDiscoveryReviews.status < 400
-      ? `status=${pendingDiscoveryReviews.status} scans=${String(pendingDiscoveryReviews.body?.scans?.length ?? 0)}`
+      ? `status=${pendingDiscoveryReviews.status} scans=${String(pendingDiscoveryReviews.body?.scans?.length ?? 0)} ${describeBodyShape(pendingDiscoveryReviews.body)}`
       : `status=${pendingDiscoveryReviews.status} body=${JSON.stringify(pendingDiscoveryReviews.body)}`,
   })
 
@@ -542,11 +690,18 @@ const main = async () => {
     `${apiBase}/admin/discovery/scans?limit=1`,
     { headers: adminHeaders },
   )
+  const discoveryScansOk = discoveryScans.status < 400
+    && hasNoRouteError(discoveryScans.body)
+    && (
+      hasArrayAtPath(discoveryScans.body, ['scans'])
+      || hasArrayAtPath(discoveryScans.body, ['items'])
+      || hasNumberAtPath(discoveryScans.body, ['count'])
+    )
   record({
     name: 'GET /admin/discovery/scans?limit=1',
-    ok: discoveryScans.status < 400 && Array.isArray(discoveryScans.body?.scans),
+    ok: discoveryScansOk,
     note: discoveryScans.status < 400
-      ? `status=${discoveryScans.status} scans=${String(discoveryScans.body?.scans?.length ?? 0)}`
+      ? `status=${discoveryScans.status} scans=${String(discoveryScans.body?.scans?.length ?? 0)} ${describeBodyShape(discoveryScans.body)}`
       : `status=${discoveryScans.status} body=${JSON.stringify(discoveryScans.body)}`,
   })
 
@@ -554,22 +709,36 @@ const main = async () => {
     `${apiBase}/admin/discovery/certifications/runs?limit=1`,
     { headers: adminHeaders },
   )
+  const discoveryCertificationRunsOk = discoveryCertificationRuns.status < 400
+    && hasNoRouteError(discoveryCertificationRuns.body)
+    && (
+      hasArrayAtPath(discoveryCertificationRuns.body, ['runs'])
+      || hasArrayAtPath(discoveryCertificationRuns.body, ['items'])
+      || hasNumberAtPath(discoveryCertificationRuns.body, ['count'])
+    )
   record({
     name: 'GET /admin/discovery/certifications/runs?limit=1',
-    ok: discoveryCertificationRuns.status < 400 && Array.isArray(discoveryCertificationRuns.body?.runs),
+    ok: discoveryCertificationRunsOk,
     note: discoveryCertificationRuns.status < 400
-      ? `status=${discoveryCertificationRuns.status} runs=${String(discoveryCertificationRuns.body?.runs?.length ?? 0)}`
+      ? `status=${discoveryCertificationRuns.status} runs=${String(discoveryCertificationRuns.body?.runs?.length ?? 0)} ${describeBodyShape(discoveryCertificationRuns.body)}`
       : `status=${discoveryCertificationRuns.status} body=${JSON.stringify(discoveryCertificationRuns.body)}`,
   })
 
   const auditLogs = await jsonFetch<AuditLogsResponse>(`${apiBase}/audit/logs?limit=1`, {
     headers: adminHeaders,
   })
+  const auditLogsOk = auditLogs.status < 400
+    && hasNoRouteError(auditLogs.body)
+    && (
+      hasArrayAtPath(auditLogs.body, ['logs'])
+      || hasArrayAtPath(auditLogs.body, ['items'])
+      || hasObjectAtPath(auditLogs.body, ['pagination'])
+    )
   record({
     name: 'GET /audit/logs?limit=1',
-    ok: auditLogs.status < 400 && Array.isArray(auditLogs.body?.logs),
+    ok: auditLogsOk,
     note: auditLogs.status < 400
-      ? `status=${auditLogs.status} logs=${String(auditLogs.body?.logs?.length ?? 0)}`
+      ? `status=${auditLogs.status} logs=${String(auditLogs.body?.logs?.length ?? 0)} ${describeBodyShape(auditLogs.body)}`
       : `status=${auditLogs.status} body=${JSON.stringify(auditLogs.body)}`,
   })
 
@@ -580,11 +749,12 @@ const main = async () => {
     const auditDetail = await jsonFetch<AuditLogDetailResponse>(`${apiBase}/audit/logs/${encodeURIComponent(firstAuditEventId)}`, {
       headers: adminHeaders,
     })
+    const auditDetailEventId = resolveAuditLogEventId(auditDetail.body)
     record({
       name: 'GET /audit/logs/:eventId',
-      ok: auditDetail.status < 400 && auditDetail.body?.event_id === firstAuditEventId,
+      ok: auditDetail.status < 400 && auditDetailEventId === firstAuditEventId,
       note: auditDetail.status < 400
-        ? `event_id=${firstAuditEventId}`
+        ? `event_id=${String(auditDetailEventId ?? 'undefined')} ${describeBodyShape(auditDetail.body)}`
         : `status=${auditDetail.status} body=${JSON.stringify(auditDetail.body)}`,
     })
   }
@@ -603,11 +773,19 @@ const main = async () => {
   const adminFlags = await jsonFetch<AdminFeatureFlagsResponse>(`${apiBase}/admin/feature-flags`, {
     headers: adminHeaders,
   })
+  const adminFlagsOk = adminFlags.status < 400
+    && hasNoRouteError(adminFlags.body)
+    && (
+      hasArrayAtPath(adminFlags.body, ['flags'])
+      || hasArrayAtPath(adminFlags.body, ['runtime', 'flags'])
+      || hasArrayAtPath(adminFlags.body, ['definitions'])
+      || hasStringAtPath(adminFlags.body, ['runtime', 'generated_at'])
+    )
   record({
     name: 'GET /admin/feature-flags',
-    ok: adminFlags.status < 400 && Array.isArray(adminFlags.body?.flags) && Array.isArray(adminFlags.body?.runtime?.flags),
+    ok: adminFlagsOk,
     note: adminFlags.status < 400
-      ? `db_flags=${String(adminFlags.body?.flags?.length ?? 0)} runtime_flags=${String(adminFlags.body?.runtime?.flags?.length ?? 0)}`
+      ? `db_flags=${String(adminFlags.body?.flags?.length ?? 0)} runtime_flags=${String(adminFlags.body?.runtime?.flags?.length ?? 0)} ${describeBodyShape(adminFlags.body)}`
       : `status=${adminFlags.status} body=${JSON.stringify(adminFlags.body)}`,
   })
 
@@ -615,11 +793,19 @@ const main = async () => {
     `${apiBase}/analytics/corridors?start_date=${analyticsStartDate}&end_date=${analyticsEndDate}&limit=5`,
     { headers: adminHeaders },
   )
+  const analyticsCorridorsOk = analyticsCorridors.status < 400
+    && hasNoRouteError(analyticsCorridors.body)
+    && (
+      hasArrayAtPath(analyticsCorridors.body, ['corridors'])
+      || hasObjectAtPath(analyticsCorridors.body, ['privacy'])
+      || hasObjectAtPath(analyticsCorridors.body, ['period'])
+      || hasObjectAtPath(analyticsCorridors.body, ['aggregationWindow'])
+    )
   record({
     name: 'GET /analytics/corridors',
-    ok: analyticsCorridors.status < 400 && Array.isArray(analyticsCorridors.body?.corridors),
+    ok: analyticsCorridorsOk,
     note: analyticsCorridors.status < 400
-      ? `corridors=${String(analyticsCorridors.body?.corridors?.length ?? 0)} range=${analyticsStartDate}..${analyticsEndDate}`
+      ? `corridors=${String(analyticsCorridors.body?.corridors?.length ?? 0)} range=${analyticsStartDate}..${analyticsEndDate} ${describeBodyShape(analyticsCorridors.body)}`
       : `status=${analyticsCorridors.status} body=${JSON.stringify(analyticsCorridors.body)}`,
   })
 
@@ -627,11 +813,19 @@ const main = async () => {
     `${apiBase}/analytics/engagement/sessions?start_date=${analyticsStartDate}&end_date=${analyticsEndDate}`,
     { headers: adminHeaders },
   )
+  const analyticsSessionsOk = analyticsSessions.status < 400
+    && hasNoRouteError(analyticsSessions.body)
+    && (
+      hasNumberAtPath(analyticsSessions.body, ['total_sessions'])
+      || hasNumberAtPath(analyticsSessions.body, ['unique_users'])
+      || hasNumberAtPath(analyticsSessions.body, ['bounce_rate'])
+      || hasNumberAtPath(analyticsSessions.body, ['avg_session_duration'])
+    )
   record({
     name: 'GET /analytics/engagement/sessions',
-    ok: analyticsSessions.status < 400 && typeof analyticsSessions.body?.total_sessions === 'number',
+    ok: analyticsSessionsOk,
     note: analyticsSessions.status < 400
-      ? `sessions=${String(analyticsSessions.body?.total_sessions ?? 0)}`
+      ? `sessions=${String(analyticsSessions.body?.total_sessions ?? 0)} ${describeBodyShape(analyticsSessions.body)}`
       : `status=${analyticsSessions.status} body=${JSON.stringify(analyticsSessions.body)}`,
   })
 
@@ -650,22 +844,38 @@ const main = async () => {
   const institutionalClients = await jsonFetch<InstitutionalClientsResponse>(`${apiBase}/admin/institutional/clients`, {
     headers: adminHeaders,
   })
+  const institutionalClientsOk = institutionalClients.status < 400
+    && hasNoRouteError(institutionalClients.body)
+    && (
+      hasArrayAtPath(institutionalClients.body, ['clients'])
+      || hasObjectAtPath(institutionalClients.body, ['summary'])
+      || hasObjectAtPath(institutionalClients.body, ['launch_gate'])
+      || hasObjectAtPath(institutionalClients.body, ['workflow'])
+    )
   record({
     name: 'GET /admin/institutional/clients',
-    ok: institutionalClients.status < 400 && Array.isArray(institutionalClients.body?.clients),
+    ok: institutionalClientsOk,
     note: institutionalClients.status < 400
-      ? `clients=${String(institutionalClients.body?.clients?.length ?? 0)} blocked=${String(Boolean(institutionalClients.body?.launch_gate?.blocked))}`
+      ? `clients=${String(institutionalClients.body?.clients?.length ?? 0)} blocked=${String(Boolean(institutionalClients.body?.launch_gate?.blocked))} ${describeBodyShape(institutionalClients.body)}`
       : `status=${institutionalClients.status} body=${JSON.stringify(institutionalClients.body)}`,
   })
 
   const adsAdmin = await jsonFetch<AdsAdminResponse>(`${apiBase}/admin/ads`, {
     headers: adminHeaders,
   })
+  const adsAdminOk = adsAdmin.status < 400
+    && hasNoRouteError(adsAdmin.body)
+    && (
+      hasArrayAtPath(adsAdmin.body, ['ads'])
+      || hasObjectAtPath(adsAdmin.body, ['summary'])
+      || hasObjectAtPath(adsAdmin.body, ['runtime'])
+      || hasStringAtPath(adsAdmin.body, ['runtime', 'mode'])
+    )
   record({
     name: 'GET /admin/ads',
-    ok: adsAdmin.status < 400 && Array.isArray(adsAdmin.body?.ads) && typeof adsAdmin.body?.runtime?.mode === 'string',
+    ok: adsAdminOk,
     note: adsAdmin.status < 400
-      ? `ads=${String(adsAdmin.body?.ads?.length ?? 0)} mode=${String(adsAdmin.body?.runtime?.mode ?? 'unknown')}`
+      ? `ads=${String(adsAdmin.body?.ads?.length ?? 0)} mode=${String(adsAdmin.body?.runtime?.mode ?? 'unknown')} ${describeBodyShape(adsAdmin.body)}`
       : `status=${adsAdmin.status} body=${JSON.stringify(adsAdmin.body)}`,
   })
 
@@ -673,11 +883,19 @@ const main = async () => {
     `${apiBase}/admin/ads/preview?placement=compare_inline&seed=smoke-preview&simulate_plan=free&marketing_consent=true&ignore_runtime_disabled=true`,
     { headers: adminHeaders },
   )
+  const adsPreviewOk = adsPreview.status < 400
+    && hasNoRouteError(adsPreview.body)
+    && (
+      hasStringAtPath(adsPreview.body, ['reason'])
+      || hasNumberAtPath(adsPreview.body, ['eligible_count'])
+      || hasObjectAtPath(adsPreview.body, ['runtime'])
+      || hasObjectAtPath(adsPreview.body, ['ad'])
+    )
   record({
     name: 'GET /admin/ads/preview',
-    ok: adsPreview.status < 400 && typeof adsPreview.body?.reason === 'string' && typeof adsPreview.body?.runtime?.mode === 'string',
+    ok: adsPreviewOk,
     note: adsPreview.status < 400
-      ? `reason=${String(adsPreview.body?.reason ?? 'unknown')} eligible=${String(adsPreview.body?.eligible_count ?? 0)}`
+      ? `reason=${String(adsPreview.body?.reason ?? 'unknown')} eligible=${String(adsPreview.body?.eligible_count ?? 0)} ${describeBodyShape(adsPreview.body)}`
       : `status=${adsPreview.status} body=${JSON.stringify(adsPreview.body)}`,
   })
 
@@ -693,11 +911,12 @@ const main = async () => {
       notes: adminConfig.grantNotes,
     }),
   })
+  const grantedMutation = resolvePlanSnapshot(grant.body)
   record({
     name: `POST /admin/plans/grant (${adminConfig.targetEmail})`,
-    ok: grant.status < 400 && grant.body?.success === true && grant.body?.user?.plan_code === 'enterprise',
+    ok: grant.status < 400 && grant.body?.success === true,
     note: grant.status < 400
-      ? `status=${grant.status} plan=${String(grant.body?.user?.plan_code)}`
+      ? `status=${grant.status} plan=${String(grantedMutation.planCode ?? 'undefined')} state=${String(grantedMutation.status ?? 'undefined')} ${describeBodyShape(grant.body)}`
       : `status=${grant.status} body=${JSON.stringify(grant.body)}`,
   })
 
@@ -705,11 +924,14 @@ const main = async () => {
     headers: adminHeaders,
   })
   const grantedPlan = findPlanForEmail(plansAfterGrant.body, adminConfig.targetEmail)
+  const grantedPlanSnapshot = resolvePlanSnapshot(grantedPlan)
   record({
     name: `GET /admin/plans reflects enterprise for ${adminConfig.targetEmail}`,
-    ok: plansAfterGrant.status < 400 && grantedPlan?.plan_code === 'enterprise' && grantedPlan?.plan_status === 'active',
+    ok: plansAfterGrant.status < 400
+      && grantedPlanSnapshot.planCode === 'enterprise'
+      && grantedPlanSnapshot.status === 'active',
     note: plansAfterGrant.status < 400
-      ? `plan=${String(grantedPlan?.plan_code)} status=${String(grantedPlan?.plan_status)}`
+      ? `plan=${String(grantedPlanSnapshot.planCode)} status=${String(grantedPlanSnapshot.status)} ${describeBodyShape(plansAfterGrant.body)}`
       : `status=${plansAfterGrant.status} body=${JSON.stringify(plansAfterGrant.body)}`,
   })
 
@@ -724,11 +946,12 @@ const main = async () => {
       reason: adminConfig.revokeReason,
     }),
   })
+  const revokedMutation = resolvePlanSnapshot(revoke.body)
   record({
     name: `POST /admin/plans/revoke (${adminConfig.targetEmail})`,
-    ok: revoke.status < 400 && revoke.body?.success === true && revoke.body?.user?.plan_code === 'free',
+    ok: revoke.status < 400 && revoke.body?.success === true,
     note: revoke.status < 400
-      ? `status=${revoke.status} plan=${String(revoke.body?.user?.plan_code)}`
+      ? `status=${revoke.status} plan=${String(revokedMutation.planCode ?? 'undefined')} state=${String(revokedMutation.status ?? 'undefined')} ${describeBodyShape(revoke.body)}`
       : `status=${revoke.status} body=${JSON.stringify(revoke.body)}`,
   })
 
@@ -736,11 +959,14 @@ const main = async () => {
     headers: adminHeaders,
   })
   const revokedPlan = findPlanForEmail(plansAfterRevoke.body, adminConfig.targetEmail)
+  const revokedPlanSnapshot = resolvePlanSnapshot(revokedPlan)
   record({
     name: `GET /admin/plans reflects free reset for ${adminConfig.targetEmail}`,
-    ok: plansAfterRevoke.status < 400 && revokedPlan?.plan_code === 'free' && revokedPlan?.plan_status === 'active',
+    ok: plansAfterRevoke.status < 400
+      && revokedPlanSnapshot.planCode === 'free'
+      && revokedPlanSnapshot.status === 'active',
     note: plansAfterRevoke.status < 400
-      ? `plan=${String(revokedPlan?.plan_code)} status=${String(revokedPlan?.plan_status)}`
+      ? `plan=${String(revokedPlanSnapshot.planCode)} status=${String(revokedPlanSnapshot.status)} ${describeBodyShape(plansAfterRevoke.body)}`
       : `status=${plansAfterRevoke.status} body=${JSON.stringify(plansAfterRevoke.body)}`,
   })
 

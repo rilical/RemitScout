@@ -7,6 +7,7 @@ describe('super-admin middleware', () => {
   const request = vi.fn<() => Promise<{ user?: { is_admin?: boolean, role?: string | null, app_role?: string | null } }>>()
   const navigateTo = vi.fn((target: string) => target)
   const isAuthenticated = ref(false)
+  const adminAccessToken = ref<string | null>(null)
 
   const loadMiddleware = async () => {
     const mod = await import('~/middleware/super-admin')
@@ -18,6 +19,7 @@ describe('super-admin middleware', () => {
     vi.clearAllMocks()
 
     isAuthenticated.value = false
+    adminAccessToken.value = null
     ensureHydrated.mockResolvedValue(undefined)
     ensureAdminSession.mockResolvedValue(false)
     request.mockResolvedValue({ user: { is_admin: true, app_role: 'super_admin' } })
@@ -29,6 +31,7 @@ describe('super-admin middleware', () => {
     })
     ;(globalThis as any).useAdminSession = () => ({
       ensureAdminSession,
+      accessToken: adminAccessToken,
     })
     ;(globalThis as any).useApi = () => ({
       request,
@@ -53,6 +56,23 @@ describe('super-admin middleware', () => {
     expect(ensureHydrated).toHaveBeenCalledTimes(1)
     expect(ensureAdminSession).toHaveBeenCalledTimes(1)
     expect(request).toHaveBeenCalledWith('/me', { retries: 0 })
+    expect(navigateTo).not.toHaveBeenCalled()
+    expect(result).toBeUndefined()
+  })
+
+  it('uses the Plane A admin token when the admin session is active without Supabase auth', async () => {
+    ensureAdminSession.mockResolvedValue(true)
+    adminAccessToken.value = 'plane-a-admin-token'
+
+    const middleware = await loadMiddleware()
+    const result = await middleware({} as never, {} as never)
+
+    expect(request).toHaveBeenCalledWith('/me', {
+      retries: 0,
+      headers: {
+        authorization: 'Bearer plane-a-admin-token',
+      },
+    })
     expect(navigateTo).not.toHaveBeenCalled()
     expect(result).toBeUndefined()
   })

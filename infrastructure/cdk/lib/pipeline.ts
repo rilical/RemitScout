@@ -43,6 +43,8 @@ export type PipelineOptions = {
   publicMetaPixelId?: string
   publicAdsEnabled?: string
   publicPulseEnabled?: string
+  publicPulseScreenerEnabled?: string
+  publicEnterpriseEnabled?: string
   publicNewRelicBrowserEnabled?: string
   publicNewRelicAccountId?: string
   publicNewRelicTrustKey?: string
@@ -146,6 +148,12 @@ export const createPipeline = (
   if (options.publicPulseEnabled) {
     buildEnvVars.PUBLIC_PULSE_ENABLED = { value: options.publicPulseEnabled }
   }
+  if (options.publicPulseScreenerEnabled !== undefined) {
+    buildEnvVars.PUBLIC_PULSE_SCREENER_ENABLED = { value: options.publicPulseScreenerEnabled }
+  }
+  if (options.publicEnterpriseEnabled !== undefined) {
+    buildEnvVars.PUBLIC_ENTERPRISE_ENABLED = { value: options.publicEnterpriseEnabled }
+  }
   if (options.publicNewRelicBrowserEnabled) {
     buildEnvVars.PUBLIC_NEW_RELIC_BROWSER_ENABLED = { value: options.publicNewRelicBrowserEnabled }
   }
@@ -235,6 +243,8 @@ export const createPipeline = (
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',
               '  export PUBLIC_PULSE_ENABLED=${PUBLIC_PULSE_ENABLED:-}',
+              '  export PUBLIC_PULSE_SCREENER_ENABLED=${PUBLIC_PULSE_SCREENER_ENABLED:-}',
+              '  export PUBLIC_ENTERPRISE_ENABLED=${PUBLIC_ENTERPRISE_ENABLED:-}',
               '  export PUBLIC_NEW_RELIC_BROWSER_ENABLED=${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}',
               '  export PUBLIC_NEW_RELIC_ACCOUNT_ID=${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}',
               '  export PUBLIC_NEW_RELIC_TRUST_KEY=${PUBLIC_NEW_RELIC_TRUST_KEY:-}',

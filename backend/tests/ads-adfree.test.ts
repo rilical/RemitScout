@@ -22,6 +22,7 @@ vi.mock('../plane-a/src/services/user-plan', () => ({
 }))
 
 describe('ads runtime and ad-free enforcement', () => {
+  const originalPlaneAPublicAdsEnabled = process.env.PLANE_A_PUBLIC_ADS_ENABLED
   const originalPublicEnableAds = process.env.PUBLIC_ENABLE_ADS
   const originalPublicAdsEnabled = process.env.PUBLIC_ADS_ENABLED
 
@@ -30,11 +31,19 @@ describe('ads runtime and ad-free enforcement', () => {
     mockQuery.mockReset()
     mockEnsureUserPlan.mockReset()
     mockGetUserPlan.mockReset()
+    delete process.env.PLANE_A_PUBLIC_ADS_ENABLED
     delete process.env.PUBLIC_ENABLE_ADS
     delete process.env.PUBLIC_ADS_ENABLED
   })
 
   afterEach(() => {
+    if (originalPlaneAPublicAdsEnabled === undefined) {
+      delete process.env.PLANE_A_PUBLIC_ADS_ENABLED
+    }
+    else {
+      process.env.PLANE_A_PUBLIC_ADS_ENABLED = originalPlaneAPublicAdsEnabled
+    }
+
     if (originalPublicEnableAds === undefined) {
       delete process.env.PUBLIC_ENABLE_ADS
     }
@@ -188,6 +197,31 @@ describe('ads runtime and ad-free enforcement', () => {
         id: 'ad-1',
         name: 'House Ad',
         placement: 'home_inline',
+      },
+    })
+  })
+
+  it('honors the mirrored Plane A ads env when frontend envs are absent', async () => {
+    process.env.PLANE_A_PUBLIC_ADS_ENABLED = 'false'
+
+    const app = { get: vi.fn(), post: vi.fn(), put: vi.fn(), patch: vi.fn(), delete: vi.fn() } as any as FastifyInstance
+    const { adsRoutes } = await import('../plane-a/src/routes/ads')
+    await adsRoutes(app)
+
+    const handler = vi.mocked(app.get).mock.calls.find((call) => call[0] === '/ads/placement')?.[1] as any
+    const reply = { code: vi.fn().mockReturnThis() } as any
+    const result = await handler(
+      { query: { placement: 'home_inline' } } as any,
+      reply,
+    )
+
+    expect(result).toEqual({
+      ad: null,
+      runtime: {
+        runtime_enabled: false,
+        source: 'env',
+        mode: 'preview_only',
+        reason: 'Ads runtime is disabled. Admin preview remains available for QA only.',
       },
     })
   })
