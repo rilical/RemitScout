@@ -111,7 +111,7 @@ describe('sign-up page', () => {
     expect(mockSignUp).toHaveBeenCalledWith({
       name: 'User One',
       email: 'user@example.com',
-      password: 'StrongPassw0rd!',
+      password: 'StrongPassw0rd!', // pragma: allowlist secret
     })
     expect(wrapper.text()).toContain('Check your email')
     expect(wrapper.text()).toContain('user@example.com')

@@ -58,7 +58,7 @@ describe('shared config JWT runtime gating', () => {
       DOTENV_DISABLE: '1',
       NODE_ENV: 'production',
       ENVIRONMENT: 'staging',
-      PLANE_A_JWT_SECRET: 'placeholder',
+      PLANE_A_JWT_SECRET: 'placeholder', // pragma: allowlist secret
     }
     const { assertRuntimeConfig } = await import('../shared/config')
 

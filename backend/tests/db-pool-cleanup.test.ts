@@ -20,7 +20,7 @@ vi.mock('../shared/config', () => ({
     env: 'test',
     runtime: { isLambda: false, isEcs: false },
     dbPool: {},
-    db: { url: 'postgres://remit:remit@127.0.0.1:5432/remit' },
+    db: { url: 'postgres://remit:remit@127.0.0.1:5432/remit' }, // pragma: allowlist secret
   },
 }))
 
@@ -56,7 +56,7 @@ describe('database pool cleanup wiring', () => {
   it('avoids direct SIGTERM/SIGINT pool cleanup handlers', async () => {
     const { createPool } = await import('../shared/db')
 
-    createPool('postgres://remit:remit@127.0.0.1:5432/remit')
+    createPool('postgres://remit:remit@127.0.0.1:5432/remit') // pragma: allowlist secret
 
     const registeredEvents = processOnceSpy.mock.calls.map(([event]) => event)
     expect(registeredEvents).toContain('beforeExit')

@@ -147,7 +147,7 @@ describe('admin-institutional route', () => {
 
     expect(result).toMatchObject({
       success: true,
-      api_key: 'rsk_test_token_abc123',
+      api_key: 'rsk_test_token_abc123', // pragma: allowlist secret
       launch_gate: expect.objectContaining({
         ready: true,
         blocked: false,

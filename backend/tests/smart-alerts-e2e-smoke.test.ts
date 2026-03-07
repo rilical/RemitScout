@@ -94,7 +94,7 @@ describe('smart-alerts e2e smoke', () => {
       ALERTS_EMAIL_ENABLED: '1',
       ALERTS_EMAIL_FROM: 'alerts@remit-scout.com',
       ALERTS_EMAIL_FROM_NAME: 'Remit-Scout Alerts',
-      ALERT_UNSUBSCRIBE_SECRET: 'test-secret-key-for-unsubscribe-tokens',
+      ALERT_UNSUBSCRIBE_SECRET: 'test-secret-key-for-unsubscribe-tokens', // pragma: allowlist secret
       ALERT_UNSUBSCRIBE_BASE_URL: 'http://localhost:3000',
     }
   })

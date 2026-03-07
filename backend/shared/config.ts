@@ -176,7 +176,7 @@ const resolveAdminIpAllowlist = () => {
   } as const
 }
 
-const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
+const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit' // pragma: allowlist secret
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
 const b2bLegacyMaxQueueAgeSeconds = toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS, 0)
 const adminIpAllowlist = resolveAdminIpAllowlist()

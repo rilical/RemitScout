@@ -8,10 +8,10 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   AWS_REGION: 'us-east-1',
   AWS_ROLE_TO_ASSUME: 'arn:aws:iam::123456789012:role/remit-scout-staging-github-actions',
   STACK_NAME: 'remit-scout-staging',
-  SHARED_SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:123456789012:secret:remit-scout-staging-shared',
+  SHARED_SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:123456789012:secret:remit-scout-staging-shared', // pragma: allowlist secret
   SES_IDENTITY_ARNS: 'arn:aws:ses:us-east-1:123456789012:identity/staging.remit-scout.com',
   SNS_TOPIC_ARNS: 'arn:aws:sns:us-east-1:123456789012:remit-scout-staging-critical',
-  DATABASE_URL_PLANE_B: 'postgres://staging_user:staging_pass@db.internal:5432/remit_scout',
+  DATABASE_URL_PLANE_B: 'postgres://staging_user:staging_pass@db.internal:5432/remit_scout', // pragma: allowlist secret
   REDIS_URL: 'redis://cache.internal:6379',
   BRONZE_S3_BUCKET: 'remit-scout-bronze-staging',
   EXPORTS_S3_BUCKET: 'remit-scout-exports-staging',
@@ -23,14 +23,14 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   PUBLIC_SUPABASE_ANON_KEY: 'sb_publishable_staging_key',
   SUPABASE_URL: 'https://rs-staging.supabase.co',
   SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_staging_key',
-  SUPABASE_SERVICE_ROLE_KEY: 'sb_service_role_staging_key',
-  STRIPE_SECRET_KEY: 'sk_test_staging_123',
-  STRIPE_WEBHOOK_SECRET: 'whsec_staging_123',
+  SUPABASE_SERVICE_ROLE_KEY: 'sb_service_role_staging_key', // pragma: allowlist secret
+  STRIPE_SECRET_KEY: 'sk_test_staging_123', // pragma: allowlist secret
+  STRIPE_WEBHOOK_SECRET: 'whsec_staging_123', // pragma: allowlist secret
   STRIPE_PRICE_ID_PLUS: 'price_staging_plus_monthly',
   STRIPE_PRICE_ID_PLUS_ANNUAL: 'price_staging_plus_annual',
   PUBLIC_GA4_MEASUREMENT_ID: 'G-STAGING123',
   PUBLIC_GOOGLE_ADS_CONVERSION_ID: 'AW-123456789',
-  NEW_RELIC_USER_API_KEY: 'nrua_staging_key',
+  NEW_RELIC_USER_API_KEY: 'nrua_staging_key', // pragma: allowlist secret
   NEW_RELIC_ACCOUNT_ID: '7756888',
   NEW_RELIC_REGION: 'US',
   NEW_RELIC_INGEST_KEY: 'nr_ingest_staging_key',
@@ -40,7 +40,7 @@ const buildBaseEnv = (): NodeJS.ProcessEnv => ({
   NEW_RELIC_PROD_AWS_ROLE_ARN: 'arn:aws:iam::210987654321:role/new-relic-prod',
   SLACK_BOT_TOKEN: 'xoxb-staging-bot-token',
   SLACK_APP_TOKEN: 'xapp-staging-app-token',
-  SLACK_SIGNING_SECRET: 'slack-signing-secret-staging',
+  SLACK_SIGNING_SECRET: 'slack-signing-secret-staging', // pragma: allowlist secret
   SLACK_CASES_CHANNEL_ID: 'C12345678',
   ALERT_SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/T12345678/B12345678/abcdefghij',
   SENTRY_AUTH_TOKEN: 'sentry-auth-staging',

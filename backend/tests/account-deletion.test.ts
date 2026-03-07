@@ -160,7 +160,7 @@ describe('account-deletion', () => {
       },
       billing: {
         stripe: {
-          secretKey: 'sk_test',
+          secretKey: 'sk_test', // pragma: allowlist secret
         },
       },
       auth: {

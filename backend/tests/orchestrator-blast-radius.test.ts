@@ -15,7 +15,7 @@ vi.mock('../shared/config', () => ({
       llmModel: 'claude-sonnet-4-20250514',
       llmMaxTokens: 2048,
       llmTemperature: 0.2,
-      anthropicApiKey: 'test-key',
+      anthropicApiKey: 'test-key', // pragma: allowlist secret
       bedrockRegion: '',
       bedrockModelId: '',
       llmPromptVersion: '1',

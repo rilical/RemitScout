@@ -58,7 +58,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           requested="$(echo "${REQUESTED_REF}" | xargs)"
           if [ -z "${requested}" ]; then
@@ -101,7 +101,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
           run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
@@ -125,7 +125,7 @@ jobs:
         env:
           SECURITY_ENV: dev
           AUDIT_BLOCKING: '0'
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           mkdir -p .security
           docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
@@ -209,7 +209,7 @@ jobs:
         env:
           AWS_ROLE_PRIMARY: ${{ vars.AWS_ROLE_TO_ASSUME }}
           AWS_ROLE_FALLBACK: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           echo "::error::Failed to assume AWS role via OIDC using both primary and fallback roles."
           echo "::error::Primary role: ${AWS_ROLE_PRIMARY}"
@@ -222,7 +222,7 @@ jobs:
         env:
           AWS_REGION: ${{ vars.AWS_REGION }}
           ENV_NAME: dev
-        run: |
+        run: | # pragma: allowlist secret
           set -uo pipefail
 
           account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
@@ -253,7 +253,7 @@ jobs:
 
       - name: Validate Required Secrets (dev)
         shell: bash
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: dev)."
@@ -268,7 +268,7 @@ jobs:
         env:
           ENV_NAME: dev
           AWS_REGION: ${{ vars.AWS_REGION }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
           echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_OUTPUT"
@@ -283,7 +283,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           ECR_REPO="remit-scout-backend-${ENV_NAME}"
           aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
@@ -294,7 +294,7 @@ jobs:
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
@@ -320,7 +320,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
-        run: |
+        run: | # pragma: allowlist secret
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-dev"
           docker run --rm \
@@ -986,7 +986,7 @@ jobs:
         shell: bash
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }} # pragma: allowlist secret
           FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
           FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
           PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
@@ -994,8 +994,8 @@ jobs:
           PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
         run: |
           set -euo pipefail
-          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
-            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then # pragma: allowlist secret
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)." # pragma: allowlist secret
             exit 1
           fi
           if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
@@ -1640,7 +1640,7 @@ jobs:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }} # pragma: allowlist secret
           PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
           PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
         run: |
@@ -2459,8 +2459,8 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
-            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)."
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then # pragma: allowlist secret
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)." # pragma: allowlist secret
             exit 1
           fi
           if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then

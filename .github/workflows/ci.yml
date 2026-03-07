@@ -357,7 +357,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_PASSWORD: test # pragma: allowlist secret
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -367,10 +367,10 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://test:test@localhost:5432/test
-      DATABASE_URL_PLANE_A: postgres://test:test@localhost:5432/test
-      DATABASE_URL_PLANE_B: postgres://test:test@localhost:5432/test
-      DATABASE_URL_PLANE_C: postgres://test:test@localhost:5432/test
+      DATABASE_URL: postgres://test:test@localhost:5432/test # pragma: allowlist secret
+      DATABASE_URL_PLANE_A: postgres://test:test@localhost:5432/test # pragma: allowlist secret
+      DATABASE_URL_PLANE_B: postgres://test:test@localhost:5432/test # pragma: allowlist secret
+      DATABASE_URL_PLANE_C: postgres://test:test@localhost:5432/test # pragma: allowlist secret
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-node-pnpm
@@ -390,7 +390,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit
+          POSTGRES_PASSWORD: remit # pragma: allowlist secret
           POSTGRES_DB: remit
         ports:
           - 5432:5432
@@ -400,10 +400,10 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       PLANE_A_ADMIN_EMAILS: admin@example.com
       ENFORCE_COVERAGE: '1'
       RUN_PROVIDER_FIXTURES: '1'
@@ -576,7 +576,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit
+          POSTGRES_PASSWORD: remit # pragma: allowlist secret
           POSTGRES_DB: remit
         ports:
           - 5432:5432
@@ -586,10 +586,10 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       PLANE_A_ADMIN_EMAILS: admin@example.com
       PLANE_A_CORS_ORIGINS: http://localhost:3000
     steps:
@@ -612,7 +612,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: remit
-          POSTGRES_PASSWORD: remit
+          POSTGRES_PASSWORD: remit # pragma: allowlist secret
           POSTGRES_DB: remit
         ports:
           - 5432:5432
@@ -622,10 +622,10 @@ jobs:
           --health-timeout=5s
           --health-retries=5
     env:
-      DATABASE_URL: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
-      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       PLANE_A_ADMIN_EMAILS: admin@example.com
       PLANE_A_CORS_ORIGINS: http://localhost:3000
     steps:
@@ -644,22 +644,22 @@ jobs:
     env:
       NODE_ENV: production
       STRICT_CONFIG: "1"
-      DATABASE_URL_PLANE_A: postgres://user:pass@host:5432/db
-      DATABASE_URL_PLANE_B: postgres://user:pass@host:5432/db
-      DATABASE_URL_PLANE_C: postgres://user:pass@host:5432/db
+      DATABASE_URL_PLANE_A: postgres://user:pass@host:5432/db # pragma: allowlist secret
+      DATABASE_URL_PLANE_B: postgres://user:pass@host:5432/db # pragma: allowlist secret
+      DATABASE_URL_PLANE_C: postgres://user:pass@host:5432/db # pragma: allowlist secret
       PLANE_C_BASE_URL: https://example.com
       REDIS_URL: redis://localhost:6379/0
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_PUBLISHABLE_KEY: example-key
-      STRIPE_SECRET_KEY: sk_test_example
-      STRIPE_WEBHOOK_SECRET: whsec_example
+      STRIPE_SECRET_KEY: sk_test_example # pragma: allowlist secret
+      STRIPE_WEBHOOK_SECRET: whsec_example # pragma: allowlist secret
       STRIPE_PRICE_ID_PLUS: price_example
       STRIPE_PRICE_ID_PLUS_ANNUAL: price_example_annual
       ALERT_EVALUATION_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123456789012/alerts
       ALERT_SLACK_WEBHOOK_URL: https://example.invalid/slack-webhook
       PLANE_A_REQUIRE_JWT: "1"
-      PLANE_A_JWT_SECRET: ci_runtime_jwt_secret_4fca8d0e6aab4a7d8f5b2eb0
-      PRIVACY_HASH_SALT: ci_runtime_privacy_hash_salt_8f3c2d1a7b4e9f6c
+      PLANE_A_JWT_SECRET: ci_runtime_jwt_secret_4fca8d0e6aab4a7d8f5b2eb0 # pragma: allowlist secret
+      PRIVACY_HASH_SALT: ci_runtime_privacy_hash_salt_8f3c2d1a7b4e9f6c # pragma: allowlist secret
       PRIVACY_SESSION_SALT: ci_runtime_privacy_session_salt_5e7a9c2d4b6f8a1e
       ADMIN_IP_ALLOWLIST: 203.0.113.0/24
       SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
@@ -668,7 +668,7 @@ jobs:
       NEW_RELIC_ACCOUNT_ID: "1234567"
       NEW_RELIC_REGION: US
       NEW_RELIC_INGEST_KEY: nr_ingest_key_ci_dummy_value
-      NEW_RELIC_USER_API_KEY: NRAK-CI-DUMMY-KEY
+      NEW_RELIC_USER_API_KEY: NRAK-CI-DUMMY-KEY # pragma: allowlist secret
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: "123456789012"
       NEW_RELIC_LOGS_ENABLED: "1"
       CLOUDWATCH_METRICS_ENABLED: "1"

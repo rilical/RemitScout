@@ -108,7 +108,7 @@ describe('auth forgot-password route', () => {
       expect.objectContaining({
         method: 'POST',
         headers: {
-          apikey: 'anon-key',
+          apikey: 'anon-key', // pragma: allowlist secret
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email: 'user@example.com' }),

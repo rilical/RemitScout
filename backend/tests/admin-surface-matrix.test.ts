@@ -42,14 +42,14 @@ const captureAdminSurfaceRoutes = async (): Promise<RegisteredRoute[]> => {
   process.env.NODE_ENV = 'development'
   process.env.ENVIRONMENT = 'dev'
   process.env.PLANE_A_CORS_ORIGINS = 'http://localhost:3000'
-  process.env.DATABASE_URL_PLANE_A = 'postgres://remit:remit@localhost:5432/remit'
-  process.env.DATABASE_URL_PLANE_B = 'postgres://remit:remit@localhost:5432/remit'
-  process.env.DATABASE_URL_PLANE_C = 'postgres://remit:remit@localhost:5432/remit'
+  process.env.DATABASE_URL_PLANE_A = 'postgres://remit:remit@localhost:5432/remit' // pragma: allowlist secret
+  process.env.DATABASE_URL_PLANE_B = 'postgres://remit:remit@localhost:5432/remit' // pragma: allowlist secret
+  process.env.DATABASE_URL_PLANE_C = 'postgres://remit:remit@localhost:5432/remit' // pragma: allowlist secret
   process.env.REDIS_URL = 'redis://localhost:6379'
   process.env.SUPABASE_URL = 'http://localhost:54321'
   process.env.SUPABASE_PUBLISHABLE_KEY = 'anon'
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service'
-  process.env.PLANE_A_JWT_SECRET = 'test-secret'
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service' // pragma: allowlist secret
+  process.env.PLANE_A_JWT_SECRET = 'test-secret' // pragma: allowlist secret
   process.env.PLANE_A_ADMIN_EMAILS = 'omar@remit-scout.com'
 
     const routes: RegisteredRoute[] = []
@@ -144,14 +144,14 @@ describe('admin surface matrix', () => {
       NODE_ENV: 'development',
       ENVIRONMENT: 'dev',
       PLANE_A_CORS_ORIGINS: 'http://localhost:3000',
-      DATABASE_URL_PLANE_A: 'postgres://remit:remit@localhost:5432/remit',
-      DATABASE_URL_PLANE_B: 'postgres://remit:remit@localhost:5432/remit',
-      DATABASE_URL_PLANE_C: 'postgres://remit:remit@localhost:5432/remit',
+      DATABASE_URL_PLANE_A: 'postgres://remit:remit@localhost:5432/remit', // pragma: allowlist secret
+      DATABASE_URL_PLANE_B: 'postgres://remit:remit@localhost:5432/remit', // pragma: allowlist secret
+      DATABASE_URL_PLANE_C: 'postgres://remit:remit@localhost:5432/remit', // pragma: allowlist secret
       REDIS_URL: 'redis://localhost:6379',
       SUPABASE_URL: 'http://localhost:54321',
       SUPABASE_PUBLISHABLE_KEY: 'anon',
-      SUPABASE_SERVICE_ROLE_KEY: 'service',
-      PLANE_A_JWT_SECRET: 'test-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'service', // pragma: allowlist secret
+      PLANE_A_JWT_SECRET: 'test-secret', // pragma: allowlist secret
       PLANE_A_ADMIN_EMAILS: 'omar@remit-scout.com',
     }
 
