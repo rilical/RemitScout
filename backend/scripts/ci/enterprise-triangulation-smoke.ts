@@ -234,6 +234,18 @@ const isActiveSmokeApiKey = (
   return typeof key.name === 'string' && key.name.startsWith('release-smoke:')
 }
 
+const isoDate = (value: Date) => value.toISOString().slice(0, 10)
+
+const buildRecentExportDateWindow = (days: number) => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - Math.max(0, days - 1))
+  return {
+    dateFrom: isoDate(start),
+    dateTo: isoDate(end),
+  }
+}
+
 const main = async () => {
   const smokeBaseUrl = mustEnv('SMOKE_BASE_URL')
   const rootBase = resolveSmokeRootBaseUrl(smokeBaseUrl)
@@ -561,6 +573,7 @@ const main = async () => {
 
     if (createdApiKeyToken) {
       const apiKeyHeaders = { 'x-api-key': createdApiKeyToken }
+      const exportWindow = buildRecentExportDateWindow(7)
 
       {
         const { status, body } = await jsonFetch<TriangulatedSeriesResponse>(
@@ -606,6 +619,8 @@ const main = async () => {
             dataType: 'indices',
             format: 'csv',
             corridorIds: [config.corridorId],
+            dateFrom: exportWindow.dateFrom,
+            dateTo: exportWindow.dateTo,
           }),
         })
         apiKeyExportJobId = typeof body?.job?.id === 'string' ? body.job.id : null
