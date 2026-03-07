@@ -1,14 +1,18 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
-import { requireAdmin } from '../plugins/auth-plugin'
+import { requireAdmin, requireSuperAdmin } from '../plugins/auth-plugin'
 import {
   createFeatureFlag,
+  getEffectiveRuntimeFlags,
   getFeatureFlag,
+  getRuntimeFlagDefinitions,
   listFeatureFlagHistory,
   listFeatureFlags,
   updateFeatureFlag,
 } from '../services/feature-flags'
+import { ensureUserPlan, getUserPlan } from '../services/user-plan'
+import { resolveEffectiveEntitlements } from '../services/effective-entitlements'
 
 const flagKeySchema = z
   .string()
@@ -38,12 +42,63 @@ const historyQuerySchema = z.object({
 export const adminFeatureFlagsRoutes = async (app: FastifyInstance) => {
   const pool = app.container.pool
 
-  app.get('/admin/feature-flags', { preHandler: requireAdmin() }, async () => {
-    const flags = await listFeatureFlags(pool)
-    return { flags }
+  const resolveRuntimeFlagContext = async (request: {
+    user?: {
+      user_id?: string
+      email?: string | null
+      role?: string | null
+      is_admin?: boolean
+    }
+  }) => {
+    if (!request.user?.user_id) {
+      return {
+        effectivePlanCode: 'free',
+        pulseAccess: 'none' as const,
+        isAdmin: false,
+      }
+    }
+
+    await ensureUserPlan(pool, request.user.user_id)
+    const plan = await getUserPlan(pool, request.user.user_id)
+    const effective = await resolveEffectiveEntitlements({
+      pool,
+      userId: request.user.user_id,
+      email: request.user.email ?? null,
+      supabaseRole: request.user.role ?? null,
+      plan,
+    })
+
+    return {
+      effectivePlanCode: effective.effectivePlanCode,
+      pulseAccess: effective.entitlements.pulse_access,
+      isAdmin: Boolean(request.user.is_admin),
+    }
+  }
+
+  app.get('/feature-flags/effective', async (request) => {
+    const runtime = await getEffectiveRuntimeFlags(pool, {
+      ...(await resolveRuntimeFlagContext(request)),
+    })
+
+    return {
+      ...runtime,
+      definitions: getRuntimeFlagDefinitions(),
+    }
   })
 
-  app.post('/admin/feature-flags', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.get('/admin/feature-flags', { preHandler: requireAdmin() }, async (request) => {
+    const flags = await listFeatureFlags(pool)
+    const runtime = await getEffectiveRuntimeFlags(pool, {
+      ...(await resolveRuntimeFlagContext(request)),
+    })
+    return {
+      flags,
+      runtime,
+      definitions: getRuntimeFlagDefinitions(),
+    }
+  })
+
+  app.post('/admin/feature-flags', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = createFlagSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
       throw new ValidationError('Invalid request', {
@@ -70,7 +125,7 @@ export const adminFeatureFlagsRoutes = async (app: FastifyInstance) => {
     return { flag }
   })
 
-  app.patch('/admin/feature-flags/:key', { preHandler: requireAdmin() }, async (request) => {
+  app.patch('/admin/feature-flags/:key', { preHandler: requireSuperAdmin() }, async (request) => {
     const key = flagKeySchema.parse((request.params as { key?: string }).key || '')
     const parsed = updateFlagSchema.safeParse(request.body ?? {})
     if (!parsed.success) {

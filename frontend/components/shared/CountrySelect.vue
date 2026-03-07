@@ -54,7 +54,7 @@ v-if="isMounted"
 to="body"
 >
       <div
-        v-show="isOpen"
+        v-if="isOpen"
         :id="listboxId"
         ref="dropdownRef"
         role="listbox"
@@ -98,7 +98,10 @@ to="body"
           @mousedown.prevent="selectCountry(country)"
           @touchstart.prevent="selectCountry(country)"
         >
-          {{ country.label }}
+          <span class="inline-flex items-center gap-2">
+            <span class="text-lg leading-none">{{ country.flag }}</span>
+            <span>{{ country.name }}</span>
+          </span>
         </button>
       </div>
     </Teleport>
@@ -138,6 +141,7 @@ interface Props {
 interface CountryOption {
   value: string
   label: string
+  flag: string
   name: string
   code: string
   searchText: string
@@ -172,7 +176,8 @@ const sourceCountries = props.supportedOnly
 
 const allCountries: CountryOption[] = sourceCountries.map(country => ({
   value: country.code,
-  label: `${country.flag} ${country.name}`,
+  label: country.name,
+  flag: country.flag,
   name: country.name,
   code: country.code,
   searchText: `${country.name.toLowerCase()} ${country.code.toLowerCase()}`,
@@ -199,6 +204,11 @@ const getOptionId = (value: string) => `${resolvedId.value}-option-${value.toLow
 
 const getSelectedCountry = () => allCountries.find(country => country.value === props.modelValue)
 
+const getAvailableCountries = () => {
+  if (!props.excludeCountry) return allCountries
+  return allCountries.filter(country => country.value !== props.excludeCountry)
+}
+
 const restoreSelectedValue = () => {
   searchQuery.value = getSelectedCountry()?.name ?? ''
 }
@@ -223,11 +233,7 @@ const matchCountry = (country: CountryOption, query: string) => {
 }
 
 const updateFilteredCountries = (preferSelected: boolean = false) => {
-  let countries = allCountries
-
-  if (props.excludeCountry) {
-    countries = countries.filter(country => country.value !== props.excludeCountry)
-  }
+  const countries = getAvailableCountries()
 
   const query = searchQuery.value.trim()
   if (!query) {
@@ -336,9 +342,38 @@ const selectCountry = (country: CountryOption) => {
   highlightedIndex.value = -1
 }
 
+const resolveExactCountryMatch = (query: string) => {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return null
+
+  return (
+    getAvailableCountries().find(country =>
+      country.code.toLowerCase() === normalized || country.name.toLowerCase() === normalized,
+    ) ?? null
+  )
+}
+
+const commitTypedCountry = () => {
+  const match = resolveExactCountryMatch(searchQuery.value)
+  if (!match) return false
+
+  if (match.value === props.modelValue) {
+    searchQuery.value = match.name
+    isOpen.value = false
+    highlightedIndex.value = -1
+    return true
+  }
+
+  selectCountry(match)
+  return true
+}
+
 const handleSearch = async (event: Event) => {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
+  if (commitTypedCountry()) {
+    return
+  }
   isOpen.value = true
   updateFilteredCountries(false)
   await nextTick()
@@ -363,6 +398,9 @@ const handleBlur = () => {
       activeElement
       && (rootRef.value?.contains(activeElement) || dropdownRef.value?.contains(activeElement))
     ) {
+      return
+    }
+    if (commitTypedCountry()) {
       return
     }
     closeDropdown(true)
@@ -453,6 +491,9 @@ const handleOutsidePointer = (event: MouseEvent | TouchEvent) => {
   const target = event.target as Node | null
   if (!target) return
   if (rootRef.value?.contains(target) || dropdownRef.value?.contains(target)) return
+  if (isOpen.value && commitTypedCountry()) {
+    return
+  }
   closeDropdown(true)
 }
 

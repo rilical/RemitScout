@@ -58,6 +58,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { isPlus, hydrated } = useEntitlements()
+const { adsEnabled } = useFeatureFlags()
 const { marketingConsent } = usePrivacySettings()
 const runtimeConfig = useRuntimeConfig()
 type AdSlotMap = Partial<Record<AdPlacement, number[]>>
@@ -75,7 +76,6 @@ const placeholderId = computed(() =>
   ),
 )
 const placeholderDomId = computed(() => (activeId.value ? `ad-slot-${activeId.value}` : ''))
-const adsEnabled = computed(() => runtimeConfig.public?.adsEnabled === true)
 const allowAds = computed(() => adsEnabled.value && marketingConsent.value)
 
 const containerClasses = computed(() => {

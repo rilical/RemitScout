@@ -602,6 +602,40 @@ jobs:
       - run: pnpm -C backend ci:seed-sanity
       - run: pnpm -C backend ci:api-smoke
 
+  release-correctness-local:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: [changes, lockfile-integrity]
+    if: needs.changes.outputs.run_backend == 'true' || needs.changes.outputs.run_frontend == 'true'
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: remit
+          POSTGRES_PASSWORD: remit
+          POSTGRES_DB: remit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U remit -d remit"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit
+      DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit
+      PLANE_A_ADMIN_EMAILS: admin@example.com
+      PLANE_A_CORS_ORIGINS: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node_version: ${{ inputs.node_version }}
+          pnpm_version: ${{ inputs.pnpm_version }}
+      - run: pnpm release:gate:ci
+
   config-validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15

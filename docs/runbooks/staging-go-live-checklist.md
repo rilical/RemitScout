@@ -25,6 +25,8 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 - [ ] `SNS_TOPIC_ARNS`
 - [ ] `PUBLIC_SITE_URL`
 - [ ] `PUBLIC_API_BASE`
+- [ ] `PLANE_A_DOMAIN_NAME`
+- [ ] `PLANE_A_CERT_ARN`
 - [ ] `PUBLIC_SUPABASE_URL`
 - [ ] `PUBLIC_SUPABASE_ANON_KEY`
 - [ ] `COMPLIANCE_SOC2_TYPE_II_STATUS`
@@ -83,6 +85,7 @@ Source template:
 - [ ] `NODE_ENV=staging`
 - [ ] `PUBLIC_SITE_URL` points to staging host.
 - [ ] `PUBLIC_API_BASE` points to staging API.
+- [ ] `PUBLIC_API_BASE` host matches `PLANE_A_DOMAIN_NAME`.
 - [ ] Supabase public staging keys set.
 - [ ] `PUBLIC_ALLOW_SEARCH_INDEXING=0` (noindex safeguard).
 - [ ] GA4 and Ads IDs set for staging test tracking.
@@ -114,10 +117,13 @@ Source template:
 - [ ] Run workflow: `.github/workflows/staging-go-live-readiness.yml` (PASS).
 - [ ] Run workflow: `.github/workflows/deploy.yml` with `env=staging` (PASS).
 - [ ] Runtime config validation passes (`ci:config-validate` in staging profile).
+- [ ] Public integration smoke passes (`pnpm -C backend ci:integration-smoke`) against `PUBLIC_API_BASE`.
 - [ ] Authenticated watchlist/alerts smoke passes (`pnpm -C backend ci:alerts-watchlists-smoke` in deploy pipeline).
 - [ ] Authenticated smoke for `omar@remit-scout.com` confirms `/api/v1/me` returns `app_role=super_admin` and enterprise entitlements.
+- [ ] Enterprise + triangulation smoke passes (`pnpm -C backend ci:enterprise-triangulation-smoke`) and leaves artifact logs in workflow evidence.
 - [ ] Admin surface smoke passes (`pnpm -C backend ci:admin-surface-smoke`) and leaves artifact logs in workflow evidence.
 - [ ] Current GitHub runner IP is inside `ADMIN_IP_ALLOWLIST` / `WAF_ADMIN_ALLOWLIST_IPS`; admin smoke must not bypass network controls.
+- [ ] Agent pipeline E2E health passes (`backend/scripts/e2e-agent-health-check.ts`) with recent detection cycles and dispatch activity.
 - [ ] For enterprise-mode staging (`PLANE_A_REQUIRE_API_KEY=1`), SOC 2 report state is allowed (`in_progress`/`audited`) and not expired/revoked in readiness checks.
 
 ## 10) Functional checks after deploy

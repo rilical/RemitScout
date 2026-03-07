@@ -1,8 +1,17 @@
 import { useApi } from '~/composables/useApi'
 import type { ModuleRegistryResponse, ModuleDetailResponse } from '~/types/modules'
-import type { AgentActionsResponse, FailureBundlesResponse, FailureTrendsResponse, SelfHealingMetrics } from '~/types/agents'
-import type { CorridorStressOverviewResponse } from '~/types/stress'
-import type { TotalCollectionErrorResponse, MttdMttrResponse, CorrectionLedgerResponse } from '~/types/data-quality'
+import type {
+  AgentActionsResponse,
+  FailureBundlesResponse,
+  FailureTrendsResponse,
+  SelfHealingMetrics,
+} from '~/types/agents'
+import type { CorridorStressOverviewResponse, StressControlState } from '~/types/stress'
+import type {
+  TotalCollectionErrorResponse,
+  MttdMttrResponse,
+  CorrectionLedgerResponse,
+} from '~/types/data-quality'
 
 export interface ServiceHealthEntry {
   service_id: string
@@ -16,6 +25,8 @@ export interface ServiceHealthResponse {
   services: ServiceHealthEntry[]
   updatedAt: string | null
   unavailable?: boolean
+  source?: 'aws' | 'legacy' | 'none'
+  message?: string | null
 }
 
 export interface AdminDiscoveryScanSummary {
@@ -82,8 +93,7 @@ export async function getServiceHealth(): Promise<ServiceHealthResponse> {
   const { request } = useApi()
   try {
     return await request<ServiceHealthResponse>('/ops/services/health')
-  }
-  catch (e: unknown) {
+  } catch (e: unknown) {
     const err = e as { statusCode?: number }
     if (err?.statusCode === 404) {
       return { services: [], updatedAt: null, unavailable: true }
@@ -109,7 +119,7 @@ export async function getAgentActions(options?: {
   action_type?: string
 }): Promise<AgentActionsResponse> {
   const { request } = useApi()
-  return await request<AgentActionsResponse>('/ops/agents/actions', { query: options })
+  return await request<AgentActionsResponse>('/ops/agents/actions', { query: options, retries: 1 })
 }
 
 export async function getFailureBundles(options?: {
@@ -119,22 +129,49 @@ export async function getFailureBundles(options?: {
   module_id?: string
 }): Promise<FailureBundlesResponse> {
   const { request } = useApi()
-  return await request<FailureBundlesResponse>('/ops/agents/failure-bundles', { query: options })
+  return await request<FailureBundlesResponse>('/ops/agents/failure-bundles', {
+    query: options,
+    retries: 1,
+  })
 }
 
 export async function getSelfHealingMetrics(): Promise<SelfHealingMetrics> {
   const { request } = useApi()
-  return await request<SelfHealingMetrics>('/ops/agents/metrics')
+  return await request<SelfHealingMetrics>('/ops/agents/metrics', { retries: 1 })
 }
 
 export async function getFailureTrends(params?: { days?: number }): Promise<FailureTrendsResponse> {
   const { request } = useApi()
-  return await request<FailureTrendsResponse>('/ops/agents/failure-trends', { query: params })
+  return await request<FailureTrendsResponse>('/ops/agents/failure-trends', {
+    query: params,
+    retries: 1,
+  })
 }
 
 export async function getCorridorStressOverview(): Promise<CorridorStressOverviewResponse> {
   const { request } = useApi()
-  return await request<CorridorStressOverviewResponse>('/ops/stress/corridors')
+  return await request<CorridorStressOverviewResponse>('/ops/stress/corridors', { retries: 1 })
+}
+
+export async function getStressControlState(): Promise<StressControlState> {
+  const { request } = useApi()
+  try {
+    return await request<StressControlState>('/ops/stress/control-state', { retries: 1 })
+  } catch (e: unknown) {
+    const err = e as { statusCode?: number }
+    if (err?.statusCode === 404) {
+      return {
+        total_modules: 0,
+        adaptive_probing_paused_modules: 0,
+        stress_probing_disabled_modules: 0,
+        pause_active: false,
+        kill_switch_active: false,
+        updatedAt: null,
+        unavailable: true,
+      }
+    }
+    throw e
+  }
 }
 
 export async function getTotalCollectionError(): Promise<TotalCollectionErrorResponse> {
@@ -162,9 +199,16 @@ export async function pauseAdaptiveProbing(paused: boolean): Promise<void> {
   await request<undefined>('/ops/stress/pause-probing', { method: 'POST', body: { paused } })
 }
 
-export async function applyStressOverride(corridorId: string, level: string, durationHours: number): Promise<void> {
+export async function applyStressOverride(
+  corridorId: string,
+  level: string,
+  durationHours: number,
+): Promise<void> {
   const { request } = useApi()
-  await request<undefined>('/ops/stress/override', { method: 'POST', body: { corridorId, level, durationHours } })
+  await request<undefined>('/ops/stress/override', {
+    method: 'POST',
+    body: { corridorId, level, durationHours },
+  })
 }
 
 export async function activateStressKillSwitch(): Promise<void> {
@@ -180,25 +224,40 @@ export async function listDiscoveryScans(options?: {
   applyStatus?: string
 }): Promise<{ scans: AdminDiscoveryScanSummary[] }> {
   const { request } = useApi()
-  return await request<{ scans: AdminDiscoveryScanSummary[] }>('/admin/discovery/scans', { query: options })
-}
-
-export async function getDiscoveryScan(scanId: number): Promise<{ scan: AdminDiscoveryScanDetail }> {
-  const { request } = useApi()
-  return await request<{ scan: AdminDiscoveryScanDetail }>(`/admin/discovery/scans/${encodeURIComponent(String(scanId))}`)
-}
-
-export async function listPendingDiscoveryReviews(limit = 50): Promise<{ scans: AdminDiscoveryScanSummary[] }> {
-  const { request } = useApi()
-  return await request<{ scans: AdminDiscoveryScanSummary[] }>('/admin/discovery/pending-reviews', { query: { limit } })
-}
-
-export async function approveDiscoveryReview(scanId: number): Promise<{ approved: boolean; scan: AdminDiscoveryScanDetail }> {
-  const { request } = useApi()
-  return await request<{ approved: boolean; scan: AdminDiscoveryScanDetail }>(`/admin/discovery/scans/${encodeURIComponent(String(scanId))}/approve`, {
-    method: 'POST',
-    body: { mode: 'operator' },
+  return await request<{ scans: AdminDiscoveryScanSummary[] }>('/admin/discovery/scans', {
+    query: options,
   })
+}
+
+export async function getDiscoveryScan(
+  scanId: number,
+): Promise<{ scan: AdminDiscoveryScanDetail }> {
+  const { request } = useApi()
+  return await request<{ scan: AdminDiscoveryScanDetail }>(
+    `/admin/discovery/scans/${encodeURIComponent(String(scanId))}`,
+  )
+}
+
+export async function listPendingDiscoveryReviews(
+  limit = 50,
+): Promise<{ scans: AdminDiscoveryScanSummary[] }> {
+  const { request } = useApi()
+  return await request<{ scans: AdminDiscoveryScanSummary[] }>('/admin/discovery/pending-reviews', {
+    query: { limit },
+  })
+}
+
+export async function approveDiscoveryReview(
+  scanId: number,
+): Promise<{ approved: boolean; scan: AdminDiscoveryScanDetail }> {
+  const { request } = useApi()
+  return await request<{ approved: boolean; scan: AdminDiscoveryScanDetail }>(
+    `/admin/discovery/scans/${encodeURIComponent(String(scanId))}/approve`,
+    {
+      method: 'POST',
+      body: { mode: 'operator' },
+    },
+  )
 }
 
 export async function applyDiscoveryReview(scanId: number): Promise<{
@@ -220,16 +279,26 @@ export async function applyDiscoveryReview(scanId: number): Promise<{
   })
 }
 
-export async function dismissDiscoveryReview(scanId: number): Promise<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }> {
+export async function dismissDiscoveryReview(
+  scanId: number,
+): Promise<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }> {
   const { request } = useApi()
-  return await request<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }>(`/admin/discovery/scans/${encodeURIComponent(String(scanId))}/dismiss`, {
-    method: 'POST',
-  })
+  return await request<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }>(
+    `/admin/discovery/scans/${encodeURIComponent(String(scanId))}/dismiss`,
+    {
+      method: 'POST',
+    },
+  )
 }
 
-export async function listDiscoveryCertificationRuns(limit = 20): Promise<{ runs: AdminDiscoveryCertificationRun[] }> {
+export async function listDiscoveryCertificationRuns(
+  limit = 20,
+): Promise<{ runs: AdminDiscoveryCertificationRun[] }> {
   const { request } = useApi()
-  return await request<{ runs: AdminDiscoveryCertificationRun[] }>('/admin/discovery/certifications/runs', { query: { limit } })
+  return await request<{ runs: AdminDiscoveryCertificationRun[] }>(
+    '/admin/discovery/certifications/runs',
+    { query: { limit } },
+  )
 }
 
 export async function getDiscoveryCertificationRun(runId: string): Promise<{
@@ -259,7 +328,9 @@ export async function triggerDiscoveryCertification(input?: {
   notes?: string
 }): Promise<AdminDiscoveryCertificationRun & { results: AdminDiscoveryCertificationResult[] }> {
   const { request } = useApi()
-  return await request<AdminDiscoveryCertificationRun & { results: AdminDiscoveryCertificationResult[] }>('/admin/discovery/certifications/runs', {
+  return await request<
+    AdminDiscoveryCertificationRun & { results: AdminDiscoveryCertificationResult[] }
+  >('/admin/discovery/certifications/runs', {
     method: 'POST',
     body: input,
   })

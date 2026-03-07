@@ -116,4 +116,39 @@ describe('useEnterpriseExports', () => {
       },
     });
   });
+
+  it('deduplicates corridor IDs before creating indices exports', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        success: true,
+        job: {
+          id: 'job-3',
+          status: 'queued',
+          jobType: 'indices_csv',
+          createdAt: '2026-03-05T00:00:00.000Z',
+        },
+      })
+      .mockResolvedValueOnce({ success: true, jobs: [] });
+
+    const { useEnterpriseExports } = await import('~/composables/useEnterpriseExports');
+    const exportsApi = useEnterpriseExports();
+    exportsApi.jobType.value = 'indices';
+    exportsApi.format.value = 'csv';
+    exportsApi.dateFrom.value = '2026-01-01';
+    exportsApi.dateTo.value = '2026-01-31';
+    exportsApi.corridorIdsText.value = 'US-PH-USD-PHP\nUS-PH-USD-PHP,US-MX-USD-MXN';
+
+    await exportsApi.createJob();
+
+    expect(mockRequest).toHaveBeenNthCalledWith(1, '/exports', {
+      method: 'POST',
+      body: {
+        dataType: 'indices',
+        format: 'csv',
+        dateFrom: '2026-01-01',
+        dateTo: '2026-01-31',
+        corridorIds: ['US-PH-USD-PHP', 'US-MX-USD-MXN'],
+      },
+    });
+  });
 });

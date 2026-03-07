@@ -27,18 +27,18 @@ OpenClaw (or any model process) must be treated as untrusted:
 
 Run locally:
 ```bash
-cd "/Users/omarghabyen/Desktop/Remit-Scout Production V2"
+cd "<repo-root>"
 pnpm -C backend brain:once
 ```
 
 Run continuously:
 ```bash
-cd "/Users/omarghabyen/Desktop/Remit-Scout Production V2"
+cd "<repo-root>"
 pnpm -C backend brain:loop
 ```
 
 Recommended env template:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.brain.example`
+- `.env.brain.example`
 
 ### Signal format (minimal)
 Create a file like `ops/brain/inbox/signal-<anything>.json`:

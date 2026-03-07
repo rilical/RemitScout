@@ -45,6 +45,31 @@
         />
       </header>
 
+      <AdminSurfaceOverview :model="surfaceOverview" />
+
+      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article class="rounded-2xl border border-rs-border bg-rs-surface p-5 shadow-sm">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Sessions</div>
+          <div class="mt-2 text-h3 font-semibold text-rs-fg">{{ formatCount(sessionMetrics.total_sessions) }}</div>
+          <p class="mt-1 text-body-sm text-rs-muted">Unique users: {{ formatCount(sessionMetrics.unique_users) }}</p>
+        </article>
+        <article class="rounded-2xl border border-rs-border bg-rs-surface p-5 shadow-sm">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Avg session duration</div>
+          <div class="mt-2 text-h3 font-semibold text-rs-fg">{{ formatFixed(sessionMetrics.avg_session_duration, 1) }}s</div>
+          <p class="mt-1 text-body-sm text-rs-muted">Searches/session: {{ formatFixed(sessionMetrics.avg_searches_per_session, 2) }}</p>
+        </article>
+        <article class="rounded-2xl border border-rs-border bg-rs-surface p-5 shadow-sm">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Bounce rate</div>
+          <div class="mt-2 text-h3 font-semibold text-rs-fg">{{ formatFixed(sessionMetrics.bounce_rate, 1) }}%</div>
+          <p class="mt-1 text-body-sm text-rs-muted">Privacy-thresholded aggregate.</p>
+        </article>
+        <article class="rounded-2xl border border-rs-border bg-rs-surface p-5 shadow-sm">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Avg savings/search</div>
+          <div class="mt-2 text-h3 font-semibold text-rs-fg">{{ formatFixed(savingsSummary.avg_savings_per_search, 2) }}</div>
+          <p class="mt-1 text-body-sm text-rs-muted">Total fee spread proxy: {{ formatFixed(savingsSummary.total_savings_fees, 2) }}</p>
+        </article>
+      </section>
+
       <section class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl bg-surface p-6 shadow-sm lg:col-span-2">
           <h2 class="text-body-lg font-semibold text-rs-fg">Corridor search trends</h2>
@@ -379,9 +404,9 @@ unit="number"
             Daily engagement summary.
           </p>
           <div class="mt-4 space-y-3 text-body-sm text-neutral-600">
-            <div>Avg session duration: {{ sessionMetrics.avg_session_duration.toFixed(1) }}s</div>
-            <div>Avg searches/session: {{ sessionMetrics.avg_searches_per_session.toFixed(2) }}</div>
-            <div>Bounce rate: {{ sessionMetrics.bounce_rate.toFixed(1) }}%</div>
+            <div>Avg session duration: {{ formatFixed(sessionMetrics.avg_session_duration, 1) }}s</div>
+            <div>Avg searches/session: {{ formatFixed(sessionMetrics.avg_searches_per_session, 2) }}</div>
+            <div>Bounce rate: {{ formatFixed(sessionMetrics.bounce_rate, 1) }}%</div>
           </div>
         </div>
 
@@ -417,8 +442,8 @@ unit="number"
           </p>
           <div class="mt-4 space-y-2 text-body-sm text-neutral-600">
             <div>Total searches: {{ savingsSummary.total_searches }}</div>
-            <div>Total fee spread: {{ savingsSummary.total_savings_fees.toFixed(2) }}</div>
-            <div>Avg fee spread/search: {{ savingsSummary.avg_savings_per_search.toFixed(2) }}</div>
+            <div>Total fee spread: {{ formatFixed(savingsSummary.total_savings_fees, 2) }}</div>
+            <div>Avg fee spread/search: {{ formatFixed(savingsSummary.avg_savings_per_search, 2) }}</div>
           </div>
         </div>
       </section>
@@ -433,17 +458,17 @@ unit="number"
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           <div
             v-for="pattern in userPatterns"
-            :key="pattern.pattern_data.bucket"
+            :key="getPatternKey(pattern)"
             class="rounded-xl border border-neutral-100 p-4"
           >
             <div class="text-body-sm uppercase text-neutral-400">
-              {{ pattern.pattern_data.bucket }}
+              {{ getPatternLabel(pattern) }}
             </div>
             <div class="mt-2 text-body-lg font-semibold text-rs-fg">
-              {{ pattern.frequency }}
+              {{ formatCount(pattern?.frequency) }}
             </div>
             <div class="text-body-sm text-rs-muted">
-              {{ pattern.percentage }}%
+              {{ formatRate(pattern?.percentage) }}
             </div>
           </div>
           <div
@@ -460,6 +485,8 @@ unit="number"
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import type { ChartSeries } from '~/types/pulse'
+import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
+import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
 import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
@@ -489,6 +516,8 @@ const { formatNumber: formatAdminNumber } = useAdminFormat()
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
+const partialFailureCount = ref(0)
+const lastLoadedAt = ref<string | null>(null)
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
 const today = new Date()
@@ -535,6 +564,12 @@ const formatCount = (value: number | string | null | undefined) => {
   return formatAdminNumber(parsed, 0)
 }
 
+const formatFixed = (value: number | string | null | undefined, decimals: number) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return (0).toFixed(decimals)
+  return parsed.toFixed(decimals)
+}
+
 const formatRate = (value: number | string | null | undefined) => {
   const parsed = Number(value)
   if (!Number.isFinite(parsed)) return '0%'
@@ -549,6 +584,19 @@ const formatConversionValues = (values?: Record<string, number> | null) => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([currency, amount]) => formatMoney(Number(amount), currency))
     .join(', ')
+}
+
+const getPatternKey = (pattern: any) => {
+  const data = pattern?.pattern_data
+  return String(data?.bucket || data?.corridor_id || data?.amount_bucket || pattern?.pattern_type || 'unknown')
+}
+
+const getPatternLabel = (pattern: any) => {
+  const data = pattern?.pattern_data
+  if (data?.bucket) return String(data.bucket)
+  if (data?.corridor_id) return String(data.corridor_id)
+  if (data?.amount_bucket !== undefined) return String(data.amount_bucket)
+  return 'Unknown'
 }
 
 const mapCorridorTrendCharts = (rows: any[]) => {
@@ -645,6 +693,83 @@ const mapEngagementSeries = (rows: any[]) => {
   ].filter(series => series.points.length > 0)
 }
 
+const latestAnalyticsTimestamp = computed(() => {
+  const candidateTimestamps: number[] = []
+
+  for (const chart of corridorTrendCharts.value) {
+    for (const series of chart.series) {
+      for (const point of series.points) {
+        candidateTimestamps.push(point.t)
+      }
+    }
+  }
+
+  for (const series of engagementSeries.value) {
+    for (const point of series.points) {
+      candidateTimestamps.push(point.t)
+    }
+  }
+
+  const latest = Math.max(0, ...candidateTimestamps)
+  return latest > 0 ? new Date(latest).toISOString() : lastLoadedAt.value
+})
+
+const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
+  const freshnessAt = latestAnalyticsTimestamp.value
+  const freshnessTone = getFreshnessTone(freshnessAt, { watchMinutes: 120, criticalMinutes: 720 })
+  const emptyState = !popularCorridors.value.length
+    && !favoriteProviders.value.length
+    && !providerImpact.value.length
+    && !userPatterns.value.length
+
+  return {
+    runtimeLabel: partialFailureCount.value > 0 ? 'Partial data available' : 'Live analytics panels responding',
+    runtimeTone: partialFailureCount.value > 0 ? 'watch' : 'healthy',
+    runtimeDetail: partialFailureCount.value > 0
+      ? `${partialFailureCount.value} analytics panels failed in the last refresh. The remaining panels are still rendering.`
+      : 'Analytics panels are rendering from the live staging aggregates.',
+    freshnessLabel: freshnessAt ? formatAdminSurfaceAge(freshnessAt) : 'No recent aggregate buckets',
+    freshnessTone,
+    freshnessDetail: freshnessAt ? `Latest aggregate bucket at ${new Date(freshnessAt).toLocaleString()}.` : 'No telemetry buckets matched the selected date range.',
+    lastJobLabel: lastLoadedAt.value ? new Date(lastLoadedAt.value).toLocaleString() : 'No successful refresh yet',
+    lastJobDetail: 'This reflects the last successful admin analytics refresh on the page.',
+    stats: [
+      { label: 'Trend panels', value: String(corridorTrendCharts.value.length) },
+      { label: 'Provider rows', value: String(providerImpact.value.length) },
+      { label: 'Heatmap countries', value: String(heatmap.value.length) },
+      { label: 'User pattern buckets', value: String(userPatterns.value.length) },
+    ],
+    dependencies: [
+      {
+        label: 'Telemetry search events',
+        status: popularCorridors.value.length > 0 ? 'healthy' : 'watch',
+        detail: popularCorridors.value.length > 0 ? 'Search aggregates are present for the selected window.' : 'No corridor aggregates were returned for the selected window.',
+      },
+      {
+        label: 'Telemetry sessions',
+        status: Number(sessionMetrics.value.total_sessions) > 0 ? 'healthy' : 'watch',
+        detail: Number(sessionMetrics.value.total_sessions) > 0 ? 'Session aggregates are available.' : 'Session metrics returned zero sessions in the selected range.',
+      },
+      {
+        label: 'Affiliate/conversion feed',
+        status: providerImpact.value.length > 0 ? 'healthy' : 'watch',
+        detail: providerImpact.value.length > 0 ? 'Provider impact data is available.' : 'No provider impact rows were returned.',
+      },
+    ],
+    nextActions: [
+      { label: 'Use partial-failure messaging to inspect the specific failing panel instead of assuming logout or auth failure.' },
+      { label: 'Narrow the date range if the dashboard is warm but sparse due to privacy thresholds.' },
+      { label: 'Treat zero-row panels as data coverage gaps first, not frontend regressions, unless the page itself crashes.' },
+    ],
+    emptyState: emptyState
+      ? {
+          title: 'No aggregates matched this date range.',
+          body: 'This usually means telemetry is sparse or privacy thresholds suppressed the result. Try a wider time window before treating this as an outage.',
+        }
+      : null,
+  }
+})
+
 const loadAnalytics = async () => {
   if (isLoading.value) return
   isLoading.value = true
@@ -700,12 +825,17 @@ const loadAnalytics = async () => {
     }
 
     const failures = results.filter(r => r.status === 'rejected')
+    partialFailureCount.value = failures.length
     if (failures.length === results.length) {
       const reason = (failures[0] as PromiseRejectedResult).reason
       error.value = getAdminApiErrorMessage(reason, 'All analytics endpoints failed to load.')
     }
     else if (failures.length > 0) {
       error.value = `${failures.length} of ${results.length} analytics panels failed to load.`
+      lastLoadedAt.value = new Date().toISOString()
+    }
+    else {
+      lastLoadedAt.value = new Date().toISOString()
     }
   }
   catch (err: unknown) {

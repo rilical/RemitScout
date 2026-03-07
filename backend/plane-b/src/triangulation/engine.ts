@@ -503,7 +503,7 @@ export class TriangulationEngine {
               weight_confidence::double precision AS weight_confidence
          FROM gold_export.cdp_daily
         WHERE amount_bucket = $1
-          AND method_profile = $2
+          AND method_profile = $2::method_profile
           AND date <= $3::date
         ORDER BY corridor_id, date DESC`,
       [amountBucket, methodProfile, date],

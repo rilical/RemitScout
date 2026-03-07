@@ -13,6 +13,10 @@ const mockRunRightsMatrixCapabilityDelta = vi.fn()
 const mockRunProviderDeliveryDiscovery = vi.fn()
 const mockRunProviderCapabilityProbe = vi.fn()
 const mockRunCorridorCoverageAudit = vi.fn()
+const mockApproveDiscoveryScan = vi.fn()
+const mockApplyDiscoveryScan = vi.fn()
+const mockRunProviderCertification = vi.fn()
+const mockEvaluateDiscoveryAutoApplyPolicy = vi.fn()
 
 vi.mock('../shared/db', () => ({
   createPool: mockCreatePool,
@@ -24,6 +28,11 @@ vi.mock('../shared/config', () => ({
     env: 'staging',
     db: {
       planeBUrl: 'postgres://remit-scout.test/plane-b',
+    },
+    anomaly: {
+      zScoreThreshold: 2,
+      minSampleCount: 10,
+      baselineWindowHours: 24,
     },
   },
 }))
@@ -72,6 +81,19 @@ vi.mock('../scripts/provider-capability-probe', () => ({
 
 vi.mock('../scripts/corridor-coverage-audit', () => ({
   runCorridorCoverageAudit: mockRunCorridorCoverageAudit,
+}))
+
+vi.mock('../plane-b/src/discovery/discovery-review', () => ({
+  approveDiscoveryScan: mockApproveDiscoveryScan,
+  applyDiscoveryScan: mockApplyDiscoveryScan,
+}))
+
+vi.mock('../scripts/lib/provider-certification', () => ({
+  runProviderCertification: mockRunProviderCertification,
+}))
+
+vi.mock('../scripts/lib/provider-automation-policy', () => ({
+  evaluateDiscoveryAutoApplyPolicy: mockEvaluateDiscoveryAutoApplyPolicy,
 }))
 
 const buildDiscoveryResult = (providerId: string) => ({
@@ -142,6 +164,20 @@ describe('provider coverage audit', () => {
     mockRunCorridorCoverageAudit.mockImplementation(async () => {
       fs.writeFileSync(path.join(process.env.OUTPUT_DIR!, 'corridor-coverage.json'), '{}')
     })
+    mockRunProviderCertification.mockResolvedValue({
+      run_id: 'certification-run-1',
+      results: [
+        { provider_id: 'ria', status: 'passed' },
+        { provider_id: 'wise', status: 'passed' },
+      ],
+    })
+    mockEvaluateDiscoveryAutoApplyPolicy.mockResolvedValue({
+      allowed: true,
+      reasons: [],
+      gating: { certification: 'passed' },
+    })
+    mockApproveDiscoveryScan.mockResolvedValue({ approved: true })
+    mockApplyDiscoveryScan.mockResolvedValue({ applied: true })
   })
 
   afterEach(() => {
@@ -179,14 +215,38 @@ describe('provider coverage audit', () => {
     expect(mockRunDiscoveryForProvider).toHaveBeenCalledTimes(2)
     expect(mockRunDiscoveryForProvider.mock.calls[0]?.[2]).toEqual(expect.objectContaining({
       correlationId: 'audit-run-1',
-      applyResults: true,
+      triggeredBy: 'manual',
     }))
     expect(mockRunDiscoveryForProvider.mock.calls[1]?.[2]).toEqual(expect.objectContaining({
       correlationId: 'audit-run-1',
-      applyResults: false,
+      triggeredBy: 'manual',
     }))
 
     expect(mockRunRightsMatrixCapabilityDelta).toHaveBeenCalledTimes(1)
+    expect(mockRunProviderCertification).toHaveBeenCalledTimes(1)
+    expect(mockEvaluateDiscoveryAutoApplyPolicy).toHaveBeenCalledWith(
+      pool,
+      expect.objectContaining({
+        providerId: 'ria',
+        scanId: 101,
+        environment: 'staging',
+      }),
+    )
+    expect(mockApproveDiscoveryScan).toHaveBeenCalledWith(
+      pool,
+      101,
+      expect.objectContaining({
+        approvedBy: 'provider-coverage-audit@system',
+        mode: 'automation',
+      }),
+    )
+    expect(mockApplyDiscoveryScan).toHaveBeenCalledWith(
+      pool,
+      101,
+      expect.objectContaining({
+        appliedBy: 'provider-coverage-audit@system',
+      }),
+    )
     expect(rightsCapabilityDeltaEnv).toEqual({
       APPLY: '1',
       APPLY_PROVIDERS: 'ria',
@@ -206,6 +266,12 @@ describe('provider coverage audit', () => {
       path.join(tmpDir, 'capability-probe', 'bank.json'),
     ])
     expect(manifest.artifacts.corridorCoverage.length).toBeGreaterThan(0)
+    expect(manifest.artifacts.certification).toEqual([
+      path.join(tmpDir, 'certification', 'run.json'),
+    ])
+    expect(manifest.artifacts.apply).toEqual([
+      path.join(tmpDir, 'apply', 'apply-results.json'),
+    ])
     expect(pool.end).toHaveBeenCalledTimes(1)
   })
 })

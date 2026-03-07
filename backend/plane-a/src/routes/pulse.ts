@@ -417,14 +417,17 @@ const buildIndicesChartSeries = (
     suppression_flag: boolean
     suppression_reason?: string | null
   }>,
-): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number; confidence?: number }> }> => {
-  const points: Array<{ t: number; v: number; confidence?: number }> = []
+): Array<{ id: string; label: string; color: string; points: Array<{ t: number; v: number; confidence?: number; lowConfidence?: boolean }> }> => {
+  const DISPLAY_MIN_PROVIDERS = 2
 
-  const addConfidence = (p: { t: number; v: number }, conf: number | null) => {
+  const points: Array<{ t: number; v: number; confidence?: number; lowConfidence?: boolean }> = []
+  const fallbackPoints: Array<{ t: number; v: number; confidence?: number; lowConfidence?: boolean }> = []
+
+  const addConfidence = (p: { t: number; v: number }, conf: number | null, target: typeof points = points) => {
     if (conf != null && conf >= 0 && conf <= 1) {
-      points.push({ ...p, confidence: conf })
+      target.push({ ...p, confidence: conf })
     } else {
-      points.push(p)
+      target.push(p)
     }
   }
 
@@ -453,13 +456,32 @@ const buildIndicesChartSeries = (
       continue
     }
 
-    // TEER/RCI/RVI indices points must not include suppressed days.
-    if (row.suppression_flag) continue
+    // Two-tier suppression: display threshold (2 providers) vs export threshold (3).
+    // Rows with provider_count >= DISPLAY_MIN_PROVIDERS are shown even if export-suppressed.
+    // Rows below display threshold go to fallback (used only if primary series is empty).
+    if (row.suppression_flag) {
+      const providerCount = row.provider_count ?? 0
+      if (providerCount < DISPLAY_MIN_PROVIDERS) {
+        // Below display threshold — collect as fallback only
+        const fbPoint = extractChartValue(chartId, row, timestamp)
+        if (fbPoint !== null) {
+          fallbackPoints.push({ ...fbPoint, lowConfidence: true })
+        }
+        continue
+      }
+      // At or above display threshold — include but mark as low confidence
+    }
 
     if (chartId === 'all-in-cost') {
       const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
       if (value === null) continue
-      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
+      const p = { t: timestamp, v: value }
+      if (row.suppression_flag) {
+        addConfidence(p, row.weight_confidence)
+        points[points.length - 1]!.lowConfidence = true
+      } else {
+        addConfidence(p, row.weight_confidence)
+      }
       continue
     }
 
@@ -467,27 +489,66 @@ const buildIndicesChartSeries = (
       if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) continue
       const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
       if (!Number.isFinite(value)) continue
-      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
+      const p = { t: timestamp, v: value }
+      if (row.suppression_flag) {
+        addConfidence(p, row.weight_confidence)
+        points[points.length - 1]!.lowConfidence = true
+      } else {
+        addConfidence(p, row.weight_confidence)
+      }
       continue
     }
 
     if (chartId === 'volatility-pulse') {
       const value = row.rvi_bps
       if (value === null) continue
-      addConfidence({ t: timestamp, v: value }, row.weight_confidence)
+      const p = { t: timestamp, v: value }
+      if (row.suppression_flag) {
+        addConfidence(p, row.weight_confidence)
+        points[points.length - 1]!.lowConfidence = true
+      } else {
+        addConfidence(p, row.weight_confidence)
+      }
     }
   }
 
-  if (!points.length) return []
+  // Use fallback points if primary series is empty (corridors with <2 providers)
+  const finalPoints = points.length > 0 ? points : fallbackPoints
+
+  if (!finalPoints.length) return []
 
   return [
     {
       id: chartId,
       label: chartId,
       color: '#2563eb',
-      points,
+      points: finalPoints,
     },
   ]
+}
+
+/** Extract a chart value from a row for fallback purposes. */
+const extractChartValue = (
+  chartId: string,
+  row: { teer_rate: number | null; rci_ratio: number | null; rvi_bps: number | null; mid_market_rate: number | null; weight_confidence: number | null },
+  timestamp: number,
+): { t: number; v: number; confidence?: number } | null => {
+  if (chartId === 'all-in-cost') {
+    const value = row.rci_ratio !== null ? row.rci_ratio * 100 : null
+    if (value === null) return null
+    return { t: timestamp, v: value, ...(row.weight_confidence != null ? { confidence: row.weight_confidence } : {}) }
+  }
+  if (chartId === 'fx-markup') {
+    if (!row.mid_market_rate || !row.teer_rate || row.mid_market_rate <= 0) return null
+    const value = ((row.mid_market_rate - row.teer_rate) / row.mid_market_rate) * 10000
+    if (!Number.isFinite(value)) return null
+    return { t: timestamp, v: value, ...(row.weight_confidence != null ? { confidence: row.weight_confidence } : {}) }
+  }
+  if (chartId === 'volatility-pulse') {
+    if (row.rvi_bps === null) return null
+    return { t: timestamp, v: row.rvi_bps, ...(row.weight_confidence != null ? { confidence: row.weight_confidence } : {}) }
+  }
+  return null
 }
 
 const buildSuppressionAnnotations = (rows: Array<{
@@ -587,6 +648,7 @@ const loadIndicesChartData = async (
 
   const series = buildIndicesChartSeries(chartId, rows)
   const annotations = buildSuppressionAnnotations(rows)
+  const hasLowConfidencePoints = series.some(s => s.points.some(p => p.lowConfidence))
   const lastUpdated = rows.reduce<Date | null>((latest, row) => {
     if (!row.created_at) return latest
     if (!latest || row.created_at > latest) return row.created_at
@@ -597,6 +659,7 @@ const loadIndicesChartData = async (
     ...fallback,
     series,
     ...(annotations.length ? { annotations } : {}),
+    ...(hasLowConfidencePoints ? { lowConfidence: true } : {}),
     metadata: {
       ...fallback.metadata,
       lastUpdated: lastUpdated ? lastUpdated.toISOString() : fallback.metadata.lastUpdated,
@@ -999,10 +1062,15 @@ const mapOverview = (
   const snapshot = isObject(snapshotPayload) ? snapshotPayload : {}
   const marketSnapshot = isObject(marketSnapshotPayload) ? marketSnapshotPayload : {}
 
-  const activeProviders = toNumber(
+  const OVERVIEW_DISPLAY_MIN_PROVIDERS = 2
+
+  const cacheProviders = toNumber(
     snapshot.unique_providers ?? overview.active_providers ?? coverage.covered_corridors ?? 0,
     0,
   )
+  // Fallback to indices provider count when cache is empty
+  const indicesProviderCount = indicesLatestPayload?.provider_count ?? 0
+  const activeProviders = cacheProviders > 0 ? cacheProviders : indicesProviderCount
 
   const quotes = Array.isArray((marketSnapshot as any).quotes)
     ? ((marketSnapshot as any).quotes as Array<Record<string, unknown>>)
@@ -1021,15 +1089,20 @@ const mapOverview = (
     ? avgFeeValues.reduce((sum, value) => sum + value, 0) / avgFeeValues.length
     : null
 
-  const rciRatio = indicesLatestPayload?.suppression_flag ? null : indicesLatestPayload?.rci_ratio ?? null
+  // Two-tier suppression for display: show RCI when provider_count >= 2
+  // even if export-suppressed (which requires 3 providers)
+  const displayEligible = indicesProviderCount >= OVERVIEW_DISPLAY_MIN_PROVIDERS
+  const rciRatio = (indicesLatestPayload?.suppression_flag && !displayEligible)
+    ? null
+    : indicesLatestPayload?.rci_ratio ?? null
   const hasRci = Number.isFinite(rciRatio ?? Number.NaN)
   const rciValue = hasRci ? `${((rciRatio ?? 0) * 100).toFixed(2)}%` : '—'
-  const rciDelta = indicesLatestPayload?.suppression_flag
+  const rciDelta = (indicesLatestPayload?.suppression_flag && !displayEligible)
     ? 'Suppressed'
     : indicesLatestPayload?.provider_count !== null && indicesLatestPayload?.provider_count !== undefined
       ? `${indicesLatestPayload.provider_count} providers`
       : 'Data pending'
-  const rciDeltaType: 'neutral' | 'negative' = indicesLatestPayload?.suppression_flag ? 'negative' : 'neutral'
+  const rciDeltaType: 'neutral' | 'negative' = (indicesLatestPayload?.suppression_flag && !displayEligible) ? 'negative' : 'neutral'
   const methodProfile = indicesLatestPayload?.method_profile ?? 'standard_bank'
   const rciDeltaLabel = methodProfile === 'cash_pickup'
     ? 'cash'
@@ -1158,6 +1231,8 @@ type GoldTrackedCorridorRow = {
   last_updated: Date | null
   min_date: Date | null
   max_date: Date | null
+  unsuppressed_points: number
+  suppressed_points: number
 }
 
 const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool']) => {
@@ -1171,7 +1246,9 @@ const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool'])
        COUNT(*)::int AS data_points,
        MAX(created_at) AS last_updated,
        MIN(date) AS min_date,
-       MAX(date) AS max_date
+       MAX(date) AS max_date,
+       COUNT(*) FILTER (WHERE suppression_flag IS FALSE)::int AS unsuppressed_points,
+       COUNT(*) FILTER (WHERE suppression_flag IS TRUE)::int AS suppressed_points
      FROM gold_export.cdp_daily
      WHERE amount_bucket = $1
      GROUP BY corridor_id
@@ -1222,6 +1299,8 @@ const loadTrackedCorridorsFromGold = async (planeAPool: PlaneAContainer['pool'])
       dataAvailability,
       daysAvailable: dataAvailability.daysAvailable,
       sufficient: dataAvailability.sufficient,
+      unsuppressedPoints: row.unsuppressed_points ?? 0,
+      suppressedPoints: row.suppressed_points ?? 0,
     }
   })
 
@@ -1674,6 +1753,49 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         // Stress data is optional; degrade gracefully.
       }
 
+      // Batch-fetch latest gold indices for screener rows (fallback when cache is empty)
+      const indicesByCorridor = new Map<string, {
+        provider_count: number | null
+        rci_ratio: number | null
+        teer_rate: number | null
+        mid_market_rate: number | null
+        suppression_flag: boolean
+        created_at: Date | null
+      }>()
+      try {
+        const indicesResult = await query<{
+          corridor_id: string
+          provider_count: number | null
+          rci_ratio: number | null
+          teer_rate: number | null
+          mid_market_rate: number | null
+          suppression_flag: boolean
+          created_at: Date | null
+        }>(
+          `SELECT DISTINCT ON (corridor_id)
+                  corridor_id, provider_count, rci_ratio, teer_rate, mid_market_rate,
+                  suppression_flag, created_at
+             FROM gold_export.cdp_daily
+            WHERE corridor_id = ANY($1)
+              AND amount_bucket = $2
+            ORDER BY corridor_id, date DESC`,
+          [corridorIds, INDICES_AMOUNT_BUCKET],
+          planeAPool,
+        )
+        for (const row of indicesResult.rows) {
+          indicesByCorridor.set(row.corridor_id, {
+            provider_count: row.provider_count,
+            rci_ratio: row.rci_ratio,
+            teer_rate: row.teer_rate,
+            mid_market_rate: row.mid_market_rate,
+            suppression_flag: row.suppression_flag,
+            created_at: row.created_at,
+          })
+        }
+      } catch {
+        // Indices fallback is best-effort; degrade gracefully.
+      }
+
       const rows: PulseScreenerRow[] = corridorIds.map((corridorId) => {
         const parsed = parseCorridorFromId(corridorId)
         const slug = parsed
@@ -1690,6 +1812,8 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         const stress = stressByCorridor.get(corridorId)
 
         if (!keys) {
+          const indicesRow = indicesByCorridor.get(corridorId)
+          const indicesUpdatedAt = indicesRow?.created_at ? toIsoString(indicesRow.created_at) : null
           return {
             corridorId,
             slug,
@@ -1700,13 +1824,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             destCountry: parsed?.toCountry,
             sourceCurrency: parsed?.sendCurrency,
             destCurrency: parsed?.recvCurrency,
-            dataAvailable: false,
-            updatedAt: null,
+            dataAvailable: Boolean(indicesRow),
+            updatedAt: indicesUpdatedAt,
             smartSendLevel: null,
             bestProvider: null,
             bestRecipientGets: null,
-            spreadRangeBps: null,
-            providerCount: null,
+            spreadRangeBps: indicesRow?.rci_ratio != null ? Math.round(indicesRow.rci_ratio * 10000) : null,
+            providerCount: indicesRow?.provider_count ?? null,
             bankSavings: null,
             bankSavingsPercent: null,
             moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
@@ -1722,6 +1846,9 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         const bankEntry = entryByKey.get(keys['pulse:bank-comparison'])
 
         if (!smartEntry || !snapshotEntry || !depthEntry || !bankEntry) {
+          // Fallback to gold indices data when pulse cache is empty
+          const indicesRow = indicesByCorridor.get(corridorId)
+          const indicesUpdatedAt = indicesRow?.created_at ? toIsoString(indicesRow.created_at) : null
           return {
             corridorId,
             slug,
@@ -1732,13 +1859,13 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             destCountry: parsed?.toCountry,
             sourceCurrency: parsed?.sendCurrency,
             destCurrency: parsed?.recvCurrency,
-            dataAvailable: false,
-            updatedAt: null,
+            dataAvailable: Boolean(indicesRow),
+            updatedAt: indicesUpdatedAt,
             smartSendLevel: null,
             bestProvider: null,
             bestRecipientGets: null,
-            spreadRangeBps: null,
-            providerCount: null,
+            spreadRangeBps: indicesRow?.rci_ratio != null ? Math.round(indicesRow.rci_ratio * 10000) : null,
+            providerCount: indicesRow?.provider_count ?? null,
             bankSavings: null,
             bankSavingsPercent: null,
             moverDeltaPct24h: moversByCorridor.get(corridorId)?.deltaPct ?? null,
@@ -2434,7 +2561,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         `SELECT MAX(date) AS max_date
            FROM gold_export.cdp_daily
           WHERE amount_bucket = $1
-            AND method_profile = $2`,
+            AND method_profile = $2::method_profile`,
         [amountBucket, methodProfile],
         planeAPool,
       )
@@ -2455,7 +2582,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         `SELECT MAX(created_at) AS updated_at
            FROM gold_export.cdp_daily
           WHERE amount_bucket = $1
-            AND method_profile = $2
+            AND method_profile = $2::method_profile
             AND date = $3`,
         [amountBucket, methodProfile, latestDate],
         planeAPool,
@@ -2487,7 +2614,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
             percentile_cont(0.9) WITHIN GROUP (ORDER BY weight_confidence) FILTER (WHERE weight_confidence IS NOT NULL) AS weight_confidence_p90
           FROM gold_export.cdp_daily
          WHERE amount_bucket = $1
-           AND method_profile = $2
+           AND method_profile = $2::method_profile
            AND date = $3
            AND SPLIT_PART(corridor_id, '-', 3) = ANY($4)
          GROUP BY send_currency
@@ -2600,7 +2727,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         `SELECT MAX(date) AS max_date
            FROM gold_export.cdp_daily
           WHERE amount_bucket = $1
-            AND method_profile = $2`,
+            AND method_profile = $2::method_profile`,
         [amountBucket, methodProfile],
         planeAPool,
       )
@@ -2624,7 +2751,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
         `SELECT MAX(created_at) AS updated_at
            FROM gold_export.cdp_daily
           WHERE amount_bucket = $1
-            AND method_profile = $2
+            AND method_profile = $2::method_profile
             AND date = $3`,
         [amountBucket, methodProfile, latestDate],
         planeAPool,
@@ -2645,7 +2772,7 @@ export const pulseRoutes = async (app: FastifyInstance) => {
                 weight_confidence
            FROM gold_export.cdp_daily
           WHERE amount_bucket = $1
-            AND method_profile = $2
+            AND method_profile = $2::method_profile
             AND date = $3
             AND SPLIT_PART(corridor_id, '-', 3) = $4
             AND (
@@ -3035,17 +3162,99 @@ export const pulseRoutes = async (app: FastifyInstance) => {
   })
 
   app.get('/pulse/smart-send', guardLite, async (request) => {
-    const filters = buildRequestFilters(request, (request.query ?? {}) as Record<string, unknown>)
+    const queryParams = (request.query ?? {}) as Record<string, unknown>
+    const filters = buildRequestFilters(request, queryParams)
     const { payload, updatedAt } = await loadPulse('smart-send', filters, pulseDefaults.smartSend)
-    if (isObject(payload)) {
+    if (isObject(payload) && updatedAt) {
       return {
         ...payload,
         lastUpdated: (payload as any).lastUpdated || updatedAt,
         dataAvailable: Boolean(updatedAt),
         updatedAt: updatedAt || null,
-        source: updatedAt ? 'gold_cache' : 'none',
+        source: 'gold_cache',
       }
     }
+
+    // Fallback: compute smart-send from gold indices when cache is empty
+    try {
+      const methodProfile = resolveIndicesMethodProfile(filters)
+      const explicitCorridorId = typeof queryParams.corridor_id === 'string' ? queryParams.corridor_id : null
+      const corridorId = await resolveIndicesCorridorId(goldIndicesRepository, filters, explicitCorridorId)
+      if (corridorId && methodProfile) {
+        const endDate = new Date()
+        const startDate = new Date(endDate)
+        startDate.setUTCDate(endDate.getUTCDate() - 30)
+        const rows = await goldIndicesRepository.getIndicesSeries({
+          corridorId,
+          amountBucket: INDICES_AMOUNT_BUCKET,
+          methodProfile,
+          startDate,
+          endDate,
+        })
+        if (rows.length > 0) {
+          const latest = rows[rows.length - 1]!
+          const rciValues = rows
+            .filter(r => r.rci_ratio !== null && (r.provider_count ?? 0) >= 2)
+            .map(r => r.rci_ratio!)
+          const avg = rciValues.length > 0
+            ? rciValues.reduce((sum, v) => sum + v, 0) / rciValues.length
+            : null
+          const currentRci = latest.rci_ratio
+          const providerCount = latest.provider_count ?? 0
+
+          let level: 'great' | 'good' | 'fair' | 'wait' = 'fair'
+          let message = 'Rates are in a normal range.'
+          const rationale: string[] = []
+
+          if (currentRci !== null && avg !== null && avg > 0) {
+            const pctFromAvg = ((currentRci - avg) / avg) * 100
+            if (pctFromAvg <= -5) {
+              level = 'great'
+              message = 'Rates are better than average right now.'
+            } else if (pctFromAvg <= 0) {
+              level = 'good'
+              message = 'Rates are slightly below average.'
+            } else if (pctFromAvg <= 5) {
+              level = 'fair'
+              message = 'Rates are in a normal range.'
+            } else {
+              level = 'wait'
+              message = 'Rates are above average — consider waiting.'
+            }
+            rationale.push(`Current cost index is ${pctFromAvg > 0 ? '+' : ''}${pctFromAvg.toFixed(1)}% vs 30-day average.`)
+          }
+
+          if (providerCount > 0) {
+            rationale.push(`Based on ${providerCount} provider${providerCount > 1 ? 's' : ''}.`)
+          }
+
+          const lastUpdatedIso = latest.created_at?.toISOString() ?? null
+          return {
+            level,
+            message,
+            rationale,
+            lastUpdated: lastUpdatedIso,
+            currentRate: latest.teer_rate,
+            avg30Day: avg,
+            percentFromAvg: currentRci !== null && avg !== null && avg > 0
+              ? ((currentRci - avg) / avg) * 100
+              : null,
+            confidence: latest.weight_confidence,
+            percentile: currentRci !== null && avg !== null && avg > 0
+              ? Math.max(0, Math.min(100, 50 - ((currentRci - avg) / avg) * 100))
+              : 50,
+            dataAvailable: true,
+            updatedAt: lastUpdatedIso,
+            source: 'gold_export',
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn('pulse_smart_send_indices_fallback_failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
     return {
       ...pulseDefaults.smartSend,
       dataAvailable: false,

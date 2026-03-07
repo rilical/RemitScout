@@ -7,9 +7,15 @@ const mockGetFeatureFlag = vi.hoisted(() => vi.fn())
 const mockCreateFeatureFlag = vi.hoisted(() => vi.fn())
 const mockUpdateFeatureFlag = vi.hoisted(() => vi.fn())
 const mockListFeatureFlagHistory = vi.hoisted(() => vi.fn())
+const mockGetEffectiveRuntimeFlags = vi.hoisted(() => vi.fn())
+const mockGetRuntimeFlagDefinitions = vi.hoisted(() => vi.fn())
+const mockEnsureUserPlan = vi.hoisted(() => vi.fn())
+const mockGetUserPlan = vi.hoisted(() => vi.fn())
+const mockResolveEffectiveEntitlements = vi.hoisted(() => vi.fn())
 
 vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
   requireAdmin: () => () => undefined,
+  requireSuperAdmin: () => () => undefined,
 }))
 
 vi.mock('../plane-a/src/services/feature-flags', () => ({
@@ -18,6 +24,17 @@ vi.mock('../plane-a/src/services/feature-flags', () => ({
   createFeatureFlag: (...args: unknown[]) => mockCreateFeatureFlag(...args),
   updateFeatureFlag: (...args: unknown[]) => mockUpdateFeatureFlag(...args),
   listFeatureFlagHistory: (...args: unknown[]) => mockListFeatureFlagHistory(...args),
+  getEffectiveRuntimeFlags: (...args: unknown[]) => mockGetEffectiveRuntimeFlags(...args),
+  getRuntimeFlagDefinitions: (...args: unknown[]) => mockGetRuntimeFlagDefinitions(...args),
+}))
+
+vi.mock('../plane-a/src/services/user-plan', () => ({
+  ensureUserPlan: (...args: unknown[]) => mockEnsureUserPlan(...args),
+  getUserPlan: (...args: unknown[]) => mockGetUserPlan(...args),
+}))
+
+vi.mock('../plane-a/src/services/effective-entitlements', () => ({
+  resolveEffectiveEntitlements: (...args: unknown[]) => mockResolveEffectiveEntitlements(...args),
 }))
 
 const makeApp = () =>
@@ -42,24 +59,80 @@ const getHandler = (
 describe('admin feature flags routes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetRuntimeFlagDefinitions.mockReturnValue([
+      { key: 'pulse.public', label: 'Pulse public rollout' },
+    ])
+    mockGetEffectiveRuntimeFlags.mockResolvedValue({
+      generated_at: '2026-03-07T12:00:00.000Z',
+      flags: [
+        {
+          key: 'pulse.public',
+          label: 'Pulse public rollout',
+          description: 'Controls Pulse visibility.',
+          enabled: false,
+          source: 'bootstrap_default',
+          reason: 'Using bootstrap.',
+          hard_gate_enabled: true,
+          bootstrap_enabled: false,
+          plan_code: 'free',
+          pulse_access: 'none',
+          matched_audience_rules: true,
+          db_flag: null,
+        },
+      ],
+    })
+    mockResolveEffectiveEntitlements.mockResolvedValue({
+      effectivePlanCode: 'free',
+      entitlements: { pulse_access: 'none' },
+    })
   })
 
-  it('lists feature flags', async () => {
+  it('lists feature flags with runtime snapshot', async () => {
     const app = makeApp()
     const { adminFeatureFlagsRoutes } = await import('../plane-a/src/routes/admin-feature-flags')
     await adminFeatureFlagsRoutes(app)
 
     mockListFeatureFlags.mockResolvedValue([
-      { key: 'ops.new_pipeline', enabled: false },
+      { key: 'pulse.public', enabled: false },
     ])
 
     const handler = getHandler(app, 'get', '/admin/feature-flags')
     const response = await handler({})
 
     expect(response).toEqual({
-      flags: [{ key: 'ops.new_pipeline', enabled: false }],
+      flags: [{ key: 'pulse.public', enabled: false }],
+      runtime: expect.objectContaining({
+        generated_at: '2026-03-07T12:00:00.000Z',
+        flags: expect.any(Array),
+      }),
+      definitions: [{ key: 'pulse.public', label: 'Pulse public rollout' }],
     })
     expect(mockListFeatureFlags).toHaveBeenCalled()
+    expect(mockGetEffectiveRuntimeFlags).toHaveBeenCalled()
+  })
+
+  it('returns effective runtime flags for the public resolver endpoint', async () => {
+    const app = makeApp()
+    const { adminFeatureFlagsRoutes } = await import('../plane-a/src/routes/admin-feature-flags')
+    await adminFeatureFlagsRoutes(app)
+
+    const handler = getHandler(app, 'get', '/feature-flags/effective')
+    const response = await handler({
+      user: {
+        user_id: '00000000-0000-4000-8000-000000000111',
+        email: 'ops@remit-scout.com',
+        role: 'admin',
+        is_admin: true,
+      },
+    })
+
+    expect(mockEnsureUserPlan).toHaveBeenCalled()
+    expect(mockResolveEffectiveEntitlements).toHaveBeenCalled()
+    expect(response).toEqual({
+      generated_at: '2026-03-07T12:00:00.000Z',
+      flags: expect.any(Array),
+      definitions: [{ key: 'pulse.public', label: 'Pulse public rollout' }],
+    })
   })
 
   it('creates a feature flag', async () => {
@@ -69,7 +142,7 @@ describe('admin feature flags routes', () => {
 
     mockGetFeatureFlag.mockResolvedValue(null)
     mockCreateFeatureFlag.mockResolvedValue({
-      key: 'ops.new_pipeline',
+      key: 'pulse.public',
       enabled: true,
       audience_rules: { global: true },
       metadata: {},
@@ -81,7 +154,7 @@ describe('admin feature flags routes', () => {
       {
         user: { user_id: '00000000-0000-4000-8000-000000000111' },
         body: {
-          key: 'ops.new_pipeline',
+          key: 'pulse.public',
           enabled: true,
           audience_rules: { global: true },
         },
@@ -92,7 +165,7 @@ describe('admin feature flags routes', () => {
     expect(reply.code).toHaveBeenCalledWith(201)
     expect(response).toMatchObject({
       flag: {
-        key: 'ops.new_pipeline',
+        key: 'pulse.public',
         enabled: true,
       },
     })
@@ -119,7 +192,7 @@ describe('admin feature flags routes', () => {
     await adminFeatureFlagsRoutes(app)
 
     mockGetFeatureFlag.mockResolvedValue({
-      key: 'ops.new_pipeline',
+      key: 'pulse.public',
       enabled: false,
     })
     mockListFeatureFlagHistory.mockResolvedValue([
@@ -128,12 +201,12 @@ describe('admin feature flags routes', () => {
 
     const handler = getHandler(app, 'get', '/admin/feature-flags/:key/history')
     const response = await handler({
-      params: { key: 'ops.new_pipeline' },
+      params: { key: 'pulse.public' },
       query: { limit: 50 },
     })
 
     expect(response).toMatchObject({
-      flag: { key: 'ops.new_pipeline' },
+      flag: { key: 'pulse.public' },
       history: [{ id: 1, action: 'created' }],
     })
   })

@@ -53,6 +53,20 @@ describe('TriangulationEngine', () => {
     vi.useRealTimers()
   })
 
+  describe('database query contracts', () => {
+    it('casts method_profile params when loading Gold composite rows', async () => {
+      const pool = createMockPool()
+      const contractEngine = new TriangulationEngine(pool as any)
+
+      await (contractEngine as any).loadCompositeRows('2026-03-01', 500, 'standard_bank')
+
+      expect(pool.query).toHaveBeenCalledTimes(1)
+      const [sql, params] = (pool.query as any).mock.calls[0] as [string, unknown[]]
+      expect(sql).toContain('AND method_profile = $2::method_profile')
+      expect(params).toEqual([500, 'standard_bank', '2026-03-01'])
+    })
+  })
+
   // =========================================================================
   // Signal validation
   // =========================================================================

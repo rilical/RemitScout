@@ -70,6 +70,7 @@ export class TriangulatedIndexRepository implements ITriangulatedIndexRepository
     const result = await query<CorridorStressRow>(
       `SELECT DISTINCT ON (corridor_id)
               corridor_id, stress_score::double precision, date,
+              created_at AS computed_at,
               confidence
          FROM gold_export.triangulated_index
         ORDER BY corridor_id, date DESC`,

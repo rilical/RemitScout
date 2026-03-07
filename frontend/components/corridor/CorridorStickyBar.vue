@@ -1,5 +1,7 @@
 <template>
   <div
+    data-testid="corridor-query-surface"
+    :data-ready="isInteractionReady ? 'true' : 'false'"
     class="overflow-hidden rounded-2xl border border-rs-border bg-gradient-to-b from-neutral-50 to-white shadow-sm"
   >
     <!-- Main Query Builder -->
@@ -19,7 +21,10 @@
                 label="From"
                 :exclude-country="localToCountry"
                 placeholder="Sending from"
-                @country-selected="emitUpdate"
+                :disabled="!isInteractionReady"
+                @country-selected="
+                  (countryCode, currency) => handleCountrySelection('from', countryCode, currency)
+                "
               />
             </div>
           </div>
@@ -35,7 +40,10 @@
                 label="To"
                 :exclude-country="localFromCountry"
                 placeholder="Receiving in"
-                @country-selected="emitUpdate"
+                :disabled="!isInteractionReady"
+                @country-selected="
+                  (countryCode, currency) => handleCountrySelection('to', countryCode, currency)
+                "
               />
             </div>
           </div>
@@ -56,6 +64,7 @@
                 :max="inputMax"
                 step="0.01"
                 class="h-12 w-full rounded-lg border border-neutral-300 bg-surface px-4 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                :disabled="!isInteractionReady"
                 @blur="handleAmountBlur"
                 @input="sanitizeAmountInput"
                 @keydown="preventNegative"
@@ -76,6 +85,7 @@
               :exclude-currency="localToCurrency"
               placeholder="USD"
               code-only
+              :disabled="!isInteractionReady"
               @currency-selected="emitUpdate"
             />
           </div>
@@ -93,6 +103,7 @@
               :exclude-currency="localFromCurrency"
               placeholder="USD"
               code-only
+              :disabled="!isInteractionReady"
               @currency-selected="emitUpdate"
             />
           </div>
@@ -104,7 +115,7 @@
               >Action</label>
             <button
               type="button"
-              :disabled="isSearching"
+              :disabled="!isInteractionReady || isSearching"
               data-testid="corridor-query-compare-button"
               class="text-body-sm flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-brand-600 px-6 font-semibold text-white transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
               @click="handleSearch"
@@ -183,9 +194,16 @@ viewBox="0 0 24 24"
             </svg>
             <span class="text-body-sm text-rs-muted">Loading options...</span>
           </div>
+          <!-- No methods available -->
+          <div
+            v-else-if="payoutMethods.length === 0"
+            class="text-body-sm text-rs-muted"
+          >
+            All delivery methods
+          </div>
           <!-- Actual method buttons -->
           <div
-            v-else-if="payoutMethods.length > 0"
+            v-else
             class="inline-flex rounded-lg border border-rs-border bg-surface p-1 shadow-sm"
           >
             <button
@@ -198,6 +216,7 @@ viewBox="0 0 24 24"
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-neutral-600 hover:bg-neutral-50',
               ]"
+              :disabled="!isInteractionReady"
               @click="selectMethod(method.value)"
             >
               <component
@@ -218,6 +237,7 @@ class="h-3.5 w-3.5"
               <UniversalDropdown
                 :model-value="localSortBy"
                 :options="sortOptions"
+                :disabled="!isInteractionReady"
                 button-class="h-12 rounded-lg border border-neutral-300 bg-surface px-4 pr-10 text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 @update:model-value="
                   value => {
@@ -244,6 +264,7 @@ class="h-3.5 w-3.5"
               ]"
               title="Add to watchlist"
               aria-label="Add to watchlist"
+              :disabled="!isInteractionReady"
               :aria-pressed="props.watchlistActive"
               data-testid="corridor-sticky-watchlist-button"
               @click="emit('save')"
@@ -273,6 +294,7 @@ class="h-3.5 w-3.5"
               ]"
               title="Set rate alert"
               aria-label="Set rate alert"
+              :disabled="!isInteractionReady"
               :aria-pressed="props.alertActive"
               data-testid="corridor-sticky-alert-button"
               @click="emit('alert')"
@@ -321,11 +343,11 @@ viewBox="0 0 24 24"
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, h } from 'vue'
+import { ref, computed, watch, h, nextTick, onMounted } from 'vue'
 import CountrySelect from '~/components/shared/CountrySelect.vue'
 import CurrencySelect from '~/components/shared/CurrencySelect.vue'
 import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
-import { getCountryByCode } from '~/utils/countries-currencies'
+import { COUNTRIES, getCountryByCode } from '~/utils/countries-currencies'
 import { sanitizeAmount, getMinAmount, getMaxAmount } from '~/utils/currency-limits'
 
 const BankIcon = () =>
@@ -448,6 +470,11 @@ const localFromCurrency = ref(props.fromCurrency || 'USD')
 const localFromCountry = ref(props.fromCountry || 'US')
 const localToCountry = ref(props.toCountry || 'MX')
 const isSearching = ref(false)
+const isInteractionReady = ref(false)
+
+onMounted(() => {
+  isInteractionReady.value = true
+})
 
 const availableToCurrenciesArray = computed(() => {
   if (Array.isArray(props.availableToCurrencies)) return props.availableToCurrencies
@@ -858,8 +885,60 @@ function emitUpdate() {
   })
 }
 
-function handleSearch() {
-  if (!localFromCountry.value || !localToCountry.value) return
+function handleCountrySelection(
+  direction: 'from' | 'to',
+  countryCode: string,
+  currency: string,
+) {
+  const normalizedCurrency = currency?.toUpperCase?.() || ''
+  if (direction === 'from') {
+    localFromCountry.value = countryCode
+    if (normalizedCurrency) {
+      localFromCurrency.value = normalizedCurrency
+    }
+  }
+ else {
+    localToCountry.value = countryCode
+    if (normalizedCurrency) {
+      localToCurrency.value = normalizedCurrency
+    }
+  }
+
+  emitUpdate()
+}
+
+function resolveCountryCodeFromInput(inputId: string, fallback: string) {
+  if (!import.meta.client) return fallback
+  const input = document.getElementById(inputId) as HTMLInputElement | null
+  const rawValue = input?.value?.trim().toLowerCase() || ''
+  if (!rawValue) return fallback
+
+  const matchedCountry = COUNTRIES.find(country => {
+    const name = country.name.trim().toLowerCase()
+    const code = country.code.trim().toLowerCase()
+    return rawValue === name || rawValue === code
+  })
+
+  return matchedCountry?.code || fallback
+}
+
+async function handleSearch() {
+  // Let any in-flight v-model updates from the country selectors settle
+  // before we snapshot the corridor for navigation.
+  await nextTick()
+
+  const resolvedFromCountry = resolveCountryCodeFromInput(
+    'corridor-from-country',
+    localFromCountry.value,
+  )
+  const resolvedToCountry = resolveCountryCodeFromInput(
+    'corridor-to-country',
+    localToCountry.value,
+  )
+  if (!resolvedFromCountry || !resolvedToCountry) return
+
+  localFromCountry.value = resolvedFromCountry
+  localToCountry.value = resolvedToCountry
 
   isSearching.value = true
   const currency = localFromCurrency.value || 'USD'
@@ -868,8 +947,8 @@ function handleSearch() {
     localAmount.value = sanitized
   }
   emit('new-query', {
-    fromCountry: localFromCountry.value,
-    toCountry: localToCountry.value,
+    fromCountry: resolvedFromCountry,
+    toCountry: resolvedToCountry,
     amount: sanitized,
     currency: localToCurrency.value,
     fromCurrency: localFromCurrency.value,

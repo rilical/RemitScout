@@ -48,6 +48,17 @@ const CLOUDWATCH_ALARM_NAMESPACES = new Set([
 const isCloudWatchRequired = (namespace: string): boolean =>
   CLOUDWATCH_ALARM_NAMESPACES.has(namespace)
 
+// Some namespaces back release gates and admin views, so mirror them directly
+// into New Relic even when CloudWatch remains the alarm source of truth.
+const DIRECT_NEW_RELIC_MIRROR_NAMESPACES = new Set([
+  'RemitScout',
+  'RemitScout/Agents',
+  'RemitScout/Business',
+])
+
+const shouldMirrorToNewRelic = (namespace: string): boolean =>
+  !isCloudWatchRequired(namespace) || DIRECT_NEW_RELIC_MIRROR_NAMESPACES.has(namespace)
+
 let client: CloudWatchClient | null = null
 let flushTimer: NodeJS.Timeout | null = null
 const metricQueue: CloudWatchMetricInput[] = []
@@ -116,6 +127,25 @@ const toDimensions = (dimensions?: Record<string, string>) => {
     Name: String(Name),
     Value: String(Value),
   }))
+}
+
+const mirrorMetricToNewRelic = (
+  metric: CloudWatchMetricInput,
+  resolvedNamespace: string,
+): void => {
+  if (!shouldMirrorToNewRelic(resolvedNamespace) || !isNewRelicMetricExportEnabled()) return
+
+  enqueueNewRelicMetric({
+    name: metric.name,
+    type: metric.unit === 'Count' ? 'count' : 'gauge',
+    value: metric.value,
+    attributes: {
+      ...Object.fromEntries(
+        Object.entries(metric.dimensions || {}).map(([key, value]) => [key, String(value)]),
+      ),
+      namespace: resolvedNamespace,
+    },
+  })
 }
 
 /**
@@ -232,20 +262,10 @@ export const recordCloudWatchMetric = (metric: CloudWatchMetricInput): void => {
   }
 
   const resolvedNamespace = metric.namespace || cloudwatchConfig.namespace
+  mirrorMetricToNewRelic(metric, resolvedNamespace)
 
   // Route non-alarm namespaces to New Relic directly (skip CloudWatch).
-  if (!isCloudWatchRequired(resolvedNamespace) && isNewRelicMetricExportEnabled()) {
-    enqueueNewRelicMetric({
-      name: metric.name,
-      type: 'gauge',
-      value: metric.value,
-      attributes: {
-        ...Object.fromEntries(
-          Object.entries(metric.dimensions || {}).map(([k, v]) => [k, String(v)]),
-        ),
-        namespace: resolvedNamespace,
-      },
-    })
+  if (!isCloudWatchRequired(resolvedNamespace)) {
     return
   }
 

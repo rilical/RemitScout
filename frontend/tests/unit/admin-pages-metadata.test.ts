@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 describe('admin pages metadata', () => {
-  it('keeps every /admin page behind auth+admin middleware and the admin layout', () => {
+  it('keeps every /admin page behind authenticated admin middleware and the admin layout', () => {
     const adminPagesDir = path.resolve(__dirname, '../../pages/admin')
     const pageFiles = readdirSync(adminPagesDir)
       .filter(file => file.endsWith('.vue'))
@@ -14,7 +14,12 @@ describe('admin pages metadata', () => {
 
     for (const file of pageFiles) {
       const content = readFileSync(path.join(adminPagesDir, file), 'utf8')
-      expect(content, `${file} missing auth+admin middleware`).toContain('middleware: [\'auth\', \'admin\']')
+      const hasAdminGuard = content.includes("middleware: ['auth', 'admin']")
+      const hasSuperAdminGuard = content.includes("middleware: ['auth', 'super-admin']")
+      expect(
+        hasAdminGuard || hasSuperAdminGuard,
+        `${file} missing authenticated admin middleware`,
+      ).toBe(true)
       expect(content, `${file} missing admin layout`).toContain('layout: \'admin\'')
     }
   })

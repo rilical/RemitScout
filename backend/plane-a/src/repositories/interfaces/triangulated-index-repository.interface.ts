@@ -18,6 +18,7 @@ export type CorridorStressRow = {
   stress_score: number | null
   stress_level: string
   date: Date
+  computed_at: Date | null
   confidence: string | null
 }
 

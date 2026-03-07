@@ -120,6 +120,23 @@ describe('admin surface matrix', () => {
     }
   })
 
+  it('keeps super-admin-only operational reads on the strict guard', async () => {
+    const routes = await captureAdminSurfaceRoutes()
+    const superAdminReads = new Map([
+      ['GET /api/v1/ops/observer/summary', 'requireSuperAdmin'],
+      ['GET /api/v1/ops/indices/health', 'requireSuperAdmin'],
+      ['GET /api/v1/ops/b2b-sweep-status', 'requireSuperAdmin'],
+      ['GET /api/v1/ops/providers/health', 'requireSuperAdmin'],
+      ['GET /api/v1/ops/services/health', 'requireSuperAdmin'],
+    ])
+
+    for (const [routeKey, expectedGuard] of superAdminReads.entries()) {
+      const actual = routes.find((route) => `${route.method} ${route.url}` === routeKey)
+      expect(actual, `missing ${routeKey}`).toBeTruthy()
+      expect(actual?.guards).toContain(expectedGuard)
+    }
+  })
+
   it('registers admin session exchange and refresh routes for the UI bootstrap flow', async () => {
     vi.resetModules()
     process.env = {

@@ -8,7 +8,7 @@ It is intentionally optimized for LLM context windows:
 - links to deeper docs instead of embedding everything here
 
 Detailed docs live under:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/`
+- `docs/architecture/`
 
 ## Agent navigation (start here)
 1. System invariants: `ARCHITECTURE.md` (this file)
@@ -125,10 +125,10 @@ Remit-Scout runs ops work as durable artifacts and bounded loops:
 - **Executors** run skills (GitHub Actions, AWS scheduled jobs, local).
 - **Judge** validates evidence + contracts, decides iterate/escalate/close.
 
-Details: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/issueops.md`
+Details: `docs/architecture/issueops.md`
 
 ## SLO targets (default values)
-Canonical list: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/observability.md`
+Canonical list: `docs/architecture/observability.md`
 
 ## Repo navigation notes (LLM friendly)
 - When diagnosing: prefer running a skill/evidence pack over reading raw logs.

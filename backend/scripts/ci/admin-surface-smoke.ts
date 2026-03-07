@@ -61,8 +61,112 @@ type ObserverSummaryResponse = {
   message?: string
 }
 
+type ModuleRegistryResponse = {
+  modules?: unknown[]
+  updatedAt?: string | null
+  error?: string
+  message?: string
+}
+
+type DiscoveryScansResponse = {
+  scans?: unknown[]
+  error?: string
+  message?: string
+}
+
+type DiscoveryCertificationRunsResponse = {
+  runs?: unknown[]
+  error?: string
+  message?: string
+}
+
 type AuditLogsResponse = {
   logs?: unknown[]
+  error?: string
+  message?: string
+}
+
+type AuditLogDetailResponse = {
+  event_id?: string
+  error?: string
+  message?: string
+}
+
+type FeatureFlagsEffectiveResponse = {
+  generated_at?: string
+  flags?: unknown[]
+  definitions?: unknown[]
+  error?: string
+  message?: string
+}
+
+type AdminFeatureFlagsResponse = {
+  flags?: unknown[]
+  runtime?: {
+    generated_at?: string
+    flags?: unknown[]
+  }
+  definitions?: unknown[]
+  error?: string
+  message?: string
+}
+
+type InstitutionalClientsResponse = {
+  clients?: unknown[]
+  launch_gate?: {
+    blocked?: boolean
+  }
+  workflow?: {
+    allowed_prelaunch_actions?: unknown[]
+  }
+  error?: string
+  message?: string
+}
+
+type AdsAdminResponse = {
+  runtime?: {
+    runtime_enabled?: boolean
+    mode?: string
+  }
+  summary?: {
+    total?: number
+  }
+  ads?: unknown[]
+  error?: string
+  message?: string
+}
+
+type AdsPreviewResponse = {
+  runtime?: {
+    runtime_enabled?: boolean
+    mode?: string
+  }
+  eligible_count?: number
+  reason?: string
+  ad?: unknown
+  error?: string
+  message?: string
+}
+
+type AnalyticsCorridorsResponse = {
+  corridors?: unknown[]
+  error?: string
+  message?: string
+}
+
+type AnalyticsSessionsResponse = {
+  total_sessions?: number
+  unique_users?: number
+  error?: string
+  message?: string
+}
+
+type GoldExportsResponse = {
+  success?: boolean
+  rows?: unknown[]
+  meta?: {
+    date?: string | null
+  }
   error?: string
   message?: string
 }
@@ -113,6 +217,23 @@ export const findPlanForEmail = (
 export const readSmokeUserMfaCode = (
   env: NodeJS.ProcessEnv = process.env,
 ): string => env.SMOKE_USER_MFA_CODE?.trim() || env.E2E_AUTH_MFA_CODE?.trim() || ''
+
+export const readExpectedAdminMfa = (
+  env: NodeJS.ProcessEnv = process.env,
+): boolean => {
+  const raw = env.SMOKE_EXPECT_ADMIN_MFA?.trim().toLowerCase()
+  if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true
+  if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
+
+  const runtime = (
+    env.ENVIRONMENT ||
+    env.ENV_NAME ||
+    env.NODE_ENV ||
+    ''
+  ).trim().toLowerCase()
+
+  return runtime === 'staging' || runtime === 'prod' || runtime === 'production'
+}
 
 export const findVerifiedTotpFactor = (
   body: SupabaseUserResponse,
@@ -314,11 +435,25 @@ const main = async () => {
   const apiBase = resolveSmokeApiBaseUrl(smokeBaseUrl)
   const rootBase = resolveSmokeRootBaseUrl(smokeBaseUrl)
   const adminConfig = readAdminSmokeConfig()
+  const expectAdminMfa = readExpectedAdminMfa()
+  const checks: Check[] = []
+  const record = (check: Check) => checks.push(check)
   const supabaseSession = await signInSupabase()
   let exchange = await exchangeAdminSession(apiBase, supabaseSession.accessToken)
   let supabaseAccessToken = supabaseSession.accessToken
+  const initialExchangeRequiredMfa = isAdminMfaRequiredResponse(exchange.status, exchange.body)
 
-  if (isAdminMfaRequiredResponse(exchange.status, exchange.body)) {
+  if (expectAdminMfa) {
+    record({
+      name: 'POST /sessions/admin/exchange requires MFA before issuing admin token',
+      ok: initialExchangeRequiredMfa,
+      note: initialExchangeRequiredMfa
+        ? `status=${exchange.status}`
+        : `status=${exchange.status} body=${JSON.stringify(exchange.body)}`,
+    })
+  }
+
+  if (initialExchangeRequiredMfa) {
     supabaseAccessToken = await maybeVerifySupabaseMfa(
       supabaseSession.supabaseUrl,
       supabaseSession.apiKey,
@@ -326,9 +461,6 @@ const main = async () => {
     )
     exchange = await exchangeAdminSession(apiBase, supabaseAccessToken)
   }
-
-  const checks: Check[] = []
-  const record = (check: Check) => checks.push(check)
 
   const adminAccessToken = typeof exchange.body?.access_token === 'string'
     ? exchange.body.access_token
@@ -350,6 +482,8 @@ const main = async () => {
   const adminHeaders = {
     Authorization: `Bearer ${adminAccessToken}`,
   }
+  const analyticsEndDate = new Date().toISOString().slice(0, 10)
+  const analyticsStartDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
   const observerSummary = await jsonFetch<ObserverSummaryResponse>(
     `${apiBase}/ops/observer/summary?limit=1&windowHours=24`,
@@ -363,6 +497,53 @@ const main = async () => {
       : `status=${observerSummary.status} body=${JSON.stringify(observerSummary.body)} root=${rootBase}`,
   })
 
+  const moduleRegistry = await jsonFetch<ModuleRegistryResponse>(`${apiBase}/ops/modules/health`, {
+    headers: adminHeaders,
+  })
+  record({
+    name: 'GET /ops/modules/health',
+    ok: moduleRegistry.status < 400 && Array.isArray(moduleRegistry.body?.modules),
+    note: moduleRegistry.status < 400
+      ? `status=${moduleRegistry.status} modules=${String(moduleRegistry.body?.modules?.length ?? 0)}`
+      : `status=${moduleRegistry.status} body=${JSON.stringify(moduleRegistry.body)}`,
+  })
+
+  const pendingDiscoveryReviews = await jsonFetch<DiscoveryScansResponse>(
+    `${apiBase}/admin/discovery/pending-reviews?limit=1`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /admin/discovery/pending-reviews?limit=1',
+    ok: pendingDiscoveryReviews.status < 400 && Array.isArray(pendingDiscoveryReviews.body?.scans),
+    note: pendingDiscoveryReviews.status < 400
+      ? `status=${pendingDiscoveryReviews.status} scans=${String(pendingDiscoveryReviews.body?.scans?.length ?? 0)}`
+      : `status=${pendingDiscoveryReviews.status} body=${JSON.stringify(pendingDiscoveryReviews.body)}`,
+  })
+
+  const discoveryScans = await jsonFetch<DiscoveryScansResponse>(
+    `${apiBase}/admin/discovery/scans?limit=1`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /admin/discovery/scans?limit=1',
+    ok: discoveryScans.status < 400 && Array.isArray(discoveryScans.body?.scans),
+    note: discoveryScans.status < 400
+      ? `status=${discoveryScans.status} scans=${String(discoveryScans.body?.scans?.length ?? 0)}`
+      : `status=${discoveryScans.status} body=${JSON.stringify(discoveryScans.body)}`,
+  })
+
+  const discoveryCertificationRuns = await jsonFetch<DiscoveryCertificationRunsResponse>(
+    `${apiBase}/admin/discovery/certifications/runs?limit=1`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /admin/discovery/certifications/runs?limit=1',
+    ok: discoveryCertificationRuns.status < 400 && Array.isArray(discoveryCertificationRuns.body?.runs),
+    note: discoveryCertificationRuns.status < 400
+      ? `status=${discoveryCertificationRuns.status} runs=${String(discoveryCertificationRuns.body?.runs?.length ?? 0)}`
+      : `status=${discoveryCertificationRuns.status} body=${JSON.stringify(discoveryCertificationRuns.body)}`,
+  })
+
   const auditLogs = await jsonFetch<AuditLogsResponse>(`${apiBase}/audit/logs?limit=1`, {
     headers: adminHeaders,
   })
@@ -372,6 +553,114 @@ const main = async () => {
     note: auditLogs.status < 400
       ? `status=${auditLogs.status} logs=${String(auditLogs.body?.logs?.length ?? 0)}`
       : `status=${auditLogs.status} body=${JSON.stringify(auditLogs.body)}`,
+  })
+
+  const firstAuditEventId = typeof (auditLogs.body?.logs?.[0] as { event_id?: unknown } | undefined)?.event_id === 'string'
+    ? (auditLogs.body?.logs?.[0] as { event_id: string }).event_id
+    : ''
+  if (firstAuditEventId) {
+    const auditDetail = await jsonFetch<AuditLogDetailResponse>(`${apiBase}/audit/logs/${encodeURIComponent(firstAuditEventId)}`, {
+      headers: adminHeaders,
+    })
+    record({
+      name: 'GET /audit/logs/:eventId',
+      ok: auditDetail.status < 400 && auditDetail.body?.event_id === firstAuditEventId,
+      note: auditDetail.status < 400
+        ? `event_id=${firstAuditEventId}`
+        : `status=${auditDetail.status} body=${JSON.stringify(auditDetail.body)}`,
+    })
+  }
+
+  const effectiveFlags = await jsonFetch<FeatureFlagsEffectiveResponse>(`${apiBase}/feature-flags/effective`, {
+    headers: adminHeaders,
+  })
+  record({
+    name: 'GET /feature-flags/effective',
+    ok: effectiveFlags.status < 400 && Array.isArray(effectiveFlags.body?.flags) && Array.isArray(effectiveFlags.body?.definitions),
+    note: effectiveFlags.status < 400
+      ? `flags=${String(effectiveFlags.body?.flags?.length ?? 0)}`
+      : `status=${effectiveFlags.status} body=${JSON.stringify(effectiveFlags.body)}`,
+  })
+
+  const adminFlags = await jsonFetch<AdminFeatureFlagsResponse>(`${apiBase}/admin/feature-flags`, {
+    headers: adminHeaders,
+  })
+  record({
+    name: 'GET /admin/feature-flags',
+    ok: adminFlags.status < 400 && Array.isArray(adminFlags.body?.flags) && Array.isArray(adminFlags.body?.runtime?.flags),
+    note: adminFlags.status < 400
+      ? `db_flags=${String(adminFlags.body?.flags?.length ?? 0)} runtime_flags=${String(adminFlags.body?.runtime?.flags?.length ?? 0)}`
+      : `status=${adminFlags.status} body=${JSON.stringify(adminFlags.body)}`,
+  })
+
+  const analyticsCorridors = await jsonFetch<AnalyticsCorridorsResponse>(
+    `${apiBase}/analytics/corridors?start_date=${analyticsStartDate}&end_date=${analyticsEndDate}&limit=5`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /analytics/corridors',
+    ok: analyticsCorridors.status < 400 && Array.isArray(analyticsCorridors.body?.corridors),
+    note: analyticsCorridors.status < 400
+      ? `corridors=${String(analyticsCorridors.body?.corridors?.length ?? 0)} range=${analyticsStartDate}..${analyticsEndDate}`
+      : `status=${analyticsCorridors.status} body=${JSON.stringify(analyticsCorridors.body)}`,
+  })
+
+  const analyticsSessions = await jsonFetch<AnalyticsSessionsResponse>(
+    `${apiBase}/analytics/engagement/sessions?start_date=${analyticsStartDate}&end_date=${analyticsEndDate}`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /analytics/engagement/sessions',
+    ok: analyticsSessions.status < 400 && typeof analyticsSessions.body?.total_sessions === 'number',
+    note: analyticsSessions.status < 400
+      ? `sessions=${String(analyticsSessions.body?.total_sessions ?? 0)}`
+      : `status=${analyticsSessions.status} body=${JSON.stringify(analyticsSessions.body)}`,
+  })
+
+  const goldExports = await jsonFetch<GoldExportsResponse>(
+    `${apiBase}/ops/gold/exports/cdp-daily?amount_bucket=500&method_profile=standard_bank&limit=5`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /ops/gold/exports/cdp-daily',
+    ok: goldExports.status < 400 && goldExports.body?.success === true && Array.isArray(goldExports.body?.rows),
+    note: goldExports.status < 400
+      ? `rows=${String(goldExports.body?.rows?.length ?? 0)} date=${String(goldExports.body?.meta?.date ?? 'null')}`
+      : `status=${goldExports.status} body=${JSON.stringify(goldExports.body)}`,
+  })
+
+  const institutionalClients = await jsonFetch<InstitutionalClientsResponse>(`${apiBase}/admin/institutional/clients`, {
+    headers: adminHeaders,
+  })
+  record({
+    name: 'GET /admin/institutional/clients',
+    ok: institutionalClients.status < 400 && Array.isArray(institutionalClients.body?.clients),
+    note: institutionalClients.status < 400
+      ? `clients=${String(institutionalClients.body?.clients?.length ?? 0)} blocked=${String(Boolean(institutionalClients.body?.launch_gate?.blocked))}`
+      : `status=${institutionalClients.status} body=${JSON.stringify(institutionalClients.body)}`,
+  })
+
+  const adsAdmin = await jsonFetch<AdsAdminResponse>(`${apiBase}/admin/ads`, {
+    headers: adminHeaders,
+  })
+  record({
+    name: 'GET /admin/ads',
+    ok: adsAdmin.status < 400 && Array.isArray(adsAdmin.body?.ads) && typeof adsAdmin.body?.runtime?.mode === 'string',
+    note: adsAdmin.status < 400
+      ? `ads=${String(adsAdmin.body?.ads?.length ?? 0)} mode=${String(adsAdmin.body?.runtime?.mode ?? 'unknown')}`
+      : `status=${adsAdmin.status} body=${JSON.stringify(adsAdmin.body)}`,
+  })
+
+  const adsPreview = await jsonFetch<AdsPreviewResponse>(
+    `${apiBase}/admin/ads/preview?placement=compare_inline&seed=smoke-preview&simulate_plan=free&marketing_consent=true&ignore_runtime_disabled=true`,
+    { headers: adminHeaders },
+  )
+  record({
+    name: 'GET /admin/ads/preview',
+    ok: adsPreview.status < 400 && typeof adsPreview.body?.reason === 'string' && typeof adsPreview.body?.runtime?.mode === 'string',
+    note: adsPreview.status < 400
+      ? `reason=${String(adsPreview.body?.reason ?? 'unknown')} eligible=${String(adsPreview.body?.eligible_count ?? 0)}`
+      : `status=${adsPreview.status} body=${JSON.stringify(adsPreview.body)}`,
   })
 
   const grant = await jsonFetch<AdminPlanMutationResponse>(`${apiBase}/admin/plans/grant`, {

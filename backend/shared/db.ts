@@ -85,11 +85,11 @@ const registerPoolForCleanup = (pool: Pool) => {
     activePools.clear()
   }
 
-  process.once('exit', cleanup)
-  if (!dbPoolConfig.disablePoolSignalCleanup) {
-    process.once('SIGTERM', cleanup)
-    process.once('SIGINT', cleanup)
-  }
+  // Signal-driven shutdown is owned by shared/shutdown.ts so workers can
+  // finish in-flight work before connection teardown.
+  process.once('beforeExit', () => {
+    void cleanup()
+  })
 }
 
 /**

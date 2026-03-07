@@ -16,7 +16,11 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
-import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
+import {
+  collectOandaThrottleEnv,
+  collectPlaneBProviderThrottleEnv,
+  resolveAdminMfaRequiredEnv,
+} from './env-utils'
 import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
@@ -144,6 +148,10 @@ export type EcsTaskOptions = {
   planeBDbPoolMax?: string
   planeBDbPoolMin?: string
   goldIndicesMinProviders?: string
+  triangulationEnabled?: string
+  stressDetectionEnabled?: string
+  emitObservations?: string
+  moduleEmitObservationsDefault?: string
   discoveryRepository?: IRepository
   discoveryImageTag?: string
 }
@@ -322,6 +330,22 @@ export const createEcsTasks = (
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
   const goldIndicesMinProviders = options.goldIndicesMinProviders
+  const triangulationEnabled =
+    options.triangulationEnabled
+    ?? process.env.TRIANGULATION_ENABLED
+    ?? ((isStaging || isProd) ? 'true' : 'false')
+  const stressDetectionEnabled =
+    options.stressDetectionEnabled
+    ?? process.env.STRESS_DETECTION_ENABLED
+    ?? ((isStaging || isProd) ? 'true' : 'false')
+  const emitObservations =
+    options.emitObservations
+    ?? process.env.EMIT_OBSERVATIONS
+    ?? ((isStaging || isProd) ? 'true' : 'false')
+  const moduleEmitObservationsDefault =
+    options.moduleEmitObservationsDefault
+    ?? process.env.MODULE_EMIT_OBSERVATIONS_DEFAULT
+    ?? emitObservations
   const capabilityProbeProxyTier = process.env.CAPABILITY_PROBE_PROXY_TIER?.trim()
   const b2cRefreshLimit = isConservativeWorkerDefaults ? '25' : '50'
   const b2cRefreshConcurrency = isConservativeWorkerDefaults ? '1' : '5'
@@ -517,6 +541,10 @@ export const createEcsTasks = (
     DB_CONNECTION_ROUTE: planeBDbRoute,
     DB_STATEMENT_TIMEOUT_POLICY:
       planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
+    TRIANGULATION_ENABLED: triangulationEnabled,
+    STRESS_DETECTION_ENABLED: stressDetectionEnabled,
+    EMIT_OBSERVATIONS: emitObservations,
+    MODULE_EMIT_OBSERVATIONS_DEFAULT: moduleEmitObservationsDefault,
     ...tracingEnv,
     TRACING_EXPORTER: tracingExporter,
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
@@ -1576,7 +1604,6 @@ export const createEcsTasks = (
     'PLANE_A_ENABLE_JWT_AUTH',
     'PLANE_A_REQUIRE_JWT',
     'PLANE_A_REQUIRE_API_KEY',
-    'ADMIN_MFA_REQUIRED',
     'PLANE_A_ADMIN_REVOCATION_FAIL_CLOSED',
   ] as const
   for (const key of planeARuntimePassthroughKeys) {
@@ -1584,6 +1611,10 @@ export const createEcsTasks = (
     if (value !== undefined && value !== '' && planeAWorkerEnv[key] === undefined) {
       planeAWorkerEnv[key] = value
     }
+  }
+  const adminMfaRequired = resolveAdminMfaRequiredEnv(options.envName)
+  if (adminMfaRequired) {
+    planeAWorkerEnv.ADMIN_MFA_REQUIRED = adminMfaRequired
   }
 
   const alertEvaluationTask = new FargateTaskDefinition(

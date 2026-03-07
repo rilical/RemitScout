@@ -32,6 +32,8 @@ export type PipelineOptions = {
   frontendDistribution?: Distribution
   planeACloudFrontDomain?: string
   planeAApiEndpoint?: string
+  publicSiteUrl?: string
+  publicApiBase?: string
   publicSupabaseUrl?: string
   publicSupabaseAnonKey?: string
   publicSupabaseSecretArn?: string
@@ -105,6 +107,12 @@ export const createPipeline = (
   if (options.planeAApiEndpoint) {
     buildEnvVars.PLANE_A_API_ENDPOINT = { value: options.planeAApiEndpoint }
   }
+  if (options.publicSiteUrl) {
+    buildEnvVars.PUBLIC_SITE_URL = { value: options.publicSiteUrl }
+  }
+  if (options.publicApiBase) {
+    buildEnvVars.PUBLIC_API_BASE = { value: options.publicApiBase }
+  }
   if (options.publicSupabaseUrl) {
     buildEnvVars.PUBLIC_SUPABASE_URL = { value: options.publicSupabaseUrl }
   }
@@ -132,6 +140,7 @@ export const createPipeline = (
     buildEnvVars.PUBLIC_META_PIXEL_ID = { value: options.publicMetaPixelId }
   }
   if (options.publicAdsEnabled) {
+    buildEnvVars.PUBLIC_ENABLE_ADS = { value: options.publicAdsEnabled }
     buildEnvVars.PUBLIC_ADS_ENABLED = { value: options.publicAdsEnabled }
   }
   if (options.publicPulseEnabled) {
@@ -197,19 +206,31 @@ export const createPipeline = (
             [
               'if [ -n "$FRONTEND_BUCKET_NAME" ]; then',
               '  echo "Building frontend..."',
+              '  if [ "$ENV_NAME" = "staging" ] || [ "$ENV_NAME" = "prod" ]; then',
+              '    if [ -z "$PUBLIC_API_BASE" ]; then',
+              '      echo "Missing PUBLIC_API_BASE for $ENV_NAME frontend build."',
+              '      exit 1',
+              '    fi',
+              '    if [ -z "$PUBLIC_SITE_URL" ]; then',
+              '      echo "Missing PUBLIC_SITE_URL for $ENV_NAME frontend build."',
+              '      exit 1',
+              '    fi',
+              '  fi',
               '  if [ -z "$PUBLIC_API_BASE" ]; then',
               '    if [ -n "$PLANE_A_CLOUDFRONT_DOMAIN" ]; then',
               '      export PUBLIC_API_BASE=https://$PLANE_A_CLOUDFRONT_DOMAIN/api/v1',
               '    elif [ -n "$PLANE_A_API_ENDPOINT" ]; then',
               '      export PUBLIC_API_BASE=${PLANE_A_API_ENDPOINT%/}/api/v1',
               '    fi',
+              '  else',
+              '    export PUBLIC_API_BASE=${PUBLIC_API_BASE%/}',
               '  fi',
-              '  if [ -n "$FRONTEND_DISTRIBUTION_DOMAIN" ]; then',
-              '    export PUBLIC_SITE_URL=https://$FRONTEND_DISTRIBUTION_DOMAIN',
-              '    export PUBLIC_IMAGE_BASE=https://$FRONTEND_DISTRIBUTION_DOMAIN/images',
-              '  elif [ -n "${PUBLIC_SITE_URL:-}" ]; then',
+              '  if [ -n "${PUBLIC_SITE_URL:-}" ]; then',
               '    export PUBLIC_SITE_URL=${PUBLIC_SITE_URL%/}',
               '    export PUBLIC_IMAGE_BASE=${PUBLIC_IMAGE_BASE:-${PUBLIC_SITE_URL%/}/images}',
+              '  elif [ -n "$FRONTEND_DISTRIBUTION_DOMAIN" ]; then',
+              '    export PUBLIC_SITE_URL=https://$FRONTEND_DISTRIBUTION_DOMAIN',
+              '    export PUBLIC_IMAGE_BASE=https://$FRONTEND_DISTRIBUTION_DOMAIN/images',
               '  fi',
               '  export PUBLIC_SUPABASE_URL=${PUBLIC_SUPABASE_URL:-}',
               '  export PUBLIC_SUPABASE_ANON_KEY=${PUBLIC_SUPABASE_ANON_KEY:-}',

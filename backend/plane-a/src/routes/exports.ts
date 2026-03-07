@@ -56,7 +56,7 @@ export const exportsRoutes = async (app: FastifyInstance) => {
     const actor = resolveActor(request, reply)
     if (!actor) return
 
-    const pipeline = getExportPipelineStatus()
+    const pipeline = await getExportPipelineStatus()
     if (!pipeline.ok) {
       reply.code(503)
       return {

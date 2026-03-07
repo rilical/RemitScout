@@ -9,7 +9,7 @@ import {
   TIER_2_SLO_MINUTES,
 } from '../../../../shared/corridor-tiers'
 import { getSweepCadenceDriftMinutes } from '../../../../shared/b2b-sweep-cadence'
-import { requireAdmin } from '../../plugins/auth-plugin'
+import { requireSuperAdmin } from '../../plugins/auth-plugin'
 
 const logger = createLogger('plane-a.ops.b2b-sweep-status')
 const planeAPool = getPool(config.db.planeAUrl)
@@ -29,7 +29,7 @@ type SweepRunRow = {
 }
 
 export const b2bSweepStatusRoutes = async (app: FastifyInstance) => {
-  app.get('/ops/b2b-sweep-status', { preHandler: requireAdmin() }, async (_request, reply) => {
+  app.get('/ops/b2b-sweep-status', { preHandler: requireSuperAdmin() }, async (_request, reply) => {
     try {
       const [runResult, completedRunResult] = await Promise.all([
         query<SweepRunRow>(

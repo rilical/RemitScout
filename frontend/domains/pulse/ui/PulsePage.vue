@@ -7,10 +7,7 @@
         <div class="mx-auto max-w-page">
           <div class="grid grid-cols-1 gap-12 lg:grid-cols-[1fr,1.1fr] lg:items-center">
             <div class="space-y-6">
-              <h1
-                class="text-hero font-bold leading-tight"
-                aria-label="Remit-Scout Pulse"
-              >
+              <h1 class="text-hero font-bold leading-tight" aria-label="Remit-Scout Pulse">
                 <span class="text-white">Remit-Scout</span>
                 <span class="text-brand-600">Pulse</span>
               </h1>
@@ -77,8 +74,8 @@
             </div>
             <h2 class="text-h2 font-bold text-neutral-900">Market Snapshot</h2>
             <p class="text-body mt-2 text-neutral-600">
-              Sending $1,000 USD — this sample shows how Pulse frames a corridor snapshot across
-              7 providers.
+              Sending $1,000 USD — this sample shows how Pulse frames a corridor snapshot across 7
+              providers.
             </p>
           </div>
 
@@ -622,9 +619,9 @@
                   </div>
                 </div>
               </div>
-              <p class="mt-3 text-body-sm text-neutral-500">
-                Illustrative rows for layout and workflow only. Enterprise unlocks the live
-                corridor screener and rankings.
+              <p class="text-body-sm mt-3 text-neutral-500">
+                Illustrative rows for layout and workflow only. Enterprise unlocks the live corridor
+                screener and rankings.
               </p>
             </div>
 
@@ -719,8 +716,7 @@
               </div>
               <div class="text-body mb-1 font-bold text-white">Corridor Screener</div>
               <p class="text-body-sm text-neutral-400">
-                Enterprise-only scanning across 49,000+ corridors with spread and provider
-                rankings.
+                Enterprise-only scanning across 49,000+ corridors with spread and provider rankings.
               </p>
             </div>
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
@@ -859,6 +855,28 @@
             </span>
           </div>
 
+          <div class="mb-8 rounded-2xl border border-brand-500/25 bg-brand-500/10 p-4">
+            <div class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div class="text-body-sm font-semibold uppercase tracking-wider text-brand-100">
+                  Benchmark Note
+                </div>
+                <p class="text-body-sm mt-1 max-w-3xl text-brand-50/90">
+                  Gold export-backed Pulse analytics normalize to a standard ${{
+                    GOLD_STANDARD_BENCHMARK_AMOUNT
+                  }}
+                  USD-equivalent send amount so corridor benchmarks stay comparable. Compare,
+                  alerts, and sender actions still use the amount you select.
+                </p>
+              </div>
+              <span
+                class="inline-flex shrink-0 items-center rounded-full border border-brand-400/30 bg-neutral-950/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-brand-100"
+              >
+                Standard Gold benchmark · ${{ GOLD_STANDARD_BENCHMARK_AMOUNT }}
+              </span>
+            </div>
+          </div>
+
           <!-- Main Header Content -->
           <div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <!-- Title and Description -->
@@ -939,6 +957,25 @@
       </div>
 
       <div class="flex flex-col py-8">
+        <div class="mb-8 px-page-x">
+          <div class="mx-auto max-w-page">
+            <PulseCorridorFinder
+              :corridors="trackedCorridors"
+              :featured-corridors="corridorFinderFeaturedCorridors"
+              :selected-corridor-id="
+                selectedCorridorOption?.corridorId || store.corridor?.corridorId || null
+              "
+              :selected-timeframe="store.timeframe"
+              :selected-amount="store.amount"
+              :latest-updated-at="store.lastUpdated || null"
+              :gold-benchmark-amount="GOLD_STANDARD_BENCHMARK_AMOUNT"
+              @select-corridor="handleCorridorFinderSelect"
+              @select-timeframe="handleCorridorFinderTimeframeSelect"
+              @select-amount="handleCorridorFinderAmountSelect"
+            />
+          </div>
+        </div>
+
         <!-- Sender-First Gauge (mobile-first: renders at top on small screens) -->
         <div id="decision" ref="decisionPanelRef" class="order-first mb-10 px-page-x md:order-none">
           <div class="mx-auto max-w-page">
@@ -1069,6 +1106,10 @@
                 :pinned-corridor-ids="effectivePinnedCorridorIds"
                 :corridor-options="trackedCorridors"
                 :corridor-days-map="corridorDaysMap"
+                :tracked-corridor-count="trackedCorridors.length"
+                :requested-amount="store.amount"
+                :query-amount="screenerQueryAmount"
+                :gold-benchmark-amount="GOLD_STANDARD_BENCHMARK_AMOUNT"
                 @select="handleScreenerSelect"
                 @pin="handlePinCorridor"
                 @unpin="handleUnpinCorridor"
@@ -1121,9 +1162,10 @@
           <div class="mx-auto max-w-page">
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
               <div class="mb-4">
-                <h2 class="text-body-lg mb-1 font-bold text-white">Advanced Filters</h2>
+                <h2 class="text-body-lg mb-1 font-bold text-white">Precision Controls</h2>
                 <p class="text-body-sm text-neutral-400">
-                  Override the selected corridor, amount, and timeframe.
+                  Use the navigator above for fast corridor search. This panel stays available for
+                  manual overrides and custom amounts.
                 </p>
               </div>
 
@@ -1182,7 +1224,7 @@
                       min="1"
                       step="1"
                       class="text-body-sm h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-4 font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
-                      placeholder="1000"
+                      placeholder="500"
                       @input="handleAmountInput"
                     />
                   </div>
@@ -2050,14 +2092,17 @@ import {
 import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue';
 import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue';
 import ProviderLogo from '~/components/shared/ProviderLogo.vue';
+import PulseCorridorFinder from '~/components/pulse/PulseCorridorFinder.vue';
 import PulseDashboardPreview from '~/components/pulse/PulseDashboardPreview.vue';
 import PulseLineChart from '~/components/pulse/PulseLineChart.vue';
 import PulseBarChart from '~/components/pulse/PulseBarChart.vue';
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue';
 import { useFeatureFlags } from '~/composables/useFeatureFlags';
 import {
+  computeCorridorDaysAvailable,
   createHeadlineFallbackController,
   mergePinnedCorridorIds,
+  sortCorridorsByCoverage,
 } from '~/domains/pulse/application';
 import { getCorridorUrl } from '~/utils/country-slugs';
 
@@ -2870,7 +2915,7 @@ const headlineTiles = computed<HeadlineTile[]>(() => {
   return defaultHeadlineTiles;
 });
 
-const amountInput = ref(store.amount || 1000);
+const amountInput = ref(store.amount || 500);
 
 const { data: trackedCorridorsData, refresh: refreshTrackedCorridors } = await useAsyncData(
   'pulse-corridors',
@@ -2986,16 +3031,43 @@ const prioritizedTrackedCorridors = computed<CorridorOption[]>(() => {
     out.push(corridor);
   };
 
+  // Watchlist and pinned corridors get priority ordering
   for (const corridor of watchlistTrackedCorridors.value) add(corridor);
   for (const corridor of pulsePinnedTrackedCorridors.value) add(corridor);
+
+  // Include ALL remaining tracked corridors from gold exports,
+  // sorted by data coverage so best corridors appear first
+  const remaining = [...trackedCorridors.value].sort(
+    (a, b) => (b.dataPoints ?? 0) - (a.dataPoints ?? 0)
+  );
+  for (const corridor of remaining) add(corridor);
+
   return out;
+});
+
+const corridorFinderFeaturedCorridors = computed<CorridorOption[]>(() => {
+  const prioritized = prioritizedTrackedCorridors.value.slice(0, 10);
+  if (prioritized.length > 0) return prioritized;
+  return sortCorridorsByCoverage(trackedCorridors.value).slice(0, 10);
+});
+
+const GOLD_STANDARD_BENCHMARK_AMOUNT = 500;
+const PULSE_SCREENER_AMOUNTS = [100, 200, 500, 1000] as const;
+
+const screenerQueryAmount = computed<number>(() => {
+  const requested = store.amount;
+  return PULSE_SCREENER_AMOUNTS.reduce((best, candidate) => {
+    const bestDelta = Math.abs(best - requested);
+    const candidateDelta = Math.abs(candidate - requested);
+    return candidateDelta < bestDelta ? candidate : best;
+  }, PULSE_SCREENER_AMOUNTS[0]);
 });
 
 const screenerCorridorIds = computed<string[]>(() => {
   const ids = prioritizedTrackedCorridors.value
     .map(c => c.corridorId)
     .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
-  return Array.from(new Set(ids)).slice(0, 16);
+  return Array.from(new Set(ids)).slice(0, 25);
 });
 
 const filtersForcedVisible = computed(
@@ -3063,8 +3135,8 @@ const loadScreener = async () => {
   try {
     const response = await getPulseScreener({
       corridorIds,
-      timeframe: '7D',
-      amount: 1000,
+      timeframe: store.timeframe,
+      amount: screenerQueryAmount.value,
       payin: 'bank',
       payout: 'bank',
       includeMovers: true,
@@ -3089,6 +3161,28 @@ const scrollToDecisionPanel = async () => {
   }
 };
 
+const syncPulseRouteToState = () => {
+  void router.replace({ path: route.path, query: store.getQueryParams() });
+};
+
+function handleCorridorFinderSelect(corridorId: string) {
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
+  if (!option) return;
+  setCorridorFromOption(option);
+  syncPulseRouteToState();
+}
+
+function handleCorridorFinderTimeframeSelect(timeframe: PulseTimeframe) {
+  store.setTimeframe(timeframe);
+  syncPulseRouteToState();
+}
+
+function handleCorridorFinderAmountSelect(amount: number) {
+  store.setAmount(amount);
+  amountInput.value = amount;
+  syncPulseRouteToState();
+}
+
 async function handleScreenerSelect(corridorId: string) {
   const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
   if (!option) return;
@@ -3097,7 +3191,7 @@ async function handleScreenerSelect(corridorId: string) {
   store.setViewMode('sender');
 
   setCorridorFromOption(option);
-  void router.replace({ path: route.path, query: store.getQueryParams() });
+  syncPulseRouteToState();
   await scrollToDecisionPanel();
 }
 
@@ -3108,7 +3202,7 @@ async function handleScreenerSelectTimeframe(corridorId: string, timeframe: Puls
   store.setViewMode('sender');
   setCorridorFromOption(option);
   store.setTimeframe(timeframe);
-  void router.replace({ path: route.path, query: store.getQueryParams() });
+  syncPulseRouteToState();
   await scrollToDecisionPanel();
 }
 
@@ -3133,7 +3227,7 @@ async function handleMoverSelect(mover: PulseTeaserMover) {
 
   store.setViewMode('sender');
   setCorridorFromOption(option);
-  void router.replace({ path: route.path, query: store.getQueryParams() });
+  syncPulseRouteToState();
   await scrollToDecisionPanel();
 }
 
@@ -3198,12 +3292,7 @@ const setCorridorFromOption = (option: CorridorOption) => {
 };
 
 function computeDaysAvailable(c: CorridorOption | null | undefined): number {
-  if (!c?.minDate || !c?.maxDate) return 0;
-  const min = new Date(`${c.minDate}T00:00:00.000Z`);
-  const max = new Date(`${c.maxDate}T00:00:00.000Z`);
-  if (Number.isNaN(min.getTime()) || Number.isNaN(max.getTime())) return 0;
-  const days = Math.floor((max.getTime() - min.getTime()) / (24 * 60 * 60 * 1000)) + 1;
-  return Number.isFinite(days) && days > 0 ? days : 0;
+  return computeCorridorDaysAvailable(c);
 }
 
 const selectedCorridorDaysAvailable = computed(() =>
@@ -3234,7 +3323,7 @@ function handleCorridorSelect() {
   const option = trackedCorridors.value.find(c => c.corridorId === key || c.value === key);
   if (!option) return;
   setCorridorFromOption(option);
-  void router.replace({ path: route.path, query: store.getQueryParams() });
+  syncPulseRouteToState();
 }
 
 const initializeCorridorSelection = () => {
@@ -3287,7 +3376,6 @@ const teardownDeepDivesObserver = () => {
 const setupDeepDivesObserver = async () => {
   if (!import.meta.client) return;
   if (!isPlus.value) return;
-  if (store.viewMode !== 'analyst') return;
 
   teardownDeepDivesObserver();
   await nextTick();
@@ -3511,6 +3599,7 @@ function handleAmountInput() {
   const amount = Number.parseInt(String(amountInput.value), 10);
   if (!Number.isNaN(amount) && amount > 0) {
     store.setAmount(amount);
+    syncPulseRouteToState();
   }
 }
 
@@ -3561,7 +3650,6 @@ const executiveNote = computed(() => {
 
 async function loadChartData() {
   if (!isPro.value) return;
-  if (store.viewMode !== 'analyst') return;
   if (!deepDivesVisible.value) return;
   if (chartLoading.value) return;
   const key = chartLoadKey.value;
@@ -3595,7 +3683,6 @@ async function loadChartData() {
 
 async function loadSnapshotSummary() {
   if (!isPlus.value) return;
-  if (store.viewMode !== 'analyst') return;
   try {
     snapshotSummary.value = await getPulseSnapshotSummary(
       store.corridor,
@@ -3758,18 +3845,22 @@ watch(
     void refreshTrackedCorridors();
     void loadCoverageSummary();
     void loadSenderHighlights();
-    if (store.viewMode === 'analyst') {
-      void loadSnapshotSummary();
-      if (isPro.value) {
-        void setupDeepDivesObserver();
-      }
+    void loadSnapshotSummary();
+    if (isPro.value) {
+      void setupDeepDivesObserver();
     }
   },
   { immediate: true }
 );
 
 watch(
-  () => [isPro.value, pulseScreenerEnabled.value, screenerCorridorIds.value.join(',')],
+  () => [
+    isPro.value,
+    pulseScreenerEnabled.value,
+    screenerCorridorIds.value.join(','),
+    store.timeframe,
+    screenerQueryAmount.value,
+  ],
   ([pro]) => {
     if (!import.meta.client) return;
     if (!pro) return;

@@ -36,6 +36,11 @@ vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
     ;(handler as { __guardTag?: string }).__guardTag = 'requireAdmin'
     return handler
   },
+  requireSuperAdmin: () => {
+    const handler = () => undefined
+    ;(handler as { __guardTag?: string }).__guardTag = 'requireSuperAdmin'
+    return handler
+  },
 }))
 
 type RouteHandler = (request: Record<string, unknown>, reply: { code: (status: number) => unknown }) => Promise<unknown>

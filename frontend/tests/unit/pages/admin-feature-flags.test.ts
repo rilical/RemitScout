@@ -1,12 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, onMounted, reactive, ref } from 'vue'
 import { mount, flushPromises } from '@vue/test-utils'
 
 const mockRequest = vi.hoisted(() => vi.fn())
+const mockRefreshRuntimeFlags = vi.hoisted(() => vi.fn())
 
 vi.mock('~/composables/useApi', () => ({
   useApi: () => ({
     request: mockRequest,
+  }),
+}))
+
+vi.mock('~/composables/useFeatureFlags', () => ({
+  useFeatureFlags: () => ({
+    refreshRuntimeFlags: mockRefreshRuntimeFlags,
   }),
 }))
 
@@ -23,12 +29,8 @@ describe('admin feature flags page', () => {
 
     vi.stubGlobal('definePageMeta', vi.fn())
     vi.stubGlobal('useAdminPage', vi.fn())
-    vi.stubGlobal('ref', ref)
-    vi.stubGlobal('reactive', reactive)
-    vi.stubGlobal('computed', computed)
-    vi.stubGlobal('onMounted', onMounted)
-    vi.stubGlobal('useApi', () => ({
-      request: mockRequest,
+    vi.stubGlobal('useAuth', () => ({
+      isSuperAdmin: { value: false },
     }))
     vi.stubGlobal('useAdminFormat', () => ({
       formatTimestamp: (value: string | null) => value || 'n/a',
@@ -45,6 +47,7 @@ describe('admin feature flags page', () => {
       global: {
         stubs: {
           AdminPageShell: true,
+          AdminSurfaceOverview: true,
           DataTable: {
             props: ['error'],
             template: '<div><div v-if="error">{{ error.message }}</div></div>',

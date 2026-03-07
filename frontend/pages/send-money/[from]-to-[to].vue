@@ -100,50 +100,6 @@ aria-current="page"
               </div>
             </div>
 
-            <div class="mb-6 grid gap-3 sm:grid-cols-3">
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Best overall
-                </p>
-                <p class="text-body-lg mt-2 font-semibold text-white">
-                  {{ hasApiQuotes ? bestProviderName : 'Warming up' }}
-                </p>
-                <p class="text-body-sm mt-1 text-white/60">
-                  {{
-                    hasApiQuotes
-                      ? 'Highest delivered value right now'
-                      : 'Waiting for live provider quotes'
-                  }}
-                </p>
-              </div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Fastest delivery
-                </p>
-                <p class="text-body-lg mt-2 font-semibold text-white">
-                  {{ fastestProvider?.provider || 'Warming up' }}
-                </p>
-                <p class="text-body-sm mt-1 text-white/60">
-                  {{
-                    fastestProvider
-                      ? fastestSpeedDisplay
-                      : 'Delivery timing appears once quotes load'
-                  }}
-                </p>
-              </div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Freshness
-                </p>
-                <p class="text-body-lg mt-2 font-semibold text-white">
-                  {{ mostRecentUpdate ? mostRecentUpdateLabel : 'Warming up' }}
-                </p>
-                <p class="text-body-sm mt-1 text-white/60">
-                  {{ mostRecentUpdate ? 'Latest market check' : 'Live data is still loading' }}
-                </p>
-              </div>
-            </div>
-
             <!-- Recipient Gets -->
             <div
               class="mb-6 rounded-2xl border border-brand-500/30 bg-gradient-to-br from-brand-500 to-brand-600 p-5 shadow-lg shadow-brand-950/20"
@@ -191,12 +147,58 @@ class="text-body-sm leading-relaxed text-white/80"
               </p>
             </div>
 
+            <!-- Status Cards -->
+            <div class="mb-6 grid gap-3 sm:grid-cols-3">
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                  Best overall
+                </p>
+                <p class="text-body-lg mt-2 font-semibold text-white">
+                  {{ hasApiQuotes ? bestProviderName : 'Warming up' }}
+                </p>
+                <p class="text-body-sm mt-1 text-white/60">
+                  {{
+                    hasApiQuotes
+                      ? 'Highest delivered value right now'
+                      : 'Waiting for live provider quotes'
+                  }}
+                </p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                  Fastest delivery
+                </p>
+                <p class="text-body-lg mt-2 font-semibold text-white">
+                  {{ fastestProvider?.provider || 'Warming up' }}
+                </p>
+                <p class="text-body-sm mt-1 text-white/60">
+                  {{
+                    fastestProvider
+                      ? fastestSpeedDisplay
+                      : 'Delivery timing appears once quotes load'
+                  }}
+                </p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                  Freshness
+                </p>
+                <p class="text-body-lg mt-2 font-semibold text-white">
+                  {{ mostRecentUpdate ? mostRecentUpdateLabel : 'Warming up' }}
+                </p>
+                <p class="text-body-sm mt-1 text-white/60">
+                  {{ mostRecentUpdate ? 'Latest market check' : 'Live data is still loading' }}
+                </p>
+              </div>
+            </div>
+
             <!-- Quick Actions -->
             <div class="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                class="text-body-sm inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/10 px-4 py-2.5 font-semibold text-white backdrop-blur-sm hover:bg-surface/20 motion-safe:transition-all"
+                class="text-body-sm inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/10 px-4 py-2.5 font-semibold text-white backdrop-blur-sm hover:bg-surface/20 motion-safe:transition-all disabled:cursor-not-allowed disabled:opacity-60"
                 :aria-pressed="isCorridorSaved"
+                :disabled="!actionControlsReady"
                 data-testid="corridor-hero-watchlist-button"
                 @click="handleSave"
               >
@@ -218,8 +220,9 @@ class="text-body-sm leading-relaxed text-white/80"
               </button>
               <button
                 type="button"
-                class="text-body-sm inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/10 px-4 py-2.5 font-semibold text-white backdrop-blur-sm hover:bg-surface/20 motion-safe:transition-all"
+                class="text-body-sm inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/10 px-4 py-2.5 font-semibold text-white backdrop-blur-sm hover:bg-surface/20 motion-safe:transition-all disabled:cursor-not-allowed disabled:opacity-60"
                 :aria-pressed="hasCorridorAlerts"
+                :disabled="!actionControlsReady"
                 data-testid="corridor-hero-alert-button"
                 @click="handleAlert"
               >
@@ -713,73 +716,12 @@ class="scroll-mt-20 bg-surface"
           data-testid="corridor-refresh-gate"
           class="mb-8 rounded-2xl border border-rs-border bg-surface p-8 shadow-sm"
         >
-          <div
-            class="mx-auto flex max-w-3xl flex-col items-center justify-center gap-6 text-center"
-          >
-            <div
-              class="flex flex-col items-center justify-center gap-5 sm:flex-row sm:items-center sm:text-left"
-            >
-              <div class="relative flex h-16 w-16 flex-shrink-0 items-center justify-center">
-                <svg
-class="h-16 w-16 -rotate-90"
-viewBox="0 0 64 64"
-aria-hidden="true"
->
-                  <circle
-                    cx="32"
-                    cy="32"
-                    :r="refreshRingRadius"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    stroke-width="4"
-                  />
-                  <circle
-                    cx="32"
-                    cy="32"
-                    :r="refreshRingRadius"
-                    fill="none"
-                    stroke="#2563eb"
-                    stroke-width="4"
-                    stroke-linecap="round"
-                    :stroke-dasharray="refreshRingCircumference"
-                    :stroke-dashoffset="refreshRingOffset"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span class="text-body-sm font-bold text-rs-fg">{{ refreshSecondsRemaining }}s</span>
-                </div>
-              </div>
-              <div class="max-w-xl text-center sm:text-left">
-                <span
-                  class="text-body-sm inline-flex items-center justify-center gap-2 rounded-full bg-brand-50 px-3 py-1 font-semibold text-brand-700 sm:justify-start"
-                >
-                  <span class="h-2 w-2 animate-pulse rounded-full bg-brand-500" />
-                  Live refresh
-                </span>
-                <h2 class="text-h3 mt-4 font-black text-rs-fg sm:text-left">
-                  Refreshing live quotes
-                </h2>
-                <p class="text-body-sm mt-3 text-neutral-600">
-                  We are checking current offers across the providers that support this route.
-                  Results appear together once responses settle or the refresh window closes.
-                </p>
-                <p class="text-body-sm mt-2 font-medium text-neutral-700">
-                  {{ refreshQueueLabel }}
-                </p>
-              </div>
-            </div>
-            <div class="w-full max-w-2xl">
-              <div class="text-body-sm flex items-center justify-between text-neutral-500">
-                <span>Live provider pass in progress</span>
-                <span>{{ refreshProgress }}%</span>
-              </div>
-              <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-neutral-200">
-                <div
-                  class="h-full rounded-full bg-brand-600 transition-[width] duration-500"
-                  :style="{ width: `${refreshProgress}%` }"
-                />
-              </div>
-            </div>
+          <div class="flex flex-col items-center justify-center gap-4 py-8 text-center">
+            <svg class="h-8 w-8 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <p class="text-body font-medium text-rs-fg">Loading live quotes...</p>
           </div>
         </div>
 
@@ -1854,8 +1796,9 @@ class="flex gap-4"
               <div class="space-y-3">
                 <button
                   type="button"
-                  class="text-body flex w-full items-center justify-center gap-2 rounded-lg bg-surface px-4 py-3 font-bold text-brand-700 shadow-md hover:bg-brand-50 hover:shadow-lg motion-safe:transition-colors"
+                  class="text-body flex w-full items-center justify-center gap-2 rounded-lg bg-surface px-4 py-3 font-bold text-brand-700 shadow-md hover:bg-brand-50 hover:shadow-lg motion-safe:transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   :aria-pressed="isCorridorSaved"
+                  :disabled="!actionControlsReady"
                   data-testid="corridor-sidebar-watchlist-button"
                   @click="handleSave"
                 >
@@ -1877,8 +1820,9 @@ class="flex gap-4"
                 </button>
                 <button
                   type="button"
-                  class="text-body flex w-full items-center justify-center gap-2 rounded-lg border-2 border-white bg-transparent px-4 py-3 font-bold text-white shadow-md hover:bg-surface hover:text-brand-700 hover:shadow-lg motion-safe:transition-colors"
+                  class="text-body flex w-full items-center justify-center gap-2 rounded-lg border-2 border-white bg-transparent px-4 py-3 font-bold text-white shadow-md hover:bg-surface hover:text-brand-700 hover:shadow-lg motion-safe:transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                   :aria-pressed="hasCorridorAlerts"
+                  :disabled="!actionControlsReady"
                   data-testid="corridor-sidebar-alert-button"
                   @click="handleAlert"
                 >
@@ -2271,7 +2215,7 @@ import { useEntitlements } from '~/composables/useEntitlements'
 import { useTelemetry } from '~/composables/useTelemetry'
 import { buildOutboundUrl, extractUtmParams } from '~/lib/outbound'
 import { useCorridorCurrencies } from '~/composables/useCorridorCurrencies'
-import { BASE_CURRENCIES } from '~/utils/countries-currencies'
+import { BASE_CURRENCIES, COUNTRIES } from '~/utils/countries-currencies'
 import {
   getCorridorUrl,
   getCanonicalSlug,
@@ -2455,13 +2399,14 @@ type CorridorContent = {
 
 const runtimeConfig = useRuntimeConfig()
 const { marketingConsent } = usePrivacySettings()
+const { adsEnabled } = useFeatureFlags()
 const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 const normalizedSiteUrl
   = siteUrl && typeof siteUrl === 'string' && siteUrl.endsWith('/')
     ? siteUrl.slice(0, -1)
     : siteUrl || 'https://Remit-Scout.com'
 const showMonetizedAds = computed(
-  () => !isPlus.value && runtimeConfig?.public?.adsEnabled === true && marketingConsent.value,
+  () => !isPlus.value && adsEnabled.value && marketingConsent.value,
 )
 
 const normalizeSlug = (value: string | string[] | undefined) => String(value || '').toLowerCase()
@@ -2669,6 +2614,7 @@ if (import.meta.client && needsCanonicalRedirect(fromSlug.value, toSlug.value)) 
 
 onMounted(() => {
   if (!import.meta.client) return
+  actionControlsReady.value = true
   if (hasApiQuotes.value || quotesPending.value) return
   if (
     hasApiError.value
@@ -2688,6 +2634,7 @@ onUnmounted(() => {
 })
 
 const providersRequestSignal = ref<AbortSignal | undefined>(undefined)
+const actionControlsReady = ref(false)
 
 const {
   data: quotesData,
@@ -2698,7 +2645,9 @@ const {
   key: currentRoute.fullPath,
   watch: [fromCountryCode, toCountryCode, displayAmount],
   server: true,
-  lazy: false,
+  // Keep SSR truthful on first load, but let client-side corridor changes
+  // render immediately so the refresh gate can represent pending live quotes.
+  lazy: import.meta.client,
   fromCurrency: fromCurrencyCode,
   toCurrency: toCurrencyCode,
   live: providersLive,
@@ -4240,53 +4189,50 @@ const escapeHtml = (value: string) => {
     .replace(/'/g, '&#39;')
 }
 
-const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => [
-  {
-    q: `What is the best way to send money from ${content.value.from} to ${content.value.to}?`,
-    a: `Online money transfer services like Wise, Remitly, and WorldRemit usually cost less than banks when sending money from ${content.value.from} to ${content.value.to}. They often have better exchange rates, lower fees, and faster delivery. Use our comparison tool above to find the best option for your transfer amount.`,
-  },
-  {
-    q: `How long does a transfer from ${content.value.from} to ${content.value.to} take?`,
-    a: 'Delivery time depends on the provider and how your recipient gets the money. Cash pickup can be available within minutes or hours. Bank deposits often take 1 to 3 business days. Traditional bank transfers through SWIFT can take 3 to 5 business days. Check the comparison table above for provider-specific delivery times.',
-  },
-  {
-    q: `What fees will I pay to send money to ${content.value.to}?`,
-    a: 'The total cost has two parts: the upfront transfer fee, plus the exchange rate markup hidden in the rate. We calculate total cost by comparing each provider\'s rate to the mid-market rate, so you can see what you actually pay.',
-  },
-  {
-    q: 'Is it safe to use online money transfer services?',
-    a: 'Generally yes, as long as you use a licensed provider. We list providers that hold licenses from financial regulators in the markets they operate in, and we exclude unlicensed services. Always verify the provider details before sending.',
-  },
-  {
-    q: 'How do you rank the providers?',
-    a: 'We rank providers based on total cost (fees plus exchange-rate markup), then show transfer speed and other details to help you decide. Providers cannot pay to rank higher. Rankings are based on the data we collect and our methodology.',
-  },
-  {
-    q: `Which provider has the best exchange rate for ${fromCurrencyCode.value} to ${toCurrencyCode.value}?`,
-    a:
-      bestRateLabel.value && bestQuote.value
-        ? `As of ${seoUpdatedLabel.value}, ${bestQuote.value.name} offers the best exchange rate at ${bestRateLabel.value}. Exchange rates change frequently — use our live comparison above to check the latest.`
-        : `Exchange rates change frequently. Use our live comparison tool above to check which provider currently offers the best ${fromCurrencyCode.value} to ${toCurrencyCode.value} rate.`,
-  },
-  {
-    q: `How many providers support ${content.value.from} to ${content.value.to} transfers?`,
-    a: liveProviderCount.value
-      ? `We currently have live quotes from ${liveProviderCount.value} providers for transfers from ${content.value.from} to ${content.value.to}. The number of available providers can vary depending on the transfer amount and delivery method.`
-      : `Multiple providers support transfers from ${content.value.from} to ${content.value.to}. Use the comparison tool above to see all currently available options.`,
-  },
-  {
-    q: `Can I send money from ${content.value.from} to ${content.value.to} for cash pickup?`,
-    a: (() => {
-      const cashProviders = content.value.table.rows
-        .filter(row => (row.payOut || '').toLowerCase().includes('cash'))
-        .map(row => row.provider)
-      if (cashProviders.length) {
-        return `Yes. ${cashProviders.slice(0, 3).join(', ')}${cashProviders.length > 3 ? ` and ${cashProviders.length - 3} more` : ''} offer cash pickup for ${content.value.from} to ${content.value.to} transfers. Check each provider for pickup location availability.`
-      }
-      return `Cash pickup availability for ${content.value.from} to ${content.value.to} depends on the provider and destination. Check the delivery methods column in our comparison above.`
-    })(),
-  },
-])
+const defaultCorridorFaqs = computed<Array<{ q: string, a: string }>>(() => {
+  const from = content.value.from
+  const to = content.value.to
+  const fromCcy = fromCurrencyCode.value
+  const toCcy = toCurrencyCode.value
+
+  const bestRateSnippet = bestRateLabel.value && bestQuote.value
+    ? ` As of ${seoUpdatedLabel.value}, ${bestQuote.value.name} offers the best exchange rate at ${bestRateLabel.value}.`
+    : ''
+
+  const providerCountSnippet = liveProviderCount.value
+    ? `We currently have live quotes from ${liveProviderCount.value} providers for this corridor.`
+    : `Multiple providers support transfers from ${from} to ${to}.`
+
+  const cashProviders = content.value.table.rows
+    .filter(row => (row.payOut || '').toLowerCase().includes('cash'))
+    .map(row => row.provider)
+  const cashSnippet = cashProviders.length
+    ? ` Cash pickup is available through ${cashProviders.slice(0, 3).join(', ')}${cashProviders.length > 3 ? ` and ${cashProviders.length - 3} more` : ''}.`
+    : ''
+
+  return [
+    {
+      q: `What is the best way to send money from ${from} to ${to}?`,
+      a: `Online money transfer services usually cost less than banks when sending money from ${from} to ${to}. They often have better exchange rates, lower fees, and faster delivery.${bestRateSnippet} Use our comparison tool above to find the best option for your transfer amount.`,
+    },
+    {
+      q: `How long does a transfer from ${from} to ${to} take?`,
+      a: 'Delivery time depends on the provider and how your recipient gets the money. Cash pickup can be available within minutes or hours. Bank deposits often take 1 to 3 business days. Traditional bank transfers through SWIFT can take 3 to 5 business days. Check the comparison table above for provider-specific delivery times.',
+    },
+    {
+      q: `What does it cost and how are providers ranked?`,
+      a: `The total cost has two parts: the upfront transfer fee, plus the exchange rate markup hidden in the ${fromCcy} to ${toCcy} rate. We calculate total cost by comparing each provider's rate to the mid-market rate, so you can see what you actually pay. Providers are ranked by total cost — they cannot pay to rank higher.`,
+    },
+    {
+      q: 'Is it safe to use online money transfer services?',
+      a: 'Generally yes, as long as you use a licensed provider. We list providers that hold licenses from financial regulators in the markets they operate in, and we exclude unlicensed services. Always verify the provider details before sending.',
+    },
+    {
+      q: `What providers and delivery methods are available for ${from} to ${to}?`,
+      a: `${providerCountSnippet} Available delivery methods vary by provider and may include bank deposit, cash pickup, mobile wallet, and more.${cashSnippet} Use the comparison tool above to see all options.`,
+    },
+  ]
+})
 
 const corridorFaqsRaw = computed<Array<{ q: string, a: string }>>(() => {
   const contentFaqs = content.value.faqs || []
@@ -5419,7 +5365,30 @@ async function handleNewQuery(data: {
   payoutMethod: string
 }) {
   searchInitiated.value = true
-  const newUrl = getCorridorUrl(data.fromCountry, data.toCountry)
+  const resolveCountryCodeFromInput = (inputId: string, fallback: string) => {
+    if (!import.meta.client) return fallback
+    const input = document.getElementById(inputId) as HTMLInputElement | null
+    const rawValue = input?.value?.trim().toLowerCase() || ''
+    if (!rawValue) return fallback
+
+    const matchedCountry = COUNTRIES.find(country => {
+      const name = country.name.trim().toLowerCase()
+      const code = country.code.trim().toLowerCase()
+      return rawValue === name || rawValue === code
+    })
+
+    return matchedCountry?.code || fallback
+  }
+
+  const resolvedFromCountry = resolveCountryCodeFromInput(
+    'corridor-from-country',
+    data.fromCountry,
+  )
+  const resolvedToCountry = resolveCountryCodeFromInput(
+    'corridor-to-country',
+    data.toCountry,
+  )
+  const newUrl = getCorridorUrl(resolvedFromCountry, resolvedToCountry)
   const sanitizedAmount = sanitizeAmount(data.amount, data.fromCurrency || fromCurrencyCode.value, {
     minAmount: getMinAmount(data.fromCurrency || fromCurrencyCode.value),
     maxAmount: getMaxAmount(data.fromCurrency || fromCurrencyCode.value),

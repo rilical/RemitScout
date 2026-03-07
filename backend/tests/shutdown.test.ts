@@ -45,30 +45,18 @@ describe('shutdown', () => {
 
     it('calls onShutdown callback', async () => {
       const onShutdown = vi.fn().mockResolvedValue(undefined)
-      createShutdownHandler({ onShutdown })
+      const handler = createShutdownHandler({ onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-      }
+      await handler.shutdown('SIGTERM')
 
       expect(onShutdown).toHaveBeenCalled()
     })
 
     it('exits with code 0 after successful shutdown', async () => {
       const onShutdown = vi.fn().mockResolvedValue(undefined)
-      createShutdownHandler({ onShutdown })
+      const handler = createShutdownHandler({ onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-      }
+      await handler.shutdown('SIGTERM')
 
       expect(process.exit).toHaveBeenCalledWith(0)
     })
@@ -76,15 +64,9 @@ describe('shutdown', () => {
     it('exits with code 1 on shutdown error', async () => {
       const error = new Error('Shutdown failed')
       const onShutdown = vi.fn().mockRejectedValue(error)
-      createShutdownHandler({ onShutdown })
+      const handler = createShutdownHandler({ onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-      }
+      await handler.shutdown('SIGTERM')
 
       expect(process.exit).toHaveBeenCalledWith(1)
     })
@@ -94,16 +76,10 @@ describe('shutdown', () => {
       const onShutdown = vi.fn().mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 50000)),
       )
-      createShutdownHandler({ timeoutMs: 1000, onShutdown })
+      const handler = createShutdownHandler({ timeoutMs: 1000, onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        sigtermHandler('SIGTERM')
-        await vi.advanceTimersByTimeAsync(1000)
-      }
+      void handler.shutdown('SIGTERM')
+      await vi.advanceTimersByTimeAsync(1000)
 
       expect(process.exit).toHaveBeenCalledWith(1)
       vi.useRealTimers()
@@ -111,18 +87,25 @@ describe('shutdown', () => {
 
     it('prevents multiple shutdown calls', async () => {
       const onShutdown = vi.fn().mockResolvedValue(undefined)
-      createShutdownHandler({ onShutdown })
+      const handler = createShutdownHandler({ onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-        await sigtermHandler('SIGTERM')
-      }
+      await Promise.all([
+        handler.shutdown('SIGTERM'),
+        handler.shutdown('SIGTERM'),
+      ])
 
       expect(onShutdown).toHaveBeenCalledTimes(1)
+    })
+
+    it('registers process signal listeners only once across repeated handler creation', () => {
+      createShutdownHandler()
+      createShutdownHandler()
+
+      const signalRegistrations = (process.on as any).mock.calls.filter(
+        ([event]: [string]) => event === 'SIGTERM' || event === 'SIGINT',
+      )
+
+      expect(signalRegistrations).toHaveLength(2)
     })
 
     it('returns shutdown function', () => {
@@ -146,35 +129,21 @@ describe('shutdown', () => {
         warn: vi.fn(),
         debug: vi.fn(),
       }
-      createShutdownHandler({ logger: customLogger })
+      const handler = createShutdownHandler({ logger: customLogger })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-      }
+      await handler.shutdown('SIGTERM')
 
       expect(customLogger.info).toHaveBeenCalled()
     })
 
     it('handles synchronous onShutdown', async () => {
       const onShutdown = vi.fn()
-      createShutdownHandler({ onShutdown })
+      const handler = createShutdownHandler({ onShutdown })
 
-      const sigtermHandler = (process.on as any).mock.calls.find(
-        (call: any[]) => call[0] === 'SIGTERM',
-      )?.[1]
-
-      if (sigtermHandler) {
-        await sigtermHandler('SIGTERM')
-      }
+      await handler.shutdown('SIGTERM')
 
       expect(onShutdown).toHaveBeenCalled()
       expect(process.exit).toHaveBeenCalledWith(0)
     })
   })
 })
-
-

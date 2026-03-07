@@ -7,6 +7,7 @@ const mockRedisDel = vi.hoisted(() => vi.fn())
 
 vi.mock('../shared/config', () => ({
   config: {
+    envName: 'staging',
     planeA: {
       featureFlagsCacheTtlSeconds: 60,
     },
@@ -92,5 +93,22 @@ describe('feature flags cache behavior', () => {
 
     expect(updated?.enabled).toBe(true)
     expect(mockRedisDel).toHaveBeenCalledWith('plane-a:feature-flags:v1')
+  })
+
+  it('normalizes nullable runtime flag context values', async () => {
+    const { getEffectiveRuntimeFlags } = await import('../plane-a/src/services/feature-flags')
+
+    mockRedisGet.mockResolvedValue(null)
+    mockQuery.mockResolvedValue({ rows: [] })
+
+    const runtime = await getEffectiveRuntimeFlags({} as any, {
+      effectivePlanCode: null,
+      pulseAccess: null,
+      envName: null,
+    })
+
+    expect(runtime.flags).toHaveLength(4)
+    expect(runtime.flags.every((flag) => flag.plan_code === 'free')).toBe(true)
+    expect(runtime.flags.every((flag) => flag.pulse_access === 'none')).toBe(true)
   })
 })

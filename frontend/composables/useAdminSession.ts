@@ -120,6 +120,26 @@ export const useAdminSession = () => {
     return applyAdminToken(response)
   }
 
+  const recoverSupabaseSession = async () => {
+    if (!isBrowser()) return null
+
+    try {
+      const supabase = useSupabaseClient()
+      if (!supabase) return null
+
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error || !data.session?.access_token) {
+        return null
+      }
+
+      session.value = data.session
+      return data.session.access_token
+    }
+    catch {
+      return null
+    }
+  }
+
   const ensureAdminSession = async () => {
     if (isTokenUsable(state.value)) {
       return true
@@ -156,18 +176,19 @@ export const useAdminSession = () => {
         return true
       }
 
-      const hasSupabaseToken = Boolean(session.value?.access_token)
-      const preferRefresh = readAdminSessionHint() && !hasSupabaseToken
+      const hasAdminHint = readAdminSessionHint()
+      let hasSupabaseToken = Boolean(session.value?.access_token)
+
+      if (!hasSupabaseToken && hasAdminHint) {
+        hasSupabaseToken = Boolean(await recoverSupabaseSession())
+      }
 
       // On the first admin page after a fresh sign-in there is no refresh cookie yet,
       // so start with exchange when we already have a Supabase session.
-      if (preferRefresh && await tryRefresh()) {
-        return true
-      }
       if (hasSupabaseToken && await tryExchange()) {
         return true
       }
-      if (!preferRefresh && await tryRefresh()) {
+      if (await tryRefresh()) {
         return true
       }
 

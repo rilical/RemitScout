@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { computed, ref } from 'vue';
 
 const mockExportVisual = vi.hoisted(() => vi.fn());
+const mockEnterpriseRequest = vi.hoisted(() => vi.fn());
 
 vi.mock('~/ui', () => ({
   DataTable: {
@@ -14,6 +15,12 @@ vi.mock('~/ui', () => ({
     name: 'Icon',
     template: '<span data-testid="icon" />',
   },
+}));
+
+vi.mock('~/composables/useApi', () => ({
+  useApi: () => ({
+    request: mockEnterpriseRequest,
+  }),
 }));
 
 vi.mock('~/composables/useEntitlements', () => ({
@@ -74,7 +81,8 @@ vi.mock('~/composables/useEnterpriseEmbeds', () => ({
     embedUrls: computed(() => ({
       teer: 'https://remit-scout.test/embed/indices/teer?published_id=123e4567-e89b-12d3-a456-426614174001',
       rci: 'https://remit-scout.test/embed/indices/rci?published_id=123e4567-e89b-12d3-a456-426614174001',
-      rvi_bps: 'https://remit-scout.test/embed/indices/rvi_bps?published_id=123e4567-e89b-12d3-a456-426614174001',
+      rvi_bps:
+        'https://remit-scout.test/embed/indices/rvi_bps?published_id=123e4567-e89b-12d3-a456-426614174001',
     })),
     embedCodes: computed(() => ({
       teer: '<iframe src="https://remit-scout.test/embed/indices/teer?published_id=123e4567-e89b-12d3-a456-426614174001"></iframe>',
@@ -94,7 +102,8 @@ vi.mock('~/composables/useEnterpriseEmbeds', () => ({
         createdAt: '2026-03-05T00:00:00.000Z',
         publishedAt: '2026-03-05T00:00:00.000Z',
         revokedAt: null,
-        publicUrl: 'https://remit-scout.test/embed/indices/teer?published_id=123e4567-e89b-12d3-a456-426614174001',
+        publicUrl:
+          'https://remit-scout.test/embed/indices/teer?published_id=123e4567-e89b-12d3-a456-426614174001',
         embedCode:
           '<iframe src="https://remit-scout.test/embed/indices/teer?published_id=123e4567-e89b-12d3-a456-426614174001"></iframe>',
         variants: [
@@ -157,22 +166,90 @@ vi.mock('~/composables/useChartImageExport', async () => {
 describe('EnterpriseTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnterpriseRequest.mockResolvedValue({
+      totalCorridors: 2,
+      corridors: [
+        {
+          corridorId: 'US-PH-USD-PHP',
+          sourceCountry: 'US',
+          destCountry: 'PH',
+          sourceCurrency: 'USD',
+          destCurrency: 'PHP',
+          dataTier: 1,
+          exportCadenceMinutes: 180,
+          collectionCadenceMinutes: 10,
+          collectionTier: 'tier_1',
+          isUsdOrigin: true,
+          dataPoints: 30,
+          lastUpdated: '2026-03-05T00:00:00.000Z',
+        },
+        {
+          corridorId: 'US-MX-USD-MXN',
+          sourceCountry: 'US',
+          destCountry: 'MX',
+          sourceCurrency: 'USD',
+          destCurrency: 'MXN',
+          dataTier: 1,
+          exportCadenceMinutes: 180,
+          collectionCadenceMinutes: 10,
+          collectionTier: 'tier_1',
+          isUsdOrigin: true,
+          dataPoints: 30,
+          lastUpdated: '2026-03-05T00:00:00.000Z',
+        },
+      ],
+    });
   });
 
-  it('shows Parquet and visual export controls', async () => {
+  const mountEnterpriseTab = async () => {
     const EnterpriseTab = (await import('~/domains/dashboard/ui/EnterpriseTab.vue')).default;
     const wrapper = mount(EnterpriseTab);
+    await flushPromises();
+    return wrapper;
+  };
 
+  it('shows the redesigned enterprise dashboard with parquet and corridor catalog messaging', async () => {
+    const wrapper = await mountEnterpriseTab();
+
+    expect(wrapper.text()).toContain('Enterprise Data Console');
     expect(wrapper.text()).toContain('Parquet');
-    expect(wrapper.text()).toContain('Published Embeds');
-    expect(wrapper.text()).toContain('PNG');
-    expect(wrapper.text()).toContain('SVG');
-    expect(wrapper.text()).toContain('PDF');
+    expect(wrapper.text()).toContain('Corridor Catalog');
+    expect(wrapper.text()).toContain('Published bundles');
+    expect(wrapper.text()).toContain('Data Exports');
+  });
+
+  it('allows adding a manual corridor for indices exports', async () => {
+    const wrapper = await mountEnterpriseTab();
+
+    const jobTypeSelect = wrapper
+      .findAll('select')
+      .find(select => select.text().includes('TEER / RCI / RVI'));
+
+    expect(jobTypeSelect).toBeDefined();
+    if (!jobTypeSelect) {
+      throw new Error('Expected indices export selector to be present');
+    }
+
+    await jobTypeSelect.setValue('indices');
+    await flushPromises();
+
+    const inputs = wrapper
+      .findAll('input[type="text"]')
+      .filter(input =>
+        input.attributes('placeholder')?.includes('Search by country, currency, or corridor ID')
+      );
+    const exportSearchInput = inputs.at(-1);
+
+    expect(exportSearchInput).toBeDefined();
+
+    await exportSearchInput!.setValue('US-GB-USD-GBP');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Add manual corridor US-GB-USD-GBP');
   });
 
   it('exports the rendered iframe preview for TEER', async () => {
-    const EnterpriseTab = (await import('~/domains/dashboard/ui/EnterpriseTab.vue')).default;
-    const wrapper = mount(EnterpriseTab);
+    const wrapper = await mountEnterpriseTab();
 
     const pngButton = wrapper.findAll('button').find(button => button.text() === 'PNG');
     expect(pngButton).toBeDefined();

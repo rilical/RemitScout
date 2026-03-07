@@ -7,6 +7,15 @@ import { ValidationError } from '../../../shared/errors'
 import { apiKeyAccessConfig } from './api-key-access'
 
 const logger = createLogger('plane-a.history')
+const METHOD_PROFILES = [
+  'standard_bank',
+  'standard_card',
+  'cash_pickup',
+  'mobile_wallet',
+  'airtime_topup',
+  'card_delivery',
+  'home_delivery',
+] as const
 
 const historyQuerySchema = z.object({
   corridor_id: z.string().min(3),
@@ -14,7 +23,7 @@ const historyQuerySchema = z.object({
   to_date: z.string().optional(),
   granularity: z.enum(['daily', '4h', 'hourly']).optional(),
   amount_bucket: z.coerce.number().int().optional(),
-  method_profile: z.string().optional(),
+  method_profile: z.enum(METHOD_PROFILES).optional(),
 })
 
 const historyCreateSchema = z.object({
@@ -144,7 +153,7 @@ export const historyRoutes = async (app: FastifyInstance) => {
       paramIndex += 1
     }
     if (parsed.data.method_profile) {
-      conditions.push(`method_profile = $${paramIndex}`)
+      conditions.push(`method_profile = $${paramIndex}::method_profile`)
       params.push(parsed.data.method_profile)
       paramIndex += 1
     }

@@ -41,10 +41,14 @@ export function useEnterpriseExports() {
   });
 
   const parsedCorridorIds = computed(() => {
-    return corridorIdsText.value
-      .split(/[\n,]/)
-      .map(value => value.trim().toUpperCase())
-      .filter(Boolean);
+    return Array.from(
+      new Set(
+        corridorIdsText.value
+          .split(/[\n,]/)
+          .map(value => value.trim().toUpperCase())
+          .filter(Boolean)
+      )
+    );
   });
 
   const columns: DataTableColumn[] = [
@@ -87,10 +91,14 @@ export function useEnterpriseExports() {
     ) {
       return `Export window too large. Max is ${errorData.allowedDays} days.`;
     }
+    if (errorData?.error === 'export_not_ready') {
+      return 'This export is still processing. Refresh in a few minutes and try again.';
+    }
     return mapPlanStateFailureMessage(err, fallback, {
       enterprise_required: 'Enterprise bulk export access is required.',
       indices_export_enterprise_only: 'TEER / RCI / RVI exports require an Enterprise plan.',
       plan_inactive: 'Your paid plan is inactive. Reactivate billing to create exports.',
+      database_error: 'Exports are temporarily unavailable because the export backend is degraded.',
     });
   };
 
@@ -166,8 +174,7 @@ export function useEnterpriseExports() {
         window.open(result.url, '_blank', 'noopener');
       }
     } catch (err) {
-      const raw = err instanceof Error ? err.message : typeof err === 'string' ? err : '';
-      error.value = raw || 'Unable to fetch export download URL.';
+      error.value = toErrorMessage(err, 'Unable to fetch export download URL.');
     }
   };
 

@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL || ''
 const authEmail = process.env.E2E_AUTH_EMAIL || process.env.PLAYWRIGHT_AUTH_EMAIL || ''
 const authPassword = process.env.E2E_AUTH_PASSWORD || process.env.PLAYWRIGHT_AUTH_PASSWORD || ''
+const authMfaCode = process.env.E2E_AUTH_MFA_CODE || process.env.PLAYWRIGHT_AUTH_MFA_CODE || ''
 const isRemoteTarget = /^https?:\/\//.test(baseUrl)
 const canRun = isRemoteTarget && Boolean(authEmail && authPassword)
 
@@ -17,8 +18,12 @@ test.describe('auth redirect security', () => {
 
     await page.getByRole('button', { name: /sign in/i }).click()
 
-    // Accounts with MFA may remain on the sign-in challenge UI.
-    // Either way, we must never leave to an external redirect URL.
+    const mfaInput = page.getByLabel(/authenticator code/i)
+    if (await mfaInput.isVisible().catch(() => false) && authMfaCode) {
+      await mfaInput.fill(authMfaCode)
+      await page.getByRole('button', { name: /^verify$/i }).click()
+    }
+
     await expect(page).not.toHaveURL(/evil\.example/i, { timeout: 30000 })
 
     const onDashboard = /\/dashboard(?:\?|$)/.test(page.url())

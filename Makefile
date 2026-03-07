@@ -439,15 +439,16 @@ db-migrate-env:
 		echo "ERROR: Could not find PlaneBIngestService in $$CLUSTER"; \
 		exit 1; \
 	fi; \
+	SERVICE_NAME=$${SERVICE_ARN##*/}; \
 	SERVICE_JSON=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs describe-services \
 		--cluster "$$CLUSTER" \
-		--services "$$SERVICE_ARN" \
+		--services "$$SERVICE_NAME" \
 		--region $(AWS_REGION) \
 		--output json); \
 	SERVICE_TASK_DEF=$$(echo "$$SERVICE_JSON" | jq -r '.services[0].taskDefinition'); \
 	NETWORK_CONFIG=$$(echo "$$SERVICE_JSON" | jq -c '.services[0].networkConfiguration'); \
 	if [ -z "$$SERVICE_TASK_DEF" ] || [ "$$SERVICE_TASK_DEF" = "null" ]; then \
-		echo "ERROR: Could not resolve task definition for $$SERVICE_ARN"; \
+		echo "ERROR: Could not resolve task definition for $$SERVICE_NAME"; \
 		exit 1; \
 	fi; \
 	MIGRATE_TASK_DEF=$$(AWS_PROFILE=$(AWS_PROFILE) aws ecs list-task-definitions \

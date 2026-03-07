@@ -96,7 +96,7 @@ base_raw AS (
     qr.fee_amount::double precision AS fee_amount,
     qr.collected_at,
     date_trunc('day', qr.collected_at) AS bucket_day,
-    CASE
+    (CASE
       WHEN qr.payout = 'cash_pickup'
         AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
         THEN 'cash_pickup'
@@ -118,7 +118,7 @@ base_raw AS (
         AND qr.payin IN ('bank_transfer', 'debit_card', 'credit_card', 'apple_pay', 'google_pay', 'cash')
         THEN 'home_delivery'
       ELSE NULL
-    END AS method_profile,
+    END)::method_profile AS method_profile,
     rm.allowed_in_rvi,
     rm.allowed_in_rci,
     rm.allowed_in_teer

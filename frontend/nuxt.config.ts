@@ -1,145 +1,142 @@
-import { promises as fs, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { promises as fs, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging'
-const isDev = !isStagingOrProd
-const envFileCandidates = [
-  join(process.cwd(), '.env.local'),
-  join(process.cwd(), '.env'),
-]
+const isStagingOrProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+const isDev = !isStagingOrProd;
+const envFileCandidates = [join(process.cwd(), '.env.local'), join(process.cwd(), '.env')];
 const readEnvValue = (key: string) => {
-  const direct = process.env[key]
-  if (direct) return direct
+  const direct = process.env[key];
+  if (direct) return direct;
   for (const filePath of envFileCandidates) {
-    if (!existsSync(filePath)) continue
-    const contents = readFileSync(filePath, 'utf8')
+    if (!existsSync(filePath)) continue;
+    const contents = readFileSync(filePath, 'utf8');
     for (const line of contents.split(/\r?\n/)) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('#')) continue
-      const match = trimmed.match(/^([A-Z0-9_]+)\s*=\s*(.*)$/)
-      if (!match) continue
-      const [, envKey, rawValue] = match
-      if (envKey !== key) continue
-      return rawValue.replace(/^['"]|['"]$/g, '')
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const match = trimmed.match(/^([A-Z0-9_]+)\s*=\s*(.*)$/);
+      if (!match) continue;
+      const [, envKey, rawValue] = match;
+      if (envKey !== key) continue;
+      return rawValue.replace(/^['"]|['"]$/g, '');
     }
   }
-  return undefined
-}
+  return undefined;
+};
 const resolveEnvValue = (...keys: string[]) => {
   for (const key of keys) {
-    const value = readEnvValue(key)
-    if (value) return value
+    const value = readEnvValue(key);
+    if (value) return value;
   }
-  return undefined
-}
+  return undefined;
+};
 const normalizeCloudFrontDomain = (value?: string) => {
-  if (!value) return undefined
-  const trimmed = value.trim()
-  if (!trimmed) return undefined
-  const noProtocol = trimmed.replace(/^https?:\/\//i, '')
-  return noProtocol.replace(/\/.*$/, '')
-}
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const noProtocol = trimmed.replace(/^https?:\/\//i, '');
+  return noProtocol.replace(/\/.*$/, '');
+};
 const cloudfrontDistributionDomain = normalizeCloudFrontDomain(
   resolveEnvValue(
     'FRONTEND_DISTRIBUTION_DOMAIN',
     'CLOUDFRONT_DISTRIBUTION_DOMAIN',
-    'CLOUDFRONT_DOMAIN',
-  ),
-)
+    'CLOUDFRONT_DOMAIN'
+  )
+);
 const cloudfrontPublicOrigin = cloudfrontDistributionDomain
   ? `https://${cloudfrontDistributionDomain}`
-  : undefined
-const isAwsEnvironment = !isDev && Boolean(
-  process.env.AWS_REGION || cloudfrontDistributionDomain || process.env.CLOUDFRONT_DISTRIBUTION_ID,
-)
-const parseEnvFlag = (value?: string) => value === 'true' || value === '1'
-const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value))
+  : undefined;
+const isAwsEnvironment =
+  !isDev &&
+  Boolean(
+    process.env.AWS_REGION || cloudfrontDistributionDomain || process.env.CLOUDFRONT_DISTRIBUTION_ID
+  );
+const parseEnvFlag = (value?: string) => value === 'true' || value === '1';
+const isAbsoluteUrl = (value?: string) => Boolean(value && /^https?:\/\//.test(value));
 const normalizeApiBase = (base?: string) => {
-  if (!base || !isAbsoluteUrl(base)) return base
-  const url = new URL(base)
-  let pathname = url.pathname.replace(/\/$/, '')
+  if (!base || !isAbsoluteUrl(base)) return base;
+  const url = new URL(base);
+  let pathname = url.pathname.replace(/\/$/, '');
   if (!pathname || pathname === '') {
-    pathname = '/api/v1'
-  }
-  else if (!pathname.endsWith('/api/v1')) {
+    pathname = '/api/v1';
+  } else if (!pathname.endsWith('/api/v1')) {
     if (pathname.endsWith('/api')) {
-      pathname = `${pathname}/v1`
-    }
-    else {
-      pathname = `${pathname}/api/v1`
+      pathname = `${pathname}/v1`;
+    } else {
+      pathname = `${pathname}/api/v1`;
     }
   }
-  url.pathname = pathname
-  return url.toString().replace(/\/$/, '')
-}
+  url.pathname = pathname;
+  return url.toString().replace(/\/$/, '');
+};
 const resolvePublicApiBase = () => {
   const forceDirectPublicApi = parseEnvFlag(
-    resolveEnvValue('PUBLIC_API_BASE_DIRECT', 'NUXT_PUBLIC_API_BASE_DIRECT') || '',
-  )
+    resolveEnvValue('PUBLIC_API_BASE_DIRECT', 'NUXT_PUBLIC_API_BASE_DIRECT') || ''
+  );
   // In static deployments (S3), no Nitro BFF proxy exists to rewrite /api/* → /api/v1/*.
   // Client-side requests must target /api/v1 directly so CloudFront routes them to the
   // correct API Gateway public routes instead of the auth-gated catch-all.
-  const staticFallback = isAwsEnvironment ? '/api/v1' : '/api'
+  const staticFallback = isAwsEnvironment ? '/api/v1' : '/api';
 
-  const publicBase = readEnvValue('PUBLIC_API_BASE')
+  const publicBase = readEnvValue('PUBLIC_API_BASE');
   if (publicBase) {
-    const normalized = normalizeApiBase(publicBase) || publicBase
+    const normalized = normalizeApiBase(publicBase) || publicBase;
     if (isAbsoluteUrl(normalized) && !forceDirectPublicApi) {
-      return staticFallback
+      return staticFallback;
     }
-    return normalized
+    return normalized;
   }
 
   if (forceDirectPublicApi) {
-    const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+    const cloudFrontDomain = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN');
     if (cloudFrontDomain) {
-      return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`
+      return `https://${cloudFrontDomain.replace(/\/$/, '')}/api/v1`;
     }
-    const apiEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+    const apiEndpoint = readEnvValue('PLANE_A_API_ENDPOINT');
     if (apiEndpoint) {
-      return `${apiEndpoint.replace(/\/$/, '')}/api/v1`
+      return `${apiEndpoint.replace(/\/$/, '')}/api/v1`;
     }
   }
 
   // Default: BFF proxy in SSR mode, direct /api/v1 in static mode.
-  return staticFallback
-}
+  return staticFallback;
+};
 const resolvePublicAdminApiBase = () => {
-  const publicBase = readEnvValue('PUBLIC_API_BASE')
+  const publicBase = readEnvValue('PUBLIC_API_BASE');
   if (publicBase) {
-    const normalized = normalizeApiBase(publicBase) || publicBase
+    const normalized = normalizeApiBase(publicBase) || publicBase;
     if (isAbsoluteUrl(normalized)) {
-      return normalized
+      return normalized;
     }
   }
 
-  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN');
   if (planeACloudFront) {
-    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`
+    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`;
   }
 
-  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
+  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT');
   if (planeAEndpoint) {
-    return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`
+    return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`;
   }
 
-  return ''
-}
+  return '';
+};
 const resolveServerApiBase = () => {
-  const apiBase = readEnvValue('API_BASE')
-  if (apiBase) return normalizeApiBase(apiBase) || apiBase
-  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT')
-  if (planeAEndpoint) return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`
-  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN')
+  const apiBase = readEnvValue('API_BASE');
+  if (apiBase) return normalizeApiBase(apiBase) || apiBase;
+  const planeAEndpoint = readEnvValue('PLANE_A_API_ENDPOINT');
+  if (planeAEndpoint) return `${planeAEndpoint.replace(/\/$/, '')}/api/v1`;
+  const planeACloudFront = readEnvValue('PLANE_A_CLOUDFRONT_DOMAIN');
   if (planeACloudFront) {
-    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`
+    return `https://${planeACloudFront.replace(/\/$/, '')}/api/v1`;
   }
-  const publicBase = resolvePublicApiBase()
-  if (isAbsoluteUrl(publicBase)) return publicBase as string
-  if (isDev) return 'http://127.0.0.1:4000/api/v1'
-  return ''
-}
-const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678
+  const publicBase = resolvePublicApiBase();
+  if (isAbsoluteUrl(publicBase)) return publicBase as string;
+  if (isDev) return 'http://127.0.0.1:4000/api/v1';
+  return '';
+};
+const hmrPort = Number(process.env.NUXT_VITE_HMR_PORT || process.env.VITE_HMR_PORT) || 24678;
 const isrRouteRules = isStagingOrProd
   ? {
       '/providers/**': { isr: 1800 }, // 30 minutes
@@ -149,16 +146,16 @@ const isrRouteRules = isStagingOrProd
       '/pulse/charts/**': { isr: 300 }, // 5 minutes - chart detail pages
       '/embed/pulse/**': { isr: 60 }, // 1 minute - embeds refresh faster
     }
-  : {}
-const projectRoot = process.cwd()
-const workspaceRoot = join(projectRoot, '..')
-const localNodeModules = join(projectRoot, 'node_modules')
-const workspaceNodeModules = join(workspaceRoot, 'node_modules')
-const workspacePnpmStore = join(workspaceNodeModules, '.pnpm')
+  : {};
+const projectRoot = process.cwd();
+const workspaceRoot = join(projectRoot, '..');
+const localNodeModules = join(projectRoot, 'node_modules');
+const workspaceNodeModules = join(workspaceRoot, 'node_modules');
+const workspacePnpmStore = join(workspaceNodeModules, '.pnpm');
 // Nuxt's internal `import("#app-manifest")` exists in a dead branch but Vite still resolves it.
 // In this monorepo + pnpm setup, Nuxt doesn't always inject the alias for dev, so we provide one.
 // The stub exists in-repo (not in `.nuxt`) so it is always resolvable.
-const appManifestAliasPath = join(projectRoot, 'app-manifest-stub.ts')
+const appManifestAliasPath = join(projectRoot, 'app-manifest-stub.ts');
 const defaultWatchIgnored = [
   '**/node_modules/**',
   '**/.pnpm/**',
@@ -170,94 +167,113 @@ const defaultWatchIgnored = [
   localNodeModules,
   workspaceNodeModules,
   workspacePnpmStore,
-]
-const watchIgnored = process.env.NUXT_DISABLE_WATCH === '1'
-  ? ['**/*']
-  : defaultWatchIgnored
-const usePolling = process.env.NUXT_USE_POLLING === '1'
-  || process.env.CHOKIDAR_USEPOLLING === '1'
+];
+const watchIgnored = process.env.NUXT_DISABLE_WATCH === '1' ? ['**/*'] : defaultWatchIgnored;
+const usePolling = process.env.NUXT_USE_POLLING === '1' || process.env.CHOKIDAR_USEPOLLING === '1';
 const watchOptions = {
   followSymlinks: false,
   ignored: watchIgnored,
   ...(usePolling ? { usePolling: true, interval: 1000 } : {}),
-}
-const nuxtModules = ['@nuxtjs/tailwindcss', '@nuxt/image', '@pinia/nuxt', 'nuxt-og-image', '@nuxtjs/google-fonts']
-const enableAds = parseEnvFlag(resolveEnvValue('PUBLIC_ENABLE_ADS', 'ENABLE_ADS') || '') && isStagingOrProd
-const adsEnabled = enableAds
+};
+const nuxtModules = [
+  '@nuxtjs/tailwindcss',
+  '@nuxt/image',
+  '@pinia/nuxt',
+  'nuxt-og-image',
+  '@nuxtjs/google-fonts',
+];
+const enableAds =
+  parseEnvFlag(resolveEnvValue('PUBLIC_ENABLE_ADS', 'PUBLIC_ADS_ENABLED', 'ENABLE_ADS') || '') && isStagingOrProd;
+const adsEnabled = enableAds;
 const parseAdSlotIds = (value: string | undefined, fallback: number[]) => {
-  if (!value) return fallback
+  if (!value) return fallback;
   const parsed = value
     .split(',')
     .map(part => Number(part.trim()))
-    .filter(id => Number.isInteger(id) && id > 0)
-  return parsed.length > 0 ? parsed : fallback
-}
+    .filter(id => Number.isInteger(id) && id > 0);
+  return parsed.length > 0 ? parsed : fallback;
+};
 const adPlacementIds = {
   compare_inline: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_COMPARE_INLINE_IDS'), [101]),
   compare_sidebar: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_COMPARE_SIDEBAR_IDS'), [101]),
   home_inline: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_HOME_INLINE_IDS'), [101]),
   dashboard_inline: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_DASHBOARD_INLINE_IDS'), [101]),
-  corridor_interstitial: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS'), [101]),
+  corridor_interstitial: parseAdSlotIds(
+    resolveEnvValue('PUBLIC_AD_CORRIDOR_INTERSTITIAL_IDS'),
+    [101]
+  ),
   corridor_below_faq: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_CORRIDOR_BELOW_FAQ_IDS'), [101]),
   corridor_footer: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_CORRIDOR_FOOTER_IDS'), [101]),
   blog_sidebar: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_BLOG_SIDEBAR_IDS'), [101]),
   blog_inline: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_BLOG_INLINE_IDS'), [101]),
   blog_banner: parseAdSlotIds(resolveEnvValue('PUBLIC_AD_BLOG_BANNER_IDS'), [101]),
-}
-const publicImageBase = process.env.PUBLIC_IMAGE_BASE
+};
+const publicImageBase = process.env.PUBLIC_IMAGE_BASE;
 const needsCloudfrontPreconnect = Boolean(
-  cloudfrontPublicOrigin
-  && (!publicImageBase || !publicImageBase.startsWith(cloudfrontPublicOrigin)),
-)
+  cloudfrontPublicOrigin &&
+  (!publicImageBase || !publicImageBase.startsWith(cloudfrontPublicOrigin))
+);
 const analyticsEnabled = (() => {
-  const flag = resolveEnvValue('NUXT_PUBLIC_ANALYTICS_ENABLED', 'PUBLIC_ANALYTICS_ENABLED')
+  const flag = resolveEnvValue('NUXT_PUBLIC_ANALYTICS_ENABLED', 'PUBLIC_ANALYTICS_ENABLED');
   // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
-  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
-})()
+  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd;
+})();
 const buildTimeTypeCheckEnabled = (() => {
-  const flag = resolveEnvValue('NUXT_BUILD_TYPECHECK')
-  return flag !== undefined ? parseEnvFlag(flag) : true
-})()
+  const flag = resolveEnvValue('NUXT_BUILD_TYPECHECK');
+  return flag !== undefined ? parseEnvFlag(flag) : true;
+})();
 
 const sentryEnabled = (() => {
-  const flag = resolveEnvValue('NUXT_PUBLIC_SENTRY_ENABLED', 'PUBLIC_SENTRY_ENABLED')
+  const flag = resolveEnvValue('NUXT_PUBLIC_SENTRY_ENABLED', 'PUBLIC_SENTRY_ENABLED');
   // Default ON for staging/prod, OFF for local/dev. Consent gates execution regardless.
-  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd
-})()
+  return flag !== undefined ? parseEnvFlag(flag) : isStagingOrProd;
+})();
 
-const environmentName = (process.env.ENVIRONMENT || process.env.NODE_ENV || (isStagingOrProd ? 'production' : 'development')).toLowerCase()
-const appVersion = process.env.APP_VERSION || process.env.SENTRY_RELEASE || process.env.GITHUB_SHA || process.env.npm_package_version || ''
+const environmentName = (
+  process.env.ENVIRONMENT ||
+  process.env.NODE_ENV ||
+  (isStagingOrProd ? 'production' : 'development')
+).toLowerCase();
+const appVersion =
+  process.env.APP_VERSION ||
+  process.env.SENTRY_RELEASE ||
+  process.env.GITHUB_SHA ||
+  process.env.npm_package_version ||
+  '';
 const allowSearchIndexing = (() => {
-  const flag = resolveEnvValue('NUXT_PUBLIC_ALLOW_SEARCH_INDEXING', 'PUBLIC_ALLOW_SEARCH_INDEXING', 'ALLOW_SEARCH_INDEXING')
-  if (flag !== undefined) return parseEnvFlag(flag)
-  return environmentName === 'production'
-})()
+  const flag = resolveEnvValue(
+    'NUXT_PUBLIC_ALLOW_SEARCH_INDEXING',
+    'PUBLIC_ALLOW_SEARCH_INDEXING',
+    'ALLOW_SEARCH_INDEXING'
+  );
+  if (flag !== undefined) return parseEnvFlag(flag);
+  return environmentName === 'production';
+})();
 const robotsMetaContent = allowSearchIndexing
   ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
-  : 'noindex, nofollow, noarchive, nosnippet, noimageindex'
+  : 'noindex, nofollow, noarchive, nosnippet, noimageindex';
 
 const ensureClientPrecomputed = async () => {
-  const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server')
-  await fs.mkdir(serverDist, { recursive: true })
-  const precomputedPath = join(serverDist, 'client.precomputed.mjs')
+  const serverDist = join(process.cwd(), '.nuxt', 'dist', 'server');
+  await fs.mkdir(serverDist, { recursive: true });
+  const precomputedPath = join(serverDist, 'client.precomputed.mjs');
   try {
-    await fs.access(precomputedPath)
+    await fs.access(precomputedPath);
+  } catch {
+    await fs.writeFile(precomputedPath, 'export default undefined', 'utf8');
   }
-  catch {
-    await fs.writeFile(precomputedPath, 'export default undefined', 'utf8')
-  }
-}
+};
 
 const ensureNuxtPaths = () => {
-  const buildDir = join(process.cwd(), '.nuxt')
-  const pathsPath = join(buildDir, 'paths.mjs')
+  const buildDir = join(process.cwd(), '.nuxt');
+  const pathsPath = join(buildDir, 'paths.mjs');
   const appConfig = {
     baseURL: '/',
     buildAssetsDir: '/_nuxt/',
     cdnURL: '',
-  }
+  };
   const contents = [
-    'import { joinRelativeURL } from \'ufo\'',
+    "import { joinRelativeURL } from 'ufo'",
     'const encodeUrlPath = (url) => encodeURI(url)',
     `const getAppConfig = () => (${JSON.stringify(appConfig)})`,
     'export const baseURL = () => getAppConfig().baseURL',
@@ -273,26 +289,24 @@ const ensureNuxtPaths = () => {
     '  globalThis.__buildAssetsURL = buildAssetsURL',
     '  globalThis.__publicAssetsURL = publicAssetsURL',
     '}',
-  ].join('\n')
+  ].join('\n');
 
   try {
-    mkdirSync(buildDir, { recursive: true })
-    const current = existsSync(pathsPath) ? readFileSync(pathsPath, 'utf8') : ''
+    mkdirSync(buildDir, { recursive: true });
+    const current = existsSync(pathsPath) ? readFileSync(pathsPath, 'utf8') : '';
     if (current !== contents) {
-      writeFileSync(pathsPath, contents, 'utf8')
+      writeFileSync(pathsPath, contents, 'utf8');
     }
-  }
-  catch {
+  } catch {
     // Keep startup resilient; Nuxt can regenerate this file in normal flows.
   }
-}
+};
 
 // `frontend/package.json` maps `#internal/nuxt/paths` to `.nuxt/paths.mjs`.
 // Ensure this file exists before dev/build runtime starts importing server chunks.
-ensureNuxtPaths()
+ensureNuxtPaths();
 
 export default defineNuxtConfig({
-
   // Modules
   modules: nuxtModules,
 
@@ -344,10 +358,16 @@ export default defineNuxtConfig({
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@RemitScout' },
         // Global OG image fallback — pages using defineOgImage() or setSeo({ ogImage }) override this
-        { property: 'og:image', content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png` },
+        {
+          property: 'og:image',
+          content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png`,
+        },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { name: 'twitter:image', content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png` },
+        {
+          name: 'twitter:image',
+          content: `${process.env.PUBLIC_SITE_URL || 'https://Remit-Scout.com'}/og-image.png`,
+        },
         // Verification tags (can be overridden by env vars)
         ...(process.env.GOOGLE_SITE_VERIFICATION
           ? [{ name: 'google-site-verification', content: process.env.GOOGLE_SITE_VERIFICATION }]
@@ -366,9 +386,13 @@ export default defineNuxtConfig({
         { rel: 'manifest', href: '/site.webmanifest' },
         // Resource hints (preconnect first, then dns-prefetch).
         ...(publicImageBase ? [{ rel: 'preconnect', href: publicImageBase }] : []),
-        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin ? [{ rel: 'preconnect', href: cloudfrontPublicOrigin }] : []),
+        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin
+          ? [{ rel: 'preconnect', href: cloudfrontPublicOrigin }]
+          : []),
         ...(publicImageBase ? [{ rel: 'dns-prefetch', href: publicImageBase }] : []),
-        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin ? [{ rel: 'dns-prefetch', href: cloudfrontPublicOrigin }] : []),
+        ...(needsCloudfrontPreconnect && cloudfrontPublicOrigin
+          ? [{ rel: 'dns-prefetch', href: cloudfrontPublicOrigin }]
+          : []),
         { rel: 'dns-prefetch', href: 'https://www.googletagmanager.com' }, // GA4
         { rel: 'dns-prefetch', href: 'https://connect.facebook.net' }, // Meta Pixel
         { rel: 'dns-prefetch', href: 'https://t.contentsquare.net' }, // Hotjar/Contentsquare
@@ -393,11 +417,14 @@ export default defineNuxtConfig({
     // Server-only backend base URL for BFF proxying (must be absolute).
     apiBase: resolveServerApiBase(),
     public: {
-      remitScoutEnv: (resolveEnvValue('PUBLIC_REMIT_SCOUT_ENV', 'REMIT_SCOUT_ENV', 'ENVIRONMENT') || (isDev ? 'dev' : 'prod')).toLowerCase(),
+      remitScoutEnv: (
+        resolveEnvValue('PUBLIC_REMIT_SCOUT_ENV', 'REMIT_SCOUT_ENV', 'ENVIRONMENT') ||
+        (isDev ? 'dev' : 'prod')
+      ).toLowerCase(),
       awsRegion: resolveEnvValue('PUBLIC_AWS_REGION', 'AWS_REGION') || 'us-east-1',
       siteUrl:
-        process.env.PUBLIC_SITE_URL
-        || (isAwsEnvironment && cloudfrontPublicOrigin
+        process.env.PUBLIC_SITE_URL ||
+        (isAwsEnvironment && cloudfrontPublicOrigin
           ? cloudfrontPublicOrigin
           : 'https://Remit-Scout.com'),
       apiBase: resolvePublicApiBase(),
@@ -409,36 +436,38 @@ export default defineNuxtConfig({
       b2cRefreshStatusPollMs: Number(process.env.PUBLIC_B2C_REFRESH_STATUS_POLL_MS) || 2500,
       b2cBackgroundRefreshEnabled: process.env.PUBLIC_B2C_BACKGROUND_REFRESH_ENABLED === '1',
       imageBase:
-        process.env.PUBLIC_IMAGE_BASE
-        || (isAwsEnvironment && cloudfrontPublicOrigin
+        process.env.PUBLIC_IMAGE_BASE ||
+        (isAwsEnvironment && cloudfrontPublicOrigin
           ? `${cloudfrontPublicOrigin}/images`
           : 'https://images.Remit-Scout.com'),
-      supabaseUrl: resolveEnvValue(
-        'PUBLIC_SUPABASE_URL',
-        'NUXT_PUBLIC_SUPABASE_URL',
-        'SUPABASE_URL',
-      ) || '',
-      supabaseAnonKey: resolveEnvValue(
-        'PUBLIC_SUPABASE_ANON_KEY',
-        'NUXT_PUBLIC_SUPABASE_ANON_KEY',
-        'SUPABASE_PUBLISHABLE_KEY',
-      ) || '',
+      supabaseUrl:
+        resolveEnvValue('PUBLIC_SUPABASE_URL', 'NUXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL') || '',
+      supabaseAnonKey:
+        resolveEnvValue(
+          'PUBLIC_SUPABASE_ANON_KEY',
+          'NUXT_PUBLIC_SUPABASE_ANON_KEY',
+          'SUPABASE_PUBLISHABLE_KEY'
+        ) || '',
       authClientMfaEnforced: parseEnvFlag(
-        resolveEnvValue('PUBLIC_AUTH_CLIENT_MFA_ENFORCED', 'AUTH_CLIENT_MFA_ENFORCED') || '',
+        resolveEnvValue('PUBLIC_AUTH_CLIENT_MFA_ENFORCED', 'AUTH_CLIENT_MFA_ENFORCED') || ''
       ),
       supabaseSuppressConfigError: process.env.NUXT_PUBLIC_SUPABASE_SUPPRESS_CONFIG_ERROR === '1',
-      pushVapidKey: process.env.PUBLIC_PUSH_VAPID_KEY || '',
-      ga4MeasurementId: process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
+      pushVapidKey: resolveEnvValue('PUBLIC_PUSH_VAPID_KEY', 'PUSH_WEB_VAPID_PUBLIC_KEY') || '',
+      ga4MeasurementId:
+        process.env.PUBLIC_GA4_MEASUREMENT_ID || process.env.GA4_MEASUREMENT_ID || '',
       gtmContainerId: process.env.PUBLIC_GTM_CONTAINER_ID || process.env.GTM_CONTAINER_ID || '',
       metaPixelId: process.env.PUBLIC_META_PIXEL_ID || process.env.META_PIXEL_ID || '',
-      googleAdsConversionId: process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || process.env.GOOGLE_ADS_CONVERSION_ID || '',
-      linkedinPartnerId: process.env.PUBLIC_LINKEDIN_PARTNER_ID || process.env.LINKEDIN_PARTNER_ID || '',
+      googleAdsConversionId:
+        process.env.PUBLIC_GOOGLE_ADS_CONVERSION_ID || process.env.GOOGLE_ADS_CONVERSION_ID || '',
+      linkedinPartnerId:
+        process.env.PUBLIC_LINKEDIN_PARTNER_ID || process.env.LINKEDIN_PARTNER_ID || '',
       redditPixelId: process.env.PUBLIC_REDDIT_PIXEL_ID || process.env.REDDIT_PIXEL_ID || '',
       xPixelId: process.env.PUBLIC_X_PIXEL_ID || process.env.X_PIXEL_ID || '',
       tiktokPixelId: process.env.PUBLIC_TIKTOK_PIXEL_ID || process.env.TIKTOK_PIXEL_ID || '',
-      clarityProjectId: process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
+      clarityProjectId:
+        process.env.PUBLIC_CLARITY_PROJECT_ID || process.env.CLARITY_PROJECT_ID || '',
       newRelicBrowserEnabled: parseEnvFlag(
-        resolveEnvValue('PUBLIC_NEW_RELIC_BROWSER_ENABLED', 'NEW_RELIC_BROWSER_ENABLED') || '',
+        resolveEnvValue('PUBLIC_NEW_RELIC_BROWSER_ENABLED', 'NEW_RELIC_BROWSER_ENABLED') || ''
       ),
       newRelicAccountId: process.env.PUBLIC_NEW_RELIC_ACCOUNT_ID || '',
       newRelicTrustKey: process.env.PUBLIC_NEW_RELIC_TRUST_KEY || '',
@@ -448,11 +477,11 @@ export default defineNuxtConfig({
       newRelicBeacon: process.env.PUBLIC_NEW_RELIC_BEACON || 'bam.nr-data.net',
       newRelicErrorBeacon: process.env.PUBLIC_NEW_RELIC_ERROR_BEACON || 'bam.nr-data.net',
       contentsquareTagSrc:
-        process.env.PUBLIC_CONTENTSQUARE_TAG_SRC
-        || process.env.CONTENTSQUARE_TAG_SRC
-        || 'https://t.contentsquare.net/uxa/3010a70945ff4.js',
+        process.env.PUBLIC_CONTENTSQUARE_TAG_SRC ||
+        process.env.CONTENTSQUARE_TAG_SRC ||
+        'https://t.contentsquare.net/uxa/3010a70945ff4.js',
       siteMaintenanceMode: parseEnvFlag(
-        resolveEnvValue('PUBLIC_SITE_MAINTENANCE_MODE', 'SITE_MAINTENANCE_MODE') || '',
+        resolveEnvValue('PUBLIC_SITE_MAINTENANCE_MODE', 'SITE_MAINTENANCE_MODE') || ''
       ),
       analyticsEnabled,
       adsEnabled,
@@ -465,26 +494,32 @@ export default defineNuxtConfig({
       // Policy: Plus has no free trial (ignore env to prevent accidental UI claims).
       stripeTrialDays: 0,
       webVitalsSampleRate: (() => {
-        const raw = resolveEnvValue('NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE', 'PUBLIC_WEB_VITALS_SAMPLE_RATE')
-        if (raw === undefined) return 0.1
-        const parsed = Number(raw)
-        if (!Number.isFinite(parsed)) return 0.1
-        return Math.min(1, Math.max(0, parsed))
+        const raw = resolveEnvValue(
+          'NUXT_PUBLIC_WEB_VITALS_SAMPLE_RATE',
+          'PUBLIC_WEB_VITALS_SAMPLE_RATE'
+        );
+        if (raw === undefined) return 0.1;
+        const parsed = Number(raw);
+        if (!Number.isFinite(parsed)) return 0.1;
+        return Math.min(1, Math.max(0, parsed));
       })(),
       pulseEnabled: (() => {
-        const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED')
+        const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_ENABLED', 'PUBLIC_PULSE_ENABLED');
         // Default OFF. Set NUXT_PUBLIC_PULSE_ENABLED=1 when data pipelines are ready.
         // Paying subscribers (Plus/Enterprise) bypass this flag via useFeatureFlags().
-        return flag !== undefined ? parseEnvFlag(flag) : false
+        return flag !== undefined ? parseEnvFlag(flag) : false;
       })(),
       pulseScreenerEnabled: (() => {
-        const flag = resolveEnvValue('NUXT_PUBLIC_PULSE_SCREENER_ENABLED', 'PUBLIC_PULSE_SCREENER_ENABLED')
+        const flag = resolveEnvValue(
+          'NUXT_PUBLIC_PULSE_SCREENER_ENABLED',
+          'PUBLIC_PULSE_SCREENER_ENABLED'
+        );
         // Frontend-only rollout guard for the screener-first Pulse experience.
-        return flag !== undefined ? parseEnvFlag(flag) : true
+        return flag !== undefined ? parseEnvFlag(flag) : true;
       })(),
       enterpriseEnabled: (() => {
-        const flag = resolveEnvValue('NUXT_PUBLIC_ENTERPRISE_ENABLED', 'PUBLIC_ENTERPRISE_ENABLED')
-        return flag !== undefined ? parseEnvFlag(flag) : false
+        const flag = resolveEnvValue('NUXT_PUBLIC_ENTERPRISE_ENABLED', 'PUBLIC_ENTERPRISE_ENABLED');
+        return flag !== undefined ? parseEnvFlag(flag) : false;
       })(),
     },
   },
@@ -497,7 +532,9 @@ export default defineNuxtConfig({
   // Route Rules (ISR)
   routeRules: {
     ...isrRouteRules,
-    '/ads.txt': { redirect: { to: 'https://srv.adstxtmanager.com/19390/remit-scout.com', statusCode: 301 } },
+    '/ads.txt': {
+      redirect: { to: 'https://srv.adstxtmanager.com/19390/remit-scout.com', statusCode: 301 },
+    },
     '/legal/methodology': { redirect: '/methodology' },
     '/how-we-make-money': { redirect: { to: '/legal/how-we-make-money', statusCode: 301 } },
     '/about-old': { redirect: { to: '/about', statusCode: 301 } },
@@ -593,8 +630,8 @@ export default defineNuxtConfig({
         enforce: 'pre',
         resolveId(id: string) {
           // Nuxt uses a virtual module id "#app-manifest". Depending on Vite internals, it may be prefixed.
-          if (id === '#app-manifest' || id === '\u0000#app-manifest') return appManifestAliasPath
-          return null
+          if (id === '#app-manifest' || id === '\u0000#app-manifest') return appManifestAliasPath;
+          return null;
         },
       },
     ],
@@ -624,44 +661,48 @@ export default defineNuxtConfig({
   hooks: {
     'build:before': async () => {
       // Copy SVG files from frontend/png/SVG to public/png/SVG for proper routing
-      const sourceDir = join(projectRoot, 'png', 'SVG')
-      const destDir = join(projectRoot, 'public', 'png', 'SVG')
+      const sourceDir = join(projectRoot, 'png', 'SVG');
+      const destDir = join(projectRoot, 'public', 'png', 'SVG');
       try {
-        await fs.mkdir(destDir, { recursive: true })
-        const files = await fs.readdir(sourceDir)
+        await fs.mkdir(destDir, { recursive: true });
+        const files = await fs.readdir(sourceDir);
         for (const file of files) {
           if (file.endsWith('.svg')) {
-            const sourcePath = join(sourceDir, file)
-            const destPath = join(destDir, file)
-            await fs.copyFile(sourcePath, destPath)
+            const sourcePath = join(sourceDir, file);
+            const destPath = join(destDir, file);
+            await fs.copyFile(sourcePath, destPath);
           }
         }
-      }
-      catch (error) {
+      } catch (error) {
         // Source directory doesn't exist or is empty - that's okay
       }
 
       // Copy PROVIDERS SVG files to public/png/SVG/PROVIDERS
-      const providersSourceDirForPublic = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
-      const providersDestDir = join(projectRoot, 'public', 'png', 'SVG', 'PROVIDERS')
+      const providersSourceDirForPublic = join(projectRoot, 'png', 'SVG', 'PROVIDERS');
+      const providersDestDir = join(projectRoot, 'public', 'png', 'SVG', 'PROVIDERS');
       try {
-        await fs.mkdir(providersDestDir, { recursive: true })
-        const providerFiles = await fs.readdir(providersSourceDirForPublic)
+        await fs.mkdir(providersDestDir, { recursive: true });
+        const providerFiles = await fs.readdir(providersSourceDirForPublic);
         for (const file of providerFiles) {
-          if (file.endsWith('.svg') || file.endsWith('.png') || file.endsWith('.webp') || file.endsWith('.jpeg') || file.endsWith('.jpg')) {
-            const sourcePath = join(providersSourceDirForPublic, file)
-            const destPath = join(providersDestDir, file)
-            await fs.copyFile(sourcePath, destPath)
+          if (
+            file.endsWith('.svg') ||
+            file.endsWith('.png') ||
+            file.endsWith('.webp') ||
+            file.endsWith('.jpeg') ||
+            file.endsWith('.jpg')
+          ) {
+            const sourcePath = join(providersSourceDirForPublic, file);
+            const destPath = join(providersDestDir, file);
+            await fs.copyFile(sourcePath, destPath);
           }
         }
-      }
-      catch (error) {
+      } catch (error) {
         // Providers directory doesn't exist or is empty - that's okay
       }
 
       // Copy provider logos from PROVIDERS folder to public/logos with slug-based names
-      const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS')
-      const logosDestDir = join(projectRoot, 'public', 'logos')
+      const providersSourceDir = join(projectRoot, 'png', 'SVG', 'PROVIDERS');
+      const logosDestDir = join(projectRoot, 'public', 'logos');
       const providerLogoMap: Record<string, string[]> = {
         'WISE_LOGO.svg': ['wise.svg'],
         'REMITLY_LOGO.svg': ['remitly.svg'],
@@ -688,27 +729,26 @@ export default defineNuxtConfig({
         'PLACID_LOGO.png': ['placid.png'],
         'DAHABSHIIL_LOGO.png': ['dahabshiil.png'],
         'BOSSMONEY_LOGO.png': ['boss-money.png'],
-      }
+      };
       try {
-        await fs.mkdir(logosDestDir, { recursive: true })
-        const providerFiles = await fs.readdir(providersSourceDir)
+        await fs.mkdir(logosDestDir, { recursive: true });
+        const providerFiles = await fs.readdir(providersSourceDir);
         for (const file of providerFiles) {
-          const targets = providerLogoMap[file]
-          if (!targets || targets.length === 0) continue
-          const sourcePath = join(providersSourceDir, file)
+          const targets = providerLogoMap[file];
+          if (!targets || targets.length === 0) continue;
+          const sourcePath = join(providersSourceDir, file);
           for (const target of targets) {
-            const destPath = join(logosDestDir, target)
-            await fs.copyFile(sourcePath, destPath)
+            const destPath = join(logosDestDir, target);
+            await fs.copyFile(sourcePath, destPath);
           }
         }
-      }
-      catch {
+      } catch {
         // Providers directory doesn't exist or is empty - that's okay
       }
     },
     'build:done': async () => {
-      await ensureClientPrecomputed()
-      ensureNuxtPaths()
+      await ensureClientPrecomputed();
+      ensureNuxtPaths();
     },
   },
   googleFonts: {
@@ -752,9 +792,7 @@ export default defineNuxtConfig({
     densities: [1, 2],
     domains: [
       'images.remit-scout.com',
-      ...(cloudfrontDistributionDomain
-        ? [cloudfrontDistributionDomain]
-        : []),
+      ...(cloudfrontDistributionDomain ? [cloudfrontDistributionDomain] : []),
     ],
     cloudflare: false,
   },
@@ -767,4 +805,4 @@ export default defineNuxtConfig({
   },
 
   // robots.txt is served by `server/routes/robots.txt.ts` (env-aware).
-})
+});

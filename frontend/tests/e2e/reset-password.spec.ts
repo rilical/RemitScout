@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const baseUrl = process.env.PLAYWRIGHT_BASE_URL || ''
+const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3002'
 const canRun = /^https?:\/\//.test(baseUrl)
 
 test.describe('reset password flow', () => {

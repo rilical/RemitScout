@@ -20,7 +20,30 @@ const logger = createLogger('script.seed-knowledge-plane')
 
 const PROVIDERS_DIR = join(__dirname, '../plane-b/src/providers')
 
-async function main(): Promise<void> {
+const readSourceVariant = (
+  providerDir: string,
+  basename: 'parse' | 'fetch',
+): string | undefined => {
+  const tsPath = join(providerDir, `${basename}.ts`)
+  if (existsSync(tsPath)) {
+    return readFileSync(tsPath, 'utf-8')
+  }
+
+  const jsPath = join(providerDir, `${basename}.js`)
+  if (existsSync(jsPath)) {
+    return readFileSync(jsPath, 'utf-8')
+  }
+
+  return undefined
+}
+
+export interface SeedKnowledgePlaneResult {
+  indexed: number
+  skipped: number
+  total: number
+}
+
+export async function seedKnowledgePlane(): Promise<SeedKnowledgePlaneResult> {
   const pool = createPool(config.db.planeBUrl)
   const knowledgePlane = new KnowledgePlane(pool)
 
@@ -36,15 +59,8 @@ async function main(): Promise<void> {
 
   for (const providerId of providerDirs) {
     const providerDir = join(PROVIDERS_DIR, providerId)
-    const parsePath = join(providerDir, 'parse.ts')
-    const fetchPath = join(providerDir, 'fetch.ts')
-
-    const parserSource = existsSync(parsePath)
-      ? readFileSync(parsePath, 'utf-8')
-      : undefined
-    const fetchSource = existsSync(fetchPath)
-      ? readFileSync(fetchPath, 'utf-8')
-      : undefined
+    const parserSource = readSourceVariant(providerDir, 'parse')
+    const fetchSource = readSourceVariant(providerDir, 'fetch')
 
     if (!parserSource && !fetchSource) {
       logger.debug('seed_skip_no_sources', { providerId })
@@ -70,14 +86,27 @@ async function main(): Promise<void> {
     }
   }
 
-  logger.info('seed_complete', { indexed, skipped, total: providerDirs.length })
+  logger.info('seed_complete', {
+    indexed,
+    skipped,
+    total: providerDirs.length,
+  })
 
   await pool.end()
+  return {
+    indexed,
+    skipped,
+    total: providerDirs.length,
+  }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    logger.error('seed_fatal', { error: err instanceof Error ? err.message : String(err) })
-    process.exit(1)
-  })
+if (require.main === module) {
+  seedKnowledgePlane()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      logger.error('seed_fatal', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+      process.exit(1)
+    })
+}
