@@ -1,4 +1,5 @@
 name: staging/go-live-readiness
+run-name: staging/go-live-readiness (${{ inputs.deploy_sha != '' && inputs.deploy_sha || github.ref_name }})
 
 on:
   workflow_dispatch:

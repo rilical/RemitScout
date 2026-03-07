@@ -1977,6 +1977,7 @@ jobs:
           fi
 
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
+          readiness_run_title="staging/go-live-readiness (${deploy_sha})"
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" \
             -f run_runtime_config_validation=true \
@@ -1984,8 +1985,9 @@ jobs:
             -f deploy_sha="${deploy_sha}"
 
           run_id=""
+          echo "Waiting for readiness workflow run titled: ${readiness_run_title}"
           for i in $(seq 1 60); do
-            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,headBranch -q ".[] | select(.event==\"workflow_dispatch\" and .headBranch==\"${dispatch_ref}\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
+            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,displayTitle -q "sort_by(.createdAt) | reverse | .[] | select(.event==\"workflow_dispatch\" and .createdAt >= \"${dispatch_started_at}\" and .displayTitle==\"${readiness_run_title}\") | .databaseId" | head -n1)"
             if [ -n "$run_id" ]; then
               break
             fi
@@ -2343,7 +2345,8 @@ jobs:
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          readiness_run_title="staging/go-live-readiness (${deploy_sha})"
+          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,displayTitle,createdAt,conclusion -q "sort_by(.createdAt) | reverse | .[] | select(.displayTitle==\"${readiness_run_title}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful staging-go-live-readiness run found for commit ${deploy_sha}."
             echo "Block prod deploy until staging readiness gate passes on this exact commit."
