@@ -35,9 +35,11 @@ export type EffectiveRuntimeFlag = {
   } | null
 }
 
+type PublicEffectiveRuntimeFlag = Pick<EffectiveRuntimeFlag, 'key' | 'enabled'>
+
 type EffectiveRuntimeFlagsResponse = {
   generated_at: string
-  flags: EffectiveRuntimeFlag[]
+  flags: PublicEffectiveRuntimeFlag[]
 }
 
 const runtimeFlagKeys: RuntimeFlagKey[] = [
@@ -131,16 +133,12 @@ export const useFeatureFlags = () => {
 
   const fallbackFlags = computed(() => buildFallbackFlags(pulseLevel.value, config))
   const runtimeFlags = computed(() => {
-    const flags = snapshot.value?.flags?.length ? snapshot.value.flags : fallbackFlags.value
-    const complete: EffectiveRuntimeFlag[] = []
-    const byKey = new Map(flags.map(flag => [flag.key, flag]))
-    for (const key of runtimeFlagKeys) {
-      const flag = byKey.get(key)
-      if (flag) {
-        complete.push(flag)
-      }
-    }
-    return complete
+    const enabledByKey = new Map(snapshot.value?.flags?.map(flag => [flag.key, flag.enabled]) ?? [])
+
+    return fallbackFlags.value.map((flag) => ({
+      ...flag,
+      enabled: enabledByKey.get(flag.key) ?? flag.enabled,
+    }))
   })
   const runtimeFlagMap = computed<Record<RuntimeFlagKey, EffectiveRuntimeFlag>>(() => {
     const map = {} as Record<RuntimeFlagKey, EffectiveRuntimeFlag>

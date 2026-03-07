@@ -75,15 +75,18 @@ export const adminFeatureFlagsRoutes = async (app: FastifyInstance) => {
     }
   }
 
+  const toPublicRuntimeSnapshot = (runtime: Awaited<ReturnType<typeof getEffectiveRuntimeFlags>>) => ({
+    generated_at: runtime.generated_at,
+    flags: runtime.flags.map(({ key, enabled }) => ({ key, enabled })),
+    definitions: getRuntimeFlagDefinitions(),
+  })
+
   app.get('/feature-flags/effective', async (request) => {
     const runtime = await getEffectiveRuntimeFlags(pool, {
       ...(await resolveRuntimeFlagContext(request)),
     })
 
-    return {
-      ...runtime,
-      definitions: getRuntimeFlagDefinitions(),
-    }
+    return toPublicRuntimeSnapshot(runtime)
   })
 
   app.get('/admin/feature-flags', { preHandler: requireAdmin() }, async (request) => {

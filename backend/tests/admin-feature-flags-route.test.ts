@@ -130,7 +130,7 @@ describe('admin feature flags routes', () => {
     expect(mockResolveEffectiveEntitlements).toHaveBeenCalled()
     expect(response).toEqual({
       generated_at: '2026-03-07T12:00:00.000Z',
-      flags: expect.any(Array),
+      flags: [{ key: 'pulse.public', enabled: false }],
       definitions: [{ key: 'pulse.public', label: 'Pulse public rollout' }],
     })
   })
