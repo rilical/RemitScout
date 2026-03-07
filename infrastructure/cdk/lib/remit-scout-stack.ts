@@ -2132,6 +2132,18 @@ export class RemitScoutStack extends Stack {
     queues.opsAlertsQueue.grantSendMessages(iam.planeBEcsTaskRole)
     queues.opsAlertsQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
     queues.opsAlertsDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.agentFailureQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.agentFailureQueue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.agentFailureDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.agentStressQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.agentStressQueue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.agentStressDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.toolRequestQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.toolRequestQueue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.toolRequestDlq.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.normalizationQueue.grantConsumeMessages(iam.planeBEcsTaskRole)
+    queues.normalizationQueue.grantSendMessages(iam.planeBEcsTaskRole)
+    queues.normalizationDlq.grantSendMessages(iam.planeBEcsTaskRole)
 
     new CfnOutput(this, 'VpcId', {
       value: networking.vpc.vpcId,

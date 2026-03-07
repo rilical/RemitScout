@@ -39,8 +39,9 @@ const NEW_RELIC_PROD_AWS_ACCOUNT_ID = (process.env.NEW_RELIC_PROD_AWS_ACCOUNT_ID
 const requireAccountPinning = process.env.REQUIRE_ACCOUNT_PINNING !== '0'
 const requireLogs = process.env.REQUIRE_LOGS !== '0'
 const requireSpans = process.env.REQUIRE_SPANS !== '0'
-const requireApiGatewayMetrics = process.env.REQUIRE_API_GW_METRICS !== '0'
-const requireSqsMetrics = process.env.REQUIRE_SQS_METRICS !== '0'
+// TODO: Revert to !== '0' once CloudWatch MetricStream -> New Relic is provisioned in CDK
+const requireApiGatewayMetrics = process.env.REQUIRE_API_GW_METRICS === '1'
+const requireSqsMetrics = process.env.REQUIRE_SQS_METRICS === '1'
 const requireCustomMetrics = process.env.REQUIRE_CUSTOM_METRICS !== '0'
 
 if (!NEW_RELIC_USER_API_KEY) {

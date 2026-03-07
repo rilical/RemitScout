@@ -86,6 +86,10 @@ export const handler = async (): Promise<number> => {
     loggerName: 'script.ingest-fanout-worker-ecs.health-server',
   })
 
+  // ECS wrapper already owns the health server (started above).
+  // Prevent the inner worker from starting a duplicate on the same port.
+  process.env.WORKER_HEALTH_ENABLED = '0'
+
   const { runIngestFanoutWorkerLoop } = await import('../ingest-fanout-worker')
   return await runIngestFanoutWorkerLoop()
 }
