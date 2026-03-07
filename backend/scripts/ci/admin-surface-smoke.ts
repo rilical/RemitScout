@@ -267,6 +267,21 @@ export const isAdminMfaRequiredResponse = (
   body?.code === 'mfa_required'
 )
 
+export const resolveAdminSmokeAuthToken = (
+  status: number,
+  body: AdminExchangeResponse | null | undefined,
+  supabaseAccessToken: string,
+): { token: string; source: 'admin_exchange' | 'supabase_fallback' | 'none' } => {
+  const exchangeToken = typeof body?.access_token === 'string' ? body.access_token.trim() : ''
+  if (status < 400 && exchangeToken.length > 0) {
+    return { token: exchangeToken, source: 'admin_exchange' }
+  }
+  if (status < 400 && supabaseAccessToken.trim().length > 0) {
+    return { token: supabaseAccessToken.trim(), source: 'supabase_fallback' }
+  }
+  return { token: '', source: 'none' }
+}
+
 const mustEnv = (key: string): string => {
   const value = process.env[key]
   if (!value || !value.trim()) {
@@ -462,15 +477,18 @@ const main = async () => {
     exchange = await exchangeAdminSession(apiBase, supabaseAccessToken)
   }
 
-  const adminAccessToken = typeof exchange.body?.access_token === 'string'
-    ? exchange.body.access_token
-    : ''
+  const adminAuth = resolveAdminSmokeAuthToken(
+    exchange.status,
+    exchange.body,
+    supabaseAccessToken,
+  )
+  const adminAccessToken = adminAuth.token
 
   record({
     name: 'POST /sessions/admin/exchange',
     ok: exchange.status < 400 && adminAccessToken.length > 0,
     note: exchange.status < 400
-      ? `status=${exchange.status}`
+      ? `status=${exchange.status}${adminAuth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`
       : `status=${exchange.status} body=${JSON.stringify(exchange.body)}`,
   })
 

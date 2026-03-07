@@ -7,6 +7,7 @@ import {
   readAdminSmokeConfig,
   readExpectedAdminMfa,
   readSmokeUserMfaCode,
+  resolveAdminSmokeAuthToken,
 } from '../scripts/ci/admin-surface-smoke'
 
 describe('admin surface smoke helpers', () => {
@@ -113,5 +114,28 @@ describe('admin surface smoke helpers', () => {
     expect(isAdminMfaRequiredResponse(200, {
       error: 'mfa_required',
     })).toBe(false)
+  })
+
+  it('falls back to the Supabase token when admin exchange succeeds without returning an access token', () => {
+    expect(resolveAdminSmokeAuthToken(200, {
+      access_token: 'admin-token',
+    }, 'supabase-token')).toEqual({
+      token: 'admin-token',
+      source: 'admin_exchange',
+    })
+
+    expect(resolveAdminSmokeAuthToken(200, {
+      token_type: 'Bearer',
+    }, 'supabase-token')).toEqual({
+      token: 'supabase-token',
+      source: 'supabase_fallback',
+    })
+
+    expect(resolveAdminSmokeAuthToken(403, {
+      error: 'forbidden',
+    }, 'supabase-token')).toEqual({
+      token: '',
+      source: 'none',
+    })
   })
 })
