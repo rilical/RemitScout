@@ -1369,6 +1369,14 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
           PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
+          PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+          PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+          PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+          PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+          PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+          PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -1395,6 +1403,24 @@ jobs:
           export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
           export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
           export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
+          export PUBLIC_NEW_RELIC_BROWSER_ENABLED="${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}"
+          export PUBLIC_NEW_RELIC_ACCOUNT_ID="${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}"
+          export PUBLIC_NEW_RELIC_TRUST_KEY="${PUBLIC_NEW_RELIC_TRUST_KEY:-}"
+          export PUBLIC_NEW_RELIC_AGENT_ID="${PUBLIC_NEW_RELIC_AGENT_ID:-}"
+          export PUBLIC_NEW_RELIC_APPLICATION_ID="${PUBLIC_NEW_RELIC_APPLICATION_ID:-}"
+          export PUBLIC_NEW_RELIC_LICENSE_KEY="${PUBLIC_NEW_RELIC_LICENSE_KEY:-}"
+          export PUBLIC_NEW_RELIC_BEACON="${PUBLIC_NEW_RELIC_BEACON:-}"
+          export PUBLIC_NEW_RELIC_ERROR_BEACON="${PUBLIC_NEW_RELIC_ERROR_BEACON:-}"
+
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ]; then
+            if [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ]; then
+              echo "Missing PUBLIC_NEW_RELIC_* browser agent vars while PUBLIC_NEW_RELIC_BROWSER_ENABLED=1."
+              exit 1
+            fi
+          fi
 
           pnpm -C frontend build
           pnpm -C frontend generate
@@ -1612,6 +1638,8 @@ jobs:
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
           REQUIRE_CUSTOM_METRICS=0 \
+          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e
@@ -2410,6 +2438,14 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
           PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
+          PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+          PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+          PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+          PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+          PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+          PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -2436,6 +2472,24 @@ jobs:
           export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
           export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
           export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
+          export PUBLIC_NEW_RELIC_BROWSER_ENABLED="${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}"
+          export PUBLIC_NEW_RELIC_ACCOUNT_ID="${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}"
+          export PUBLIC_NEW_RELIC_TRUST_KEY="${PUBLIC_NEW_RELIC_TRUST_KEY:-}"
+          export PUBLIC_NEW_RELIC_AGENT_ID="${PUBLIC_NEW_RELIC_AGENT_ID:-}"
+          export PUBLIC_NEW_RELIC_APPLICATION_ID="${PUBLIC_NEW_RELIC_APPLICATION_ID:-}"
+          export PUBLIC_NEW_RELIC_LICENSE_KEY="${PUBLIC_NEW_RELIC_LICENSE_KEY:-}"
+          export PUBLIC_NEW_RELIC_BEACON="${PUBLIC_NEW_RELIC_BEACON:-}"
+          export PUBLIC_NEW_RELIC_ERROR_BEACON="${PUBLIC_NEW_RELIC_ERROR_BEACON:-}"
+
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ]; then
+            if [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ]; then
+              echo "Missing PUBLIC_NEW_RELIC_* browser agent vars while PUBLIC_NEW_RELIC_BROWSER_ENABLED=1."
+              exit 1
+            fi
+          fi
 
           pnpm -C frontend build
           pnpm -C frontend generate
@@ -2637,6 +2691,8 @@ jobs:
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
+          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e

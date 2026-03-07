@@ -165,7 +165,7 @@ export class RemitScoutStack extends Stack {
       toOptionalBool(
         this.node.tryGetContext('enableDbProxy') ??
           process.env.ENABLE_DB_PROXY,
-      ) ?? envName !== 'dev'
+      ) ?? (envName === 'prod')
     const redisAuthMode =
       toRedisAuthMode(
         this.node.tryGetContext('redisAuthMode') ??
@@ -205,7 +205,7 @@ export class RemitScoutStack extends Stack {
       toOptionalBool(
         this.node.tryGetContext('enableSynthetics') ??
           process.env.ENABLE_SYNTHETICS,
-      ) ?? (envName !== 'dev')
+      ) ?? (envName === 'prod')
     const pinpointEnabled =
       toOptionalBool(
         cdkContext.pinpointEnabled ??
@@ -332,7 +332,7 @@ export class RemitScoutStack extends Stack {
         )
       : undefined
     const interfaceEndpointMode: InterfaceEndpointMode = envName === 'staging'
-      ? (stagingInterfaceEndpointsMode ?? 'all')
+      ? (stagingInterfaceEndpointsMode ?? 'minimal')
       : envName === 'prod'
         ? (prodInterfaceEndpointsMode ?? 'all')
         : 'none'
@@ -478,6 +478,20 @@ export class RemitScoutStack extends Stack {
     const sentrySecretJsonKey =
       this.node.tryGetContext('sentrySecretJsonKey') ??
       process.env.SENTRY_SECRET_JSON_KEY
+    const newRelicIngestKeySecretArn =
+      this.node.tryGetContext('newRelicIngestKeySecretArn') ??
+      process.env.NEW_RELIC_INGEST_KEY_SECRET_ARN
+    const newRelicIngestKeySecretJsonKey =
+      this.node.tryGetContext('newRelicIngestKeySecretJsonKey') ??
+      process.env.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY
+    const newRelicAwsMetricStreamEnabled = toOptionalBool(
+      this.node.tryGetContext('newRelicAwsMetricStreamEnabled') ??
+        process.env.NEW_RELIC_AWS_METRIC_STREAM_ENABLED,
+    ) ?? (envName === 'staging' || envName === 'prod')
+    const newRelicAwsLogForwardingEnabled = toOptionalBool(
+      this.node.tryGetContext('newRelicAwsLogForwardingEnabled') ??
+        process.env.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED,
+    ) ?? (envName === 'staging' || envName === 'prod')
     const oandaSecretArn =
       this.node.tryGetContext('oandaSecretArn') ??
       process.env.OANDA_SECRET_ARN
@@ -767,11 +781,11 @@ export class RemitScoutStack extends Stack {
     const agentOrchestratorServiceEnabled = toOptionalBool(
       this.node.tryGetContext('agentOrchestratorServiceEnabled') ??
         process.env.AGENT_ORCHESTRATOR_SERVICE_ENABLED,
-    ) ?? (envName === 'prod')
+    ) ?? (envName === 'prod' || envName === 'staging')
     const stressResponderServiceEnabled = toOptionalBool(
       this.node.tryGetContext('stressResponderServiceEnabled') ??
         process.env.STRESS_RESPONDER_SERVICE_ENABLED,
-    ) ?? (envName === 'prod')
+    ) ?? (envName === 'prod' || envName === 'staging')
     const normalizationServiceEnabled = toOptionalBool(
       this.node.tryGetContext('normalizationServiceEnabled') ??
         process.env.NORMALIZATION_SERVICE_ENABLED,
@@ -779,11 +793,11 @@ export class RemitScoutStack extends Stack {
     const agentOrchestratorDesiredCount = toOptionalNumber(
       this.node.tryGetContext('agentOrchestratorDesiredCount') ??
         process.env.AGENT_ORCHESTRATOR_DESIRED_COUNT,
-    ) ?? (envName === 'prod' ? 1 : 0)
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
     const stressResponderDesiredCount = toOptionalNumber(
       this.node.tryGetContext('stressResponderDesiredCount') ??
         process.env.STRESS_RESPONDER_DESIRED_COUNT,
-    ) ?? (envName === 'prod' ? 1 : 0)
+    ) ?? (envName === 'prod' ? 1 : envName === 'staging' ? 1 : 0)
     const normalizationWorkerDesiredCount = toOptionalNumber(
       this.node.tryGetContext('normalizationWorkerDesiredCount') ??
         process.env.NORMALIZATION_WORKER_DESIRED_COUNT,
@@ -1396,6 +1410,8 @@ export class RemitScoutStack extends Stack {
       minimalMode,
       paused: devPaused,
       cpuArchitecture,
+      newRelicAwsMetricStreamEnabled,
+      newRelicAwsLogForwardingEnabled,
       foundation: foundationStack.resources,
       taskOptions: {
         planeBDbSecretArn,
@@ -1416,6 +1432,8 @@ export class RemitScoutStack extends Stack {
         planeCDbName,
         sentrySecretArn,
         sentrySecretJsonKey,
+        newRelicIngestKeySecretArn,
+        newRelicIngestKeySecretJsonKey,
         sharedSecretArn,
         planeAJwtSecretJsonKey,
         quoteRefreshQueueUrl: queues.quoteRefreshQueue.queueUrl,

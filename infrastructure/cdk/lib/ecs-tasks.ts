@@ -122,6 +122,8 @@ export type EcsTaskOptions = {
   agentBedrockModelId?: string
   agentBedrockMaxTokens?: string
   agentBedrockSecretArn?: string
+  newRelicIngestKeySecretArn?: string
+  newRelicIngestKeySecretJsonKey?: string
   bronzeBucketName?: string
   bronzePrefix?: string
   b2cQueueInSweep?: string
@@ -338,6 +340,8 @@ export const createEcsTasks = (
   const agentBedrockModelId = options.agentBedrockModelId ?? process.env.AGENT_BEDROCK_MODEL_ID
   const agentBedrockMaxTokens = options.agentBedrockMaxTokens ?? process.env.AGENT_BEDROCK_MAX_TOKENS
   const agentBedrockSecretArn = options.agentBedrockSecretArn
+  const newRelicIngestKeySecretArn = options.newRelicIngestKeySecretArn
+  const newRelicIngestKeySecretJsonKey = options.newRelicIngestKeySecretJsonKey
 
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
@@ -435,6 +439,13 @@ export const createEcsTasks = (
       }
     }
 
+    if (newRelicIngestKeySecretArn) {
+      const secret = importSecretByRef('PlaneBNewRelicIngestKeySecret', newRelicIngestKeySecretArn)
+      secrets.NEW_RELIC_INGEST_KEY = newRelicIngestKeySecretJsonKey
+        ? EcsSecret.fromSecretsManager(secret, newRelicIngestKeySecretJsonKey)
+        : EcsSecret.fromSecretsManager(secret)
+    }
+
     return secrets
   }
 
@@ -486,6 +497,19 @@ export const createEcsTasks = (
   }
 
   const sharedSecrets = buildSecrets()
+  const runtimeTracingEnv = { ...tracingEnv }
+  if (sharedSecrets.NEW_RELIC_INGEST_KEY) {
+    delete runtimeTracingEnv.NEW_RELIC_INGEST_KEY
+    const buildTimeNewRelicHeader = process.env.NEW_RELIC_INGEST_KEY?.trim()
+      ? `api-key=${process.env.NEW_RELIC_INGEST_KEY.trim()}`
+      : ''
+    if (
+      buildTimeNewRelicHeader
+      && runtimeTracingEnv.OTEL_EXPORTER_OTLP_HEADERS === buildTimeNewRelicHeader
+    ) {
+      delete runtimeTracingEnv.OTEL_EXPORTER_OTLP_HEADERS
+    }
+  }
   const secretsConfig =
     Object.keys(sharedSecrets).length > 0 ? { secrets: sharedSecrets } : {}
   const goldLiveSecrets = buildGoldLiveSecrets()
@@ -506,8 +530,9 @@ export const createEcsTasks = (
     DB_CONNECTION_ROUTE: planeBDbRoute,
     DB_STATEMENT_TIMEOUT_POLICY:
       planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
-    ...tracingEnv,
+    ...runtimeTracingEnv,
     TRACING_EXPORTER: tracingExporter,
+    NEW_RELIC_REGION: process.env.NEW_RELIC_REGION ?? 'US',
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',

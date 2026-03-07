@@ -130,11 +130,11 @@ export const createFrontend = (
 
   const htmlCachePolicy = new CachePolicy(scope, 'FrontendHtmlCachePolicy', {
     cachePolicyName: `remit-scout-frontend-html-${options.envName}`,
-    defaultTtl: Duration.seconds(0),
+    defaultTtl: Duration.seconds(60),
     minTtl: Duration.seconds(0),
-    maxTtl: Duration.seconds(0),
-    enableAcceptEncodingGzip: false,
-    enableAcceptEncodingBrotli: false,
+    maxTtl: Duration.seconds(300),
+    enableAcceptEncodingGzip: true,
+    enableAcceptEncodingBrotli: true,
   })
 
   const isrCachePolicy = new CachePolicy(scope, 'FrontendISRCachePolicy', {
