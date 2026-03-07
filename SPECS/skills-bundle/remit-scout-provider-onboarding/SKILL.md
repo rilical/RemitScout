@@ -1,157 +1,64 @@
 ---
 name: remit-scout-provider-onboarding
-description: Zero-touch provider onboarding loop for Codex/Claude. Ingests provider curl specs + coverage, scaffolds provider artifacts, runs probes/evidence/smoke, computes Remit-Score, and emits review-ready run artifacts with reason codes.
-contract_version: v1
+description: Zero-touch provider onboarding loop for Remit-Scout. Runs scaffold, probes, evidence, B2C smoke, Remit-Score, and review payload generation from one v1 contract.
 ---
 
-# Zero-Touch Provider Loop (Execution Spec)
+# remit-scout-provider-onboarding
 
-This skill is executable via:
+## Execution Entry
+
+Run locally:
 
 ```bash
 pnpm -C backend provider:onboarding-orchestrator --input <payload.json>
 ```
 
 Primary implementation:
-- `backend/scripts/provider-onboarding-orchestrator.ts`
+- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/provider-onboarding-orchestrator.ts`
 
-## 1) Input Contract (v1)
+Primary contract spec:
+- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/SPECS/skills-bundle/remit-scout-provider-onboarding/SKILL.md`
 
-Required top-level fields:
-- `providers`: array of provider onboarding jobs
+## Required Provider Payload Fields
 
-Optional top-level fields:
-- `execution_env`: `dev|staging|prod` (default `staging`)
-- `ci_ref`: commit/context ref (fallback order: `--ci_ref` -> payload -> `GITHUB_SHA` -> `GITHUB_RUN_ID` -> generated token)
-- `operator_notes`: free-form context
-- `dry_run`: boolean (default `false`)
-- `staging_only`: boolean (default `false`)
-- `auto_merge`: boolean (default `false`)
-- `continue_on_error`: boolean (default `true`)
-- `corridor_limit`: integer (default `10`, bounded)
-- `score_threshold`: number (default `7.0`)
-- `command_timeout_ms`: integer (default `90000`)
-- `smoke_base_url`: URL for B2C smoke (`API_BASE_URL` fallback)
-
-Each provider entry must include:
+Each `providers[]` entry must include:
 - `provider_slug`
 - `provider_name`
-- `provider_type`: `B2B|B2C|BOTH`
-- `curl_requests[]`: `{ method, url, headers, body, assertions }`
-- `supported_countries[]`: ISO2 list
-- `supported_currencies[]`: ISO4217 list
+- `provider_type` (`B2B|B2C|BOTH`)
+- `curl_requests[]` with auth headers
+- `supported_countries[]` (ISO2)
+- `supported_currencies[]` (ISO4217)
 
-Optional provider fields:
-- `corridors[]`: `SEND-RECV-SENDCUR-RECVCUR`
+Optional:
+- `corridors[]`
 - `operator_notes`
 
-### Hard input validation rules
-- Missing/invalid required fields -> `provider_onboarding.input_invalid`
-- Missing auth header in curl templates (`authorization`, `x-api-key`, `apikey`, `x-auth-token`, `proxy-authorization`) -> `provider_onboarding.input_invalid`
-- Invalid country/currency codes -> `provider_onboarding.input_invalid`
+Top-level options:
+- `execution_env` (`staging` default)
+- `ci_ref`
+- `dry_run`
+- `staging_only`
+- `auto_merge`
+- `continue_on_error`
+- `corridor_limit`
+- `score_threshold`
+- `command_timeout_ms`
+- `smoke_base_url`
 
-## 2) Deterministic Step Order
+## Fixed Remit-Score Weights
 
-Per run:
-1. Parse + validate payload
-1. Enforce environment rules (`staging_only` gate)
-1. Derive synthetic corridors where `corridors` is empty
-1. Persist synthetic catalog artifacts
-1. For each provider, execute in order:
-   - `provider:scaffold`
-   - `probe:provider`
-   - `evidence:provider-health`
-   - `ci:api-smoke` (B2C/BOTH only)
-1. Global capability validation:
-   - `capability:seed-canary`
-   - `capability:probe`
-   - `evidence:provider-capability-probe`
-1. Compute Remit-Score + review card
-1. Emit consolidated run output + per-provider artifacts + reason codes
-
-## 3) Branch-Aware Behavior
-
-- `dry_run=true`
-  - No scaffold/probe/evidence/smoke commands are executed.
-  - Synthetic catalogs + score/review artifacts are still emitted.
-
-- `staging_only=true`
-  - Hard stop unless `execution_env=staging`.
-
-- `auto_merge=true`
-  - No merge is executed by this skill.
-  - Review card `next_action` is set to auto-merge-aware promotion text.
-
-- `continue_on_error=false`
-  - First blocked provider halts execution for remaining providers in the batch.
-  - Remaining providers are emitted as blocked/skip artifacts with explicit reason context.
-
-## 4) Blockers vs Warnings
-
-Hard blockers (review becomes `blocked`):
-- `provider_onboarding.input_invalid`
-- `provider_onboarding.scaffold_fail`
-- `provider_onboarding.probe_timeout`
-- `provider_onboarding.smoke_fail`
-- `provider_onboarding.score_below_threshold`
-
-Warnings:
-- Non-blocking evidence anomalies inherited from evidence payloads
-- Dry-run notice
-
-Blocked runs must include:
-- `provider_onboarding.review_blocked`
-
-## 5) Remit-Score Contract
-
-Remit-Score is computed using frontend-aligned fixed weights:
 - Delivered Value: `40`
 - Reliability/Success: `20`
 - Friction/Speed: `15`
 - Support/Refunds: `15`
 - Trust/Safety: `10`
 
-Source alignment:
-- `frontend/pages/methodology.vue`
-- `frontend/pages/learn/how-remit-score-works.vue`
+These match:
+- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/frontend/pages/methodology.vue`
+- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/frontend/pages/learn/how-remit-score-works.vue`
 
-Output includes:
-- `remit_score.total` (0-10)
-- `remit_score.threshold`
-- `remit_score.breakdown` with per-dimension `weight`, `score`, `note`
+## Onboarding Reason Codes
 
-## 6) Output Contract (Canonical)
-
-Top-level run artifact (`artifacts/provider-onboarding/<run_id>/provider-onboarding-run.json`):
-- `run_id`
-- `stage`
-- `ci_ref`
-- `execution_env`
-- `status`
-- `artifact_paths[]`
-- `evidence_paths[]`
-- `reason_codes[]`
-- `remit_score` (aggregate)
-- `review_card` (single gate state)
-- `next_skill_ids[]`
-- `providers[]` (per-provider outputs)
-
-Per-provider output contract:
-- `run_id`
-- `stage`
-- `ci_ref`
-- `provider_slug`
-- `status`
-- `artifact_paths[]`
-- `evidence_paths[]`
-- `reason_codes[]`
-- `remit_score`
-- `review_card`
-- `next_skill_ids[]`
-
-## 7) Reason-Code Coverage
-
-Required onboarding reason codes:
 - `provider_onboarding.input_invalid`
 - `provider_onboarding.scaffold_fail`
 - `provider_onboarding.probe_timeout`
@@ -159,39 +66,13 @@ Required onboarding reason codes:
 - `provider_onboarding.score_below_threshold`
 - `provider_onboarding.review_blocked`
 
-## 8) Evidence + Review Integration
+## Output Artifact
 
-The run emits:
-- One consolidated run artifact
-- Per-provider artifacts/logs
-- Provider health evidence payloads
-- Capability probe evidence payload
-- Review card object with blockers/warnings for admin consumption
+- `artifacts/provider-onboarding/<run_id>/provider-onboarding-run.json`
 
-## 9) Metrics + Ops Hooks
-
-The orchestrator emits CloudWatch metrics under `RemitScout/Onboarding`:
-- `provider_onboarding_run_count`
-- `provider_onboarding_provider_count`
-- `provider_onboarding_provider_status`
-- `provider_onboarding_remit_score`
-
-## 10) Example Invocation
-
-```bash
-pnpm -C backend provider:onboarding-orchestrator \
-  --input artifacts/provider-onboarding-input.json \
-  --execution_env staging \
-  --ci_ref 97862e7 \
-  --corridor_limit 10 \
-  --score_threshold 7
-```
-
-## 11) Expected Acceptance Signals
-
-- Invalid payload fails early with `provider_onboarding.input_invalid`
-- Derived corridors are logged when `corridors[]` omitted
-- B2C smoke failures map to `provider_onboarding.smoke_fail`
-- Timeout paths map to `provider_onboarding.probe_timeout`
-- Every provider gets isolated artifacts and review status
-- `ci_ref` is always non-empty in emitted artifacts
+Includes:
+- consolidated run status
+- per-provider artifacts/evidence/reason codes
+- remit-score breakdown
+- review card
+- next skill IDs
