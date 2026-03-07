@@ -656,7 +656,7 @@ jobs:
       STRIPE_PRICE_ID_PLUS: price_example
       STRIPE_PRICE_ID_PLUS_ANNUAL: price_example_annual
       ALERT_EVALUATION_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123456789012/alerts
-      ALERT_SLACK_WEBHOOK_URL: https://example.invalid/slack-webhook
+      ALERT_SLACK_WEBHOOK_URL: https://ci-slack-webhook.invalid/remit-scout
       PLANE_A_REQUIRE_JWT: "1"
       PLANE_A_JWT_SECRET: ci_runtime_jwt_secret_4fca8d0e6aab4a7d8f5b2eb0 # pragma: allowlist secret
       PRIVACY_HASH_SALT: ci_runtime_privacy_hash_salt_8f3c2d1a7b4e9f6c # pragma: allowlist secret
