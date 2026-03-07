@@ -1316,7 +1316,7 @@ jobs:
             -c stagingInterfaceEndpointsMode=minimal
             -c alertEvaluationServiceEnabled=true
             -c exportServiceEnabled=true
-            -c agentOrchestratorServiceEnabled=true
+            -c agentOrchestratorServiceEnabled=false
             -c stressResponderServiceEnabled=true
             -c normalizationServiceEnabled=true
             -c planeBIngestDesiredCount=1
@@ -1330,7 +1330,7 @@ jobs:
             -c planeBOpsAlertsDesiredCount=1
             -c alertEvaluationDesiredCount=1
             -c exportWorkerDesiredCount=1
-            -c agentOrchestratorDesiredCount=1
+            -c agentOrchestratorDesiredCount=0
             -c stressResponderDesiredCount=1
             -c normalizationWorkerDesiredCount=1
             -c planeBQueueWorkerDesiredCount=1
@@ -1493,7 +1493,7 @@ jobs:
             -c stagingInterfaceEndpointsMode=minimal
             -c alertEvaluationServiceEnabled=true
             -c exportServiceEnabled=true
-            -c agentOrchestratorServiceEnabled=true
+            -c agentOrchestratorServiceEnabled=false
             -c stressResponderServiceEnabled=true
             -c normalizationServiceEnabled=true
             -c planeBIngestDesiredCount=1
@@ -1507,7 +1507,7 @@ jobs:
             -c planeBOpsAlertsDesiredCount=1
             -c alertEvaluationDesiredCount=1
             -c exportWorkerDesiredCount=1
-            -c agentOrchestratorDesiredCount=1
+            -c agentOrchestratorDesiredCount=0
             -c stressResponderDesiredCount=1
             -c normalizationWorkerDesiredCount=1
             -c planeBQueueWorkerDesiredCount=1
