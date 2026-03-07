@@ -222,6 +222,18 @@ export const readEnterpriseConfig = (env: NodeJS.ProcessEnv = process.env) => ({
     ['1', 'true', 'yes', 'on'].includes((env.SMOKE_ALLOW_EXPORT_PIPELINE_DEGRADED || '').trim().toLowerCase()),
 })
 
+const isActiveSmokeApiKey = (
+  key: NonNullable<MeApiKeysResponse['keys']>[number] | undefined,
+): key is NonNullable<MeApiKeysResponse['keys']>[number] & { key_id: string } => {
+  if (!key || typeof key.key_id !== 'string' || key.key_id.length === 0) {
+    return false
+  }
+  if (typeof key.revoked_at === 'string' && key.revoked_at.length > 0) {
+    return false
+  }
+  return typeof key.name === 'string' && key.name.startsWith('release-smoke:')
+}
+
 const main = async () => {
   const smokeBaseUrl = mustEnv('SMOKE_BASE_URL')
   const rootBase = resolveSmokeRootBaseUrl(smokeBaseUrl)
@@ -264,13 +276,38 @@ const main = async () => {
     }
 
     {
-      const { status, body } = await jsonFetch<MeApiKeysResponse>(`${apiBase}/me/api-keys`, {
+      const listApiKeys = () => jsonFetch<MeApiKeysResponse>(`${apiBase}/me/api-keys`, {
         headers: authHeaders,
       })
+
+      let { status, body } = await listApiKeys()
+      let cleanedSmokeKeys = 0
+
+      if (status < 400 && body?.success === true && Array.isArray(body?.keys)) {
+        for (const key of body.keys.filter(isActiveSmokeApiKey)) {
+          const cleanup = await jsonFetch<{ success?: boolean; error?: string }>(
+            `${apiBase}/me/api-keys/${key.key_id}`,
+            {
+              method: 'DELETE',
+              headers: authHeaders,
+            },
+          )
+          if (cleanup.status < 400 && cleanup.body?.success === true) {
+            cleanedSmokeKeys += 1
+          }
+        }
+
+        if (cleanedSmokeKeys > 0) {
+          const refreshed = await listApiKeys()
+          status = refreshed.status
+          body = refreshed.body
+        }
+      }
+
       record({
         name: 'GET /me/api-keys',
         ok: status < 400 && body?.success === true && Array.isArray(body?.keys),
-        note: `status=${status} keys=${Array.isArray(body?.keys) ? body.keys.length : 'n/a'}`,
+        note: `status=${status} keys=${Array.isArray(body?.keys) ? body.keys.length : 'n/a'}${cleanedSmokeKeys > 0 ? ` cleaned=${cleanedSmokeKeys}` : ''}`,
       })
     }
 
