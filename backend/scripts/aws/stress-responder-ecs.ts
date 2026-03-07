@@ -8,18 +8,12 @@
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
+import {
+  resolveLlmConnector,
+  validateResolvedLlmConfig,
+} from './agent-llm-startup'
 
 const logger = createLogger('script.stress-responder-ecs')
-
-const resolveLlmConnector = (): 'anthropic' | 'bedrock' => {
-  const connector = (process.env.AGENT_LLM_CONNECTOR || process.env.AGENT_LLM_PROVIDER || '')
-    .trim()
-    .toLowerCase()
-  if (connector === 'bedrock' || connector === 'anthropic') {
-    return connector
-  }
-  return 'bedrock'
-}
 
 export const handler = async (): Promise<number> => {
   try {
@@ -47,11 +41,47 @@ export const handler = async (): Promise<number> => {
     throw new Error(`Failed to resolve database URL: ${message}`)
   }
 
-  const { runStartupChecks } = await import('../../shared/startup')
-  const { config } = await import('../../shared/config')
+  try {
+    await resolveAwsEnv([
+      {
+        envVar: 'AGENT_ANTHROPIC_API_KEY',
+        secretArnEnv: 'AGENT_ANTHROPIC_API_KEY_SECRET_ARN',
+        jsonKeys: ['apiKey', 'AGENT_ANTHROPIC_API_KEY', 'anthropic_api_key'],
+        required: false,
+      },
+      {
+        envVar: 'AGENT_BEDROCK_REGION',
+        secretArnEnv: 'AGENT_BEDROCK_SECRET_ARN',
+        jsonKeys: ['region', 'AGENT_BEDROCK_REGION', 'bedrock_region'],
+        required: false,
+      },
+      {
+        envVar: 'AGENT_BEDROCK_MODEL_ID',
+        secretArnEnv: 'AGENT_BEDROCK_SECRET_ARN',
+        jsonKeys: ['modelId', 'AGENT_BEDROCK_MODEL_ID', 'bedrock_model_id'],
+        required: false,
+      },
+    ])
+  } catch (error: unknown) {
+    const { message } = formatError(error)
+    logger.warn('llm_secret_resolution_failed', { error: message })
+  }
+
+  if (!process.env.AGENT_LLM_CONNECTOR && process.env.AGENT_LLM_PROVIDER) {
+    process.env.AGENT_LLM_CONNECTOR = process.env.AGENT_LLM_PROVIDER
+  }
+  if (!process.env.AGENT_ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY) {
+    process.env.AGENT_ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
+  }
+  if (!process.env.AGENT_LLM_MODEL && process.env.AGENT_BEDROCK_MODEL_ID) {
+    process.env.AGENT_LLM_MODEL = process.env.AGENT_BEDROCK_MODEL_ID
+  }
   if (!process.env.AGENT_LLM_PROMPT_VERSION) {
     process.env.AGENT_LLM_PROMPT_VERSION = 'v1'
   }
+  const { config } = await import('../../shared/config')
+  const { runStartupChecks } = await import('../../shared/startup')
+  logger.info('llm_startup_validation', validateResolvedLlmConfig())
   logger.info('llm_runtime_contract', {
     connector: resolveLlmConnector(),
     model: process.env.AGENT_LLM_MODEL || '',
@@ -75,6 +105,7 @@ export const handler = async (): Promise<number> => {
       requireGoldLiveQueue: false,
       requireAlertEvaluationQueue: false,
       requireStorage: false,
+      requireAgentLlm: true,
     },
   })
 

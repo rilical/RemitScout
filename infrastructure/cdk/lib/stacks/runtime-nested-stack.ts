@@ -1,10 +1,12 @@
 import { NestedStack } from 'aws-cdk-lib'
 import { Role } from 'aws-cdk-lib/aws-iam'
+import { LogGroup } from 'aws-cdk-lib/aws-logs'
 import type { Construct } from 'constructs'
 
 import { createCompute } from '../compute'
 import { createEcsServices } from '../ecs-services'
 import { createEcsTasks } from '../ecs-tasks'
+import { createNewRelicAwsObservabilityResources } from '../newrelic-aws-observability-resources'
 import type { RuntimeNestedStackProps, RuntimeResources } from './contracts'
 
 export class RuntimeNestedStack extends NestedStack {
@@ -44,6 +46,21 @@ export class RuntimeNestedStack extends NestedStack {
         planeBEcsTaskRole: immutableTaskRole,
       },
       ...props.taskOptions,
+    })
+
+    const ecsLogGroups = this.node.findAll().filter((child): child is LogGroup => (
+      child instanceof LogGroup
+      && child.logGroupName.startsWith(`/remit-scout/${props.envName}/`)
+      && !child.logGroupName.endsWith('-otel')
+    ))
+
+    createNewRelicAwsObservabilityResources(this, {
+      envName: props.envName,
+      metricStreamEnabled: props.newRelicAwsMetricStreamEnabled,
+      logForwardingEnabled: props.newRelicAwsLogForwardingEnabled,
+      ingestKeySecretArn: props.taskOptions.newRelicIngestKeySecretArn,
+      ingestKeySecretJsonKey: props.taskOptions.newRelicIngestKeySecretJsonKey,
+      logGroups: ecsLogGroups,
     })
 
     const ecsServices = createEcsServices(this, {

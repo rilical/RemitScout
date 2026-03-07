@@ -2,11 +2,11 @@
 
 ## One-screen quick map (operator + agent)
 Entrypoints:
-- Brain loop: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/brain/brain.ts`
-- Skill catalog: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.remit-scout/skills/catalog.yaml`
-- Case contracts: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.remit-scout/cases/<case_id>/`
-- Slack front desk runner: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/frontdesk/slack-frontdesk.ts`
-- Front desk docs: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/frontdesk/README.md`
+- Brain loop: `backend/scripts/brain/brain.ts`
+- Skill catalog: `.remit-scout/skills/catalog.yaml`
+- Case contracts: `.remit-scout/cases/<case_id>/`
+- Slack front desk runner: `backend/scripts/frontdesk/slack-frontdesk.ts`
+- Front desk docs: `ops/frontdesk/README.md`
 
 Primary flow:
 1. Signals arrive (CloudWatch/Sentry/manual Slack).

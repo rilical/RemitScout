@@ -55,10 +55,10 @@ Use this runbook to connect staging end-to-end across AWS, Stripe, Supabase, ana
 - Optional: `SENTRY_AUTH_TOKEN`
 
 ## 3) Local env templates to fill
-- Backend: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/.env.staging.example`
-- Frontend: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/frontend/.env.staging.example`
-- Front desk: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.frontdesk.example`
-- Brain: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.brain.example`
+- Backend: `backend/.env.staging.example`
+- Frontend: `frontend/.env.staging.example`
+- Front desk: `.env.frontdesk.example`
+- Brain: `.env.brain.example`
 
 ## 4) Run readiness checks
 1. Run GitHub workflow:
@@ -97,7 +97,7 @@ ENVIRONMENT=staging NODE_ENV=staging pnpm -C backend ci:config-validate
 make status-ops-permissions
 
 # Verify staging migration state before applying
-DATABASE_URL_PLANE_B="<staging-credential>" pnpm -C "/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend" db:migrate --dry-run
+DATABASE_URL_PLANE_B="<staging-credential>" pnpm -C "backend" db:migrate --dry-run
 DATABASE_URL_PLANE_B="<staging-credential>" make db-migrate-staging-dry-run
 
 # Front desk runtime

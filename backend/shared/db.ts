@@ -3,6 +3,7 @@ import { config } from './config'
 import { recordQueryFromSql, updateConnectionPoolMetrics } from './db-metrics'
 import { registerDatabasePool } from './connection-manager'
 import { createLogger } from './logger'
+import { startSpan } from './tracing'
 
 const logger = createLogger('shared.db')
 const activePools = new Set<Pool>()
@@ -41,6 +42,100 @@ type PoolWithPolicy = Pool & {
   __validateConnectionOnCheckout?: boolean
   __connectionRoute?: ConnectionRoute
   __statementTimeoutPolicy?: StatementTimeoutPolicy
+}
+
+const DB_QUERY_INSTRUMENTED = Symbol('dbQueryInstrumented')
+
+type InstrumentedQueryTarget = {
+  query: (...args: any[]) => unknown
+  [DB_QUERY_INSTRUMENTED]?: boolean
+}
+
+const extractQueryText = (input: unknown): string => {
+  if (typeof input === 'string') return input
+  if (input && typeof input === 'object' && 'text' in input) {
+    const text = (input as { text?: unknown }).text
+    return typeof text === 'string' ? text : ''
+  }
+  return ''
+}
+
+const normalizeStatementForSpan = (sql: string): string =>
+  sql.replace(/\s+/g, ' ').trim().slice(0, 1500)
+
+const extractOperation = (sql: string): string => {
+  const operation = sql.trim().split(/\s+/, 1)[0]?.toUpperCase()
+  return operation || 'QUERY'
+}
+
+const setSpanAttributesIfPossible = (
+  span: unknown,
+  attributes: Record<string, string | number | boolean>,
+): void => {
+  if (
+    span
+    && typeof span === 'object'
+    && 'setAttributes' in span
+    && typeof (span as { setAttributes: (attrs: Record<string, string | number | boolean>) => void }).setAttributes === 'function'
+  ) {
+    ;(span as { setAttributes: (attrs: Record<string, string | number | boolean>) => void }).setAttributes(attributes)
+  }
+}
+
+const instrumentQueryTarget = (
+  target: InstrumentedQueryTarget,
+  connectionRoute: ConnectionRoute,
+): void => {
+  if (target[DB_QUERY_INSTRUMENTED]) return
+
+  const originalQuery = target.query.bind(target)
+  target.query = ((...args: any[]) => {
+    if (args.some((arg) => typeof arg === 'function')) {
+      return originalQuery(...args)
+    }
+
+    const statementText = extractQueryText(args[0])
+    if (!statementText) {
+      return originalQuery(...args)
+    }
+
+    const statement = normalizeStatementForSpan(statementText)
+    const operation = extractOperation(statement)
+
+    return startSpan(
+      `db.query.${operation}`,
+      async (span) => {
+        setSpanAttributesIfPossible(span, {
+          'db.system': 'postgresql',
+          'db.operation': operation,
+          'db.statement': statement,
+          'db.connection_route': connectionRoute,
+        })
+
+        const result = await originalQuery(...args)
+        if (
+          result
+          && typeof result === 'object'
+          && 'rowCount' in result
+          && typeof (result as { rowCount?: unknown }).rowCount === 'number'
+        ) {
+          setSpanAttributesIfPossible(span, {
+            'db.row_count': (result as { rowCount: number }).rowCount,
+          })
+        }
+        return result
+      },
+      {
+        attributes: {
+          'db.system': 'postgresql',
+          'db.operation': operation,
+          'db.connection_route': connectionRoute,
+        },
+      },
+    )
+  }) as typeof target.query
+
+  target[DB_QUERY_INSTRUMENTED] = true
 }
 
 const registerPoolForCleanup = (pool: Pool) => {
@@ -221,6 +316,7 @@ export const createPool = (connectionString?: string) => {
     validateConnectionOnCheckout
   poolWithPolicy.__connectionRoute = connectionRoute
   poolWithPolicy.__statementTimeoutPolicy = statementTimeoutPolicy
+  instrumentQueryTarget(pool as Pool as InstrumentedQueryTarget, connectionRoute)
 
   const poolPolicyMetadata: PoolPolicyMetadata = {
     connectionRoute,
@@ -266,6 +362,14 @@ export const createPool = (connectionString?: string) => {
     } else {
       logger.error('db_pool_error', payload)
     }
+  })
+  pool.on('connect', (client) => {
+    const clientWithPolicy = client as PoolClient & PoolWithPolicy & InstrumentedQueryTarget
+    clientWithPolicy.__skipStatementTimeout = disableStatementTimeout
+    clientWithPolicy.__validateConnectionOnCheckout = validateConnectionOnCheckout
+    clientWithPolicy.__connectionRoute = connectionRoute
+    clientWithPolicy.__statementTimeoutPolicy = statementTimeoutPolicy
+    instrumentQueryTarget(clientWithPolicy, connectionRoute)
   })
 
   return pool

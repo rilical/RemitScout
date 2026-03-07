@@ -60,6 +60,8 @@ export type RuntimeNestedStackProps = NestedStackProps & {
   minimalMode: boolean
   paused: boolean
   cpuArchitecture: CpuArchitecture
+  newRelicAwsMetricStreamEnabled?: boolean
+  newRelicAwsLogForwardingEnabled?: boolean
   foundation: FoundationResources
   taskOptions: Omit<
     EcsTaskOptions,

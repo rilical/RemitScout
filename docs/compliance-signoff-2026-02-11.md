@@ -54,13 +54,13 @@ Scope: staging and planned production launch
   - Required auth secret for authenticated scans: `DAST_AUTH_BEARER_TOKEN`
   - Optional auth header variable: `DAST_AUTH_HEADER_NAME` (defaults to `Authorization`)
 - Manual security artifacts prepared:
-  - Burp runbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/burp-manual-security-session.md`
-  - STRIDE session brief: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-session-brief.md`
-  - STRIDE model artifact: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
-  - Findings register: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+  - Burp runbook: `docs/security/burp-manual-security-session.md`
+  - STRIDE session brief: `docs/security/stride-session-brief.md`
+  - STRIDE model artifact: `docs/security/stride-threat-model-2026-02.md`
+  - Findings register: `docs/security/security-findings-register-2026-02.md`
 - Pentest operator assets:
-  - Playbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/pentest-playbook.md`
-  - Prompt pack: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/pentest-prompts.md`
+  - Playbook: `docs/security/pentest-playbook.md`
+  - Prompt pack: `docs/security/pentest-prompts.md`
 - Status: **Pending scan execution evidence attachment and triage report completion**.
 
 ## Final Decision
@@ -70,8 +70,8 @@ Scope: staging and planned production launch
   - Staging/prod stacks are not deployed yet in `us-east-1`.
   - SES accounts are still in sandbox mode (`ProductionAccessEnabled=false`), so non-verified recipients are blocked.
   - Pentest + DAST workflows are in place; execution evidence must be attached in:
-    - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
-    - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
+    - `docs/security/security-findings-register-2026-02.md`
+    - `docs/security/stride-threat-model-2026-02.md`
 - Required approvers:
   - Security:
   - Platform:

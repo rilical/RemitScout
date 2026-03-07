@@ -8,6 +8,7 @@ import type { FailureBundle } from '../../../shared/types/failure-bundle'
 import { ToolGateway } from './tool-gateway'
 import { KnowledgePlane, type KnowledgeChunk } from './knowledge-plane'
 import { LLMClient } from './llm-client'
+import { isLlmCircuitOpenSentinel } from './llm-circuit-breaker'
 import { recordCloudWatchMetric } from '../../../shared/cloudwatch-metrics'
 import { notifyAgent } from '../../../shared/agent-notifications'
 import { captureExceptionWithContext } from '../../../shared/error-tracker'
@@ -582,6 +583,7 @@ export class PatchProposer {
 
       const llmMeta = this.llmClient.getMetadata()
       const route = context.bundle.affectedCorridors[0] ?? 'unknown'
+      const circuitOpen = isLlmCircuitOpenSentinel(response)
       recordCloudWatchMetric({
         name: 'agent_llm_latency_ms',
         value: response.durationMs,
@@ -595,10 +597,17 @@ export class PatchProposer {
           model: llmMeta.model,
           run_id: context.bundle.bundleId,
           correlation_id: context.bundle.bundleId,
-          outcome: 'completed',
+          outcome: circuitOpen ? 'circuit_open' : 'completed',
         }),
         highCardinality: true,
       })
+
+      if (circuitOpen) {
+        logger.warn('llm_circuit_open_proposal_skipped', {
+          bundleId: context.bundle.bundleId,
+        })
+        return null
+      }
 
       let decoded: unknown
       try {

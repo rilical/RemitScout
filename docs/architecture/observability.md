@@ -2,15 +2,15 @@
 
 ## One-screen quick map
 Core monitoring wiring:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/monitoring.ts`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/infrastructure/cdk/lib/scheduled-jobs.ts`
-- Ralph loop runtime telemetry: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/scripts/ralph-loop.sh` (`Run observability event=*` includes traceability-tag coverage counters)
-- Trace validation runbook: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/ops/tracing-validation.md`
+- `infrastructure/cdk/lib/monitoring.ts`
+- `infrastructure/cdk/lib/scheduled-jobs.ts`
+- Ralph loop runtime telemetry: `scripts/ralph-loop.sh` (`Run observability event=*` includes traceability-tag coverage counters)
+- Trace validation runbook: `docs/ops/tracing-validation.md`
 
 Evidence packs (bounded JSON for agents):
-- Schema: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.remit-scout/schema/evidence.schema.json`
-- Library: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/lib/evidence.ts`
-- Workflows: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.github/workflows/evidence-*.yml`
+- Schema: `.remit-scout/schema/evidence.schema.json`
+- Library: `backend/scripts/lib/evidence.ts`
+- Workflows: `.github/workflows/evidence-*.yml`
 
 ## IssueOps escalation observability
 - Run records must expose `decision_record.human_in_loop` as the canonical escalation handoff envelope.

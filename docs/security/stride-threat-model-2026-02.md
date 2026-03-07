@@ -5,10 +5,10 @@
 - Environment: staging
 - Method: Claude-assisted STRIDE + operator review
 - Sources:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ARCHITECTURE.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/security.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/auth-bypass-paths.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/route-validation-audit.md`
+  - `ARCHITECTURE.md`
+  - `docs/architecture/security.md`
+  - `docs/security/auth-bypass-paths.md`
+  - `docs/security/route-validation-audit.md`
 
 Scoring rule: `risk = likelihood * impact` (1-25).
 

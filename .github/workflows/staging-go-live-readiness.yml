@@ -152,6 +152,8 @@ jobs:
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
+          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
 
       - name: Runtime config validation (staging profile)

@@ -1,7 +1,11 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 import { config } from '../../../shared/config'
 import { createLogger } from '../../../shared/logger'
-import { llmCircuitBreaker, LLM_CIRCUIT_OPEN_SENTINEL } from './llm-circuit-breaker'
+import {
+  llmCircuitBreaker,
+  LLM_CIRCUIT_OPEN_SENTINEL,
+  isLlmCircuitOpenSentinel,
+} from './llm-circuit-breaker'
 
 const logger = createLogger('plane-b.agents.llm-client')
 
@@ -344,6 +348,14 @@ export class LLMClient {
       maxTokens: 512,
       temperature: 0.1,
     })
+
+    if (isLlmCircuitOpenSentinel(response)) {
+      return {
+        diagnosis: 'llm_circuit_open',
+        suggestedAction: 'manual_investigation',
+        confidence: 'low',
+      }
+    }
 
     try {
       return JSON.parse(response.content)

@@ -2,8 +2,8 @@
 
 ## One-screen quick map
 Queue helpers:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/shared/sqs.ts`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/shared/config.ts` (queue URLs)
+- `backend/shared/sqs.ts`
+- `backend/shared/config.ts` (queue URLs)
 
 Workers:
 - `backend/scripts/*queue-worker.ts`

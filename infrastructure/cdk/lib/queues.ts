@@ -51,7 +51,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const quoteRefreshDlq = new Queue(scope, 'QuoteRefreshDlq', {
     queueName: `remit-scout-${options.envName}-quote-refresh-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const quoteRefreshQueueName = `remit-scout-${options.envName}-quote-refresh`
@@ -59,7 +59,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: quoteRefreshQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: quoteRefreshDlq,
       maxReceiveCount: 5,
@@ -70,7 +70,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const fxRateRefreshDlq = new Queue(scope, 'FxRateRefreshDlq', {
     queueName: `remit-scout-${options.envName}-fx-rate-refresh-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const fxRateRefreshQueueName = `remit-scout-${options.envName}-fx-rate-refresh`
@@ -78,7 +78,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: fxRateRefreshQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: fxRateRefreshDlq,
       maxReceiveCount: 5,
@@ -89,7 +89,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const exportJobDlq = new Queue(scope, 'ExportJobDlq', {
     queueName: `remit-scout-${options.envName}-export-job-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const exportJobQueueName = `remit-scout-${options.envName}-export-job`
@@ -97,7 +97,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: exportJobQueueName,
     visibilityTimeout: Duration.minutes(15),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: exportJobDlq,
       maxReceiveCount: 3,
@@ -108,7 +108,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const alertEvaluationDlq = new Queue(scope, 'AlertEvaluationDlq', {
     queueName: `remit-scout-${options.envName}-alert-evaluation-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const alertEvaluationQueueName = `remit-scout-${options.envName}-alert-evaluation`
@@ -116,7 +116,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: alertEvaluationQueueName,
     visibilityTimeout: Duration.minutes(15),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: alertEvaluationDlq,
       maxReceiveCount: 5,
@@ -127,7 +127,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const ingestFanoutDlq = new Queue(scope, 'IngestFanoutDlq', {
     queueName: `remit-scout-${options.envName}-ingest-fanout-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const ingestFanoutQueueName = `remit-scout-${options.envName}-ingest-fanout`
@@ -135,7 +135,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: ingestFanoutQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: ingestFanoutDlq,
       maxReceiveCount: 5,
@@ -154,7 +154,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const ingestFanoutTier2Dlq = new Queue(scope, 'IngestFanoutTier2Dlq', {
     queueName: `remit-scout-${options.envName}-ingest-fanout-tier2-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const ingestFanoutTier2QueueName = `remit-scout-${options.envName}-ingest-fanout-tier2`
@@ -162,7 +162,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: ingestFanoutTier2QueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: ingestFanoutTier2Dlq,
       maxReceiveCount: 5,
@@ -181,7 +181,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const goldLiveDlq = new Queue(scope, 'GoldLiveDlq', {
     queueName: `remit-scout-${options.envName}-gold-live-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const goldLiveQueueName = `remit-scout-${options.envName}-gold-live`
@@ -189,7 +189,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: goldLiveQueueName,
     visibilityTimeout: Duration.minutes(2),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: goldLiveDlq,
       maxReceiveCount: 5,
@@ -200,7 +200,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const notificationsDlq = new Queue(scope, 'NotificationsDlq', {
     queueName: `remit-scout-${options.envName}-notifications-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const notificationsQueueName = `remit-scout-${options.envName}-notifications`
@@ -208,7 +208,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: notificationsQueueName,
     visibilityTimeout: Duration.minutes(2),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: notificationsDlq,
       maxReceiveCount: 5,
@@ -219,7 +219,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const opsAlertsDlq = new Queue(scope, 'OpsAlertsDlq', {
     queueName: `remit-scout-${options.envName}-ops-alerts-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const opsAlertsQueueName = `remit-scout-${options.envName}-ops-alerts`
@@ -227,7 +227,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: opsAlertsQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: opsAlertsDlq,
       maxReceiveCount: 5,
@@ -241,7 +241,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const agentFailureDlq = new Queue(scope, 'AgentFailureDlq', {
     queueName: `remit-scout-${options.envName}-agent-failure-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const agentFailureQueueName = `remit-scout-${options.envName}-agent-failure`
@@ -251,7 +251,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     // correlate traces before the message becomes visible again.
     visibilityTimeout: Duration.minutes(10),
     retentionPeriod: Duration.days(7),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: agentFailureDlq,
       // Low maxReceiveCount: if we cannot process a failure bundle after 3
@@ -264,7 +264,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const agentStressDlq = new Queue(scope, 'AgentStressDlq', {
     queueName: `remit-scout-${options.envName}-agent-stress-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const agentStressQueueName = `remit-scout-${options.envName}-agent-stress`
@@ -272,7 +272,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: agentStressQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: agentStressDlq,
       maxReceiveCount: 3,
@@ -283,7 +283,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const toolRequestDlq = new Queue(scope, 'ToolRequestDlq', {
     queueName: `remit-scout-${options.envName}-tool-request-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const toolRequestQueueName = `remit-scout-${options.envName}-tool-request`
@@ -291,7 +291,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: toolRequestQueueName,
     visibilityTimeout: Duration.minutes(10),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: toolRequestDlq,
       maxReceiveCount: 3,
@@ -304,7 +304,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
   const normalizationDlq = new Queue(scope, 'NormalizationDlq', {
     queueName: `remit-scout-${options.envName}-normalization-dlq`,
     retentionPeriod: Duration.days(14),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
   })
 
   const normalizationQueueName = `remit-scout-${options.envName}-normalization`
@@ -312,7 +312,7 @@ export const createQueues = (scope: Construct, options: QueueOptions): QueueReso
     queueName: normalizationQueueName,
     visibilityTimeout: Duration.minutes(5),
     retentionPeriod: Duration.days(4),
-    encryption: QueueEncryption.KMS_MANAGED,
+    encryption: QueueEncryption.SQS_MANAGED,
     deadLetterQueue: {
       queue: normalizationDlq,
       maxReceiveCount: 5,
