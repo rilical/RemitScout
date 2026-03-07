@@ -7,11 +7,11 @@ Duration: 60 minutes.
 Environment: staging only.
 
 ## Inputs to provide Claude
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ARCHITECTURE.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/security.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/auth-bypass-paths.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/route-validation-audit.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/compliance-signoff-2026-02-11.md`
+- `ARCHITECTURE.md`
+- `docs/architecture/security.md`
+- `docs/security/auth-bypass-paths.md`
+- `docs/security/route-validation-audit.md`
+- `docs/compliance-signoff-2026-02-11.md`
 
 ## Trust boundaries to include explicitly
 - Internet clients -> CloudFront/WAF -> Plane A public API.
@@ -75,8 +75,8 @@ Each threat row must include:
 3. 30-45 min: Force-prioritize to Top 10 by risk score.
 4. 45-55 min: Validate each threat has one runnable test.
 5. 55-60 min: Export into repository artifacts:
-   - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
-   - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+   - `docs/security/stride-threat-model-2026-02.md`
+   - `docs/security/security-findings-register-2026-02.md`
 
 ## Completion criteria
 - Top 10 threats are ranked and test-mapped.

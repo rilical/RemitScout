@@ -62,7 +62,7 @@ Mark each item as complete (`[x]`) before promoting staging as ready.
 
 ## 4) Backend env (staging profile)
 Source template:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/.env.staging.example`
+- `backend/.env.staging.example`
 
 - [ ] `ENVIRONMENT=staging`
 - [ ] `NODE_ENV=staging`
@@ -78,7 +78,7 @@ Source template:
 
 ## 5) Frontend env (staging profile)
 Source template:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/frontend/.env.staging.example`
+- `frontend/.env.staging.example`
 
 - [ ] `NODE_ENV=staging`
 - [ ] `PUBLIC_SITE_URL` points to staging host.
@@ -93,11 +93,11 @@ Source template:
 - [ ] Socket Mode enabled.
 - [ ] Scopes set: `chat:write`, `commands`.
 - [ ] Bot invited to ops channel.
-- [ ] `.env.frontdesk` created from `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.frontdesk.example`.
+- [ ] `.env.frontdesk` created from `.env.frontdesk.example`.
 - [ ] Front desk process starts cleanly (`pnpm -C backend frontdesk:slack`).
 
 ## 7) Brain setup
-- [ ] `.env.brain` created from `/Users/omarghabyen/Desktop/Remit-Scout Production V2/.env.brain.example`.
+- [ ] `.env.brain` created from `.env.brain.example`.
 - [ ] `GITHUB_REPOSITORY` and `GITHUB_TOKEN` set with required permissions.
 - [ ] Brain loop starts cleanly (`pnpm -C backend brain:loop`).
 - [ ] Brain dispatch + ingestion flags enabled for staging.
@@ -121,10 +121,10 @@ Source template:
 - [ ] Plane A health and key API routes respond.
 - [ ] Provider evidence workflows run and upload artifacts.
 - [ ] Queue/freshness/exports/db evidence workflows run and upload artifacts.
-- [ ] Burp manual security session completed using `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/burp-manual-security-session.md`.
+- [ ] Burp manual security session completed using `docs/security/burp-manual-security-session.md`.
 - [ ] Claude STRIDE output reviewed and triaged; artifacts updated:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/stride-threat-model-2026-02.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+  - `docs/security/stride-threat-model-2026-02.md`
+  - `docs/security/security-findings-register-2026-02.md`
 - [ ] Stripe test checkout succeeds.
 - [ ] Stripe webhook signature verification succeeds.
 - [ ] Supabase login + protected route behavior verified.
@@ -144,7 +144,7 @@ Source template:
 - [ ] Staging marked READY in ops channel.
 
 ## References
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/runbooks/staging-go-live.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/runbooks/github-actions-cicd-v2.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/frontdesk/README.md`
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ops/brain/README.md`
+- `docs/runbooks/staging-go-live.md`
+- `docs/runbooks/github-actions-cicd-v2.md`
+- `ops/frontdesk/README.md`
+- `ops/brain/README.md`

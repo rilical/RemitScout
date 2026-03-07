@@ -236,7 +236,7 @@ Co-Authored-By: ...
 
 ## Database Schema
 
-~70 tables across 5 schemas. Schema defined in 97 sequential migration files (`backend/db/migrations/001_*.sql` through `096_*.sql`).
+~70 tables across 5 schemas. Schema defined in 105 sequential migration files (`backend/db/migrations/001_*.sql` through `104_*.sql`).
 
 | Schema | Tables | Purpose |
 |--------|--------|---------|
@@ -247,6 +247,8 @@ Co-Authored-By: ...
 | `public` | 5 | Cross-plane: institutional clients, API usage, feature flags, account deletion |
 
 **Key silver tables**: `quote_record`, `provider`, `corridor`, `ingestion_run`, `user_account`, `user_plan`, `alert_rule`, `module_registry`, `agent_action`, `dispatch_queue`
+
+**Recent migrations (097-104)**: `discovery_scan`, `observation_ingestion_run_id_constraint`, `stress_signal_persistence`, `api_daily_usage_counter`, `institutional_client_webhook`, `rls_policies_and_grant_hardening`, `fk_constraints_weight_snapshot_triangulated_index`, `rights_matrix_audit_tracking`
 
 **Views**: `silver.corridor_tier` (current tier), `silver.corridor_priority` (tier-to-SLO mapping)
 

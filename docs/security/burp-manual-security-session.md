@@ -9,11 +9,11 @@ User goal: close pentest/DAST evidence gap with an operator-run manual test sess
 ## Scope and authoritative references
 - Environment: staging only.
 - Primary scope docs:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ARCHITECTURE.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/architecture/security.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/auth-bypass-paths.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/route-validation-audit.md`
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/compliance-signoff-2026-02-11.md`
+  - `ARCHITECTURE.md`
+  - `docs/architecture/security.md`
+  - `docs/security/auth-bypass-paths.md`
+  - `docs/security/route-validation-audit.md`
+  - `docs/compliance-signoff-2026-02-11.md`
 
 ## Safety rules (non-negotiable)
 - No destructive payloads.
@@ -34,7 +34,7 @@ User goal: close pentest/DAST evidence gap with an operator-run manual test sess
 - [ ] Confirm rate limits and auth controls are enabled in staging.
 - [ ] Confirm latest auth bypass map and route validation audit are reviewed.
 - [ ] Confirm the findings register file exists:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+  - `docs/security/security-findings-register-2026-02.md`
 
 ## Burp setup (Community Edition)
 1. Launch Burp and start a proxy listener on `127.0.0.1:8080`.
@@ -90,7 +90,7 @@ Use this capture template:
 ## Session closeout checklist
 - [ ] All matrix categories executed at least once.
 - [ ] All confirmed findings logged in:
-  - `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/security/security-findings-register-2026-02.md`
+  - `docs/security/security-findings-register-2026-02.md`
 - [ ] False positives marked explicitly.
 - [ ] Unclear cases converted into follow-up API/infra checks.
 - [ ] Summary posted to compliance sign-off thread/doc.

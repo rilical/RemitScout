@@ -1,5 +1,7 @@
 # Security Findings Register - 2026-02 (Staging)
 
+> **Note:** This register is a template awaiting actual pentest/DAST results. All entries below are placeholders. Populate after completing the penetration test plan (`docs/ops/penetration-test-plan.md`).
+
 This register tracks all confirmed findings from Burp manual validation and STRIDE-driven test execution.
 
 ## Status taxonomy
