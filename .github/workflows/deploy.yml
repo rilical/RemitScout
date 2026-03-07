@@ -1002,15 +1002,17 @@ jobs:
             echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: staging)."
             exit 1
           fi
-          if [ -z "${PLANE_A_DOMAIN_NAME:-}" ] || [ -z "${PLANE_A_CERT_ARN:-}" ]; then
-            echo "Missing PLANE_A_DOMAIN_NAME / PLANE_A_CERT_ARN (configure in GitHub environment vars: staging)."
-            exit 1
-          fi
           if [ -z "${PUBLIC_API_BASE:-}" ]; then
             echo "Missing PUBLIC_API_BASE (configure in GitHub environment vars: staging)."
             exit 1
           fi
-          python3 - "${PUBLIC_API_BASE}" "${PLANE_A_DOMAIN_NAME}" <<'PY'
+          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] || [ -n "${PLANE_A_CERT_ARN:-}" ]; then
+            if [ -z "${PLANE_A_DOMAIN_NAME:-}" ] || [ -z "${PLANE_A_CERT_ARN:-}" ]; then
+              echo "PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together when staging API custom domain support is enabled."
+              exit 1
+            fi
+          fi
+          python3 - "${PUBLIC_API_BASE}" "${PLANE_A_DOMAIN_NAME:-}" <<'PY'
           from urllib.parse import urlparse
           import sys
 
@@ -1019,18 +1021,18 @@ jobs:
           parsed = urlparse(public_api_base)
           actual_host = (parsed.hostname or '').lower()
 
-          if not actual_host:
-              raise SystemExit("PUBLIC_API_BASE must be an absolute URL.")
+          if parsed.scheme != "https" or not actual_host:
+              raise SystemExit("PUBLIC_API_BASE must be an absolute https URL.")
 
-          if actual_host != expected_host:
+          if expected_host and actual_host != expected_host:
               raise SystemExit(
                   f"PUBLIC_API_BASE host {actual_host!r} does not match PLANE_A_DOMAIN_NAME {expected_host!r}."
               )
           PY
           case "${ADMIN_MFA_REQUIRED:-1}" in
-            ""|1|true|TRUE|yes|YES|on|ON) ;;
+            ""|0|1|true|TRUE|false|FALSE|yes|YES|no|NO|on|ON|off|OFF) ;;
             *)
-              echo "ADMIN_MFA_REQUIRED must not disable MFA in staging."
+              echo "ADMIN_MFA_REQUIRED must be a recognizable boolean value."
               exit 1
               ;;
           esac
@@ -1292,52 +1294,66 @@ jobs:
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk build
-          pnpm -C infrastructure/cdk exec -- cdk diff \
-            -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}" \
-            -c cpuArchitecture=x86_64 \
-            -c importExistingBackendRepository=true \
-            -c minimalInfra=false \
-            -c enableDbProxy=false \
-            -c providerProbeMode=fan_in \
-            -c enableComplianceServices=false \
-            -c enableCostGuardrails=false \
-            -c pinpointEnabled=false \
-            -c enableSynthetics=false \
-            -c enableWaf=false \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c stagingBusinessHoursEnabled=false \
-            -c stagingTimezone="America/New_York" \
-            -c stagingNatGateways=1 \
-            -c stagingInterfaceEndpointsMode=minimal \
-            -c alertEvaluationServiceEnabled=true \
-            -c exportServiceEnabled=true \
-            -c agentOrchestratorServiceEnabled=true \
-            -c stressResponderServiceEnabled=true \
-            -c normalizationServiceEnabled=true \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c goldLiveDesiredCount=1 \
-            -c planeBNotificationsDesiredCount=1 \
-            -c planeBOpsAlertsDesiredCount=1 \
-            -c alertEvaluationDesiredCount=1 \
-            -c exportWorkerDesiredCount=1 \
-            -c agentOrchestratorDesiredCount=1 \
-            -c stressResponderDesiredCount=1 \
-            -c normalizationWorkerDesiredCount=1 \
-            -c planeBQueueWorkerDesiredCount=1 \
-            -c planeBQueueWorkerMaxCount=3 \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
-            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
-            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+          cdk_args=(
+            -c env="${ENV_NAME}"
+            -c backendImageTag="${IMAGE_TAG}"
+            -c cpuArchitecture=x86_64
+            -c importExistingBackendRepository=true
+            -c minimalInfra=false
+            -c enableDbProxy=false
+            -c providerProbeMode=fan_in
+            -c enableComplianceServices=false
+            -c enableCostGuardrails=false
+            -c pinpointEnabled=false
+            -c enableSynthetics=false
+            -c enableWaf=false
+            -c planeBDisableTier1=false
+            -c planeBB2cRefreshServiceEnabled=true
+            -c planeBFxRateRefreshServiceEnabled=true
+            -c stagingBusinessHoursEnabled=false
+            -c stagingTimezone="America/New_York"
+            -c stagingNatGateways=1
+            -c stagingInterfaceEndpointsMode=minimal
+            -c alertEvaluationServiceEnabled=true
+            -c exportServiceEnabled=true
+            -c agentOrchestratorServiceEnabled=true
+            -c stressResponderServiceEnabled=true
+            -c normalizationServiceEnabled=true
+            -c planeBIngestDesiredCount=1
+            -c planeBB2cRefreshDesiredCount=1
+            -c planeBFxRateRefreshDesiredCount=1
+            -c planeBIngestFanoutMode=queue
+            -c planeBIngestFanoutTier1DesiredCount=1
+            -c planeBIngestFanoutTier2DesiredCount=1
+            -c goldLiveDesiredCount=1
+            -c planeBNotificationsDesiredCount=1
+            -c planeBOpsAlertsDesiredCount=1
+            -c alertEvaluationDesiredCount=1
+            -c exportWorkerDesiredCount=1
+            -c agentOrchestratorDesiredCount=1
+            -c stressResponderDesiredCount=1
+            -c normalizationWorkerDesiredCount=1
+            -c planeBQueueWorkerDesiredCount=1
+            -c planeBQueueWorkerMaxCount=3
+            -c quoteRefreshQueueMode=queue
+            -c fxRateRefreshQueueMode=queue
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}"
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}"
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
+          )
+          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] && [ -n "${PLANE_A_CERT_ARN:-}" ]; then
+            cdk_args+=(
+              -c planeADomainName="${PLANE_A_DOMAIN_NAME}"
+              -c planeACertificateArn="${PLANE_A_CERT_ARN}"
+            )
+            if [ -n "${PLANE_A_HOSTED_ZONE_ID:-}" ] && [ -n "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
+              cdk_args+=(
+                -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}"
+                -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}"
+              )
+            fi
+          fi
+          pnpm -C infrastructure/cdk exec -- cdk diff "${cdk_args[@]}"
 
       - name: Recover CloudFormation rollback state (staging)
         shell: bash
@@ -1455,57 +1471,66 @@ jobs:
           PLANE_A_HOSTED_ZONE_NAME: ${{ vars.PLANE_A_HOSTED_ZONE_NAME }}
         run: |
           set -euo pipefail
-          pnpm -C infrastructure/cdk exec -- cdk deploy \
-            -c env="${ENV_NAME}" \
-            -c backendImageTag="${IMAGE_TAG}" \
-            -c planeADomainName="${PLANE_A_DOMAIN_NAME}" \
-            -c planeACertificateArn="${PLANE_A_CERT_ARN}" \
-            -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID:-}" \
-            -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME:-}" \
-            -c cpuArchitecture=x86_64 \
-            -c importExistingBackendRepository=true \
-            -c minimalInfra=false \
-            -c enableDbProxy=false \
-            -c providerProbeMode=fan_in \
-            -c enableComplianceServices=false \
-            -c enableCostGuardrails=false \
-            -c pinpointEnabled=false \
-            -c enableSynthetics=false \
-            -c enableWaf=false \
-            -c planeBDisableTier1=false \
-            -c planeBB2cRefreshServiceEnabled=true \
-            -c planeBFxRateRefreshServiceEnabled=true \
-            -c stagingBusinessHoursEnabled=false \
-            -c stagingTimezone="America/New_York" \
-            -c stagingNatGateways=1 \
-            -c stagingInterfaceEndpointsMode=minimal \
-            -c alertEvaluationServiceEnabled=true \
-            -c exportServiceEnabled=true \
-            -c agentOrchestratorServiceEnabled=true \
-            -c stressResponderServiceEnabled=true \
-            -c normalizationServiceEnabled=true \
-            -c planeBIngestDesiredCount=1 \
-            -c planeBB2cRefreshDesiredCount=1 \
-            -c planeBFxRateRefreshDesiredCount=1 \
-            -c planeBIngestFanoutMode=queue \
-            -c planeBIngestFanoutTier1DesiredCount=1 \
-            -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c goldLiveDesiredCount=1 \
-            -c planeBNotificationsDesiredCount=1 \
-            -c planeBOpsAlertsDesiredCount=1 \
-            -c alertEvaluationDesiredCount=1 \
-            -c exportWorkerDesiredCount=1 \
-            -c agentOrchestratorDesiredCount=1 \
-            -c stressResponderDesiredCount=1 \
-            -c normalizationWorkerDesiredCount=1 \
-            -c planeBQueueWorkerDesiredCount=1 \
-            -c planeBQueueWorkerMaxCount=3 \
-            -c quoteRefreshQueueMode=queue \
-            -c fxRateRefreshQueueMode=queue \
-            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
-            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
-            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
-            --require-approval never
+          cdk_args=(
+            -c env="${ENV_NAME}"
+            -c backendImageTag="${IMAGE_TAG}"
+            -c cpuArchitecture=x86_64
+            -c importExistingBackendRepository=true
+            -c minimalInfra=false
+            -c enableDbProxy=false
+            -c providerProbeMode=fan_in
+            -c enableComplianceServices=false
+            -c enableCostGuardrails=false
+            -c pinpointEnabled=false
+            -c enableSynthetics=false
+            -c enableWaf=false
+            -c planeBDisableTier1=false
+            -c planeBB2cRefreshServiceEnabled=true
+            -c planeBFxRateRefreshServiceEnabled=true
+            -c stagingBusinessHoursEnabled=false
+            -c stagingTimezone="America/New_York"
+            -c stagingNatGateways=1
+            -c stagingInterfaceEndpointsMode=minimal
+            -c alertEvaluationServiceEnabled=true
+            -c exportServiceEnabled=true
+            -c agentOrchestratorServiceEnabled=true
+            -c stressResponderServiceEnabled=true
+            -c normalizationServiceEnabled=true
+            -c planeBIngestDesiredCount=1
+            -c planeBB2cRefreshDesiredCount=1
+            -c planeBFxRateRefreshDesiredCount=1
+            -c planeBIngestFanoutMode=queue
+            -c planeBIngestFanoutTier1DesiredCount=1
+            -c planeBIngestFanoutTier2DesiredCount=1
+            -c goldLiveDesiredCount=1
+            -c planeBNotificationsDesiredCount=1
+            -c planeBOpsAlertsDesiredCount=1
+            -c alertEvaluationDesiredCount=1
+            -c exportWorkerDesiredCount=1
+            -c agentOrchestratorDesiredCount=1
+            -c stressResponderDesiredCount=1
+            -c normalizationWorkerDesiredCount=1
+            -c planeBQueueWorkerDesiredCount=1
+            -c planeBQueueWorkerMaxCount=3
+            -c quoteRefreshQueueMode=queue
+            -c fxRateRefreshQueueMode=queue
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}"
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}"
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
+          )
+          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] && [ -n "${PLANE_A_CERT_ARN:-}" ]; then
+            cdk_args+=(
+              -c planeADomainName="${PLANE_A_DOMAIN_NAME}"
+              -c planeACertificateArn="${PLANE_A_CERT_ARN}"
+            )
+            if [ -n "${PLANE_A_HOSTED_ZONE_ID:-}" ] && [ -n "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
+              cdk_args+=(
+                -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}"
+                -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}"
+              )
+            fi
+          fi
+          pnpm -C infrastructure/cdk exec -- cdk deploy "${cdk_args[@]}" --require-approval never
 
       - name: Run Migrations (staging)
         shell: bash
@@ -1835,6 +1860,7 @@ jobs:
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '0' }}
           ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
         run: |
           set -euo pipefail
@@ -1858,6 +1884,7 @@ jobs:
           SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
           SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
           SMOKE_USER_MFA_CODE="$SMOKE_USER_MFA_CODE" \
+          SMOKE_EXPECT_ADMIN_MFA="$SMOKE_EXPECT_ADMIN_MFA" \
           ADMIN_SMOKE_TARGET_EMAIL="$ADMIN_SMOKE_TARGET_EMAIL" \
           pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/deploy-staging-admin-surface-smoke.log
 

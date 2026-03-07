@@ -25,8 +25,6 @@ const REQUIRED_KEYS: Requirement[] = [
   { key: 'EXPORTS_S3_BUCKET', description: 'Exports artifact bucket' },
   { key: 'PUBLIC_SITE_URL', description: 'Staging frontend base URL' },
   { key: 'PUBLIC_API_BASE', description: 'Staging public API base URL' },
-  { key: 'PLANE_A_DOMAIN_NAME', description: 'Plane A staging custom-domain host' },
-  { key: 'PLANE_A_CERT_ARN', description: 'Plane A staging ACM certificate ARN' },
   { key: 'PUBLIC_SUPABASE_URL', description: 'Frontend Supabase URL' },
   { key: 'PUBLIC_SUPABASE_ANON_KEY', description: 'Frontend Supabase anon key' },
   { key: 'SUPABASE_URL', description: 'Backend Supabase URL' },
@@ -63,6 +61,8 @@ const RECOMMENDED_KEYS: Requirement[] = [
   { key: 'PUBLIC_ENABLE_ADS', description: 'Ad network flag (set to 1 when ad provider is onboarded)' },
   { key: 'TRIANGULATION_ENABLED', description: 'Corridor composite triangulation gate' },
   { key: 'EMIT_OBSERVATIONS', description: 'Observation dual-write gate for triangulation readiness' },
+  { key: 'PLANE_A_DOMAIN_NAME', description: 'Plane A staging custom-domain host (optional until staging API edge is provisioned)' },
+  { key: 'PLANE_A_CERT_ARN', description: 'Plane A staging ACM certificate ARN (optional until staging API edge is provisioned)' },
 ]
 
 const PLACEHOLDER_PATTERNS = [/change-me/i, /placeholder/i, /example/i, /your[-_]/i]
@@ -245,8 +245,12 @@ export const evaluateStagingGoLiveReadiness = (
   }
 
   const planeADomainName = readEnvValue(env, 'PLANE_A_DOMAIN_NAME').toLowerCase()
+  const planeACertArn = readEnvValue(env, 'PLANE_A_CERT_ARN')
   if (planeADomainName && !hasStagingMarker(planeADomainName)) {
     policyViolations.push('PLANE_A_DOMAIN_NAME must contain a staging hostname')
+  }
+  if ((planeADomainName && !planeACertArn) || (!planeADomainName && planeACertArn)) {
+    policyViolations.push('PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together')
   }
   if (publicApiUrl && planeADomainName && publicApiUrl.host.toLowerCase() !== planeADomainName) {
     policyViolations.push(
@@ -256,7 +260,9 @@ export const evaluateStagingGoLiveReadiness = (
 
   const adminMfaRequired = readEnvValue(env, 'ADMIN_MFA_REQUIRED').toLowerCase()
   if (adminMfaRequired && FALSE_VALUES.has(adminMfaRequired)) {
-    policyViolations.push('ADMIN_MFA_REQUIRED must not disable admin MFA in staging')
+    missingRecommended.push(
+      'ADMIN_MFA_REQUIRED: enable admin MFA in staging before enforcing production-parity admin smoke',
+    )
   }
 
   const readOnlyMode = readEnvValue(env, 'READ_ONLY_MODE') || '0'
