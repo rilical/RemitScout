@@ -60,7 +60,7 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
   const snapshotsEnabled = Boolean(redisSnapshottingClusterId)
 
   const redisAuthSecret = new Secret(scope, 'RedisAuthSecret', {
-    secretName: `remit-scout/${options.envName}/redis-auth`,
+    secretName: `remit-scout/${options.envName}/redis-auth`, // pragma: allowlist secret
     description: `Redis AUTH token for Remit-Scout ${options.envName}`,
     generateSecretString: {
       passwordLength: 48,

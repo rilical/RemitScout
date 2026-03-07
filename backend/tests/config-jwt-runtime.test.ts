@@ -21,7 +21,7 @@ describe('shared config JWT runtime gating', () => {
     await expect(import('../shared/config')).resolves.toHaveProperty('config')
   })
 
-  it('allows staging to explicitly disable admin MFA via env override', async () => {
+  it('keeps admin MFA forced on in staging even if the env flag is disabled', async () => {
     vi.resetModules()
     process.env = {
       ...originalEnv,
@@ -33,7 +33,7 @@ describe('shared config JWT runtime gating', () => {
     }
 
     const { config } = await import('../shared/config')
-    expect(config.planeA.adminMfaRequired).toBe(false)
+    expect(config.planeA.adminMfaRequired).toBe(true)
   })
 
   it('keeps admin MFA forced on in production even if the env flag is disabled', async () => {
@@ -58,7 +58,7 @@ describe('shared config JWT runtime gating', () => {
       DOTENV_DISABLE: '1',
       NODE_ENV: 'production',
       ENVIRONMENT: 'staging',
-      PLANE_A_JWT_SECRET: 'placeholder',
+      PLANE_A_JWT_SECRET: 'placeholder', // pragma: allowlist secret
     }
     const { assertRuntimeConfig } = await import('../shared/config')
 

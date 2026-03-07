@@ -42,28 +42,54 @@
             </h2>
 
             <form
+              :data-ready="interactionReady ? 'true' : 'false'"
               class="space-y-6"
               @submit.prevent="handleCheckout"
             >
               <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
-                <div class="text-body-sm font-semibold text-neutral-300">
-                  Signed in as
-                </div>
-                <div class="text-white font-semibold">
-                  {{ userEmail || 'Account email' }}
-                </div>
-                <p class="mt-2 text-body-sm text-rs-muted">
-                  Payment details are entered securely on Stripe Checkout. We never collect or store card data on this page.
-                </p>
+                <template v-if="isAuthenticated">
+                  <div class="text-body-sm font-semibold text-neutral-300">
+                    Signed in as
+                  </div>
+                  <div class="text-white font-semibold">
+                    {{ userEmail || 'Account email' }}
+                  </div>
+                  <p class="mt-2 text-body-sm text-rs-muted">
+                    Payment details are entered securely on Stripe Checkout. We never collect or store card data on this page.
+                  </p>
+                </template>
+                <template v-else>
+                  <div class="text-body-sm font-semibold text-neutral-300">
+                    Sign in required
+                  </div>
+                  <div class="text-white font-semibold">
+                    Use your Remit-Scout account to continue checkout.
+                  </div>
+                  <p class="mt-2 text-body-sm text-rs-muted">
+                    Plus subscriptions are tied to your account so alerts, watchlists, exports, and billing stay attached to the right user.
+                  </p>
+                  <p class="mt-2 text-body-sm text-rs-muted">
+                    New here?
+                    <NuxtLink
+                      :to="{ path: '/sign-up', query: { redirect: '/plus/checkout' } }"
+                      class="text-primary-400 hover:text-primary-300"
+                    >
+                      Create a free account first.
+                    </NuxtLink>
+                  </p>
+                </template>
               </div>
 
               <!-- Submit Button -->
               <button
+                data-testid="plus-checkout-submit"
                 type="submit"
-                :disabled="processing"
+                :disabled="processing || !interactionReady"
                 class="w-full h-14 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-body-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:bg-neutral-600 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <span v-if="!processing">Continue to Stripe Checkout</span>
+                <span v-if="!processing">
+                  {{ isAuthenticated ? 'Continue to Stripe Checkout' : 'Sign in to continue' }}
+                </span>
                 <span v-else>Processing...</span>
                 <svg
                   v-if="!processing"
@@ -253,7 +279,7 @@ class="flex items-start gap-2"
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { CenteredPage } from '~/ui'
 import { useMarketingAnalytics } from '~/composables/useMarketingAnalytics'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
@@ -262,6 +288,7 @@ import { formatMoney as formatMoneyValue } from '~/shared/lib/format'
 const { pulseEnabled } = useFeatureFlags()
 
 const processing = ref(false)
+const interactionReady = ref(false)
 const { isAuthenticated, user } = useAuth()
 const billingActions = useBilling()
 const userEmail = computed(() => user.value?.email || '')
@@ -313,6 +340,10 @@ const billedAnnuallyMonthlyDisplay = computed(() => {
 })
 const billingIntervalLabel = computed(() => (billingInterval.value === 'year' ? 'Annual' : 'Monthly'))
 const totalDueToday = computed(() => priceDisplay.value)
+
+onMounted(() => {
+  interactionReady.value = true
+})
 
 async function handleCheckout() {
   if (!isAuthenticated.value) {

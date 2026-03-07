@@ -19,117 +19,87 @@
         </div>
 
         <!-- Two Column Layout -->
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[1.02fr_1fr]">
-          <!-- Article Section -->
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+          <!-- Value Proposition -->
           <article
-            class="flex flex-col rounded-3xl border border-neutral-200 bg-white/90 p-6 shadow-sm"
+            class="flex flex-col justify-center rounded-3xl border border-neutral-200 bg-white/90 p-6 shadow-sm"
           >
-            <span
-              class="text-body-sm inline-flex w-fit items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 font-semibold text-neutral-700"
-            >
-              How we compare
-            </span>
-            <h2 class="text-h3 mt-4 font-bold text-rs-fg">Transparent rankings in one screen</h2>
-            <p class="text-body mt-3 max-w-2xl leading-relaxed text-neutral-700">
+            <h2 class="text-h3 font-bold text-rs-fg">Transparent rankings in one screen</h2>
+            <p class="text-body mt-3 leading-relaxed text-neutral-700">
               We compare delivered value, transfer fees, and FX markup together so you can make a
               faster decision with fewer surprises at checkout.
             </p>
 
-            <div class="mt-6 grid gap-3 sm:grid-cols-3">
-              <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100">
-                  <svg
-                    class="h-4 w-4 text-brand-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2.5"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <p class="text-body-sm mt-3 font-semibold text-neutral-900">No pay-to-rank</p>
-                <p class="text-body-sm mt-1 leading-relaxed text-neutral-600">
-                  Providers cannot buy better placement. Rankings are based on delivered value.
-                </p>
-              </div>
-              <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100">
-                  <svg
-                    class="h-4 w-4 text-brand-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2.5"
-                      d="M4 7h16M4 12h10M4 17h7"
-                    />
-                  </svg>
-                </div>
-                <p class="text-body-sm mt-3 font-semibold text-neutral-900">True total cost</p>
-                <p class="text-body-sm mt-1 leading-relaxed text-neutral-600">
-                  Fees and hidden FX markup are shown together so every quote is comparable.
-                </p>
-              </div>
-              <div class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100">
-                  <svg
-                    class="h-4 w-4 text-brand-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2.5"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                </div>
-                <p class="text-body-sm mt-3 font-semibold text-neutral-900">Licensed coverage</p>
-                <p class="text-body-sm mt-1 leading-relaxed text-neutral-600">
-                  See live comparisons across 30+ licensed providers, including Wise, Remitly, and
-                  Western Union.
-                </p>
-              </div>
-            </div>
+            <ul class="mt-6 space-y-3">
+              <li class="flex items-center gap-3">
+                <svg
+                  class="h-5 w-5 flex-shrink-0 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-body text-neutral-800"><strong>No pay-to-rank</strong> — rankings based on delivered value</span>
+              </li>
+              <li class="flex items-center gap-3">
+                <svg
+                  class="h-5 w-5 flex-shrink-0 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-body text-neutral-800"><strong>True total cost</strong> — fees and FX markup shown together</span>
+              </li>
+              <li class="flex items-center gap-3">
+                <svg
+                  class="h-5 w-5 flex-shrink-0 text-brand-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-body text-neutral-800"><strong>Licensed coverage</strong> — 30+ regulated providers compared</span>
+              </li>
+            </ul>
 
-            <div class="mt-auto pt-6">
-              <div class="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p class="text-body-sm text-neutral-600">
-                    Live quotes from licensed providers. Methodology and coverage are always
-                    visible.
-                  </p>
-                  <NuxtLink
-                    to="/learn"
-                    class="text-body-sm inline-flex items-center gap-2 font-semibold text-brand-600 hover:text-brand-700"
-                  >
-                    Explore guides
-                    <svg
-class="h-4 w-4"
-fill="none"
-stroke="currentColor"
-viewBox="0 0 24 24"
->
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </div>
+            <div class="mt-6 flex items-center gap-4 text-body-sm text-neutral-500">
+              <NuxtLink
+                to="/methodology"
+                class="font-semibold text-brand-600 hover:text-brand-700"
+              >
+                Methodology
+              </NuxtLink>
+              <NuxtLink
+                to="/faq"
+                class="font-semibold text-brand-600 hover:text-brand-700"
+              >
+                FAQ
+              </NuxtLink>
+              <NuxtLink
+                to="/providers"
+                class="font-semibold text-brand-600 hover:text-brand-700"
+              >
+                All providers
+              </NuxtLink>
             </div>
           </article>
 

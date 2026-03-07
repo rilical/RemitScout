@@ -33,6 +33,15 @@ export type AuditLogEntry = {
   entity_id?: string | null
   category?: string | null
   severity?: string | null
+  reason?: string | null
+  evidence_links?: string[] | null
+  before_snapshot?: Record<string, unknown> | null
+  after_snapshot?: Record<string, unknown> | null
+  changes?: Record<string, unknown> | null
+  ip_address?: string | null
+  user_agent?: string | null
+  request_id?: string | null
+  session_id?: string | null
   metadata?: Record<string, unknown> | null
 }
 

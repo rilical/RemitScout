@@ -71,7 +71,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
   })
 
   const credentialsSecret = new Secret(scope, 'AuroraMasterSecret', {
-    secretName: `remit-scout/${options.envName}/database/master`,
+    secretName: `remit-scout/${options.envName}/database/master`, // pragma: allowlist secret
     generateSecretString: {
       secretStringTemplate: JSON.stringify({ username: 'remit_scout' }),
       generateStringKey: 'password',

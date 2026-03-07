@@ -18,6 +18,7 @@ const listQuerySchema = z.object({
   amount_bucket: z.coerce.number().int().positive().default(500),
   method_profile: z.enum(['standard_bank', 'standard_card', 'cash_pickup', 'mobile_wallet', 'airtime_topup', 'card_delivery', 'home_delivery']).default('standard_bank'),
   date: z.string().optional(),
+  methodology: z.string().trim().min(1).max(64).optional(),
   q: z.string().trim().min(1).max(64).optional(),
   send_currencies: z.string().optional(),
   suppressed: z.enum(['0', '1']).optional(),
@@ -170,7 +171,7 @@ const resolveLatestDate = async (
     `SELECT MAX(date)::text AS max_date
        FROM gold_export.cdp_daily
       WHERE amount_bucket = $1
-        AND method_profile = $2`,
+        AND method_profile = $2::method_profile`,
     [amountBucket, methodProfile],
     pool,
   )
@@ -181,6 +182,7 @@ type SliceFilters = {
   date: string
   amountBucket: number
   methodProfile: string
+  methodology?: string
   q?: string
   sendCurrencies: string[]
   suppressed?: '0' | '1'
@@ -190,7 +192,7 @@ const buildWhere = (filters: SliceFilters) => {
   const conditions: string[] = [
     'date = $1',
     'amount_bucket = $2',
-    'method_profile = $3',
+    'method_profile = $3::method_profile',
   ]
   const values: Array<string | number | boolean | string[]> = [
     filters.date,
@@ -201,6 +203,11 @@ const buildWhere = (filters: SliceFilters) => {
   if (filters.q) {
     values.push(`%${filters.q}%`)
     conditions.push(`corridor_id ILIKE $${values.length}`)
+  }
+
+  if (filters.methodology) {
+    values.push(filters.methodology)
+    conditions.push(`methodology_version = $${values.length}`)
   }
 
   if (filters.sendCurrencies.length > 0) {
@@ -258,6 +265,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     const amountBucket = parsed.data.amount_bucket
     const methodProfile = parsed.data.method_profile
     const q = parsed.data.q
+    const methodology = parsed.data.methodology
     const sendCurrencies = parseSendCurrencies(parsed.data.send_currencies)
     const suppressed = parsed.data.suppressed
     const limit = parsed.data.limit
@@ -305,6 +313,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
       date,
       amountBucket,
       methodProfile,
+      methodology,
       q,
       sendCurrencies,
       suppressed,
@@ -463,6 +472,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
     const amountBucket = parsed.data.amount_bucket
     const methodProfile = parsed.data.method_profile
     const q = parsed.data.q
+    const methodology = parsed.data.methodology
     const sendCurrencies = parseSendCurrencies(parsed.data.send_currencies)
     const suppressed = parsed.data.suppressed
     const format = parsed.data.format
@@ -498,6 +508,7 @@ export const goldExportsRoutes = (app: FastifyInstance) => {
       date,
       amountBucket,
       methodProfile,
+      methodology,
       q,
       sendCurrencies,
       suppressed,

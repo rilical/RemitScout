@@ -44,6 +44,21 @@ const loadModule = async (overrides?: Partial<any>) => {
   vi.resetModules()
   vi.doMock('../shared/config', () => ({
     config: {
+      observability: {
+        cloudwatch: {
+          enabled: false,
+        },
+        newRelicMetrics: {
+          enabled: false,
+          ingestKey: '',
+          endpoint: 'https://metric-api.newrelic.com/metric/v1',
+          batchSize: 100,
+          flushIntervalMs: 10_000,
+          maxQueue: 5_000,
+          serviceName: '',
+          normalizedEnvironment: 'test',
+        },
+      },
       storage: {
         exports: {
           bucket: '',
@@ -145,7 +160,7 @@ describe('account-deletion', () => {
       },
       billing: {
         stripe: {
-          secretKey: 'sk_test',
+          secretKey: 'sk_test', // pragma: allowlist secret
         },
       },
       auth: {

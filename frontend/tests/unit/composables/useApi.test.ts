@@ -106,6 +106,33 @@ describe('createApiClient', () => {
     expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
   })
 
+  it('falls back to the primary base for admin-surface paths when the direct admin base is cross-origin in the browser', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true })
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: { location: { origin: 'https://staging.remit-scout.com' } },
+    })
+
+    try {
+      const client = createApiClient({
+        base: '/api/v1',
+        adminBase: 'https://plane-a.example.com/api/v1',
+        fetcher,
+        getAdminAccessToken: () => 'plane_a_admin_token',
+        makeRequestId: () => 'req_admin_cross_origin',
+      })
+
+      await client.request('/analytics/heatmap')
+
+      const [url, init] = fetcher.mock.calls[0] as any[]
+      expect(url).toBe('/api/v1/analytics/heatmap')
+      expect(init.headers.authorization).toBe('Bearer plane_a_admin_token')
+    }
+    finally {
+      delete (globalThis as { window?: unknown }).window
+    }
+  })
+
   it('keeps session exchange on the primary base even when a direct admin base is configured', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true })
     const client = createApiClient({

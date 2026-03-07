@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { query } from '../../../shared/db'
 import { createLogger } from '../../../shared/logger'
-import { requireAdmin } from '../plugins/auth-plugin'
+import { requireAdmin, requireSuperAdmin } from '../plugins/auth-plugin'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'
 import { generateApiKeyToken, hashApiKey } from '../services/api-keys'
 import { getInstitutionalClientScopes } from '../services/institutional-clients'
@@ -11,6 +11,7 @@ import { sendAdminWebhook } from '../services/admin-webhooks'
 import { ValidationError, NotFoundError } from '../../../shared/errors'
 
 const logger = createLogger('plane-a.admin-institutional')
+const jsonObjectSchema = z.record(z.string(), z.unknown())
 
 const listQuerySchema = z.object({
   status: z.enum(['active', 'suspended', 'revoked']).optional(),
@@ -27,6 +28,10 @@ const createSchema = z.object({
   contract_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   nda_signed_at: z.string().nullable().optional(),
   report_schedule: z.enum(['weekly', 'monthly', 'none']).default('none'),
+  internal_owner_email: z.string().email().nullable().optional(),
+  compliance_notes: z.string().max(4000).nullable().optional(),
+  onboarding_checklist: jsonObjectSchema.optional(),
+  prelaunch_config: jsonObjectSchema.optional(),
 })
 
 const updateSchema = z.object({
@@ -38,6 +43,10 @@ const updateSchema = z.object({
   contract_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   contract_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   report_schedule: z.enum(['weekly', 'monthly', 'none']).optional(),
+  internal_owner_email: z.string().email().nullable().optional(),
+  compliance_notes: z.string().max(4000).nullable().optional(),
+  onboarding_checklist: jsonObjectSchema.optional(),
+  prelaunch_config: jsonObjectSchema.optional(),
 })
 
 const statusSchema = z.object({
@@ -58,6 +67,10 @@ type InstitutionalClientRow = {
   contract_start: string | null
   contract_end: string | null
   report_schedule: string
+  internal_owner_email: string | null
+  compliance_notes: string | null
+  onboarding_checklist: Record<string, unknown>
+  prelaunch_config: Record<string, unknown>
   created_at: string
   updated_at: string
 }
@@ -71,6 +84,30 @@ const toLaunchGatePayload = (launchGate: Awaited<ReturnType<typeof getInstitutio
   enforced: launchGate.enforced,
   blocked: launchGate.blocked,
   message: launchGate.message,
+})
+
+const blockedActions = [
+  'key_activation',
+  'webhook_delivery',
+  'export_jobs',
+  'production_traffic',
+  'live_entitlement_grant',
+]
+
+const allowedPrelaunchActions = [
+  'client_creation',
+  'metadata_capture',
+  'internal_owner_assignment',
+  'onboarding_checklist',
+  'compliance_notes',
+  'prelaunch_configuration',
+]
+
+const toWorkflowPayload = (launchGate: Awaited<ReturnType<typeof getInstitutionalLaunchGate>>) => ({
+  live_activation_blocked: Boolean(launchGate.blocked),
+  blocked_actions: launchGate.blocked ? blockedActions : [],
+  allowed_prelaunch_actions: allowedPrelaunchActions,
+  key_state: launchGate.blocked ? 'withheld_until_launch_gate_clears' : 'active',
 })
 
 export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
@@ -103,7 +140,12 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
           nda_signed_at::text, contract_start::text, contract_end::text,
-          report_schedule, created_at::text, updated_at::text
+          report_schedule,
+          internal_owner_email,
+          compliance_notes,
+          COALESCE(onboarding_checklist, '{}'::jsonb) AS onboarding_checklist,
+          COALESCE(prelaunch_config, '{}'::jsonb) AS prelaunch_config,
+          created_at::text, updated_at::text
         FROM public.institutional_client
         ${whereClause}
         ORDER BY created_at DESC
@@ -154,6 +196,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         },
         clients: result.rows,
         launch_gate: toLaunchGatePayload(launchGate),
+        workflow: toWorkflowPayload(launchGate),
       }
     } catch (error) {
       logger.error('admin_institutional_list_failed', {
@@ -176,7 +219,12 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
           nda_signed_at::text, contract_start::text, contract_end::text,
-          report_schedule, created_at::text, updated_at::text
+          report_schedule,
+          internal_owner_email,
+          compliance_notes,
+          COALESCE(onboarding_checklist, '{}'::jsonb) AS onboarding_checklist,
+          COALESCE(prelaunch_config, '{}'::jsonb) AS prelaunch_config,
+          created_at::text, updated_at::text
         FROM public.institutional_client
         WHERE id = $1
         `,
@@ -236,6 +284,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         exports: exportResult.rows,
         scopes,
         launch_gate: toLaunchGatePayload(launchGate),
+        workflow: toWorkflowPayload(launchGate),
       }
     } catch (error) {
       if (error instanceof NotFoundError) throw error
@@ -249,7 +298,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
   })
 
   // Create client + generate API key
-  app.post('/admin/institutional/clients', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/institutional/clients', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const parsed = createSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
       throw new ValidationError('Invalid request', { details: { error: 'bad_request', details: parsed.error.issues } })
@@ -269,14 +318,20 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         INSERT INTO public.institutional_client (
           name, client_prefix, api_key_hash, tier,
           corridors_allowed, rate_limit_rpm, rate_limit_daily,
-          status, nda_signed_at, contract_start, contract_end, report_schedule
+          status, nda_signed_at, contract_start, contract_end, report_schedule,
+          internal_owner_email, compliance_notes, onboarding_checklist, prelaunch_config
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16::jsonb)
         RETURNING
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
           nda_signed_at::text, contract_start::text, contract_end::text,
-          report_schedule, created_at::text, updated_at::text
+          report_schedule,
+          internal_owner_email,
+          compliance_notes,
+          COALESCE(onboarding_checklist, '{}'::jsonb) AS onboarding_checklist,
+          COALESCE(prelaunch_config, '{}'::jsonb) AS prelaunch_config,
+          created_at::text, updated_at::text
         `,
         [
           data.name,
@@ -291,6 +346,10 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           data.contract_start ?? null,
           data.contract_end ?? null,
           data.report_schedule,
+          data.internal_owner_email ?? null,
+          data.compliance_notes ?? null,
+          JSON.stringify(data.onboarding_checklist ?? {}),
+          JSON.stringify(data.prelaunch_config ?? {}),
         ],
         planeAPool,
       )
@@ -342,8 +401,9 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
       return {
         success: true,
         client,
-        api_key: token,
+        api_key: launchGate.blocked ? null : token,
         launch_gate: toLaunchGatePayload(launchGate),
+        workflow: toWorkflowPayload(launchGate),
       }
     } catch (error) {
       logger.error('admin_institutional_create_failed', {
@@ -355,7 +415,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
   })
 
   // Update client fields
-  app.patch('/admin/institutional/clients/:id', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.patch('/admin/institutional/clients/:id', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const { id } = request.params as { id: string }
     const parsed = updateSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
@@ -410,6 +470,26 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         params.push(data.report_schedule)
         paramIndex++
       }
+      if (data.internal_owner_email !== undefined) {
+        setClauses.push(`internal_owner_email = $${paramIndex}`)
+        params.push(data.internal_owner_email)
+        paramIndex++
+      }
+      if (data.compliance_notes !== undefined) {
+        setClauses.push(`compliance_notes = $${paramIndex}`)
+        params.push(data.compliance_notes)
+        paramIndex++
+      }
+      if (data.onboarding_checklist !== undefined) {
+        setClauses.push(`onboarding_checklist = $${paramIndex}::jsonb`)
+        params.push(JSON.stringify(data.onboarding_checklist))
+        paramIndex++
+      }
+      if (data.prelaunch_config !== undefined) {
+        setClauses.push(`prelaunch_config = $${paramIndex}::jsonb`)
+        params.push(JSON.stringify(data.prelaunch_config))
+        paramIndex++
+      }
 
       if (setClauses.length === 0) {
         throw new ValidationError('Invalid request', { details: { error: 'no_fields_to_update' } })
@@ -427,7 +507,12 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
           nda_signed_at::text, contract_start::text, contract_end::text,
-          report_schedule, created_at::text, updated_at::text
+          report_schedule,
+          internal_owner_email,
+          compliance_notes,
+          COALESCE(onboarding_checklist, '{}'::jsonb) AS onboarding_checklist,
+          COALESCE(prelaunch_config, '{}'::jsonb) AS prelaunch_config,
+          created_at::text, updated_at::text
         `,
         params,
         planeAPool,
@@ -469,7 +554,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
   })
 
   // Change client status (suspend / revoke / reactivate)
-  app.post('/admin/institutional/clients/:id/status', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/institutional/clients/:id/status', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const { id } = request.params as { id: string }
     const parsed = statusSchema.safeParse(request.body ?? {})
     if (!parsed.success) {
@@ -488,6 +573,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           code: 'institutional_launch_blocked',
           message: launchGate.message,
           launch_gate: toLaunchGatePayload(launchGate),
+          workflow: toWorkflowPayload(launchGate),
         }
       }
 
@@ -500,7 +586,12 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
           id, name, client_prefix, tier, corridors_allowed,
           rate_limit_rpm, rate_limit_daily, status,
           nda_signed_at::text, contract_start::text, contract_end::text,
-          report_schedule, created_at::text, updated_at::text
+          report_schedule,
+          internal_owner_email,
+          compliance_notes,
+          COALESCE(onboarding_checklist, '{}'::jsonb) AS onboarding_checklist,
+          COALESCE(prelaunch_config, '{}'::jsonb) AS prelaunch_config,
+          created_at::text, updated_at::text
         `,
         [status, id],
         planeAPool,
@@ -549,6 +640,7 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         success: true,
         client: result.rows[0],
         launch_gate: toLaunchGatePayload(launchGate),
+        workflow: toWorkflowPayload(launchGate),
       }
     } catch (error) {
       if (error instanceof NotFoundError) throw error
@@ -562,11 +654,23 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
   })
 
   // Rotate API key
-  app.post('/admin/institutional/clients/:id/rotate-key', { preHandler: requireAdmin() }, async (request, reply) => {
+  app.post('/admin/institutional/clients/:id/rotate-key', { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const { id } = request.params as { id: string }
     const adminId = request.user?.user_id ?? 'unknown'
 
     try {
+      const launchGate = await getInstitutionalLaunchGate(planeAPool)
+      if (launchGate.blocked) {
+        reply.code(409)
+        return {
+          error: 'institutional_launch_blocked',
+          code: 'institutional_launch_blocked',
+          message: launchGate.message,
+          launch_gate: toLaunchGatePayload(launchGate),
+          workflow: toWorkflowPayload(launchGate),
+        }
+      }
+
       const token = generateApiKeyToken(32)
       const keyHash = hashApiKey(token)
 
@@ -622,6 +726,8 @@ export const adminInstitutionalRoutes = async (app: FastifyInstance) => {
         success: true,
         client_id: id,
         api_key: token,
+        launch_gate: toLaunchGatePayload(launchGate),
+        workflow: toWorkflowPayload(launchGate),
       }
     } catch (error) {
       if (error instanceof NotFoundError) throw error

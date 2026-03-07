@@ -50,6 +50,7 @@ describe('admin analytics page', () => {
       global: {
         stubs: {
           AdminPageShell: true,
+          AdminSurfaceOverview: true,
           ErrorState: {
             props: ['message'],
             template: '<div data-testid="error-state">{{ message }}</div>',

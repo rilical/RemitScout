@@ -30,7 +30,7 @@ export const usePulseStore = defineStore('pulse', {
     corridor: null,
     timeframe: '7D',
     viewMode: 'sender',
-    amount: 1000,
+    amount: 500,
     lastUpdated: '',
     isLoading: false,
   }),
@@ -162,7 +162,7 @@ export const usePulseStore = defineStore('pulse', {
       if (this.viewMode !== 'sender') {
         params.mode = this.viewMode
       }
-      if (this.amount !== 1000) {
+      if (this.amount !== 500) {
         params.amount = String(this.amount)
       }
       return params

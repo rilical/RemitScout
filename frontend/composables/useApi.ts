@@ -13,6 +13,7 @@ type ApiFetchOptions = {
   body?: BodyInit | Record<string, unknown> | null
   headers?: Record<string, string>
   timeoutMs?: number
+  responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer'
   validate?: (data: unknown) => unknown
   signal?: AbortSignal
   retries?: number
@@ -85,6 +86,23 @@ export const createApiClient = (deps: ApiClientDeps) => {
     )
   }
 
+  const canUseDirectAdminBase = (): boolean => {
+    if (!deps.adminBase) return false
+    if (typeof window === 'undefined' || !window.location?.origin) {
+      return true
+    }
+    if (!/^https?:\/\//.test(deps.adminBase)) {
+      return true
+    }
+
+    try {
+      return new URL(deps.adminBase).origin === window.location.origin
+    }
+    catch {
+      return false
+    }
+  }
+
   const makeRequestId = deps.makeRequestId || (() => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID()
@@ -128,7 +146,7 @@ export const createApiClient = (deps: ApiClientDeps) => {
   }
 
   async function request<T = unknown>(path: string, options: ApiFetchOptions = {}) {
-    const requestBase = isAdminSurfacePath(path) && deps.adminBase
+    const requestBase = isAdminSurfacePath(path) && canUseDirectAdminBase() && deps.adminBase
       ? deps.adminBase
       : deps.base
     const url = joinBase(requestBase, path)
@@ -172,6 +190,7 @@ export const createApiClient = (deps: ApiClientDeps) => {
         body: options.body ?? undefined,
         headers,
         timeout: timeoutMs,
+        responseType: options.responseType,
         signal: options.signal,
       }) as unknown
 

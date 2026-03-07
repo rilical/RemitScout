@@ -8,8 +8,25 @@ const mockFetchRate = vi.fn()
 
 const mockConfig = vi.hoisted(() => ({
   redis: { url: '' },
-  fxRates: { oandaFallbackEnabled: false, refreshEnabled: false, dbFreshnessHours: 1 },
-  observability: { cloudwatch: { enabled: false } },
+  fxRates: {
+    oandaFallbackEnabled: false,
+    refreshEnabled: false,
+    dbFreshnessHours: 1,
+    cacheTtlSeconds: 300,
+  },
+  observability: {
+    cloudwatch: { enabled: false },
+    newRelicMetrics: {
+      enabled: false,
+      ingestKey: '',
+      endpoint: 'https://metric-api.newrelic.com/metric/v1',
+      batchSize: 100,
+      flushIntervalMs: 10_000,
+      maxQueue: 5_000,
+      serviceName: '',
+      normalizedEnvironment: 'test',
+    },
+  },
 }))
 
 vi.mock('../shared/config', () => ({ config: mockConfig }))

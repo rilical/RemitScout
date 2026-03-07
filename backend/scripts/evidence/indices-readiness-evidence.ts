@@ -89,7 +89,7 @@ const main = async () => {
          FROM gold_export.cdp_daily
          WHERE corridor_id = ANY($1::text[])
            AND amount_bucket = $2
-           AND method_profile = $3
+           AND method_profile = $3::method_profile
          ORDER BY corridor_id, date DESC
        )
        SELECT

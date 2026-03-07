@@ -2,6 +2,12 @@ import { expect, test, type Page } from '@playwright/test'
 
 const corridorPath = '/send-money/united-states-to-philippines'
 
+async function waitForCorridorQueryReady(page: Page) {
+  await expect(page.getByTestId('corridor-query-surface')).toHaveAttribute('data-ready', 'true', {
+    timeout: 20000,
+  })
+}
+
 async function selectCountry(
   page: Page,
   inputId: string,
@@ -29,6 +35,7 @@ async function selectCountry(
 test.describe('Corridor query polish', () => {
   test('editing the corridor from the sticky bar navigates to the new route', async ({ page }) => {
     await page.goto(corridorPath)
+    await waitForCorridorQueryReady(page)
     await expect(page.getByTestId('corridor-query-compare-button')).toBeVisible({ timeout: 20000 })
 
     await selectCountry(page, 'corridor-to-country', 'Mexico', /mexico/i)
@@ -50,6 +57,7 @@ test.describe('Corridor query polish', () => {
     })
 
     await page.goto(corridorPath)
+    await waitForCorridorQueryReady(page)
     await selectCountry(page, 'corridor-to-country', 'Mexico', /mexico/i)
     await page.getByTestId('corridor-query-compare-button').click()
 
@@ -78,6 +86,7 @@ test.describe('Corridor query polish', () => {
     })
 
     await page.goto(corridorPath)
+    await waitForCorridorQueryReady(page)
     await selectCountry(page, 'corridor-to-country', 'Mexico', /mexico/i)
     await page.getByTestId('corridor-query-compare-button').click()
 
@@ -112,6 +121,7 @@ test.describe('Corridor query polish', () => {
     })
 
     await page.goto(corridorPath)
+    await waitForCorridorQueryReady(page)
     await selectCountry(page, 'corridor-to-country', 'Mexico', /mexico/i)
     await page.getByTestId('corridor-query-compare-button').click()
 

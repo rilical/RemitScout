@@ -22,6 +22,8 @@
       </template>
     </AdminPageShell>
 
+    <AdminSurfaceOverview :model="surfaceOverview" />
+
     <section class="rounded-2xl border border-rs-border bg-rs-surface p-6 shadow-sm">
       <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-6">
         <div>
@@ -139,7 +141,24 @@ class="text-body-sm text-rs-muted"
         :loading="loading"
         :error="error ? { message: error } : null"
         :empty="{ title: 'No audit events found.' }"
-      />
+      >
+        <template #cell-severity="{ row }">
+          <span
+            class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold"
+            :class="severityBadgeClass((row as any).severity)"
+          >
+            {{ (row as any).severity }}
+          </span>
+        </template>
+        <template #cell-action_detail="{ row }">
+          <button
+            class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+            @click="openLogDetail((row as any).event_id)"
+          >
+            View
+          </button>
+        </template>
+      </DataTable>
 
       <div class="mt-4 flex items-center justify-between">
         <div class="text-body-sm text-rs-muted">
@@ -162,6 +181,74 @@ class="text-body-sm text-rs-muted"
           </button>
         </div>
       </div>
+
+      <div
+        v-if="selectedLog"
+        class="mt-6 rounded-2xl border border-rs-border bg-rs-bg/40 p-5"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 class="text-body-lg font-semibold text-rs-fg">Event detail</h3>
+            <p class="text-body-sm text-rs-muted">{{ selectedLog.event_id }}</p>
+          </div>
+          <button
+            class="rounded-lg border border-rs-border px-3 py-1.5 text-body-sm font-semibold text-rs-fg hover:bg-neutral-50"
+            @click="selectedLog = null"
+          >
+            Close
+          </button>
+        </div>
+
+        <div v-if="detailLoading" class="mt-4 text-body-sm text-rs-muted">
+          Loading event detail…
+        </div>
+
+        <div v-else class="mt-4 grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-rs-border bg-rs-surface p-4">
+            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Context</div>
+            <div class="mt-3 space-y-2 text-body-sm text-rs-fg">
+              <div>Action: {{ selectedLog.action || 'n/a' }}</div>
+              <div>Actor: {{ selectedLog.actor_id || 'system' }}</div>
+              <div>Category: {{ selectedLog.category || 'n/a' }}</div>
+              <div>Severity: {{ selectedLog.severity || 'info' }}</div>
+              <div>Request ID: {{ selectedLog.request_id || 'n/a' }}</div>
+              <div>IP: {{ selectedLog.ip_address || 'n/a' }}</div>
+              <div>User agent: {{ selectedLog.user_agent || 'n/a' }}</div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-rs-border bg-rs-surface p-4">
+            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Reason and evidence</div>
+            <div class="mt-3 space-y-2 text-body-sm text-rs-fg">
+              <div>Reason: {{ selectedLog.reason || 'No explicit reason provided.' }}</div>
+              <div>Entity: {{ selectedLog.entity_type || 'entity' }}{{ selectedLog.entity_id ? `:${selectedLog.entity_id}` : '' }}</div>
+              <div>Session: {{ selectedLog.session_id || 'n/a' }}</div>
+            </div>
+            <div v-if="selectedLog.evidence_links?.length" class="mt-3 space-y-1">
+              <a
+                v-for="link in selectedLog.evidence_links"
+                :key="link"
+                :href="link"
+                target="_blank"
+                rel="noreferrer"
+                class="block text-body-sm font-semibold text-brand-600 hover:text-brand-700"
+              >
+                {{ link }}
+              </a>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-rs-border bg-rs-surface p-4">
+            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Metadata</div>
+            <pre class="mt-3 overflow-auto rounded-lg bg-rs-bg px-3 py-3 text-xs text-rs-fg">{{ formatJson(selectedLog.metadata) }}</pre>
+          </div>
+
+          <div class="rounded-xl border border-rs-border bg-rs-surface p-4">
+            <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Change diff</div>
+            <pre class="mt-3 overflow-auto rounded-lg bg-rs-bg px-3 py-3 text-xs text-rs-fg">{{ formatJson(selectedLog.changes || { before: selectedLog.before_snapshot, after: selectedLog.after_snapshot }) }}</pre>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -170,6 +257,8 @@ class="text-body-sm text-rs-muted"
 import { computed } from 'vue'
 import { DataTable } from '~/ui'
 import type { DataTableColumn } from '~/ui'
+import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
+import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -178,7 +267,7 @@ useAdminPage({
   description: 'Audit stream for security, compliance, and admin operations.',
 })
 
-const { getLogs, exportLogs, loading, error } = useAudit()
+const { getLogs, getLog, exportLogs, loading, error } = useAudit()
 const { formatTimestamp } = useAdminFormat()
 const route = useRoute()
 const firstFilterRef = ref<HTMLInputElement | null>(null)
@@ -206,6 +295,16 @@ type AuditLogEntry = {
   entity_id: string | null
   category: string | null
   severity: string | null
+  metadata?: Record<string, unknown> | null
+  before_snapshot?: Record<string, unknown> | null
+  after_snapshot?: Record<string, unknown> | null
+  changes?: Record<string, unknown> | null
+  reason?: string | null
+  evidence_links?: string[] | null
+  ip_address?: string | null
+  user_agent?: string | null
+  request_id?: string | null
+  session_id?: string | null
 }
 
 type AuditPagination = {
@@ -216,6 +315,8 @@ type AuditPagination = {
 
 const logs = ref<AuditLogEntry[]>([])
 const pagination = ref<AuditPagination>({ total: 0, limit: 100, offset: 0 })
+const selectedLog = ref<AuditLogEntry | null>(null)
+const detailLoading = ref(false)
 
 const columns: DataTableColumn[] = [
   { key: 'created_at', label: 'Time' },
@@ -224,6 +325,7 @@ const columns: DataTableColumn[] = [
   { key: 'entity', label: 'Entity' },
   { key: 'category', label: 'Category' },
   { key: 'severity', label: 'Severity' },
+  { key: 'action_detail', label: 'Detail', align: 'right' },
 ]
 
 const tableRows = computed(() =>
@@ -232,8 +334,71 @@ const tableRows = computed(() =>
     created_at: formatTimestamp(log.created_at),
     entity: `${log.entity_type || 'entity'}${log.entity_id ? `:${log.entity_id}` : ''}`,
     severity: log.severity || 'info',
+    action_detail: 'View',
   })),
 )
+
+const severityBadgeClass = (severity: string) => {
+  if (severity === 'critical' || severity === 'error') return 'bg-rose-100 text-rose-700'
+  if (severity === 'warning') return 'bg-amber-100 text-amber-700'
+  return 'bg-sky-100 text-sky-700'
+}
+
+const formatJson = (value: unknown) => JSON.stringify(value ?? {}, null, 2)
+
+const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
+  const latestLogAt = logs.value[0]?.created_at || null
+  const criticalCount = logs.value.filter(log => log.severity === 'critical' || log.severity === 'error').length
+  const adminCount = logs.value.filter(log => log.category === 'admin').length
+  const securityCount = logs.value.filter(log => log.category === 'security').length
+
+  return {
+    runtimeLabel: logs.value.length > 0 ? 'Audit stream loaded' : 'No audit events in current filter',
+    runtimeTone: logs.value.length > 0 ? (criticalCount > 0 ? 'watch' : 'healthy') : 'watch',
+    runtimeDetail: logs.value.length > 0
+      ? 'The audit log surface is reading the live immutable event stream.'
+      : 'No events matched the current filter window.',
+    freshnessLabel: latestLogAt ? formatAdminSurfaceAge(latestLogAt) : 'No recent events',
+    freshnessTone: getFreshnessTone(latestLogAt, { watchMinutes: 120, criticalMinutes: 1440 }),
+    freshnessDetail: latestLogAt ? `Most recent event at ${formatTimestamp(latestLogAt)}.` : 'The selected filter window returned no events.',
+    lastJobLabel: latestLogAt ? formatTimestamp(latestLogAt) : 'No recent writes',
+    lastJobDetail: 'Latest successful audit write observed in this filter window.',
+    stats: [
+      { label: 'Visible events', value: String(logs.value.length) },
+      { label: 'Total matches', value: String(pagination.value.total) },
+      { label: 'Critical/error', value: String(criticalCount) },
+      { label: 'Security events', value: String(securityCount) },
+    ],
+    dependencies: [
+      {
+        label: 'Immutable audit log table',
+        status: logs.value.length > 0 ? 'healthy' : 'watch',
+        detail: logs.value.length > 0 ? 'Events are loading from the audit log table.' : 'No events were returned for the current filter window.',
+      },
+      {
+        label: 'Admin event volume',
+        status: adminCount > 0 ? 'healthy' : 'watch',
+        detail: adminCount > 0 ? 'Administrative actions are visible in the current window.' : 'No admin events appeared in the current filter window.',
+      },
+      {
+        label: 'Event detail route',
+        status: selectedLog.value && !detailLoading.value ? 'healthy' : 'watch',
+        detail: selectedLog.value ? 'Detailed event payload is available below.' : 'Open an event to inspect before/after snapshots and evidence links.',
+      },
+    ],
+    nextActions: [
+      { label: 'Use the detail view instead of relying on the flat list when investigating security or compliance events.' },
+      { label: 'Filter by actor, action, and severity first; export only after the event set is narrowed.' },
+      { label: 'Treat empty results as a filter mismatch before assuming the audit pipeline is broken.' },
+    ],
+    emptyState: logs.value.length === 0
+      ? {
+          title: 'No audit events matched the filter window.',
+          body: 'Widen the time window or clear actor/action filters before escalating this as a pipeline outage.',
+        }
+      : null,
+  }
+})
 
 const toUtcIsoBoundary = (value: string, boundary: 'start' | 'end') => {
   if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null
@@ -266,6 +431,21 @@ const loadLogs = async () => {
     total: nextPagination.total,
     limit: nextPagination.limit,
     offset: Math.min(Math.max(0, nextPagination.offset), maxOffset),
+  }
+}
+
+const openLogDetail = async (eventId: string) => {
+  detailLoading.value = true
+  try {
+    const response = await getLog(eventId) as { log?: AuditLogEntry }
+    selectedLog.value = response?.log || null
+  }
+  catch (err) {
+    selectedLog.value = null
+    error.value = err instanceof Error ? err.message : 'Failed to load audit event detail.'
+  }
+  finally {
+    detailLoading.value = false
   }
 }
 

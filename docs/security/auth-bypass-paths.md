@@ -67,6 +67,7 @@ Rules:
 
     "/api/v1/provider-visits/track",
     "/api/v1/indices/health",
+    "/api/v1/feature-flags/effective",
     "/api/v1/public/indices/series",
     "/api/v1/public/indices/embed-snapshots/:snapshotId",
     "/api/v1/public/indices/published-embeds/:id",
@@ -90,6 +91,7 @@ Rules:
 - `/api/v1/alerts/corridor-eligibility`, `/api/v1/alerts/macro-corridors`: allowed unauthenticated only in dev/test for UI bootstrapping.
 - Public read-only API endpoints (quotes/providers/rates/etc): used by unauthenticated discovery flows; must not expose PII.
 - `/api/v1/public/indices/*`, `/api/v1/public/pulse/*`: share-safe embed/public data feeds; must remain aggregate-only and PII-free.
+- `/api/v1/feature-flags/effective`: public runtime toggle snapshot for client bootstrapping; must expose only minimal resolved flag state.
 - `/api/v1/compliance/*`: exposes non-sensitive certification posture and privacy threshold metadata.
 - Telemetry write endpoints: accept anonymous events; must avoid PII and be rate-limited.
 - `/api/v1/indices/health`: public readiness summary for indices (no user data).

@@ -37,6 +37,14 @@ let shutdownRequested = false
 let forceExitTimer: ReturnType<typeof setTimeout> | null = null
 let globalCrashHandlersInstalled = false
 let shutdownController: AbortController | null = null
+let signalHandlersInstalled = false
+let currentSignalHandler: {
+  exitOnSignal: boolean
+  requestShutdown: (signal: string) => Promise<void>
+  shutdownNow: (signal: string) => Promise<void>
+} | null = null
+let sigtermListener: (() => void) | null = null
+let sigintListener: (() => void) | null = null
 
 export const isShutdownRequested = (): boolean => shutdownRequested
 
@@ -48,6 +56,16 @@ export const resetShutdownState = (): void => {
     clearTimeout(forceExitTimer)
     forceExitTimer = null
   }
+  currentSignalHandler = null
+  if (sigtermListener && typeof process.off === 'function') {
+    process.off('SIGTERM', sigtermListener)
+  }
+  if (sigintListener && typeof process.off === 'function') {
+    process.off('SIGINT', sigintListener)
+  }
+  sigtermListener = null
+  sigintListener = null
+  signalHandlersInstalled = false
 }
 
 const getShutdownController = (): AbortController => {
@@ -104,6 +122,29 @@ const installGlobalCrashHandlers = (log: ReturnType<typeof createLogger>): void 
     forcedExit.unref?.()
     void captureError(err, { event: 'uncaughtException' }).finally(() => process.exit(1))
   })
+}
+
+const installSignalHandlers = (): void => {
+  if (isLambda || signalHandlersInstalled) return
+  signalHandlersInstalled = true
+
+  sigtermListener = () => {
+    const handler = currentSignalHandler
+    if (!handler) return
+    void (handler.exitOnSignal
+      ? handler.shutdownNow('SIGTERM')
+      : handler.requestShutdown('SIGTERM'))
+  }
+  sigintListener = () => {
+    const handler = currentSignalHandler
+    if (!handler) return
+    void (handler.exitOnSignal
+      ? handler.shutdownNow('SIGINT')
+      : handler.requestShutdown('SIGINT'))
+  }
+
+  process.on('SIGTERM', sigtermListener)
+  process.on('SIGINT', sigintListener)
 }
 
 const getDefaultTimeout = (): number => {
@@ -379,8 +420,12 @@ export const createShutdownHandler = (
     await shutdownNowPromise
   }
 
-  process.on('SIGTERM', () => (exitOnSignal ? shutdownNow('SIGTERM') : requestShutdown('SIGTERM')))
-  process.on('SIGINT', () => (exitOnSignal ? shutdownNow('SIGINT') : requestShutdown('SIGINT')))
+  currentSignalHandler = {
+    exitOnSignal,
+    requestShutdown,
+    shutdownNow,
+  }
+  installSignalHandlers()
 
   return {
     requestShutdown,

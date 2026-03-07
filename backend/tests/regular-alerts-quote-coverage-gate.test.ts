@@ -55,6 +55,10 @@ vi.mock('../shared/macro-corridors', () => ({
   getMacroCorridors: vi.fn().mockReturnValue([]),
 }))
 
+vi.mock('../plane-a/src/plugins/auth-plugin', () => ({
+  requireAuth: () => () => undefined,
+}))
+
 vi.mock('../plane-a/src/services/user-plan', () => ({
   getUserPlan: (...args: any[]) => mockGetUserPlan(...args),
 }))
@@ -123,8 +127,8 @@ describe('Regular corridor alerts quote coverage gate', () => {
   const makeApp = () => {
     const routes = new Map<string, any>()
     const app: any = {
-      get: (path: string, handler: any) => {
-        routes.set(`GET ${path}`, handler)
+      get: (path: string, optionsOrHandler: any, maybeHandler?: any) => {
+        routes.set(`GET ${path}`, maybeHandler ?? optionsOrHandler)
       },
       post: (path: string, _opts: any, handler: any) => {
         routes.set(`POST ${path}`, handler)

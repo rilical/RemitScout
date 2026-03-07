@@ -1,0 +1,320 @@
+{
+  "version": 1,
+  "profiles": {
+    "prepush": {
+      "description": "Fast local gate before git push. No staging dependencies.",
+      "checks": [
+        "repo:guard-secret-placeholders",
+        "repo:guard-generated-artifacts",
+        "backend:migration-numbering",
+        "backend:sql-interpolation-changed",
+        "frontend:api-types-check",
+        "backend:release-b2c-core",
+        "backend:release-auth-enterprise",
+        "backend:release-admin-alerts",
+        "backend:release-market-indices-exports",
+        "backend:release-data-triangulation",
+        "backend:release-queue-observability",
+        "backend:release-release-safety",
+        "frontend:prepare",
+        "frontend:release-b2c-core",
+        "frontend:release-b2c-e2e",
+        "frontend:release-auth-enterprise",
+        "frontend:release-admin-watchlists",
+        "frontend:release-corridors-contract",
+        "frontend:release-pulse-embeds-charts",
+        "frontend:type-check"
+      ]
+    },
+    "local": {
+      "description": "Full local release gate before opening or updating a PR.",
+      "checks": [
+        "repo:guard-secret-placeholders",
+        "repo:guard-generated-artifacts",
+        "backend:migration-numbering",
+        "backend:sql-interpolation-changed",
+        "frontend:api-types-check",
+        "backend:release-b2c-core",
+        "backend:release-auth-enterprise",
+        "backend:release-admin-alerts",
+        "backend:release-market-indices-exports",
+        "backend:release-data-triangulation",
+        "backend:release-queue-observability",
+        "backend:release-release-safety",
+        "frontend:prepare",
+        "frontend:release-b2c-core",
+        "frontend:release-b2c-e2e",
+        "frontend:release-auth-enterprise",
+        "frontend:release-admin-watchlists",
+        "frontend:release-corridors-contract",
+        "frontend:release-pulse-embeds-charts",
+        "frontend:type-check",
+        "backend:build",
+        "frontend:build"
+      ]
+    },
+    "ci": {
+      "description": "Local-first correctness gate with database smoke checks for CI runners.",
+      "checks": [
+        "repo:guard-secret-placeholders",
+        "repo:guard-generated-artifacts",
+        "backend:migration-numbering",
+        "backend:sql-interpolation-changed",
+        "frontend:api-types-check",
+        "backend:release-b2c-core",
+        "backend:release-auth-enterprise",
+        "backend:release-admin-alerts",
+        "backend:release-market-indices-exports",
+        "backend:release-data-triangulation",
+        "backend:release-queue-observability",
+        "backend:release-release-safety",
+        "frontend:prepare",
+        "frontend:release-b2c-core",
+        "frontend:release-b2c-e2e",
+        "frontend:release-auth-enterprise",
+        "frontend:release-admin-watchlists",
+        "frontend:release-corridors-contract",
+        "frontend:release-pulse-embeds-charts",
+        "frontend:type-check",
+        "backend:build",
+        "frontend:build",
+        "backend:db-migrate",
+        "backend:seed-sanity",
+        "backend:api-smoke"
+      ]
+    },
+    "staging": {
+      "description": "Remote authenticated smoke against staging/prod-like infrastructure.",
+      "checks": [
+        "backend:integration-smoke",
+        "backend:auth-surface-smoke",
+        "backend:alerts-watchlists-smoke",
+        "backend:admin-surface-smoke",
+        "backend:enterprise-triangulation-smoke",
+        "backend:worker-resilience-smoke",
+        "frontend:auth-ui-smoke",
+        "frontend:admin-ui-smoke",
+        "backend:runtime-config-validate",
+        "backend:observability-gate",
+        "backend:observability-business-gate"
+      ]
+    }
+  },
+  "checks": {
+    "repo:guard-secret-placeholders": {
+      "description": "Block placeholder secrets and fake runtime values from shipping.",
+      "command": "pnpm -C backend exec tsx scripts/ci/guard-secret-placeholders.ts"
+    },
+    "repo:guard-generated-artifacts": {
+      "description": "Block stale or missing generated artifacts.",
+      "command": "pnpm -C backend exec tsx scripts/ci/guard-generated-artifacts.ts"
+    },
+    "backend:migration-numbering": {
+      "description": "Ensure migrations are additive and properly numbered.",
+      "command": "pnpm -C backend guardrail:migrations"
+    },
+    "backend:sql-interpolation-changed": {
+      "description": "Detect unsafe SQL interpolation in changed files before CI does.",
+      "command": "pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-a && pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only && pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --plane-c && pnpm -C backend exec tsx scripts/sql-guardrail.ts --unsafe-interpolation --changed-only --root scripts"
+    },
+    "frontend:api-types-check": {
+      "description": "Catch frontend/backend contract drift in generated API types.",
+      "command": "pnpm -C frontend api:types:check"
+    },
+    "backend:release-b2c-core": {
+      "description": "Critical backend B2C coverage for auth recovery, newsletter, Plus billing, alerts, watchlists, account deletion, and paid-tier gating.",
+      "command": "pnpm -C backend test:release:b2c-core"
+    },
+    "backend:release-auth-enterprise": {
+      "description": "Critical backend auth, plan, API key, enterprise, billing, and notification tests.",
+      "command": "pnpm -C backend test:release:auth-enterprise"
+    },
+    "backend:release-admin-alerts": {
+      "description": "Critical backend admin, audit, alerts, watchlists, and push delivery tests.",
+      "command": "pnpm -C backend test:release:admin-alerts"
+    },
+    "backend:release-market-indices-exports": {
+      "description": "Release backend coverage for TEER, RCI, RVI, exports, pulse APIs, embeds, charts, and market data.",
+      "command": "pnpm -C backend test:release:market-indices-exports"
+    },
+    "backend:release-data-triangulation": {
+      "description": "Release backend coverage for corridors, providers, triangulation, and self-healing.",
+      "command": "pnpm -C backend test:release:data-triangulation"
+    },
+    "backend:release-queue-observability": {
+      "description": "Release backend coverage for queue health, worker resilience, and observability exporters.",
+      "command": "pnpm -C backend test:release:queue-observability"
+    },
+    "backend:release-release-safety": {
+      "description": "Release backend coverage for config safety, migration governance, and API contract drift.",
+      "command": "pnpm -C backend test:release:release-safety"
+    },
+    "frontend:prepare": {
+      "description": "Generate Nuxt runtime artifacts required for frontend unit and type checks.",
+      "command": "pnpm -C frontend exec nuxt prepare"
+    },
+    "frontend:release-b2c-core": {
+      "description": "Critical frontend B2C coverage for sign-in/up, password recovery, newsletter, Plus surfaces, dashboard alerts, and account deletion.",
+      "command": "pnpm -C frontend test:release:b2c-core"
+    },
+    "frontend:release-b2c-e2e": {
+      "description": "Critical browser-level B2C coverage for corridor comparison, watchlist entry, and welcome-back corridor recall.",
+      "command": "pnpm -C frontend test:e2e:release:b2c"
+    },
+    "frontend:release-auth-enterprise": {
+      "description": "Critical frontend auth and enterprise dashboard tests.",
+      "command": "pnpm -C frontend test:release:auth-enterprise"
+    },
+    "frontend:release-admin-watchlists": {
+      "description": "Critical frontend admin, alerts, and watchlist tests.",
+      "command": "pnpm -C frontend test:release:admin-watchlists"
+    },
+    "frontend:release-corridors-contract": {
+      "description": "Critical frontend corridor and API contract tests.",
+      "command": "pnpm -C frontend test:release:corridors-contract"
+    },
+    "frontend:release-pulse-embeds-charts": {
+      "description": "Release frontend coverage for pulse charts, exports, embeds, and charting UI.",
+      "command": "pnpm -C frontend test:release:pulse-embeds-charts"
+    },
+    "frontend:type-check": {
+      "description": "Nuxt typecheck for release-critical UI changes.",
+      "command": "pnpm -C frontend type-check"
+    },
+    "backend:build": {
+      "description": "TypeScript build for backend release surfaces.",
+      "command": "pnpm -C backend build"
+    },
+    "frontend:build": {
+      "description": "Production build for frontend release surfaces.",
+      "command": "pnpm -C frontend build"
+    },
+    "backend:db-migrate": {
+      "description": "Migration dry-run against local CI database.",
+      "command": "pnpm -C backend db:migrate",
+      "requiresEnv": [
+        "DATABASE_URL",
+        "DATABASE_URL_PLANE_A",
+        "DATABASE_URL_PLANE_B",
+        "DATABASE_URL_PLANE_C"
+      ]
+    },
+    "backend:seed-sanity": {
+      "description": "Seed sanity for smoke prerequisites.",
+      "command": "pnpm -C backend ci:seed-sanity",
+      "requiresEnv": [
+        "DATABASE_URL",
+        "DATABASE_URL_PLANE_A",
+        "DATABASE_URL_PLANE_B",
+        "DATABASE_URL_PLANE_C"
+      ]
+    },
+    "backend:api-smoke": {
+      "description": "Boot Plane A and hit local health endpoints.",
+      "command": "pnpm -C backend ci:api-smoke",
+      "requiresEnv": [
+        "DATABASE_URL_PLANE_A"
+      ]
+    },
+    "backend:integration-smoke": {
+      "description": "Remote B2C corridor and indices health smoke.",
+      "command": "pnpm -C backend ci:integration-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL"
+      ]
+    },
+    "backend:alerts-watchlists-smoke": {
+      "description": "Remote authenticated alerts/watchlists smoke.",
+      "command": "pnpm -C backend ci:alerts-watchlists-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SMOKE_USER_EMAIL",
+        "SMOKE_USER_PASSWORD"
+      ]
+    },
+    "backend:auth-surface-smoke": {
+      "description": "Remote auth smoke for sign-in, MFA truth, forgot-password, sign-up, and email-verification policy.",
+      "command": "pnpm -C backend ci:auth-surface-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SMOKE_USER_EMAIL",
+        "SMOKE_USER_PASSWORD"
+      ]
+    },
+    "backend:admin-surface-smoke": {
+      "description": "Remote authenticated admin exchange, observer, audit, and grant/revoke smoke.",
+      "command": "pnpm -C backend ci:admin-surface-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SMOKE_USER_EMAIL",
+        "SMOKE_USER_PASSWORD"
+      ]
+    },
+    "backend:enterprise-triangulation-smoke": {
+      "description": "Remote enterprise API key, embeds, exports, billing, notifications, and triangulation smoke.",
+      "command": "pnpm -C backend ci:enterprise-triangulation-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SMOKE_USER_EMAIL",
+        "SMOKE_USER_PASSWORD"
+      ]
+    },
+    "backend:worker-resilience-smoke": {
+      "description": "Remote worker, queue, backlog, and pause/resume resilience smoke against staging infrastructure.",
+      "command": "pnpm -C backend ci:worker-resilience-smoke",
+      "requiresEnv": [
+        "SMOKE_BASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SMOKE_USER_EMAIL",
+        "SMOKE_USER_PASSWORD",
+        "AWS_REGION"
+      ]
+    },
+    "frontend:auth-ui-smoke": {
+      "description": "Remote browser auth smoke for sign-in persistence, reset password, and redirect safety.",
+      "command": "pnpm -C frontend test:e2e:release:auth-remote",
+      "requiresEnv": [
+        "PLAYWRIGHT_BASE_URL",
+        "E2E_AUTH_EMAIL",
+        "E2E_AUTH_PASSWORD"
+      ]
+    },
+    "frontend:admin-ui-smoke": {
+      "description": "Remote browser admin smoke for observer, admin pages, and enterprise grant/revoke flow.",
+      "command": "pnpm -C frontend test:e2e:release:admin-remote",
+      "requiresEnv": [
+        "PLAYWRIGHT_BASE_URL",
+        "E2E_AUTH_EMAIL",
+        "E2E_AUTH_PASSWORD"
+      ]
+    },
+    "backend:runtime-config-validate": {
+      "description": "Validate staging/prod runtime contracts before smoke approval.",
+      "command": "pnpm -C backend ci:config-validate"
+    },
+    "backend:observability-gate": {
+      "description": "Validate observability/New Relic release gates.",
+      "command": "pnpm -C backend ci:observability"
+    },
+    "backend:observability-business-gate": {
+      "description": "Validate New Relic and CloudWatch business-signal coverage for auth, exports, alerts, queues, and indices.",
+      "command": "pnpm -C backend ci:observability-business-gate",
+      "requiresEnv": [
+        "NEW_RELIC_USER_API_KEY",
+        "NEW_RELIC_ACCOUNT_ID",
+        "NEW_RELIC_REGION",
+        "AWS_REGION"
+      ]
+    }
+  }
+}

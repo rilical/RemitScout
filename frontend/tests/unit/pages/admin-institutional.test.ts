@@ -23,6 +23,9 @@ describe('admin institutional page', () => {
 
     vi.stubGlobal('definePageMeta', vi.fn())
     vi.stubGlobal('useAdminPage', vi.fn())
+    vi.stubGlobal('useAuth', () => ({
+      isSuperAdmin: { value: false },
+    }))
     vi.stubGlobal('useLogger', () => ({
       error: mockLogError,
       warn: vi.fn(),
@@ -41,6 +44,7 @@ describe('admin institutional page', () => {
       global: {
         stubs: {
           AdminPageShell: true,
+          AdminSurfaceOverview: true,
           DataTable: true,
           ErrorState: {
             props: ['message'],

@@ -6,21 +6,13 @@ test.describe('free and anonymous surface audit', () => {
     await expect(page).toHaveURL(/\/sign-in\?redirect=\/dashboard/)
   })
 
-  test('auth-gates FX rate and guide alert CTAs for signed-out users', async ({ page }) => {
-    await page.goto('/exchange-rates/usd-php')
+  test('auth-gates corridor alert creation for signed-out users', async ({ page }) => {
+    await page.goto('/send-money/united-states-to-philippines')
 
-    const fxAlertButton = page.getByRole('button', { name: /set alert/i }).first()
-    await expect(fxAlertButton).toBeVisible()
-    await fxAlertButton.click()
-    await expect(page.getByRole('dialog')).toContainText(/sign in to set alerts/i)
-
-    await page.getByRole('button', { name: /close dialog/i }).click()
-
-    await page.goto('/learn/how-exchange-rates-work')
-
-    const guideAlertButton = page.getByRole('button', { name: /set alert/i }).first()
-    await expect(guideAlertButton).toBeVisible()
-    await guideAlertButton.click()
+    const alertButton = page.getByTestId('corridor-hero-alert-button')
+    await expect(alertButton).toBeVisible({ timeout: 20000 })
+    await expect(alertButton).toBeEnabled()
+    await alertButton.click()
     await expect(page.getByRole('dialog')).toContainText(/sign in to set alerts/i)
   })
 

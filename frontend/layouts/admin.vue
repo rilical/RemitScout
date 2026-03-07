@@ -3,8 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import AdminCommandPalette, { type AdminCommand } from '~/components/admin/AdminCommandPalette.vue'
 
 const route = useRoute()
-const { user } = useAuth()
+const { user, ensureHydrated, isAuthenticated } = useAuth()
 const { ensureAdminSession, signOutAdmin } = useAdminSession()
+const { request } = useApi()
 const runtimeConfig = useRuntimeConfig()
 const env = () => String(runtimeConfig.public.remitScoutEnv ?? 'dev').toLowerCase()
 
@@ -12,6 +13,7 @@ const sidebarCollapsed = ref(false)
 const mobileNavOpen = ref(false)
 const commandPaletteOpen = ref(false)
 const isSigningOut = ref(false)
+const adminProfileEmail = ref<string | null>(null)
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined'
 
 const adminLinks = [
@@ -34,7 +36,7 @@ const adminLinks = [
   { to: '/admin/newsletter', label: 'Newsletter', description: 'Compose and send campaigns', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
 ]
 
-const userEmail = computed(() => user.value?.email || 'Unknown')
+const userEmail = computed(() => user.value?.email || adminProfileEmail.value || 'Unknown')
 
 const environmentBadge = computed(() => {
   const e = env()
@@ -65,11 +67,49 @@ const commands = computed<AdminCommand[]>(() => [
 ])
 
 const ensureAdminSessionSafe = async () => {
-  const ok = await ensureAdminSession()
+  let ok = false
+  try {
+    ok = await ensureAdminSession()
+  }
+  catch {
+    ok = false
+  }
+
   if (!ok) {
+    await ensureHydrated()
+    if (isAuthenticated.value) {
+      return false
+    }
     await navigateTo('/sign-in')
   }
   return ok
+}
+
+const hydrateAdminProfile = async () => {
+  if (user.value?.email) {
+    adminProfileEmail.value = user.value.email
+    return
+  }
+
+  if (adminProfileEmail.value) {
+    return
+  }
+
+  await ensureHydrated()
+  if (!isAuthenticated.value) {
+    return
+  }
+
+  try {
+    const me = await request<{ user?: { email?: string | null } }>('/me', { retries: 0 })
+    const email = typeof me?.user?.email === 'string' ? me.user.email.trim() : ''
+    if (email) {
+      adminProfileEmail.value = email
+    }
+  }
+  catch {
+    // Keep the fallback label if the profile request fails; this must not block navigation.
+  }
 }
 
 const onGlobalKeydown = (event: KeyboardEvent) => {
@@ -124,6 +164,7 @@ watch(
     if (!route.path.startsWith('/admin')) return
     if (isBrowser()) {
       await ensureAdminSessionSafe()
+      await hydrateAdminProfile()
     }
     // Close mobile nav on route change
     mobileNavOpen.value = false
@@ -133,6 +174,7 @@ watch(
 onMounted(async () => {
   if (route.path.startsWith('/admin') && isBrowser()) {
     await ensureAdminSessionSafe()
+    await hydrateAdminProfile()
   }
   if (isBrowser()) {
     window.addEventListener('keydown', onGlobalKeydown)

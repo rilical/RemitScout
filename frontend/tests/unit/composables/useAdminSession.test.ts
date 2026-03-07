@@ -6,6 +6,7 @@ import { mount } from '@vue/test-utils'
 const mockRequest = vi.hoisted(() => vi.fn())
 const mockEnsureHydrated = vi.hoisted(() => vi.fn())
 const mockSignOut = vi.hoisted(() => vi.fn())
+const mockSupabaseRefreshSession = vi.hoisted(() => vi.fn())
 const authSession = vi.hoisted(() => ({ value: null as { access_token?: string } | null }))
 
 const stateStore = new Map<string, ReturnType<typeof ref>>()
@@ -74,7 +75,16 @@ describe('useAdminSession', () => {
       }
       return stateStore.get(key)
     })
+    vi.stubGlobal('useSupabaseClient', () => ({
+      auth: {
+        refreshSession: mockSupabaseRefreshSession,
+      },
+    }))
     vi.stubGlobal('computed', computed)
+    mockSupabaseRefreshSession.mockReset().mockResolvedValue({
+      data: { session: null },
+      error: new Error('no_supabase_session'),
+    })
   })
 
   afterEach(() => {
@@ -124,6 +134,37 @@ describe('useAdminSession', () => {
 
     expect(mockRequest).toHaveBeenCalledTimes(1)
     expect(mockRequest.mock.calls[0]?.[0]).toBe('/sessions/admin/refresh')
+  })
+
+  it('recovers the Supabase session before retrying admin bootstrap on a hinted reload', async () => {
+    authSession.value = null
+    window.localStorage.setItem('rs:admin-session-seeded', '1')
+    mockSupabaseRefreshSession.mockResolvedValue({
+      data: {
+        session: { access_token: 'supabase.refreshed.token' },
+      },
+      error: null,
+    })
+
+    mockRequest.mockImplementation(async (path: string) => {
+      if (path === '/sessions/admin/exchange') {
+        return {
+          access_token: makeAdminToken(),
+          expires_in: 3600,
+          token_type: 'Bearer',
+        }
+      }
+      throw new Error(`Unexpected request: ${path}`)
+    })
+
+    const wrapper = await mountComposable()
+
+    await expect((wrapper.vm as any).ensureAdminSession()).resolves.toBe(true)
+
+    expect(mockSupabaseRefreshSession).toHaveBeenCalledTimes(1)
+    expect(mockRequest).toHaveBeenCalledTimes(1)
+    expect(mockRequest.mock.calls[0]?.[0]).toBe('/sessions/admin/exchange')
+    expect((authSession.value as { access_token?: string } | null)?.access_token).toBe('supabase.refreshed.token')
   })
 
   it('deduplicates concurrent admin bootstrap attempts into a single request', async () => {

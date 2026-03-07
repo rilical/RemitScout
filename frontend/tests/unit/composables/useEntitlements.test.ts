@@ -128,4 +128,80 @@ describe('useEntitlements helpers', () => {
       email: 'user@example.com',
     }))
   })
+
+  it('hydrates enterprise entitlements with unlimited export and watchlist limits', async () => {
+    mockRequest.mockResolvedValueOnce({
+      success: true,
+      timestamp: '2026-03-06T12:00:00.000Z',
+      user: {
+        user_id: 'enterprise-1',
+        email: 'enterprise@example.com',
+        name: 'Enterprise User',
+      },
+      plan: {
+        plan_code: 'enterprise',
+        status: 'active',
+      },
+      plan_effective: {
+        plan_code: 'enterprise',
+        is_active: true,
+        lifecycle_state: 'active',
+      },
+      billing: {
+        next_billing_date: '2026-04-01T00:00:00.000Z',
+        current_period_end: '2026-04-01T00:00:00.000Z',
+        cancel_at_period_end: false,
+        amount: 199,
+        currency: 'USD',
+        status: 'active',
+        payment_method: null,
+      },
+      entitlements: {
+        pulse_access: 'full',
+        exports_enabled: true,
+        exports_max_days: null,
+        alerts_max: null,
+        history_max_days: null,
+        watchlist_items: null,
+        api_access: true,
+        api_tier: 2,
+        bulk_export: true,
+        indices_api: true,
+        daily_alerts_enabled: true,
+        smart_alerts_enabled: true,
+        index_threshold_alerts_enabled: true,
+        indices_exports_enabled: true,
+        pulse_embeds_enabled: true,
+        indices_embeds_enabled: true,
+        api_key_max: 10,
+        api_rate_limit_rpm: 600,
+      },
+      usage: {
+        alerts_count: 4,
+        watchlist_count: 6,
+      },
+    })
+
+    vi.resetModules()
+    const { useEntitlements } = await import('~/composables/useEntitlements')
+    const entitlements = useEntitlements()
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(entitlements.plan.value).toBe('enterprise')
+    expect(entitlements.storedPlanCode.value).toBe('enterprise')
+    expect(entitlements.hasPaidAccess.value).toBe(true)
+    expect(entitlements.isEnterprise.value).toBe(true)
+    expect(entitlements.pulseLevel.value).toBe('full')
+    expect(entitlements.limits.value).toEqual({
+      watchlistItems: 'unlimited',
+      alerts: 'unlimited',
+      historyDays: 'unlimited',
+      exports: true,
+      exportsMaxDays: 'unlimited',
+    })
+    expect(entitlements.bulkExportEnabled.value).toBe(true)
+    expect(entitlements.indicesExportsEnabled.value).toBe(true)
+  })
 })

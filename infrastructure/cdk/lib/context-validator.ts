@@ -125,19 +125,24 @@ export const validateContext = (
     errors.push(...validationErrors)
   }
 
-  if (envName === 'prod') {
-    const prodRequired = [
-      'planeADomainName',
-      'planeACertificateArn',
-      'planeAHostedZoneId',
-      'planeAHostedZoneName',
-    ]
+  if (envName === 'staging' || envName === 'prod') {
+    const requiredKeys = envName === 'prod'
+      ? [
+          'planeADomainName',
+          'planeACertificateArn',
+          'planeAHostedZoneId',
+          'planeAHostedZoneName',
+        ]
+      : [
+          'planeADomainName',
+          'planeACertificateArn',
+        ]
 
-    for (const key of prodRequired) {
+    for (const key of requiredKeys) {
       const value = construct.node.tryGetContext(key)
-      if (value === undefined) {
+      if (value === undefined || value === '') {
         errors.push(
-          `Production environment requires '${key}' for custom domain support`,
+          `${envName === 'prod' ? 'Production' : 'Staging'} environment requires '${key}' for API custom domain support`,
         )
       }
     }

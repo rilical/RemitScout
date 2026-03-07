@@ -34,7 +34,7 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
-import { collectOandaThrottleEnv } from './env-utils'
+import { collectOandaThrottleEnv, resolveAdminMfaRequiredEnv } from './env-utils'
 import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
 
 export type ApiOptions = {
@@ -415,7 +415,7 @@ export const createApi = (scope: Construct, options: ApiOptions): ApiResources =
       ? '1'
       : '0'
   }
-  const adminMfaRequired = process.env.ADMIN_MFA_REQUIRED
+  const adminMfaRequired = resolveAdminMfaRequiredEnv(options.envName)
   if (adminMfaRequired !== undefined && adminMfaRequired !== '') {
     planeAEnvironment.ADMIN_MFA_REQUIRED = adminMfaRequired
   }

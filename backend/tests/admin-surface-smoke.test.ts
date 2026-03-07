@@ -5,6 +5,7 @@ import {
   hasTotpMfaAmr,
   isAdminMfaRequiredResponse,
   readAdminSmokeConfig,
+  readExpectedAdminMfa,
   readSmokeUserMfaCode,
 } from '../scripts/ci/admin-surface-smoke'
 
@@ -42,6 +43,32 @@ describe('admin surface smoke helpers', () => {
     expect(readSmokeUserMfaCode({
       E2E_AUTH_MFA_CODE: ' 123456 ',
     })).toBe('123456')
+  })
+
+  it('expects admin MFA by default in staging and production smoke runs', () => {
+    expect(readExpectedAdminMfa({
+      ENVIRONMENT: 'staging',
+    })).toBe(true)
+
+    expect(readExpectedAdminMfa({
+      ENV_NAME: 'prod',
+    })).toBe(true)
+
+    expect(readExpectedAdminMfa({
+      NODE_ENV: 'development',
+    })).toBe(false)
+  })
+
+  it('allows explicit smoke override for admin MFA expectations', () => {
+    expect(readExpectedAdminMfa({
+      ENVIRONMENT: 'staging',
+      SMOKE_EXPECT_ADMIN_MFA: '0',
+    })).toBe(false)
+
+    expect(readExpectedAdminMfa({
+      ENVIRONMENT: 'development',
+      SMOKE_EXPECT_ADMIN_MFA: '1',
+    })).toBe(true)
   })
 
   it('finds a verified TOTP factor when present', () => {

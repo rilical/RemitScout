@@ -176,7 +176,7 @@ const resolveAdminIpAllowlist = () => {
   } as const
 }
 
-const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit'
+const defaultLocalDbUrl = 'postgres://remit:remit@localhost:5432/remit' // pragma: allowlist secret
 const frontendFallbackUrl = isAwsRuntime ? '' : 'http://localhost:3000'
 const b2bLegacyMaxQueueAgeSeconds = toNumber(process.env.PLANE_B_B2B_MAX_QUEUE_AGE_SECONDS, 0)
 const adminIpAllowlist = resolveAdminIpAllowlist()
@@ -432,7 +432,7 @@ const rawConfig = {
     requireEmailConfirmation: toBoolean(process.env.PLANE_A_REQUIRE_EMAIL_CONFIRMATION, true),
     adminMfaRequired: (() => {
       const raw = (process.env.ADMIN_MFA_REQUIRED || '').trim().toLowerCase()
-      if (envName === 'prod' || envName === 'production') return true
+      if (envName === 'prod' || envName === 'production' || envName === 'staging') return true
       if (raw === '0' || raw === 'false' || raw === 'no' || raw === 'off') return false
       if (raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on') return true
       return true

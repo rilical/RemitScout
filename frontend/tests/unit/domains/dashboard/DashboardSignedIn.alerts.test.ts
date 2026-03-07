@@ -4,6 +4,20 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DashboardSignedIn from '~/domains/dashboard/ui/DashboardSignedIn.vue'
 
+vi.mock('~/composables/useFeatureFlags', async () => {
+  const { ref } = await import('vue')
+  return {
+    useFeatureFlags: () => ({
+      enterpriseEnabled: ref(false),
+      pulseEnabled: ref(true),
+      runtimeFlags: ref(null),
+      loading: ref(false),
+      hydrated: ref(true),
+      fetchRuntimeFlags: vi.fn().mockResolvedValue(undefined),
+    }),
+  }
+})
+
 describe('DashboardSignedIn alerts tab', () => {
   const route = reactive({
     query: { tab: 'alerts' },
@@ -49,6 +63,7 @@ describe('DashboardSignedIn alerts tab', () => {
     ;(globalThis as any).ref = ref
     ;(globalThis as any).computed = computed
     ;(globalThis as any).watch = watch
+    ;(globalThis as any).useState = vi.fn((_: string, init: () => unknown) => ref(init()))
     ;(globalThis as any).onMounted = onMounted
     ;(globalThis as any).onBeforeUnmount = onBeforeUnmount
     ;(globalThis as any).onUnmounted = onUnmounted
@@ -201,6 +216,7 @@ describe('DashboardSignedIn alerts tab', () => {
     delete (globalThis as any).ref
     delete (globalThis as any).computed
     delete (globalThis as any).watch
+    delete (globalThis as any).useState
     delete (globalThis as any).onMounted
     delete (globalThis as any).onBeforeUnmount
     delete (globalThis as any).onUnmounted

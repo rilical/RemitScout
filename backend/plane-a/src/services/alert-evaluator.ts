@@ -384,7 +384,7 @@ export async function evaluateAlert(
            FROM gold_export.cdp_daily
           WHERE corridor_id = $1
             AND amount_bucket = $2
-            AND method_profile = $3
+            AND method_profile = $3::method_profile
           ORDER BY date DESC, created_at DESC
           LIMIT 1`,
         [corridorId, GOLD_ALERT_AMOUNT_BUCKET, GOLD_ALERT_METHOD_PROFILE],
@@ -501,7 +501,7 @@ export async function evaluateAlert(
            FROM gold_export.cdp_daily
           WHERE corridor_id = $1
             AND amount_bucket = $2
-            AND method_profile = $3
+            AND method_profile = $3::method_profile
           ORDER BY date DESC, created_at DESC
           LIMIT 1`,
         [corridorId, GOLD_ALERT_AMOUNT_BUCKET, GOLD_ALERT_METHOD_PROFILE],
