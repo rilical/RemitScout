@@ -11,6 +11,15 @@ on:
           - dev
           - staging
           - prod
+      mode:
+        description: Roll back, inspect stack status, or cancel a stuck update before re-inspecting
+        required: true
+        default: rollback
+        type: choice
+        options:
+          - rollback
+          - inspect
+          - cancel_update
       image_tag:
         description: ECR image tag to deploy (e.g. 1.2.3 or abc1234)
         required: false
@@ -42,6 +51,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-duration-seconds: 7200
       - name: Resolve Image Tag (SSM fallback)
+        if: inputs.mode == 'rollback'
         shell: bash
         env:
           ENV_NAME: ${{ inputs.env }}
@@ -58,9 +68,10 @@ jobs:
             exit 1
           fi
           echo "IMAGE_TAG=${tag}" >> "$GITHUB_ENV"
-      - name: Recover CloudFormation rollback state
+      - name: Inspect or recover CloudFormation stack state
         shell: bash
         env:
+          MODE: ${{ inputs.mode }}
           STACK_NAME: ${{ vars.STACK_NAME }}
         run: |
           set -euo pipefail
@@ -74,8 +85,92 @@ jobs:
             exit 0
           fi
 
-          status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
-          echo "Current stack status: ${status}"
+          stack_status() {
+            aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].StackStatus' \
+              --output text
+          }
+
+          print_snapshot() {
+            local status last_updated stack_id
+            status="$(stack_status)"
+            last_updated="$(aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].LastUpdatedTime' \
+              --output text 2>/dev/null || true)"
+            stack_id="$(aws cloudformation describe-stacks \
+              --stack-name "${STACK_NAME}" \
+              --query 'Stacks[0].StackId' \
+              --output text)"
+
+            echo "Stack name: ${STACK_NAME}"
+            echo "Stack id: ${stack_id}"
+            echo "Stack status: ${status}"
+            echo "Last updated: ${last_updated}"
+
+            echo "::group::Recent stack events"
+            aws cloudformation describe-stack-events \
+              --stack-name "${STACK_NAME}" \
+              --query 'StackEvents[:40].[Timestamp,LogicalResourceId,ResourceType,ResourceStatus,ResourceStatusReason]' \
+              --output table
+            echo "::endgroup::"
+
+            echo "::group::In-progress or failed resources"
+            resources_json="$(aws cloudformation describe-stack-resources \
+              --stack-name "${STACK_NAME}" \
+              --output json)"
+            problem_resources="$(printf '%s' "${resources_json}" | jq -r '
+              .StackResources[]
+              | select(.ResourceStatus | test("_IN_PROGRESS|_FAILED|ROLLBACK|CLEANUP|DELETE_"))
+              | [.LogicalResourceId, .ResourceType, .ResourceStatus, (.ResourceStatusReason // "")]
+              | @tsv
+            ')"
+            if [ -n "${problem_resources}" ]; then
+              printf '%s\n' "${problem_resources}"
+            else
+              echo "No in-progress or failed stack resources."
+            fi
+            echo "::endgroup::"
+          }
+
+          print_snapshot
+
+          if [ "${MODE}" = "inspect" ]; then
+            exit 0
+          fi
+
+          if [ "${MODE}" = "cancel_update" ]; then
+            status="$(stack_status)"
+            if [ "${status}" != "UPDATE_IN_PROGRESS" ]; then
+              echo "::error::Refusing to call cancel-update-stack because current status is ${status}, not UPDATE_IN_PROGRESS."
+              exit 1
+            fi
+
+            echo "Cancelling in-progress stack update for ${STACK_NAME}."
+            aws cloudformation cancel-update-stack --stack-name "${STACK_NAME}"
+
+            for i in $(seq 1 60); do
+              status="$(stack_status)"
+              echo "Waiting for stack to settle after cancel (${i}/60): ${status}"
+              case "${status}" in
+                UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|UPDATE_ROLLBACK_FAILED|UPDATE_FAILED|CREATE_COMPLETE|IMPORT_COMPLETE)
+                  break
+                  ;;
+                *_IN_PROGRESS|*_CLEANUP_IN_PROGRESS)
+                  sleep 10
+                  ;;
+                *)
+                  break
+                  ;;
+              esac
+            done
+
+            print_snapshot
+            exit 0
+          fi
+
+          status="$(stack_status)"
           if [ "${status}" = "UPDATE_ROLLBACK_FAILED" ]; then
             echo "Detected UPDATE_ROLLBACK_FAILED. Attempting continue-update-rollback."
             aws cloudformation continue-update-rollback --stack-name "${STACK_NAME}" >/dev/null
@@ -83,7 +178,7 @@ jobs:
 
           # Wait for stack to reach a deployable state (5 min max)
           for i in $(seq 1 30); do
-            status="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query 'Stacks[0].StackStatus' --output text)"
+            status="$(stack_status)"
             case "${status}" in
               CREATE_COMPLETE|UPDATE_COMPLETE|UPDATE_ROLLBACK_COMPLETE|IMPORT_COMPLETE)
                 echo "Stack is stable: ${status}"
@@ -100,7 +195,10 @@ jobs:
             esac
           done
 
+          print_snapshot
+
       - name: Pre-deploy infrastructure health check
+        if: inputs.mode == 'rollback'
         shell: bash
         env:
           ENV_NAME: ${{ inputs.env }}
@@ -135,6 +233,7 @@ jobs:
           echo "Aurora health check passed: $status"
 
       - name: Roll back stack to image tag
+        if: inputs.mode == 'rollback'
         shell: bash
         env:
           ENV_NAME: ${{ inputs.env }}
