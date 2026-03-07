@@ -56,35 +56,18 @@ const importSecretByRef = (scope: Construct, id: string, secretRef: string): ISe
   return Secret.fromSecretNameV2(scope, id, normalizedRef)
 }
 
-const unwrapLicenseKey = (rawValue?: string): string => {
-  const raw = rawValue?.trim() || ''
-  if (!raw) return ''
-  try {
-    const parsed = JSON.parse(raw)
-    if (typeof parsed === 'object' && parsed !== null && 'LicenseKey' in parsed) {
-      const value = parsed.LicenseKey
-      return typeof value === 'string' ? value.trim() : raw
-    }
-  } catch {
-    return raw
-  }
-  return raw
-}
-
 const resolveIngestKey = (
   scope: Construct,
   options: Pick<NewRelicAwsObservabilityOptions, 'ingestKeySecretArn' | 'ingestKeySecretJsonKey'>,
 ): string | undefined => {
   const secretArn = options.ingestKeySecretArn?.trim()
-  if (secretArn) {
-    const secret = importSecretByRef(scope, 'NewRelicIngestKeySecret', secretArn)
-    const secretJsonKey = options.ingestKeySecretJsonKey?.trim()
-    return secretJsonKey
-      ? secret.secretValueFromJson(secretJsonKey).toString()
-      : secret.secretValue.toString()
-  }
-  const envIngestKey = unwrapLicenseKey(process.env.NEW_RELIC_INGEST_KEY)
-  return envIngestKey || undefined
+  if (!secretArn) return undefined
+
+  const secret = importSecretByRef(scope, 'NewRelicIngestKeySecret', secretArn)
+  const secretJsonKey = options.ingestKeySecretJsonKey?.trim()
+  return secretJsonKey
+    ? secret.secretValueFromJson(secretJsonKey).toString()
+    : secret.secretValue.toString()
 }
 
 const addFirehoseBackupPermissions = (role: Role, bucket: Bucket): void => {
@@ -211,8 +194,9 @@ export const createNewRelicAwsObservabilityResources = (
   const ingestKey = resolveIngestKey(scope, options)
   if (!ingestKey) {
     throw new Error(
-      'NEW_RELIC_INGEST_KEY or NEW_RELIC_INGEST_KEY_SECRET_ARN is required when '
-      + 'New Relic AWS metric streaming or log forwarding is enabled.',
+      'NEW_RELIC_INGEST_KEY_SECRET_ARN is required when '
+      + 'New Relic AWS metric streaming or log forwarding is enabled. '
+      + 'Plaintext NEW_RELIC_INGEST_KEY fallback is not allowed for these resources.',
     )
   }
 

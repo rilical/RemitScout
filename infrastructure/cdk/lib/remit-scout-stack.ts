@@ -492,6 +492,15 @@ export class RemitScoutStack extends Stack {
       this.node.tryGetContext('newRelicAwsLogForwardingEnabled') ??
         process.env.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED,
     ) ?? (envName === 'staging' || envName === 'prod')
+    if (
+      (newRelicAwsMetricStreamEnabled || newRelicAwsLogForwardingEnabled)
+      && !newRelicIngestKeySecretArn
+    ) {
+      throw new Error(
+        'NEW_RELIC_INGEST_KEY_SECRET_ARN is required when '
+        + 'NEW_RELIC_AWS_METRIC_STREAM_ENABLED or NEW_RELIC_AWS_LOG_FORWARDING_ENABLED is enabled.',
+      )
+    }
     const oandaSecretArn =
       this.node.tryGetContext('oandaSecretArn') ??
       process.env.OANDA_SECRET_ARN

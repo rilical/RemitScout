@@ -620,6 +620,10 @@ jobs:
       NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+      NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
+      NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
@@ -884,6 +888,11 @@ jobs:
           fi
           if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+            exit 1
+          fi
+          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
+             [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
@@ -1754,6 +1763,10 @@ jobs:
       NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || '7756888' }}
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
+      NEW_RELIC_INGEST_KEY_SECRET_ARN: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_ARN }}
+      NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY: ${{ vars.NEW_RELIC_INGEST_KEY_SECRET_JSON_KEY }}
+      NEW_RELIC_AWS_METRIC_STREAM_ENABLED: ${{ vars.NEW_RELIC_AWS_METRIC_STREAM_ENABLED || '1' }}
+      NEW_RELIC_AWS_LOG_FORWARDING_ENABLED: ${{ vars.NEW_RELIC_AWS_LOG_FORWARDING_ENABLED || '1' }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
@@ -2093,6 +2106,11 @@ jobs:
           fi
           if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
+            exit 1
+          fi
+          if { [ "${NEW_RELIC_AWS_METRIC_STREAM_ENABLED:-1}" != "0" ] || [ "${NEW_RELIC_AWS_LOG_FORWARDING_ENABLED:-1}" != "0" ]; } && \
+             [ -z "${NEW_RELIC_INGEST_KEY_SECRET_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_INGEST_KEY_SECRET_ARN for New Relic AWS metric/log streaming."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
