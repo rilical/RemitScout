@@ -7,7 +7,9 @@ import {
   readAdminSmokeConfig,
   readExpectedAdminMfa,
   readSmokeUserMfaCode,
+  resolveAuditLogEventId,
   resolveAdminSmokeAuthToken,
+  resolvePlanSnapshot,
 } from '../scripts/ci/admin-surface-smoke'
 
 describe('admin surface smoke helpers', () => {
@@ -24,15 +26,43 @@ describe('admin surface smoke helpers', () => {
   })
 
   it('finds the target user plan case-insensitively in admin/plans responses', () => {
-    expect(findPlanForEmail({
+    expect(resolvePlanSnapshot(findPlanForEmail({
       users: [
         { email: 'other@remit-scout.com', plan_code: 'free', plan_status: 'active' },
         { email: 'Support@Remit-Scout.com', plan_code: 'enterprise', plan_status: 'active' },
       ],
-    }, 'support@remit-scout.com')).toEqual({
+    }, 'support@remit-scout.com'))).toEqual({
       email: 'Support@Remit-Scout.com',
-      plan_code: 'enterprise',
-      plan_status: 'active',
+      planCode: 'enterprise',
+      status: 'active',
+    })
+  })
+
+  it('resolves plan snapshots across legacy and wrapped response shapes', () => {
+    expect(resolvePlanSnapshot({
+      user: {
+        email: 'support@remit-scout.com',
+        planCode: 'enterprise',
+        planStatus: 'active',
+      },
+    })).toEqual({
+      email: 'support@remit-scout.com',
+      planCode: 'enterprise',
+      status: 'active',
+    })
+
+    expect(resolvePlanSnapshot({
+      result: {
+        plan: {
+          email: 'support@remit-scout.com',
+          plan_code: 'free',
+          status: 'active',
+        },
+      },
+    })).toEqual({
+      email: 'support@remit-scout.com',
+      planCode: 'free',
+      status: 'active',
     })
   })
 
@@ -137,5 +167,21 @@ describe('admin surface smoke helpers', () => {
       token: '',
       source: 'none',
     })
+  })
+
+  it('reads audit event ids from both top-level and wrapped audit detail payloads', () => {
+    expect(resolveAuditLogEventId({
+      event_id: 'evt-top-level',
+    })).toBe('evt-top-level')
+
+    expect(resolveAuditLogEventId({
+      log: {
+        event_id: 'evt-wrapped',
+      },
+    })).toBe('evt-wrapped')
+
+    expect(resolveAuditLogEventId({
+      log: {},
+    })).toBeNull()
   })
 })
