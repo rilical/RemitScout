@@ -517,6 +517,10 @@ async function downloadEmbedVisual(
     embedVisualErrors.value[key] = 'Publish a static embed before downloading visual exports.';
     return;
   }
+  if (!(frame instanceof HTMLIFrameElement)) {
+    embedVisualErrors.value[key] = 'Embed preview is not ready yet.';
+    return;
+  }
 
   activeVisualExportKey.value = key;
   activeVisualExportFormat.value = format;

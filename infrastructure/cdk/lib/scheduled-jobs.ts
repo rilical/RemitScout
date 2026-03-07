@@ -2280,8 +2280,8 @@ export const createScheduledJobs = (
       redisUrl,
     )
     applyProxyEnv(scope, probeFanInFunction, {
-      proxyResidentialSecretId: 'ProviderProbeFanInProxyResidentialSecret',
-      proxyDatacenterSecretId: 'ProviderProbeFanInProxyDatacenterSecret',
+      proxyResidentialSecretId: 'ProviderProbeFanInProxyResidentialSecret', // pragma: allowlist secret
+      proxyDatacenterSecretId: 'ProviderProbeFanInProxyDatacenterSecret', // pragma: allowlist secret
       proxyResidentialSecretArn,
       proxyResidentialSsmName,
       proxyResidentialUrl,
