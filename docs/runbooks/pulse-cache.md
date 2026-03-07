@@ -13,10 +13,10 @@
 1. Indices readiness (often correlates with Gold export health):
    - Skill: `evidence.indices_readiness.github_actions`
 2. Gold pulse batch job wiring:
-   - Script: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/gold-pulse-cache-job.ts`
+   - Script: `backend/scripts/gold-pulse-cache-job.ts`
 3. Pulse API truthfulness (must not fabricate freshness):
-   - Route: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/plane-a/src/routes/pulse.ts`
-   - Invariant: if data is missing/stale, return explicit availability flags (see `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ARCHITECTURE.md`)
+   - Route: `backend/plane-a/src/routes/pulse.ts`
+   - Invariant: if data is missing/stale, return explicit availability flags (see `ARCHITECTURE.md`)
 
 ## Common root causes
 - Scheduled job disabled (ops pause) or misconfigured schedule.

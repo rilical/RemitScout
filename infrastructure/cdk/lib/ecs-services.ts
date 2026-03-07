@@ -161,7 +161,8 @@ export const createEcsServices = (
   const minimalIngestFanoutTier2Desired = isPaused
     ? 0
     : (options.ingestFanoutTier2DesiredCount ?? 1)
-  const spotOnly = options.queueWorkerSpotOnly ?? !isProd
+  const isStaging = options.envName === 'staging'
+  const spotOnly = options.queueWorkerSpotOnly ?? (isDev || isStaging)
   const spotCapacityProviderStrategies = spotOnly
     ? [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }]
     : isProd
@@ -260,8 +261,8 @@ export const createEcsServices = (
     }
   }
 
-  // Plane A API server — always on FARGATE (not Spot) for stable API availability.
-  // Desired count is always 1; auto-scaling handles bursts.
+  // Plane A API server — on-demand FARGATE in prod for stable availability;
+  // FARGATE_SPOT in non-prod where brief interruptions are acceptable.
   const planeAService = new FargateService(scope, 'PlaneAService', {
     cluster: options.cluster,
     taskDefinition: options.planeATask,
@@ -269,7 +270,9 @@ export const createEcsServices = (
     assignPublicIp: usePublicSubnets,
     vpcSubnets: { subnetType },
     securityGroups: [options.planeASecurityGroup],
-    capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+    capacityProviderStrategies: isProd
+      ? [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }]
+      : [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }],
     enableExecuteCommand,
     circuitBreaker,
     minHealthyPercent,
@@ -277,8 +280,8 @@ export const createEcsServices = (
   })
   tagManaged(planeAService)
 
-  // Plane C Gold publisher — always on FARGATE for stable internal API availability.
-  // Desired count is always 1; auto-scaling handles bursts (prod only).
+  // Plane C Gold publisher — on-demand FARGATE in prod for stable availability;
+  // FARGATE_SPOT in non-prod where brief interruptions are acceptable.
   const planeCService = new FargateService(scope, 'PlaneCService', {
     cluster: options.cluster,
     taskDefinition: options.planeCTask,
@@ -286,7 +289,9 @@ export const createEcsServices = (
     assignPublicIp: usePublicSubnets,
     vpcSubnets: { subnetType },
     securityGroups: [options.planeCSecurityGroup],
-    capacityProviderStrategies: [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }],
+    capacityProviderStrategies: isProd
+      ? [{ capacityProvider: 'FARGATE', base: 1, weight: 1 }]
+      : [{ capacityProvider: 'FARGATE_SPOT', weight: 1 }],
     enableExecuteCommand,
     circuitBreaker,
     minHealthyPercent,

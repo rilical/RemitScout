@@ -29,7 +29,6 @@ export type DatabaseOptions = {
   dbSecurityGroup: SecurityGroup
   proxySecurityGroup?: SecurityGroup
   enableProxy?: boolean
-  instanceCount?: number
 }
 
 export const createDatabase = (scope: Construct, options: DatabaseOptions): DatabaseResources => {
@@ -71,7 +70,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
   })
 
   const credentialsSecret = new Secret(scope, 'AuroraMasterSecret', {
-    secretName: `remit-scout/${options.envName}/database/master`, // pragma: allowlist secret
+    secretName: `remit-scout/${options.envName}/database/master`,
     generateSecretString: {
       secretStringTemplate: JSON.stringify({ username: 'remit_scout' }),
       generateStringKey: 'password',
@@ -86,7 +85,7 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
     }),
     credentials: Credentials.fromSecret(credentialsSecret),
     defaultDatabaseName: 'remit_scout',
-    backup: { retention: Duration.days(isProd ? 14 : (isDev ? 3 : 14)) },
+    backup: { retention: Duration.days(isProd ? 14 : (isDev ? 3 : 7)) },
     storageEncrypted: true,
     storageEncryptionKey: encryptionKey,
     deletionProtection: isProtectedEnv,
@@ -98,8 +97,20 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
 
   const dbSubnetType = SubnetType.PRIVATE_WITH_EGRESS
 
-  const cluster = isDev
+  const cluster = isProd
     ? new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
+        ...clusterBaseProps,
+        instances: 2,
+        instanceProps: {
+          vpc: options.vpc,
+          vpcSubnets: { subnetType: dbSubnetType },
+          securityGroups: [options.dbSecurityGroup],
+          instanceType: new InstanceType('t4g.medium'),
+          enablePerformanceInsights: true,
+          performanceInsightRetention: PerformanceInsightRetention.DEFAULT,
+        },
+      })
+    : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
         ...clusterBaseProps,
         vpc: options.vpc,
         vpcSubnets: { subnetType: dbSubnetType },
@@ -107,21 +118,9 @@ export const createDatabase = (scope: Construct, options: DatabaseOptions): Data
         writer: ClusterInstance.serverlessV2('Writer', {
           publiclyAccessible: false,
         }),
-        serverlessV2MinCapacity: 0,
-        serverlessV2MaxCapacity: 1,
-        serverlessV2AutoPauseDuration: Duration.minutes(10),
-      })
-    : new DatabaseCluster(scope, 'RemitScoutAuroraCluster', {
-        ...clusterBaseProps,
-        instances: isProd ? (options.instanceCount ?? 2) : 1,
-        instanceProps: {
-          vpc: options.vpc,
-          vpcSubnets: { subnetType: dbSubnetType },
-          securityGroups: [options.dbSecurityGroup],
-          instanceType: new InstanceType(isProd ? 't4g.medium' : 't4g.medium'),
-          enablePerformanceInsights: true,
-          performanceInsightRetention: PerformanceInsightRetention.DEFAULT,
-        },
+        serverlessV2MinCapacity: isDev ? 0 : 0.5,
+        serverlessV2MaxCapacity: isDev ? 1 : 2,
+        ...(isDev ? { serverlessV2AutoPauseDuration: Duration.minutes(10) } : {}),
       })
 
   const proxy = enableProxy

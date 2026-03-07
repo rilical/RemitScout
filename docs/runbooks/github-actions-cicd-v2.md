@@ -54,4 +54,4 @@ Before first staging go-live (and before major integration changes), run:
 - `.github/workflows/staging-go-live-readiness.yml`
 
 Runbook:
-- `/Users/omarghabyen/Desktop/Remit-Scout Production V2/docs/runbooks/staging-go-live.md`
+- `docs/runbooks/staging-go-live.md`

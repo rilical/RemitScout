@@ -2,19 +2,46 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Pool } from 'pg'
 import { createPool, getPool, query } from '../shared/db'
 import * as dbMetrics from '../shared/db-metrics'
+import * as tracing from '../shared/tracing'
 
 vi.mock('../shared/db-metrics', () => ({
   recordQueryFromSql: vi.fn(),
   updateConnectionPoolMetrics: vi.fn(),
 }))
 
+vi.mock('../shared/tracing', () => ({
+  startSpan: vi.fn(async (_name: string, fn: (span: unknown) => Promise<unknown>) =>
+    await fn({ setAttributes: vi.fn() })),
+}))
+
 vi.mock('../shared/config', () => ({
   config: {
+    env: 'test',
     db: {
       url: 'postgresql://test:test@localhost:5432/test',
       planeAUrl: 'postgresql://test:test@localhost:5432/plane-a',
       planeBUrl: 'postgresql://test:test@localhost:5432/plane-b',
       planeCUrl: 'postgresql://test:test@localhost:5432/plane-c',
+    },
+    dbPool: {
+      sslMode: 'disable',
+      queryTimeoutEnabled: true,
+      queryTimeoutMs: 5_000,
+      proxyQueryTimeoutMs: 5_000,
+      connectionTimeoutMs: 5_000,
+      idleTimeoutMs: 30_000,
+      keepAliveEnabled: false,
+      keepAliveInitialDelayMs: 0,
+      maxUses: 0,
+      applicationName: 'db-test',
+      disableStatementTimeoutExplicit: false,
+      disablePoolSignalCleanup: true,
+      maxOverride: NaN,
+      minOverride: NaN,
+    },
+    runtime: {
+      isLambda: false,
+      isEcs: false,
     },
   },
 }))
@@ -184,7 +211,63 @@ describe('db', () => {
 
       expect(result).toBe(mockResult)
     })
+
+    it('traces direct pool.query calls', async () => {
+      const pool = createPool('postgresql://trace:test@localhost:5432/trace') as Pool & {
+        emit: (eventName: string, payload: unknown) => boolean
+        connect: ReturnType<typeof vi.fn>
+      }
+      const client = {
+        once: vi.fn(),
+        removeListener: vi.fn(),
+        release: vi.fn(),
+        query: vi.fn((_text: string, _values: unknown[] | undefined, cb?: (err: unknown, res: unknown) => void) => {
+          cb?.(undefined, { rows: [{ ok: true }], rowCount: 1 })
+          return Promise.resolve({ rows: [{ ok: true }], rowCount: 1 })
+        }),
+      }
+
+      pool.connect = vi.fn((cb?: (err: unknown, client: typeof client) => void) => {
+        cb?.(undefined, client)
+        return Promise.resolve(client as any)
+      }) as unknown as typeof pool.connect
+
+      await pool.query('SELECT * FROM traced_pool')
+
+      expect(tracing.startSpan).toHaveBeenCalledWith(
+        'db.query.SELECT',
+        expect.any(Function),
+        expect.objectContaining({
+          attributes: expect.objectContaining({
+            'db.system': 'postgresql',
+            'db.operation': 'SELECT',
+          }),
+        }),
+      )
+    })
+
+    it('traces checked-out client queries', async () => {
+      const pool = createPool('postgresql://trace:test@localhost:5432/trace-client') as Pool & {
+        emit: (eventName: string, payload: unknown) => boolean
+      }
+      const client = {
+        query: vi.fn().mockResolvedValue({ rows: [{ ok: true }], rowCount: 1 }),
+      }
+
+      pool.emit('connect', client)
+      await (client.query as (sql: string) => Promise<unknown>)('SELECT * FROM traced_client')
+
+      expect(tracing.startSpan).toHaveBeenCalledWith(
+        'db.query.SELECT',
+        expect.any(Function),
+        expect.objectContaining({
+          attributes: expect.objectContaining({
+            'db.system': 'postgresql',
+            'db.operation': 'SELECT',
+          }),
+        }),
+      )
+    })
   })
 })
-
 

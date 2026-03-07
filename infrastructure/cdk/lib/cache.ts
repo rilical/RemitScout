@@ -81,7 +81,7 @@ export const createCache = (scope: Construct, options: CacheOptions): CacheResou
 
   const replicationGroup = new CfnReplicationGroup(
     scope,
-    authEnabled ? 'RedisReplicationGroupAuth' : 'RedisReplicationGroup',
+    'RedisReplicationGroupAuth',
     {
       replicationGroupDescription: `Remit-Scout Redis (${options.envName})`,
       cacheNodeType,

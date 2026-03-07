@@ -24,8 +24,9 @@ Rules:
     "/api/v1/billing/webhook",
     "/api/v1/auth/forgot-password",
     "/api/v1/alerts/unsubscribe",
-    "/api/v1/alerts/corridor-eligibility",
-    "/api/v1/alerts/macro-corridors"
+    "/api/v1/sessions/track",
+    "/api/v1/account/deletion/cancel",
+    "/api/v1/auth/forgot-password"
   ],
   "bypass_prefixes": [
     "/api-docs"
@@ -88,7 +89,9 @@ Rules:
 - `/api/v1/billing/webhook`: Stripe webhook (signature verification + optional IP allowlist).
 - `/api/v1/auth/forgot-password`: password-reset initiation must work before authentication.
 - `/api/v1/alerts/unsubscribe`: email unsubscribe (token validation in handler).
-- `/api/v1/alerts/corridor-eligibility`, `/api/v1/alerts/macro-corridors`: allowed unauthenticated only in dev/test for UI bootstrapping.
+- `/api/v1/sessions/track`: Anonymous session telemetry must work before authentication.
+- `/api/v1/account/deletion/cancel`: Account deletion cancel link from email must work without authentication.
+- `/api/v1/auth/forgot-password`: Password reset must work without authentication.
 - Public read-only API endpoints (quotes/providers/rates/etc): used by unauthenticated discovery flows; must not expose PII.
 - `/api/v1/public/indices/*`, `/api/v1/public/pulse/*`: share-safe embed/public data feeds; must remain aggregate-only and PII-free.
 - `/api/v1/feature-flags/effective`: public runtime toggle snapshot for client bootstrapping; must expose only minimal resolved flag state.

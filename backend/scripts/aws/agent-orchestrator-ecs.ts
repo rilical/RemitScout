@@ -7,72 +7,35 @@
 
 import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
+import type { JobHandler } from '../../shared/types/job'
 import { formatError } from '../../shared/utils/error-handling'
+import {
+  resolveLlmConnector,
+  validateResolvedLlmConfig,
+} from './agent-llm-startup'
 
 const logger = createLogger('script.agent-orchestrator-ecs')
 
-const isProdLikeEnv = (): boolean => {
-  const envName = (process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim().toLowerCase()
-  return envName === 'staging' || envName === 'prod' || envName === 'production'
-}
+export { resolveLlmConnector, validateResolvedLlmConfig } from './agent-llm-startup'
 
-export const resolveLlmConnector = (): 'anthropic' | 'bedrock' => {
-  const connector = (process.env.AGENT_LLM_CONNECTOR || process.env.AGENT_LLM_PROVIDER || '')
-    .trim()
-    .toLowerCase()
-  if (connector === 'bedrock' || connector === 'anthropic') {
-    return connector
-  }
-  return isProdLikeEnv() ? 'bedrock' : 'anthropic'
-}
+export const shouldRequireAgentQueues = (queues: {
+  agentFailure: { mode: string }
+  toolRequest: { mode: string }
+}): boolean => queues.agentFailure.mode !== 'off' || queues.toolRequest.mode !== 'off'
 
-export const validateResolvedLlmConfig = (): void => {
-  const connector = resolveLlmConnector()
-  const missing: string[] = []
-  const prodLike = isProdLikeEnv()
-
-  if (!process.env.AGENT_LLM_MODEL?.trim()) {
-    missing.push('AGENT_LLM_MODEL')
-  }
-  if (!process.env.AGENT_LLM_PROMPT_VERSION?.trim()) {
-    missing.push('AGENT_LLM_PROMPT_VERSION')
-  }
-
-  if (connector === 'anthropic') {
-    const hasApiKey = Boolean(process.env.AGENT_ANTHROPIC_API_KEY?.trim())
-    const hasSecretArn = Boolean(process.env.AGENT_ANTHROPIC_API_KEY_SECRET_ARN?.trim())
-    if (prodLike && !hasSecretArn) {
-      missing.push('AGENT_ANTHROPIC_API_KEY_SECRET_ARN')
-    }
-    if (!hasApiKey) {
-      missing.push('AGENT_ANTHROPIC_API_KEY')
-    }
-  }
-
-  if (connector === 'bedrock') {
-    if (!process.env.AGENT_BEDROCK_REGION?.trim()) {
-      missing.push('AGENT_BEDROCK_REGION')
-    }
-    if (!process.env.AGENT_BEDROCK_MODEL_ID?.trim() && !process.env.AGENT_LLM_MODEL?.trim()) {
-      missing.push('AGENT_BEDROCK_MODEL_ID')
-    }
-  }
-
-  logger.info('llm_startup_validation', {
-    connector,
-    model: process.env.AGENT_LLM_MODEL || '',
-    promptVersion: process.env.AGENT_LLM_PROMPT_VERSION || '',
-    bedrockRegionPresent: Boolean(process.env.AGENT_BEDROCK_REGION?.trim()),
-    bedrockModelPresent: Boolean(process.env.AGENT_BEDROCK_MODEL_ID?.trim()),
-    anthropicKeyPresent: Boolean(process.env.AGENT_ANTHROPIC_API_KEY?.trim()),
-    anthropicSecretArnPresent: Boolean(process.env.AGENT_ANTHROPIC_API_KEY_SECRET_ARN?.trim()),
-    missing,
-    prodLike,
-  })
-
-  if (missing.length > 0 && prodLike) {
-    throw new Error(`LLM startup validation failed: ${missing.join(', ')}`)
-  }
+export const registerBuiltInHandlers = (
+  orchestrator: { registerHandler(queueName: string, handler: JobHandler): void },
+  handlers: {
+    parser: JobHandler
+    contractTest: JobHandler
+    stressResponse: JobHandler
+    repairFallback: JobHandler
+  },
+): void => {
+  orchestrator.registerHandler('agent-patch-propose', handlers.parser)
+  orchestrator.registerHandler('agent-contract-test', handlers.contractTest)
+  orchestrator.registerHandler('agent-stress-respond', handlers.stressResponse)
+  orchestrator.registerHandler('agent-repair', handlers.repairFallback)
 }
 
 export const handler = async (): Promise<number> => {
@@ -147,14 +110,23 @@ export const handler = async (): Promise<number> => {
   if (!process.env.AGENT_LLM_PROMPT_VERSION) {
     process.env.AGENT_LLM_PROMPT_VERSION = 'v1'
   }
-  validateResolvedLlmConfig()
+  logger.info('llm_startup_validation', validateResolvedLlmConfig())
 
+  const { config } = await import('../../shared/config')
   const { runStartupChecks } = await import('../../shared/startup')
+  const requireAgentQueues = shouldRequireAgentQueues(config.queues)
+  logger.info('agent_orchestrator_queue_contract', {
+    requireAgentQueues,
+    agentFailureMode: config.queues.agentFailure.mode,
+    agentFailureQueueUrl: config.queues.agentFailure.url || '',
+    toolRequestMode: config.queues.toolRequest.mode,
+    toolRequestQueueUrl: config.queues.toolRequest.url || '',
+  })
   await runStartupChecks({
     requirements: {
       requirePlaneB: true,
       requireRedis: false,
-      requireQueues: false,
+      requireQueues: requireAgentQueues,
       requireQuoteRefreshQueue: false,
       requireFxRateRefreshQueue: false,
       requireExportJobQueue: false,
@@ -169,13 +141,14 @@ export const handler = async (): Promise<number> => {
   })
 
   const { createPool } = await import('../../shared/db')
-  const { config } = await import('../../shared/config')
   const { initErrorTracking } = await import('../../shared/error-tracker')
   const { initTracing } = await import('../../shared/tracing')
   const { startHealthServer } = await import('../../shared/health-server')
   const { AgentOrchestrator } = await import('../../plane-b/src/agents/orchestrator')
   const { ParserHandler } = await import('../../plane-b/src/handlers/parser')
   const { ContractTestHandler } = await import('../../plane-b/src/handlers/contract-test')
+  const { StressResponseHandler } = await import('../../plane-b/src/handlers/stress-response')
+  const { RepairFallbackHandler } = await import('../../plane-b/src/handlers/repair-fallback')
 
   initTracing('agent-orchestrator')
   await initErrorTracking('agent-orchestrator')
@@ -184,9 +157,12 @@ export const handler = async (): Promise<number> => {
 
   const orchestrator = new AgentOrchestrator(pool)
 
-  // Register built-in handlers
-  orchestrator.registerHandler('agent-patch-propose', new ParserHandler())
-  orchestrator.registerHandler('agent-contract-test', new ContractTestHandler())
+  registerBuiltInHandlers(orchestrator, {
+    parser: new ParserHandler(),
+    contractTest: new ContractTestHandler(),
+    stressResponse: new StressResponseHandler(),
+    repairFallback: new RepairFallbackHandler(),
+  })
 
   // Health server — expose orchestrator health snapshot at /metrics as JSON
   const healthPort = Number(process.env.HEALTH_PORT) || 8080

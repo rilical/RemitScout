@@ -32,7 +32,7 @@ In `backend/plane-b/src/normalize/quality-flags.ts`, add a new flag after `negat
 
 **Step 2: Verify the flag is type-safe**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx tsc --noEmit --pretty plane-b/src/normalize/quality-flags.ts`
+Run: `cd backend && npx tsc --noEmit --pretty plane-b/src/normalize/quality-flags.ts`
 
 Expected: No type errors.
 
@@ -150,7 +150,7 @@ describe('executability detection (promotional_teaser flag)', () => {
 
 **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/quote-normalizer.test.ts -t "executability detection"`
+Run: `cd backend && npx vitest run tests/quote-normalizer.test.ts -t "executability detection"`
 
 Expected: FAIL — first test expects `promotional_teaser` in flags but normalizer doesn't produce it yet.
 
@@ -204,13 +204,13 @@ So the check must go AFTER line 343 (end of `rateMatchesDerived` closure) and BE
 
 **Step 2: Run tests to verify they pass**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/quote-normalizer.test.ts`
+Run: `cd backend && npx vitest run tests/quote-normalizer.test.ts`
 
 Expected: ALL PASS (both existing promo fields tests and new executability tests).
 
 **Step 3: Run full test suite to check for regressions**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/quote-normalizer.test.ts tests/gold-indices-computation.test.ts`
+Run: `cd backend && npx vitest run tests/quote-normalizer.test.ts tests/gold-indices-computation.test.ts`
 
 Expected: ALL PASS.
 
@@ -313,7 +313,7 @@ describe('computeAblationImpact', () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/ablation-study.test.ts`
+Run: `cd backend && npx vitest run tests/ablation-study.test.ts`
 
 Expected: FAIL — module `../scripts/ablation-study` does not exist yet.
 
@@ -415,7 +415,7 @@ export function computeAblationImpact(
 
 **Step 2: Run tests to verify they pass**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/ablation-study.test.ts`
+Run: `cd backend && npx vitest run tests/ablation-study.test.ts`
 
 Expected: ALL PASS (7 tests).
 
@@ -481,7 +481,7 @@ describe('summarizeAblationStudy', () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/ablation-study.test.ts -t "summarizeAblationStudy"`
+Run: `cd backend && npx vitest run tests/ablation-study.test.ts -t "summarizeAblationStudy"`
 
 Expected: FAIL — `summarizeAblationStudy` not exported.
 
@@ -568,7 +568,7 @@ export type AblationLayer = typeof ABLATION_LAYERS[number]
 
 **Step 4: Run all ablation tests to verify they pass**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/ablation-study.test.ts`
+Run: `cd backend && npx vitest run tests/ablation-study.test.ts`
 
 Expected: ALL PASS (10 tests).
 
@@ -620,7 +620,7 @@ COMMENT ON TABLE gold_export.edv_residual_log IS
 
 **Step 2: Verify the migration file exists and is valid SQL**
 
-Run: `head -5 /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend/db/migrations/093_edv_residual_log.sql`
+Run: `head -5 backend/db/migrations/093_edv_residual_log.sql`
 
 Expected: First 5 lines of the migration file.
 
@@ -762,7 +762,7 @@ describe('classifyResidual', () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/edv-residual-monitor.test.ts`
+Run: `cd backend && npx vitest run tests/edv-residual-monitor.test.ts`
 
 Expected: FAIL — module `../scripts/edv-residual-monitor` does not exist yet.
 
@@ -878,13 +878,13 @@ export function classifyResidual(input: ResidualInput): ResidualClassification {
 
 **Step 2: Run tests to verify they pass**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/edv-residual-monitor.test.ts`
+Run: `cd backend && npx vitest run tests/edv-residual-monitor.test.ts`
 
 Expected: ALL PASS (11 tests).
 
 **Step 3: Run all tests together to check for regressions**
 
-Run: `cd /Users/omarghabyen/Desktop/Remit-Scout\ Production\ V2/.claude/worktrees/practical-tu/backend && npx vitest run tests/quote-normalizer.test.ts tests/ablation-study.test.ts tests/edv-residual-monitor.test.ts`
+Run: `cd backend && npx vitest run tests/quote-normalizer.test.ts tests/ablation-study.test.ts tests/edv-residual-monitor.test.ts`
 
 Expected: ALL PASS.
 

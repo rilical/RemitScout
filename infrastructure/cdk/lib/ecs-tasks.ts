@@ -16,12 +16,8 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm'
 import type { Construct } from 'constructs'
 
 import type { IamResources } from './iam'
-import {
-  collectOandaThrottleEnv,
-  collectPlaneBProviderThrottleEnv,
-  resolveAdminMfaRequiredEnv,
-} from './env-utils'
-import { resolveCloudWatchMetricsEnabled, resolveTracingEnv } from './newrelic-observability'
+import { collectOandaThrottleEnv, collectPlaneBProviderThrottleEnv } from './env-utils'
+import { resolveTracingEnv } from './newrelic-observability'
 
 export type EcsTaskResources = {
   planeATask: FargateTaskDefinition
@@ -77,12 +73,6 @@ export type EcsTaskOptions = {
   stripeSecretArn?: string
   stripeSsmName?: string
   communicationsSecretArn?: string
-  planeAAdminEmails?: string
-  planeAAdminIpAllowlist?: string
-  planeACorsOrigins?: string
-  planeACorsAllowedHeaders?: string
-  planeACorsAllowedMethods?: string
-  planeACorsAllowCredentials?: string
   planeCDbSecretArn?: string
   planeCDbSsmName?: string
   planeCDbHost?: string
@@ -132,6 +122,8 @@ export type EcsTaskOptions = {
   agentBedrockModelId?: string
   agentBedrockMaxTokens?: string
   agentBedrockSecretArn?: string
+  newRelicIngestKeySecretArn?: string
+  newRelicIngestKeySecretJsonKey?: string
   bronzeBucketName?: string
   bronzePrefix?: string
   b2cQueueInSweep?: string
@@ -148,10 +140,6 @@ export type EcsTaskOptions = {
   planeBDbPoolMax?: string
   planeBDbPoolMin?: string
   goldIndicesMinProviders?: string
-  triangulationEnabled?: string
-  stressDetectionEnabled?: string
-  emitObservations?: string
-  moduleEmitObservationsDefault?: string
   discoveryRepository?: IRepository
   discoveryImageTag?: string
 }
@@ -186,7 +174,7 @@ export const createEcsTasks = (
     ? parseInt(process.env.APP_LOG_RETENTION_DAYS, 10)
     : (isProd ? 90 : 1)
   const logRetention = appLogRetentionDays
-  const cloudwatchMetricsEnabled = resolveCloudWatchMetricsEnabled(options.envName)
+  const cloudwatchMetricsEnabled = process.env.CLOUDWATCH_METRICS_ENABLED ?? (isProd ? '1' : '0')
   const tracingEnv = resolveTracingEnv({
     envName: options.envName,
     defaultExporter: 'xray',
@@ -279,18 +267,8 @@ export const createEcsTasks = (
   const planeCDbHost = options.planeCDbHost ?? options.planeBDbHost
   const planeCDbPort = options.planeCDbPort ?? options.planeBDbPort
   const planeCDbName = options.planeCDbName ?? options.planeBDbName
-  const planeAAdminIpAllowlist = options.planeAAdminIpAllowlist
   const sharedSecretArn = options.sharedSecretArn
-  const supabaseSecretArn = options.supabaseSecretArn
-  const supabaseSsmName = options.supabaseSsmName
-  const stripeSecretArn = options.stripeSecretArn
-  const stripeSsmName = options.stripeSsmName
-  const planeAAdminEmails = options.planeAAdminEmails
   const planeAJwtSecretJsonKey = options.planeAJwtSecretJsonKey
-  const planeACorsOrigins = options.planeACorsOrigins
-  const planeACorsAllowedHeaders = options.planeACorsAllowedHeaders
-  const planeACorsAllowedMethods = options.planeACorsAllowedMethods
-  const planeACorsAllowCredentials = options.planeACorsAllowCredentials
   const redisSecretArn = options.redisSecretArn
   const redisSecretJsonKey = options.redisSecretJsonKey
   const redisSsmName = options.redisSsmName
@@ -305,6 +283,11 @@ export const createEcsTasks = (
   const proxyDatacenterUrl = options.proxyDatacenterUrl
   const sentrySecretArn = options.sentrySecretArn
   const sentrySecretJsonKey = options.sentrySecretJsonKey
+  const supabaseSecretArn = options.supabaseSecretArn
+  const supabaseSsmName = options.supabaseSsmName
+  const stripeSecretArn = options.stripeSecretArn
+  const stripeSsmName = options.stripeSsmName
+  const communicationsSecretArn = options.communicationsSecretArn
   const quoteRefreshQueueUrl = options.quoteRefreshQueueUrl
   const quoteRefreshDlqUrl = options.quoteRefreshDlqUrl
   const quoteRefreshQueueMode = options.quoteRefreshQueueMode
@@ -330,22 +313,6 @@ export const createEcsTasks = (
     options.planeBB2bObservationMode ?? process.env.PLANE_B_B2B_OBSERVATION_MODE
   const planeBB2bMaxQueueDepth = options.planeBB2bMaxQueueDepth
   const goldIndicesMinProviders = options.goldIndicesMinProviders
-  const triangulationEnabled =
-    options.triangulationEnabled
-    ?? process.env.TRIANGULATION_ENABLED
-    ?? ((isStaging || isProd) ? 'true' : 'false')
-  const stressDetectionEnabled =
-    options.stressDetectionEnabled
-    ?? process.env.STRESS_DETECTION_ENABLED
-    ?? ((isStaging || isProd) ? 'true' : 'false')
-  const emitObservations =
-    options.emitObservations
-    ?? process.env.EMIT_OBSERVATIONS
-    ?? ((isStaging || isProd) ? 'true' : 'false')
-  const moduleEmitObservationsDefault =
-    options.moduleEmitObservationsDefault
-    ?? process.env.MODULE_EMIT_OBSERVATIONS_DEFAULT
-    ?? emitObservations
   const capabilityProbeProxyTier = process.env.CAPABILITY_PROBE_PROXY_TIER?.trim()
   const b2cRefreshLimit = isConservativeWorkerDefaults ? '25' : '50'
   const b2cRefreshConcurrency = isConservativeWorkerDefaults ? '1' : '5'
@@ -373,6 +340,8 @@ export const createEcsTasks = (
   const agentBedrockModelId = options.agentBedrockModelId ?? process.env.AGENT_BEDROCK_MODEL_ID
   const agentBedrockMaxTokens = options.agentBedrockMaxTokens ?? process.env.AGENT_BEDROCK_MAX_TOKENS
   const agentBedrockSecretArn = options.agentBedrockSecretArn
+  const newRelicIngestKeySecretArn = options.newRelicIngestKeySecretArn
+  const newRelicIngestKeySecretJsonKey = options.newRelicIngestKeySecretJsonKey
 
   const buildSecrets = (): Record<string, EcsSecret> => {
     const secrets: Record<string, EcsSecret> = {}
@@ -470,6 +439,13 @@ export const createEcsTasks = (
       }
     }
 
+    if (newRelicIngestKeySecretArn) {
+      const secret = importSecretByRef('PlaneBNewRelicIngestKeySecret', newRelicIngestKeySecretArn)
+      secrets.NEW_RELIC_INGEST_KEY = newRelicIngestKeySecretJsonKey
+        ? EcsSecret.fromSecretsManager(secret, newRelicIngestKeySecretJsonKey)
+        : EcsSecret.fromSecretsManager(secret)
+    }
+
     return secrets
   }
 
@@ -521,6 +497,19 @@ export const createEcsTasks = (
   }
 
   const sharedSecrets = buildSecrets()
+  const runtimeTracingEnv = { ...tracingEnv }
+  if (sharedSecrets.NEW_RELIC_INGEST_KEY) {
+    delete runtimeTracingEnv.NEW_RELIC_INGEST_KEY
+    const buildTimeNewRelicHeader = process.env.NEW_RELIC_INGEST_KEY?.trim()
+      ? `api-key=${process.env.NEW_RELIC_INGEST_KEY.trim()}`
+      : ''
+    if (
+      buildTimeNewRelicHeader
+      && runtimeTracingEnv.OTEL_EXPORTER_OTLP_HEADERS === buildTimeNewRelicHeader
+    ) {
+      delete runtimeTracingEnv.OTEL_EXPORTER_OTLP_HEADERS
+    }
+  }
   const secretsConfig =
     Object.keys(sharedSecrets).length > 0 ? { secrets: sharedSecrets } : {}
   const goldLiveSecrets = buildGoldLiveSecrets()
@@ -541,12 +530,9 @@ export const createEcsTasks = (
     DB_CONNECTION_ROUTE: planeBDbRoute,
     DB_STATEMENT_TIMEOUT_POLICY:
       planeBDbRoute === 'proxy' ? 'proxy-guarded' : 'server-statement-timeout',
-    TRIANGULATION_ENABLED: triangulationEnabled,
-    STRESS_DETECTION_ENABLED: stressDetectionEnabled,
-    EMIT_OBSERVATIONS: emitObservations,
-    MODULE_EMIT_OBSERVATIONS_DEFAULT: moduleEmitObservationsDefault,
-    ...tracingEnv,
+    ...runtimeTracingEnv,
     TRACING_EXPORTER: tracingExporter,
+    NEW_RELIC_REGION: process.env.NEW_RELIC_REGION ?? 'US',
     NEW_RELIC_LOGS_ENABLED: newRelicLogsEnabled,
     CLOUDWATCH_METRICS_ENABLED: cloudwatchMetricsEnabled,
     CLOUDWATCH_NAMESPACE: 'RemitScout',
@@ -559,21 +545,6 @@ export const createEcsTasks = (
     AGENT_LLM_TEMPERATURE: agentLlmTemperature,
     AGENT_LLM_PROMPT_VERSION: agentLlmPromptVersion,
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  }
-  if (sharedSecretArn) {
-    sharedEnv.SHARED_SECRET_ARN = sharedSecretArn
-  }
-  if (supabaseSecretArn) {
-    sharedEnv.SUPABASE_SECRET_ARN = supabaseSecretArn
-  }
-  if (supabaseSsmName) {
-    sharedEnv.SUPABASE_SSM_NAME = supabaseSsmName
-  }
-  if (stripeSecretArn) {
-    sharedEnv.STRIPE_SECRET_ARN = stripeSecretArn
-  }
-  if (stripeSsmName) {
-    sharedEnv.STRIPE_SSM_NAME = stripeSsmName
   }
   Object.assign(sharedEnv, collectOandaThrottleEnv(), collectPlaneBProviderThrottleEnv())
   const planeBDbPoolMax = options.planeBDbPoolMax ?? '2'
@@ -645,11 +616,30 @@ export const createEcsTasks = (
   if (planeCDbSecretArn) {
     sharedEnv.PLANE_C_DB_SECRET_ARN = planeCDbSecretArn
   }
+  if (planeCDbSsmName) {
+    sharedEnv.PLANE_C_DB_SSM_NAME = planeCDbSsmName
+  }
   if (planeCDbPort) {
     sharedEnv.PLANE_C_DB_PORT = planeCDbPort
   }
   if (planeCDbName) {
     sharedEnv.PLANE_C_DB_NAME = planeCDbName
+  }
+  if (sharedSecretArn) {
+    sharedEnv.SHARED_SECRET_ARN = sharedSecretArn
+  }
+  if (process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY) {
+    sharedEnv.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY =
+      process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
+  }
+  if (redisSecretArn) {
+    sharedEnv.REDIS_SECRET_ARN = redisSecretArn
+  }
+  if (redisSecretJsonKey) {
+    sharedEnv.REDIS_SECRET_JSON_KEY = redisSecretJsonKey
+  }
+  if (redisSsmName) {
+    sharedEnv.REDIS_SSM_NAME = redisSsmName
   }
   if (redisUrl && !sharedSecrets.REDIS_URL) {
     sharedEnv.REDIS_URL = redisUrl
@@ -1552,24 +1542,6 @@ export const createEcsTasks = (
   const planeAWorkerEnv: Record<string, string> = {
     ...sharedEnv,
   }
-  if (planeAAdminEmails) {
-    planeAWorkerEnv.PLANE_A_ADMIN_EMAILS = planeAAdminEmails
-  }
-  if (planeAAdminIpAllowlist) {
-    planeAWorkerEnv.ADMIN_IP_ALLOWLIST = planeAAdminIpAllowlist
-  }
-  if (planeACorsOrigins) {
-    planeAWorkerEnv.PLANE_A_CORS_ORIGINS = planeACorsOrigins
-  }
-  if (planeACorsAllowedHeaders) {
-    planeAWorkerEnv.PLANE_A_CORS_ALLOWED_HEADERS = planeACorsAllowedHeaders
-  }
-  if (planeACorsAllowedMethods) {
-    planeAWorkerEnv.PLANE_A_CORS_ALLOWED_METHODS = planeACorsAllowedMethods
-  }
-  if (planeACorsAllowCredentials) {
-    planeAWorkerEnv.PLANE_A_CORS_ALLOW_CREDENTIALS = planeACorsAllowCredentials
-  }
   if (planeADbHost) {
     planeAWorkerEnv.PLANE_A_DB_HOST = planeADbHost
   }
@@ -1585,18 +1557,42 @@ export const createEcsTasks = (
   if (planeADbName) {
     planeAWorkerEnv.PLANE_A_DB_NAME = planeADbName
   }
+  if (supabaseSecretArn) {
+    planeAWorkerEnv.SUPABASE_SECRET_ARN = supabaseSecretArn
+  }
+  if (supabaseSsmName) {
+    planeAWorkerEnv.SUPABASE_SSM_NAME = supabaseSsmName
+  }
+  if (stripeSecretArn) {
+    planeAWorkerEnv.STRIPE_SECRET_ARN = stripeSecretArn
+  }
+  if (stripeSsmName) {
+    planeAWorkerEnv.STRIPE_SSM_NAME = stripeSsmName
+  }
+  if (communicationsSecretArn) {
+    planeAWorkerEnv.COMMUNICATIONS_SECRET_ARN = communicationsSecretArn
+  }
+  if (sharedSecretArn) {
+    planeAWorkerEnv.SHARED_SECRET_ARN = sharedSecretArn
+  }
+  if (planeAJwtSecretJsonKey) {
+    planeAWorkerEnv.PLANE_A_JWT_SECRET_JSON_KEY = planeAJwtSecretJsonKey
+  }
+  if (process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY) {
+    planeAWorkerEnv.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY =
+      process.env.PLANE_C_INTERNAL_API_TOKEN_SECRET_JSON_KEY
+  }
   const planeARuntimePassthroughKeys = [
+    'PLANE_A_ADMIN_EMAILS',
+    'ADMIN_IP_ALLOWLIST',
     'WAF_ADMIN_ALLOWLIST_IPS',
     'WAF_ALLOWLIST_IPS',
     'PRIVACY_HASH_SALT',
     'PRIVACY_SESSION_SALT',
-    'SUPABASE_URL',
-    'SUPABASE_PUBLISHABLE_KEY',
-    'SUPABASE_JWKS_URL',
-    'SUPABASE_JWT_ISSUER',
-    'SUPABASE_JWT_AUDIENCE',
-    'SUPABASE_JWT_AUD',
-    'SUPABASE_AUTH_VERIFY_MODE',
+    'PLANE_A_CORS_ORIGINS',
+    'PLANE_A_CORS_ALLOWED_HEADERS',
+    'PLANE_A_CORS_ALLOWED_METHODS',
+    'PLANE_A_CORS_ALLOW_CREDENTIALS',
     'PUBLIC_SITE_URL',
     'FRONTEND_BASE_URL',
     'PLANE_A_JWT_ISSUER',
@@ -1608,13 +1604,9 @@ export const createEcsTasks = (
   ] as const
   for (const key of planeARuntimePassthroughKeys) {
     const value = process.env[key]
-    if (value !== undefined && value !== '' && planeAWorkerEnv[key] === undefined) {
+    if (value !== undefined && value !== '') {
       planeAWorkerEnv[key] = value
     }
-  }
-  const adminMfaRequired = resolveAdminMfaRequiredEnv(options.envName)
-  if (adminMfaRequired) {
-    planeAWorkerEnv.ADMIN_MFA_REQUIRED = adminMfaRequired
   }
 
   const alertEvaluationTask = new FargateTaskDefinition(
@@ -1908,9 +1900,6 @@ export const createEcsTasks = (
     ...planeAWorkerEnv,
     PLANE_A_PORT: '4000',
     HEALTH_PORT: '4000',
-  }
-  if (planeAAdminIpAllowlist) {
-    planeAApiEnv.ADMIN_IP_ALLOWLIST = planeAAdminIpAllowlist
   }
   const planeAApiContainer = planeATask.addContainer('PlaneAApiContainer', {
     image,

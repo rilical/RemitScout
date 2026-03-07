@@ -1,9 +1,9 @@
 # Security Architecture (Claw Cage + Repo Policies)
 
 ## One-screen quick map
-- System invariants: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/ARCHITECTURE.md`
+- System invariants: `ARCHITECTURE.md`
 - Rights matrix rules: enforced in Silver and consumed by Plane A/B/C
-- Brain security posture: `/Users/omarghabyen/Desktop/Remit-Scout Production V2/backend/scripts/brain/brain.ts`
+- Brain security posture: `backend/scripts/brain/brain.ts`
 
 ## Claw Cage policy
 - Treat model/skills as untrusted dependencies.
@@ -28,13 +28,13 @@ Each agent has an explicit allowlist of tool types:
 | Agent | Allowed Tools |
 |-------|--------------|
 | failure-detector | `db_query` |
-| patch-proposer | `db_query`, `file_read`, `http_fetch`, `llm_inference` |
+| patch-proposer | `db_query`, `file_read`, `http_fetch`, `llm_inference`, `playwright_discovery` |
 | patch-validator | `db_query`, `file_read` |
-| patch-deployer | `db_query`, `file_read`, `git_read`, `git_write`, `github_api` |
+| patch-deployer | `db_query`, `file_read`, `file_write`, `git_read`, `git_write`, `github_api` |
 | stress-responder | `db_query`, `redis_command` |
 | orchestrator | `db_query`, `redis_command`, `file_read`, `git_read` |
 
-Only `patch-deployer` has write access to git and GitHub — all other agents are read-only.
+Only `patch-deployer` has write access to git, GitHub, and filesystem — all other agents are read-only.
 
 ### Layer 2: Gateway-level policy
 - `file_read` is restricted to safe directories: `providers/`, `collectors/`, `normalize/`, `shared/`

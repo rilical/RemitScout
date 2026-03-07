@@ -13,6 +13,18 @@ The Remit-Scout agent infrastructure consists of 10 agent classes managed by the
 - **Tool Gateway** — policy-enforced tool execution
 - **LLM Client** — manages LLM inference calls
 - **Agent Config** — resolves per-agent configuration
+- **LLM Startup Validator** — validates LLM connector config at boot (`backend/scripts/aws/agent-llm-startup.ts`)
+
+## LLM Startup Validation
+
+Before the agent orchestrator begins processing, `validateResolvedLlmConfig()` checks that the resolved LLM connector (`anthropic` or `bedrock`) has all required environment variables:
+
+- **Connector resolution:** Explicit `AGENT_LLM_CONNECTOR` → falls back to `bedrock` in prod/staging, `anthropic` locally
+- **Anthropic requires:** `AGENT_ANTHROPIC_API_KEY` (always), `AGENT_ANTHROPIC_API_KEY_SECRET_ARN` (prod/staging)
+- **Bedrock requires:** `AGENT_BEDROCK_REGION`, `AGENT_BEDROCK_MODEL_ID` (if `AGENT_LLM_MODEL` not set)
+- **Common requires:** `AGENT_LLM_MODEL`, `AGENT_LLM_PROMPT_VERSION`
+
+In prod-like environments, missing variables cause a hard startup failure. In dev, missing variables are logged but non-fatal.
 
 ## Health Checks
 
@@ -116,6 +128,32 @@ To test the repair pipeline end-to-end:
 5. Verify patch validator runs contract tests
 6. Verify patch deployer creates a PR (if auto-deploy is enabled)
 7. Revert the injected failure
+
+## Handler System
+
+Two job handlers in `backend/plane-b/src/handlers/` provide structured responses when the standard agent repair pipeline cannot resolve a failure bundle.
+
+### Repair Fallback (`backend/plane-b/src/handlers/repair-fallback.ts`)
+
+`RepairFallbackHandler` is the last-resort handler invoked when the normal patch-proposer/validator/deployer pipeline fails to produce a viable repair. It:
+
+1. Extracts failure context from the job parameters (bundle ID, provider, category, severity, failure layer, consecutive failure count).
+2. Inserts a `manual_investigation` action into `silver.agent_action` with `requires_approval = TRUE`, signalling that a human operator must review the failure.
+3. Marks the associated failure bundle as `repair_attempted = TRUE, repair_outcome = 'rejected'` so the orchestrator does not re-queue it.
+
+No automated fix is attempted — the handler exists purely to capture context and escalate cleanly.
+
+### Stress Response (`backend/plane-b/src/handlers/stress-response.ts`)
+
+`StressResponseHandler` bridges failure bundles into the stress-responder agent. When a failure bundle carries corridor routing information, this handler converts it into a `CorridorStressSignal` and delegates to `StressResponder.processStressSignals()`. It:
+
+1. Maps failure severity to stress level and score (`critical` -> 0.9, `persistent` -> 0.7, `degraded` -> 0.45, `transient` -> 0.35).
+2. Builds trigger factors from the failure category, fetcher source, and failure layer.
+3. If the corridor route is missing or `unknown`, skips stress processing and records a `manual_investigation` escalation instead.
+4. If cadence overrides are applied by the stress responder, marks the bundle outcome as `applied`; otherwise marks it `failed`.
+5. Records all actions to `silver.agent_action` with `action_type = 'stress_response'` and `requires_approval = FALSE` (autonomous).
+
+Both handlers extend `BaseJobHandler` and return structured `JobResult` objects with timing and metadata for observability.
 
 ## Tool Gateway Audit
 

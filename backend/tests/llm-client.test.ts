@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildLlmClient } from '../plane-b/src/agents/llm-client'
+import { buildLlmClient, LLMClient, type LLMConnector } from '../plane-b/src/agents/llm-client'
+import { LLM_CIRCUIT_OPEN_SENTINEL } from '../plane-b/src/agents/llm-circuit-breaker'
 
 describe('llm client connector factory', () => {
   it('builds anthropic connector with direct key', () => {
@@ -50,5 +51,29 @@ describe('llm client connector factory', () => {
 
     expect(client.connector).toBe('bedrock')
     expect(client.isAvailable()).toBe(true)
+  })
+
+  it('returns a safe fallback diagnosis when the LLM circuit is open', async () => {
+    const connector: LLMConnector = {
+      connector: 'anthropic',
+      model: 'claude-sonnet-4-20250514',
+      isAvailable: () => true,
+      sendMessage: async () => ({
+        ...LLM_CIRCUIT_OPEN_SENTINEL,
+        model: 'claude-sonnet-4-20250514',
+      }),
+    }
+
+    const client = new LLMClient(connector)
+    await expect(client.analyzeFailure({
+      moduleId: 'provider.test',
+      providerId: 'wise',
+      errorMessage: 'selector missing',
+      errorType: 'parse_error',
+    })).resolves.toEqual({
+      diagnosis: 'llm_circuit_open',
+      suggestedAction: 'manual_investigation',
+      confidence: 'low',
+    })
   })
 })

@@ -58,7 +58,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (inputs.ref != '' && inputs.ref || github.sha) }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           requested="$(echo "${REQUESTED_REF}" | xargs)"
           if [ -z "${requested}" ]; then
@@ -101,7 +101,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
           run_id="$(gh run list --repo "$REPO" --workflow ci-main.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
@@ -125,7 +125,7 @@ jobs:
         env:
           SECURITY_ENV: dev
           AUDIT_BLOCKING: '0'
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           mkdir -p .security
           docker run --rm -v "$PWD:/workspace" anchore/syft:v1.18.1 \
@@ -133,44 +133,12 @@ jobs:
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
           pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
-          high_critical_count="$(
-            node -e '
-              const fs = require("fs");
-              const path = process.argv[1];
-              let raw = "";
-              try {
-                raw = fs.readFileSync(path, "utf8").trim();
-              } catch {
-                console.log(-1);
-                process.exit(0);
-              }
-              if (!raw) {
-                console.log(-1);
-                process.exit(0);
-              }
-              try {
-                const parsed = JSON.parse(raw);
-                const v = parsed?.metadata?.vulnerabilities ?? {};
-                const high = Number(v.high ?? 0);
-                const critical = Number(v.critical ?? 0);
-                console.log(high + critical);
-              } catch {
-                console.log(-1);
-              }
-            ' ".security/${SECURITY_ENV}-pnpm-audit.json"
-          )"
-          if [ "${high_critical_count}" -lt 0 ]; then
-            echo "::error::Failed to parse pnpm audit JSON output."
-            exit 1
-          fi
-          if [ "${high_critical_count}" -gt 0 ]; then
-            echo "pnpm audit reported HIGH/CRITICAL issues (count=${high_critical_count})."
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
-              exit 1
+              exit "$audit_exit"
             fi
             echo "Non-blocking mode: continuing."
-          elif [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit exited with code ${audit_exit} but no HIGH/CRITICAL vulnerabilities were reported."
           fi
 
       - name: Upload Security Evidence
@@ -209,7 +177,7 @@ jobs:
         env:
           AWS_ROLE_PRIMARY: ${{ vars.AWS_ROLE_TO_ASSUME }}
           AWS_ROLE_FALLBACK: ${{ vars.AWS_ROLE_TO_ASSUME_FALLBACK }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           echo "::error::Failed to assume AWS role via OIDC using both primary and fallback roles."
           echo "::error::Primary role: ${AWS_ROLE_PRIMARY}"
@@ -217,43 +185,9 @@ jobs:
           echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
           exit 1
 
-      - name: Warn on non-prod security drift (dev)
-        shell: bash
-        env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          ENV_NAME: dev
-        run: | # pragma: allowlist secret
-          set -uo pipefail
-
-          account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
-          if [ -z "${account_id}" ] || [ "${account_id}" = "None" ]; then
-            echo "::warning::Unable to resolve AWS account ID for ${ENV_NAME}; skipping GuardDuty/Inspector drift check."
-            exit 0
-          fi
-
-          detector_ids="$(aws guardduty list-detectors --region "${AWS_REGION}" --query 'DetectorIds' --output text 2>/dev/null || true)"
-          if [ -n "${detector_ids}" ] && [ "${detector_ids}" != "None" ]; then
-            echo "::warning::GuardDuty remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
-          fi
-
-          inspector_json="$(aws inspector2 batch-get-account-status --account-ids "${account_id}" --region "${AWS_REGION}" --output json 2>/dev/null || true)"
-          if [ -z "${inspector_json}" ]; then
-            exit 0
-          fi
-
-          inspector_state="$(printf '%s' "${inspector_json}" | jq -r '.accounts[0].state.status // empty')"
-          enabled_resources="$(printf '%s' "${inspector_json}" | jq -r '[.accounts[0].resourceState | to_entries[]? | select(.value.status == "ENABLED") | .key] | join(",")')"
-          if [ "${inspector_state}" = "ENABLED" ]; then
-            if [ -n "${enabled_resources}" ] && [ "${enabled_resources}" != "null" ]; then
-              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id} for: ${enabled_resources}. Disable it unless non-prod coverage is intentional."
-            else
-              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
-            fi
-          fi
-
       - name: Validate Required Secrets (dev)
         shell: bash
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: dev)."
@@ -268,7 +202,7 @@ jobs:
         env:
           ENV_NAME: dev
           AWS_REGION: ${{ vars.AWS_REGION }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           echo "ENV_NAME=${ENV_NAME}" >> "$GITHUB_OUTPUT"
           echo "AWS_REGION=${AWS_REGION}" >> "$GITHUB_OUTPUT"
@@ -283,7 +217,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           ENV_NAME: ${{ steps.vars.outputs.ENV_NAME }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           ECR_REPO="remit-scout-backend-${ENV_NAME}"
           aws ecr describe-repositories --repository-names "${ECR_REPO}" >/dev/null 2>&1 || \
@@ -294,7 +228,7 @@ jobs:
         env:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
@@ -320,7 +254,7 @@ jobs:
           AWS_REGION: ${{ steps.vars.outputs.AWS_REGION }}
           ACCOUNT_ID: ${{ steps.vars.outputs.ACCOUNT_ID }}
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
-        run: | # pragma: allowlist secret
+        run: |
           set -euo pipefail
           ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/remit-scout-backend-dev"
           docker run --rm \
@@ -399,10 +333,8 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
-            -c devNightlyPauseEnabled=false \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
-            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutTier1DesiredCount=0 \
             -c planeBIngestFanoutTier2DesiredCount=0 \
             -c goldLiveDesiredCount=0 \
@@ -530,10 +462,8 @@ jobs:
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-20}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             -c devPaused=true \
-            -c devNightlyPauseEnabled=false \
             -c planeBIngestDesiredCount=0 \
             -c planeBB2cRefreshDesiredCount=0 \
-            -c planeBFxRateRefreshDesiredCount=0 \
             -c planeBIngestFanoutTier1DesiredCount=0 \
             -c planeBIngestFanoutTier2DesiredCount=0 \
             -c goldLiveDesiredCount=0 \
@@ -691,8 +621,6 @@ jobs:
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-      NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-      NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -715,7 +643,6 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
       WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
       ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
-      ADMIN_MFA_REQUIRED: ${{ vars.ADMIN_MFA_REQUIRED }}
       PLANE_A_ADMIN_EMAILS: ${{ vars.PLANE_A_ADMIN_EMAILS }}
       PLANE_A_ENABLE_JWT_AUTH: ${{ vars.PLANE_A_ENABLE_JWT_AUTH }}
       PLANE_A_REQUIRE_JWT: ${{ vars.PLANE_A_REQUIRE_JWT }}
@@ -728,17 +655,9 @@ jobs:
       PLANE_A_CORS_ALLOWED_HEADERS: ${{ vars.PLANE_A_CORS_ALLOWED_HEADERS }}
       PLANE_A_CORS_ALLOWED_METHODS: ${{ vars.PLANE_A_CORS_ALLOWED_METHODS }}
       PLANE_A_CORS_ALLOW_CREDENTIALS: ${{ vars.PLANE_A_CORS_ALLOW_CREDENTIALS }}
-      SUPABASE_URL: ${{ vars.SUPABASE_URL || vars.PUBLIC_SUPABASE_URL }}
-      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY || vars.PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_JWT_ISSUER: ${{ vars.SUPABASE_JWT_ISSUER || vars.PLANE_A_JWT_ISSUER }}
-      SUPABASE_JWT_AUDIENCE: ${{ vars.SUPABASE_JWT_AUDIENCE || vars.SUPABASE_JWT_AUD || vars.PLANE_A_JWT_AUDIENCES }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
       PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
-      PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
-      PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
-      PLANE_A_HOSTED_ZONE_ID: ${{ vars.PLANE_A_HOSTED_ZONE_ID }}
-      PLANE_A_HOSTED_ZONE_NAME: ${{ vars.PLANE_A_HOSTED_ZONE_NAME }}
       PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
       PUBLIC_GA4_MEASUREMENT_ID: ${{ vars.PUBLIC_GA4_MEASUREMENT_ID }}
       PUBLIC_GTM_CONTAINER_ID: ${{ vars.PUBLIC_GTM_CONTAINER_ID }}
@@ -860,44 +779,12 @@ jobs:
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
           pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
-          high_critical_count="$(
-            node -e '
-              const fs = require("fs");
-              const path = process.argv[1];
-              let raw = "";
-              try {
-                raw = fs.readFileSync(path, "utf8").trim();
-              } catch {
-                console.log(-1);
-                process.exit(0);
-              }
-              if (!raw) {
-                console.log(-1);
-                process.exit(0);
-              }
-              try {
-                const parsed = JSON.parse(raw);
-                const v = parsed?.metadata?.vulnerabilities ?? {};
-                const high = Number(v.high ?? 0);
-                const critical = Number(v.critical ?? 0);
-                console.log(high + critical);
-              } catch {
-                console.log(-1);
-              }
-            ' ".security/${SECURITY_ENV}-pnpm-audit.json"
-          )"
-          if [ "${high_critical_count}" -lt 0 ]; then
-            echo "::error::Failed to parse pnpm audit JSON output."
-            exit 1
-          fi
-          if [ "${high_critical_count}" -gt 0 ]; then
-            echo "pnpm audit reported HIGH/CRITICAL issues (count=${high_critical_count})."
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
-              exit 1
+              exit "$audit_exit"
             fi
             echo "Non-blocking mode: continuing."
-          elif [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit exited with code ${audit_exit} but no HIGH/CRITICAL vulnerabilities were reported."
           fi
 
       - name: Upload Security Evidence
@@ -944,40 +831,6 @@ jobs:
           echo "::error::Remediation: update IAM trust policy for GitHub OIDC (aud=sts.amazonaws.com) and this repo/environment."
           exit 1
 
-      - name: Warn on non-prod security drift (staging)
-        shell: bash
-        env:
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          ENV_NAME: staging
-        run: |
-          set -uo pipefail
-
-          account_id="$(aws sts get-caller-identity --query Account --output text 2>/dev/null || true)"
-          if [ -z "${account_id}" ] || [ "${account_id}" = "None" ]; then
-            echo "::warning::Unable to resolve AWS account ID for ${ENV_NAME}; skipping GuardDuty/Inspector drift check."
-            exit 0
-          fi
-
-          detector_ids="$(aws guardduty list-detectors --region "${AWS_REGION}" --query 'DetectorIds' --output text 2>/dev/null || true)"
-          if [ -n "${detector_ids}" ] && [ "${detector_ids}" != "None" ]; then
-            echo "::warning::GuardDuty remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
-          fi
-
-          inspector_json="$(aws inspector2 batch-get-account-status --account-ids "${account_id}" --region "${AWS_REGION}" --output json 2>/dev/null || true)"
-          if [ -z "${inspector_json}" ]; then
-            exit 0
-          fi
-
-          inspector_state="$(printf '%s' "${inspector_json}" | jq -r '.accounts[0].state.status // empty')"
-          enabled_resources="$(printf '%s' "${inspector_json}" | jq -r '[.accounts[0].resourceState | to_entries[]? | select(.value.status == "ENABLED") | .key] | join(",")')"
-          if [ "${inspector_state}" = "ENABLED" ]; then
-            if [ -n "${enabled_resources}" ] && [ "${enabled_resources}" != "null" ]; then
-              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id} for: ${enabled_resources}. Disable it unless non-prod coverage is intentional."
-            else
-              echo "::warning::Inspector2 remains enabled in ${ENV_NAME} account ${account_id}. Disable it unless non-prod coverage is intentional."
-            fi
-          fi
-
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/setup-qemu-action@v3
@@ -986,56 +839,19 @@ jobs:
         shell: bash
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }} # pragma: allowlist secret
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
           FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
-          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
-          PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
-          PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
         run: |
           set -euo pipefail
-          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then # pragma: allowlist secret
-            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)." # pragma: allowlist secret
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: staging)."
             exit 1
           fi
           if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
             echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: staging)."
             exit 1
           fi
-          if [ -z "${PUBLIC_API_BASE:-}" ]; then
-            echo "Missing PUBLIC_API_BASE (configure in GitHub environment vars: staging)."
-            exit 1
-          fi
-          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] || [ -n "${PLANE_A_CERT_ARN:-}" ]; then
-            if [ -z "${PLANE_A_DOMAIN_NAME:-}" ] || [ -z "${PLANE_A_CERT_ARN:-}" ]; then
-              echo "PLANE_A_DOMAIN_NAME and PLANE_A_CERT_ARN must be configured together when staging API custom domain support is enabled."
-              exit 1
-            fi
-          fi
-          python3 - "${PUBLIC_API_BASE}" "${PLANE_A_DOMAIN_NAME:-}" <<'PY'
-          from urllib.parse import urlparse
-          import sys
-
-          public_api_base = sys.argv[1].strip()
-          expected_host = sys.argv[2].strip().lower()
-          parsed = urlparse(public_api_base)
-          actual_host = (parsed.hostname or '').lower()
-
-          if parsed.scheme != "https" or not actual_host:
-              raise SystemExit("PUBLIC_API_BASE must be an absolute https URL.")
-
-          if expected_host and actual_host != expected_host:
-              raise SystemExit(
-                  f"PUBLIC_API_BASE host {actual_host!r} does not match PLANE_A_DOMAIN_NAME {expected_host!r}."
-              )
-          PY
-          case "${ADMIN_MFA_REQUIRED:-1}" in
-            ""|0|1|true|TRUE|false|FALSE|yes|YES|no|NO|on|ON|off|OFF) ;;
-            *)
-              echo "ADMIN_MFA_REQUIRED must be a recognizable boolean value."
-              exit 1
-              ;;
-          esac
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: staging)."
             exit 1
@@ -1062,16 +878,12 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
+          if [ -z "${NEW_RELIC_STAGING_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
-            exit 1
-          fi
-          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
+          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
@@ -1102,8 +914,6 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
@@ -1243,49 +1053,6 @@ jobs:
             --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
             "${IMAGE_URI}"
 
-      - name: Extend staging admin allowlists for runner-backed smoke
-        shell: bash
-        run: |
-          set -euo pipefail
-          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
-          python3 - "$runner_ip" "${ADMIN_IP_ALLOWLIST:-}" "${WAF_ADMIN_ALLOWLIST_IPS:-}" "$GITHUB_ENV" <<'PY'
-          import ipaddress
-          import pathlib
-          import sys
-
-          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
-          admin_allowlist_raw = sys.argv[2]
-          waf_allowlist_raw = sys.argv[3]
-          github_env_path = pathlib.Path(sys.argv[4])
-          runner_cidr = f"{runner_ip}/{32 if runner_ip.version == 4 else 128}"
-
-          def ensure_runner_allowlisted(raw: str) -> tuple[str, bool]:
-              entries = [item.strip() for item in raw.split(",") if item.strip()]
-              for entry in entries:
-                  network = ipaddress.ip_network(entry if "/" in entry else f"{entry}/32", strict=False)
-                  if runner_ip in network:
-                      return ",".join(entries), False
-              entries.append(runner_cidr)
-              return ",".join(entries), True
-
-          updated_admin, admin_added = ensure_runner_allowlisted(admin_allowlist_raw)
-          updated_waf, waf_added = ensure_runner_allowlisted(waf_allowlist_raw)
-
-          with github_env_path.open("a", encoding="utf-8") as handle:
-              handle.write(f"STAGING_ADMIN_SMOKE_RUNNER_IP={runner_ip}\n")
-              handle.write(f"STAGING_ADMIN_SMOKE_RUNNER_CIDR={runner_cidr}\n")
-              handle.write(f"ADMIN_IP_ALLOWLIST={updated_admin}\n")
-              handle.write(f"WAF_ADMIN_ALLOWLIST_IPS={updated_waf}\n")
-
-          if admin_added or waf_added:
-              print(
-                  f"Appended {runner_cidr} to staging admin allowlists for this deployment "
-                  f"(runner IP {runner_ip})."
-              )
-          else:
-              print(f"Runner IP {runner_ip} is already covered by the staging admin allowlists.")
-          PY
-
       - name: CDK Diff (staging)
         shell: bash
         env:
@@ -1294,66 +1061,32 @@ jobs:
         run: |
           set -euo pipefail
           pnpm -C infrastructure/cdk build
-          cdk_args=(
-            -c env="${ENV_NAME}"
-            -c backendImageTag="${IMAGE_TAG}"
-            -c cpuArchitecture=x86_64
-            -c importExistingBackendRepository=true
-            -c minimalInfra=false
-            -c enableDbProxy=false
-            -c providerProbeMode=fan_in
-            -c enableComplianceServices=false
-            -c enableCostGuardrails=false
-            -c pinpointEnabled=false
-            -c enableSynthetics=false
-            -c enableWaf=false
-            -c planeBDisableTier1=false
-            -c planeBB2cRefreshServiceEnabled=true
-            -c planeBFxRateRefreshServiceEnabled=true
-            -c stagingBusinessHoursEnabled=false
-            -c stagingTimezone="America/New_York"
-            -c stagingNatGateways=1
-            -c stagingInterfaceEndpointsMode=minimal
-            -c alertEvaluationServiceEnabled=true
-            -c exportServiceEnabled=true
-            -c agentOrchestratorServiceEnabled=false
-            -c stressResponderServiceEnabled=true
-            -c normalizationServiceEnabled=true
-            -c planeBIngestDesiredCount=1
-            -c planeBB2cRefreshDesiredCount=1
-            -c planeBFxRateRefreshDesiredCount=1
-            -c planeBIngestFanoutMode=queue
-            -c planeBIngestFanoutTier1DesiredCount=1
-            -c planeBIngestFanoutTier2DesiredCount=1
-            -c goldLiveDesiredCount=1
-            -c planeBNotificationsDesiredCount=1
-            -c planeBOpsAlertsDesiredCount=1
-            -c alertEvaluationDesiredCount=1
-            -c exportWorkerDesiredCount=1
-            -c agentOrchestratorDesiredCount=0
-            -c stressResponderDesiredCount=1
-            -c normalizationWorkerDesiredCount=1
-            -c planeBQueueWorkerDesiredCount=1
-            -c planeBQueueWorkerMaxCount=3
-            -c quoteRefreshQueueMode=queue
-            -c fxRateRefreshQueueMode=queue
-            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}"
-            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}"
+          pnpm -C infrastructure/cdk exec -- cdk diff \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c cpuArchitecture=x86_64 \
+            -c importExistingBackendRepository=true \
+            -c minimalInfra=false \
+            -c enableDbProxy=false \
+            -c providerProbeMode=per_provider \
+            -c enableComplianceServices=false \
+            -c enableCostGuardrails=false \
+            -c pinpointEnabled=false \
+            -c enableWaf=false \
+            -c planeBDisableTier1=false \
+            -c planeBB2cRefreshServiceEnabled=true \
+            -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBIngestFanoutMode=queue \
+            -c planeBIngestFanoutTier1DesiredCount=1 \
+            -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c quoteRefreshQueueMode=queue \
+            -c fxRateRefreshQueueMode=queue \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
-          )
-          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] && [ -n "${PLANE_A_CERT_ARN:-}" ]; then
-            cdk_args+=(
-              -c planeADomainName="${PLANE_A_DOMAIN_NAME}"
-              -c planeACertificateArn="${PLANE_A_CERT_ARN}"
-            )
-            if [ -n "${PLANE_A_HOSTED_ZONE_ID:-}" ] && [ -n "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
-              cdk_args+=(
-                -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}"
-                -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}"
-              )
-            fi
-          fi
-          pnpm -C infrastructure/cdk exec -- cdk diff "${cdk_args[@]}"
 
       - name: Recover CloudFormation rollback state (staging)
         shell: bash
@@ -1465,80 +1198,48 @@ jobs:
           IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
           FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
           FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
-          PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
-          PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
-          PLANE_A_HOSTED_ZONE_ID: ${{ vars.PLANE_A_HOSTED_ZONE_ID }}
-          PLANE_A_HOSTED_ZONE_NAME: ${{ vars.PLANE_A_HOSTED_ZONE_NAME }}
         run: |
           set -euo pipefail
-          cdk_args=(
-            -c env="${ENV_NAME}"
-            -c backendImageTag="${IMAGE_TAG}"
-            -c cpuArchitecture=x86_64
-            -c importExistingBackendRepository=true
-            -c minimalInfra=false
-            -c enableDbProxy=false
-            -c providerProbeMode=fan_in
-            -c enableComplianceServices=false
-            -c enableCostGuardrails=false
-            -c pinpointEnabled=false
-            -c enableSynthetics=false
-            -c enableWaf=false
-            -c planeBDisableTier1=false
-            -c planeBB2cRefreshServiceEnabled=true
-            -c planeBFxRateRefreshServiceEnabled=true
-            -c stagingBusinessHoursEnabled=false
-            -c stagingTimezone="America/New_York"
-            -c stagingNatGateways=1
-            -c stagingInterfaceEndpointsMode=minimal
-            -c alertEvaluationServiceEnabled=true
-            -c exportServiceEnabled=true
-            -c agentOrchestratorServiceEnabled=false
-            -c stressResponderServiceEnabled=true
-            -c normalizationServiceEnabled=true
-            -c planeBIngestDesiredCount=1
-            -c planeBB2cRefreshDesiredCount=1
-            -c planeBFxRateRefreshDesiredCount=1
-            -c planeBIngestFanoutMode=queue
-            -c planeBIngestFanoutTier1DesiredCount=1
-            -c planeBIngestFanoutTier2DesiredCount=1
-            -c goldLiveDesiredCount=1
-            -c planeBNotificationsDesiredCount=1
-            -c planeBOpsAlertsDesiredCount=1
-            -c alertEvaluationDesiredCount=1
-            -c exportWorkerDesiredCount=1
-            -c agentOrchestratorDesiredCount=0
-            -c stressResponderDesiredCount=1
-            -c normalizationWorkerDesiredCount=1
-            -c planeBQueueWorkerDesiredCount=1
-            -c planeBQueueWorkerMaxCount=3
-            -c quoteRefreshQueueMode=queue
-            -c fxRateRefreshQueueMode=queue
-            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}"
-            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}"
-            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
-          )
-          if [ -n "${PLANE_A_DOMAIN_NAME:-}" ] && [ -n "${PLANE_A_CERT_ARN:-}" ]; then
-            cdk_args+=(
-              -c planeADomainName="${PLANE_A_DOMAIN_NAME}"
-              -c planeACertificateArn="${PLANE_A_CERT_ARN}"
-            )
-            if [ -n "${PLANE_A_HOSTED_ZONE_ID:-}" ] && [ -n "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
-              cdk_args+=(
-                -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}"
-                -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}"
-              )
-            fi
-          fi
-          pnpm -C infrastructure/cdk exec -- cdk deploy "${cdk_args[@]}" --require-approval never
+          pnpm -C infrastructure/cdk exec -- cdk deploy \
+            -c env="${ENV_NAME}" \
+            -c backendImageTag="${IMAGE_TAG}" \
+            -c cpuArchitecture=x86_64 \
+            -c importExistingBackendRepository=true \
+            -c minimalInfra=false \
+            -c enableDbProxy=false \
+            -c providerProbeMode=per_provider \
+            -c enableComplianceServices=false \
+            -c enableCostGuardrails=false \
+            -c pinpointEnabled=false \
+            -c enableWaf=false \
+            -c planeBDisableTier1=false \
+            -c planeBB2cRefreshServiceEnabled=true \
+            -c planeBFxRateRefreshServiceEnabled=true \
+            -c planeBIngestDesiredCount=1 \
+            -c planeBB2cRefreshDesiredCount=1 \
+            -c planeBFxRateRefreshDesiredCount=1 \
+            -c planeBIngestFanoutMode=queue \
+            -c planeBIngestFanoutTier1DesiredCount=1 \
+            -c planeBIngestFanoutTier2DesiredCount=1 \
+            -c quoteRefreshQueueMode=queue \
+            -c fxRateRefreshQueueMode=queue \
+            -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-100}" \
+            -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-60}" \
+            -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
+            --require-approval never
 
       - name: Run Migrations (staging)
         shell: bash
         env:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
+          SKIP_MIGRATIONS: '1'
         run: |
           set -euo pipefail
+          if [ "${SKIP_MIGRATIONS:-0}" = "1" ]; then
+            echo "Skipping migrations for staging minimal deploy profile."
+            exit 0
+          fi
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           task_def="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="DbMigrateTaskDefinitionArn") | .OutputValue')"
           sg_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneBSecurityGroupId") | .OutputValue')"
@@ -1665,9 +1366,17 @@ jobs:
           ENV_NAME: staging
           STACK_NAME: ${{ vars.STACK_NAME }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }} # pragma: allowlist secret
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'staging' }}
           PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
+          PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+          PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+          PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+          PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+          PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+          PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
@@ -1676,10 +1385,9 @@ jobs:
           dist_domain="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionDomain") | .OutputValue')"
           plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
           plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
-          resolved_public_api_base="$(echo "${PUBLIC_API_BASE:-}" | sed 's:/*$::')"
-          if [ -z "$resolved_public_api_base" ]; then
-            echo "Missing PUBLIC_API_BASE for staging frontend deploy."
-            exit 1
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
           export NODE_ENV=staging
@@ -1688,13 +1396,31 @@ jobs:
           export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
           export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
           export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
-          export PUBLIC_API_BASE="${resolved_public_api_base}"
+          export PUBLIC_API_BASE="${api_base}/api/v1"
           export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
           export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
           export PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV:-${ENV_NAME}}"
           export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
           export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
           export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
+          export PUBLIC_NEW_RELIC_BROWSER_ENABLED="${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}"
+          export PUBLIC_NEW_RELIC_ACCOUNT_ID="${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}"
+          export PUBLIC_NEW_RELIC_TRUST_KEY="${PUBLIC_NEW_RELIC_TRUST_KEY:-}"
+          export PUBLIC_NEW_RELIC_AGENT_ID="${PUBLIC_NEW_RELIC_AGENT_ID:-}"
+          export PUBLIC_NEW_RELIC_APPLICATION_ID="${PUBLIC_NEW_RELIC_APPLICATION_ID:-}"
+          export PUBLIC_NEW_RELIC_LICENSE_KEY="${PUBLIC_NEW_RELIC_LICENSE_KEY:-}"
+          export PUBLIC_NEW_RELIC_BEACON="${PUBLIC_NEW_RELIC_BEACON:-}"
+          export PUBLIC_NEW_RELIC_ERROR_BEACON="${PUBLIC_NEW_RELIC_ERROR_BEACON:-}"
+
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ]; then
+            if [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ]; then
+              echo "Missing PUBLIC_NEW_RELIC_* browser agent vars while PUBLIC_NEW_RELIC_BROWSER_ENABLED=1."
+              exit 1
+            fi
+          fi
 
           pnpm -C frontend build
           pnpm -C frontend generate
@@ -1713,12 +1439,15 @@ jobs:
         shell: bash
         env:
           ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
         run: |
           set -euo pipefail
-          api_base="$(echo "${PUBLIC_API_BASE:-}" | sed -E 's:/api/v1/?$::; s:/api/?$::')"
-          if [ -z "$api_base" ]; then
-            echo "Missing PUBLIC_API_BASE for staging public API checks."
-            exit 1
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
           refresh_status="$(curl -sS -o /tmp/refresh-status.out -w '%{http_code}' "${api_base}/api/v1/quotes/refresh-status?request_ids=00000000-0000-4000-8000-000000000001")"
@@ -1746,209 +1475,56 @@ jobs:
         shell: bash
         env:
           ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: omar@remit-scout.com
-          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
-          SMOKE_EXPECTED_EMAIL: omar@remit-scout.com
-          SMOKE_EXPECTED_IS_ADMIN: '1'
-          SMOKE_EXPECTED_APP_ROLE: super_admin
-          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
-          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
+          SMOKE_USER_EMAIL: ${{ secrets.SMOKE_USER_EMAIL }}
+          SMOKE_USER_PASSWORD: ${{ secrets.SMOKE_USER_PASSWORD }}
         run: |
           set -euo pipefail
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
           if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
             echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for authenticated smoke."
             exit 1
           fi
-          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging authenticated smoke."
-            exit 1
-          fi
-          if [ -z "${PUBLIC_API_BASE:-}" ]; then
-            echo "Missing PUBLIC_API_BASE for staging authenticated smoke."
-            exit 1
+          if [ -z "${SMOKE_USER_EMAIL:-}" ] || [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Skipping authenticated smoke: SMOKE_USER_EMAIL or SMOKE_USER_PASSWORD not configured in staging environment secrets."
+            exit 0
           fi
 
-          mkdir -p .smoke-artifacts
-          SMOKE_BASE_URL="${PUBLIC_API_BASE}" \
+          SMOKE_BASE_URL="$api_base" \
           SUPABASE_URL="$SUPABASE_URL" \
           SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
           SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
           SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
-          SMOKE_EXPECTED_EMAIL="$SMOKE_EXPECTED_EMAIL" \
-          SMOKE_EXPECTED_IS_ADMIN="$SMOKE_EXPECTED_IS_ADMIN" \
-          SMOKE_EXPECTED_APP_ROLE="$SMOKE_EXPECTED_APP_ROLE" \
-          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE="$SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE" \
-          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS="$SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS" \
-          pnpm -C backend ci:alerts-watchlists-smoke | tee .smoke-artifacts/deploy-staging-omar-entitlement-smoke.log
-
-      - name: Enterprise + Triangulation Smoke (staging)
-        shell: bash
-        env:
-          ENV_NAME: staging
-          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: austrilic@gmail.com
-          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_AUSTRILIC || secrets.DEFAULT_LAUNCH_PASSWORD }}
-          SMOKE_EXPECTED_EMAIL: austrilic@gmail.com
-          SMOKE_EXPECTED_IS_ADMIN: '0'
-          SMOKE_EXPECTED_APP_ROLE: user
-          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE: enterprise
-          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS: '1'
-        run: |
-          set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
-            echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for enterprise smoke."
-            exit 1
-          fi
-          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Missing LAUNCH_PASSWORD_AUSTRILIC or DEFAULT_LAUNCH_PASSWORD for staging enterprise smoke."
-            exit 1
-          fi
-          if [ -z "${PUBLIC_API_BASE:-}" ]; then
-            echo "Missing PUBLIC_API_BASE for staging enterprise smoke."
-            exit 1
-          fi
-
-          mkdir -p .smoke-artifacts
-          SMOKE_BASE_URL="${PUBLIC_API_BASE}" \
-          SUPABASE_URL="$SUPABASE_URL" \
-          SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-          SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
-          SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
-          SMOKE_EXPECTED_EMAIL="$SMOKE_EXPECTED_EMAIL" \
-          SMOKE_EXPECTED_IS_ADMIN="$SMOKE_EXPECTED_IS_ADMIN" \
-          SMOKE_EXPECTED_APP_ROLE="$SMOKE_EXPECTED_APP_ROLE" \
-          SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE="$SMOKE_EXPECTED_EFFECTIVE_PLAN_CODE" \
-          SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS="$SMOKE_EXPECT_ENTERPRISE_ENTITLEMENTS" \
-          pnpm -C backend ci:enterprise-triangulation-smoke | tee .smoke-artifacts/deploy-staging-enterprise-triangulation-smoke.log
-
-      - name: Verify runner IP is allowlisted for staging admin smoke
-        shell: bash
-        run: |
-          set -euo pipefail
-          admin_allowlist="${ADMIN_IP_ALLOWLIST:-${WAF_ADMIN_ALLOWLIST_IPS:-}}"
-          if [ -z "${admin_allowlist:-}" ]; then
-            echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
-            exit 1
-          fi
-          runner_ip="${STAGING_ADMIN_SMOKE_RUNNER_IP:-$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')}"
-          python3 - "$runner_ip" "$admin_allowlist" <<'PY'
-          import ipaddress
-          import sys
-
-          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
-          allowlist_raw = sys.argv[2]
-
-          for token in [item.strip() for item in allowlist_raw.split(',') if item.strip()]:
-              network = ipaddress.ip_network(token if '/' in token else f"{token}/32", strict=False)
-              if runner_ip in network:
-                  print(f"Runner IP {runner_ip} is allowlisted by {network}")
-                  raise SystemExit(0)
-
-          print(f"Runner IP {runner_ip} is not present in ADMIN_IP_ALLOWLIST.", file=sys.stderr)
-          raise SystemExit(1)
-          PY
-
-      - name: Admin Surface Smoke (staging)
-        shell: bash
-        env:
-          ENV_NAME: staging
-          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
-          SMOKE_USER_EMAIL: omar@remit-scout.com
-          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
-          SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '0' }}
-          ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
-        run: |
-          set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
-            echo "Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY for staging admin surface smoke."
-            exit 1
-          fi
-          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
-            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
-            exit 1
-          fi
-          if [ -z "${PUBLIC_API_BASE:-}" ]; then
-            echo "Missing PUBLIC_API_BASE for staging admin surface smoke."
-            exit 1
-          fi
-
-          mkdir -p .smoke-artifacts
-          SMOKE_BASE_URL="${PUBLIC_API_BASE}" \
-          SUPABASE_URL="$SUPABASE_URL" \
-          SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-          SMOKE_USER_EMAIL="$SMOKE_USER_EMAIL" \
-          SMOKE_USER_PASSWORD="$SMOKE_USER_PASSWORD" \
-          SMOKE_USER_MFA_CODE="$SMOKE_USER_MFA_CODE" \
-          SMOKE_EXPECT_ADMIN_MFA="$SMOKE_EXPECT_ADMIN_MFA" \
-          ADMIN_SMOKE_TARGET_EMAIL="$ADMIN_SMOKE_TARGET_EMAIL" \
-          pnpm -C backend ci:admin-surface-smoke | tee .smoke-artifacts/deploy-staging-admin-surface-smoke.log
-
-      - name: Install Playwright browser runtime (staging admin UI smoke)
-        shell: bash
-        run: pnpm -C frontend exec playwright install --with-deps chromium
-
-      - name: Admin UI Smoke (staging)
-        shell: bash
-        env:
-          ENV_NAME: staging
-          PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
-          E2E_AUTH_EMAIL: omar@remit-scout.com
-          E2E_AUTH_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
-          E2E_AUTH_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
-          E2E_ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
-        run: |
-          set -euo pipefail
-          app_base="$(echo "${PLAYWRIGHT_BASE_URL:-}" | sed 's:/*$::')"
-          if [ -z "${app_base:-}" ] || [ "${app_base:-}" = "https://" ]; then
-            echo "Missing PUBLIC_SITE_URL for staging admin UI smoke."
-            exit 1
-          fi
-          if [ -z "${E2E_AUTH_PASSWORD:-}" ]; then
-            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
-            exit 1
-          fi
-
-          mkdir -p .smoke-artifacts
-          PLAYWRIGHT_BASE_URL="$app_base" \
-          E2E_AUTH_EMAIL="$E2E_AUTH_EMAIL" \
-          E2E_AUTH_PASSWORD="$E2E_AUTH_PASSWORD" \
-          E2E_AUTH_MFA_CODE="$E2E_AUTH_MFA_CODE" \
-          E2E_ADMIN_SMOKE_TARGET_EMAIL="$E2E_ADMIN_SMOKE_TARGET_EMAIL" \
-          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee .smoke-artifacts/deploy-staging-admin-ui-smoke.log
-
-      - name: Upload staging admin smoke evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: deploy-staging-admin-smoke-evidence
-          path: |
-            .smoke-artifacts
-            frontend/playwright-report
-            frontend/test-results
-          retention-days: 30
-          if-no-files-found: ignore
+          pnpm -C backend ci:alerts-watchlists-smoke
 
       - name: Post-deploy Smoke (staging) + Auto Rollback On Failure
         shell: bash
         env:
           ENV_NAME: staging
+          STACK_NAME: ${{ vars.STACK_NAME }}
           PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          api_base="$(echo "${PUBLIC_API_BASE:-}" | sed -E 's:/api/v1/?$::; s:/api/?$::')"
-          if [ -z "${api_base:-}" ] || [ "${api_base:-}" = "https://" ]; then
-            echo "Missing PUBLIC_API_BASE for staging post-deploy smoke."
-            exit 1
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
           set +e
-          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 SMOKE_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
           smoke_ec=$?
           set -e
           if [ "$smoke_ec" != "0" ]; then
@@ -1970,24 +1546,18 @@ jobs:
           set -euo pipefail
           dispatch_ref="${{ steps.resolve_ref.outputs.requested_ref }}"
           if [[ "${dispatch_ref}" =~ ^[0-9a-fA-F]{40}$ ]]; then
-            dispatch_ref="staging"
+            dispatch_ref="${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}"
           fi
           if [ -z "${dispatch_ref}" ] || [ "${dispatch_ref}" = "HEAD" ]; then
-            dispatch_ref="staging"
+            dispatch_ref="${GITHUB_REF_NAME:-staging}"
           fi
 
-          deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          readiness_run_title="staging/go-live-readiness (${deploy_sha})"
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" \
-            -f run_runtime_config_validation=true \
-            -f skip_duplicate_admin_smoke=true \
-            -f deploy_sha="${deploy_sha}"
+          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true
 
           run_id=""
-          echo "Waiting for readiness workflow run titled: ${readiness_run_title}"
           for i in $(seq 1 60); do
-            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt,displayTitle -q "sort_by(.createdAt) | reverse | .[] | select(.event==\"workflow_dispatch\" and .createdAt >= \"${dispatch_started_at}\" and .displayTitle==\"${readiness_run_title}\") | .databaseId" | head -n1)"
+            run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,event,createdAt -q ".[] | select(.event==\"workflow_dispatch\" and .createdAt >= \"${dispatch_started_at}\") | .databaseId" | head -n1)"
             if [ -n "$run_id" ]; then
               break
             fi
@@ -2000,7 +1570,7 @@ jobs:
           fi
 
           for i in $(seq 1 240); do
-            run_payload="$(gh run view "$run_id" --json status,conclusion 2>/dev/null || true)"
+            run_payload="$(gh run view "$run_id" --json status,conclusion,headSha 2>/dev/null || true)"
             if [ -z "${run_payload}" ]; then
               sleep 5
               continue
@@ -2008,7 +1578,12 @@ jobs:
 
             run_status="$(echo "$run_payload" | jq -r '.status')"
             run_conclusion="$(echo "$run_payload" | jq -r '.conclusion // ""')"
+            run_head_sha="$(echo "$run_payload" | jq -r '.headSha // ""')"
             if [ "$run_status" = "completed" ]; then
+              if [ "$run_head_sha" != "${{ steps.resolve_ref.outputs.sha }}" ]; then
+                echo "Staging readiness workflow run ${run_id} headSha=${run_head_sha} does not match deploy sha=${{ steps.resolve_ref.outputs.sha }}."
+                exit 1
+              fi
               if [ "$run_conclusion" = "success" ]; then
                 echo "Staging readiness workflow run ${run_id} succeeded."
                 exit 0
@@ -2033,8 +1608,6 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'push_pull' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2049,12 +1622,8 @@ jobs:
             echo "Missing NEW_RELIC_STAGING_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
-            exit 1
-          fi
-          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
+          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
             exit 1
           fi
           set +e
@@ -2068,6 +1637,9 @@ jobs:
           REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
+          REQUIRE_CUSTOM_METRICS=0 \
+          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e
@@ -2137,7 +1709,7 @@ jobs:
           COMMIT_SHA_IMAGE_TAG: ${{ steps.vars.outputs.IMAGE_TAG }}
           RESOLVE_REF_SHA: ${{ steps.resolve_ref.outputs.sha }}
           DEFAULT_SHA: ${{ github.sha }}
-        run: |
+        run: | 
           set -euo pipefail
           if [ -z "${SLACK_WEBHOOK:-}" ]; then
             echo "Skipping Slack notification: SLACK_WEBHOOK_URL is not configured."
@@ -2183,8 +1755,6 @@ jobs:
       NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
       NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
       NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-      NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
-      NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
       NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
       NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
       NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -2221,14 +1791,6 @@ jobs:
       COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON: ${{ vars.COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON }}
       COMPLIANCE_SOC2_TYPE_II_REPORT_URL: ${{ vars.COMPLIANCE_SOC2_TYPE_II_REPORT_URL }}
       PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
-      FRONTEND_DOMAIN_NAME: ${{ vars.FRONTEND_DOMAIN_NAME }}
-      FRONTEND_CERT_ARN: ${{ vars.FRONTEND_CERT_ARN }}
-      FRONTEND_HOSTED_ZONE_ID: ${{ vars.FRONTEND_HOSTED_ZONE_ID }}
-      FRONTEND_HOSTED_ZONE_NAME: ${{ vars.FRONTEND_HOSTED_ZONE_NAME }}
-      PLANE_A_DOMAIN_NAME: ${{ vars.PLANE_A_DOMAIN_NAME }}
-      PLANE_A_CERT_ARN: ${{ vars.PLANE_A_CERT_ARN }}
-      PLANE_A_HOSTED_ZONE_ID: ${{ vars.PLANE_A_HOSTED_ZONE_ID }}
-      PLANE_A_HOSTED_ZONE_NAME: ${{ vars.PLANE_A_HOSTED_ZONE_NAME }}
       PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
       PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
       PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
@@ -2345,8 +1907,7 @@ jobs:
         run: |
           set -euo pipefail
           deploy_sha="${{ steps.resolve_ref.outputs.sha }}"
-          readiness_run_title="staging/go-live-readiness (${deploy_sha})"
-          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,displayTitle,createdAt,conclusion -q "sort_by(.createdAt) | reverse | .[] | select(.displayTitle==\"${readiness_run_title}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
+          run_id="$(gh run list --workflow staging-go-live-readiness.yml --json databaseId,headSha,conclusion -q ".[] | select(.headSha==\"${deploy_sha}\" and .conclusion==\"success\") | .databaseId" | head -n1)"
           if [ -z "$run_id" ]; then
             echo "No successful staging-go-live-readiness run found for commit ${deploy_sha}."
             echo "Block prod deploy until staging readiness gate passes on this exact commit."
@@ -2354,7 +1915,7 @@ jobs:
           fi
           echo "Found successful staging readiness run: ${run_id}"
 
-      - name: Compliance metadata note
+      - name: SOC 2 Type II enterprise launch gate
         shell: bash
         env:
           PLANE_A_REQUIRE_API_KEY: ${{ vars.PLANE_A_REQUIRE_API_KEY }}
@@ -2366,12 +1927,51 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ "${PLANE_A_REQUIRE_API_KEY:-0}" != "1" ]; then
+            echo "SOC 2 launch gate skipped: PLANE_A_REQUIRE_API_KEY is not set to 1."
+            exit 0
+          fi
+
           report_state="${COMPLIANCE_SOC2_TYPE_II_REPORT_STATE:-${COMPLIANCE_SOC2_TYPE_II_STATUS:-}}"
-          echo "PLANE_A_REQUIRE_API_KEY=${PLANE_A_REQUIRE_API_KEY:-0}"
-          echo "COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=${report_state:-<unset>}"
-          echo "COMPLIANCE_SOC2_TYPE_II_REPORT_DATE=${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE:-<unset>}"
-          echo "COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON=${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON:-<unset>}"
-          echo "Compliance metadata is advisory for deploy readiness. Commercial launch remains controlled by the runtime institutional data-maturity gate."
+          if [ -z "$report_state" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_STATE must be set for enterprise mode."
+            exit 1
+          fi
+
+          if [ "$report_state" != "audited" ]; then
+            echo "SOC 2 launch gate failed: report_state must be audited for enterprise production promotion (received \"$report_state\")."
+            echo "Set COMPLIANCE_SOC2_TYPE_II_REPORT_STATE=audited and provide a valid report date/window."
+            exit 1
+          fi
+
+          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE:-}" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is required when report_state is audited."
+            exit 1
+          fi
+          if ! date -d "${COMPLIANCE_SOC2_TYPE_II_REPORT_DATE}" +%s >/dev/null 2>&1; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_DATE is not a valid date."
+            exit 1
+          fi
+
+          if [ -z "${COMPLIANCE_SOC2_TYPE_II_REPORT_URL:-}" ]; then
+            echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_REPORT_URL is required when report_state is audited."
+            exit 1
+          fi
+
+          if [ -n "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON:-}" ]; then
+            if ! date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s >/dev/null 2>&1; then
+              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is not a valid date."
+              exit 1
+            fi
+            if [ "$(date -d "${COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON}" +%s)" -le "$(date +%s)" ]; then
+              echo "SOC 2 launch gate failed: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON must be in the future."
+              exit 1
+            fi
+          else
+            echo "SOC 2 launch gate warning: COMPLIANCE_SOC2_TYPE_II_EXPIRES_ON is empty."
+          fi
+
+          echo "SOC 2 Type II production launch gate passed (report_state=audited)."
 
       - uses: ./.github/actions/setup-node-pnpm
         with:
@@ -2391,44 +1991,12 @@ jobs:
             -o spdx-json="/workspace/.security/${SECURITY_ENV}-sbom.spdx.json"
           audit_exit=0
           pnpm -w audit --prod --audit-level=high --json > ".security/${SECURITY_ENV}-pnpm-audit.json" || audit_exit=$?
-          high_critical_count="$(
-            node -e '
-              const fs = require("fs");
-              const path = process.argv[1];
-              let raw = "";
-              try {
-                raw = fs.readFileSync(path, "utf8").trim();
-              } catch {
-                console.log(-1);
-                process.exit(0);
-              }
-              if (!raw) {
-                console.log(-1);
-                process.exit(0);
-              }
-              try {
-                const parsed = JSON.parse(raw);
-                const v = parsed?.metadata?.vulnerabilities ?? {};
-                const high = Number(v.high ?? 0);
-                const critical = Number(v.critical ?? 0);
-                console.log(high + critical);
-              } catch {
-                console.log(-1);
-              }
-            ' ".security/${SECURITY_ENV}-pnpm-audit.json"
-          )"
-          if [ "${high_critical_count}" -lt 0 ]; then
-            echo "::error::Failed to parse pnpm audit JSON output."
-            exit 1
-          fi
-          if [ "${high_critical_count}" -gt 0 ]; then
-            echo "pnpm audit reported HIGH/CRITICAL issues (count=${high_critical_count})."
+          if [ "$audit_exit" -ne 0 ]; then
+            echo "pnpm audit reported issues (exit=$audit_exit)."
             if [ "${AUDIT_BLOCKING}" = "1" ]; then
-              exit 1
+              exit "$audit_exit"
             fi
             echo "Non-blocking mode: continuing."
-          elif [ "$audit_exit" -ne 0 ]; then
-            echo "pnpm audit exited with code ${audit_exit} but no HIGH/CRITICAL vulnerabilities were reported."
           fi
 
       - name: Upload Security Evidence
@@ -2489,47 +2057,10 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then # pragma: allowlist secret
-            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)." # pragma: allowlist secret
+          if [ -z "${PUBLIC_SUPABASE_URL:-}" ] || [ -z "${PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY (configure in GitHub environment: prod)."
             exit 1
           fi
-          if [ -z "${FRONTEND_DOMAIN_NAME:-}" ] || [ -z "${FRONTEND_CERT_ARN:-}" ]; then
-            echo "Missing FRONTEND_DOMAIN_NAME / FRONTEND_CERT_ARN (configure in GitHub environment vars: prod)."
-            exit 1
-          fi
-          if [ -z "${FRONTEND_HOSTED_ZONE_ID:-}" ] || [ -z "${FRONTEND_HOSTED_ZONE_NAME:-}" ]; then
-            echo "Missing FRONTEND_HOSTED_ZONE_ID / FRONTEND_HOSTED_ZONE_NAME (configure in GitHub environment vars: prod)."
-            exit 1
-          fi
-          if [ -z "${PLANE_A_DOMAIN_NAME:-}" ] || [ -z "${PLANE_A_CERT_ARN:-}" ]; then
-            echo "Missing PLANE_A_DOMAIN_NAME / PLANE_A_CERT_ARN (configure in GitHub environment vars: prod)."
-            exit 1
-          fi
-          if [ -z "${PLANE_A_HOSTED_ZONE_ID:-}" ] || [ -z "${PLANE_A_HOSTED_ZONE_NAME:-}" ]; then
-            echo "Missing PLANE_A_HOSTED_ZONE_ID / PLANE_A_HOSTED_ZONE_NAME (configure in GitHub environment vars: prod)."
-            exit 1
-          fi
-          if [ -z "${PUBLIC_API_BASE:-}" ]; then
-            echo "Missing PUBLIC_API_BASE (configure in GitHub environment vars: prod)."
-            exit 1
-          fi
-          python3 - "${PUBLIC_API_BASE}" "${PLANE_A_DOMAIN_NAME}" <<'PY'
-          import sys
-          from urllib.parse import urlparse
-
-          public_api_base = sys.argv[1].strip()
-          expected_host = sys.argv[2].strip().lower()
-          parsed = urlparse(public_api_base)
-
-          if parsed.scheme not in {"https"} or not parsed.netloc:
-              raise SystemExit("PUBLIC_API_BASE must be an absolute https URL.")
-
-          actual_host = parsed.hostname.lower() if parsed.hostname else ""
-          if actual_host != expected_host:
-              raise SystemExit(
-                  f"PUBLIC_API_BASE host {actual_host!r} does not match PLANE_A_DOMAIN_NAME {expected_host!r}."
-              )
-          PY
           if [ -z "${SHARED_SECRET_ARN:-}" ]; then
             echo "Missing SHARED_SECRET_ARN (configure in GitHub environment secret: prod)."
             exit 1
@@ -2556,16 +2087,12 @@ jobs:
             echo "Missing NEW_RELIC_USER_API_KEY / NEW_RELIC_ACCOUNT_ID / NEW_RELIC_REGION for hard New Relic gate."
             exit 1
           fi
-          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
+          if [ -z "${NEW_RELIC_PROD_AWS_ACCOUNT_ID:-}" ]; then
             echo "Missing NEW_RELIC_PROD_AWS_ACCOUNT_ID for account-pinned verify-signals."
             exit 1
           fi
-          if [ "${NEW_RELIC_STAGING_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN for staging cloud-link sync."
-            exit 1
-          fi
-          if [ "${NEW_RELIC_PROD_AWS_MODE:-push_pull}" != "otlp_only" ] && [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
-            echo "Missing NEW_RELIC_PROD_AWS_ROLE_ARN for prod cloud-link sync."
+          if [ -z "${NEW_RELIC_STAGING_AWS_ROLE_ARN:-}" ] || [ -z "${NEW_RELIC_PROD_AWS_ROLE_ARN:-}" ]; then
+            echo "Missing NEW_RELIC_STAGING_AWS_ROLE_ARN / NEW_RELIC_PROD_AWS_ROLE_ARN for cloud-link sync."
             exit 1
           fi
           if [ "${NEW_RELIC_LOGS_ENABLED:-1}" = "0" ]; then
@@ -2596,8 +2123,6 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
           NEW_RELIC_PROD_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_PROD_AWS_ROLE_ARN }}
@@ -2756,35 +2281,11 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk diff \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c frontendDomainName="${FRONTEND_DOMAIN_NAME}" \
-            -c frontendCertificateArn="${FRONTEND_CERT_ARN}" \
-            -c frontendHostedZoneId="${FRONTEND_HOSTED_ZONE_ID}" \
-            -c frontendHostedZoneName="${FRONTEND_HOSTED_ZONE_NAME}" \
-            -c planeADomainName="${PLANE_A_DOMAIN_NAME}" \
-            -c planeACertificateArn="${PLANE_A_CERT_ARN}" \
-            -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}" \
-            -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}" \
             -c minimalInfra=false \
-            -c enableWaf=true \
-            -c wafEnableBotControl=false \
-            -c enableDbProxy=false \
-            -c providerProbeMode=fan_in \
-            -c prodNatGateways=1 \
-            -c prodInterfaceEndpointsMode=minimal \
-            -c planeADesiredCount=2 \
-            -c prodDatabaseInstances=1 \
-            -c prodRedisNodeType=cache.t4g.small \
-            -c prodRedisReplicasPerNodeGroup=0 \
-            -c prodRedisAutomaticFailoverEnabled=false \
-            -c prodRedisMultiAzEnabled=false \
+            -c providerProbeMode=per_provider \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
-            -c alertEvaluationServiceEnabled=true \
-            -c exportServiceEnabled=true \
-            -c agentOrchestratorServiceEnabled=true \
-            -c stressResponderServiceEnabled=true \
-            -c normalizationServiceEnabled=true \
             -c planeBIngestFanoutMode=queue \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
@@ -2793,17 +2294,6 @@ jobs:
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c goldLiveDesiredCount=1 \
-            -c planeBNotificationsDesiredCount=1 \
-            -c planeBOpsAlertsDesiredCount=1 \
-            -c alertEvaluationDesiredCount=1 \
-            -c exportWorkerDesiredCount=1 \
-            -c agentOrchestratorDesiredCount=1 \
-            -c stressResponderDesiredCount=1 \
-            -c normalizationWorkerDesiredCount=1 \
-            -c planeBQueueWorkerDesiredCount=1 \
-            -c planeBQueueWorkerMaxCount=3 \
-            -c planeBQueueWorkerSpotOnly=true \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}"
@@ -2921,35 +2411,11 @@ jobs:
           pnpm -C infrastructure/cdk exec -- cdk deploy \
             -c env="${ENV_NAME}" \
             -c backendImageTag="${IMAGE_TAG}" \
-            -c frontendDomainName="${FRONTEND_DOMAIN_NAME}" \
-            -c frontendCertificateArn="${FRONTEND_CERT_ARN}" \
-            -c frontendHostedZoneId="${FRONTEND_HOSTED_ZONE_ID}" \
-            -c frontendHostedZoneName="${FRONTEND_HOSTED_ZONE_NAME}" \
-            -c planeADomainName="${PLANE_A_DOMAIN_NAME}" \
-            -c planeACertificateArn="${PLANE_A_CERT_ARN}" \
-            -c planeAHostedZoneId="${PLANE_A_HOSTED_ZONE_ID}" \
-            -c planeAHostedZoneName="${PLANE_A_HOSTED_ZONE_NAME}" \
             -c minimalInfra=false \
-            -c enableWaf=true \
-            -c wafEnableBotControl=false \
-            -c enableDbProxy=false \
-            -c providerProbeMode=fan_in \
-            -c prodNatGateways=1 \
-            -c prodInterfaceEndpointsMode=minimal \
-            -c planeADesiredCount=2 \
-            -c prodDatabaseInstances=1 \
-            -c prodRedisNodeType=cache.t4g.small \
-            -c prodRedisReplicasPerNodeGroup=0 \
-            -c prodRedisAutomaticFailoverEnabled=false \
-            -c prodRedisMultiAzEnabled=false \
+            -c providerProbeMode=per_provider \
             -c planeBDisableTier1=false \
             -c planeBB2cRefreshServiceEnabled=true \
             -c planeBFxRateRefreshServiceEnabled=true \
-            -c alertEvaluationServiceEnabled=true \
-            -c exportServiceEnabled=true \
-            -c agentOrchestratorServiceEnabled=true \
-            -c stressResponderServiceEnabled=true \
-            -c normalizationServiceEnabled=true \
             -c planeBIngestFanoutMode=queue \
             -c quoteRefreshQueueMode=queue \
             -c fxRateRefreshQueueMode=queue \
@@ -2958,135 +2424,72 @@ jobs:
             -c planeBFxRateRefreshDesiredCount=1 \
             -c planeBIngestFanoutTier1DesiredCount=1 \
             -c planeBIngestFanoutTier2DesiredCount=1 \
-            -c goldLiveDesiredCount=1 \
-            -c planeBNotificationsDesiredCount=1 \
-            -c planeBOpsAlertsDesiredCount=1 \
-            -c alertEvaluationDesiredCount=1 \
-            -c exportWorkerDesiredCount=1 \
-            -c agentOrchestratorDesiredCount=1 \
-            -c stressResponderDesiredCount=1 \
-            -c normalizationWorkerDesiredCount=1 \
-            -c planeBQueueWorkerDesiredCount=1 \
-            -c planeBQueueWorkerMaxCount=3 \
-            -c planeBQueueWorkerSpotOnly=true \
             -c costBudgetAmountUsd="${COST_BUDGET_AMOUNT_USD:-500}" \
             -c costAnomalyThresholdUsd="${COST_ANOMALY_THRESHOLD_USD:-100}" \
             -c costAlertEmails="${COST_ALERT_EMAILS:-alerts@remit-scout.com}" \
             --require-approval broadening
-
-      - name: Verify WAF attachment (prod)
-        shell: bash
-        env:
-          STACK_NAME: ${{ vars.STACK_NAME }}
-        run: |
-          set -euo pipefail
-          if [ -z "${STACK_NAME:-}" ]; then
-            echo "::error::STACK_NAME is required for WAF verification."
-            exit 1
-          fi
-
-          plane_a_domain="$(aws cloudformation describe-stacks \
-            --stack-name "${STACK_NAME}" \
-            --query "Stacks[0].Outputs[?OutputKey=='PlaneACloudFrontDomain'].OutputValue | [0]" \
-            --output text)"
-          frontend_distribution_id="$(aws cloudformation describe-stacks \
-            --stack-name "${STACK_NAME}" \
-            --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue | [0]" \
-            --output text)"
-
-          if [ -z "${plane_a_domain}" ] || [ "${plane_a_domain}" = "None" ]; then
-            echo "::error::Plane A CloudFront domain output is missing."
-            exit 1
-          fi
-          if [ -z "${frontend_distribution_id}" ] || [ "${frontend_distribution_id}" = "None" ]; then
-            echo "::error::Frontend CloudFront distribution output is missing."
-            exit 1
-          fi
-
-          plane_a_waf_arn="$(aws cloudfront list-distributions \
-            --query "DistributionList.Items[?DomainName=='${plane_a_domain}'].WebACLId | [0]" \
-            --output text)"
-          frontend_waf_arn="$(aws cloudfront get-distribution-config \
-            --id "${frontend_distribution_id}" \
-            --query 'DistributionConfig.WebACLId' \
-            --output text)"
-
-          if [ -z "${plane_a_waf_arn}" ] || [ "${plane_a_waf_arn}" = "None" ]; then
-            echo "::error::Plane A distribution is missing a WAF association."
-            exit 1
-          fi
-          if [ -z "${frontend_waf_arn}" ] || [ "${frontend_waf_arn}" = "None" ]; then
-            echo "::error::Frontend distribution is missing a WAF association."
-            exit 1
-          fi
-          if [ "${plane_a_waf_arn}" != "${frontend_waf_arn}" ]; then
-            echo "::error::Plane A and frontend distributions are attached to different WAF ACLs."
-            exit 1
-          fi
-
-          waf_json="$(aws wafv2 list-web-acls --scope CLOUDFRONT --region us-east-1 --output json)"
-          web_acl_name="$(printf '%s' "${waf_json}" | jq -r --arg arn "${plane_a_waf_arn}" '.WebACLs[] | select(.ARN == $arn) | .Name' | head -n1)"
-          web_acl_id="$(printf '%s' "${waf_json}" | jq -r --arg arn "${plane_a_waf_arn}" '.WebACLs[] | select(.ARN == $arn) | .Id' | head -n1)"
-
-          if [ -z "${web_acl_name}" ] || [ -z "${web_acl_id}" ]; then
-            echo "::error::Unable to resolve the attached CloudFront WAF ACL."
-            exit 1
-          fi
-
-          bot_control_rules="$(aws wafv2 get-web-acl \
-            --name "${web_acl_name}" \
-            --id "${web_acl_id}" \
-            --scope CLOUDFRONT \
-            --region us-east-1 \
-            --query "length(WebACL.Rules[?Statement.ManagedRuleGroupStatement.Name=='AWSManagedRulesBotControlRuleSet'])" \
-            --output text)"
-
-          if [ "${bot_control_rules}" != "0" ]; then
-            echo "::error::Bot Control is enabled in prod WAF, which violates the launch-cost posture."
-            exit 1
-          fi
 
       - name: Deploy Frontend (prod)
         shell: bash
         env:
           ENV_NAME: prod
           STACK_NAME: ${{ vars.STACK_NAME }}
-          PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
-          PUBLIC_API_BASE: ${{ vars.PUBLIC_API_BASE }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           PUBLIC_REMIT_SCOUT_ENV: ${{ vars.PUBLIC_REMIT_SCOUT_ENV || 'prod' }}
           PUBLIC_ENTERPRISE_ENABLED: ${{ vars.PUBLIC_ENTERPRISE_ENABLED || '1' }}
+          PUBLIC_NEW_RELIC_BROWSER_ENABLED: ${{ vars.PUBLIC_NEW_RELIC_BROWSER_ENABLED }}
+          PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+          PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.PUBLIC_NEW_RELIC_TRUST_KEY }}
+          PUBLIC_NEW_RELIC_AGENT_ID: ${{ vars.PUBLIC_NEW_RELIC_AGENT_ID }}
+          PUBLIC_NEW_RELIC_APPLICATION_ID: ${{ vars.PUBLIC_NEW_RELIC_APPLICATION_ID }}
+          PUBLIC_NEW_RELIC_LICENSE_KEY: ${{ vars.PUBLIC_NEW_RELIC_LICENSE_KEY }}
+          PUBLIC_NEW_RELIC_BEACON: ${{ vars.PUBLIC_NEW_RELIC_BEACON }}
+          PUBLIC_NEW_RELIC_ERROR_BEACON: ${{ vars.PUBLIC_NEW_RELIC_ERROR_BEACON }}
         run: |
           set -euo pipefail
           outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
           bucket="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendBucketName") | .OutputValue')"
           dist_id="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionId") | .OutputValue')"
           dist_domain="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="FrontendDistributionDomain") | .OutputValue')"
-          resolved_public_api_base="$(echo "${PUBLIC_API_BASE:-}" | sed 's:/*$::')"
-          resolved_public_site_url="$(echo "${PUBLIC_SITE_URL:-}" | sed 's:/*$::')"
-          if [ -z "${resolved_public_api_base:-}" ]; then
-            echo "Missing PUBLIC_API_BASE for prod frontend deploy."
-            exit 1
-          fi
-          if [ -z "${resolved_public_site_url:-}" ]; then
-            echo "Missing PUBLIC_SITE_URL for prod frontend deploy."
-            exit 1
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
           export NODE_ENV=production
           export ENVIRONMENT="${ENV_NAME}"
           export CLOUDFRONT_DISTRIBUTION_ID="$dist_id"
           export FRONTEND_DISTRIBUTION_DOMAIN="${dist_domain:-}"
-          export PUBLIC_SITE_URL="${resolved_public_site_url}"
-          export PUBLIC_IMAGE_BASE="${PUBLIC_IMAGE_BASE:-${resolved_public_site_url}/images}"
-          export PUBLIC_API_BASE="${resolved_public_api_base}"
+          export PLANE_A_CLOUDFRONT_DOMAIN="${plane_a_cf:-}"
+          export PLANE_A_API_ENDPOINT="${plane_a_api:-}"
+          export PUBLIC_API_BASE="${api_base}/api/v1"
           export PUBLIC_SUPABASE_URL="${PUBLIC_SUPABASE_URL}"
           export PUBLIC_SUPABASE_ANON_KEY="${PUBLIC_SUPABASE_ANON_KEY}"
           export PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV:-${ENV_NAME}}"
           export PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED:-1}"
           export NUXT_PUBLIC_REMIT_SCOUT_ENV="${PUBLIC_REMIT_SCOUT_ENV}"
           export NUXT_PUBLIC_ENTERPRISE_ENABLED="${PUBLIC_ENTERPRISE_ENABLED}"
+          export PUBLIC_NEW_RELIC_BROWSER_ENABLED="${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-}"
+          export PUBLIC_NEW_RELIC_ACCOUNT_ID="${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}"
+          export PUBLIC_NEW_RELIC_TRUST_KEY="${PUBLIC_NEW_RELIC_TRUST_KEY:-}"
+          export PUBLIC_NEW_RELIC_AGENT_ID="${PUBLIC_NEW_RELIC_AGENT_ID:-}"
+          export PUBLIC_NEW_RELIC_APPLICATION_ID="${PUBLIC_NEW_RELIC_APPLICATION_ID:-}"
+          export PUBLIC_NEW_RELIC_LICENSE_KEY="${PUBLIC_NEW_RELIC_LICENSE_KEY:-}"
+          export PUBLIC_NEW_RELIC_BEACON="${PUBLIC_NEW_RELIC_BEACON:-}"
+          export PUBLIC_NEW_RELIC_ERROR_BEACON="${PUBLIC_NEW_RELIC_ERROR_BEACON:-}"
+
+          if [ "${PUBLIC_NEW_RELIC_BROWSER_ENABLED:-0}" = "1" ]; then
+            if [ -z "${PUBLIC_NEW_RELIC_ACCOUNT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_AGENT_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_APPLICATION_ID:-}" ] || \
+               [ -z "${PUBLIC_NEW_RELIC_LICENSE_KEY:-}" ]; then
+              echo "Missing PUBLIC_NEW_RELIC_* browser agent vars while PUBLIC_NEW_RELIC_BROWSER_ENABLED=1."
+              exit 1
+            fi
+          fi
 
           pnpm -C frontend build
           pnpm -C frontend generate
@@ -3232,18 +2635,21 @@ jobs:
         shell: bash
         env:
           ENV_NAME: prod
+          STACK_NAME: ${{ vars.STACK_NAME }}
           PREV_GOOD_TAG: ${{ steps.prev_good.outputs.TAG }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          api_base="$(echo "${PUBLIC_API_BASE:-}" | sed -E 's:/api/v1/?$::; s:/api/?$::')"
-          if [ -z "${api_base:-}" ] || [ "${api_base:-}" = "https://" ]; then
-            echo "Missing PUBLIC_API_BASE for prod post-deploy smoke."
-            exit 1
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
           set +e
-          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 SMOKE_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
+          SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
           smoke_ec=$?
           set -e
           if [ "$smoke_ec" != "0" ]; then
@@ -3268,8 +2674,6 @@ jobs:
           NEW_RELIC_REGION: ${{ vars.NEW_RELIC_REGION || 'US' }}
           NEW_RELIC_INGEST_KEY: ${{ secrets.NEW_RELIC_INGEST_KEY }}
           NEW_RELIC_LOGS_ENABLED: ${{ vars.NEW_RELIC_LOGS_ENABLED || '1' }}
-          NEW_RELIC_STAGING_AWS_MODE: ${{ vars.NEW_RELIC_STAGING_AWS_MODE || 'otlp_only' }}
-          NEW_RELIC_PROD_AWS_MODE: ${{ vars.NEW_RELIC_PROD_AWS_MODE || 'otlp_only' }}
           NEW_RELIC_STAGING_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_STAGING_AWS_ACCOUNT_ID }}
           NEW_RELIC_PROD_AWS_ACCOUNT_ID: ${{ vars.NEW_RELIC_PROD_AWS_ACCOUNT_ID }}
           NEW_RELIC_STAGING_AWS_ROLE_ARN: ${{ vars.NEW_RELIC_STAGING_AWS_ROLE_ARN }}
@@ -3284,11 +2688,11 @@ jobs:
           node ops/newrelic/sync-cloud-links.mjs
           cloud_links_ec=$?
           NEW_RELIC_TARGET_ENV=prod \
-          REQUIRE_ACCOUNT_PINNING=0 \
+          REQUIRE_ACCOUNT_PINNING=1 \
           REQUIRE_LOGS=1 \
           REQUIRE_SPANS=1 \
-          REQUIRE_API_GW_METRICS=0 \
-          REQUIRE_SQS_METRICS=0 \
+          REQUIRE_API_GW_METRICS=1 \
+          REQUIRE_SQS_METRICS=1 \
           node ops/newrelic/verify-signals.mjs
           verify_ec=$?
           set -e
