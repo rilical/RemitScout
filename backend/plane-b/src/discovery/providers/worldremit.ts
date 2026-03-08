@@ -142,7 +142,7 @@ export class WorldRemitDiscovery extends ProviderDiscovery {
     const methods: DiscoveredDeliveryMethod[] = []
     const parts = corridorId.split('-')
     if (parts.length < 4) return methods
-    const [srcCountry, destCountry, srcCurrency, destCurrency] = parts
+    const [srcCountry, destCountry, _srcCurrency, destCurrency] = parts
 
     try {
       const resp = await fetch('https://api.worldremit.com/graphql', {

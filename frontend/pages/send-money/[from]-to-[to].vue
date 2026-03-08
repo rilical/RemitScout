@@ -148,10 +148,10 @@ class="text-body-sm leading-relaxed text-white/80"
             </div>
 
             <!-- Status Cards -->
-            <div class="mb-6 grid gap-3 sm:grid-cols-3">
+            <div class="mb-4 grid gap-3 sm:grid-cols-2">
               <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Best overall
+                  Best value now
                 </p>
                 <p class="text-body-lg mt-2 font-semibold text-white">
                   {{ hasApiQuotes ? bestProviderName : 'Warming up' }}
@@ -166,7 +166,7 @@ class="text-body-sm leading-relaxed text-white/80"
               </div>
               <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Fastest delivery
+                  Fastest arrival
                 </p>
                 <p class="text-body-lg mt-2 font-semibold text-white">
                   {{ fastestProvider?.provider || 'Warming up' }}
@@ -179,16 +179,53 @@ class="text-body-sm leading-relaxed text-white/80"
                   }}
                 </p>
               </div>
-              <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                  Freshness
+            </div>
+
+            <div class="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                    Live quote status
+                  </p>
+                  <p class="text-body-lg mt-2 font-semibold text-white">
+                    {{ heroRefreshStatusTitle }}
+                  </p>
+                  <p class="text-body-sm mt-1 text-white/70">
+                    {{ heroRefreshStatusBody }}
+                  </p>
+                </div>
+                <p class="text-body-sm font-semibold tabular-nums text-white/80">
+                  {{
+                    showHeroRefreshStatus
+                      ? `${refreshProgress}%`
+                      : hasApiQuotes
+                        ? `Updated ${mostRecentUpdateLabel}`
+                        : 'Ready'
+                  }}
                 </p>
-                <p class="text-body-lg mt-2 font-semibold text-white">
-                  {{ mostRecentUpdate ? mostRecentUpdateLabel : 'Warming up' }}
-                </p>
-                <p class="text-body-sm mt-1 text-white/60">
-                  {{ mostRecentUpdate ? 'Latest market check' : 'Live data is still loading' }}
-                </p>
+              </div>
+
+              <div class="mt-4 h-2.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  class="relative h-full rounded-full transition-[width] duration-500 ease-out"
+                  :class="heroRefreshBarClass"
+                  :style="{ width: heroRefreshBarWidth }"
+                >
+                  <div
+                    v-if="showHeroRefreshStatus"
+                    class="loading-bar-animate absolute inset-y-0 left-0 rounded-full bg-white/35"
+                  />
+                </div>
+              </div>
+
+              <div class="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-white/55">
+                <span>{{ providerCount }} providers tracked</span>
+                <span v-if="mostRecentUpdate && hasApiQuotes">
+                  Latest market check {{ mostRecentUpdateLabel }}
+                </span>
+                <span v-else-if="showHeroRefreshStatus && refreshSecondsRemaining > 0">
+                  Up to {{ refreshSecondsRemaining }}s remaining
+                </span>
               </div>
             </div>
 
@@ -717,9 +754,24 @@ class="scroll-mt-20 bg-surface"
           class="mb-8 rounded-2xl border border-rs-border bg-surface p-8 shadow-sm"
         >
           <div class="flex flex-col items-center justify-center gap-4 py-8 text-center">
-            <svg class="h-8 w-8 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <svg
+class="h-8 w-8 animate-spin text-brand-600"
+fill="none"
+viewBox="0 0 24 24"
+>
+              <circle
+class="opacity-25"
+cx="12"
+cy="12"
+r="10"
+stroke="currentColor"
+stroke-width="4"
+/>
+              <path
+class="opacity-75"
+fill="currentColor"
+d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+/>
             </svg>
             <p class="text-body font-medium text-rs-fg">Loading live quotes...</p>
           </div>
@@ -2674,16 +2726,11 @@ const getRefreshPollDelayMs = (attempt: number) => {
 }
 const refreshTimeoutSeconds = Math.round(REFRESH_STATUS_TIMEOUT_MS / 1000)
 const MAX_B2C_STALE_MS = 4 * 60 * 60 * 1000
-const refreshRingRadius = 28
-const refreshRingCircumference = 2 * Math.PI * refreshRingRadius
 const refreshProgress = computed(() => {
   if (!shouldBlockResults.value || refreshTimeoutSeconds <= 0) return 0
   const raw = Math.round((refreshElapsedSeconds.value / refreshTimeoutSeconds) * 100)
   return Math.min(100, Math.max(0, raw))
 })
-const refreshRingOffset = computed(
-  () => refreshRingCircumference - (refreshRingCircumference * refreshProgress.value) / 100,
-)
 const refreshSecondsRemaining = computed(() =>
   Math.max(0, refreshTimeoutSeconds - refreshElapsedSeconds.value),
 )
@@ -2697,6 +2744,50 @@ const refreshQueueLabel = computed(() => {
     return 'Finalizing results...'
   }
   return `${pending} of ${total} providers still responding`
+})
+const showHeroRefreshStatus = computed(() => {
+  if (refreshTimedOut.value) return true
+  if (refreshFinalizing.value) return true
+  if (quoteRefreshPending.value) return true
+  if (isRefreshQueued.value) return true
+  if (isQuotesLoading.value) return true
+  return shouldBlockResults.value
+})
+const heroRefreshStatusTitle = computed(() => {
+  if (refreshTimedOut.value) return 'Live refresh is taking longer than expected'
+  if (refreshFinalizing.value) return 'Finalizing the live comparison'
+  if (quoteRefreshPending.value) return 'Queueing a fresh provider sweep'
+  if (showHeroRefreshStatus.value && hasApiQuotes.value) return 'Refreshing live provider quotes'
+  if (showHeroRefreshStatus.value) return 'Checking live provider quotes'
+  if (mostRecentUpdate.value) return `Latest market check ${mostRecentUpdateLabel.value}`
+  return 'Ready for a live comparison'
+})
+const heroRefreshStatusBody = computed(() => {
+  if (refreshTimedOut.value) {
+    return hasApiQuotes.value
+      ? 'Showing the latest available ranking while slower providers finish responding.'
+      : 'The first live sweep is still delayed. Retry or change the amount to trigger a fresh pass.'
+  }
+  if (showHeroRefreshStatus.value) {
+    if (hasApiQuotes.value) {
+      return `${refreshQueueLabel.value}. Rankings will tighten as the remaining providers respond.`
+    }
+    return `${refreshQueueLabel.value}. The table unlocks as soon as the current sweep completes.`
+  }
+  if (mostRecentUpdate.value) {
+    return 'Quotes are current for this route, amount, and bank-deposit delivery path.'
+  }
+  return 'Live ranking will appear here once the first provider sweep completes.'
+})
+const heroRefreshBarClass = computed(() => {
+  if (refreshTimedOut.value) return 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500'
+  if (!showHeroRefreshStatus.value) return 'bg-gradient-to-r from-emerald-400 via-sky-400 to-emerald-500'
+  if (hasApiQuotes.value) return 'bg-gradient-to-r from-sky-400 via-brand-400 to-emerald-400'
+  return 'bg-gradient-to-r from-brand-400 via-sky-400 to-cyan-300'
+})
+const heroRefreshBarWidth = computed(() => {
+  if (!showHeroRefreshStatus.value) return '100%'
+  return `${Math.max(10, refreshProgress.value)}%`
 })
 
 const clearRefreshPoll = () => {
@@ -5371,7 +5462,7 @@ async function handleNewQuery(data: {
     const rawValue = input?.value?.trim().toLowerCase() || ''
     if (!rawValue) return fallback
 
-    const matchedCountry = COUNTRIES.find(country => {
+    const matchedCountry = COUNTRIES.find((country) => {
       const name = country.name.trim().toLowerCase()
       const code = country.code.trim().toLowerCase()
       return rawValue === name || rawValue === code
@@ -5576,19 +5667,22 @@ function openScoreModal(row: TableRow | EnrichedTableRow) {
 <style scoped>
 @keyframes loading-bar {
   0% {
-    transform: translateX(-100%);
+    transform: translateX(-140%);
+    opacity: 0;
   }
-  50% {
-    transform: translateX(400%);
+  20% {
+    opacity: 0.55;
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(220%);
+    opacity: 0;
   }
 }
 
 .loading-bar-animate {
-  width: 30%;
-  animation: loading-bar 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  width: 42%;
+  animation: loading-bar 1.8s linear infinite;
+  will-change: transform, opacity;
 }
 
 .insight-summary {

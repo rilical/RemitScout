@@ -93,7 +93,7 @@ export const renderPdf = async (title: string, sections: CsvSection[]): Promise<
       const HEADER_FONT_SIZE = colCount > 10 ? 6 : BASE_HEADER_FONT_SIZE
 
       // Proportional column widths based on max content length per column
-      const colMaxLengths = section.headers.map((header, ci) => {
+      const colMaxLengths = section.headers.map((header) => {
         let maxLen = header.length
         for (const row of section.rows) {
           const val = String(row[header] ?? '')

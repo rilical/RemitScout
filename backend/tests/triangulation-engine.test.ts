@@ -11,7 +11,7 @@ vi.mock('../shared/logger', () => ({
 }))
 
 import { TriangulationEngine } from '../plane-b/src/triangulation/engine'
-import type { StressSignal, StressSignalType } from '../plane-b/src/triangulation/engine'
+import type { StressSignalType } from '../plane-b/src/triangulation/engine'
 
 // Minimal mock pool — the engine's pure methods (signal management,
 // stress scoring, confidence assessment) don't need real DB access.
@@ -28,16 +28,6 @@ const createMockPool = () => ({
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const makeSignal = (overrides: Partial<StressSignal> = {}): StressSignal => ({
-  signalId: overrides.signalId ?? `sig-${Math.random().toString(36).slice(2, 8)}`,
-  corridorId: overrides.corridorId ?? 'USD-PHP',
-  signalType: overrides.signalType ?? 'rate_deviation',
-  intensity: overrides.intensity ?? 0.5,
-  detectedAt: overrides.detectedAt ?? new Date().toISOString(),
-  ttlSeconds: overrides.ttlSeconds ?? 300,
-  source: overrides.source ?? 'test-module',
-})
 
 describe('TriangulationEngine', () => {
   let engine: TriangulationEngine
@@ -338,7 +328,7 @@ describe('TriangulationEngine', () => {
     })
 
     it('isSignalActive returns true for active signals', () => {
-      const signal = engine.ingestSignal({
+      engine.ingestSignal({
         signalId: 'test-active',
         corridorId: 'USD-PHP',
         signalType: 'rate_deviation',

@@ -93,7 +93,8 @@ export async function getServiceHealth(): Promise<ServiceHealthResponse> {
   const { request } = useApi()
   try {
     return await request<ServiceHealthResponse>('/ops/services/health')
-  } catch (e: unknown) {
+  }
+ catch (e: unknown) {
     const err = e as { statusCode?: number }
     if (err?.statusCode === 404) {
       return { services: [], updatedAt: null, unavailable: true }
@@ -157,7 +158,8 @@ export async function getStressControlState(): Promise<StressControlState> {
   const { request } = useApi()
   try {
     return await request<StressControlState>('/ops/stress/control-state', { retries: 1 })
-  } catch (e: unknown) {
+  }
+ catch (e: unknown) {
     const err = e as { statusCode?: number }
     if (err?.statusCode === 404) {
       return {
@@ -249,9 +251,9 @@ export async function listPendingDiscoveryReviews(
 
 export async function approveDiscoveryReview(
   scanId: number,
-): Promise<{ approved: boolean; scan: AdminDiscoveryScanDetail }> {
+): Promise<{ approved: boolean, scan: AdminDiscoveryScanDetail }> {
   const { request } = useApi()
-  return await request<{ approved: boolean; scan: AdminDiscoveryScanDetail }>(
+  return await request<{ approved: boolean, scan: AdminDiscoveryScanDetail }>(
     `/admin/discovery/scans/${encodeURIComponent(String(scanId))}/approve`,
     {
       method: 'POST',
@@ -281,9 +283,9 @@ export async function applyDiscoveryReview(scanId: number): Promise<{
 
 export async function dismissDiscoveryReview(
   scanId: number,
-): Promise<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }> {
+): Promise<{ dismissed: boolean, scan: AdminDiscoveryScanDetail }> {
   const { request } = useApi()
-  return await request<{ dismissed: boolean; scan: AdminDiscoveryScanDetail }>(
+  return await request<{ dismissed: boolean, scan: AdminDiscoveryScanDetail }>(
     `/admin/discovery/scans/${encodeURIComponent(String(scanId))}/dismiss`,
     {
       method: 'POST',

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent } from 'vue'
-import { flushPromises } from '@vue/test-utils'
 
 const mockRequest = vi.hoisted(() => vi.fn())
 
@@ -39,7 +38,7 @@ describe('NewsletterSignup', () => {
       method: 'POST',
       body: { email: 'user@example.com', source: 'NewsletterSignup' },
     })
-    expect(wrapper.text()).toContain("You're In!")
+    expect(wrapper.text()).toContain('You\'re In!')
     expect(wrapper.text()).toContain('Welcome to the Remit-Scout community')
   })
 

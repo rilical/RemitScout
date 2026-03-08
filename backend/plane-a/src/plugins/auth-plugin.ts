@@ -15,7 +15,7 @@ import {
   isInstitutionalClientActive,
   validateInstitutionalClientApiKey,
 } from '../services/institutional-clients'
-import { getEntitlementsForPlan, type Entitlements } from '../services/entitlements'
+import { getEntitlementsForPlan } from '../services/entitlements'
 import { resolveEffectiveEntitlements } from '../services/effective-entitlements'
 import { ensureUserPlan, getUserPlan } from '../services/user-plan'
 import { getRequestContext, logAuditEvent } from '../services/audit-log'

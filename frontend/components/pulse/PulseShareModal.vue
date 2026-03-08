@@ -19,7 +19,10 @@
     >
       <!-- Header -->
       <div class="flex items-center justify-between border-b border-neutral-700 px-6 py-4">
-        <h2 id="pulse-share-title" class="text-body-lg font-bold text-white">
+        <h2
+id="pulse-share-title"
+class="text-body-lg font-bold text-white"
+>
           {{ modeTitle }}
         </h2>
         <button
@@ -27,7 +30,11 @@
           aria-label="Close dialog"
           @click="$emit('close')"
         >
-          <Icon name="x" :size="20" class="text-current" />
+          <Icon
+name="x"
+:size="20"
+class="text-current"
+/>
         </button>
       </div>
 
@@ -67,9 +74,10 @@
           <!-- Options -->
           <div class="mb-4 flex flex-wrap gap-4">
             <div>
-              <label for="pulse-embed-theme" class="text-body-sm mb-1 block text-neutral-400"
-                >Theme</label
-              >
+              <label
+for="pulse-embed-theme"
+class="text-body-sm mb-1 block text-neutral-400"
+>Theme</label>
               <select
                 id="pulse-embed-theme"
                 v-model="embedTheme"
@@ -80,28 +88,30 @@
               </select>
             </div>
             <div>
-              <label for="pulse-embed-width" class="text-body-sm mb-1 block text-neutral-400"
-                >Width</label
-              >
+              <label
+for="pulse-embed-width"
+class="text-body-sm mb-1 block text-neutral-400"
+>Width</label>
               <input
                 id="pulse-embed-width"
                 v-model="embedWidth"
                 type="text"
                 class="text-body-sm w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-white focus:border-brand-600 focus:outline-none"
                 placeholder="100%"
-              />
+              >
             </div>
             <div>
-              <label for="pulse-embed-height" class="text-body-sm mb-1 block text-neutral-400"
-                >Height</label
-              >
+              <label
+for="pulse-embed-height"
+class="text-body-sm mb-1 block text-neutral-400"
+>Height</label>
               <input
                 id="pulse-embed-height"
                 v-model="embedHeight"
                 type="text"
                 class="text-body-sm w-24 rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-white focus:border-brand-600 focus:outline-none"
                 placeholder="400"
-              />
+              >
             </div>
           </div>
 
@@ -127,12 +137,18 @@
             <div class="mt-1">
               Published ID: <span class="font-mono">{{ embedPublishedId }}</span>
             </div>
-            <div v-if="embedPublishedAt" class="mt-1">
+            <div
+v-if="embedPublishedAt"
+class="mt-1"
+>
               Published: {{ new Date(embedPublishedAt).toLocaleString() }}
             </div>
           </div>
 
-          <p v-if="embedError" class="text-body-sm mb-3 text-danger-600">
+          <p
+v-if="embedError"
+class="text-body-sm mb-3 text-danger-600"
+>
             {{ embedError }}
           </p>
 
@@ -146,7 +162,11 @@
               :disabled="!embedCode"
               @click="copyEmbedCode"
             >
-              <Icon :name="copiedEmbed ? 'check' : 'copy'" :size="16" class="text-current" />
+              <Icon
+:name="copiedEmbed ? 'check' : 'copy'"
+:size="16"
+class="text-current"
+/>
               {{ copiedEmbed ? 'Copied!' : 'Copy' }}
             </button>
           </div>
@@ -272,11 +292,17 @@
             </button>
           </div>
 
-          <p v-if="imageError" class="text-body-sm mt-2 text-danger-600">
+          <p
+v-if="imageError"
+class="text-body-sm mt-2 text-danger-600"
+>
             {{ imageError }}
           </p>
 
-          <p v-if="!chartContainerRef" class="mt-2 text-[11px] text-neutral-500">
+          <p
+v-if="!chartContainerRef"
+class="mt-2 text-[11px] text-neutral-500"
+>
             Visual export is available when a chart is currently rendered on the page.
           </p>
 
@@ -301,93 +327,93 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue';
-import type { PulseFilters, TimeRange } from '~/types/pulse';
-import { getChartById } from '~/lib/pulseChartRegistry';
-import { createPulsePublishedEmbed } from '~/lib/pulseApi';
-import { Icon } from '~/ui';
-import { useFocusTrap } from '~/composables/useFocusTrap';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import type { PulseFilters, TimeRange } from '~/types/pulse'
+import { getChartById } from '~/lib/pulseChartRegistry'
+import { createPulsePublishedEmbed } from '~/lib/pulseApi'
+import { Icon } from '~/ui'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 import {
   CHART_VISUAL_EXPORT_FORMATS,
   type ChartVisualExportFormat,
   useChartImageExport,
-} from '~/composables/useChartImageExport';
-import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError';
+} from '~/composables/useChartImageExport'
+import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
 
 interface Props {
-  chartId: string;
-  filters: PulseFilters;
-  range?: TimeRange;
+  chartId: string
+  filters: PulseFilters
+  range?: TimeRange
   /** Optional ref to the chart container element for image export */
-  chartContainerRef?: HTMLElement | null;
+  chartContainerRef?: HTMLElement | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   range: '30d',
   chartContainerRef: null,
-});
+})
 
 defineEmits<{
-  close: [];
-}>();
+  close: []
+}>()
 
-const modalRef = ref<HTMLElement | null>(null);
-const { activate, deactivate } = useFocusTrap(modalRef);
-const copiedEmbed = ref(false);
-const embedTheme = ref<'dark' | 'light'>('dark');
-const embedWidth = ref('100%');
-const embedHeight = ref('400');
-const embedTab = ref<'iframe' | 'image'>('iframe');
-const embedPublishedId = ref<string | null>(null);
-const embedPublishedAt = ref<string | null>(null);
-const embedPublicUrl = ref('');
-const embedGenerating = ref(false);
-const embedError = ref<string | null>(null);
-const imageError = ref<string | null>(null);
-const activeVisualFormat = ref<ChartVisualExportFormat | null>(null);
+const modalRef = ref<HTMLElement | null>(null)
+const { activate, deactivate } = useFocusTrap(modalRef)
+const copiedEmbed = ref(false)
+const embedTheme = ref<'dark' | 'light'>('dark')
+const embedWidth = ref('100%')
+const embedHeight = ref('400')
+const embedTab = ref<'iframe' | 'image'>('iframe')
+const embedPublishedId = ref<string | null>(null)
+const embedPublishedAt = ref<string | null>(null)
+const embedPublicUrl = ref('')
+const embedGenerating = ref(false)
+const embedError = ref<string | null>(null)
+const imageError = ref<string | null>(null)
+const activeVisualFormat = ref<ChartVisualExportFormat | null>(null)
 
-const { exportVisual, exporting: imageExporting } = useChartImageExport();
-const visualExportButtons: Array<{ value: ChartVisualExportFormat; label: string }> =
-  CHART_VISUAL_EXPORT_FORMATS.map(format => ({
+const { exportVisual, exporting: imageExporting } = useChartImageExport()
+const visualExportButtons: Array<{ value: ChartVisualExportFormat, label: string }>
+  = CHART_VISUAL_EXPORT_FORMATS.map(format => ({
     value: format,
     label: format.toUpperCase(),
-  }));
+  }))
 
-const chartMeta = computed(() => getChartById(props.chartId));
+const chartMeta = computed(() => getChartById(props.chartId))
 
 const modeTitle = computed(() => {
-  return embedTab.value === 'image' ? 'Download Chart Visuals' : 'Publish Static Embed';
-});
+  return embedTab.value === 'image' ? 'Download Chart Visuals' : 'Publish Static Embed'
+})
 
 const baseUrl = computed(() => {
-  if (typeof window === 'undefined') return '';
-  return window.location.origin;
-});
+  if (typeof window === 'undefined') return ''
+  return window.location.origin
+})
 
 onMounted(async () => {
-  await nextTick();
-  activate();
-});
+  await nextTick()
+  activate()
+})
 
 onBeforeUnmount(() => {
-  deactivate();
-});
+  deactivate()
+})
 
 const corridorLabel = computed(() => {
-  if (props.filters.corridor === 'global') return 'Global';
-  return props.filters.corridor.toUpperCase();
-});
+  if (props.filters.corridor === 'global') return 'Global'
+  return props.filters.corridor.toUpperCase()
+})
 
 const embedUrl = computed(() => {
-  if (embedPublicUrl.value) return embedPublicUrl.value;
-  if (!embedPublishedId.value) return '';
-  const params = new URLSearchParams();
-  params.set('published_id', embedPublishedId.value);
-  return `${baseUrl.value}/embed/pulse/${props.chartId}?${params.toString()}`;
-});
+  if (embedPublicUrl.value) return embedPublicUrl.value
+  if (!embedPublishedId.value) return ''
+  const params = new URLSearchParams()
+  params.set('published_id', embedPublishedId.value)
+  return `${baseUrl.value}/embed/pulse/${props.chartId}?${params.toString()}`
+})
 
 const embedCode = computed(() => {
-  if (!embedUrl.value) return '';
+  if (!embedUrl.value) return ''
   return `<iframe
   src="${embedUrl.value}"
   width="${embedWidth.value}"
@@ -397,20 +423,20 @@ const embedCode = computed(() => {
   style="border: 0; border-radius: 8px;"
   title="${shareTitle.value} — Remit-Scout"
   allow="clipboard-write"
-></iframe>`;
-});
+></iframe>`
+})
 
 const shareTitle = computed(() => {
-  return chartMeta.value?.title || 'Remit-Pulse Chart';
-});
+  return chartMeta.value?.title || 'Remit-Pulse Chart'
+})
 
 const resetPublishedEmbed = () => {
-  embedPublishedId.value = null;
-  embedPublishedAt.value = null;
-  embedPublicUrl.value = '';
-  copiedEmbed.value = false;
-  embedError.value = null;
-};
+  embedPublishedId.value = null
+  embedPublishedAt.value = null
+  embedPublicUrl.value = ''
+  copiedEmbed.value = false
+  embedError.value = null
+}
 
 watch(
   () => [
@@ -424,40 +450,40 @@ watch(
     embedTheme.value,
   ],
   () => {
-    if (!embedPublishedId.value && !embedPublicUrl.value) return;
-    resetPublishedEmbed();
+    if (!embedPublishedId.value && !embedPublicUrl.value) return
+    resetPublishedEmbed()
   },
-);
+)
 
 function resolvePublishedEmbedError(error: unknown): string {
-  const data =
-    error && typeof error === 'object' && 'data' in error
+  const data
+    = error && typeof error === 'object' && 'data' in error
       ? ((error as { data?: Record<string, unknown> }).data ?? null)
-      : null;
+      : null
   if (data?.error === 'published_embed_limit_reached') {
-    const max = typeof data.maxPublishedEmbeds === 'number' ? data.maxPublishedEmbeds : 100;
-    return `Published embed limit reached. Revoke an existing embed or contact support. Max: ${max}.`;
+    const max = typeof data.maxPublishedEmbeds === 'number' ? data.maxPublishedEmbeds : 100
+    return `Published embed limit reached. Revoke an existing embed or contact support. Max: ${max}.`
   }
   return mapPlanStateFailureMessage(error, 'Failed to publish static embed.', {
     enterprise_required:
       'Enterprise embed access is required to publish static Pulse embeds.',
     plan_inactive: 'Your paid plan is inactive. Reactivate billing to publish static embeds.',
     forbidden: 'Enterprise embed access is required to publish static Pulse embeds.',
-  });
+  })
 }
 
 async function publishStaticEmbed() {
-  if (embedGenerating.value) return;
-  embedGenerating.value = true;
-  embedError.value = null;
+  if (embedGenerating.value) return
+  embedGenerating.value = true
+  embedError.value = null
 
   try {
-    const payoutMethod: 'bank' | 'cash' | 'wallet' =
-      props.filters.payoutMethod === 'cash'
+    const payoutMethod: 'bank' | 'cash' | 'wallet'
+      = props.filters.payoutMethod === 'cash'
         ? 'cash'
         : props.filters.payoutMethod === 'wallet'
           ? 'wallet'
-          : 'bank';
+          : 'bank'
     const response = await createPulsePublishedEmbed({
       chart_id: props.chartId,
       corridor: props.filters.corridor,
@@ -467,37 +493,40 @@ async function publishStaticEmbed() {
       payout_method: payoutMethod,
       range: props.range,
       theme: embedTheme.value,
-    });
-    embedPublishedId.value = response.publishedId;
-    embedPublishedAt.value = response.publishedAt;
-    embedPublicUrl.value = response.publicUrl;
-  } catch (error) {
-    embedError.value = resolvePublishedEmbedError(error);
-  } finally {
-    embedGenerating.value = false;
+    })
+    embedPublishedId.value = response.publishedId
+    embedPublishedAt.value = response.publishedAt
+    embedPublicUrl.value = response.publicUrl
+  }
+ catch (error) {
+    embedError.value = resolvePublishedEmbedError(error)
+  }
+ finally {
+    embedGenerating.value = false
   }
 }
 
 async function copyEmbedCode() {
   if (!embedUrl.value) {
-    embedError.value = 'Publish a static embed before copying embed code.';
-    return;
+    embedError.value = 'Publish a static embed before copying embed code.'
+    return
   }
   try {
-    await navigator.clipboard.writeText(embedCode.value);
-    copiedEmbed.value = true;
+    await navigator.clipboard.writeText(embedCode.value)
+    copiedEmbed.value = true
     setTimeout(() => {
-      copiedEmbed.value = false;
-    }, 2000);
-  } catch (e) {
-    useLogger('PulseShareModal').error('Failed to copy', e);
+      copiedEmbed.value = false
+    }, 2000)
+  }
+ catch (e) {
+    useLogger('PulseShareModal').error('Failed to copy', e)
   }
 }
 
 async function downloadVisual(format: ChartVisualExportFormat) {
-  if (!props.chartContainerRef) return;
-  imageError.value = null;
-  activeVisualFormat.value = format;
+  if (!props.chartContainerRef) return
+  imageError.value = null
+  activeVisualFormat.value = format
   try {
     await exportVisual(props.chartContainerRef, {
       title: shareTitle.value,
@@ -505,11 +534,13 @@ async function downloadVisual(format: ChartVisualExportFormat) {
       source: `Source: Remit-Scout · remit-scout.com/pulse · ${corridorLabel.value}`,
       filename: `remit-scout-${props.chartId}-${props.filters.corridor}`,
       format,
-    });
-  } catch (e) {
-    imageError.value = e instanceof Error ? e.message : 'Failed to generate visual export.';
-  } finally {
-    activeVisualFormat.value = null;
+    })
+  }
+ catch (e) {
+    imageError.value = e instanceof Error ? e.message : 'Failed to generate visual export.'
+  }
+ finally {
+    activeVisualFormat.value = null
   }
 }
 </script>

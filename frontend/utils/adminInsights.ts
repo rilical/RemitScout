@@ -130,14 +130,14 @@ export const buildDataQualityInsights = (
   const cycleByModule = new Map(mttdRows.map(row => [row.module_id, getCycleMinutes(row)]))
 
   const modules = rows
-    .map<DataQualityModuleInsight>(row => {
+    .map<DataQualityModuleInsight>((row) => {
       const status = getDataQualityModuleStatus(row)
       const cycle_minutes = cycleByModule.get(row.module_id) ?? null
-      const risk_score =
-        (status === 'critical' ? 10 : status === 'watch' ? 5 : status === 'warming' ? 1 : 0) +
-        row.consecutive_failures * 2 +
-        row.parse_error_rate * 100 +
-        (cycle_minutes ?? 0) / 60
+      const risk_score
+        = (status === 'critical' ? 10 : status === 'watch' ? 5 : status === 'warming' ? 1 : 0)
+          + row.consecutive_failures * 2
+          + row.parse_error_rate * 100
+          + (cycle_minutes ?? 0) / 60
       return {
         ...row,
         cycle_minutes,
@@ -170,23 +170,23 @@ export const buildDataQualityInsights = (
       cycle_minutes: getCycleMinutes(row),
     }))
     .filter(
-      (entry): entry is { row: MttdMttrEntry; cycle_minutes: number } =>
+      (entry): entry is { row: MttdMttrEntry, cycle_minutes: number } =>
         entry.cycle_minutes !== null,
     )
 
-  const slowestCycleRow =
-    cycleRows.sort((left, right) => right.cycle_minutes - left.cycle_minutes)[0]?.row ?? null
+  const slowestCycleRow
+    = cycleRows.sort((left, right) => right.cycle_minutes - left.cycle_minutes)[0]?.row ?? null
   const slowestCycleModule = slowestCycleRow
     ? (modules.find(row => row.module_id === slowestCycleRow.module_id) ?? null)
     : null
 
-  const longestDetectionRow =
-    [...mttdRows]
+  const longestDetectionRow
+    = [...mttdRows]
       .filter(row => (row.mttd_minutes ?? 0) > 0)
       .sort((left, right) => (right.mttd_minutes ?? 0) - (left.mttd_minutes ?? 0))[0] ?? null
 
-  const longestResolutionRow =
-    [...mttdRows]
+  const longestResolutionRow
+    = [...mttdRows]
       .filter(row => (row.mttr_minutes ?? 0) > 0)
       .sort((left, right) => (right.mttr_minutes ?? 0) - (left.mttr_minutes ?? 0))[0] ?? null
 
@@ -266,7 +266,7 @@ export const buildIncidentTimeline = (
       if (!bundle) continue
       const createdAt = toTimestamp(bundle.created_at) ?? nowMs
       const nextBundleAt = toTimestamp(moduleBundles[index + 1]?.created_at)
-      const relatedActions = (actionsByModule.get(bundle.module_id) ?? []).filter(action => {
+      const relatedActions = (actionsByModule.get(bundle.module_id) ?? []).filter((action) => {
         const actionAt = toTimestamp(action.created_at)
         if (actionAt === null || actionAt < createdAt) return false
         if (nextBundleAt !== null && actionAt >= nextBundleAt) return false
@@ -276,10 +276,10 @@ export const buildIncidentTimeline = (
       const resolutionAction = [...relatedActions].reverse().find(isResolutionAction) ?? null
       const resolved = isResolvedOutcome(bundle.repair_outcome)
       const resolutionAt = resolved
-        ? (resolutionAction?.completed_at ??
-          resolutionAction?.created_at ??
-          triageAction?.created_at ??
-          bundle.created_at)
+        ? (resolutionAction?.completed_at
+          ?? resolutionAction?.created_at
+          ?? triageAction?.created_at
+          ?? bundle.created_at)
         : null
       const endMs = toTimestamp(resolutionAt) ?? nowMs
       const elapsed_seconds = Math.max(0, Math.floor((endMs - createdAt) / 1000))
@@ -434,8 +434,8 @@ const compareStressRows = (left: CorridorStressInsight, right: CorridorStressIns
     return (right.stress_score ?? -1) - (left.stress_score ?? -1)
   }
   return (
-    (toTimestamp(right.computed_at ?? right.date) ?? 0) -
-    (toTimestamp(left.computed_at ?? left.date) ?? 0)
+    (toTimestamp(right.computed_at ?? right.date) ?? 0)
+    - (toTimestamp(left.computed_at ?? left.date) ?? 0)
   )
 }
 
@@ -457,8 +457,8 @@ export const buildSelfHealingInsights = (
   const executingActions = actions.filter(action => action.status === 'executing').length
   const completedActions = actions.filter(action => action.status === 'completed').length
   const failedActions = actions.filter(action => action.status === 'failed').length
-  const latestAction =
-    [...actions].sort(
+  const latestAction
+    = [...actions].sort(
       (left, right) => (toTimestamp(right.created_at) ?? 0) - (toTimestamp(left.created_at) ?? 0),
     )[0] ?? null
   const totalBundlesInTrend = trends.reduce((sum, point) => sum + point.total_bundles, 0)
@@ -468,8 +468,8 @@ export const buildSelfHealingInsights = (
     if (terminalActions > 0) return completedActions / terminalActions
     return metrics?.auto_heal_success_rate ?? null
   })()
-  const repairHitRate =
-    totalBundlesInTrend > 0
+  const repairHitRate
+    = totalBundlesInTrend > 0
       ? appliedBundlesInTrend / totalBundlesInTrend
       : (metrics?.auto_heal_success_rate ?? null)
   const modulePressure = new Map<string, number>()
@@ -477,9 +477,9 @@ export const buildSelfHealingInsights = (
   for (const bundle of bundles) {
     modulePressure.set(
       bundle.module_id,
-      (modulePressure.get(bundle.module_id) ?? 0) +
-        severityWeight(bundle.severity) +
-        bundle.consecutive_failures,
+      (modulePressure.get(bundle.module_id) ?? 0)
+      + severityWeight(bundle.severity)
+      + bundle.consecutive_failures,
     )
   }
 
@@ -487,13 +487,13 @@ export const buildSelfHealingInsights = (
     if (!action.module_id) continue
     modulePressure.set(
       action.module_id,
-      (modulePressure.get(action.module_id) ?? 0) +
-        (action.status === 'failed' ? 3 : action.status === 'completed' ? 1 : 2),
+      (modulePressure.get(action.module_id) ?? 0)
+      + (action.status === 'failed' ? 3 : action.status === 'completed' ? 1 : 2),
     )
   }
 
-  const hottestModuleId =
-    [...modulePressure.entries()].sort((left, right) => {
+  const hottestModuleId
+    = [...modulePressure.entries()].sort((left, right) => {
       if (right[1] !== left[1]) return right[1] - left[1]
       return left[0].localeCompare(right[0])
     })[0]?.[0] ?? null
@@ -501,13 +501,13 @@ export const buildSelfHealingInsights = (
   const telemetryState: SelfHealingTelemetryState = (() => {
     if (!metrics && actions.length === 0 && bundles.length === 0 && trends.length === 0)
       return 'empty'
-    const noRecentPressure =
-      (metrics?.pending_bundles ?? 0) === 0 &&
-      (metrics?.active_repairs ?? 0) === 0 &&
-      (metrics?.total_bundles_24h ?? 0) === 0 &&
-      actions.length === 0 &&
-      bundles.length === 0 &&
-      totalBundlesInTrend === 0
+    const noRecentPressure
+      = (metrics?.pending_bundles ?? 0) === 0
+        && (metrics?.active_repairs ?? 0) === 0
+        && (metrics?.total_bundles_24h ?? 0) === 0
+        && actions.length === 0
+        && bundles.length === 0
+        && totalBundlesInTrend === 0
     if (noRecentPressure) return 'warming'
     return 'live'
   })()
@@ -541,20 +541,20 @@ export const buildCorridorStressInsights = (
   updatedAt: string | null | undefined,
   nowMs = Date.now(),
 ): CorridorStressInsights => {
-  const latestTimestamp =
-    corridors
+  const latestTimestamp
+    = corridors
       .map(corridor => toTimestamp(corridor.computed_at ?? null))
       .filter((value): value is number => value !== null)
       .sort((left, right) => right - left)[0] ?? toTimestamp(updatedAt)
 
-  const snapshotAgeMinutes =
-    latestTimestamp === null ? null : Math.max(0, Math.floor((nowMs - latestTimestamp) / 60_000))
+  const snapshotAgeMinutes
+    = latestTimestamp === null ? null : Math.max(0, Math.floor((nowMs - latestTimestamp) / 60_000))
 
   const corridorInsights = corridors
-    .map<CorridorStressInsight>(corridor => {
+    .map<CorridorStressInsight>((corridor) => {
       const timestamp = toTimestamp(corridor.computed_at ?? null) ?? latestTimestamp
-      const age_minutes =
-        timestamp === null ? null : Math.max(0, Math.floor((nowMs - timestamp) / 60_000))
+      const age_minutes
+        = timestamp === null ? null : Math.max(0, Math.floor((nowMs - timestamp) / 60_000))
 
       return {
         ...corridor,
@@ -568,9 +568,9 @@ export const buildCorridorStressInsights = (
   const elevatedCount = summary
     ? summary.elevated + summary.high + summary.critical
     : corridorInsights.filter(corridor => corridor.stress_level !== 'normal').length
-  const criticalCount =
-    summary?.critical ??
-    corridorInsights.filter(corridor => corridor.stress_level === 'critical').length
+  const criticalCount
+    = summary?.critical
+      ?? corridorInsights.filter(corridor => corridor.stress_level === 'critical').length
   const totalCorridors = summary?.total_corridors ?? corridorInsights.length
   const calmCount = Math.max(0, totalCorridors - elevatedCount)
 

@@ -24,14 +24,14 @@ const extractDetailField = (details: unknown, key: 'error' | 'code' | 'message')
 export const getAdminApiErrorMessage = (error: unknown, fallback: string): string => {
   const err = (isRecord(error) ? error : {}) as ErrorLike
   const data = (isRecord(err.data) ? err.data : {}) as ErrorData
-  const statusCode =
-    typeof err.statusCode === 'number'
+  const statusCode
+    = typeof err.statusCode === 'number'
       ? err.statusCode
       : isRecord(err.response) && typeof err.response.status === 'number'
         ? err.response.status
         : null
-  const detailCode =
-    extractDetailField(data.details, 'error') || extractDetailField(data.details, 'code')
+  const detailCode
+    = extractDetailField(data.details, 'error') || extractDetailField(data.details, 'code')
   const detailMessage = extractDetailField(data.details, 'message')
 
   const codes = [data.code, data.error, detailCode]
@@ -65,8 +65,8 @@ export const getAdminApiErrorMessage = (error: unknown, fallback: string): strin
   }
   if (codes.includes('institutional_launch_blocked')) {
     return (
-      data.message ||
-      'Institutional activation is blocked until the data-maturity gate is satisfied.'
+      data.message
+      || 'Institutional activation is blocked until the data-maturity gate is satisfied.'
     )
   }
   if (codes.includes('user_not_found')) {

@@ -17,7 +17,22 @@ type ExporterConfig = {
   maxQueue: number
 }
 
+type RawNewRelicMetricConfig = ExporterConfig & {
+  serviceName: string
+  normalizedEnvironment: string
+}
+
 const DROP_WARN_INTERVAL_MS = 30_000
+const DEFAULT_NEW_RELIC_METRIC_CONFIG: RawNewRelicMetricConfig = {
+  enabled: false,
+  ingestKey: '',
+  endpoint: 'https://metric-api.newrelic.com/metric/v1',
+  batchSize: 100,
+  flushIntervalMs: 10_000,
+  maxQueue: 5000,
+  serviceName: '',
+  normalizedEnvironment: '',
+}
 
 let cachedConfig: ExporterConfig | null = null
 let queue: MetricRecord[] = []
@@ -26,10 +41,13 @@ let inFlightFlush: Promise<void> | null = null
 let droppedCount = 0
 let lastDropWarnAt = 0
 
+const getRawConfig = (): RawNewRelicMetricConfig =>
+  config.observability?.newRelicMetrics ?? DEFAULT_NEW_RELIC_METRIC_CONFIG
+
 const getConfig = (): ExporterConfig => {
   if (cachedConfig) return cachedConfig
 
-  const nrm = config.observability.newRelicMetrics
+  const nrm = getRawConfig()
 
   cachedConfig = {
     enabled: nrm.enabled,
@@ -63,7 +81,7 @@ const emitDropWarning = (): void => {
 
 const buildPayload = (batch: MetricRecord[]): object[] => {
   const now = Math.floor(Date.now() / 1000)
-  const nrm = config.observability.newRelicMetrics
+  const nrm = getRawConfig()
   const serviceName = nrm.serviceName
   const environment = nrm.normalizedEnvironment
 

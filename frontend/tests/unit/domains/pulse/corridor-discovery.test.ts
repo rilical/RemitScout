@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import type { CorridorOption } from '~/types/pulse';
+import { describe, expect, it } from 'vitest'
+import type { CorridorOption } from '~/types/pulse'
 import {
   buildCorridorSearchText,
   computeCorridorDaysAvailable,
   matchesCorridorSearch,
   sortCorridorsByCoverage,
-} from '~/domains/pulse/application';
+} from '~/domains/pulse/application'
 
 const corridor = (overrides: Partial<CorridorOption> = {}): CorridorOption => ({
   value: 'usd-php',
@@ -26,7 +26,7 @@ const corridor = (overrides: Partial<CorridorOption> = {}): CorridorOption => ({
   maxDate: '2026-03-07',
   isUsdOrigin: true,
   ...overrides,
-});
+})
 
 describe('corridor-discovery helpers', () => {
   it('computes days available from min and max date inclusively', () => {
@@ -36,18 +36,18 @@ describe('corridor-discovery helpers', () => {
           minDate: '2026-03-01',
           maxDate: '2026-03-07',
           daysAvailable: undefined,
-        })
-      )
-    ).toBe(7);
-  });
+        }),
+      ),
+    ).toBe(7)
+  })
 
   it('matches search by currency, country name, and corridor id', () => {
-    const item = corridor();
+    const item = corridor()
 
-    expect(matchesCorridorSearch(item, 'philippines php')).toBe(true);
-    expect(matchesCorridorSearch(item, 'US-PH-USD-PHP')).toBe(true);
-    expect(buildCorridorSearchText(item)).toContain('philippines');
-  });
+    expect(matchesCorridorSearch(item, 'philippines php')).toBe(true)
+    expect(matchesCorridorSearch(item, 'US-PH-USD-PHP')).toBe(true)
+    expect(buildCorridorSearchText(item)).toContain('philippines')
+  })
 
   it('sorts corridors by usd bias, coverage, and freshness', () => {
     const sorted = sortCorridorsByCoverage([
@@ -84,12 +84,12 @@ describe('corridor-discovery helpers', () => {
         lastUpdated: '2026-03-07T12:00:00.000Z',
       }),
       corridor(),
-    ]);
+    ])
 
     expect(sorted.map(item => item.corridorId)).toEqual([
       'US-MX-USD-MXN',
       'US-PH-USD-PHP',
       'GB-NG-GBP-NGN',
-    ]);
-  });
-});
+    ])
+  })
+})

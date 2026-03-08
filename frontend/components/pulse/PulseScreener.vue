@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { CorridorOption, PulseScreenerRow } from '~/types/pulse';
-import type { PulseTimeframe } from '~/stores/pulse';
-import SkeletonBlock from '~/components/shared/SkeletonBlock.vue';
-import { formatUpdatedLabel } from '~/shared/lib/format';
-import { getAvailableTimeframes, isTimeframeAvailable } from '~/composables/usePulseTimeframes';
+import { computed } from 'vue'
+import type { CorridorOption, PulseScreenerRow } from '~/types/pulse'
+import type { PulseTimeframe } from '~/stores/pulse'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import { formatUpdatedLabel } from '~/shared/lib/format'
+import { getAvailableTimeframes, isTimeframeAvailable } from '~/composables/usePulseTimeframes'
 
-const TIMEFRAMES: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX'];
+const TIMEFRAMES: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 
 const props = withDefaults(
   defineProps<{
-    rows: PulseScreenerRow[];
-    loading?: boolean;
-    error?: string | null;
-    selectedCorridorId?: string | null;
-    selectedTimeframe?: PulseTimeframe;
-    pinnedCorridorIds?: string[];
-    corridorOptions?: CorridorOption[];
-    corridorDaysMap?: Record<string, number>;
-    trackedCorridorCount?: number;
-    requestedAmount?: number;
-    queryAmount?: number;
-    goldBenchmarkAmount?: number;
+    rows: PulseScreenerRow[]
+    loading?: boolean
+    error?: string | null
+    selectedCorridorId?: string | null
+    selectedTimeframe?: PulseTimeframe
+    pinnedCorridorIds?: string[]
+    corridorOptions?: CorridorOption[]
+    corridorDaysMap?: Record<string, number>
+    trackedCorridorCount?: number
+    requestedAmount?: number
+    queryAmount?: number
+    goldBenchmarkAmount?: number
   }>(),
   {
     corridorOptions: () => [],
@@ -31,125 +31,126 @@ const props = withDefaults(
     requestedAmount: 1000,
     queryAmount: 1000,
     goldBenchmarkAmount: 500,
-  }
-);
+  },
+)
 
 const emit = defineEmits<{
-  select: [corridorId: string];
-  pin: [corridorId: string];
-  unpin: [corridorId: string];
-  selectTimeframe: [corridorId: string, timeframe: PulseTimeframe];
-}>();
+  select: [corridorId: string]
+  pin: [corridorId: string]
+  unpin: [corridorId: string]
+  selectTimeframe: [corridorId: string, timeframe: PulseTimeframe]
+}>()
 
 function getDaysAvailableForRow(row: PulseScreenerRow): number {
-  const fromMap = props.corridorDaysMap?.[row.corridorId];
-  if (typeof fromMap === 'number' && fromMap >= 0) return fromMap;
+  const fromMap = props.corridorDaysMap?.[row.corridorId]
+  if (typeof fromMap === 'number' && fromMap >= 0) return fromMap
   const opt = props.corridorOptions.find(
-    c => c.corridorId === row.corridorId || (c.slug ?? c.value) === row.slug
-  );
-  if (!opt?.minDate || !opt?.maxDate) return 0;
-  const min = new Date(opt.minDate).getTime();
-  const max = new Date(opt.maxDate).getTime();
-  if (Number.isNaN(min) || Number.isNaN(max)) return 0;
-  return Math.ceil((max - min) / 86400000);
+    c => c.corridorId === row.corridorId || (c.slug ?? c.value) === row.slug,
+  )
+  if (!opt?.minDate || !opt?.maxDate) return 0
+  const min = new Date(opt.minDate).getTime()
+  const max = new Date(opt.maxDate).getTime()
+  if (Number.isNaN(min) || Number.isNaN(max)) return 0
+  return Math.ceil((max - min) / 86400000)
 }
 
 function handleTimeframeClick(row: PulseScreenerRow, tf: PulseTimeframe) {
-  if (!isTimeframeAvailable(getDaysAvailableForRow(row), tf)) return;
-  emit('selectTimeframe', row.corridorId, tf);
+  if (!isTimeframeAvailable(getDaysAvailableForRow(row), tf)) return
+  emit('selectTimeframe', row.corridorId, tf)
 }
 
-const pinnedSet = computed(() => new Set(props.pinnedCorridorIds ?? []));
+const pinnedSet = computed(() => new Set(props.pinnedCorridorIds ?? []))
 
 const handlePinToggle = (event: Event, row: PulseScreenerRow) => {
-  event.stopPropagation();
+  event.stopPropagation()
   if (pinnedSet.value.has(row.corridorId)) {
-    emit('unpin', row.corridorId);
-  } else {
-    emit('pin', row.corridorId);
+    emit('unpin', row.corridorId)
   }
-};
+ else {
+    emit('pin', row.corridorId)
+  }
+}
 
-const hasRows = computed(() => props.rows && props.rows.length > 0);
+const hasRows = computed(() => props.rows && props.rows.length > 0)
 
 const formatPct = (value: number | null) => {
-  if (value === null) return '—';
-  const sign = value > 0 ? '+' : '';
-  return `${sign}${(value * 100).toFixed(2)}%`;
-};
+  if (value === null) return '—'
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${(value * 100).toFixed(2)}%`
+}
 
 const formatNumber = (value: number | null) => {
-  if (value === null) return '—';
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
-};
+  if (value === null) return '—'
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)
+}
 
 const formatRecipientGets = (value: number | null, currency?: string) => {
-  if (value === null) return '—';
-  const rounded = Math.round(value);
-  const formatted = formatNumber(rounded);
-  return currency ? `${currency} ${formatted}` : formatted;
-};
+  if (value === null) return '—'
+  const rounded = Math.round(value)
+  const formatted = formatNumber(rounded)
+  return currency ? `${currency} ${formatted}` : formatted
+}
 
 const levelLabel = (level: PulseScreenerRow['smartSendLevel']) => {
-  if (!level) return '—';
-  if (level === 'great') return 'Great';
-  if (level === 'good') return 'Good';
-  if (level === 'fair') return 'Fair';
-  return 'Wait';
-};
+  if (!level) return '—'
+  if (level === 'great') return 'Great'
+  if (level === 'good') return 'Good'
+  if (level === 'fair') return 'Fair'
+  return 'Wait'
+}
 
 const levelClass = (level: PulseScreenerRow['smartSendLevel']) => {
   switch (level) {
     case 'great':
-      return 'bg-success-600/15 text-success-400 border border-success-600/30';
+      return 'bg-success-600/15 text-success-400 border border-success-600/30'
     case 'good':
-      return 'bg-brand-600/15 text-brand-400 border border-brand-600/30';
+      return 'bg-brand-600/15 text-brand-400 border border-brand-600/30'
     case 'fair':
-      return 'bg-warning-500/15 text-warning-400 border border-warning-500/30';
+      return 'bg-warning-500/15 text-warning-400 border border-warning-500/30'
     case 'wait':
-      return 'bg-danger-600/15 text-danger-400 border border-danger-600/30';
+      return 'bg-danger-600/15 text-danger-400 border border-danger-600/30'
     default:
-      return 'bg-neutral-800 text-neutral-300 border border-neutral-700';
+      return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
   }
-};
+}
 
 const moverClass = (delta: number | null) => {
-  if (delta === null) return 'bg-neutral-800 text-neutral-300 border border-neutral-700';
-  if (delta > 0) return 'bg-success-600/15 text-success-400 border border-success-600/30';
-  if (delta < 0) return 'bg-danger-600/15 text-danger-400 border border-danger-600/30';
-  return 'bg-neutral-800 text-neutral-300 border border-neutral-700';
-};
+  if (delta === null) return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+  if (delta > 0) return 'bg-success-600/15 text-success-400 border border-success-600/30'
+  if (delta < 0) return 'bg-danger-600/15 text-danger-400 border border-danger-600/30'
+  return 'bg-neutral-800 text-neutral-300 border border-neutral-700'
+}
 
 const handleSelect = (row: PulseScreenerRow) => {
-  if (!row.dataAvailable) return;
-  emit('select', row.corridorId);
-};
+  if (!row.dataAvailable) return
+  emit('select', row.corridorId)
+}
 
 const formatUsd = (value: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(value)
 
-const requestedAmountLabel = computed(() => formatUsd(props.requestedAmount));
+const requestedAmountLabel = computed(() => formatUsd(props.requestedAmount))
 
-const queryAmountLabel = computed(() => formatUsd(props.queryAmount));
+const queryAmountLabel = computed(() => formatUsd(props.queryAmount))
 
-const goldBenchmarkLabel = computed(() => formatUsd(props.goldBenchmarkAmount));
+const goldBenchmarkLabel = computed(() => formatUsd(props.goldBenchmarkAmount))
 
 const screenerContextLabel = computed(() => {
-  const base = `${requestedAmountLabel.value} requested • ${props.selectedTimeframe} • bank→bank • ${goldBenchmarkLabel.value} Gold benchmark`;
-  if (props.requestedAmount === props.queryAmount) return base;
-  return `${base} • ${queryAmountLabel.value} Pulse bucket`;
-});
+  const base = `${requestedAmountLabel.value} requested • ${props.selectedTimeframe} • bank→bank • ${goldBenchmarkLabel.value} Gold benchmark`
+  if (props.requestedAmount === props.queryAmount) return base
+  return `${base} • ${queryAmountLabel.value} Pulse bucket`
+})
 
 const screenerSummaryLabel = computed(() => {
-  const trackedCount = props.trackedCorridorCount ?? 0;
+  const trackedCount = props.trackedCorridorCount ?? 0
   if (trackedCount <= 0)
-    return 'Prioritizes pinned and watchlist routes, then highest-coverage Gold corridors.';
-  return `Scanning ${formatNumber(trackedCount)} Gold-supported corridors, with pinned and watchlist routes first.`;
-});
+    return 'Prioritizes pinned and watchlist routes, then highest-coverage Gold corridors.'
+  return `Scanning ${formatNumber(trackedCount)} Gold-supported corridors, with pinned and watchlist routes first.`
+})
 </script>
 
 <template>
@@ -176,18 +177,41 @@ const screenerSummaryLabel = computed(() => {
         {{ error }}
       </div>
 
-      <div v-else-if="loading" class="space-y-3">
+      <div
+v-else-if="loading"
+class="space-y-3"
+>
         <div
           v-for="n in 6"
           :key="n"
           class="rounded-xl border border-neutral-700 bg-neutral-900/30 p-4"
         >
-          <SkeletonBlock width="11rem" height="14" tone="dark" />
+          <SkeletonBlock
+width="11rem"
+height="14"
+tone="dark"
+/>
           <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <SkeletonBlock width="5rem" height="12" tone="dark" />
-            <SkeletonBlock width="7rem" height="12" tone="dark" />
-            <SkeletonBlock width="6rem" height="12" tone="dark" />
-            <SkeletonBlock width="5rem" height="12" tone="dark" />
+            <SkeletonBlock
+width="5rem"
+height="12"
+tone="dark"
+/>
+            <SkeletonBlock
+width="7rem"
+height="12"
+tone="dark"
+/>
+            <SkeletonBlock
+width="6rem"
+height="12"
+tone="dark"
+/>
+            <SkeletonBlock
+width="5rem"
+height="12"
+tone="dark"
+/>
           </div>
         </div>
       </div>
@@ -199,7 +223,10 @@ const screenerSummaryLabel = computed(() => {
         No Gold-supported corridors are available right now.
       </div>
 
-      <div v-else class="space-y-3">
+      <div
+v-else
+class="space-y-3"
+>
         <button
           v-for="row in rows"
           :key="row.corridorId"
@@ -216,8 +243,7 @@ const screenerSummaryLabel = computed(() => {
           <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div class="text-body-sm font-semibold text-white">
-                <span class="mr-2">{{ row.fromFlag }}</span
-                >{{ row.label }}
+                <span class="mr-2">{{ row.fromFlag }}</span>{{ row.label }}
                 <span
                   v-if="getDaysAvailableForRow(row) > 0 && getDaysAvailableForRow(row) < 7"
                   class="ml-2 rounded border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300"
@@ -229,10 +255,11 @@ const screenerSummaryLabel = computed(() => {
                 <span v-if="row.bestProvider">Best: {{ row.bestProvider }}</span>
                 <span v-else>Best: —</span>
                 <span class="text-neutral-700">|</span>
+                <span>Gets: {{ formatRecipientGets(row.bestRecipientGets, row.destCurrency) }}</span>
                 <span
-                  >Gets: {{ formatRecipientGets(row.bestRecipientGets, row.destCurrency) }}</span
-                >
-                <span v-if="row.corridorId === selectedCorridorId" class="text-brand-400">
+v-if="row.corridorId === selectedCorridorId"
+class="text-brand-400"
+>
                   Loaded below
                 </span>
               </div>
@@ -352,7 +379,10 @@ const screenerSummaryLabel = computed(() => {
                   :score="row.stressScore"
                   compact
                 />
-                <span v-else class="text-body-sm font-mono font-bold text-white">—</span>
+                <span
+v-else
+class="text-body-sm font-mono font-bold text-white"
+>—</span>
               </div>
             </div>
             <div>

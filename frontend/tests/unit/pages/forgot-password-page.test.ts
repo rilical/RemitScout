@@ -60,7 +60,7 @@ describe('forgot-password page', () => {
     await flushPromises()
 
     expect(mockRequestPasswordReset).toHaveBeenCalledWith('user@example.com')
-    expect(wrapper.text()).toContain("We've sent a password reset link to user@example.com")
+    expect(wrapper.text()).toContain('We\'ve sent a password reset link to user@example.com')
   })
 
   it('shows the auth error when the reset link request fails', async () => {

@@ -1,16 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { mount, flushPromises } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { mount, flushPromises } from '@vue/test-utils'
 
-const mockApproveDiscoveryReview = vi.hoisted(() => vi.fn());
-const mockApplyDiscoveryReview = vi.hoisted(() => vi.fn());
-const mockDismissDiscoveryReview = vi.hoisted(() => vi.fn());
-const mockGetDiscoveryCertificationRun = vi.hoisted(() => vi.fn());
-const mockGetDiscoveryScan = vi.hoisted(() => vi.fn());
-const mockListDiscoveryCertificationRuns = vi.hoisted(() => vi.fn());
-const mockListDiscoveryScans = vi.hoisted(() => vi.fn());
-const mockListPendingDiscoveryReviews = vi.hoisted(() => vi.fn());
-const mockTriggerDiscoveryCertification = vi.hoisted(() => vi.fn());
+const mockApproveDiscoveryReview = vi.hoisted(() => vi.fn())
+const mockApplyDiscoveryReview = vi.hoisted(() => vi.fn())
+const mockDismissDiscoveryReview = vi.hoisted(() => vi.fn())
+const mockGetDiscoveryCertificationRun = vi.hoisted(() => vi.fn())
+const mockGetDiscoveryScan = vi.hoisted(() => vi.fn())
+const mockListDiscoveryCertificationRuns = vi.hoisted(() => vi.fn())
+const mockListDiscoveryScans = vi.hoisted(() => vi.fn())
+const mockListPendingDiscoveryReviews = vi.hoisted(() => vi.fn())
+const mockTriggerDiscoveryCertification = vi.hoisted(() => vi.fn())
 
 vi.mock('~/lib/opsApi', () => ({
   approveDiscoveryReview: (...args: unknown[]) => mockApproveDiscoveryReview(...args),
@@ -23,10 +23,10 @@ vi.mock('~/lib/opsApi', () => ({
   listDiscoveryScans: (...args: unknown[]) => mockListDiscoveryScans(...args),
   listPendingDiscoveryReviews: (...args: unknown[]) => mockListPendingDiscoveryReviews(...args),
   triggerDiscoveryCertification: (...args: unknown[]) => mockTriggerDiscoveryCertification(...args),
-}));
+}))
 
 const mountDiscoveryPage = async () => {
-  const DiscoveryPage = (await import('~/pages/admin/discovery.vue')).default;
+  const DiscoveryPage = (await import('~/pages/admin/discovery.vue')).default
   return mount(DiscoveryPage, {
     global: {
       stubs: {
@@ -36,12 +36,12 @@ const mountDiscoveryPage = async () => {
         },
       },
     },
-  });
-};
+  })
+}
 
 describe('admin discovery page', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks()
 
     const scanSummary = {
       id: 42,
@@ -64,12 +64,12 @@ describe('admin discovery page', () => {
       started_at: '2026-03-07T09:00:00.000Z',
       completed_at: '2026-03-07T09:01:00.000Z',
       created_at: '2026-03-07T09:00:00.000Z',
-    };
+    }
 
     mockListPendingDiscoveryReviews.mockRejectedValue(
-      new Error('Pending review queue is unavailable right now.')
-    );
-    mockListDiscoveryScans.mockResolvedValue({ scans: [scanSummary] });
+      new Error('Pending review queue is unavailable right now.'),
+    )
+    mockListDiscoveryScans.mockResolvedValue({ scans: [scanSummary] })
     mockListDiscoveryCertificationRuns.mockResolvedValue({
       runs: [
         {
@@ -89,7 +89,7 @@ describe('admin discovery page', () => {
           completed_at: '2026-03-07T10:05:00.000Z',
         },
       ],
-    });
+    })
     mockGetDiscoveryScan.mockResolvedValue({
       scan: {
         ...scanSummary,
@@ -97,7 +97,7 @@ describe('admin discovery page', () => {
         result_json: { providerId: 'remitly', corridors: ['US-AL'] },
         apply_result_json: null,
       },
-    });
+    })
     mockGetDiscoveryCertificationRun.mockResolvedValue({
       run: {
         run_id: 'cert-run-1',
@@ -129,51 +129,51 @@ describe('admin discovery page', () => {
           created_at: '2026-03-07T10:05:00.000Z',
         },
       ],
-    });
-    mockApproveDiscoveryReview.mockResolvedValue({ approved: true, scan: null });
+    })
+    mockApproveDiscoveryReview.mockResolvedValue({ approved: true, scan: null })
     mockApplyDiscoveryReview.mockResolvedValue({
       applied: true,
       idempotent: false,
       result: null,
       scan: null,
       errors: [],
-    });
-    mockDismissDiscoveryReview.mockResolvedValue({ dismissed: true, scan: null });
+    })
+    mockDismissDiscoveryReview.mockResolvedValue({ dismissed: true, scan: null })
     mockTriggerDiscoveryCertification.mockResolvedValue({
       run_id: 'cert-run-1',
       status: 'partial',
       results: [],
-    });
+    })
 
-    vi.stubGlobal('definePageMeta', vi.fn());
-    vi.stubGlobal('useAdminPage', vi.fn());
-    vi.stubGlobal('ref', ref);
-    vi.stubGlobal('reactive', reactive);
-    vi.stubGlobal('computed', computed);
-    vi.stubGlobal('watch', watch);
-    vi.stubGlobal('onMounted', onMounted);
-    vi.stubGlobal('onUnmounted', onUnmounted);
+    vi.stubGlobal('definePageMeta', vi.fn())
+    vi.stubGlobal('useAdminPage', vi.fn())
+    vi.stubGlobal('ref', ref)
+    vi.stubGlobal('reactive', reactive)
+    vi.stubGlobal('computed', computed)
+    vi.stubGlobal('watch', watch)
+    vi.stubGlobal('onMounted', onMounted)
+    vi.stubGlobal('onUnmounted', onUnmounted)
     vi.stubGlobal('useAdminFormat', () => ({
       formatDateTime: (value: string | null) => value || '—',
       formatDuration: (value: number | null | undefined) => (value == null ? '—' : `${value}s`),
       formatNumber: (value: number | null | undefined) => (value == null ? '—' : String(value)),
-    }));
-  });
+    }))
+  })
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+    vi.unstubAllGlobals()
+  })
 
   it('keeps the control plane visible when one dataset fails to load', async () => {
-    const wrapper = await mountDiscoveryPage();
+    const wrapper = await mountDiscoveryPage()
 
-    await flushPromises();
-    await flushPromises();
+    await flushPromises()
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Pending review queue is unavailable right now.');
-    expect(wrapper.text()).not.toContain('Failed to load provider control plane.');
-    expect(wrapper.text()).toContain('Operator brief');
-    expect(wrapper.text()).toContain('cert-run-1');
-    expect(wrapper.text()).toContain('remitly');
-  });
-});
+    expect(wrapper.text()).toContain('Pending review queue is unavailable right now.')
+    expect(wrapper.text()).not.toContain('Failed to load provider control plane.')
+    expect(wrapper.text()).toContain('Operator brief')
+    expect(wrapper.text()).toContain('cert-run-1')
+    expect(wrapper.text()).toContain('remitly')
+  })
+})

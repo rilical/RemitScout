@@ -1,13 +1,19 @@
 <template>
   <div class="min-h-screen bg-neutral-900">
     <!-- Public preview (no Plus required) -->
-    <div v-if="!isPlus" class="min-h-screen">
+    <div
+v-if="!isPlus"
+class="min-h-screen"
+>
       <!-- Hero -->
       <div class="px-page-x pb-12 pt-16">
         <div class="mx-auto max-w-page">
           <div class="grid grid-cols-1 gap-12 lg:grid-cols-[1fr,1.1fr] lg:items-center">
             <div class="space-y-6">
-              <h1 class="text-hero font-bold leading-tight" aria-label="Remit-Scout Pulse">
+              <h1
+class="text-hero font-bold leading-tight"
+aria-label="Remit-Scout Pulse"
+>
                 <span class="text-white">Remit-Scout</span>
                 <span class="text-brand-600">Pulse</span>
               </h1>
@@ -39,7 +45,12 @@
                 class="text-body-sm inline-flex items-center gap-1.5 font-medium text-white/40 transition-colors hover:text-white/70"
               >
                 Our methodology
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -68,9 +79,7 @@
                 />
                 <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
               </span>
-              <span class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500"
-                >Illustrative sample — US → Philippines</span
-              >
+              <span class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500">Illustrative sample — US → Philippines</span>
             </div>
             <h2 class="text-h2 font-bold text-neutral-900">Market Snapshot</h2>
             <p class="text-body mt-2 text-neutral-600">
@@ -80,7 +89,10 @@
           </div>
 
           <!-- 4 KPI Tiles -->
-          <div ref="kpiSectionRef" class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div
+ref="kpiSectionRef"
+class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4"
+>
             <div
               v-for="(kpi, idx) in sampleKpis"
               :key="kpi.id"
@@ -153,7 +165,10 @@
                 {{ kpi.value }}
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="text-body-sm font-semibold" :class="kpi.deltaClass">
+                <span
+class="text-body-sm font-semibold"
+:class="kpi.deltaClass"
+>
                   <svg
                     v-if="kpi.deltaType === 'positive'"
                     class="inline h-3 w-3"
@@ -170,7 +185,10 @@
                   </svg>
                   {{ kpi.delta }}
                 </span>
-                <span v-if="kpi.deltaLabel" class="text-body-sm text-neutral-400">{{
+                <span
+v-if="kpi.deltaLabel"
+class="text-body-sm text-neutral-400"
+>{{
                   kpi.deltaLabel
                 }}</span>
               </div>
@@ -205,7 +223,11 @@
               </div>
             </div>
             <div class="px-4 py-6 sm:px-6">
-              <svg viewBox="0 0 780 280" class="w-full" preserveAspectRatio="xMidYMid meet">
+              <svg
+viewBox="0 0 780 280"
+class="w-full"
+preserveAspectRatio="xMidYMid meet"
+>
                 <line
                   v-for="tick in previewRateYTicks"
                   :key="`grid-${tick.y}`"
@@ -244,9 +266,23 @@
                 </text>
 
                 <defs>
-                  <linearGradient id="sample-area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.12" />
-                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+                  <linearGradient
+id="sample-area-grad"
+x1="0%"
+y1="0%"
+x2="0%"
+y2="100%"
+>
+                    <stop
+offset="0%"
+stop-color="#2563EB"
+stop-opacity="0.12"
+/>
+                    <stop
+offset="100%"
+stop-color="#2563EB"
+stop-opacity="0"
+/>
                   </linearGradient>
                 </defs>
                 <path
@@ -366,7 +402,12 @@
               :key="slug"
               class="flex h-10 w-20 items-center justify-center rounded-lg border border-neutral-100 bg-white p-1.5 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0"
             >
-              <ProviderLogo :slug="slug" :alt="slug" size="small" fit />
+              <ProviderLogo
+:slug="slug"
+:alt="slug"
+size="small"
+fit
+/>
             </div>
           </div>
         </div>
@@ -385,9 +426,7 @@
                 />
                 <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
               </span>
-              <span class="text-body-sm font-semibold text-neutral-300"
-                >Illustrative sample — 🇺🇸 USD → 🇵🇭 PHP</span
-              >
+              <span class="text-body-sm font-semibold text-neutral-300">Illustrative sample — 🇺🇸 USD → 🇵🇭 PHP</span>
             </div>
             <h2 class="text-h2 font-bold text-white">18 Charts Across 4 Categories</h2>
             <p class="text-body mx-auto mt-2 max-w-2xl text-neutral-400">
@@ -405,11 +444,13 @@
             >
               <div class="px-5 pb-2 pt-5">
                 <div class="mb-2 flex items-center gap-2">
-                  <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: chart.accent }" />
+                  <span
+class="h-2 w-2 rounded-full"
+:style="{ backgroundColor: chart.accent }"
+/>
                   <span
                     class="text-body-sm font-semibold uppercase tracking-wider text-neutral-500"
-                    >{{ chart.category }}</span
-                  >
+                    >{{ chart.category }}</span>
                 </div>
                 <h3 class="text-body-lg mb-1 font-bold text-white">{{ chart.title }}</h3>
                 <p class="text-body-sm text-neutral-500">{{ chart.description }}</p>
@@ -541,7 +582,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-400 transition-colors hover:text-brand-300"
             >
               Read our full methodology
-              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -631,7 +677,10 @@
                 <h3 class="text-body-lg font-bold text-neutral-900">Corridor Movers</h3>
                 <span class="text-body-sm text-neutral-500">Biggest pricing changes</span>
               </div>
-              <PulseMoversList variant="public" :limit="6" />
+              <PulseMoversList
+variant="public"
+:limit="6"
+/>
             </div>
           </div>
         </div>
@@ -844,9 +893,7 @@
                 {{ pulseUpdatedBadgeLabel }}
               </span>
             </div>
-            <span class="text-body-sm text-neutral-400"
-              >Market analytics for remittance pricing</span
-            >
+            <span class="text-body-sm text-neutral-400">Market analytics for remittance pricing</span>
             <span
               v-if="pulseEnvironmentBadge"
               class="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300"
@@ -883,8 +930,7 @@
             <div class="flex-1 space-y-4">
               <div>
                 <h1 class="text-hero mb-4 font-bold leading-tight text-white">
-                  <span class="text-white">Remit</span><span class="text-brand-600">-</span
-                  ><span class="text-brand-600">Pulse</span>
+                  <span class="text-white">Remit</span><span class="text-brand-600">-</span><span class="text-brand-600">Pulse</span>
                 </h1>
                 <p class="text-body-lg max-w-2xl leading-relaxed text-neutral-300">
                   Market intelligence for remittance pricing. Track spreads, markups, provider
@@ -941,14 +987,22 @@
                   class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-primary-500 bg-primary-500 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-brand-600 hover:bg-brand-600 hover:shadow-xl"
                 >
                   Enterprise
-                  <Icon name="arrow-right" :size="20" class="text-current" />
+                  <Icon
+name="arrow-right"
+:size="20"
+class="text-current"
+/>
                 </NuxtLink>
                 <NuxtLink
                   to="/methodology"
                   class="text-body inline-flex items-center gap-2.5 whitespace-nowrap rounded-xl border-2 border-success-600 bg-success-600 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:border-success-600 hover:bg-success-600 hover:shadow-xl"
                 >
                   Methodology
-                  <Icon name="arrow-right" :size="20" class="text-current" />
+                  <Icon
+name="arrow-right"
+:size="20"
+class="text-current"
+/>
                 </NuxtLink>
               </div>
             </div>
@@ -977,7 +1031,11 @@
         </div>
 
         <!-- Sender-First Gauge (mobile-first: renders at top on small screens) -->
-        <div id="decision" ref="decisionPanelRef" class="order-first mb-10 px-page-x md:order-none">
+        <div
+id="decision"
+ref="decisionPanelRef"
+class="order-first mb-10 px-page-x md:order-none"
+>
           <div class="mx-auto max-w-page">
             <div class="space-y-6">
               <PulseSmartGauge />
@@ -1003,9 +1061,15 @@
                 :loading="highlightsLoading"
               />
 
-              <PulsePersonalHistory :data="personalHistory" :loading="highlightsLoading" />
+              <PulsePersonalHistory
+:data="personalHistory"
+:loading="highlightsLoading"
+/>
 
-              <PulseHeroChart metric="rate" :days-available="selectedCorridorDaysAvailable" />
+              <PulseHeroChart
+metric="rate"
+:days-available="selectedCorridorDaysAvailable"
+/>
 
               <PulseMarketQuotes />
             </div>
@@ -1065,13 +1129,22 @@
                 v-if="actionError || actionStatus || snapshotExportError || snapshotExportStatus"
                 class="text-body-sm mt-3"
               >
-                <p v-if="actionError" class="text-danger-600">
+                <p
+v-if="actionError"
+class="text-danger-600"
+>
                   {{ actionError }}
                 </p>
-                <p v-else-if="snapshotExportError" class="text-danger-600">
+                <p
+v-else-if="snapshotExportError"
+class="text-danger-600"
+>
                   {{ snapshotExportError }}
                 </p>
-                <p v-else class="text-neutral-400">
+                <p
+v-else
+class="text-neutral-400"
+>
                   {{ actionStatus || snapshotExportStatus }}
                 </p>
               </div>
@@ -1096,7 +1169,10 @@
         <!-- Screener-first (Enterprise) -->
         <div class="order-2 mb-8 px-page-x md:order-none">
           <div class="mx-auto grid max-w-page grid-cols-1 gap-6 lg:grid-cols-12">
-            <div v-if="isPro && pulseScreenerEnabled" class="lg:col-span-7">
+            <div
+v-if="isPro && pulseScreenerEnabled"
+class="lg:col-span-7"
+>
               <PulseScreener
                 :rows="screenerRows"
                 :loading="screenerLoading"
@@ -1134,9 +1210,10 @@
             <div class="text-body-sm text-neutral-400">
               <template v-if="isPro && pulseScreenerEnabled">
                 Tip: Click a screener row or mover to load the decision panel.
-                <span v-if="screenerUpdatedAt" class="ml-2 text-neutral-500"
-                  >Screener {{ formatUpdatedLabel(screenerUpdatedAt) }}</span
-                >
+                <span
+v-if="screenerUpdatedAt"
+class="ml-2 text-neutral-500"
+>Screener {{ formatUpdatedLabel(screenerUpdatedAt) }}</span>
               </template>
               <template v-else> Tip: Click a mover to load the decision panel below. </template>
             </div>
@@ -1158,7 +1235,10 @@
         </div>
 
         <!-- Advanced Filters (optional) -->
-        <div v-if="filtersVisible" class="mb-8 px-page-x">
+        <div
+v-if="filtersVisible"
+class="mb-8 px-page-x"
+>
           <div class="mx-auto max-w-page">
             <div class="rounded-2xl border border-neutral-700 bg-neutral-800 p-6 shadow-lg">
               <div class="mb-4">
@@ -1196,7 +1276,11 @@
                     <div
                       class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3"
                     >
-                      <Icon name="chevron-down" :size="16" class="text-neutral-400" />
+                      <Icon
+name="chevron-down"
+:size="16"
+class="text-neutral-400"
+/>
                     </div>
                   </div>
                   <p
@@ -1205,7 +1289,10 @@
                   >
                     No tracked corridors are available right now.
                   </p>
-                  <p v-else-if="corridorCoverageLabel" class="text-body-sm mt-2 text-neutral-400">
+                  <p
+v-else-if="corridorCoverageLabel"
+class="text-body-sm mt-2 text-neutral-400"
+>
                     {{ corridorCoverageLabel }}
                   </p>
                 </div>
@@ -1226,7 +1313,7 @@
                       class="text-body-sm h-12 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-4 pr-4 font-medium text-white focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
                       placeholder="500"
                       @input="handleAmountInput"
-                    />
+                    >
                   </div>
                 </div>
               </div>
@@ -1476,9 +1563,10 @@
                     <span class="overflow-hidden text-ellipsis whitespace-nowrap">{{
                       kpi.label
                     }}</span>
-                    <span class="ml-1 flex-shrink-0 text-neutral-600" :title="kpi.tooltip"
-                      >(i)</span
-                    >
+                    <span
+class="ml-1 flex-shrink-0 text-neutral-600"
+:title="kpi.tooltip"
+>(i)</span>
                   </div>
                   <div
                     class="text-h3 mt-2 overflow-hidden text-ellipsis whitespace-nowrap font-bold text-white"
@@ -1498,9 +1586,23 @@
                     :key="`kpi-skeleton-${i}`"
                     class="rounded-xl border border-neutral-700 bg-neutral-800 p-4"
                   >
-                    <SkeletonBlock width="6rem" height="16" tone="dark" />
-                    <SkeletonBlock class="mt-3" width="5rem" height="24" tone="dark" />
-                    <SkeletonBlock class="mt-2" width="7rem" height="12" tone="dark" />
+                    <SkeletonBlock
+width="6rem"
+height="16"
+tone="dark"
+/>
+                    <SkeletonBlock
+class="mt-3"
+width="5rem"
+height="24"
+tone="dark"
+/>
+                    <SkeletonBlock
+class="mt-2"
+width="7rem"
+height="12"
+tone="dark"
+/>
                   </div>
                 </template>
               </div>
@@ -1821,10 +1923,16 @@
                     >
                       {{ snapshotExporting ? 'Exporting...' : 'Download CSV' }}
                     </button>
-                    <p v-if="snapshotExportStatus" class="mt-2 text-[11px] text-neutral-400">
+                    <p
+v-if="snapshotExportStatus"
+class="mt-2 text-[11px] text-neutral-400"
+>
                       {{ snapshotExportStatus }}
                     </p>
-                    <p v-if="snapshotExportError" class="mt-2 text-[11px] text-danger-600">
+                    <p
+v-if="snapshotExportError"
+class="mt-2 text-[11px] text-danger-600"
+>
                       {{ snapshotExportError }}
                     </p>
                   </div>
@@ -1850,7 +1958,10 @@
                         }}
                       </button>
                     </div>
-                    <p v-if="chartImageError" class="mt-2 text-[11px] text-danger-600">
+                    <p
+v-if="chartImageError"
+class="mt-2 text-[11px] text-danger-600"
+>
                       {{ chartImageError }}
                     </p>
                   </div>
@@ -1873,7 +1984,10 @@
                     >
                       Contact Sales
                     </NuxtLink>
-                    <p v-if="!pulseEmbedsEnabled" class="mt-2 text-[11px] text-neutral-500">
+                    <p
+v-if="!pulseEmbedsEnabled"
+class="mt-2 text-[11px] text-neutral-500"
+>
                       Static public Pulse embeds are available on Enterprise only.
                     </p>
                   </div>
@@ -1902,7 +2016,11 @@
                     <div
                       class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500/30"
                     >
-                      <Icon name="building-library" :size="20" class="text-primary-400" />
+                      <Icon
+name="building-library"
+:size="20"
+class="text-primary-400"
+/>
                     </div>
                     <div>
                       <h2 class="text-body-lg font-bold text-white">Enterprise Access</h2>
@@ -1915,7 +2033,11 @@
                 <div class="grid grid-cols-1 gap-4 p-6 lg:grid-cols-4">
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="mb-2 flex items-center gap-2">
-                      <Icon name="document-text" :size="16" class="text-primary-400" />
+                      <Icon
+name="document-text"
+:size="16"
+class="text-primary-400"
+/>
                       <div class="text-body-sm font-semibold text-white">API Access</div>
                     </div>
                     <p class="text-body-sm text-neutral-400">
@@ -1924,7 +2046,11 @@
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="mb-2 flex items-center gap-2">
-                      <Icon name="share" :size="16" class="text-primary-400" />
+                      <Icon
+name="share"
+:size="16"
+class="text-primary-400"
+/>
                       <div class="text-body-sm font-semibold text-white">Webhooks</div>
                     </div>
                     <p class="text-body-sm text-neutral-400">
@@ -1933,7 +2059,11 @@
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="mb-2 flex items-center gap-2">
-                      <Icon name="clock" :size="16" class="text-primary-400" />
+                      <Icon
+name="clock"
+:size="16"
+class="text-primary-400"
+/>
                       <div class="text-body-sm font-semibold text-white">Extended History</div>
                     </div>
                     <p class="text-body-sm text-neutral-400">
@@ -1942,7 +2072,11 @@
                   </div>
                   <div class="rounded-lg border border-neutral-700 bg-neutral-900 p-4">
                     <div class="mb-2 flex items-center gap-2">
-                      <Icon name="chart-bar" :size="16" class="text-primary-400" />
+                      <Icon
+name="chart-bar"
+:size="16"
+class="text-primary-400"
+/>
                       <div class="text-body-sm font-semibold text-white">Advanced Signals</div>
                     </div>
                     <p class="text-body-sm text-neutral-400">
@@ -1956,7 +2090,11 @@
                     class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-primary-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
                   >
                     Learn More About Enterprise Access
-                    <Icon name="arrow-right" :size="16" class="text-current" />
+                    <Icon
+name="arrow-right"
+:size="16"
+class="text-current"
+/>
                   </NuxtLink>
                 </div>
               </div>
@@ -1984,7 +2122,11 @@
                   <div
                     class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 transition-transform group-hover:scale-110"
                   >
-                    <Icon name="exclamation-triangle" :size="24" class="text-white" />
+                    <Icon
+name="exclamation-triangle"
+:size="24"
+class="text-white"
+/>
                   </div>
                   <div class="text-center">
                     <h3 class="text-body-lg mb-2 font-bold text-neutral-900">
@@ -2004,7 +2146,11 @@
                   <div
                     class="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-600 transition-transform group-hover:scale-110"
                   >
-                    <Icon name="book-open" :size="24" class="text-white" />
+                    <Icon
+name="book-open"
+:size="24"
+class="text-white"
+/>
                   </div>
                   <div class="text-center">
                     <h3 class="text-body-lg mb-2 font-bold text-neutral-900">
@@ -2029,7 +2175,7 @@
         :chart-id="embedModalChart"
         :filters="legacyFilters"
         :range="embedModalRange"
-        :chart-container-ref="chartRef as unknown as HTMLElement | null"
+        :chart-container-ref="chartRef"
         @close="embedModalChart = null"
       />
     </div>
@@ -2037,8 +2183,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, defineAsyncComponent } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import type {
   PulseFilters,
   ChartData,
@@ -2049,7 +2195,7 @@ import type {
   PulseScreenerRow,
   HeadlineTile,
   TimeRange,
-} from '~/types/pulse';
+} from '~/types/pulse'
 import {
   getChartsBatch,
   getPulseSnapshotSummary,
@@ -2064,92 +2210,92 @@ import {
   getPulsePinnedCorridors,
   pinPulseCorridor,
   unpinPulseCorridor,
-} from '~/domains/pulse/infrastructure/pulseApi';
+} from '~/domains/pulse/infrastructure/pulseApi'
 import type {
   PulseNarrativeData,
   PulsePersonalHistoryData,
-} from '~/domains/pulse/infrastructure/pulseApi';
-import { pulseChartRegistry, getChartById } from '~/lib/pulseChartRegistry';
-import { getCategoryAccent } from '~/lib/pulseChartStyle';
+} from '~/domains/pulse/infrastructure/pulseApi'
+import { pulseChartRegistry, getChartById } from '~/lib/pulseChartRegistry'
+import { getCategoryAccent } from '~/lib/pulseChartStyle'
 import {
   usePulseStore,
   type PulseCorridor,
   type PulseTimeframe,
   type PulseViewMode,
-} from '~/stores/pulse';
-import { Icon } from '~/ui';
-import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/format';
-import { COUNTRIES } from '~/utils/countries-currencies';
-import { useEntitlements } from '~/composables/useEntitlements';
-import { useWatchlist } from '~/composables/useWatchlist';
-import { useSaveAlertModal } from '~/composables/useSaveAlertModal';
-import { useExports } from '~/composables/useExports';
+} from '~/stores/pulse'
+import { Icon } from '~/ui'
+import { formatNumber as formatCount, formatUpdatedLabel } from '~/shared/lib/format'
+import { COUNTRIES } from '~/utils/countries-currencies'
+import { useEntitlements } from '~/composables/useEntitlements'
+import { useWatchlist } from '~/composables/useWatchlist'
+import { useSaveAlertModal } from '~/composables/useSaveAlertModal'
+import { useExports } from '~/composables/useExports'
 import {
   CHART_VISUAL_EXPORT_FORMATS,
   type ChartVisualExportFormat,
   useChartImageExport,
-} from '~/composables/useChartImageExport';
-import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue';
-import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue';
-import ProviderLogo from '~/components/shared/ProviderLogo.vue';
-import PulseCorridorFinder from '~/components/pulse/PulseCorridorFinder.vue';
-import PulseDashboardPreview from '~/components/pulse/PulseDashboardPreview.vue';
-import PulseLineChart from '~/components/pulse/PulseLineChart.vue';
-import PulseBarChart from '~/components/pulse/PulseBarChart.vue';
-import SkeletonBlock from '~/components/shared/SkeletonBlock.vue';
-import { useFeatureFlags } from '~/composables/useFeatureFlags';
+} from '~/composables/useChartImageExport'
+import TrustMetricsStrip from '~/components/home/TrustMetricsStrip.vue'
+import InstitutionalTeaser from '~/components/home/InstitutionalTeaser.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import PulseCorridorFinder from '~/components/pulse/PulseCorridorFinder.vue'
+import PulseDashboardPreview from '~/components/pulse/PulseDashboardPreview.vue'
+import PulseLineChart from '~/components/pulse/PulseLineChart.vue'
+import PulseBarChart from '~/components/pulse/PulseBarChart.vue'
+import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import {
   computeCorridorDaysAvailable,
   createHeadlineFallbackController,
   mergePinnedCorridorIds,
   sortCorridorsByCoverage,
-} from '~/domains/pulse/application';
-import { getCorridorUrl } from '~/utils/country-slugs';
+} from '~/domains/pulse/application'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const PulseShareModal = defineAsyncComponent(
-  () => import('~/components/pulse/PulseShareModal.vue')
-);
+  () => import('~/components/pulse/PulseShareModal.vue'),
+)
 const PulseSmartGauge = defineAsyncComponent(
-  () => import('~/components/pulse/PulseSmartGauge.vue')
-);
+  () => import('~/components/pulse/PulseSmartGauge.vue'),
+)
 const PulseMarketQuotes = defineAsyncComponent(
-  () => import('~/components/pulse/PulseMarketQuotes.vue')
-);
-const PulseHeroChart = defineAsyncComponent(() => import('~/components/pulse/PulseHeroChart.vue'));
+  () => import('~/components/pulse/PulseMarketQuotes.vue'),
+)
+const PulseHeroChart = defineAsyncComponent(() => import('~/components/pulse/PulseHeroChart.vue'))
 const PulseMarketDepth = defineAsyncComponent(
-  () => import('~/components/pulse/PulseMarketDepth.vue')
-);
+  () => import('~/components/pulse/PulseMarketDepth.vue'),
+)
 const PulseProviderLeaderboard = defineAsyncComponent(
-  () => import('~/components/pulse/PulseProviderLeaderboard.vue')
-);
+  () => import('~/components/pulse/PulseProviderLeaderboard.vue'),
+)
 const PulseProviderHeatmap = defineAsyncComponent(
-  () => import('~/components/pulse/PulseProviderHeatmap.vue')
-);
+  () => import('~/components/pulse/PulseProviderHeatmap.vue'),
+)
 const PulseBankComparison = defineAsyncComponent(
-  () => import('~/components/pulse/PulseBankComparison.vue')
-);
+  () => import('~/components/pulse/PulseBankComparison.vue'),
+)
 const PulseOperationalCoverage = defineAsyncComponent(
-  () => import('~/components/pulse/PulseOperationalCoverage.vue')
-);
+  () => import('~/components/pulse/PulseOperationalCoverage.vue'),
+)
 const PulseReliabilityCoverage = defineAsyncComponent(
-  () => import('~/components/pulse/PulseReliabilityCoverage.vue')
-);
+  () => import('~/components/pulse/PulseReliabilityCoverage.vue'),
+)
 const PulseArbitrageAlert = defineAsyncComponent(
-  () => import('~/components/pulse/PulseArbitrageAlert.vue')
-);
+  () => import('~/components/pulse/PulseArbitrageAlert.vue'),
+)
 
-const { pulseEnabled, pulseScreenerEnabled } = useFeatureFlags();
+const { pulseEnabled, pulseScreenerEnabled } = useFeatureFlags()
 
 if (!pulseEnabled.value) {
-  await navigateTo('/plus', { redirectCode: 302 });
+  await navigateTo('/plus', { redirectCode: 302 })
 }
 
-const router = useRouter();
-const route = useRoute();
-const runtimeConfig = useRuntimeConfig();
-const store = usePulseStore();
-const { isPlus, pulseLevel, limits, pulseEmbedsEnabled } = useEntitlements();
-const isPro = computed(() => pulseLevel.value === 'full');
+const router = useRouter()
+const route = useRoute()
+const runtimeConfig = useRuntimeConfig()
+const store = usePulseStore()
+const { isPlus, pulseLevel, limits, pulseEmbedsEnabled } = useEntitlements()
+const isPro = computed(() => pulseLevel.value === 'full')
 
 const previewScreenerRows = [
   {
@@ -2240,7 +2386,7 @@ const previewScreenerRows = [
     providers: '3',
     updated: 'Preview only',
   },
-];
+]
 
 const sampleKpis = [
   {
@@ -2283,70 +2429,70 @@ const sampleKpis = [
     deltaLabel: 'vs 30d',
     icon: 'activity',
   },
-];
+]
 
 const PREVIEW_RATE_CHART_BOUNDS = {
   xStart: 55,
   xEnd: 770,
   yTop: 20,
   yBottom: 240,
-} as const;
-const previewRateDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-const previewBestRates = [55.72, 55.85, 56.04, 55.91, 55.98, 56.12, 56.04] as const;
-const previewMidMarketRates = [55.8, 55.89, 56.01, 55.94, 56.0, 56.07, 56.0] as const;
+} as const
+const previewRateDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+const previewBestRates = [55.72, 55.85, 56.04, 55.91, 55.98, 56.12, 56.04] as const
+const previewMidMarketRates = [55.8, 55.89, 56.01, 55.94, 56.0, 56.07, 56.0] as const
 
 type PreviewRatePoint = {
-  index: number;
-  x: number;
-  y: number;
-  value: number;
-  highlight: boolean;
-};
+  index: number
+  x: number
+  y: number
+  value: number
+  highlight: boolean
+}
 
 const previewRateScale = computed(() => {
-  const values = [...previewBestRates, ...previewMidMarketRates];
-  const rawMin = Math.min(...values);
-  const rawMax = Math.max(...values);
-  const padding = 0.12;
-  const min = Math.floor((rawMin - padding) * 100) / 100;
-  const max = Math.ceil((rawMax + padding) * 100) / 100;
-  return { min, max };
-});
+  const values = [...previewBestRates, ...previewMidMarketRates]
+  const rawMin = Math.min(...values)
+  const rawMax = Math.max(...values)
+  const padding = 0.12
+  const min = Math.floor((rawMin - padding) * 100) / 100
+  const max = Math.ceil((rawMax + padding) * 100) / 100
+  return { min, max }
+})
 
 const previewRateToY = (value: number) => {
-  const { min, max } = previewRateScale.value;
-  const ratio = (value - min) / Math.max(max - min, 0.0001);
-  const { yTop, yBottom } = PREVIEW_RATE_CHART_BOUNDS;
-  return yBottom - ratio * (yBottom - yTop);
-};
+  const { min, max } = previewRateScale.value
+  const ratio = (value - min) / Math.max(max - min, 0.0001)
+  const { yTop, yBottom } = PREVIEW_RATE_CHART_BOUNDS
+  return yBottom - ratio * (yBottom - yTop)
+}
 
 const previewRateToX = (index: number) => {
-  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS;
-  const step = (xEnd - xStart) / Math.max(previewRateDays.length - 1, 1);
-  return xStart + step * index;
-};
+  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS
+  const step = (xEnd - xStart) / Math.max(previewRateDays.length - 1, 1)
+  return xStart + step * index
+}
 
 const previewRateYTicks = computed(() => {
-  const { min, max } = previewRateScale.value;
-  const ticks = 5;
+  const { min, max } = previewRateScale.value
+  const ticks = 5
   return Array.from({ length: ticks }, (_, index) => {
-    const ratio = index / (ticks - 1);
-    const value = max - (max - min) * ratio;
-    const y = previewRateToY(value);
+    const ratio = index / (ticks - 1)
+    const value = max - (max - min) * ratio
+    const y = previewRateToY(value)
     return {
       label: value.toFixed(2),
       y,
       isBaseline: index === ticks - 1,
-    };
-  });
-});
+    }
+  })
+})
 
 const previewRateDayTicks = computed(() =>
   previewRateDays.map((label, index) => ({
     label,
     x: previewRateToX(index),
-  }))
-);
+  })),
+)
 
 const previewRateBestPoints = computed<PreviewRatePoint[]>(() =>
   previewBestRates.map((value, index) => ({
@@ -2355,8 +2501,8 @@ const previewRateBestPoints = computed<PreviewRatePoint[]>(() =>
     x: previewRateToX(index),
     y: previewRateToY(value),
     highlight: index >= previewBestRates.length - 2,
-  }))
-);
+  })),
+)
 
 const previewRateMidPoints = computed(() =>
   previewMidMarketRates.map((value, index) => ({
@@ -2364,86 +2510,86 @@ const previewRateMidPoints = computed(() =>
     value,
     x: previewRateToX(index),
     y: previewRateToY(value),
-  }))
-);
+  })),
+)
 
-const toPolyline = (points: Array<{ x: number; y: number }>) =>
-  points.map(point => `${point.x},${point.y}`).join(' ');
+const toPolyline = (points: Array<{ x: number, y: number }>) =>
+  points.map(point => `${point.x},${point.y}`).join(' ')
 
-const previewRateBestPolyline = computed(() => toPolyline(previewRateBestPoints.value));
-const previewRateMidPolyline = computed(() => toPolyline(previewRateMidPoints.value));
+const previewRateBestPolyline = computed(() => toPolyline(previewRateBestPoints.value))
+const previewRateMidPolyline = computed(() => toPolyline(previewRateMidPoints.value))
 const previewRateBestAreaPath = computed(() => {
-  const points = previewRateBestPoints.value;
-  if (points.length === 0) return '';
-  const first = points[0];
-  const last = points[points.length - 1];
+  const points = previewRateBestPoints.value
+  if (points.length === 0) return ''
+  const first = points[0]
+  const last = points[points.length - 1]
   return `M ${first.x},${first.y} L ${points
     .slice(1)
     .map(point => `${point.x},${point.y}`)
     .join(
-      ' L '
-    )} L ${last.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} L ${first.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} Z`;
-});
+      ' L ',
+    )} L ${last.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} L ${first.x},${PREVIEW_RATE_CHART_BOUNDS.yBottom} Z`
+})
 
 const previewRateBestPeakPoint = computed(() => {
-  const points = previewRateBestPoints.value;
-  return points.reduce((peak, point) => (point.value > peak.value ? point : peak), points[0]);
-});
+  const points = previewRateBestPoints.value
+  return points.reduce((peak, point) => (point.value > peak.value ? point : peak), points[0])
+})
 const previewRateBestLatestPoint = computed(
-  () => previewRateBestPoints.value[previewRateBestPoints.value.length - 1]
-);
+  () => previewRateBestPoints.value[previewRateBestPoints.value.length - 1],
+)
 const previewRateMidLatestPoint = computed(
-  () => previewRateMidPoints.value[previewRateMidPoints.value.length - 1]
-);
+  () => previewRateMidPoints.value[previewRateMidPoints.value.length - 1],
+)
 
 const clampPreviewRectX = (x: number, width: number) => {
-  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS;
-  return Math.min(Math.max(x, xStart), xEnd - width);
-};
+  const { xStart, xEnd } = PREVIEW_RATE_CHART_BOUNDS
+  return Math.min(Math.max(x, xStart), xEnd - width)
+}
 
 const previewPeakBestLabelRect = computed(() => {
-  const point = previewRateBestPeakPoint.value;
-  const width = 100;
-  const height = 18;
+  const point = previewRateBestPeakPoint.value
+  const width = 100
+  const height = 18
   return {
     x: clampPreviewRectX(point.x - width / 2, width),
     y: Math.max(2, point.y - 26),
     width,
     height,
-  };
-});
+  }
+})
 const previewLatestBestLabelRect = computed(() => {
-  const point = previewRateBestLatestPoint.value;
-  const width = 106;
-  const height = 16;
+  const point = previewRateBestLatestPoint.value
+  const width = 106
+  const height = 16
   return {
     x: clampPreviewRectX(point.x + 8, width),
     y: Math.max(2, point.y - 20),
     width,
     height,
-  };
-});
+  }
+})
 const previewLatestMidLabelRect = computed(() => {
-  const point = previewRateMidLatestPoint.value;
-  const width = 116;
-  const height = 16;
+  const point = previewRateMidLatestPoint.value
+  const width = 116
+  const height = 16
   return {
     x: clampPreviewRectX(point.x - width + 2, width),
     y: Math.min(PREVIEW_RATE_CHART_BOUNDS.yBottom - height - 2, point.y + 8),
     width,
     height,
-  };
-});
+  }
+})
 
 const previewPeakBestLabel = computed(
-  () => `${previewRateBestPeakPoint.value.value.toFixed(2)} Best rate`
-);
+  () => `${previewRateBestPeakPoint.value.value.toFixed(2)} Best rate`,
+)
 const previewLatestBestLabel = computed(
-  () => `${previewRateBestLatestPoint.value.value.toFixed(2)} Best rate`
-);
+  () => `${previewRateBestLatestPoint.value.value.toFixed(2)} Best rate`,
+)
 const previewLatestMidLabel = computed(
-  () => `${previewRateMidLatestPoint.value.value.toFixed(2)} Mid-market`
-);
+  () => `${previewRateMidLatestPoint.value.value.toFixed(2)} Mid-market`,
+)
 
 const providerSlugs = [
   'wise',
@@ -2462,9 +2608,9 @@ const providerSlugs = [
   'koronapay',
   'wirebarley',
   'intermex',
-];
+]
 
-const sampleTs = Array.from({ length: 7 }, (_, i) => Date.now() - (6 - i) * 86400000);
+const sampleTs = Array.from({ length: 7 }, (_, i) => Date.now() - (6 - i) * 86400000)
 const sampleChartSeries = {
   'all-in-cost': [
     {
@@ -2550,7 +2696,7 @@ const sampleChartSeries = {
       points: sampleTs.map((t, i) => ({ t, v: [82, 85, 88, 86, 91, 89, 92][i] })),
     },
   ],
-} as Record<string, import('~/types/pulse').ChartSeries[]>;
+} as Record<string, import('~/types/pulse').ChartSeries[]>
 
 const previewChartCards = [
   {
@@ -2613,7 +2759,7 @@ const previewChartCards = [
     unit: 'percent',
     showArea: true,
   },
-];
+]
 
 const PREVIEW_CHART_IDS = [
   'all-in-cost',
@@ -2622,8 +2768,8 @@ const PREVIEW_CHART_IDS = [
   'volatility-pulse',
   'quote-success',
   'indices-confidence',
-] as const;
-const PREVIEW_SPARKLINES: Record<string, { sparkline: string; areaPath: string }> = {
+] as const
+const PREVIEW_SPARKLINES: Record<string, { sparkline: string, areaPath: string }> = {
   'all-in-cost': {
     sparkline: '0,40 33,35 66,42 100,30 133,38 166,25 200,20',
     areaPath: 'M 0,60 L 0,40 L 33,35 L 66,42 L 100,30 L 133,38 L 166,25 L 200,20 L 200,60 Z',
@@ -2648,18 +2794,18 @@ const PREVIEW_SPARKLINES: Record<string, { sparkline: string; areaPath: string }
     sparkline: '0,35 33,30 66,25 100,28 133,20 166,22 200,15',
     areaPath: 'M 0,60 L 0,35 L 33,30 L 66,25 L 100,28 L 133,20 L 166,22 L 200,15 L 200,60 Z',
   },
-};
-const ENTERPRISE_CHART_IDS = new Set(['provider-winner', 'indices-confidence']);
+}
+const ENTERPRISE_CHART_IDS = new Set(['provider-winner', 'indices-confidence'])
 
 const previewCharts = computed(() =>
-  PREVIEW_CHART_IDS.map(id => {
-    const meta = getChartById(id);
-    if (!meta) return null;
-    const isEnterprise = ENTERPRISE_CHART_IDS.has(id);
+  PREVIEW_CHART_IDS.map((id) => {
+    const meta = getChartById(id)
+    if (!meta) return null
+    const isEnterprise = ENTERPRISE_CHART_IDS.has(id)
     const paths = PREVIEW_SPARKLINES[id] ?? {
       sparkline: '0,40 100,30 200,35',
       areaPath: 'M 0,60 L 0,40 L 100,30 L 200,35 L 200,60 Z',
-    };
+    }
     return {
       id: meta.id,
       title: meta.title,
@@ -2671,9 +2817,9 @@ const previewCharts = computed(() =>
       sparkline: paths.sparkline,
       areaPath: paths.areaPath,
       accentColor: getCategoryAccent(meta.category),
-    };
-  }).filter((c): c is NonNullable<typeof c> => c != null)
-);
+    }
+  }).filter((c): c is NonNullable<typeof c> => c != null),
+)
 
 const plusFeatures = [
   'Corridor movers and market snapshot',
@@ -2681,7 +2827,7 @@ const plusFeatures = [
   '7-day chart history (basic line charts)',
   'Smart alert creation',
   'CSV snapshot export',
-];
+]
 
 const enterpriseFeatures = [
   'Everything in Plus',
@@ -2689,115 +2835,115 @@ const enterpriseFeatures = [
   'Stacked, scatter, and matrix chart types',
   'Watchlist screener with provider rankings',
   'Gold Indices health dashboard',
-];
+]
 
 // Preview card and screener row animations handled by v-reveal directive
 
-const kpiSectionRef = ref<HTMLElement | null>(null);
-const chartRef = ref<HTMLElement | null>(null);
-const chartVisible = ref(false);
+const kpiSectionRef = ref<HTMLElement | null>(null)
+const chartRef = ref<HTMLElement | null>(null)
+const chartVisible = ref(false)
 
 function animateCountUp(el: HTMLElement, target: string, duration = 1200) {
-  const prefix = target.match(/^[₱$]/)?.[0] || '';
-  const suffix = target.match(/[%]$/)?.[0] || '';
-  const numStr = target.replace(/[₱$%,]/g, '');
-  const end = parseFloat(numStr);
+  const prefix = target.match(/^[₱$]/)?.[0] || ''
+  const suffix = target.match(/[%]$/)?.[0] || ''
+  const numStr = target.replace(/[₱$%,]/g, '')
+  const end = parseFloat(numStr)
   if (isNaN(end)) {
-    el.textContent = target;
-    return;
+    el.textContent = target
+    return
   }
-  const decimals = numStr.includes('.') ? numStr.split('.')[1].length : 0;
-  const start = performance.now();
+  const decimals = numStr.includes('.') ? numStr.split('.')[1].length : 0
+  const start = performance.now()
   const step = (now: number) => {
-    const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const current = (end * eased).toFixed(decimals);
-    el.textContent = `${prefix}${current}${suffix}`;
-    if (progress < 1) requestAnimationFrame(step);
-    else el.textContent = target;
-  };
-  requestAnimationFrame(step);
+    const progress = Math.min((now - start) / duration, 1)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    const current = (end * eased).toFixed(decimals)
+    el.textContent = `${prefix}${current}${suffix}`
+    if (progress < 1) requestAnimationFrame(step)
+    else el.textContent = target
+  }
+  requestAnimationFrame(step)
 }
 
 function revealElements(container: HTMLElement, selector: string) {
-  container.querySelectorAll(selector).forEach(el => {
+  container.querySelectorAll(selector).forEach((el) => {
     (el as HTMLElement).style.opacity = '1';
-    (el as HTMLElement).style.transform = 'translateY(0)';
-  });
+    (el as HTMLElement).style.transform = 'translateY(0)'
+  })
 }
 
-let kpiObserver: IntersectionObserver | null = null;
-watch(kpiSectionRef, el => {
-  kpiObserver?.disconnect();
-  if (!el || typeof IntersectionObserver === 'undefined') return;
-  const observedEl = el as unknown as HTMLElement;
+let kpiObserver: IntersectionObserver | null = null
+watch(kpiSectionRef, (el) => {
+  kpiObserver?.disconnect()
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  const observedEl = el as unknown as HTMLElement
   kpiObserver = new IntersectionObserver(
-    entries => {
+    (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          revealElements(observedEl, '.kpi-value');
-          observedEl.querySelectorAll<HTMLElement>('.kpi-value').forEach(valEl => {
-            const target = valEl.dataset.target;
-            if (target) animateCountUp(valEl, target);
-          });
+          revealElements(observedEl, '.kpi-value')
+          observedEl.querySelectorAll<HTMLElement>('.kpi-value').forEach((valEl) => {
+            const target = valEl.dataset.target
+            if (target) animateCountUp(valEl, target)
+          })
           if (observedEl.children) {
-            Array.from(observedEl.children).forEach(child => {
+            Array.from(observedEl.children).forEach((child) => {
               (child as HTMLElement).style.opacity = '1';
-              (child as HTMLElement).style.transform = 'translateY(0)';
-            });
+              (child as HTMLElement).style.transform = 'translateY(0)'
+            })
           }
-          kpiObserver?.unobserve(entry.target as Element);
+          kpiObserver?.unobserve(entry.target as Element)
         }
       }
     },
-    { rootMargin: '0px 0px -30px 0px', threshold: 0.15 }
-  );
-  kpiObserver.observe(observedEl as unknown as Element);
-});
+    { rootMargin: '0px 0px -30px 0px', threshold: 0.15 },
+  )
+  kpiObserver.observe(observedEl as unknown as Element)
+})
 
-let chartObserver: IntersectionObserver | null = null;
-watch(chartRef, el => {
-  chartObserver?.disconnect();
-  if (!el || typeof IntersectionObserver === 'undefined') return;
-  const observedEl = el as unknown as Element;
+let chartObserver: IntersectionObserver | null = null
+watch(chartRef, (el) => {
+  chartObserver?.disconnect()
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  const observedEl = el as unknown as Element
   chartObserver = new IntersectionObserver(
-    entries => {
+    (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          chartVisible.value = true;
-          chartObserver?.unobserve(entry.target as Element);
+          chartVisible.value = true
+          chartObserver?.unobserve(entry.target as Element)
         }
       }
     },
-    { rootMargin: '0px 0px -50px 0px', threshold: 0.1 }
-  );
-  chartObserver.observe(observedEl);
-});
+    { rootMargin: '0px 0px -50px 0px', threshold: 0.1 },
+  )
+  chartObserver.observe(observedEl)
+})
 
-const watchlist = useWatchlist();
-const saveAlertModal = useSaveAlertModal();
-const exportsApi = useExports();
-const embedModalChart = ref<string | null>(null);
+const watchlist = useWatchlist()
+const saveAlertModal = useSaveAlertModal()
+const exportsApi = useExports()
+const embedModalChart = ref<string | null>(null)
 const embedModalRange = computed<TimeRange>(() => {
   switch (store.timeframe) {
     case '24H':
     case '7D':
-      return '7d';
+      return '7d'
     case '30D':
-      return '30d';
+      return '30d'
     case '1Y':
     case 'MAX':
-      return '365d';
+      return '365d'
     default:
-      return '30d';
+      return '30d'
   }
-});
-const activeMetric = ref<'rate' | 'markup'>('rate');
-const highlightedSection = ref<string | null>(null);
-let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+})
+const activeMetric = ref<'rate' | 'markup'>('rate')
+const highlightedSection = ref<string | null>(null)
+let highlightTimer: ReturnType<typeof setTimeout> | null = null
 
 // Scrollspy: track which section is currently in view
-const activeSection = ref<string>('snapshot');
+const activeSection = ref<string>('snapshot')
 const sectionIds = [
   'snapshot',
   'dispersion',
@@ -2809,58 +2955,58 @@ const sectionIds = [
   'exports',
   'enterprise',
   'methodology',
-];
-let scrollspyObserver: IntersectionObserver | null = null;
+]
+let scrollspyObserver: IntersectionObserver | null = null
 
 onMounted(() => {
-  if (typeof IntersectionObserver === 'undefined') return;
+  if (typeof IntersectionObserver === 'undefined') return
   scrollspyObserver = new IntersectionObserver(
-    entries => {
+    (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          activeSection.value = entry.target.id;
+          activeSection.value = entry.target.id
         }
       }
     },
-    { rootMargin: '-20% 0px -60% 0px' }
-  );
+    { rootMargin: '-20% 0px -60% 0px' },
+  )
   // Defer to next tick so sections are rendered
   nextTick(() => {
     for (const id of sectionIds) {
-      const el = document.getElementById(id);
-      if (el) scrollspyObserver?.observe(el);
+      const el = document.getElementById(id)
+      if (el) scrollspyObserver?.observe(el)
     }
-  });
-});
+  })
+})
 
 onUnmounted(() => {
-  scrollspyObserver?.disconnect();
-  kpiObserver?.disconnect();
-  chartObserver?.disconnect();
-});
+  scrollspyObserver?.disconnect()
+  kpiObserver?.disconnect()
+  chartObserver?.disconnect()
+})
 
 const timeframes = computed<PulseTimeframe[]>(() => {
-  if (isPro.value) return ['24H', '7D', '30D', '1Y', 'MAX'];
-  return ['7D', '30D'];
-});
-const summary = ref<PulseCoverageSummary | null>(null);
-const overview = ref<{ tiles: HeadlineTile[]; lastUpdated?: string } | null>(null);
-const narrative = ref<PulseNarrativeData | null>(null);
-const personalHistory = ref<PulsePersonalHistoryData | null>(null);
-const highlightsLoading = ref(false);
-const headlineLoading = ref(false);
-const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdated || null));
+  if (isPro.value) return ['24H', '7D', '30D', '1Y', 'MAX']
+  return ['7D', '30D']
+})
+const summary = ref<PulseCoverageSummary | null>(null)
+const overview = ref<{ tiles: HeadlineTile[], lastUpdated?: string } | null>(null)
+const narrative = ref<PulseNarrativeData | null>(null)
+const personalHistory = ref<PulsePersonalHistoryData | null>(null)
+const highlightsLoading = ref(false)
+const headlineLoading = ref(false)
+const pulseUpdatedBadgeLabel = computed(() => formatUpdatedLabel(store.lastUpdated || null))
 const pulseEnvironmentBadge = computed(() => {
   const raw = String(
-    runtimeConfig.public?.remitScoutEnv || runtimeConfig.public?.environmentName || ''
+    runtimeConfig.public?.remitScoutEnv || runtimeConfig.public?.environmentName || '',
   )
     .trim()
-    .toLowerCase();
-  if (!raw || raw === 'prod' || raw === 'production') return null;
-  if (raw === 'staging') return 'Staging';
-  if (raw === 'dev' || raw === 'development') return 'Dev';
-  return raw.toUpperCase();
-});
+    .toLowerCase()
+  if (!raw || raw === 'prod' || raw === 'production') return null
+  if (raw === 'staging') return 'Staging'
+  if (raw === 'dev' || raw === 'development') return 'Dev'
+  return raw.toUpperCase()
+})
 
 const defaultHeadlineTiles: HeadlineTile[] = [
   {
@@ -2907,230 +3053,233 @@ const defaultHeadlineTiles: HeadlineTile[] = [
     chartId: 'all-in-cost',
     icon: 'activity',
   },
-];
+]
 
 const headlineTiles = computed<HeadlineTile[]>(() => {
-  const tiles = overview.value?.tiles;
-  if (Array.isArray(tiles) && tiles.length >= 4) return tiles.slice(0, 4);
-  return defaultHeadlineTiles;
-});
+  const tiles = overview.value?.tiles
+  if (Array.isArray(tiles) && tiles.length >= 4) return tiles.slice(0, 4)
+  return defaultHeadlineTiles
+})
 
-const amountInput = ref(store.amount || 500);
+const amountInput = ref(store.amount || 500)
 
 const { data: trackedCorridorsData, refresh: refreshTrackedCorridors } = await useAsyncData(
   'pulse-corridors',
   async () => {
     // Avoid Plus-gated calls for public preview SSR. We'll refresh client-side after entitlements hydrate.
-    if (!isPlus.value) return [];
-    return await getCorridors();
+    if (!isPlus.value) return []
+    return await getCorridors()
   },
-  { server: true }
-);
-const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.value || []);
-const selectedCorridorKey = ref<string>('');
-const decisionPanelRef = ref<HTMLElement | null>(null);
+  { server: true },
+)
+const trackedCorridors = computed<CorridorOption[]>(() => trackedCorridorsData.value || [])
+const selectedCorridorKey = ref<string>('')
+const decisionPanelRef = ref<HTMLElement | null>(null)
 
 // Screener state (Plus)
-const showAdvancedFilters = ref(false);
+const showAdvancedFilters = ref(false)
 
 const pickBestByCoverage = (candidates: CorridorOption[]): CorridorOption | undefined => {
-  if (candidates.length === 0) return undefined;
+  if (candidates.length === 0) return undefined
 
-  let best = candidates[0];
+  let best = candidates[0]
   let bestRank: [number, number, number] = [
     best.isUsdOrigin ? 1 : 0,
     typeof best.dataPoints === 'number' ? best.dataPoints : 0,
     best.lastUpdated ? new Date(best.lastUpdated).getTime() : 0,
-  ];
+  ]
 
   for (const entry of candidates.slice(1)) {
     const rank: [number, number, number] = [
       entry.isUsdOrigin ? 1 : 0,
       typeof entry.dataPoints === 'number' ? entry.dataPoints : 0,
       entry.lastUpdated ? new Date(entry.lastUpdated).getTime() : 0,
-    ];
+    ]
 
     if (rank[0] !== bestRank[0]) {
       if (rank[0] > bestRank[0]) {
-        best = entry;
-        bestRank = rank;
+        best = entry
+        bestRank = rank
       }
-      continue;
+      continue
     }
     if (rank[1] !== bestRank[1]) {
       if (rank[1] > bestRank[1]) {
-        best = entry;
-        bestRank = rank;
+        best = entry
+        bestRank = rank
       }
-      continue;
+      continue
     }
     if (rank[2] > bestRank[2]) {
-      best = entry;
-      bestRank = rank;
+      best = entry
+      bestRank = rank
     }
   }
 
-  return best;
-};
+  return best
+}
 
 const watchlistTrackedCorridors = computed<CorridorOption[]>(() => {
-  if (!isPlus.value) return [];
-  if (!trackedCorridors.value.length) return [];
+  if (!isPlus.value) return []
+  if (!trackedCorridors.value.length) return []
 
-  const out: CorridorOption[] = [];
-  const seen = new Set<string>();
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
 
   for (const item of watchlist.items.value) {
-    if (item.target.type !== 'corridor') continue;
-    const from = item.target.from.toUpperCase();
-    const to = item.target.to.toUpperCase();
-    const key = `${from}-${to}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (item.target.type !== 'corridor') continue
+    const from = item.target.from.toUpperCase()
+    const to = item.target.to.toUpperCase()
+    const key = `${from}-${to}`
+    if (seen.has(key)) continue
+    seen.add(key)
 
-    const candidates = trackedCorridors.value.filter(c => {
-      const src = (c.sourceCountry || '').toUpperCase();
-      const dst = (c.destCountry || '').toUpperCase();
-      return src === from && dst === to;
-    });
+    const candidates = trackedCorridors.value.filter((c) => {
+      const src = (c.sourceCountry || '').toUpperCase()
+      const dst = (c.destCountry || '').toUpperCase()
+      return src === from && dst === to
+    })
 
-    const best = pickBestByCoverage(candidates);
-    if (best?.corridorId) out.push(best);
-    if (out.length >= 16) break;
+    const best = pickBestByCoverage(candidates)
+    if (best?.corridorId) out.push(best)
+    if (out.length >= 16) break
   }
 
-  return out;
-});
+  return out
+})
 
-const pulsePinnedCorridorIds = ref<string[]>([]);
+const pulsePinnedCorridorIds = ref<string[]>([])
 
 const pulsePinnedTrackedCorridors = computed<CorridorOption[]>(() => {
-  if (!isPro.value) return [];
-  if (!trackedCorridors.value.length) return [];
+  if (!isPro.value) return []
+  if (!trackedCorridors.value.length) return []
 
-  const out: CorridorOption[] = [];
-  const seen = new Set<string>();
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
 
   for (const corridorId of pulsePinnedCorridorIds.value) {
-    const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
-    if (!option?.corridorId || seen.has(option.corridorId)) continue;
-    seen.add(option.corridorId);
-    out.push(option);
+    const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+    if (!option?.corridorId || seen.has(option.corridorId)) continue
+    seen.add(option.corridorId)
+    out.push(option)
   }
 
-  return out;
-});
+  return out
+})
 
 const prioritizedTrackedCorridors = computed<CorridorOption[]>(() => {
-  const out: CorridorOption[] = [];
-  const seen = new Set<string>();
+  const out: CorridorOption[] = []
+  const seen = new Set<string>()
   const add = (corridor: CorridorOption) => {
-    const id = corridor.corridorId;
-    if (!id || seen.has(id)) return;
-    seen.add(id);
-    out.push(corridor);
-  };
+    const id = corridor.corridorId
+    if (!id || seen.has(id)) return
+    seen.add(id)
+    out.push(corridor)
+  }
 
   // Watchlist and pinned corridors get priority ordering
-  for (const corridor of watchlistTrackedCorridors.value) add(corridor);
-  for (const corridor of pulsePinnedTrackedCorridors.value) add(corridor);
+  for (const corridor of watchlistTrackedCorridors.value) add(corridor)
+  for (const corridor of pulsePinnedTrackedCorridors.value) add(corridor)
 
   // Include ALL remaining tracked corridors from gold exports,
   // sorted by data coverage so best corridors appear first
   const remaining = [...trackedCorridors.value].sort(
-    (a, b) => (b.dataPoints ?? 0) - (a.dataPoints ?? 0)
-  );
-  for (const corridor of remaining) add(corridor);
+    (a, b) => (b.dataPoints ?? 0) - (a.dataPoints ?? 0),
+  )
+  for (const corridor of remaining) add(corridor)
 
-  return out;
-});
+  return out
+})
 
 const corridorFinderFeaturedCorridors = computed<CorridorOption[]>(() => {
-  const prioritized = prioritizedTrackedCorridors.value.slice(0, 10);
-  if (prioritized.length > 0) return prioritized;
-  return sortCorridorsByCoverage(trackedCorridors.value).slice(0, 10);
-});
+  const prioritized = prioritizedTrackedCorridors.value.slice(0, 10)
+  if (prioritized.length > 0) return prioritized
+  return sortCorridorsByCoverage(trackedCorridors.value).slice(0, 10)
+})
 
-const GOLD_STANDARD_BENCHMARK_AMOUNT = 500;
-const PULSE_SCREENER_AMOUNTS = [100, 200, 500, 1000] as const;
+const GOLD_STANDARD_BENCHMARK_AMOUNT = 500
+const PULSE_SCREENER_AMOUNTS = [100, 200, 500, 1000] as const
 
 const screenerQueryAmount = computed<number>(() => {
-  const requested = store.amount;
+  const requested = store.amount
   return PULSE_SCREENER_AMOUNTS.reduce((best, candidate) => {
-    const bestDelta = Math.abs(best - requested);
-    const candidateDelta = Math.abs(candidate - requested);
-    return candidateDelta < bestDelta ? candidate : best;
-  }, PULSE_SCREENER_AMOUNTS[0]);
-});
+    const bestDelta = Math.abs(best - requested)
+    const candidateDelta = Math.abs(candidate - requested)
+    return candidateDelta < bestDelta ? candidate : best
+  }, PULSE_SCREENER_AMOUNTS[0])
+})
 
 const screenerCorridorIds = computed<string[]>(() => {
   const ids = prioritizedTrackedCorridors.value
     .map(c => c.corridorId)
-    .filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
-  return Array.from(new Set(ids)).slice(0, 25);
-});
+    .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
+  return Array.from(new Set(ids)).slice(0, 25)
+})
 
 const filtersForcedVisible = computed(
-  () => !pulseScreenerEnabled.value || screenerCorridorIds.value.length === 0
-);
-const filtersVisible = computed(() => showAdvancedFilters.value || filtersForcedVisible.value);
+  () => !pulseScreenerEnabled.value || screenerCorridorIds.value.length === 0,
+)
+const filtersVisible = computed(() => showAdvancedFilters.value || filtersForcedVisible.value)
 
 const toggleAdvancedFilters = () => {
-  showAdvancedFilters.value = !showAdvancedFilters.value;
-};
+  showAdvancedFilters.value = !showAdvancedFilters.value
+}
 
-const screenerRows = ref<PulseScreenerRow[]>([]);
-const screenerLoading = ref(false);
-const screenerError = ref<string | null>(null);
-const screenerUpdatedAt = ref<string | null>(null);
+const screenerRows = ref<PulseScreenerRow[]>([])
+const screenerLoading = ref(false)
+const screenerError = ref<string | null>(null)
+const screenerUpdatedAt = ref<string | null>(null)
 
 // Pinned corridors (Enterprise watchlist)
 const effectivePinnedCorridorIds = computed<string[]>(() => {
-  return mergePinnedCorridorIds(pulsePinnedCorridorIds.value, watchlistTrackedCorridors.value);
-});
+  return mergePinnedCorridorIds(pulsePinnedCorridorIds.value, watchlistTrackedCorridors.value)
+})
 
 const loadPinnedCorridors = async () => {
-  if (!isPro.value) return;
+  if (!isPro.value) return
   try {
-    const pinned = await getPulsePinnedCorridors();
-    pulsePinnedCorridorIds.value = pinned.map(p => p.corridorId);
-  } catch {
-    pulsePinnedCorridorIds.value = [];
+    const pinned = await getPulsePinnedCorridors()
+    pulsePinnedCorridorIds.value = pinned.map(p => p.corridorId)
   }
-};
+ catch {
+    pulsePinnedCorridorIds.value = []
+  }
+}
 
 const handlePinCorridor = async (corridorId: string) => {
   try {
-    await pinPulseCorridor(corridorId);
-    pulsePinnedCorridorIds.value = [...pulsePinnedCorridorIds.value, corridorId];
-  } catch (error: any) {
-    actionError.value = error?.message || 'Failed to pin corridor';
+    await pinPulseCorridor(corridorId)
+    pulsePinnedCorridorIds.value = [...pulsePinnedCorridorIds.value, corridorId]
   }
-};
+ catch (error: any) {
+    actionError.value = error?.message || 'Failed to pin corridor'
+  }
+}
 
 const handleUnpinCorridor = async (corridorId: string) => {
   try {
-    await unpinPulseCorridor(corridorId);
-    pulsePinnedCorridorIds.value = pulsePinnedCorridorIds.value.filter(id => id !== corridorId);
-  } catch (error: any) {
-    actionError.value = error?.message || 'Failed to unpin corridor';
+    await unpinPulseCorridor(corridorId)
+    pulsePinnedCorridorIds.value = pulsePinnedCorridorIds.value.filter(id => id !== corridorId)
   }
-};
+ catch (error: any) {
+    actionError.value = error?.message || 'Failed to unpin corridor'
+  }
+}
 
 const loadScreener = async () => {
-  if (!isPro.value) return;
-  if (!pulseScreenerEnabled.value) return;
+  if (!isPro.value) return
+  if (!pulseScreenerEnabled.value) return
 
-  const corridorIds = screenerCorridorIds.value;
+  const corridorIds = screenerCorridorIds.value
   if (corridorIds.length === 0) {
-    screenerRows.value = [];
-    screenerUpdatedAt.value = null;
-    screenerError.value = null;
-    return;
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+    screenerError.value = null
+    return
   }
 
-  screenerLoading.value = true;
-  screenerError.value = null;
+  screenerLoading.value = true
+  screenerError.value = null
 
   try {
     const response = await getPulseScreener({
@@ -3140,138 +3289,140 @@ const loadScreener = async () => {
       payin: 'bank',
       payout: 'bank',
       includeMovers: true,
-    });
-    screenerRows.value = response.rows ?? [];
-    screenerUpdatedAt.value = response.updatedAt ?? null;
-  } catch (error: any) {
-    screenerError.value = error?.message || 'Unable to load screener right now.';
-    screenerRows.value = [];
-    screenerUpdatedAt.value = null;
-  } finally {
-    screenerLoading.value = false;
+    })
+    screenerRows.value = response.rows ?? []
+    screenerUpdatedAt.value = response.updatedAt ?? null
   }
-};
+ catch (error: any) {
+    screenerError.value = error?.message || 'Unable to load screener right now.'
+    screenerRows.value = []
+    screenerUpdatedAt.value = null
+  }
+ finally {
+    screenerLoading.value = false
+  }
+}
 
 const scrollToDecisionPanel = async () => {
-  if (!import.meta.client) return;
-  await nextTick();
-  const el = decisionPanelRef.value || document.getElementById('decision');
+  if (!import.meta.client) return
+  await nextTick()
+  const el = decisionPanelRef.value || document.getElementById('decision')
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-};
+}
 
 const syncPulseRouteToState = () => {
-  void router.replace({ path: route.path, query: store.getQueryParams() });
-};
+  void router.replace({ path: route.path, query: store.getQueryParams() })
+}
 
 function handleCorridorFinderSelect(corridorId: string) {
-  const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
-  if (!option) return;
-  setCorridorFromOption(option);
-  syncPulseRouteToState();
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
+  setCorridorFromOption(option)
+  syncPulseRouteToState()
 }
 
 function handleCorridorFinderTimeframeSelect(timeframe: PulseTimeframe) {
-  store.setTimeframe(timeframe);
-  syncPulseRouteToState();
+  store.setTimeframe(timeframe)
+  syncPulseRouteToState()
 }
 
 function handleCorridorFinderAmountSelect(amount: number) {
-  store.setAmount(amount);
-  amountInput.value = amount;
-  syncPulseRouteToState();
+  store.setAmount(amount)
+  amountInput.value = amount
+  syncPulseRouteToState()
 }
 
 async function handleScreenerSelect(corridorId: string) {
-  const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
-  if (!option) return;
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
 
   // Screener is a decision tool; force Decision mode to keep the UI predictable.
-  store.setViewMode('sender');
+  store.setViewMode('sender')
 
-  setCorridorFromOption(option);
-  syncPulseRouteToState();
-  await scrollToDecisionPanel();
+  setCorridorFromOption(option)
+  syncPulseRouteToState()
+  await scrollToDecisionPanel()
 }
 
 async function handleScreenerSelectTimeframe(corridorId: string, timeframe: PulseTimeframe) {
-  const option = trackedCorridors.value.find(c => c.corridorId === corridorId);
-  if (!option) return;
+  const option = trackedCorridors.value.find(c => c.corridorId === corridorId)
+  if (!option) return
 
-  store.setViewMode('sender');
-  setCorridorFromOption(option);
-  store.setTimeframe(timeframe);
-  syncPulseRouteToState();
-  await scrollToDecisionPanel();
+  store.setViewMode('sender')
+  setCorridorFromOption(option)
+  store.setTimeframe(timeframe)
+  syncPulseRouteToState()
+  await scrollToDecisionPanel()
 }
 
 type PulseTeaserMover = {
-  corridorId: string;
-  fromCountry: string;
-  toCountry: string;
-  sendCurrency: string;
-  recvCurrency: string;
-  deltaPct: number;
-  providerCount: number;
-  timestampBucket: string;
-};
+  corridorId: string
+  fromCountry: string
+  toCountry: string
+  sendCurrency: string
+  recvCurrency: string
+  deltaPct: number
+  providerCount: number
+  timestampBucket: string
+}
 
 async function handleMoverSelect(mover: PulseTeaserMover) {
-  const optionById = trackedCorridors.value.find(c => c.corridorId === mover.corridorId);
-  const slug = `${mover.sendCurrency.toLowerCase()}-${mover.recvCurrency.toLowerCase()}`;
-  const optionBySlug =
-    getCorridorBySlug(slug) || trackedCorridors.value.find(c => (c.slug || c.value) === slug);
-  const option = optionById || optionBySlug;
-  if (!option) return;
+  const optionById = trackedCorridors.value.find(c => c.corridorId === mover.corridorId)
+  const slug = `${mover.sendCurrency.toLowerCase()}-${mover.recvCurrency.toLowerCase()}`
+  const optionBySlug
+    = getCorridorBySlug(slug) || trackedCorridors.value.find(c => (c.slug || c.value) === slug)
+  const option = optionById || optionBySlug
+  if (!option) return
 
-  store.setViewMode('sender');
-  setCorridorFromOption(option);
-  syncPulseRouteToState();
-  await scrollToDecisionPanel();
+  store.setViewMode('sender')
+  setCorridorFromOption(option)
+  syncPulseRouteToState()
+  await scrollToDecisionPanel()
 }
 
 async function handleMoverAdded(mover: PulseTeaserMover) {
   // Watchlist mutations will naturally refresh `screenerCorridorIds` and trigger `loadScreener`.
-  await handleMoverSelect(mover);
+  await handleMoverSelect(mover)
 }
 
 const selectedCorridorOption = computed<CorridorOption | null>(() => {
-  const key = selectedCorridorKey.value;
-  if (!key) return null;
-  return trackedCorridors.value.find(c => c.corridorId === key || c.value === key) || null;
-});
+  const key = selectedCorridorKey.value
+  if (!key) return null
+  return trackedCorridors.value.find(c => c.corridorId === key || c.value === key) || null
+})
 
 const toCountryName = (code?: string | null): string => {
-  if (!code) return '';
-  const normalized = code.trim().toUpperCase();
-  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized);
-  return found?.name || normalized;
-};
+  if (!code) return ''
+  const normalized = code.trim().toUpperCase()
+  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized)
+  return found?.name || normalized
+}
 
 const toCountryFlag = (code?: string | null, fallback?: string): string => {
-  if (fallback) return fallback;
-  if (!code) return '🌍';
-  const normalized = code.trim().toUpperCase();
-  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized);
-  return found?.flag || '🌍';
-};
+  if (fallback) return fallback
+  if (!code) return '🌍'
+  const normalized = code.trim().toUpperCase()
+  const found = COUNTRIES.find(c => c.code.toUpperCase() === normalized)
+  return found?.flag || '🌍'
+}
 
 const toPulseCorridor = (option: CorridorOption): PulseCorridor => {
-  const corridorId = option.corridorId;
-  const parts = corridorId ? corridorId.split('-') : [];
-  const sourceCountry = (option.sourceCountry || parts[0] || '').toUpperCase();
-  const destCountry = (option.destCountry || parts[1] || '').toUpperCase();
+  const corridorId = option.corridorId
+  const parts = corridorId ? corridorId.split('-') : []
+  const sourceCountry = (option.sourceCountry || parts[0] || '').toUpperCase()
+  const destCountry = (option.destCountry || parts[1] || '').toUpperCase()
 
-  const fromCode = (option.fromCode || option.sourceCurrency || parts[2] || '').toUpperCase();
-  const toCode = (option.toCode || option.destCurrency || parts[3] || '').toUpperCase();
+  const fromCode = (option.fromCode || option.sourceCurrency || parts[2] || '').toUpperCase()
+  const toCode = (option.toCode || option.destCurrency || parts[3] || '').toUpperCase()
 
   const slug = String(
-    option.slug || option.value || `${fromCode.toLowerCase()}-${toCode.toLowerCase()}`
+    option.slug || option.value || `${fromCode.toLowerCase()}-${toCode.toLowerCase()}`,
   )
     .trim()
-    .toLowerCase();
-  const label = option.label || `${fromCode} → ${toCode}`;
+    .toLowerCase()
+  const label = option.label || `${fromCode} → ${toCode}`
 
   return {
     from: toCountryName(sourceCountry) || sourceCountry || fromCode,
@@ -3283,323 +3434,329 @@ const toPulseCorridor = (option: CorridorOption): PulseCorridor => {
     label,
     slug,
     corridorId,
-  };
-};
+  }
+}
 
 const setCorridorFromOption = (option: CorridorOption) => {
-  store.setCorridor(toPulseCorridor(option));
-  selectedCorridorKey.value = option.corridorId || option.value;
-};
+  store.setCorridor(toPulseCorridor(option))
+  selectedCorridorKey.value = option.corridorId || option.value
+}
 
 function computeDaysAvailable(c: CorridorOption | null | undefined): number {
-  return computeCorridorDaysAvailable(c);
+  return computeCorridorDaysAvailable(c)
 }
 
 const selectedCorridorDaysAvailable = computed(() =>
-  computeDaysAvailable(selectedCorridorOption.value)
-);
+  computeDaysAvailable(selectedCorridorOption.value),
+)
 
 const corridorDaysMap = computed<Record<string, number>>(() => {
-  const map: Record<string, number> = {};
+  const map: Record<string, number> = {}
   for (const c of trackedCorridors.value) {
-    const id = c.corridorId || c.value;
-    if (id) map[id] = computeDaysAvailable(c);
+    const id = c.corridorId || c.value
+    if (id) map[id] = computeDaysAvailable(c)
   }
-  return map;
-});
+  return map
+})
 
 const corridorCoverageLabel = computed(() => {
-  const c = selectedCorridorOption.value;
-  const daysAvailable = computeDaysAvailable(c);
-  if (!daysAvailable) return '';
-  const desiredDays = store.timeframeDays;
-  const cappedNote =
-    desiredDays > daysAvailable ? ` • Only ${daysAvailable}d available for this corridor` : '';
-  return `Coverage: ${c?.minDate} to ${c?.maxDate} (${formatCount(daysAvailable)} days available)${cappedNote}`;
-});
+  const c = selectedCorridorOption.value
+  const daysAvailable = computeDaysAvailable(c)
+  if (!daysAvailable) return ''
+  const desiredDays = store.timeframeDays
+  const cappedNote
+    = desiredDays > daysAvailable ? ` • Only ${daysAvailable}d available for this corridor` : ''
+  return `Coverage: ${c?.minDate} to ${c?.maxDate} (${formatCount(daysAvailable)} days available)${cappedNote}`
+})
 
 function handleCorridorSelect() {
-  const key = selectedCorridorKey.value;
-  const option = trackedCorridors.value.find(c => c.corridorId === key || c.value === key);
-  if (!option) return;
-  setCorridorFromOption(option);
-  syncPulseRouteToState();
+  const key = selectedCorridorKey.value
+  const option = trackedCorridors.value.find(c => c.corridorId === key || c.value === key)
+  if (!option) return
+  setCorridorFromOption(option)
+  syncPulseRouteToState()
 }
 
 const initializeCorridorSelection = () => {
-  if (trackedCorridors.value.length === 0) return;
+  if (trackedCorridors.value.length === 0) return
 
-  const corridorIdFromUrl =
-    typeof route.query.corridor_id === 'string' ? route.query.corridor_id : undefined;
-  const corridorSlugFromUrl =
-    typeof route.query.corridor === 'string' ? route.query.corridor : undefined;
+  const corridorIdFromUrl
+    = typeof route.query.corridor_id === 'string' ? route.query.corridor_id : undefined
+  const corridorSlugFromUrl
+    = typeof route.query.corridor === 'string' ? route.query.corridor : undefined
 
-  let option: CorridorOption | undefined;
+  let option: CorridorOption | undefined
 
   if (corridorIdFromUrl) {
-    option =
-      getCorridorById(corridorIdFromUrl) ||
-      trackedCorridors.value.find(c => c.corridorId === corridorIdFromUrl);
+    option
+      = getCorridorById(corridorIdFromUrl)
+        || trackedCorridors.value.find(c => c.corridorId === corridorIdFromUrl)
   }
   if (!option && corridorSlugFromUrl) {
-    option =
-      getCorridorBySlug(corridorSlugFromUrl) ||
-      trackedCorridors.value.find(c => (c.slug || c.value) === corridorSlugFromUrl);
+    option
+      = getCorridorBySlug(corridorSlugFromUrl)
+        || trackedCorridors.value.find(c => (c.slug || c.value) === corridorSlugFromUrl)
   }
-  const currentCorridorId = store.corridor?.corridorId;
+  const currentCorridorId = store.corridor?.corridorId
   if (!option && currentCorridorId) {
-    option =
-      getCorridorById(currentCorridorId) ||
-      trackedCorridors.value.find(c => c.corridorId === currentCorridorId);
+    option
+      = getCorridorById(currentCorridorId)
+        || trackedCorridors.value.find(c => c.corridorId === currentCorridorId)
   }
   if (!option) {
-    option = prioritizedTrackedCorridors.value[0] || trackedCorridors.value[0];
+    option = prioritizedTrackedCorridors.value[0] || trackedCorridors.value[0]
   }
 
   if (option) {
-    setCorridorFromOption(option);
+    setCorridorFromOption(option)
   }
-};
+}
 
-const deepDivesRef = ref<HTMLElement | null>(null);
-const deepDivesVisible = ref(false);
-let deepDivesObserver: IntersectionObserver | null = null;
+const deepDivesRef = ref<HTMLElement | null>(null)
+const deepDivesVisible = ref(false)
+let deepDivesObserver: IntersectionObserver | null = null
 
 const teardownDeepDivesObserver = () => {
   if (deepDivesObserver) {
-    deepDivesObserver.disconnect();
-    deepDivesObserver = null;
+    deepDivesObserver.disconnect()
+    deepDivesObserver = null
   }
-  deepDivesVisible.value = false;
-};
+  deepDivesVisible.value = false
+}
 
 const setupDeepDivesObserver = async () => {
-  if (!import.meta.client) return;
-  if (!isPlus.value) return;
+  if (!import.meta.client) return
+  if (!isPlus.value) return
 
-  teardownDeepDivesObserver();
-  await nextTick();
+  teardownDeepDivesObserver()
+  await nextTick()
 
-  const el = deepDivesRef.value;
-  if (!el) return;
+  const el = deepDivesRef.value
+  if (!el) return
 
   deepDivesObserver = new IntersectionObserver(
-    entries => {
-      const entry = entries[0];
-      if (!entry?.isIntersecting) return;
+    (entries) => {
+      const entry = entries[0]
+      if (!entry?.isIntersecting) return
 
-      deepDivesVisible.value = true;
+      deepDivesVisible.value = true
       if (deepDivesObserver) {
-        deepDivesObserver.disconnect();
-        deepDivesObserver = null;
+        deepDivesObserver.disconnect()
+        deepDivesObserver = null
       }
-      void loadChartData();
+      void loadChartData()
     },
     // Preload slightly before the section is visible to avoid a "blank chart grid" moment.
-    { root: null, rootMargin: '200px 0px', threshold: 0.01 }
-  );
+    { root: null, rootMargin: '200px 0px', threshold: 0.01 },
+  )
 
-  deepDivesObserver.observe(el as unknown as Element);
-};
+  deepDivesObserver.observe(el as unknown as Element)
+}
 
-const actionStatus = ref<string | null>(null);
-const actionError = ref<string | null>(null);
+const actionStatus = ref<string | null>(null)
+const actionError = ref<string | null>(null)
 
-const snapshotExporting = ref(false);
-const snapshotExportStatus = ref<string | null>(null);
-const snapshotExportError = ref<string | null>(null);
-let snapshotExportPoll: ReturnType<typeof setInterval> | null = null;
+const snapshotExporting = ref(false)
+const snapshotExportStatus = ref<string | null>(null)
+const snapshotExportError = ref<string | null>(null)
+let snapshotExportPoll: ReturnType<typeof setInterval> | null = null
 
 const clearSnapshotExportPoll = () => {
-  if (!snapshotExportPoll) return;
-  clearInterval(snapshotExportPoll);
-  snapshotExportPoll = null;
-};
+  if (!snapshotExportPoll) return
+  clearInterval(snapshotExportPoll)
+  snapshotExportPoll = null
+}
 
 const corridorCountries = computed(() => {
-  const id = store.corridor?.corridorId;
-  if (!id) return { from: 'US', to: 'PH' };
-  const [from, to] = id.split('-');
-  return { from: (from || 'US').toUpperCase(), to: (to || 'PH').toUpperCase() };
-});
+  const id = store.corridor?.corridorId
+  if (!id) return { from: 'US', to: 'PH' }
+  const [from, to] = id.split('-')
+  return { from: (from || 'US').toUpperCase(), to: (to || 'PH').toUpperCase() }
+})
 
 const compareCorridorUrl = computed(() => {
-  const base = getCorridorUrl(corridorCountries.value.from, corridorCountries.value.to);
-  return `${base}?amount=${encodeURIComponent(String(store.amount))}`;
-});
+  const base = getCorridorUrl(corridorCountries.value.from, corridorCountries.value.to)
+  return `${base}?amount=${encodeURIComponent(String(store.amount))}`
+})
 
 function setViewMode(mode: PulseViewMode) {
   if (!isPro.value && mode === 'analyst') {
-    store.setViewMode('sender');
-    return;
+    store.setViewMode('sender')
+    return
   }
-  store.setViewMode(mode);
-  const nextQuery = { ...route.query } as Record<string, any>;
+  store.setViewMode(mode)
+  const nextQuery = { ...route.query } as Record<string, any>
   if (mode === 'sender') {
-    delete nextQuery.mode;
-  } else {
-    nextQuery.mode = mode;
+    delete nextQuery.mode
   }
-  void router.replace({ path: route.path, query: nextQuery });
+ else {
+    nextQuery.mode = mode
+  }
+  void router.replace({ path: route.path, query: nextQuery })
 }
 
-const setActionMessage = (next: { status?: string | null; error?: string | null }) => {
-  actionStatus.value = next.status ?? null;
-  actionError.value = next.error ?? null;
+const setActionMessage = (next: { status?: string | null, error?: string | null }) => {
+  actionStatus.value = next.status ?? null
+  actionError.value = next.error ?? null
   if (actionStatus.value || actionError.value) {
     setTimeout(() => {
-      actionStatus.value = null;
-      actionError.value = null;
-    }, 3500);
+      actionStatus.value = null
+      actionError.value = null
+    }, 3500)
   }
-};
+}
 
 async function handleAddToWatchlist() {
-  const { from, to } = corridorCountries.value;
+  const { from, to } = corridorCountries.value
   try {
-    const result = await watchlist.ensure({ type: 'corridor', from, to, method: 'bank' });
+    const result = await watchlist.ensure({ type: 'corridor', from, to, method: 'bank' })
     if (result.status === 'limit_reached') {
-      setActionMessage({ error: result.message });
-      return;
+      setActionMessage({ error: result.message })
+      return
     }
     if (result.status === 'error') {
-      setActionMessage({ error: result.message });
-      return;
+      setActionMessage({ error: result.message })
+      return
     }
-    setActionMessage({ status: 'Added to watchlist.' });
-  } catch (error: any) {
-    setActionMessage({ error: error?.message || 'Unable to add to watchlist.' });
+    setActionMessage({ status: 'Added to watchlist.' })
+  }
+ catch (error: any) {
+    setActionMessage({ error: error?.message || 'Unable to add to watchlist.' })
   }
 }
 
 function handleCreateAlert() {
-  const { from, to } = corridorCountries.value;
+  const { from, to } = corridorCountries.value
   saveAlertModal.open({
     source: 'pulse',
     target: { type: 'corridor', from, to, method: 'bank' },
     label: `${from}→${to} • bank`,
-  });
+  })
 }
 
 const resolveExportDays = () => {
-  if (!limits.value.exports) return 0;
-  const max = limits.value.exportsMaxDays;
+  if (!limits.value.exports) return 0
+  const max = limits.value.exportsMaxDays
   // All plans capped at 30d exports (backend hard cap).
-  if (max === 'unlimited') return 30;
-  if (typeof max === 'number' && max > 0) return Math.min(30, max);
-  return 0;
-};
+  if (max === 'unlimited') return 30
+  if (typeof max === 'number' && max > 0) return Math.min(30, max)
+  return 0
+}
 
 const pollExportStatus = async (jobId: string) => {
-  clearSnapshotExportPoll();
+  clearSnapshotExportPoll()
 
   const tick = async () => {
     try {
-      const response = await exportsApi.getExportStatus(jobId);
-      if (!response.success) return;
+      const response = await exportsApi.getExportStatus(jobId)
+      if (!response.success) return
 
       if (response.job.status === 'failed') {
-        snapshotExportError.value = response.job.error || 'Export failed. Please try again.';
-        snapshotExporting.value = false;
-        clearSnapshotExportPoll();
-        return;
+        snapshotExportError.value = response.job.error || 'Export failed. Please try again.'
+        snapshotExporting.value = false
+        clearSnapshotExportPoll()
+        return
       }
 
       if (response.job.status === 'done') {
-        snapshotExportStatus.value = 'Export ready. Downloading...';
-        const download = await exportsApi.getExportDownloadUrl(jobId);
-        snapshotExporting.value = false;
-        clearSnapshotExportPoll();
+        snapshotExportStatus.value = 'Export ready. Downloading...'
+        const download = await exportsApi.getExportDownloadUrl(jobId)
+        snapshotExporting.value = false
+        clearSnapshotExportPoll()
         if (import.meta.client) {
-          window.location.href = download.url;
+          window.location.href = download.url
         }
-        return;
+        return
       }
 
-      snapshotExportStatus.value = 'Export in progress...';
-    } catch (error: any) {
-      snapshotExportError.value = error?.message || 'Unable to export right now.';
-      snapshotExporting.value = false;
-      clearSnapshotExportPoll();
+      snapshotExportStatus.value = 'Export in progress...'
     }
-  };
+ catch (error: any) {
+      snapshotExportError.value = error?.message || 'Unable to export right now.'
+      snapshotExporting.value = false
+      clearSnapshotExportPoll()
+    }
+  }
 
-  await tick();
-  snapshotExportPoll = setInterval(tick, 2500);
-};
+  await tick()
+  snapshotExportPoll = setInterval(tick, 2500)
+}
 
-const { exportVisual, exporting: chartImageExporting } = useChartImageExport();
-const chartVisualButtons: Array<{ value: ChartVisualExportFormat; label: string }> =
-  CHART_VISUAL_EXPORT_FORMATS.map(format => ({
+const { exportVisual, exporting: chartImageExporting } = useChartImageExport()
+const chartVisualButtons: Array<{ value: ChartVisualExportFormat, label: string }>
+  = CHART_VISUAL_EXPORT_FORMATS.map(format => ({
     value: format,
     label: format.toUpperCase(),
-  }));
-const chartImageError = ref<string | null>(null);
-const activeChartVisualFormat = ref<ChartVisualExportFormat | null>(null);
+  }))
+const chartImageError = ref<string | null>(null)
+const activeChartVisualFormat = ref<ChartVisualExportFormat | null>(null)
 
 async function downloadChartVisual(format: ChartVisualExportFormat) {
-  const el = chartRef.value;
-  if (!el || chartImageExporting.value) return;
-  chartImageError.value = null;
-  activeChartVisualFormat.value = format;
+  const el = chartRef.value
+  if (!el || chartImageExporting.value) return
+  chartImageError.value = null
+  activeChartVisualFormat.value = format
   try {
-    const label = store.corridorLabel || store.corridorSlug || 'Global';
+    const label = store.corridorLabel || store.corridorSlug || 'Global'
     await exportVisual(el as HTMLElement, {
       title: 'All-in Cost Index',
       subtitle: `${label} · $${store.amount}`,
       source: `Source: Remit-Scout · remit-scout.com/pulse · ${label}`,
       filename: `remit-scout-all-in-cost-${store.corridorSlug || 'global'}`,
       format,
-    });
-  } catch (e) {
-    chartImageError.value = e instanceof Error ? e.message : 'Failed to generate visual export.';
-  } finally {
-    activeChartVisualFormat.value = null;
+    })
+  }
+ catch (e) {
+    chartImageError.value = e instanceof Error ? e.message : 'Failed to generate visual export.'
+  }
+ finally {
+    activeChartVisualFormat.value = null
   }
 }
 
 async function downloadSnapshotCsv() {
-  if (snapshotExporting.value) return;
-  snapshotExportError.value = null;
-  snapshotExportStatus.value = null;
-  snapshotExporting.value = true;
+  if (snapshotExporting.value) return
+  snapshotExportError.value = null
+  snapshotExportStatus.value = null
+  snapshotExporting.value = true
 
   try {
-    const days = resolveExportDays();
+    const days = resolveExportDays()
     if (days <= 0) {
-      throw new Error('Exports are not available on your plan.');
+      throw new Error('Exports are not available on your plan.')
     }
 
-    const toDateOnlyUtc = (date: Date) => date.toISOString().split('T')[0];
-    const dateTo = toDateOnlyUtc(new Date());
-    const dateFrom = toDateOnlyUtc(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000));
-    const corridorId = store.corridor?.corridorId;
+    const toDateOnlyUtc = (date: Date) => date.toISOString().split('T')[0]
+    const dateTo = toDateOnlyUtc(new Date())
+    const dateFrom = toDateOnlyUtc(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000))
+    const corridorId = store.corridor?.corridorId
     const response = await exportsApi.createExport({
       dataType: 'history',
       format: 'csv',
       dateFrom,
       dateTo,
       corridorIds: corridorId ? [corridorId] : undefined,
-    });
+    })
 
     if (!response.success) {
-      throw new Error('Export request failed.');
+      throw new Error('Export request failed.')
     }
 
-    snapshotExportStatus.value = 'Export queued. We will start processing shortly.';
-    await pollExportStatus(response.job.id);
-  } catch (error: any) {
-    snapshotExportError.value = error?.message || 'Unable to export right now.';
-    snapshotExporting.value = false;
-    clearSnapshotExportPoll();
+    snapshotExportStatus.value = 'Export queued. We will start processing shortly.'
+    await pollExportStatus(response.job.id)
+  }
+ catch (error: any) {
+    snapshotExportError.value = error?.message || 'Unable to export right now.'
+    snapshotExporting.value = false
+    clearSnapshotExportPoll()
   }
 }
 
 function handleAmountInput() {
-  const amount = Number.parseInt(String(amountInput.value), 10);
+  const amount = Number.parseInt(String(amountInput.value), 10)
   if (!Number.isNaN(amount) && amount > 0) {
-    store.setAmount(amount);
-    syncPulseRouteToState();
+    store.setAmount(amount)
+    syncPulseRouteToState()
   }
 }
 
@@ -3609,144 +3766,147 @@ const legacyFilters = computed<PulseFilters>(() => ({
   amount: store.amount as 100 | 200 | 500 | 1000,
   fundingMethod: 'bank',
   payoutMethod: 'bank',
-}));
+}))
 
 type ChartAvailabilityEntry = {
-  dataAvailable: boolean;
-  updatedAt: string | null;
-  source: 'gold_export' | 'gold_cache' | 'none';
-};
+  dataAvailable: boolean
+  updatedAt: string | null
+  source: 'gold_export' | 'gold_cache' | 'none'
+}
 
-const chartData = ref<Record<string, ChartData | null>>({});
-const chartAvailability = ref<Record<string, ChartAvailabilityEntry>>({});
+const chartData = ref<Record<string, ChartData | null>>({})
+const chartAvailability = ref<Record<string, ChartAvailabilityEntry>>({})
 
 const INDICES_CHART_IDS = [
   'indices-confidence',
   'indices-provider-count',
   'indices-suppression',
-] as const;
+] as const
 const indicesCharts = computed(() =>
-  INDICES_CHART_IDS.map(id => getChartById(id)).filter((c): c is NonNullable<typeof c> => c != null)
-);
+  INDICES_CHART_IDS.map(id => getChartById(id)).filter((c): c is NonNullable<typeof c> => c != null),
+)
 
-const snapshotSummary = ref<PulseSnapshotSummary | null>(null);
+const snapshotSummary = ref<PulseSnapshotSummary | null>(null)
 const chartLoadKey = computed(
-  () => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}`
-);
-const chartLoadedKey = ref<string | null>(null);
-const chartLoading = ref(false);
+  () => `${legacyFilters.value.corridorId || ''}:${store.timeframe}:${store.amount}`,
+)
+const chartLoadedKey = ref<string | null>(null)
+const chartLoading = ref(false)
 
 const executiveNote = computed(() => {
-  if (!snapshotSummary.value) return '';
+  if (!snapshotSummary.value) return ''
   const getValue = (id: string) =>
-    snapshotSummary.value?.kpis.find(kpi => kpi.id === id)?.value || '';
-  const spread = getValue('market-spread');
-  const leader = getValue('leader');
-  const volatility = getValue('volatility');
-  const success = getValue('quote-success');
+    snapshotSummary.value?.kpis.find(kpi => kpi.id === id)?.value || ''
+  const spread = getValue('market-spread')
+  const leader = getValue('leader')
+  const volatility = getValue('volatility')
+  const success = getValue('quote-success')
 
-  return `Dispersion is ${spread}. Leader is ${leader}. Volatility: ${volatility}. Quote success: ${success}.`;
-});
+  return `Dispersion is ${spread}. Leader is ${leader}. Volatility: ${volatility}. Quote success: ${success}.`
+})
 
 async function loadChartData() {
-  if (!isPro.value) return;
-  if (!deepDivesVisible.value) return;
-  if (chartLoading.value) return;
-  const key = chartLoadKey.value;
-  if (chartLoadedKey.value === key) return;
+  if (!isPro.value) return
+  if (!deepDivesVisible.value) return
+  if (chartLoading.value) return
+  const key = chartLoadKey.value
+  if (chartLoadedKey.value === key) return
   try {
-    chartLoading.value = true;
-    const enterpriseOnlyChartIds = new Set(['corridor-liquidity']);
+    chartLoading.value = true
+    const enterpriseOnlyChartIds = new Set(['corridor-liquidity'])
     const chartIds = pulseChartRegistry
       .filter(c => isPro.value || !enterpriseOnlyChartIds.has(c.id))
-      .map(c => c.id);
-    const response = await getChartsBatch(chartIds, legacyFilters.value);
-    const newData: Record<string, ChartData | null> = {};
-    const availability: Record<string, ChartAvailabilityEntry> = {};
+      .map(c => c.id)
+    const response = await getChartsBatch(chartIds, legacyFilters.value)
+    const newData: Record<string, ChartData | null> = {}
+    const availability: Record<string, ChartAvailabilityEntry> = {}
     for (const item of response.charts || []) {
-      newData[item.id] = item.chart;
+      newData[item.id] = item.chart
       availability[item.id] = {
         dataAvailable: item.dataAvailable,
         updatedAt: item.updatedAt,
         source: item.source,
-      };
+      }
     }
-    chartData.value = newData;
-    chartAvailability.value = availability;
-    chartLoadedKey.value = key;
-  } catch (e) {
-    useLogger('PulsePage').error('Failed to load chart data', e);
-  } finally {
-    chartLoading.value = false;
+    chartData.value = newData
+    chartAvailability.value = availability
+    chartLoadedKey.value = key
+  }
+ catch (e) {
+    useLogger('PulsePage').error('Failed to load chart data', e)
+  }
+ finally {
+    chartLoading.value = false
   }
 }
 
 async function loadSnapshotSummary() {
-  if (!isPlus.value) return;
+  if (!isPlus.value) return
   try {
     snapshotSummary.value = await getPulseSnapshotSummary(
       store.corridor,
       store.timeframe,
-      store.amount
-    );
+      store.amount,
+    )
     if (snapshotSummary.value?.lastUpdated) {
-      store.setLastUpdated(snapshotSummary.value.lastUpdated);
+      store.setLastUpdated(snapshotSummary.value.lastUpdated)
     }
-  } catch (e) {
-    useLogger('PulsePage').error('Failed to load snapshot summary', e);
+  }
+ catch (e) {
+    useLogger('PulsePage').error('Failed to load snapshot summary', e)
   }
 }
 
 function navigateToChart(chartId: string) {
-  const params = store.getQueryParams();
-  const queryString = new URLSearchParams(params).toString();
-  router.push(`/pulse/charts/${chartId}${queryString ? '?' + queryString : ''}`);
+  const params = store.getQueryParams()
+  const queryString = new URLSearchParams(params).toString()
+  router.push(`/pulse/charts/${chartId}${queryString ? '?' + queryString : ''}`)
 }
 
 function handleEmbed(chartId: string) {
-  if (!pulseEmbedsEnabled.value) return;
-  embedModalChart.value = chartId;
+  if (!pulseEmbedsEnabled.value) return
+  embedModalChart.value = chartId
 }
 
 function getDeltaClass(deltaType: PulseDeltaType) {
-  if (deltaType === 'positive') return 'text-success-600';
-  if (deltaType === 'negative') return 'text-danger-600';
-  return 'text-neutral-400';
+  if (deltaType === 'positive') return 'text-success-600'
+  if (deltaType === 'negative') return 'text-danger-600'
+  return 'text-neutral-400'
 }
 
 function highlightSection(sectionId: string) {
-  highlightedSection.value = sectionId;
+  highlightedSection.value = sectionId
   if (highlightTimer) {
-    clearTimeout(highlightTimer);
+    clearTimeout(highlightTimer)
   }
   highlightTimer = setTimeout(() => {
-    highlightedSection.value = null;
-  }, 2000);
+    highlightedSection.value = null
+  }, 2000)
 }
 
 function scrollToSection(sectionId: string) {
-  const element = document.getElementById(sectionId);
+  const element = document.getElementById(sectionId)
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    highlightSection(sectionId);
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    highlightSection(sectionId)
   }
 }
 
 function handleKpiClick(kpiId: string) {
-  const mapping: Record<string, { section: string; metric?: 'rate' | 'markup' }> = {
+  const mapping: Record<string, { section: string, metric?: 'rate' | 'markup' }> = {
     'all-in-cost': { section: 'snapshot-chart', metric: 'markup' },
     'market-spread': { section: 'market-spread', metric: 'markup' },
-    leader: { section: 'competition', metric: 'rate' },
-    volatility: { section: 'risk', metric: 'rate' },
+    'leader': { section: 'competition', metric: 'rate' },
+    'volatility': { section: 'risk', metric: 'rate' },
     'quote-success': { section: 'reliability', metric: 'rate' },
-  };
-
-  const target = mapping[kpiId];
-  if (!target) return;
-  if (target.metric) {
-    activeMetric.value = target.metric;
   }
-  scrollToSection(target.section);
+
+  const target = mapping[kpiId]
+  if (!target) return
+  if (target.metric) {
+    activeMetric.value = target.metric
+  }
+  scrollToSection(target.section)
 }
 
 function handleKeyDown(event: KeyboardEvent) {
@@ -3754,104 +3914,107 @@ function handleKeyDown(event: KeyboardEvent) {
 }
 
 function formatMethods(methods: string[]): string {
-  return methods.map(method => method.charAt(0).toUpperCase() + method.slice(1)).join(', ');
+  return methods.map(method => method.charAt(0).toUpperCase() + method.slice(1)).join(', ')
 }
 
 function handleHeadlineTileClick(tile: HeadlineTile) {
-  if (!tile.chartId) return;
-  navigateToChart(tile.chartId);
+  if (!tile.chartId) return
+  navigateToChart(tile.chartId)
 }
 
 const headlineFallback = createHeadlineFallbackController(() => {
-  if (!headlineLoading.value) return;
-  headlineLoading.value = false;
-}, 10_000);
+  if (!headlineLoading.value) return
+  headlineLoading.value = false
+}, 10_000)
 
 const startHeadlineFallbackTimer = () => {
-  headlineFallback.start();
-};
+  headlineFallback.start()
+}
 
 const hasChartSeries = (chartId: string) => {
-  const data = chartData.value[chartId];
-  if (!data || !Array.isArray(data.series)) return false;
-  return data.series.some(series => Array.isArray(series.points) && series.points.length > 0);
-};
+  const data = chartData.value[chartId]
+  if (!data || !Array.isArray(data.series)) return false
+  return data.series.some(series => Array.isArray(series.points) && series.points.length > 0)
+}
 
 const isIndicesChartPending = (chartId: string) => {
-  const availability = chartAvailability.value[chartId];
-  if (!availability) return chartLoading.value || !hasChartSeries(chartId);
-  if (!availability.dataAvailable) return true;
-  return !hasChartSeries(chartId);
-};
+  const availability = chartAvailability.value[chartId]
+  if (!availability) return chartLoading.value || !hasChartSeries(chartId)
+  if (!availability.dataAvailable) return true
+  return !hasChartSeries(chartId)
+}
 
 const indicesCardUpdatedAtLabel = (chartId: string) => {
-  const updatedAt = chartAvailability.value[chartId]?.updatedAt;
-  if (!updatedAt) return null;
-  return formatUpdatedLabel(updatedAt);
-};
+  const updatedAt = chartAvailability.value[chartId]?.updatedAt
+  if (!updatedAt) return null
+  return formatUpdatedLabel(updatedAt)
+}
 
 async function loadSenderHighlights() {
-  if (!isPlus.value) return;
-  highlightsLoading.value = true;
-  headlineLoading.value = true;
-  startHeadlineFallbackTimer();
+  if (!isPlus.value) return
+  highlightsLoading.value = true
+  headlineLoading.value = true
+  startHeadlineFallbackTimer()
   try {
     const [overviewResponse, narrativeResponse, personalHistoryResponse] = await Promise.all([
       getPulseOverview(legacyFilters.value),
       getPulseNarrative(store.corridor, store.timeframe, store.amount),
       getPulsePersonalHistory(store.corridor, store.amount),
-    ]);
+    ])
 
     overview.value = {
       tiles: overviewResponse.tiles || [],
       lastUpdated: overviewResponse.lastUpdated,
-    };
-    narrative.value = narrativeResponse;
-    personalHistory.value = personalHistoryResponse;
+    }
+    narrative.value = narrativeResponse
+    personalHistory.value = personalHistoryResponse
 
     if (overviewResponse.lastUpdated) {
-      store.setLastUpdated(overviewResponse.lastUpdated);
+      store.setLastUpdated(overviewResponse.lastUpdated)
     }
-    headlineLoading.value = false;
-    headlineFallback.clear();
-  } catch (e) {
-    useLogger('PulsePage').error('Failed to load sender highlights', e);
-    headlineFallback.clear();
-    headlineLoading.value = false;
-  } finally {
-    highlightsLoading.value = false;
+    headlineLoading.value = false
+    headlineFallback.clear()
+  }
+ catch (e) {
+    useLogger('PulsePage').error('Failed to load sender highlights', e)
+    headlineFallback.clear()
+    headlineLoading.value = false
+  }
+ finally {
+    highlightsLoading.value = false
   }
 }
 
 async function loadCoverageSummary() {
-  if (!isPlus.value) return;
+  if (!isPlus.value) return
   try {
-    summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe);
+    summary.value = await getPulseCoverageSummary(store.corridor, store.timeframe)
     if (summary.value?.lastUpdated) {
-      store.setLastUpdated(summary.value.lastUpdated);
+      store.setLastUpdated(summary.value.lastUpdated)
     }
-  } catch (e) {
-    useLogger('PulsePage').error('Failed to load coverage summary', e);
+  }
+ catch (e) {
+    useLogger('PulsePage').error('Failed to load coverage summary', e)
   }
 }
 
 watch(
   () => isPlus.value,
-  plus => {
-    if (!import.meta.client) return;
-    if (!plus) return;
+  (plus) => {
+    if (!import.meta.client) return
+    if (!plus) return
 
     // Entitlements hydrate client-side; refresh Plus-gated data once we know the plan.
-    void refreshTrackedCorridors();
-    void loadCoverageSummary();
-    void loadSenderHighlights();
-    void loadSnapshotSummary();
+    void refreshTrackedCorridors()
+    void loadCoverageSummary()
+    void loadSenderHighlights()
+    void loadSnapshotSummary()
     if (isPro.value) {
-      void setupDeepDivesObserver();
+      void setupDeepDivesObserver()
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => [
@@ -3862,102 +4025,102 @@ watch(
     screenerQueryAmount.value,
   ],
   ([pro]) => {
-    if (!import.meta.client) return;
-    if (!pro) return;
-    void loadScreener();
+    if (!import.meta.client) return
+    if (!pro) return
+    void loadScreener()
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => isPro.value,
-  pro => {
-    if (pro) return;
+  (pro) => {
+    if (pro) return
     if (store.timeframe !== '7D' && store.timeframe !== '30D') {
-      store.setTimeframe('30D');
+      store.setTimeframe('30D')
     }
     if (store.viewMode !== 'sender') {
-      store.setViewMode('sender');
-      const nextQuery = { ...route.query } as Record<string, any>;
-      delete nextQuery.mode;
-      void router.replace({ path: route.path, query: nextQuery });
+      store.setViewMode('sender')
+      const nextQuery = { ...route.query } as Record<string, any>
+      delete nextQuery.mode
+      void router.replace({ path: route.path, query: nextQuery })
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => [store.corridor, store.timeframe, store.amount],
   () => {
-    if (!isPlus.value) return;
-    void loadSnapshotSummary();
+    if (!isPlus.value) return
+    void loadSnapshotSummary()
     if (isPro.value) {
-      void loadChartData();
+      void loadChartData()
     }
-    void loadCoverageSummary();
-    void loadSenderHighlights();
+    void loadCoverageSummary()
+    void loadSenderHighlights()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 
 watch(
   () => store.viewMode,
-  mode => {
-    if (!isPlus.value) return;
+  (mode) => {
+    if (!isPlus.value) return
     if (mode === 'analyst') {
-      void loadSnapshotSummary();
-      void loadCoverageSummary();
+      void loadSnapshotSummary()
+      void loadCoverageSummary()
       if (isPro.value) {
-        void setupDeepDivesObserver();
+        void setupDeepDivesObserver()
       }
-      return;
+      return
     }
-    void loadSenderHighlights();
-    teardownDeepDivesObserver();
-  }
-);
+    void loadSenderHighlights()
+    teardownDeepDivesObserver()
+  },
+)
 
 watch(
   () => trackedCorridors.value.length,
-  len => {
-    if (!import.meta.client) return;
-    if (len === 0) return;
-    store.initCorridor(trackedCorridors.value);
+  (len) => {
+    if (!import.meta.client) return
+    if (len === 0) return
+    store.initCorridor(trackedCorridors.value)
     if (!selectedCorridorKey.value) {
-      initializeCorridorSelection();
+      initializeCorridorSelection()
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 onMounted(async () => {
-  document.addEventListener('keydown', handleKeyDown);
-  await store.initFromRoute(route.query as Record<string, string>);
-  amountInput.value = store.amount;
+  document.addEventListener('keydown', handleKeyDown)
+  await store.initFromRoute(route.query as Record<string, string>)
+  amountInput.value = store.amount
 
-  initializeCorridorSelection();
+  initializeCorridorSelection()
 
   // Avoid Plus-gated Pulse API calls for public preview users.
   if (isPlus.value) {
-    void refreshTrackedCorridors();
+    void refreshTrackedCorridors()
     if (isPro.value) {
-      void loadScreener();
-      void loadPinnedCorridors();
-      void loadChartData();
-      void setupDeepDivesObserver();
+      void loadScreener()
+      void loadPinnedCorridors()
+      void loadChartData()
+      void setupDeepDivesObserver()
     }
-    void loadSnapshotSummary();
-    void loadCoverageSummary();
-    void loadSenderHighlights();
+    void loadSnapshotSummary()
+    void loadCoverageSummary()
+    void loadSenderHighlights()
   }
-});
+})
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeyDown);
-  teardownDeepDivesObserver();
-  clearSnapshotExportPoll();
-  headlineFallback.clear();
-});
+  document.removeEventListener('keydown', handleKeyDown)
+  teardownDeepDivesObserver()
+  clearSnapshotExportPoll()
+  headlineFallback.clear()
+})
 
 useHead({
   title: 'Remit-Scout Pulse | Remittance Market Dashboard',
@@ -4010,25 +4173,25 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
-        name: 'Remit-Scout Pulse',
-        description: 'Market dashboard for remittance pricing',
-        url: 'https://remitscout.com/pulse',
-        applicationCategory: 'FinanceApplication',
-        operatingSystem: 'Web',
-        offers: {
+        'name': 'Remit-Scout Pulse',
+        'description': 'Market dashboard for remittance pricing',
+        'url': 'https://remitscout.com/pulse',
+        'applicationCategory': 'FinanceApplication',
+        'operatingSystem': 'Web',
+        'offers': {
           '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
+          'price': '0',
+          'priceCurrency': 'USD',
         },
-        provider: {
+        'provider': {
           '@type': 'Organization',
-          name: 'Remit-Scout',
-          url: 'https://remitscout.com',
+          'name': 'Remit-Scout',
+          'url': 'https://remitscout.com',
         },
       }),
     },
   ],
-});
+})
 </script>
 
 <style scoped>

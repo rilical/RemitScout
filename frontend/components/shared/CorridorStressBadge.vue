@@ -20,7 +20,10 @@ const levelColor = (level: string | null | undefined) => {
     class="text-caption inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium"
     :class="[levelColor(level), compact ? 'text-[10px]' : '']"
   >
-    <span v-if="score != null" class="tabular-nums">{{ score.toFixed(1) }}</span>
+    <span
+v-if="score != null"
+class="tabular-nums"
+>{{ score.toFixed(1) }}</span>
     <span class="capitalize">{{ level }}</span>
   </span>
 </template>

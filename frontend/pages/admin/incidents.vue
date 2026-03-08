@@ -450,9 +450,11 @@ const load = async () => {
     bundleTotal.value = bundlesRes.total
     actionTotal.value = actionsRes.total
     lastUpdated.value = new Date().toISOString()
-  } catch (e: any) {
+  }
+ catch (e: any) {
     error.value = e?.message ?? 'Failed to load incident data.'
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }

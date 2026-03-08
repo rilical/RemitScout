@@ -79,7 +79,7 @@ describe('refreshAdminSession', () => {
       denyReason: 'admin_allowlist_denied',
     })
 
-    const { refreshAdminSession, AdminSessionError } = await import('../plane-a/src/services/admin-sessions')
+    const { refreshAdminSession } = await import('../plane-a/src/services/admin-sessions')
 
     await expect(refreshAdminSession({
       pool: {
@@ -88,7 +88,7 @@ describe('refreshAdminSession', () => {
       refreshToken: 'refresh-token',
       ipHash: 'ip-hash',
       userAgent: 'browser',
-    })).rejects.toEqual(expect.objectContaining<Partial<InstanceType<typeof AdminSessionError>>>({
+    })).rejects.toEqual(expect.objectContaining({
       code: 'admin_allowlist_denied',
       statusCode: 403,
     }))

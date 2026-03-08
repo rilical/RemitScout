@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushPromises, mount } from '@vue/test-utils';
-import { computed, ref } from 'vue';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { computed, ref } from 'vue'
 
-const mockExportVisual = vi.hoisted(() => vi.fn());
-const mockEnterpriseRequest = vi.hoisted(() => vi.fn());
+const mockExportVisual = vi.hoisted(() => vi.fn())
+const mockEnterpriseRequest = vi.hoisted(() => vi.fn())
 
 vi.mock('~/ui', () => ({
   DataTable: {
@@ -15,13 +15,13 @@ vi.mock('~/ui', () => ({
     name: 'Icon',
     template: '<span data-testid="icon" />',
   },
-}));
+}))
 
 vi.mock('~/composables/useApi', () => ({
   useApi: () => ({
     request: mockEnterpriseRequest,
   }),
-}));
+}))
 
 vi.mock('~/composables/useEntitlements', () => ({
   useEntitlements: () => ({
@@ -34,7 +34,7 @@ vi.mock('~/composables/useEntitlements', () => ({
       exportsMaxDays: 365,
     })),
   }),
-}));
+}))
 
 vi.mock('~/composables/useEnterpriseApiKeys', () => ({
   useEnterpriseApiKeys: () => ({
@@ -59,7 +59,7 @@ vi.mock('~/composables/useEnterpriseApiKeys', () => ({
     revokeKey: vi.fn(),
     copyToken: vi.fn(),
   }),
-}));
+}))
 
 vi.mock('~/composables/useEnterpriseEmbeds', () => ({
   useEnterpriseEmbeds: () => ({
@@ -123,7 +123,7 @@ vi.mock('~/composables/useEnterpriseEmbeds', () => ({
     fetchPublishedEmbeds: vi.fn(),
     revokePublishedEmbed: vi.fn(),
   }),
-}));
+}))
 
 vi.mock('~/composables/useEnterpriseExports', () => ({
   useEnterpriseExports: () => ({
@@ -147,12 +147,12 @@ vi.mock('~/composables/useEnterpriseExports', () => ({
     createJob: vi.fn(),
     downloadJob: vi.fn(),
   }),
-}));
+}))
 
 vi.mock('~/composables/useChartImageExport', async () => {
   const actual = await vi.importActual<typeof import('~/composables/useChartImageExport')>(
-    '~/composables/useChartImageExport'
-  );
+    '~/composables/useChartImageExport',
+  )
   return {
     ...actual,
     useChartImageExport: () => ({
@@ -160,12 +160,12 @@ vi.mock('~/composables/useChartImageExport', async () => {
       exportAsImage: mockExportVisual,
       exporting: ref(false),
     }),
-  };
-});
+  }
+})
 
 describe('EnterpriseTab', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks()
     mockEnterpriseRequest.mockResolvedValue({
       totalCorridors: 2,
       corridors: [
@@ -198,72 +198,95 @@ describe('EnterpriseTab', () => {
           lastUpdated: '2026-03-05T00:00:00.000Z',
         },
       ],
-    });
-  });
+    })
+  })
 
   const mountEnterpriseTab = async () => {
-    const EnterpriseTab = (await import('~/domains/dashboard/ui/EnterpriseTab.vue')).default;
-    const wrapper = mount(EnterpriseTab);
-    await flushPromises();
-    return wrapper;
-  };
+    const EnterpriseTab = (await import('~/domains/dashboard/ui/EnterpriseTab.vue')).default
+    const wrapper = mount(EnterpriseTab)
+    await flushPromises()
+    return wrapper
+  }
 
   it('shows the redesigned enterprise dashboard with parquet and corridor catalog messaging', async () => {
-    const wrapper = await mountEnterpriseTab();
+    const wrapper = await mountEnterpriseTab()
 
-    expect(wrapper.text()).toContain('Enterprise Data Console');
-    expect(wrapper.text()).toContain('Parquet');
-    expect(wrapper.text()).toContain('Corridor Catalog');
-    expect(wrapper.text()).toContain('Published bundles');
-    expect(wrapper.text()).toContain('Data Exports');
-  });
+    expect(wrapper.text()).toContain('Enterprise Data Console')
+    expect(wrapper.text()).toContain('Parquet')
+    expect(wrapper.text()).toContain('Corridor Catalog')
+    expect(wrapper.text()).toContain('Published bundles')
+    expect(wrapper.text()).toContain('Data Exports')
+  })
 
-  it('allows adding a manual corridor for indices exports', async () => {
-    const wrapper = await mountEnterpriseTab();
+  it('adds an indices export corridor from the country-pair catalog', async () => {
+    const wrapper = await mountEnterpriseTab()
 
     const jobTypeSelect = wrapper
       .findAll('select')
-      .find(select => select.text().includes('TEER / RCI / RVI'));
+      .find(select => select.text().includes('TEER / RCI / RVI'))
 
-    expect(jobTypeSelect).toBeDefined();
+    expect(jobTypeSelect).toBeDefined()
     if (!jobTypeSelect) {
-      throw new Error('Expected indices export selector to be present');
+      throw new Error('Expected indices export selector to be present')
     }
 
-    await jobTypeSelect.setValue('indices');
-    await flushPromises();
+    await jobTypeSelect.setValue('indices')
+    await flushPromises()
 
     const inputs = wrapper
       .findAll('input[type="text"]')
       .filter(input =>
-        input.attributes('placeholder')?.includes('Search by country, currency, or corridor ID')
-      );
-    const exportSearchInput = inputs.at(-1);
+        input.attributes('placeholder')?.includes('Search by send country or destination country'),
+      )
+    const exportSearchInput = inputs.at(-1)
 
-    expect(exportSearchInput).toBeDefined();
+    expect(exportSearchInput).toBeDefined()
 
-    await exportSearchInput!.setValue('US-GB-USD-GBP');
-    await flushPromises();
+    await exportSearchInput!.setValue('philippines')
+    await flushPromises()
+    await exportSearchInput!.trigger('keydown.enter')
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Add manual corridor US-GB-USD-GBP');
-  });
+    expect(wrapper.text()).toContain('United States -> Philippines')
+    expect(wrapper.text()).not.toContain('Add manual corridor')
+  })
+
+  it('keeps the embed search input human-readable after selecting a corridor', async () => {
+    const wrapper = await mountEnterpriseTab()
+
+    const embedSearchInput = wrapper
+      .findAll('input[type="text"]')
+      .find(input =>
+        input.attributes('placeholder')?.includes('Search by send country or destination country'),
+      )
+
+    expect(embedSearchInput).toBeDefined()
+    expect((embedSearchInput!.element as HTMLInputElement).value).toBe('United States -> Philippines')
+
+    await embedSearchInput!.setValue('mexico')
+    await flushPromises()
+    await embedSearchInput!.trigger('keydown.enter')
+    await flushPromises()
+
+    expect((embedSearchInput!.element as HTMLInputElement).value).toBe('United States -> Mexico')
+  })
 
   it('exports the rendered iframe preview for TEER', async () => {
-    const wrapper = await mountEnterpriseTab();
+    const wrapper = await mountEnterpriseTab()
 
-    const pngButton = wrapper.findAll('button').find(button => button.text() === 'PNG');
-    expect(pngButton).toBeDefined();
+    const pngButton = wrapper.findAll('button').find(button => button.text() === 'PNG')
+    expect(pngButton).toBeDefined()
 
-    await pngButton!.trigger('click');
+    await pngButton!.trigger('click')
 
-    expect(mockExportVisual).toHaveBeenCalledTimes(1);
-    const [target, options] = mockExportVisual.mock.calls[0];
-    expect(target).toBeInstanceOf(HTMLIFrameElement);
+    expect(mockExportVisual).toHaveBeenCalledTimes(1)
+    const [target, options] = mockExportVisual.mock.calls[0]
+    expect(target).toBeInstanceOf(HTMLIFrameElement)
     expect(options).toEqual(
       expect.objectContaining({
         format: 'png',
         title: 'TEER Published Embed',
-      })
-    );
-  });
-});
+      }),
+    )
+  })
+})

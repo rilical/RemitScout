@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeAblationImpact, summarizeAblationStudy, type IndexSnapshot, type AblationStudySummary } from '../scripts/ablation-study'
+import { computeAblationImpact, summarizeAblationStudy, type IndexSnapshot } from '../scripts/ablation-study'
 
 describe('computeAblationImpact', () => {
   const baseline: IndexSnapshot = {

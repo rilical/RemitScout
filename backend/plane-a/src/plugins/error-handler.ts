@@ -15,12 +15,6 @@ const logger = createLogger('plane-a.error-handler')
 
 const stripQuery = (url: string): string => url.split('?')[0] || url
 
-const toNumberOrNull = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string' && value.trim() && Number.isFinite(Number(value))) return Number(value)
-  return null
-}
-
 const getSentry4xxSampleRate = (): number => {
   const explicit = config.planeA.sentryCaptureRate4xx
   if (explicit !== null) {
@@ -212,4 +206,3 @@ export const setupErrorHandler = (app: FastifyInstance): void => {
     )
   })
 }
-

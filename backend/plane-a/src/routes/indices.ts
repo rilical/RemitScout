@@ -1176,7 +1176,7 @@ export const indicesRoutes = async (app: FastifyInstance) => {
     }
   })
 
-  app.get('/indices/triangulated/:corridorId', indicesApiKeyRouteOptions, async (request, reply) => {
+  app.get('/indices/triangulated/:corridorId', indicesApiKeyRouteOptions, async (request) => {
     const { corridorId } = request.params as { corridorId: string }
     const qs = request.query as {
       amount_bucket?: string

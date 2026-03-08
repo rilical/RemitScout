@@ -55,7 +55,7 @@
             <input
               v-model="filters.q"
               type="text"
-              placeholder="e.g., US-JO"
+              placeholder="e.g., United States to Jordan or US-JO"
               class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
               @keydown.enter="applyFilters"
             >
@@ -133,7 +133,7 @@
         <div class="rounded-2xl bg-surface p-6 shadow-sm lg:col-span-2">
           <h2 class="text-body-lg font-semibold text-rs-fg">Snapshot rows</h2>
           <p class="text-body-sm text-rs-muted">
-            amount_bucket={{ meta.amount_bucket }}, method_profile={{ meta.method_profile }}
+            amount bucket {{ meta.amount_bucket }}, bank deposit only
           </p>
 
           <div class="mt-4 overflow-auto">
@@ -156,7 +156,12 @@
                   :key="`${row.corridor_id}:${row.date}:${row.method_profile}:${row.amount_bucket}`"
                   class="border-t border-neutral-100"
                 >
-                  <td class="py-2 text-neutral-700">{{ row.corridor_id }}</td>
+                  <td class="py-2 text-neutral-700">
+                    <div class="font-medium">{{ formatCorridorCountryPair(row.corridor_id, ' -> ') }}</div>
+                    <div class="text-[11px] text-neutral-400">
+                      {{ formatCorridorCountryCodePair(row.corridor_id, ' -> ') }}
+                    </div>
+                  </td>
                   <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.teer_rate, 6) }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ formatPercentRatio(row.rci_ratio) }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ formatAdminNumber(row.rvi_bps, 1) }}</td>
@@ -284,7 +289,12 @@ v-for="c in corrections"
 :key="c.correction_id"
 class="border-t border-neutral-100"
 >
-                  <td class="py-2 text-neutral-700">{{ c.corridor_id }}</td>
+                  <td class="py-2 text-neutral-700">
+                    <div class="font-medium">{{ formatCorridorCountryPair(c.corridor_id, ' -> ') }}</div>
+                    <div class="text-[11px] text-neutral-400">
+                      {{ formatCorridorCountryCodePair(c.corridor_id, ' -> ') }}
+                    </div>
+                  </td>
                   <td class="py-2 text-neutral-700">{{ c.field_name }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ c.old_value != null ? formatAdminNumber(c.old_value, 6) : '—' }}</td>
                   <td class="py-2 text-right text-neutral-600">{{ c.new_value != null ? formatAdminNumber(c.new_value, 6) : '—' }}</td>
@@ -313,10 +323,10 @@ No corrections recorded.
             >
               <option
                 v-for="corridor in corridorOptions"
-                :key="corridor"
-                :value="corridor"
+                :key="corridor.value"
+                :value="corridor.value"
               >
-                {{ corridor }}
+                {{ corridor.label }}
               </option>
             </select>
           </label>
@@ -400,6 +410,7 @@ import type { CorrectionLedgerEntry } from '~/types/data-quality'
 import { getCorrectionLedger } from '~/lib/opsApi'
 import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
 import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
+import { formatCorridorCountryCodePair, formatCorridorCountryPair } from '~/utils/corridorLabels'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -521,7 +532,12 @@ const corrections = ref<CorrectionLedgerEntry[]>([])
 const correctionsOpen = ref(false)
 const correctionsLoading = ref(false)
 
-const corridorOptions = computed(() => [...new Set(rows.value.map(row => row.corridor_id))])
+const corridorOptions = computed(() =>
+  [...new Set(rows.value.map(row => row.corridor_id))].map(corridorId => ({
+    value: corridorId,
+    label: formatCorridorCountryPair(corridorId, ' -> '),
+  })),
+)
 
 watch(corridorOptions, (options) => {
   if (!options.length) {
@@ -529,8 +545,9 @@ watch(corridorOptions, (options) => {
     chartSeries.value = []
     return
   }
-  if (!selectedCorridor.value || !options.includes(selectedCorridor.value)) {
-    selectedCorridor.value = options[0]
+  const corridorIds = options.map(option => option.value)
+  if (!selectedCorridor.value || !corridorIds.includes(selectedCorridor.value)) {
+    selectedCorridor.value = corridorIds[0]
   }
 }, { immediate: true })
 
@@ -815,7 +832,7 @@ const surfaceOverview = computed<AdminSurfaceOverviewModel>(() => {
     freshnessTone,
     freshnessDetail: meta.last_updated_at ? `Snapshot updated ${formatTimestamp(meta.last_updated_at)}.` : 'The current slice has not reported a snapshot timestamp.',
     lastJobLabel: meta.last_updated_at ? formatTimestamp(meta.last_updated_at) : 'No successful export job detected',
-    lastJobDetail: `Snapshot date ${meta.date || 'n/a'} · ${meta.method_profile} · amount bucket ${meta.amount_bucket}`,
+    lastJobDetail: `Snapshot date ${meta.date || 'n/a'} · bank deposit only · amount bucket ${meta.amount_bucket}`,
     stats: [
       { label: 'Corridors', value: String(summary.corridors_total) },
       { label: 'Available ratio', value: formatPercent(summary.available_ratio) },

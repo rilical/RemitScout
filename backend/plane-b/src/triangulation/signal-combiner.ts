@@ -1,6 +1,6 @@
 import type { Pool } from 'pg'
 import { createLogger } from '../../../shared/logger'
-import type { Factor, FactorSource } from '../../../shared/types/factor'
+import type { FactorSource } from '../../../shared/types/factor'
 import type { StressSignal, StressSignalType } from './engine'
 
 const logger = createLogger('plane-b.triangulation.signal-combiner')

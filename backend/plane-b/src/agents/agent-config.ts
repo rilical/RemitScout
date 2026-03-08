@@ -1,4 +1,3 @@
-import { config } from '../../../shared/config'
 import type { ToolGatewayPolicy } from '../../../shared/types/tool-gateway'
 import { DEFAULT_TOOL_GATEWAY_POLICY } from '../../../shared/types/tool-gateway'
 

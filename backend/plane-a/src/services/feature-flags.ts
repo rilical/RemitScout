@@ -80,13 +80,6 @@ export type EffectiveRuntimeFlag = {
   db_flag: FeatureFlagRecord | null
 }
 
-const DEFAULT_RUNTIME_FLAG_KEYS: RuntimeFlagKey[] = [
-  'pulse.public',
-  'pulse.screener',
-  'enterprise.public',
-  'ads.public',
-]
-
 const parseJsonObject = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as Record<string, unknown>

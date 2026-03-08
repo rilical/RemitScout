@@ -40,10 +40,8 @@
             <ul class="text-body space-y-2 text-neutral-700">
               <li class="flex items-start gap-2">
                 <span class="mt-1 text-brand-600">•</span>
-                <span
-                  >Self-serve embeds deliver static snapshots and branded visual exports while
-                  preserving editorial independence.</span
-                >
+                <span>Self-serve embeds deliver static snapshots and branded visual exports while
+                  preserving editorial independence.</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="mt-1 text-brand-600">•</span>
@@ -51,16 +49,18 @@
               </li>
               <li class="flex items-start gap-2">
                 <span class="mt-1 text-brand-600">•</span>
-                <span
-                  >Ideal for publishers, fintech apps, community portals, and research
-                  platforms.</span
-                >
+                <span>Ideal for publishers, fintech apps, community portals, and research
+                  platforms.</span>
               </li>
             </ul>
           </div>
           <!-- Widget Examples -->
           <div class="my-10">
-            <AdPlacement placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+placement="blog_inline"
+wrapper-class="rounded-xl"
+min-height="120px"
+/>
           </div>
           <div class="mb-12">
             <h2 class="text-h2 mb-6 font-bold text-neutral-900">Widget Examples</h2>
@@ -148,7 +148,11 @@
           </div>
 
           <div class="my-10">
-            <AdPlacement placement="blog_inline" wrapper-class="rounded-xl" min-height="120px" />
+            <AdPlacement
+placement="blog_inline"
+wrapper-class="rounded-xl"
+min-height="120px"
+/>
           </div>
 
           <!-- Use Cases -->
@@ -230,7 +234,12 @@
                 class="text-body inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-md transition-all hover:bg-brand-700"
               >
                 Request Widget Access
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -244,7 +253,12 @@
                 class="text-body inline-flex items-center gap-2 rounded-xl border-2 border-brand-600 bg-surface px-6 py-3 font-semibold text-brand-600 transition-all hover:bg-brand-50"
               >
                 Learn About Partnerships
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -276,7 +290,12 @@
               class="text-body-sm inline-flex items-center gap-1 font-semibold text-white group-hover:gap-2 motion-safe:transition-all"
             >
               Read guide
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -298,7 +317,12 @@
               class="text-body-sm inline-flex items-center gap-1 font-semibold text-white group-hover:gap-2 motion-safe:transition-all"
             >
               Read guide
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -320,7 +344,12 @@
               class="text-body-sm inline-flex items-center gap-1 font-semibold text-white group-hover:gap-2 motion-safe:transition-all"
             >
               Read guide
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -337,21 +366,21 @@
 </template>
 
 <script setup lang="ts">
-import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo';
-import Breadcrumbs from '~/components/shared/Breadcrumbs.vue';
+import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Guides', path: '/learn' },
   { name: 'For Publishers', path: '/learn/embed-remit-scout-on-your-site' },
-];
+]
 
-const runtimeConfig = useRuntimeConfig();
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com';
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://Remit-Scout.com'
 
-const seoTitle = 'Embed Remit-Scout on Your Site: Widgets and Editorial Independence | Remit-Scout';
-const seoDescription =
-  'Guide for publishers and platforms: widget examples, white-label rules, use cases, and how we maintain independent rankings.';
+const seoTitle = 'Embed Remit-Scout on Your Site: Widgets and Editorial Independence | Remit-Scout'
+const seoDescription
+  = 'Guide for publishers and platforms: widget examples, white-label rules, use cases, and how we maintain independent rankings.'
 
 defineOgImage({
   component: 'OgImageArticle',
@@ -360,18 +389,18 @@ defineOgImage({
     category: 'Learn',
     readTime: '10 min read',
   },
-});
+})
 
 setSeo({
   title: seoTitle,
   description: seoDescription,
   canonical: `${siteUrl}/learn/embed-remit-scout-on-your-site`,
   ogImage: false,
-});
+})
 
 jsonLdBreadcrumb([
   { name: 'Home', url: `${siteUrl}/` },
   { name: 'Learn', url: `${siteUrl}/learn` },
   { name: 'For Publishers', url: `${siteUrl}/learn/embed-remit-scout-on-your-site` },
-]);
+])
 </script>

@@ -41,11 +41,6 @@ const clamp01 = (value: number, fallback: number) => {
   return Math.max(0, Math.min(1, value))
 }
 
-const toNumber = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : fallback
-}
-
 const loadCatalog = (catalogPath: string): ProviderVolumeCatalogFile => {
   if (!fs.existsSync(catalogPath)) {
     return {

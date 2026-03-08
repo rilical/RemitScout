@@ -178,7 +178,6 @@ async function main() {
   )
 
   let totalInserted = 0
-  let totalSkipped = 0
   let providersProcessed = 0
 
   for (const row of matrixRows) {

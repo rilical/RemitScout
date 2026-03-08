@@ -304,6 +304,7 @@ jobs:
           NODE_ENV: staging
           AWS_REGION: ${{ vars.AWS_REGION }}
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
+          DB_FORCE_IPV4: '1'
           AGENT_HEALTH_LOOKBACK_HOURS: ${{ vars.AGENT_HEALTH_LOOKBACK_HOURS || '6' }}
         run: |
           set -euo pipefail

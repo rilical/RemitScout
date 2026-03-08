@@ -1,14 +1,14 @@
 export type Plan = 'free' | 'plus' | 'enterprise'
-export type PlanLifecycleState =
-  | 'active'
-  | 'trialing'
-  | 'scheduled_cancel'
-  | 'past_due'
-  | 'canceled'
-  | 'unpaid'
-  | 'incomplete_expired'
-  | 'expired'
-  | 'inactive'
+export type PlanLifecycleState
+  = | 'active'
+    | 'trialing'
+    | 'scheduled_cancel'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'incomplete_expired'
+    | 'expired'
+    | 'inactive'
 
 export type PlanRecoveryAction = 'none' | 'billing_portal' | 'upgrade'
 
@@ -208,8 +208,8 @@ export const useEntitlements = () => {
       const data = await request<MeResponse>('/me')
 
       if (data.success && data.plan) {
-        const storedPlan =
-          data.plan.plan_code === 'enterprise'
+        const storedPlan
+          = data.plan.plan_code === 'enterprise'
             ? 'enterprise'
             : (data.plan.plan_code === 'plus' ? 'plus' : 'free')
         const effectivePlanCode = data.plan_effective?.plan_code || data.plan.plan_code

@@ -4,7 +4,7 @@
  * Resolves database credentials and starts the normalization worker loop.
  */
 
-import { resolveAwsEnv, resolveDatabaseUrl } from '../../shared/aws-params'
+import { resolveDatabaseUrl } from '../../shared/aws-params'
 import { createLogger } from '../../shared/logger'
 import { formatError } from '../../shared/utils/error-handling'
 

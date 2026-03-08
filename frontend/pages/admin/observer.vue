@@ -3,7 +3,10 @@
     <header
       class="relative overflow-hidden rounded-3xl border border-rs-border bg-rs-surface p-6 shadow-sm"
     >
-      <div class="absolute inset-x-0 top-0 h-1.5" :class="observerStripeClass" />
+      <div
+class="absolute inset-x-0 top-0 h-1.5"
+:class="observerStripeClass"
+/>
       <div
         class="absolute -left-10 top-10 h-40 w-40 rounded-full bg-brand-100/70 blur-3xl dark:bg-brand-900/20"
       />
@@ -39,7 +42,7 @@
                 v-model="autoRefresh"
                 type="checkbox"
                 class="h-4 w-4 rounded border-rs-border text-brand-600"
-              />
+              >
               Auto-refresh every 60s
             </label>
             <div class="flex flex-col gap-2 sm:flex-row xl:justify-end">
@@ -103,7 +106,10 @@
                 class="rounded-2xl border border-rs-border/80 bg-rs-bg/80 p-4"
               >
                 <div class="flex items-center gap-2">
-                  <span class="inline-flex h-2.5 w-2.5 rounded-full" :class="metric.dotClass" />
+                  <span
+class="inline-flex h-2.5 w-2.5 rounded-full"
+:class="metric.dotClass"
+/>
                   <div class="text-caption uppercase tracking-[0.14em] text-rs-muted">
                     {{ metric.label }}
                   </div>
@@ -133,19 +139,11 @@
         </div>
 
         <div class="text-body-sm flex flex-wrap items-center gap-3 text-rs-muted">
-          <span
-            >Last refresh:
-            {{ lastRefresh ? formatTimestamp(lastRefresh) : 'Waiting for first refresh.' }}</span
-          >
-          <span v-if="observerSummary?.timestamp"
-            >Observer timestamp: {{ formatTimestamp(observerSummary.timestamp) }}</span
-          >
-          <span v-if="providerHealthSummary?.generated_at"
-            >Provider snapshot: {{ formatTimestamp(providerHealthSummary.generated_at) }}</span
-          >
-          <span v-if="serviceHealthResponse?.updatedAt"
-            >Service health: {{ formatTimestamp(serviceHealthResponse.updatedAt) }}</span
-          >
+          <span>Last refresh:
+            {{ lastRefresh ? formatTimestamp(lastRefresh) : 'Waiting for first refresh.' }}</span>
+          <span v-if="observerSummary?.timestamp">Observer timestamp: {{ formatTimestamp(observerSummary.timestamp) }}</span>
+          <span v-if="providerHealthSummary?.generated_at">Provider snapshot: {{ formatTimestamp(providerHealthSummary.generated_at) }}</span>
+          <span v-if="serviceHealthResponse?.updatedAt">Service health: {{ formatTimestamp(serviceHealthResponse.updatedAt) }}</span>
         </div>
 
         <div
@@ -305,7 +303,10 @@
           leave-from-class="max-h-[600px] opacity-100"
           leave-to-class="max-h-0 opacity-0"
         >
-          <div v-if="indicesAccordionOpen" class="mt-4 overflow-hidden">
+          <div
+v-if="indicesAccordionOpen"
+class="mt-4 overflow-hidden"
+>
             <div class="rounded-2xl border border-rs-border bg-rs-bg/60 p-4">
               <div class="grid gap-3 md:grid-cols-2">
                 <div class="rounded-2xl border border-rs-border bg-rs-surface p-4">
@@ -351,10 +352,8 @@
                       class="flex items-center justify-between rounded-xl border border-rs-border bg-rs-bg px-3 py-2"
                     >
                       <span class="font-medium text-rs-fg">{{ tier.priorityTier }}</span>
-                      <span
-                        >{{ tier.providers }} providers · drift {{ tier.driftMinutes ?? 'n/a' }}m ·
-                        {{ tier.anyEnabled ? 'enabled' : 'disabled' }}</span
-                      >
+                      <span>{{ tier.providers }} providers · drift {{ tier.driftMinutes ?? 'n/a' }}m ·
+                        {{ tier.anyEnabled ? 'enabled' : 'disabled' }}</span>
                     </div>
                     <div
                       v-if="(b2bSweepStatus?.schedule || []).length === 0"
@@ -458,7 +457,10 @@
               leave-from-class="max-h-[2200px] opacity-100"
               leave-to-class="max-h-0 opacity-0"
             >
-              <div v-if="providerGridAccordionOpen" class="overflow-hidden">
+              <div
+v-if="providerGridAccordionOpen"
+class="overflow-hidden"
+>
                 <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <button
                     v-for="provider in providerHealth"
@@ -538,7 +540,10 @@
                           </td>
                         </tr>
                         <tr v-if="(selectedProvider.corridors || []).length === 0">
-                          <td colspan="4" class="text-body-sm py-3 text-center text-neutral-400">
+                          <td
+colspan="4"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                             No corridor detail available.
                           </td>
                         </tr>
@@ -645,7 +650,10 @@
 
       <div class="mt-4">
         <h3 class="text-body-md mb-3 font-semibold text-rs-fg">Service Health</h3>
-        <div v-if="serviceHealthLoading" class="flex flex-wrap gap-3">
+        <div
+v-if="serviceHealthLoading"
+class="flex flex-wrap gap-3"
+>
           <div
             v-for="label in ['Plane A API', 'Plane B Ingest', 'Export Worker']"
             :key="label"
@@ -664,7 +672,10 @@
         >
           {{ serviceHealthMessage }}
         </div>
-        <div v-else class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+v-else
+class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+>
           <div
             v-for="tile in serviceHealthTiles"
             :key="tile.service_id"
@@ -680,7 +691,10 @@
             <div class="text-caption mt-1 text-rs-muted">
               {{ tile.last_active_at ? formatTimestamp(tile.last_active_at) : 'No activity' }}
             </div>
-            <div v-if="tile.message" class="text-caption mt-1 text-rs-muted">
+            <div
+v-if="tile.message"
+class="text-caption mt-1 text-rs-muted"
+>
               {{ tile.message }}
             </div>
           </div>
@@ -688,12 +702,18 @@
       </div>
 
       <!-- Self-healing KPI tiles -->
-      <div v-if="platformMetrics" class="mt-4">
+      <div
+v-if="platformMetrics"
+class="mt-4"
+>
         <SelfHealingKpiTiles :metrics="platformMetrics" />
       </div>
 
       <!-- Recent agent actions inline -->
-      <div v-if="platformActions.length" class="mt-4 rounded-xl border border-rs-border p-4">
+      <div
+v-if="platformActions.length"
+class="mt-4 rounded-xl border border-rs-border p-4"
+>
         <div class="text-body-sm mb-3 font-semibold text-rs-fg">Recent Agent Actions</div>
         <AgentActionTimeline :actions="platformActions" />
       </div>
@@ -723,7 +743,10 @@
       <div class="rounded-2xl bg-surface p-6 shadow-sm lg:col-span-2">
         <h2 class="text-body-lg font-semibold text-rs-fg">Indices health</h2>
         <p class="text-body-sm text-rs-muted">Source: <code>/api/v1/ops/indices/health</code></p>
-        <div v-if="indicesHealth" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+v-if="indicesHealth"
+class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+>
           <div class="rounded-lg border border-neutral-100 p-3">
             <div class="text-body-sm uppercase text-neutral-400">Status</div>
             <div class="text-body-lg mt-1 font-semibold text-rs-fg">{{ indicesHealth.status }}</div>
@@ -759,13 +782,21 @@
             </div>
           </div>
         </div>
-        <p v-else class="text-body-sm mt-4 text-rs-muted">No indices health data yet.</p>
+        <p
+v-else
+class="text-body-sm mt-4 text-rs-muted"
+>
+No indices health data yet.
+</p>
       </div>
 
       <div class="rounded-2xl bg-surface p-6 shadow-sm">
         <h2 class="text-body-lg font-semibold text-rs-fg">B2B cadence</h2>
         <p class="text-body-sm text-rs-muted">Source: <code>/api/v1/ops/b2b-sweep-status</code></p>
-        <div v-if="b2bSweepStatus?.schedule?.length" class="mt-4 space-y-3">
+        <div
+v-if="b2bSweepStatus?.schedule?.length"
+class="mt-4 space-y-3"
+>
           <div
             v-for="tier in b2bSweepStatus.schedule"
             :key="tier.priorityTier"
@@ -778,7 +809,12 @@
             <div class="text-body-sm text-rs-muted">drift={{ tier.driftMinutes ?? 'n/a' }} min</div>
           </div>
         </div>
-        <p v-else class="text-body-sm mt-4 text-rs-muted">No sweep status data yet.</p>
+        <p
+v-else
+class="text-body-sm mt-4 text-rs-muted"
+>
+No sweep status data yet.
+</p>
       </div>
     </section>
 
@@ -813,7 +849,10 @@
               <td class="py-2 text-rs-muted">{{ formatTimestamp(row.timestamp) }}</td>
             </tr>
             <tr v-if="providerChecks.length === 0">
-              <td colspan="5" class="text-body-sm py-3 text-center text-neutral-400">
+              <td
+colspan="5"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                 No provider checks yet.
               </td>
             </tr>
@@ -826,7 +865,10 @@
       <h2 class="text-body-lg font-semibold text-rs-fg">Latest Silver activity</h2>
       <p class="text-body-sm text-rs-muted">Source: <code>/api/v1/ops/observer/summary</code></p>
 
-      <div v-if="observerSummary?.success" class="mt-4 space-y-6">
+      <div
+v-if="observerSummary?.success"
+class="mt-4 space-y-6"
+>
         <div class="grid gap-6 lg:grid-cols-2">
           <div class="rounded-xl border border-neutral-100 p-4">
             <div class="text-body-sm font-semibold text-rs-fg">Watchlist items</div>
@@ -854,7 +896,10 @@
                     <td class="py-2 text-neutral-700">{{ row.label || '—' }}</td>
                   </tr>
                   <tr v-if="observerSummary.latest.watchlist_items.length === 0">
-                    <td colspan="4" class="text-body-sm py-3 text-center text-neutral-400">
+                    <td
+colspan="4"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                       No watchlist items yet.
                     </td>
                   </tr>
@@ -888,7 +933,10 @@
                     <td class="py-2 text-neutral-700">{{ row.metric }}</td>
                     <td class="py-2 text-neutral-700">
                       {{ row.comparator }} {{ row.threshold }}
-                      <span v-if="row.currency" class="text-body-sm text-rs-muted">
+                      <span
+v-if="row.currency"
+class="text-body-sm text-rs-muted"
+>
                         {{ row.currency }}
                       </span>
                     </td>
@@ -896,7 +944,10 @@
                     <td class="py-2 text-neutral-700">{{ row.enabled ? 'yes' : 'no' }}</td>
                   </tr>
                   <tr v-if="observerSummary.latest.alerts.length === 0">
-                    <td colspan="5" class="text-body-sm py-3 text-center text-neutral-400">
+                    <td
+colspan="5"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                       No alerts yet.
                     </td>
                   </tr>
@@ -934,7 +985,10 @@
                   <td class="text-body-sm py-2 text-rs-muted">{{ row.message || '—' }}</td>
                 </tr>
                 <tr v-if="observerSummary.latest.alert_events.length === 0">
-                  <td colspan="5" class="text-body-sm py-3 text-center text-neutral-400">
+                  <td
+colspan="5"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                     No alert events yet.
                   </td>
                 </tr>
@@ -960,16 +1014,16 @@
                 class="h-4 w-4 rounded border-neutral-300 text-brand-600"
                 :disabled="loading"
                 @change="refresh"
-              />
+              >
               Show PII
             </label>
           </div>
           <div
             v-if="
-              includePii &&
-              observerSummary?.pii &&
-              observerSummary.pii.requested &&
-              !observerSummary.pii.included
+              includePii
+              && observerSummary?.pii
+              && observerSummary.pii.requested
+              && !observerSummary.pii.included
             "
             class="mt-1 text-xs text-neutral-400"
           >
@@ -999,8 +1053,8 @@
                   <td class="py-2 text-neutral-700">{{ row.status }}</td>
                   <td class="text-body-sm py-2 text-rs-muted">
                     {{
-                      row.to_email ||
-                      (row.to_email_hash ? `${row.to_email_hash.slice(0, 10)}…` : '—')
+                      row.to_email
+                      || (row.to_email_hash ? `${row.to_email_hash.slice(0, 10)}…` : '—')
                     }}
                   </td>
                   <td class="py-2 text-neutral-700">{{ row.subject || '—' }}</td>
@@ -1009,7 +1063,10 @@
                   </td>
                 </tr>
                 <tr v-if="observerSummary.latest.notification_attempts.length === 0">
-                  <td colspan="5" class="text-body-sm py-3 text-center text-neutral-400">
+                  <td
+colspan="5"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                     No notification attempts recorded.
                   </td>
                 </tr>
@@ -1046,7 +1103,10 @@
                   <td class="py-2 text-neutral-700">{{ row.status }}</td>
                 </tr>
                 <tr v-if="observerSummary.latest.quotes.length === 0">
-                  <td colspan="5" class="text-body-sm py-3 text-center text-neutral-400">
+                  <td
+colspan="5"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                     No quote records yet.
                   </td>
                 </tr>
@@ -1104,7 +1164,10 @@
         </div>
       </div>
 
-      <p v-else class="text-body-sm mt-4 text-rs-muted">
+      <p
+v-else
+class="text-body-sm mt-4 text-rs-muted"
+>
         Observer summary unavailable yet (migrations/permissions/config may still be applying).
       </p>
     </section>
@@ -1252,8 +1315,8 @@ type ObserverSummaryResponse = {
     latest_date: string | null
   }
   queues: {
-    quote_refresh: Array<{ status: string; count: number }>
-    fx_rate_refresh: Array<{ status: string; count: number }>
+    quote_refresh: Array<{ status: string, count: number }>
+    fx_rate_refresh: Array<{ status: string, count: number }>
   }
   latest: {
     quotes: Array<{
@@ -1338,10 +1401,10 @@ type FailedAlertEvaluationResponse = {
   message?: string
 }
 
-type AlertEvaluationResponse =
-  | BatchAlertEvaluationResponse
-  | SingleAlertEvaluationResponse
-  | FailedAlertEvaluationResponse
+type AlertEvaluationResponse
+  = | BatchAlertEvaluationResponse
+    | SingleAlertEvaluationResponse
+    | FailedAlertEvaluationResponse
 
 type AttentionItem = {
   title: string
@@ -1405,8 +1468,8 @@ const indicesAccordionOpen = ref(true)
 const platformSelfHealingTone = computed<'stable' | 'watch' | 'warming'>(() => {
   if (!platformMetrics.value && platformActions.value.length === 0) return 'warming'
   if (
-    (platformMetrics.value?.pending_bundles ?? 0) > 0 ||
-    (platformMetrics.value?.active_repairs ?? 0) > 0
+    (platformMetrics.value?.pending_bundles ?? 0) > 0
+    || (platformMetrics.value?.active_repairs ?? 0) > 0
   )
     return 'watch'
   return 'stable'
@@ -1443,13 +1506,13 @@ const platformStressInsights = computed(() =>
 const platformStressTone = computed<'stable' | 'watch' | 'critical' | 'warming'>(() => {
   if (platformStressInsights.value.telemetryState !== 'live') return 'warming'
   if (
-    platformStressInsights.value.criticalCount > 0 ||
-    platformStressInsights.value.freshnessState === 'stale'
+    platformStressInsights.value.criticalCount > 0
+    || platformStressInsights.value.freshnessState === 'stale'
   )
     return 'critical'
   if (
-    platformStressInsights.value.elevatedCount > 0 ||
-    platformStressInsights.value.freshnessState === 'delayed'
+    platformStressInsights.value.elevatedCount > 0
+    || platformStressInsights.value.freshnessState === 'delayed'
   )
     return 'watch'
   return 'stable'
@@ -1550,8 +1613,8 @@ const watchedProviders = [
 
 const selectedProvider = computed(
   () =>
-    providerHealth.value.find(provider => provider.provider_id === selectedProviderId.value) ??
-    null,
+    providerHealth.value.find(provider => provider.provider_id === selectedProviderId.value)
+    ?? null,
 )
 
 const serviceHealthUnavailable = computed(() => serviceHealthResponse.value?.unavailable === true)
@@ -1582,7 +1645,7 @@ const opsPauseActive = computed(() => {
   return message.includes('paused') || message.includes('pause active')
 })
 
-const summarizeQueueRows = (rows: Array<{ status: string; count: number }> = []) => {
+const summarizeQueueRows = (rows: Array<{ status: string, count: number }> = []) => {
   return rows.reduce(
     (summary, row) => {
       const count = Number(row.count || 0)
@@ -1805,26 +1868,26 @@ const goldFreshnessDetail = computed(() => {
 
 const observerReadinessLevel = computed<'blocked' | 'at_risk' | 'healthy'>(() => {
   if (
-    Boolean(error.value) ||
-    serviceHealthUnavailable.value ||
-    opsPauseActive.value ||
-    serviceCounts.value.offline > 0 ||
-    providerCounts.value.error > 0 ||
-    queuePressureLevel.value === 'blocked' ||
-    goldFreshnessLevel.value === 'blocked' ||
-    sweepLevel.value === 'blocked' ||
-    indicesLevel.value === 'blocked'
+    Boolean(error.value)
+    || serviceHealthUnavailable.value
+    || opsPauseActive.value
+    || serviceCounts.value.offline > 0
+    || providerCounts.value.error > 0
+    || queuePressureLevel.value === 'blocked'
+    || goldFreshnessLevel.value === 'blocked'
+    || sweepLevel.value === 'blocked'
+    || indicesLevel.value === 'blocked'
   ) {
     return 'blocked'
   }
 
   if (
-    serviceCounts.value.degraded > 0 ||
-    providerCounts.value.degraded > 0 ||
-    queuePressureLevel.value === 'at_risk' ||
-    goldFreshnessLevel.value === 'at_risk' ||
-    sweepLevel.value === 'at_risk' ||
-    indicesLevel.value === 'at_risk'
+    serviceCounts.value.degraded > 0
+    || providerCounts.value.degraded > 0
+    || queuePressureLevel.value === 'at_risk'
+    || goldFreshnessLevel.value === 'at_risk'
+    || sweepLevel.value === 'at_risk'
+    || indicesLevel.value === 'at_risk'
   ) {
     return 'at_risk'
   }
@@ -2015,9 +2078,11 @@ const providerRiskDetail = (provider: ProviderHealthAggregateItem) => {
 
   if (provider.error) {
     parts.unshift(provider.error)
-  } else if (provider.status === 'error') {
+  }
+ else if (provider.status === 'error') {
     parts.unshift('Provider reported error')
-  } else if (provider.status === 'degraded') {
+  }
+ else if (provider.status === 'degraded') {
     parts.unshift('Provider reported degraded')
   }
 
@@ -2045,7 +2110,8 @@ const attentionItems = computed<AttentionItem[]>(() => {
       href: awsLinks.find(link => link.label === 'ECS Cluster')?.href,
       toneClass: 'border-red-200 bg-red-50 text-red-700',
     })
-  } else if (serviceCounts.value.offline > 0 || serviceCounts.value.degraded > 0) {
+  }
+ else if (serviceCounts.value.offline > 0 || serviceCounts.value.degraded > 0) {
     items.push({
       title: 'Recover service coverage',
       detail: serviceCoverageDetail.value,
@@ -2156,9 +2222,9 @@ const immediateAwsLinks = computed<ImmediateAwsLink[]>(() => {
   }
 
   if (
-    providerCounts.value.error > 0 ||
-    providerCounts.value.degraded > 0 ||
-    indicesLevel.value !== 'healthy'
+    providerCounts.value.error > 0
+    || providerCounts.value.degraded > 0
+    || indicesLevel.value !== 'healthy'
   ) {
     push(
       'RDS Query Editor v2',
@@ -2224,7 +2290,8 @@ const toggleProviderDetails = (providerId: string) => {
 const loadMe = async () => {
   try {
     me.value = await request<MeResponse>('/me', { method: 'GET', timeoutMs: 15000, retries: 0 })
-  } catch {
+  }
+ catch {
     me.value = null
   }
 }
@@ -2237,8 +2304,8 @@ const ensureAuditTable = async () => {
   }
   ensuring.value = true
   try {
-    const typed =
-      typeof window !== 'undefined'
+    const typed
+      = typeof window !== 'undefined'
         ? window.prompt('Type APPLY to run DDL ensure in dev. Leave blank to check status.')
         : null
     const wantsEnsure = (typed || '').trim().toUpperCase() === 'APPLY'
@@ -2259,13 +2326,16 @@ const ensureAuditTable = async () => {
     })
     if (!result?.success) {
       error.value = result?.message || 'Failed to ensure email audit table.'
-    } else {
+    }
+ else {
       actionMessage.value = result?.message || 'Email audit table check completed.'
       await loadObserver()
     }
-  } catch (err: unknown) {
+  }
+ catch (err: unknown) {
     error.value = getAdminApiErrorMessage(err, 'Failed to ensure email audit table.')
-  } finally {
+  }
+ finally {
     ensuring.value = false
   }
 }
@@ -2278,8 +2348,8 @@ const runAlertEvaluation = async () => {
   }
   evaluating.value = true
   try {
-    const typed =
-      typeof window !== 'undefined'
+    const typed
+      = typeof window !== 'undefined'
         ? window.prompt('Type RUN to execute (sends notifications). Leave blank for dry-run.')
         : null
     const isExecute = (typed || '').trim().toUpperCase() === 'RUN'
@@ -2298,19 +2368,24 @@ const runAlertEvaluation = async () => {
     })
     if (result?.success !== true) {
       error.value = result?.message || 'Alert evaluation failed.'
-    } else {
+    }
+ else {
       if (result?.mode === 'batch') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): triggered ${result?.triggered ?? 0}/${result?.total ?? 0}.`
-      } else if (result?.mode === 'single') {
+      }
+ else if (result?.mode === 'single') {
         actionMessage.value = `Alert evaluation (${result?.run_mode || mode}): alert ${result?.alertId} triggered=${Boolean(result?.triggered)}.`
-      } else {
+      }
+ else {
         actionMessage.value = `Alert evaluation (${mode}) completed.`
       }
       await loadObserver()
     }
-  } catch (err: unknown) {
+  }
+ catch (err: unknown) {
     error.value = getAdminApiErrorMessage(err, 'Alert evaluation failed.')
-  } finally {
+  }
+ finally {
     evaluating.value = false
   }
 }
@@ -2322,8 +2397,8 @@ const loadObserver = async () => {
   const platformPromise = loadPlatformData()
   const servicePromise = loadServiceHealth()
   try {
-    const [indicesResult, sweepResult, summaryResult, providersAggregateResult] =
-      await Promise.allSettled([
+    const [indicesResult, sweepResult, summaryResult, providersAggregateResult]
+      = await Promise.allSettled([
         request<IndicesHealthResponse>('/ops/indices/health'),
         request<B2bSweepStatusResponse>('/ops/b2b-sweep-status'),
         request<ObserverSummaryResponse>('/ops/observer/summary', {
@@ -2350,7 +2425,7 @@ const loadObserver = async () => {
       providerHealthSummary.value = providersAggregateResult.value.summary ?? null
       providerHealth.value = providersAggregateResult.value.providers ?? []
 
-      providerChecks.value = watchedProviders.flatMap(provider => {
+      providerChecks.value = watchedProviders.flatMap((provider) => {
         const row = providerHealth.value.find(item => item.provider_id === provider.id)
         if (!row) return []
         return [
@@ -2366,8 +2441,8 @@ const loadObserver = async () => {
       })
 
       if (
-        selectedProviderId.value &&
-        !providerHealth.value.some(item => item.provider_id === selectedProviderId.value)
+        selectedProviderId.value
+        && !providerHealth.value.some(item => item.provider_id === selectedProviderId.value)
       ) {
         selectedProviderId.value = null
       }
@@ -2375,7 +2450,7 @@ const loadObserver = async () => {
 
     const extractReason = (result: PromiseSettledResult<unknown>) => {
       if (result.status !== 'rejected') return null
-      const err = result.reason as { statusCode?: number; message?: string }
+      const err = result.reason as { statusCode?: number, message?: string }
       if (err?.statusCode === 404) return '404 — check BFF proxy allowlist'
       return getAdminApiErrorMessage(result.reason, 'unknown error')
     }
@@ -2397,9 +2472,11 @@ const loadObserver = async () => {
 
     await Promise.all([platformPromise, servicePromise])
     lastRefresh.value = new Date().toISOString()
-  } catch (err: unknown) {
+  }
+ catch (err: unknown) {
     error.value = getAdminApiErrorMessage(err, 'Failed to load observer status.')
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }
@@ -2409,7 +2486,8 @@ const loadServiceHealth = async () => {
   serviceHealthResponse.value = null
   try {
     serviceHealthResponse.value = await getServiceHealth()
-  } catch (err: unknown) {
+  }
+ catch (err: unknown) {
     serviceHealthResponse.value = {
       services: [],
       updatedAt: null,
@@ -2417,7 +2495,8 @@ const loadServiceHealth = async () => {
       source: 'none',
       message: getAdminApiErrorMessage(err, 'Health check unavailable'),
     }
-  } finally {
+  }
+ finally {
     serviceHealthLoading.value = false
   }
 }
@@ -2456,7 +2535,7 @@ const refresh = () => {
   void loadObserver()
 }
 
-watch(autoRefresh, enabled => {
+watch(autoRefresh, (enabled) => {
   if (autoRefreshTimer) {
     clearInterval(autoRefreshTimer)
     autoRefreshTimer = null

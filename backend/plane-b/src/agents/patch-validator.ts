@@ -27,16 +27,6 @@ export type ValidationCheck = {
 }
 
 /**
- * Contract test result — outcome from running contract tests for a module.
- */
-type ContractTestResult = {
-  totalReferences: number
-  violations: number
-  corridorsCovered: number
-  violationDetails: Array<{ corridorId: string; field: string; expected: unknown; actual: unknown }>
-}
-
-/**
  * Patch Validator — validates proposed patches before they can be deployed.
  *
  * The validator runs a comprehensive series of checks on a PatchProposal:

@@ -91,7 +91,7 @@ const run = async () => {
     let totalErrors = 0
     let failedProviders = 0
 
-    for (const [providerId, result] of results) {
+    for (const result of results.values()) {
       totalCorridors += result.corridors.length
       totalDeliveryMethods += result.deliveryMethods.length
       totalPromotions += result.promotions.length

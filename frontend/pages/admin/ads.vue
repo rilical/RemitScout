@@ -48,7 +48,10 @@
           <h2 class="mt-3 text-body-lg font-semibold text-rs-fg">
             {{ runtimeState.runtime_enabled ? 'Ads may render for eligible free users.' : 'Ads are runtime-disabled in this environment.' }}
           </h2>
-          <p class="mt-2 text-body-sm" :class="runtimeState.runtime_enabled ? 'text-emerald-900' : 'text-amber-900'">
+          <p
+class="mt-2 text-body-sm"
+:class="runtimeState.runtime_enabled ? 'text-emerald-900' : 'text-amber-900'"
+>
             {{ runtimeState.reason }}
           </p>
         </div>
@@ -84,7 +87,10 @@
           </span>
         </div>
 
-        <form class="mt-4 grid gap-4 md:grid-cols-2" @submit.prevent="runPreview">
+        <form
+class="mt-4 grid gap-4 md:grid-cols-2"
+@submit.prevent="runPreview"
+>
           <label class="text-body-sm text-rs-muted">
             Placement
             <select
@@ -92,7 +98,11 @@
               class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
               :disabled="previewLoading"
             >
-              <option v-for="placement in placements" :key="placement" :value="placement">
+              <option
+v-for="placement in placements"
+:key="placement"
+:value="placement"
+>
                 {{ placement }}
               </option>
             </select>
@@ -150,7 +160,10 @@
             >
               {{ previewLoading ? 'Running preview...' : 'Run preview' }}
             </button>
-            <span v-if="previewError" class="text-body-sm text-danger-600">{{ previewError }}</span>
+            <span
+v-if="previewError"
+class="text-body-sm text-danger-600"
+>{{ previewError }}</span>
           </div>
         </form>
 
@@ -238,7 +251,10 @@
           </div>
         </div>
 
-        <form class="mt-5 grid gap-4 md:grid-cols-2" @submit.prevent="handleCreate">
+        <form
+class="mt-5 grid gap-4 md:grid-cols-2"
+@submit.prevent="handleCreate"
+>
           <label class="text-body-sm text-rs-muted">
             Name
             <input
@@ -349,8 +365,14 @@
             >
               {{ saving ? 'Creating...' : 'Create ad' }}
             </button>
-            <span v-if="formError" class="text-body-sm text-danger-600">{{ formError }}</span>
-            <span v-if="formSuccess" class="text-body-sm text-success-600">{{ formSuccess }}</span>
+            <span
+v-if="formError"
+class="text-body-sm text-danger-600"
+>{{ formError }}</span>
+            <span
+v-if="formSuccess"
+class="text-body-sm text-success-600"
+>{{ formSuccess }}</span>
           </div>
         </form>
       </article>
@@ -376,7 +398,10 @@
         No ads configured yet. Seed at least one house or synthetic creative per critical placement so preview coverage is meaningful before runtime is ever enabled.
       </div>
 
-      <div v-else class="mt-5 grid gap-4">
+      <div
+v-else
+class="mt-5 grid gap-4"
+>
         <article
           v-for="ad in ads"
           :key="ad.id"
@@ -582,7 +607,7 @@ const canMutate = computed(() => Boolean(isSuperAdmin.value))
 
 const latestInventoryUpdate = computed(() => {
   const timestamps = ads.value
-    .map((ad) => ad.updatedAt || ad.createdAt || null)
+    .map(ad => ad.updatedAt || ad.createdAt || null)
     .filter((value): value is string => Boolean(value))
     .sort()
   return timestamps[timestamps.length - 1] || null
@@ -746,7 +771,7 @@ const handleCreate = async () => {
           status: form.status,
           kind: 'house',
         },
-        placements: form.placements.map((placement) => ({
+        placements: form.placements.map(placement => ({
           placement,
           layout: form.layout,
         })),

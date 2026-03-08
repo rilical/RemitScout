@@ -157,9 +157,9 @@ export class ContractTestHandler extends BaseJobHandler {
     }
 
     return {
-      success: violations.length === 0,
+      success: violations.length === 0 && itemsFailed === 0,
       itemsProcessed,
-      itemsFailed: violations.length,
+      itemsFailed: violations.length + itemsFailed,
       durationMs: Date.now() - startedAt,
       metadata: testResult,
     }

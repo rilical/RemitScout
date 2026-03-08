@@ -1,8 +1,15 @@
 <template>
   <div class="min-h-screen bg-surface">
     <!-- Ad Banner for Free Users -->
-    <div v-if="!isPlus" class="bg-brand-600 text-white">
-      <CenteredPage as="div" padding-y="none" section-gap-class="space-y-0">
+    <div
+v-if="!isPlus"
+class="bg-brand-600 text-white"
+>
+      <CenteredPage
+as="div"
+padding-y="none"
+section-gap-class="space-y-0"
+>
         <div class="py-2">
           <div class="text-body-sm flex items-center justify-center gap-3">
             <span><strong>Upgrade to Plus</strong> — {{ upgradeBannerText }}</span>
@@ -11,24 +18,43 @@
               class="inline-flex items-center gap-1 font-semibold text-white underline underline-offset-2 hover:text-primary-100"
             >
               <span>Learn more about Plus</span>
-              <Icon name="chevron-right" :size="16" class="text-current" />
+              <Icon
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
             </NuxtLink>
           </div>
         </div>
       </CenteredPage>
     </div>
 
-    <div v-if="!isPlus" class="border-b border-rs-border bg-neutral-50">
-      <CenteredPage as="div" padding-y="none" section-gap-class="space-y-0">
+    <div
+v-if="!isPlus"
+class="border-b border-rs-border bg-neutral-50"
+>
+      <CenteredPage
+as="div"
+padding-y="none"
+section-gap-class="space-y-0"
+>
         <div class="py-4">
-          <AdPlacement placement="dashboard_inline" wrapper-class="rounded-xl" min-height="120px" />
+          <AdPlacement
+placement="dashboard_inline"
+wrapper-class="rounded-xl"
+min-height="120px"
+/>
         </div>
       </CenteredPage>
     </div>
 
     <!-- Header -->
     <header class="sticky top-16 z-40 border-b border-rs-border bg-surface">
-      <CenteredPage as="div" padding-y="none" section-gap-class="space-y-0">
+      <CenteredPage
+as="div"
+padding-y="none"
+section-gap-class="space-y-0"
+>
         <!-- Main Header Row -->
         <div class="flex items-center justify-between py-6">
           <div>
@@ -61,21 +87,28 @@
               to="/plus/checkout"
               class="text-body-sm flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-neutral-800"
             >
-              <Icon name="sparkles" :size="16" variant="solid" class="text-current" />
+              <Icon
+name="sparkles"
+:size="16"
+variant="solid"
+class="text-current"
+/>
               Upgrade to Plus
             </NuxtLink>
           </div>
         </div>
 
         <!-- Usage Stats for Free Users -->
-        <div v-if="!isPlus" class="text-body-sm flex items-center gap-6 pb-4">
+        <div
+v-if="!isPlus"
+class="text-body-sm flex items-center gap-6 pb-4"
+>
           <div class="flex items-center gap-2">
             <span class="text-rs-muted">Watchlist:</span>
             <span
               class="font-medium"
               :class="watchlistLimitPercent >= 100 ? 'text-brand-600' : 'text-rs-fg'"
-              >{{ watchlistCount }}/{{ limits.watchlistItems }}</span
-            >
+              >{{ watchlistCount }}/{{ limits.watchlistItems }}</span>
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200">
               <div
                 class="h-full rounded-full"
@@ -89,8 +122,7 @@
             <span
               class="font-medium"
               :class="alertsLimitPercent >= 100 ? 'text-brand-600' : 'text-rs-fg'"
-              >{{ alertsCount }}/{{ limits.alerts }}</span
-            >
+              >{{ alertsCount }}/{{ limits.alerts }}</span>
             <div class="h-1.5 w-16 overflow-hidden rounded-full bg-neutral-200">
               <div
                 class="h-full rounded-full"
@@ -126,7 +158,11 @@
     </header>
 
     <!-- Main Content -->
-    <CenteredPage as="main" padding-y="sm" section-gap-class="space-y-0">
+    <CenteredPage
+as="main"
+padding-y="sm"
+section-gap-class="space-y-0"
+>
       <!-- Overview Tab -->
       <div v-if="activeTab === 'overview'">
         <!-- Stats Row with Limits -->
@@ -142,7 +178,10 @@
               </span>
             </div>
             <div class="text-h3 font-semibold text-white">{{ watchlistCount }}</div>
-            <div v-if="limits.watchlistItems !== 'unlimited'" class="mt-2">
+            <div
+v-if="limits.watchlistItems !== 'unlimited'"
+class="mt-2"
+>
               <div class="h-1.5 overflow-hidden rounded-full bg-surface/30">
                 <div
                   class="h-full rounded-full bg-surface transition-all"
@@ -168,7 +207,10 @@
               </span>
             </div>
             <div class="text-h3 font-semibold text-white">{{ alertsCount }}</div>
-            <div v-if="limits.alerts !== 'unlimited'" class="mt-2">
+            <div
+v-if="limits.alerts !== 'unlimited'"
+class="mt-2"
+>
               <div class="h-1.5 overflow-hidden rounded-full bg-surface/30">
                 <div
                   class="h-full rounded-full bg-surface transition-all"
@@ -189,17 +231,28 @@
           <div class="rounded-xl border border-brand-700 bg-brand-600 p-5">
             <div class="mb-1 flex items-center justify-between">
               <span class="text-body-sm text-white/90">History</span>
-              <span v-if="!isPlus" class="text-body-sm text-white/70"
-                >{{ limits.historyDays }} days</span
-              >
-              <span v-else class="text-body-sm text-white">{{
+              <span
+v-if="!isPlus"
+class="text-body-sm text-white/70"
+>{{ limits.historyDays }} days</span>
+              <span
+v-else
+class="text-body-sm text-white"
+>{{
                 isEnterprise ? '180 days' : '90 days'
               }}</span>
             </div>
             <div class="text-h3 font-semibold text-white">{{ compareCount }}</div>
-            <div v-if="!isPlus" class="mt-2">
+            <div
+v-if="!isPlus"
+class="mt-2"
+>
               <div class="text-body-sm flex items-center gap-1 text-white/70">
-                <Icon name="info" :size="16" class="text-current" />
+                <Icon
+name="info"
+:size="16"
+class="text-current"
+/>
                 Limited to last 30 days
               </div>
             </div>
@@ -227,7 +280,10 @@
                 />
                 {{ formatPercentValue(currentRate.change) }} vs previous
               </span>
-              <span v-else class="text-body-sm text-white/70">{{
+              <span
+v-else
+class="text-body-sm text-white/70"
+>{{
                 selectedCorridor ? 'No rate history yet' : 'Select a corridor'
               }}</span>
             </div>
@@ -263,7 +319,11 @@
               <div
                 class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-success-100 text-success-700"
               >
-                <Icon name="check-circle" :size="24" class="text-current" />
+                <Icon
+name="check-circle"
+:size="24"
+class="text-current"
+/>
               </div>
               <div>
                 <h3 class="text-body font-semibold text-rs-fg">Help improve provider accuracy</h3>
@@ -303,17 +363,31 @@
                       >
                         <template v-if="selectedCorridor">
                           <span>{{ getFlag(selectedCorridor.from) }}</span>
-                          <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                          <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                           <span>{{ getFlag(selectedCorridor.to) }}</span>
-                          <span class="text-rs-muted"
-                            >{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span
-                          >
-                          <Icon name="chevron-down" :size="16" class="text-neutral-400" />
+                          <span class="text-rs-muted">{{ selectedCorridor.from }}/{{ selectedCorridor.to }}</span>
+                          <Icon
+name="chevron-down"
+:size="16"
+class="text-neutral-400"
+/>
                         </template>
                         <template v-else>
-                          <Icon name="magnifying-glass" :size="16" class="text-neutral-500" />
+                          <Icon
+name="magnifying-glass"
+:size="16"
+class="text-neutral-500"
+/>
                           <span>Select corridor</span>
-                          <Icon name="chevron-down" :size="16" class="text-neutral-400" />
+                          <Icon
+name="chevron-down"
+:size="16"
+class="text-neutral-400"
+/>
                         </template>
                       </button>
 
@@ -324,9 +398,7 @@
                       >
                         <div class="space-y-3">
                           <div>
-                            <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                              >From</label
-                            >
+                            <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">From</label>
                             <UniversalDropdown
                               v-model="customCorridor.from"
                               :options="inlineFromOptions"
@@ -336,9 +408,7 @@
                             />
                           </div>
                           <div>
-                            <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                              >To</label
-                            >
+                            <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">To</label>
                             <UniversalDropdown
                               v-model="customCorridor.to"
                               :options="inlineToOptions"
@@ -389,16 +459,16 @@
                     <div class="mb-1 flex items-center gap-2">
                       <template v-if="selectedCorridor">
                         <span class="text-h3">{{ getFlag(selectedCorridor.from) }}</span>
-                        <Icon name="arrow-right" :size="16" class="text-neutral-400" />
+                        <Icon
+name="arrow-right"
+:size="16"
+class="text-neutral-400"
+/>
                         <span class="text-h3">{{ getFlag(selectedCorridor.to) }}</span>
-                        <span class="text-body-sm ml-1 text-rs-muted"
-                          >{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span
-                        >
+                        <span class="text-body-sm ml-1 text-rs-muted">{{ selectedCorridor.from }} to {{ selectedCorridor.to }}</span>
                       </template>
                       <template v-else>
-                        <span class="text-body-sm text-neutral-500"
-                          >Select a corridor to view rate history.</span
-                        >
+                        <span class="text-body-sm text-neutral-500">Select a corridor to view rate history.</span>
                       </template>
                     </div>
                     <div class="flex items-baseline gap-3">
@@ -486,7 +556,10 @@
                     v-if="selectedHistoryLoading"
                     class="absolute inset-0 flex items-center justify-center px-4"
                   >
-                    <LoadingState mode="inline" message="Loading rate history..." />
+                    <LoadingState
+mode="inline"
+message="Loading rate history..."
+/>
                   </div>
                   <div
                     v-else-if="graphData.length === 0"
@@ -501,9 +574,21 @@
                     preserveAspectRatio="none"
                   >
                     <defs>
-                      <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color: #2563eb; stop-opacity: 0.15" />
-                        <stop offset="100%" style="stop-color: #2563eb; stop-opacity: 0" />
+                      <linearGradient
+id="chartGradient"
+x1="0%"
+y1="0%"
+x2="0%"
+y2="100%"
+>
+                        <stop
+offset="0%"
+style="stop-color: #2563eb; stop-opacity: 0.15"
+/>
+                        <stop
+offset="100%"
+style="stop-color: #2563eb; stop-opacity: 0"
+/>
                       </linearGradient>
                     </defs>
                     <!-- Grid lines -->
@@ -535,7 +620,10 @@
                       stroke-dasharray="4"
                     />
                     <!-- Area fill -->
-                    <polygon :points="`0,180 ${graphPoints} 400,180`" fill="url(#chartGradient)" />
+                    <polygon
+:points="`0,180 ${graphPoints} 400,180`"
+fill="url(#chartGradient)"
+/>
                     <!-- Line -->
                     <polyline
                       :points="graphPoints"
@@ -593,7 +681,11 @@
                     :disabled="!selectedCorridor || watchlistLimitReached"
                     @click="handleAddToWatchlist"
                   >
-                    <Icon name="plus" :size="16" class="text-current" />
+                    <Icon
+name="plus"
+:size="16"
+class="text-current"
+/>
                     Add to Watchlist
                   </button>
                   <button
@@ -607,7 +699,11 @@
                     :disabled="!selectedCorridor || alertsLimitReached"
                     @click="handleSetAlert"
                   >
-                    <Icon name="bell-alert" :size="16" class="text-current" />
+                    <Icon
+name="bell-alert"
+:size="16"
+class="text-current"
+/>
                     Set Alert
                   </button>
                   <button
@@ -616,7 +712,11 @@
                     class="text-body-sm inline-flex items-center gap-2 rounded-lg px-3 py-1.5 font-medium text-neutral-700 transition-colors hover:bg-neutral-200 hover:text-rs-fg"
                     @click="showExportModal = true"
                   >
-                    <Icon name="arrow-down-tray" :size="16" class="text-current" />
+                    <Icon
+name="arrow-down-tray"
+:size="16"
+class="text-current"
+/>
                     Export
                   </button>
                 </div>
@@ -631,10 +731,17 @@
                     class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
                     aria-hidden="true"
                   />
-                  <Icon v-else name="chevron-right" :size="16" class="text-current" />
-                  <span v-if="comparingSelectedCorridor" role="status" aria-live="polite"
-                    >Comparing…</span
-                  >
+                  <Icon
+v-else
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
+                  <span
+v-if="comparingSelectedCorridor"
+role="status"
+aria-live="polite"
+>Comparing…</span>
                   <span v-else>Compare Corridor</span>
                 </button>
               </div>
@@ -718,7 +825,10 @@
                   View all
                 </button>
               </div>
-              <div v-if="corridorWatchlistItems.length === 0" class="px-6 py-12">
+              <div
+v-if="corridorWatchlistItems.length === 0"
+class="px-6 py-12"
+>
                 <EmptyState
                   mode="inline"
                   title="No corridors saved yet"
@@ -734,7 +844,10 @@
                   </template>
                 </EmptyState>
               </div>
-              <div v-else class="divide-y divide-neutral-100">
+              <div
+v-else
+class="divide-y divide-neutral-100"
+>
                 <div
                   v-for="item in corridorWatchlistItems.slice(0, 3)"
                   :key="item.id"
@@ -743,7 +856,11 @@
                   <div class="flex items-center gap-3">
                     <div class="flex items-center gap-1">
                       <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
-                      <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                      <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                       <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
                     </div>
                     <span class="text-body-sm font-medium text-rs-fg">{{ item.label }}</span>
@@ -765,14 +882,27 @@
             <!-- Recent Searches -->
             <div class="rounded-xl border border-rs-border bg-surface p-6">
               <h3 class="mb-4 font-semibold text-rs-fg">Recent Searches</h3>
-              <div v-if="recentSearchesPending" class="py-4">
-                <LoadingState mode="inline" message="Loading recent searches..." />
+              <div
+v-if="recentSearchesPending"
+class="py-4"
+>
+                <LoadingState
+mode="inline"
+message="Loading recent searches..."
+/>
               </div>
-              <div v-else-if="recentSearches.length === 0" class="py-4 text-center">
+              <div
+v-else-if="recentSearches.length === 0"
+class="py-4 text-center"
+>
                 <div
                   class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100"
                 >
-                  <Icon name="magnifying-glass" :size="20" class="text-neutral-400" />
+                  <Icon
+name="magnifying-glass"
+:size="20"
+class="text-neutral-400"
+/>
                 </div>
                 <p class="text-body-sm mb-2 text-rs-muted">No searches yet</p>
                 <NuxtLink
@@ -782,7 +912,10 @@
                   Compare rates →
                 </NuxtLink>
               </div>
-              <div v-else class="space-y-3">
+              <div
+v-else
+class="space-y-3"
+>
                 <NuxtLink
                   v-for="(search, idx) in recentSearches.slice(0, 5)"
                   :key="idx"
@@ -791,7 +924,11 @@
                 >
                   <div class="flex items-center gap-1.5">
                     <span class="text-body-lg">{{ getFlag(search.from) }}</span>
-                    <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                     <span class="text-body-lg">{{ getFlag(search.to) }}</span>
                   </div>
                   <div class="min-w-0 flex-1">
@@ -810,35 +947,64 @@
             <!-- Top Movers from Watchlist -->
             <div class="rounded-xl border border-rs-border bg-surface p-6">
               <h3 class="mb-4 font-semibold text-rs-fg">Top Movers Today</h3>
-              <div v-if="!watchlistHydrated" class="py-4">
-                <LoadingState mode="inline" message="Loading watchlist..." />
+              <div
+v-if="!watchlistHydrated"
+class="py-4"
+>
+                <LoadingState
+mode="inline"
+message="Loading watchlist..."
+/>
               </div>
-              <div v-else-if="corridorWatchlistItems.length === 0" class="py-4 text-center">
+              <div
+v-else-if="corridorWatchlistItems.length === 0"
+class="py-4 text-center"
+>
                 <div
                   class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100"
                 >
-                  <Icon name="arrow-trending-up" :size="20" class="text-neutral-400" />
+                  <Icon
+name="arrow-trending-up"
+:size="20"
+class="text-neutral-400"
+/>
                 </div>
                 <p class="text-body-sm mb-2 text-rs-muted">No corridors tracked</p>
                 <p class="text-body-sm text-neutral-400">
                   Add corridors to your watchlist to see their daily movements
                 </p>
               </div>
-              <div v-else-if="topMoversLoading" class="py-4">
-                <LoadingState mode="inline" message="Loading rate history..." />
+              <div
+v-else-if="topMoversLoading"
+class="py-4"
+>
+                <LoadingState
+mode="inline"
+message="Loading rate history..."
+/>
               </div>
-              <div v-else-if="topMoversFromWatchlist.length === 0" class="py-4 text-center">
+              <div
+v-else-if="topMoversFromWatchlist.length === 0"
+class="py-4 text-center"
+>
                 <div
                   class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100"
                 >
-                  <Icon name="arrow-trending-up" :size="20" class="text-neutral-400" />
+                  <Icon
+name="arrow-trending-up"
+:size="20"
+class="text-neutral-400"
+/>
                 </div>
                 <p class="text-body-sm mb-2 text-rs-muted">No rate history yet</p>
                 <p class="text-body-sm text-neutral-400">
                   Once history is available, movers will appear here.
                 </p>
               </div>
-              <div v-else class="space-y-3">
+              <div
+v-else
+class="space-y-3"
+>
                 <NuxtLink
                   v-for="item in topMoversFromWatchlist"
                   :key="item.id"
@@ -847,11 +1013,13 @@
                 >
                   <div class="flex items-center gap-2">
                     <span class="text-body-lg">{{ getFlag(item.target.from) }}</span>
-                    <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                     <span class="text-body-lg">{{ getFlag(item.target.to) }}</span>
-                    <span class="text-body-sm text-neutral-700"
-                      >{{ item.target.from }}/{{ item.target.to }}</span
-                    >
+                    <span class="text-body-sm text-neutral-700">{{ item.target.from }}/{{ item.target.to }}</span>
                   </div>
                   <span
                     class="text-body-sm font-medium"
@@ -880,7 +1048,11 @@
               <div class="flex items-start gap-4">
                 <div class="flex-shrink-0">
                   <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface/20">
-                    <Icon name="chat-bubble" :size="20" class="text-white" />
+                    <Icon
+name="chat-bubble"
+:size="20"
+class="text-white"
+/>
                   </div>
                 </div>
                 <div class="flex-1">
@@ -893,19 +1065,31 @@
                     class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-surface px-4 py-2 font-semibold text-brand-600 transition-colors hover:bg-surface/90"
                   >
                     Contact Support
-                    <Icon name="chevron-right" :size="16" class="text-current" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
                   </NuxtLink>
                 </div>
               </div>
             </div>
 
             <!-- Ad: Upgrade to Plus (Free users only) -->
-            <div v-if="!isPlus" class="rounded-xl bg-brand-600 p-5 text-white">
+            <div
+v-if="!isPlus"
+class="rounded-xl bg-brand-600 p-5 text-white"
+>
               <div class="flex items-start gap-3">
                 <div
                   class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-surface/20"
                 >
-                  <Icon name="sparkles" :size="20" variant="solid" class="text-current" />
+                  <Icon
+name="sparkles"
+:size="20"
+variant="solid"
+class="text-current"
+/>
                 </div>
                 <div class="flex-1">
                   <h4 class="text-body-sm mb-1 font-semibold">Remove Ads with Plus</h4>
@@ -915,7 +1099,11 @@
                     class="text-body-sm inline-flex items-center gap-1 font-semibold text-white hover:text-primary-100"
                   >
                     <span>Learn more about Plus</span>
-                    <Icon name="chevron-right" :size="16" class="text-current" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
                   </NuxtLink>
                 </div>
               </div>
@@ -947,7 +1135,11 @@
                 v-else
                 class="text-body-sm inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 font-medium text-brand-700"
               >
-                <Icon name="check" :size="16" class="text-current" />
+                <Icon
+name="check"
+:size="16"
+class="text-current"
+/>
                 Unlimited
               </span>
             </div>
@@ -1037,7 +1229,10 @@
           v-if="!watchlistLimitReached"
           class="mb-6 rounded-xl border border-rs-border bg-surface p-4"
         >
-          <form class="flex flex-col gap-3 sm:flex-row" @submit.prevent="handleAddWatchlist">
+          <form
+class="flex flex-col gap-3 sm:flex-row"
+@submit.prevent="handleAddWatchlist"
+>
             <div class="flex flex-1 gap-2">
               <div class="flex-1">
                 <label class="sr-only">From</label>
@@ -1049,7 +1244,11 @@
                 />
               </div>
               <div class="flex items-center text-neutral-400">
-                <Icon name="arrow-right" :size="20" class="text-current" />
+                <Icon
+name="arrow-right"
+:size="20"
+class="text-current"
+/>
               </div>
               <div class="flex-1">
                 <label class="sr-only">To</label>
@@ -1065,14 +1264,24 @@
               type="submit"
               class="text-body-sm inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white transition-colors hover:bg-brand-700"
             >
-              <Icon name="plus" :size="16" class="text-current" />
+              <Icon
+name="plus"
+:size="16"
+class="text-current"
+/>
               Add Corridor
             </button>
           </form>
         </div>
 
-        <div v-if="!watchlistHydrated" class="flex justify-center py-12">
-          <LoadingState mode="inline" message="Loading watchlist..." />
+        <div
+v-if="!watchlistHydrated"
+class="flex justify-center py-12"
+>
+          <LoadingState
+mode="inline"
+message="Loading watchlist..."
+/>
         </div>
         <div
           v-else-if="corridorWatchlistItems.length === 0"
@@ -1104,7 +1313,11 @@
                 <div class="flex items-center gap-3">
                   <div class="flex items-center gap-2">
                     <span class="text-h3">{{ getFlag(item.target.from) }}</span>
-                    <Icon name="arrow-right" :size="20" class="text-neutral-300" />
+                    <Icon
+name="arrow-right"
+:size="20"
+class="text-neutral-300"
+/>
                     <span class="text-h3">{{ getFlag(item.target.to) }}</span>
                   </div>
                   <div>
@@ -1122,7 +1335,11 @@
                   :aria-label="`Remove ${item.target.from} to ${item.target.to} from watchlist`"
                   @click="openDeleteWatchlistModal(item)"
                 >
-                  <Icon name="trash" :size="16" class="text-current" />
+                  <Icon
+name="trash"
+:size="16"
+class="text-current"
+/>
                 </button>
               </div>
 
@@ -1153,8 +1370,8 @@
                       :size="16"
                       class="text-current"
                       :class="
-                        getWatchlistSnapshot(item.id).hasChange &&
-                        getWatchlistSnapshot(item.id).changeValue < 0
+                        getWatchlistSnapshot(item.id).hasChange
+                        && getWatchlistSnapshot(item.id).changeValue < 0
                           ? 'rotate-180'
                           : ''
                       "
@@ -1174,7 +1391,12 @@
                   v-if="getWatchlistAlertCount(item.id) > 0"
                   class="text-body-sm inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 font-medium text-brand-700"
                 >
-                  <Icon name="bell-alert" :size="16" variant="solid" class="text-current" />
+                  <Icon
+name="bell-alert"
+:size="16"
+variant="solid"
+class="text-current"
+/>
                   {{ getWatchlistAlertCount(item.id) }} alert{{
                     getWatchlistAlertCount(item.id) !== 1 ? 's' : ''
                   }}
@@ -1187,7 +1409,10 @@
                   v-if="isWatchlistHistoryLoading(item.id)"
                   class="absolute inset-0 flex items-center justify-center px-4"
                 >
-                  <LoadingState mode="inline" message="Loading rate history..." />
+                  <LoadingState
+mode="inline"
+message="Loading rate history..."
+/>
                 </div>
                 <div
                   v-else-if="getWatchlistSnapshot(item.id).history.length < 2"
@@ -1195,7 +1420,12 @@
                 >
                   No rate history yet
                 </div>
-                <svg v-else class="h-full w-full" viewBox="0 0 400 120" preserveAspectRatio="none">
+                <svg
+v-else
+class="h-full w-full"
+viewBox="0 0 400 120"
+preserveAspectRatio="none"
+>
                   <defs>
                     <linearGradient
                       :id="`chartGradient-${item.id}`"
@@ -1204,15 +1434,42 @@
                       x2="0%"
                       y2="100%"
                     >
-                      <stop offset="0%" style="stop-color: rgb(59, 130, 246); stop-opacity: 0.2" />
-                      <stop offset="100%" style="stop-color: rgb(59, 130, 246); stop-opacity: 0" />
+                      <stop
+offset="0%"
+style="stop-color: rgb(59, 130, 246); stop-opacity: 0.2"
+/>
+                      <stop
+offset="100%"
+style="stop-color: rgb(59, 130, 246); stop-opacity: 0"
+/>
                     </linearGradient>
                   </defs>
 
                   <!-- Grid lines -->
-                  <line x1="0" y1="30" x2="400" y2="30" stroke="#e2e8f0" stroke-width="1" />
-                  <line x1="0" y1="60" x2="400" y2="60" stroke="#e2e8f0" stroke-width="1" />
-                  <line x1="0" y1="90" x2="400" y2="90" stroke="#e2e8f0" stroke-width="1" />
+                  <line
+x1="0"
+y1="30"
+x2="400"
+y2="30"
+stroke="#e2e8f0"
+stroke-width="1"
+/>
+                  <line
+x1="0"
+y1="60"
+x2="400"
+y2="60"
+stroke="#e2e8f0"
+stroke-width="1"
+/>
+                  <line
+x1="0"
+y1="90"
+x2="400"
+y2="90"
+stroke="#e2e8f0"
+stroke-width="1"
+/>
 
                   <!-- Area fill -->
                   <path
@@ -1269,13 +1526,18 @@
             <div class="border-t border-rs-border bg-surface px-5 py-4">
               <div class="mb-3 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <Icon name="sparkles" :size="16" class="text-success-600" />
-                  <span class="text-body-sm font-semibold uppercase tracking-wide text-neutral-700"
-                    >Best Provider (Latest)</span
-                  >
+                  <Icon
+name="sparkles"
+:size="16"
+class="text-success-600"
+/>
+                  <span class="text-body-sm font-semibold uppercase tracking-wide text-neutral-700">Best Provider (Latest)</span>
                 </div>
               </div>
-              <div v-if="getBestProviderForItem(item.id)" class="flex items-center gap-3">
+              <div
+v-if="getBestProviderForItem(item.id)"
+class="flex items-center gap-3"
+>
                 <div class="flex h-10 w-24 flex-shrink-0 items-center justify-center">
                   <ProviderLogo
                     :slug="getBestProviderForItem(item.id)?.slug || ''"
@@ -1295,13 +1557,28 @@
                   :aria-label="`View provider review for ${getBestProviderForItem(item.id)?.name || 'this provider'}`"
                 >
                   Provider review
-                  <Icon name="chevron-right" :size="16" class="text-current" />
+                  <Icon
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
                 </NuxtLink>
               </div>
-              <div v-else-if="isProviderRatesLoadingForItem(item.id)" class="py-2">
-                <LoadingState mode="inline" message="Loading provider quotes..." />
+              <div
+v-else-if="isProviderRatesLoadingForItem(item.id)"
+class="py-2"
+>
+                <LoadingState
+mode="inline"
+message="Loading provider quotes..."
+/>
               </div>
-              <div v-else class="text-body-sm text-rs-muted">No provider quotes yet.</div>
+              <div
+v-else
+class="text-body-sm text-rs-muted"
+>
+No provider quotes yet.
+</div>
             </div>
 
             <!-- Quick Actions -->
@@ -1317,10 +1594,17 @@
                   class="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent"
                   aria-hidden="true"
                 />
-                <Icon v-else name="magnifying-glass" :size="16" class="text-current" />
-                <span v-if="comparingCorridor === item.id" role="status" aria-live="polite"
-                  >Comparing…</span
-                >
+                <Icon
+v-else
+name="magnifying-glass"
+:size="16"
+class="text-current"
+/>
+                <span
+v-if="comparingCorridor === item.id"
+role="status"
+aria-live="polite"
+>Comparing…</span>
                 <span v-else>Compare</span>
               </button>
               <button
@@ -1328,7 +1612,11 @@
                 class="text-body-sm inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-surface px-4 py-2.5 font-semibold text-neutral-700 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
                 @click="openAlert(item)"
               >
-                <Icon name="bell-alert" :size="16" class="text-current" />
+                <Icon
+name="bell-alert"
+:size="16"
+class="text-current"
+/>
                 Set Alert
               </button>
             </div>
@@ -1336,12 +1624,16 @@
         </div>
 
         <!-- Ad: Sponsored Provider (Free users only) -->
-        <div v-if="!isPlus" class="mt-6 rounded-xl border border-rs-border bg-neutral-50 p-4">
+        <div
+v-if="!isPlus"
+class="mt-6 rounded-xl border border-rs-border bg-neutral-50 p-4"
+>
           <div class="mb-3 flex items-center justify-between">
             <span class="text-body-sm uppercase tracking-wide text-neutral-400">Sponsored</span>
-            <NuxtLink to="/plus/checkout" class="text-body-sm text-brand-600 hover:text-brand-700"
-              >Remove ads</NuxtLink
-            >
+            <NuxtLink
+to="/plus/checkout"
+class="text-body-sm text-brand-600 hover:text-brand-700"
+>Remove ads</NuxtLink>
           </div>
           <div class="flex items-center gap-4">
             <div
@@ -1388,7 +1680,11 @@
                 v-else
                 class="text-body-sm inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 font-medium text-brand-700"
               >
-                <Icon name="check" :size="16" class="text-current" />
+                <Icon
+name="check"
+:size="16"
+class="text-current"
+/>
                 Unlimited
               </span>
             </div>
@@ -1410,7 +1706,12 @@
               to="/plus/checkout"
               class="text-body-sm inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-3 py-1.5 font-medium text-brand-600 transition-colors hover:bg-primary-50"
             >
-              <Icon name="sparkles" :size="16" variant="solid" class="text-current" />
+              <Icon
+name="sparkles"
+:size="16"
+variant="solid"
+class="text-current"
+/>
               Upgrade
             </NuxtLink>
             <button
@@ -1482,8 +1783,14 @@
           </div>
         </div>
 
-        <div v-if="!alertsHydrated" class="flex justify-center py-12">
-          <LoadingState mode="inline" message="Loading alerts..." />
+        <div
+v-if="!alertsHydrated"
+class="flex justify-center py-12"
+>
+          <LoadingState
+mode="inline"
+message="Loading alerts..."
+/>
         </div>
         <div
           v-else-if="alertItems.length === 0"
@@ -1501,7 +1808,11 @@
                 :disabled="alertsLimitReached"
                 @click="openCreateAlert"
               >
-                <Icon name="plus" :size="16" class="text-current" />
+                <Icon
+name="plus"
+:size="16"
+class="text-current"
+/>
                 Create Alert
               </button>
             </template>
@@ -1509,7 +1820,10 @@
         </div>
 
         <!-- Enhanced Alerts Cards -->
-        <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+v-else
+class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+>
           <div
             v-for="alert in alertItems"
             :key="alert.id"
@@ -1582,7 +1896,11 @@
                 <div class="flex items-center">
                   <span class="text-h3">{{ getFlag(getAlertCorridor(alert).from) }}</span>
                   <div class="mx-2 flex flex-col items-center">
-                    <Icon name="arrow-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="arrow-right"
+:size="16"
+class="text-neutral-400"
+/>
                   </div>
                   <span class="text-h3">{{ getFlag(getAlertCorridor(alert).to) }}</span>
                 </div>
@@ -1646,7 +1964,11 @@
                   </div>
                 </div>
                 <div class="px-3">
-                  <Icon name="chevron-right" :size="16" class="text-neutral-300" />
+                  <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-300"
+/>
                 </div>
                 <div class="flex-1 text-center">
                   <div class="text-body-sm mb-0.5 text-neutral-400">Target</div>
@@ -1682,7 +2004,11 @@
 
               <!-- Frequency Badge -->
               <div class="flex items-center gap-2">
-                <Icon name="clock" :size="16" class="text-neutral-400" />
+                <Icon
+name="clock"
+:size="16"
+class="text-neutral-400"
+/>
                 <span class="text-body-sm text-rs-muted">{{
                   formatFrequency(alert.frequency)
                 }}</span>
@@ -1695,7 +2021,11 @@
                 :to="getCorridorUrl(getAlertCorridor(alert).from, getAlertCorridor(alert).to)"
                 class="text-body-sm inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
               >
-                <Icon name="magnifying-glass" :size="16" class="text-current" />
+                <Icon
+name="magnifying-glass"
+:size="16"
+class="text-current"
+/>
                 Compare
               </NuxtLink>
               <button
@@ -1703,7 +2033,11 @@
                 class="text-body-sm inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-rs-border bg-surface px-3 py-2 font-semibold text-neutral-700 transition-colors hover:bg-neutral-100"
                 @click="editAlert(alert)"
               >
-                <Icon name="pencil-square" :size="16" class="text-current" />
+                <Icon
+name="pencil-square"
+:size="16"
+class="text-current"
+/>
                 Edit
               </button>
               <button
@@ -1711,20 +2045,31 @@
                 class="inline-flex items-center justify-center rounded-lg border border-rs-border px-2 py-2 text-neutral-400 transition-colors hover:border-danger-600 hover:bg-danger-600 hover:text-danger-600"
                 @click="openDeleteAlertModal(alert)"
               >
-                <Icon name="trash" :size="16" class="text-current" />
+                <Icon
+name="trash"
+:size="16"
+class="text-current"
+/>
               </button>
             </div>
           </div>
         </div>
 
         <!-- Ad: Plus Features (Free users only) -->
-        <div v-if="!isPlus" class="mt-6 rounded-xl bg-neutral-900 p-6 text-white">
+        <div
+v-if="!isPlus"
+class="mt-6 rounded-xl bg-neutral-900 p-6 text-white"
+>
           <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div class="flex items-start gap-4">
               <div
                 class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600"
               >
-                <Icon name="bell-alert" :size="24" class="text-white" />
+                <Icon
+name="bell-alert"
+:size="24"
+class="text-white"
+/>
               </div>
               <div>
                 <h4 class="mb-1 font-semibold">Need More Alerts?</h4>
@@ -1756,7 +2101,11 @@
               class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
               @click="showExportModal = true"
             >
-              <Icon name="arrow-down-tray" :size="16" class="text-current" />
+              <Icon
+name="arrow-down-tray"
+:size="16"
+class="text-current"
+/>
               Export Data
             </button>
             <button
@@ -1784,7 +2133,10 @@
         </div>
 
         <!-- Export Modal -->
-        <div v-if="showExportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+v-if="showExportModal"
+class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
           <div
             class="absolute inset-0 bg-black/50"
             aria-label="Close dialog"
@@ -1799,16 +2151,28 @@
                 aria-label="Close dialog"
                 @click="showExportModal = false"
               >
-                <Icon name="x" :size="20" class="text-current" />
+                <Icon
+name="x"
+:size="20"
+class="text-current"
+/>
               </button>
             </div>
 
             <!-- Paid-plan gate -->
-            <div v-if="!exportsEnabled" class="py-6 text-center">
+            <div
+v-if="!exportsEnabled"
+class="py-6 text-center"
+>
               <div
                 class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-50"
               >
-                <Icon name="sparkles" :size="24" variant="solid" class="text-brand-600" />
+                <Icon
+name="sparkles"
+:size="24"
+variant="solid"
+class="text-brand-600"
+/>
               </div>
               <h4 class="text-body mb-2 font-semibold text-rs-fg">Paid Feature</h4>
               <p class="text-body-sm mb-6 text-rs-muted">
@@ -1823,11 +2187,12 @@
             </div>
 
             <!-- Export form for Plus users -->
-            <div v-else class="space-y-6">
+            <div
+v-else
+class="space-y-6"
+>
               <div>
-                <label class="text-body-sm mb-3 block font-semibold text-rs-fg"
-                  >Data to Export</label
-                >
+                <label class="text-body-sm mb-3 block font-semibold text-rs-fg">Data to Export</label>
                 <div class="space-y-2.5">
                   <label
                     class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3.5 transition-all"
@@ -1842,7 +2207,7 @@
                       type="radio"
                       value="history"
                       class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">Comparison History</div>
                       <div class="text-body-sm mt-0.5 text-rs-muted">All your rate comparisons</div>
@@ -1861,7 +2226,7 @@
                       type="radio"
                       value="watchlist"
                       class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">Watchlist</div>
                       <div class="text-body-sm mt-0.5 text-rs-muted">Saved corridors and rates</div>
@@ -1880,7 +2245,7 @@
                       type="radio"
                       value="alerts"
                       class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">Alerts</div>
                       <div class="text-body-sm mt-0.5 text-rs-muted">Alert rules and history</div>
@@ -1899,7 +2264,7 @@
                       type="radio"
                       value="all"
                       class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">All Data</div>
                       <div class="text-body-sm mt-0.5 text-rs-muted">
@@ -1921,7 +2286,7 @@
                       type="radio"
                       value="indices"
                       class="h-4 w-4 border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                     <div class="flex-1">
                       <div class="text-body-sm font-semibold text-rs-fg">TEER / RCI / RVI</div>
                       <div class="text-body-sm mt-0.5 text-rs-muted">
@@ -1958,7 +2323,7 @@
                     :disabled="
                       exportCorridorIds.length === 0 || exportSettings.dataType === 'indices'
                     "
-                  />
+                  >
                   <div class="flex-1">
                     <div class="text-body-sm font-semibold text-rs-fg">
                       Include corridor history (Pulse indices)
@@ -1970,7 +2335,10 @@
                       Adds Pulse indices history for {{ exportCorridorIds.length }} watchlist
                       corridor{{ exportCorridorIds.length !== 1 ? 's' : '' }} (max 16).
                     </div>
-                    <div v-else class="text-body-sm mt-0.5 text-rs-muted">
+                    <div
+v-else
+class="text-body-sm mt-0.5 text-rs-muted"
+>
                       Add corridors to your watchlist to include indices history in this export.
                     </div>
                   </div>
@@ -1978,9 +2346,7 @@
               </div>
 
               <div>
-                <label class="text-body-sm mb-3 block font-semibold text-rs-fg"
-                  >Export Format</label
-                >
+                <label class="text-body-sm mb-3 block font-semibold text-rs-fg">Export Format</label>
                 <div class="grid grid-cols-2 gap-3">
                   <label
                     class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3.5 transition-all"
@@ -1995,8 +2361,12 @@
                       type="radio"
                       value="csv"
                       class="sr-only"
-                    />
-                    <Icon name="document-text" :size="20" class="text-current" />
+                    >
+                    <Icon
+name="document-text"
+:size="20"
+class="text-current"
+/>
                     <span class="text-body-sm font-semibold">CSV</span>
                   </label>
                   <label
@@ -2012,18 +2382,31 @@
                       type="radio"
                       value="pdf"
                       class="sr-only"
-                    />
-                    <Icon name="document-text" :size="20" class="text-current" />
+                    >
+                    <Icon
+name="document-text"
+:size="20"
+class="text-current"
+/>
                     <span class="text-body-sm font-semibold">PDF</span>
                   </label>
                 </div>
               </div>
 
-              <div v-if="exportStatusMessage || exportErrorMessage" class="text-body-sm">
-                <p v-if="exportErrorMessage" class="text-danger-600">
+              <div
+v-if="exportStatusMessage || exportErrorMessage"
+class="text-body-sm"
+>
+                <p
+v-if="exportErrorMessage"
+class="text-danger-600"
+>
                   {{ exportErrorMessage }}
                 </p>
-                <p v-else class="text-neutral-600">
+                <p
+v-else
+class="text-neutral-600"
+>
                   {{ exportStatusMessage }}
                 </p>
               </div>
@@ -2074,7 +2457,11 @@
                 :disabled="accountDeleting"
                 @click="closeDeleteAccountModal"
               >
-                <Icon name="x" :size="20" class="text-current" />
+                <Icon
+name="x"
+:size="20"
+class="text-current"
+/>
               </button>
             </div>
 
@@ -2096,7 +2483,7 @@
                   v-model="deleteAccountConfirmed"
                   type="checkbox"
                   class="h-4 w-4 rounded border-neutral-300 text-danger-600 focus:ring-danger-600"
-                />
+                >
                 I understand this action cannot be undone.
               </label>
               <input
@@ -2104,11 +2491,17 @@
                 type="text"
                 placeholder="Type DELETE to confirm"
                 class="text-body-sm w-full rounded-lg border border-rs-border px-3 py-2 text-neutral-700 focus:border-danger-600 focus:outline-none focus:ring-2 focus:ring-danger-600"
-              />
-              <p v-if="deleteAccountError" class="text-body-sm text-danger-600">
+              >
+              <p
+v-if="deleteAccountError"
+class="text-body-sm text-danger-600"
+>
                 {{ deleteAccountError }}
               </p>
-              <p v-else-if="deleteAccountWarning" class="text-body-sm text-warning-600">
+              <p
+v-else-if="deleteAccountWarning"
+class="text-body-sm text-warning-600"
+>
                 {{ deleteAccountWarning }}
               </p>
             </div>
@@ -2158,26 +2551,26 @@
                 aria-label="Close dialog"
                 @click="closeDeleteWatchlistModal"
               >
-                <Icon name="x" :size="20" class="text-current" />
+                <Icon
+name="x"
+:size="20"
+class="text-current"
+/>
               </button>
             </div>
 
             <div class="text-body-sm space-y-4 text-neutral-600">
               <p v-if="watchlistItemToDelete?.target.type === 'corridor'">
                 Are you sure you want to remove
-                <strong class="font-semibold text-rs-fg"
-                  >{{ watchlistItemToDelete.target.from }} →
-                  {{ watchlistItemToDelete.target.to }}</strong
-                >
+                <strong class="font-semibold text-rs-fg">{{ watchlistItemToDelete.target.from }} →
+                  {{ watchlistItemToDelete.target.to }}</strong>
                 from your watchlist?
               </p>
               <p v-else-if="watchlistItemToDelete?.target.type === 'fxPair'">
                 Are you sure you want to remove
-                <strong class="font-semibold text-rs-fg"
-                  >{{ watchlistItemToDelete.target.base }}/{{
+                <strong class="font-semibold text-rs-fg">{{ watchlistItemToDelete.target.base }}/{{
                     watchlistItemToDelete.target.quote
-                  }}</strong
-                >
+                  }}</strong>
                 from your watchlist?
               </p>
               <p v-else>Are you sure you want to remove this item from your watchlist?</p>
@@ -2222,13 +2615,20 @@
                 aria-label="Close dialog"
                 @click="closeDeleteAlertModal"
               >
-                <Icon name="x" :size="20" class="text-current" />
+                <Icon
+name="x"
+:size="20"
+class="text-current"
+/>
               </button>
             </div>
 
             <div class="text-body-sm space-y-4 text-neutral-600">
               <p>Are you sure you want to delete this alert?</p>
-              <p v-if="alertToDelete" class="rounded-xl border border-rs-border bg-neutral-50 p-3">
+              <p
+v-if="alertToDelete"
+class="rounded-xl border border-rs-border bg-neutral-50 p-3"
+>
                 <span class="font-semibold text-rs-fg">
                   {{ watchlistFindById(alertToDelete.watchlistItemId)?.label || 'Alert' }}
                 </span>
@@ -2261,14 +2661,27 @@
           </div>
         </div>
 
-        <div v-if="!compareHydrated" class="flex justify-center py-12">
-          <LoadingState mode="inline" message="Loading comparisons..." />
+        <div
+v-if="!compareHydrated"
+class="flex justify-center py-12"
+>
+          <LoadingState
+mode="inline"
+message="Loading comparisons..."
+/>
         </div>
-        <div v-else-if="compareRuns.length === 0" class="py-16 text-center">
+        <div
+v-else-if="compareRuns.length === 0"
+class="py-16 text-center"
+>
           <div
             class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100"
           >
-            <Icon name="clock" :size="24" class="text-neutral-400" />
+            <Icon
+name="clock"
+:size="24"
+class="text-neutral-400"
+/>
           </div>
           <h3 class="text-body-lg mb-2 font-semibold text-rs-fg">No comparisons yet</h3>
           <p class="text-body-sm mx-auto mb-6 max-w-sm text-rs-muted">
@@ -2296,20 +2709,22 @@
                 type="checkbox"
                 :value="run.id"
                 class="h-4 w-4 flex-shrink-0 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-              />
+              >
               <div class="flex min-w-0 flex-1 items-center gap-3">
                 <div class="flex flex-shrink-0 items-center gap-2">
                   <span class="text-h4">{{ getFlag(run.from) }}</span>
-                  <Icon name="arrow-right" :size="16" class="text-neutral-400" />
+                  <Icon
+name="arrow-right"
+:size="16"
+class="text-neutral-400"
+/>
                   <span class="text-h4">{{ getFlag(run.to) }}</span>
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <span class="font-semibold text-rs-fg">{{ run.from }}/{{ run.to }}</span>
                     <span class="text-neutral-400">•</span>
-                    <span class="text-body-sm font-medium text-success-600"
-                      >Sent {{ formatCurrency(run.amount, run.from) }}</span
-                    >
+                    <span class="text-body-sm font-medium text-success-600">Sent {{ formatCurrency(run.amount, run.from) }}</span>
                     <span class="text-neutral-400">•</span>
                     <span class="text-body-sm font-medium capitalize text-brand-600">{{
                       run.method
@@ -2334,12 +2749,19 @@
         </div>
 
         <!-- Ad: Extended History (Free users only) -->
-        <div v-if="!isPlus" class="mt-6 rounded-xl border border-primary-200 bg-primary-50 p-5">
+        <div
+v-if="!isPlus"
+class="mt-6 rounded-xl border border-primary-200 bg-primary-50 p-5"
+>
           <div class="flex items-start gap-4">
             <div
               class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100"
             >
-              <Icon name="clock" :size="20" class="text-brand-600" />
+              <Icon
+name="clock"
+:size="20"
+class="text-brand-600"
+/>
             </div>
             <div class="flex-1">
               <h4 class="text-body-sm mb-1 font-semibold text-brand-600">
@@ -2354,7 +2776,11 @@
                 class="text-body-sm inline-flex items-center gap-1 font-semibold text-brand-600 hover:text-brand-700"
               >
                 Upgrade to Plus
-                <Icon name="chevron-right" :size="16" class="text-current" />
+                <Icon
+name="chevron-right"
+:size="16"
+class="text-current"
+/>
               </NuxtLink>
             </div>
           </div>
@@ -2365,12 +2791,10 @@
           v-if="selectedExportItems.length > 0 && isPlus"
           class="fixed bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-neutral-900 px-6 py-3 text-white shadow-lg"
         >
-          <span class="text-body-sm"
-            >{{ selectedExportItems.length }} item{{
+          <span class="text-body-sm">{{ selectedExportItems.length }} item{{
               selectedExportItems.length !== 1 ? 's' : ''
             }}
-            selected</span
-          >
+            selected</span>
           <button
             type="button"
             class="text-body-sm font-medium text-primary-400 hover:text-primary-300"
@@ -2384,7 +2808,11 @@
             aria-label="Clear selection"
             @click="selectedExportItems = []"
           >
-            <Icon name="x" :size="16" class="text-current" />
+            <Icon
+name="x"
+:size="16"
+class="text-current"
+/>
           </button>
         </div>
       </div>
@@ -2486,8 +2914,14 @@
               </div>
             </div>
 
-            <div v-if="opsLoading[provider.id]" class="px-6 py-6">
-              <LoadingState mode="inline" message="Loading health data..." />
+            <div
+v-if="opsLoading[provider.id]"
+class="px-6 py-6"
+>
+              <LoadingState
+mode="inline"
+message="Loading health data..."
+/>
             </div>
             <div
               v-else-if="opsErrors[provider.id]"
@@ -2495,7 +2929,10 @@
             >
               {{ opsErrors[provider.id] }}
             </div>
-            <div v-else-if="!opsState[provider.id]" class="text-body-sm px-6 py-6 text-rs-muted">
+            <div
+v-else-if="!opsState[provider.id]"
+class="text-body-sm px-6 py-6 text-rs-muted"
+>
               No health data loaded yet.
             </div>
             <div v-else>
@@ -2601,8 +3038,8 @@
               </div>
               <div
                 v-else-if="
-                  isProviderExpanded(provider.id) &&
-                  (opsState[provider.id]?.corridors?.length ?? 0) > OPS_CORRIDOR_PREVIEW_LIMIT
+                  isProviderExpanded(provider.id)
+                  && (opsState[provider.id]?.corridors?.length ?? 0) > OPS_CORRIDOR_PREVIEW_LIMIT
                 "
                 class="border-t border-neutral-100 px-5 py-2 text-center"
               >
@@ -2659,7 +3096,7 @@
                     type="email"
                     placeholder="user@example.com"
                     class="text-body-sm w-full rounded-lg border border-rs-border px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
+                  >
                   <select
                     v-model="adminPlanSelection"
                     class="text-body-sm w-full rounded-lg border border-rs-border px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
@@ -2674,7 +3111,7 @@
                     type="text"
                     placeholder="Notes (company name, deal terms...)"
                     class="text-body-sm w-full rounded-lg border border-rs-border px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
+                  >
                   <button
                     type="button"
                     class="text-body-sm inline-flex items-center justify-center rounded-lg bg-neutral-900 px-3 py-2 font-semibold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
@@ -2683,10 +3120,16 @@
                   >
                     {{ adminPlanLoading ? 'Updating...' : 'Set plan' }}
                   </button>
-                  <p v-if="adminPlanSuccess" class="text-body-sm text-success-600">
+                  <p
+v-if="adminPlanSuccess"
+class="text-body-sm text-success-600"
+>
                     {{ adminPlanSuccess }}
                   </p>
-                  <p v-else-if="adminPlanError" class="text-body-sm text-warning-600">
+                  <p
+v-else-if="adminPlanError"
+class="text-body-sm text-warning-600"
+>
                     {{ adminPlanError }}
                   </p>
                 </div>
@@ -2740,7 +3183,11 @@
                     v-model.number="telemetryHours"
                     class="text-body-sm mt-1 w-full rounded-lg border border-rs-border px-3 py-2"
                   >
-                    <option v-for="option in telemetryHourOptions" :key="option" :value="option">
+                    <option
+v-for="option in telemetryHourOptions"
+:key="option"
+:value="option"
+>
                       {{ option }}h
                     </option>
                   </select>
@@ -2752,14 +3199,29 @@
               >
                 {{ telemetryError }}
               </p>
-              <div v-else class="mt-4">
-                <div v-if="telemetryLoading" class="py-2">
-                  <LoadingState mode="inline" message="Loading telemetry analytics..." />
+              <div
+v-else
+class="mt-4"
+>
+                <div
+v-if="telemetryLoading"
+class="py-2"
+>
+                  <LoadingState
+mode="inline"
+message="Loading telemetry analytics..."
+/>
                 </div>
-                <div v-else-if="!telemetryLatest" class="text-body-sm text-rs-muted">
+                <div
+v-else-if="!telemetryLatest"
+class="text-body-sm text-rs-muted"
+>
                   No telemetry aggregates yet.
                 </div>
-                <div v-else class="space-y-3">
+                <div
+v-else
+class="space-y-3"
+>
                   <div class="text-body-sm flex flex-wrap items-center gap-3 text-rs-muted">
                     <span>Bucket: {{ formatOpsTimestamp(telemetryLatest.time_bucket) }}</span>
                     <span v-if="telemetryWindowHours">Window: {{ telemetryWindowHours }}h</span>
@@ -2786,14 +3248,23 @@
                       </div>
                     </div>
                   </div>
-                  <div v-else class="overflow-auto">
+                  <div
+v-else
+class="overflow-auto"
+>
                     <table class="text-body-sm min-w-full">
                       <thead class="text-body-sm uppercase text-neutral-400">
                         <tr>
-                          <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">
+                          <th
+v-if="telemetryMetric === 'heatmap'"
+class="px-3 py-2 text-left"
+>
                             From
                           </th>
-                          <th v-if="telemetryMetric === 'heatmap'" class="px-3 py-2 text-left">
+                          <th
+v-if="telemetryMetric === 'heatmap'"
+class="px-3 py-2 text-left"
+>
                             To
                           </th>
                           <th
@@ -2825,10 +3296,16 @@
                           :key="row.key"
                           class="border-t border-neutral-100"
                         >
-                          <td v-if="telemetryMetric === 'heatmap'" class="py-2 text-neutral-700">
+                          <td
+v-if="telemetryMetric === 'heatmap'"
+class="py-2 text-neutral-700"
+>
                             {{ row.from || '—' }}
                           </td>
-                          <td v-if="telemetryMetric === 'heatmap'" class="py-2 text-neutral-700">
+                          <td
+v-if="telemetryMetric === 'heatmap'"
+class="py-2 text-neutral-700"
+>
                             {{ row.to || '—' }}
                           </td>
                           <td
@@ -2929,10 +3406,12 @@
                   • {{ opsSuppressedCount }} row{{
                     opsSuppressedCount === 1 ? '' : 's'
                   }}
-                  suppressed/grouped</span
-                >
+                  suppressed/grouped</span>
               </p>
-              <div v-if="!opsAnalyticsError" class="text-body-sm mt-4 grid gap-6 md:grid-cols-2">
+              <div
+v-if="!opsAnalyticsError"
+class="text-body-sm mt-4 grid gap-6 md:grid-cols-2"
+>
                 <div>
                   <div class="text-body-sm uppercase tracking-wide text-neutral-400">
                     Popular corridors
@@ -2943,22 +3422,21 @@
                       :key="row.corridor_id"
                       class="flex items-center justify-between gap-4"
                     >
-                      <span class="text-neutral-700"
-                        >{{ row.from_country }} → {{ row.to_country }}</span
-                      >
+                      <span class="text-neutral-700">{{ row.from_country }} → {{ row.to_country }}</span>
                       <span class="text-body-sm text-rs-muted">
                         {{ row.search_count }} searches
                         <span v-if="row.trend_percentage !== undefined">
-                          • {{ formatTrendPercentage(row.trend_percentage) }}</span
-                        >
-                        <span v-if="row.suppressionReason" class="ml-1 text-neutral-400">
+                          • {{ formatTrendPercentage(row.trend_percentage) }}</span>
+                        <span
+v-if="row.suppressionReason"
+class="ml-1 text-neutral-400"
+>
                           •
                           {{
                             row.suppressionReason === 'low_volume_grouped'
                               ? 'grouped'
                               : row.suppressionReason
-                          }}</span
-                        >
+                          }}</span>
                       </span>
                     </li>
                     <li
@@ -2985,8 +3463,7 @@
                       <span class="text-body-sm text-rs-muted">
                         {{ row.click_through_rate }}% CTR
                         <span v-if="row.quote_count">
-                          • {{ formatOpsNumber(row.quote_count, 0) }} quotes</span
-                        >
+                          • {{ formatOpsNumber(row.quote_count, 0) }} quotes</span>
                       </span>
                     </li>
                     <li
@@ -3002,8 +3479,7 @@
                 <NuxtLink
                   to="/admin/analytics"
                   class="font-semibold text-brand-600 hover:text-brand-700"
-                  >Open analytics console →</NuxtLink
-                >
+                  >Open analytics console →</NuxtLink>
               </div>
             </div>
 
@@ -3051,7 +3527,10 @@
               >
                 {{ opsAuditError }}
               </p>
-              <div v-else class="mt-4 overflow-auto">
+              <div
+v-else
+class="mt-4 overflow-auto"
+>
                 <table class="text-body-sm min-w-full">
                   <thead class="text-body-sm uppercase text-neutral-400">
                     <tr>
@@ -3075,7 +3554,10 @@
                       <td class="py-2 text-neutral-600">{{ log.severity || 'info' }}</td>
                     </tr>
                     <tr v-if="!opsAuditLoading && opsAuditLogs.length === 0">
-                      <td colspan="4" class="text-body-sm py-3 text-center text-neutral-400">
+                      <td
+colspan="4"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                         No audit events found.
                       </td>
                     </tr>
@@ -3086,8 +3568,7 @@
                 <NuxtLink
                   to="/admin/audit"
                   class="font-semibold text-brand-600 hover:text-brand-700"
-                  >Open audit console →</NuxtLink
-                >
+                  >Open audit console →</NuxtLink>
               </div>
             </div>
           </div>
@@ -3146,10 +3627,12 @@
               • {{ opsSuppressedCount }} row{{
                 opsSuppressedCount === 1 ? '' : 's'
               }}
-              suppressed/grouped</span
-            >
+              suppressed/grouped</span>
           </p>
-          <div v-if="!opsAnalyticsError" class="mt-4 space-y-6">
+          <div
+v-if="!opsAnalyticsError"
+class="mt-4 space-y-6"
+>
             <div class="text-body-sm grid gap-3 text-neutral-700 sm:grid-cols-2 lg:grid-cols-3">
               <div class="rounded-lg border border-neutral-100 p-3">
                 <div class="text-body-sm uppercase tracking-wide text-neutral-400">
@@ -3232,7 +3715,10 @@
                         </td>
                       </tr>
                       <tr v-if="opsRevenueRows.length === 0">
-                        <td colspan="4" class="text-body-sm py-3 text-center text-neutral-400">
+                        <td
+colspan="4"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                           No affiliate click data yet.
                         </td>
                       </tr>
@@ -3275,7 +3761,10 @@
                         </td>
                       </tr>
                       <tr v-if="opsProviderImpact.length === 0">
-                        <td colspan="4" class="text-body-sm py-3 text-center text-neutral-400">
+                        <td
+colspan="4"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                           No conversion data yet.
                         </td>
                       </tr>
@@ -3325,7 +3814,10 @@
                       </td>
                     </tr>
                     <tr v-if="opsProviderCorridors.length === 0">
-                      <td colspan="6" class="text-body-sm py-3 text-center text-neutral-400">
+                      <td
+colspan="6"
+class="text-body-sm py-3 text-center text-neutral-400"
+>
                         No corridor conversion data yet.
                       </td>
                     </tr>
@@ -3355,7 +3847,11 @@
                 "
                 @click="activeAccountSection = section.id"
               >
-                <Icon :name="section.icon" :size="16" class="text-current" />
+                <Icon
+:name="section.icon"
+:size="16"
+class="text-current"
+/>
                 {{ section.label }}
               </button>
             </nav>
@@ -3364,7 +3860,10 @@
           <!-- Account Content -->
           <div class="max-w-2xl flex-1">
             <!-- Profile Section -->
-            <div v-if="activeAccountSection === 'profile'" class="space-y-6">
+            <div
+v-if="activeAccountSection === 'profile'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Profile</h2>
                 <p class="text-body-sm text-rs-muted">Manage your personal information</p>
@@ -3386,26 +3885,22 @@
 
                 <div class="space-y-4">
                   <div>
-                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                      >Display Name</label
-                    >
+                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">Display Name</label>
                     <input
                       v-model="profileName"
                       type="text"
                       class="text-body-sm w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                       placeholder="Your name"
-                    />
+                    >
                   </div>
                   <div>
-                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                      >Email Address</label
-                    >
+                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">Email Address</label>
                     <input
                       type="email"
                       :value="user?.email"
                       disabled
                       class="text-body-sm w-full rounded-lg border border-rs-border bg-neutral-50 px-3 py-2 text-rs-muted"
-                    />
+                    >
                     <p class="text-body-sm mt-1 text-neutral-400">
                       Contact support to change your email
                     </p>
@@ -3419,10 +3914,18 @@
                     v-if="profileSaved"
                     class="text-body-sm flex items-center gap-2 text-success-600"
                   >
-                    <Icon name="check-circle" :size="16" variant="solid" class="text-current" />
+                    <Icon
+name="check-circle"
+:size="16"
+variant="solid"
+class="text-current"
+/>
                     Changes saved!
                   </div>
-                  <p v-else-if="profileSaveError" class="text-body-sm text-danger-600">
+                  <p
+v-else-if="profileSaveError"
+class="text-body-sm text-danger-600"
+>
                     {{ profileSaveError }}
                   </p>
                   <div v-else />
@@ -3438,7 +3941,10 @@
             </div>
 
             <!-- Billing Section -->
-            <div v-else-if="activeAccountSection === 'billing'" class="space-y-6">
+            <div
+v-else-if="activeAccountSection === 'billing'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Billing</h2>
                 <p class="text-body-sm text-rs-muted">
@@ -3498,7 +4004,10 @@
                       billingRenewalValue
                     }}</span>
                   </div>
-                  <div v-if="hasStoredPaidPlan" class="flex items-baseline justify-between">
+                  <div
+v-if="hasStoredPaidPlan"
+class="flex items-baseline justify-between"
+>
                     <span class="text-body-sm text-neutral-600">Amount</span>
                     <span class="text-body-sm font-medium text-rs-fg">
                       {{ formatBillingAmount(billingSummary?.amount, billingSummary?.currency) }}
@@ -3514,7 +4023,12 @@
                     <div
                       class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary-100"
                     >
-                      <Icon name="sparkles" :size="16" variant="solid" class="text-brand-600" />
+                      <Icon
+name="sparkles"
+:size="16"
+variant="solid"
+class="text-brand-600"
+/>
                     </div>
                     <div class="flex-1">
                       <h4 class="text-body-sm font-semibold text-rs-fg">
@@ -3535,7 +4049,10 @@
                   </div>
                 </div>
 
-                <div v-if="showBillingPortalButton" class="flex gap-3">
+                <div
+v-if="showBillingPortalButton"
+class="flex gap-3"
+>
                   <button
                     type="button"
                     class="text-body-sm rounded-lg bg-neutral-100 px-4 py-2 font-medium text-neutral-700 transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-70"
@@ -3570,15 +4087,13 @@
                     </div>
                     <div>
                       <div class="text-body-sm font-medium text-rs-fg">
-                        <span v-if="billingSummary?.payment_method?.last4"
-                          >•••• •••• •••• {{ billingSummary?.payment_method?.last4 }}</span
-                        >
+                        <span v-if="billingSummary?.payment_method?.last4">•••• •••• •••• {{ billingSummary?.payment_method?.last4 }}</span>
                         <span v-else>No payment method on file</span>
                       </div>
                       <div
                         v-if="
-                          billingSummary?.payment_method?.exp_month &&
-                          billingSummary?.payment_method?.exp_year
+                          billingSummary?.payment_method?.exp_month
+                          && billingSummary?.payment_method?.exp_year
                         "
                         class="text-body-sm text-rs-muted"
                       >
@@ -3604,16 +4119,31 @@
                 class="rounded-xl border border-rs-border bg-surface p-6"
               >
                 <h3 class="mb-4 font-medium text-rs-fg">Billing History</h3>
-                <div v-if="billingHistoryLoading" class="py-2">
-                  <LoadingState mode="inline" message="Loading billing history..." />
+                <div
+v-if="billingHistoryLoading"
+class="py-2"
+>
+                  <LoadingState
+mode="inline"
+message="Loading billing history..."
+/>
                 </div>
-                <div v-else-if="billingHistoryError" class="text-body-sm text-danger-600">
+                <div
+v-else-if="billingHistoryError"
+class="text-body-sm text-danger-600"
+>
                   {{ billingHistoryError }}
                 </div>
-                <div v-else-if="billingHistory.length === 0" class="text-body-sm text-rs-muted">
+                <div
+v-else-if="billingHistory.length === 0"
+class="text-body-sm text-rs-muted"
+>
                   No invoices yet.
                 </div>
-                <div v-else class="space-y-3">
+                <div
+v-else
+class="space-y-3"
+>
                   <div
                     v-for="(invoice, index) in billingHistory"
                     :key="invoice.id"
@@ -3646,7 +4176,10 @@
             </div>
 
             <!-- Notifications Section -->
-            <div v-else-if="activeAccountSection === 'notifications'" class="space-y-6">
+            <div
+v-else-if="activeAccountSection === 'notifications'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Notifications</h2>
                 <p class="text-body-sm text-rs-muted">Choose how you want to be notified</p>
@@ -3666,7 +4199,7 @@
                       v-model="notificationSettings.rateAlerts"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -3679,7 +4212,7 @@
                       v-model="notificationSettings.weeklySummary"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -3694,7 +4227,7 @@
                       v-model="notificationSettings.marketUpdates"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -3707,7 +4240,7 @@
                       v-model="notificationSettings.productUpdates"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -3722,7 +4255,7 @@
                       v-model="notificationSettings.promotional"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                 </div>
               </div>
@@ -3754,7 +4287,10 @@
                     }}
                   </button>
                 </div>
-                <p v-if="!pushSupported" class="text-body-sm mt-3 text-rs-muted">
+                <p
+v-if="!pushSupported"
+class="text-body-sm mt-3 text-rs-muted"
+>
                   Push notifications are not supported in this browser.
                 </p>
                 <p
@@ -3775,22 +4311,37 @@
                   {{ notificationLoading ? 'Saving…' : 'Save Preferences' }}
                 </button>
               </div>
-              <p v-if="notificationSaveSuccess" class="text-body-sm text-success-600">
+              <p
+v-if="notificationSaveSuccess"
+class="text-body-sm text-success-600"
+>
                 Notification settings saved.
               </p>
-              <p v-else-if="notificationSaveError" class="text-body-sm text-danger-600">
+              <p
+v-else-if="notificationSaveError"
+class="text-body-sm text-danger-600"
+>
                 {{ notificationSaveError }}
               </p>
-              <p v-else-if="notificationLoadError" class="text-body-sm text-danger-600">
+              <p
+v-else-if="notificationLoadError"
+class="text-body-sm text-danger-600"
+>
                 {{ notificationLoadError }}
               </p>
-              <p v-else-if="privacyLoadError" class="text-body-sm text-danger-600">
+              <p
+v-else-if="privacyLoadError"
+class="text-body-sm text-danger-600"
+>
                 {{ privacyLoadError }}
               </p>
             </div>
 
             <!-- Security Section -->
-            <div v-else-if="activeAccountSection === 'security'" class="space-y-6">
+            <div
+v-else-if="activeAccountSection === 'security'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Security</h2>
                 <p class="text-body-sm text-rs-muted">Manage your account security settings</p>
@@ -3803,37 +4354,31 @@
                 </p>
                 <div class="space-y-4">
                   <div>
-                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                      >Current Password</label
-                    >
+                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">Current Password</label>
                     <input
                       v-model="securitySettings.currentPassword"
                       type="password"
                       class="text-body-sm w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                       placeholder="••••••••"
-                    />
+                    >
                   </div>
                   <div>
-                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                      >New Password</label
-                    >
+                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">New Password</label>
                     <input
                       v-model="securitySettings.newPassword"
                       type="password"
                       class="text-body-sm w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                       placeholder="••••••••"
-                    />
+                    >
                   </div>
                   <div>
-                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700"
-                      >Confirm New Password</label
-                    >
+                    <label class="text-body-sm mb-1.5 block font-medium text-neutral-700">Confirm New Password</label>
                     <input
                       v-model="securitySettings.confirmPassword"
                       type="password"
                       class="text-body-sm w-full rounded-lg border border-neutral-300 bg-surface px-3 py-2 text-rs-fg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                       placeholder="••••••••"
-                    />
+                    >
                   </div>
                 </div>
                 <div
@@ -3888,16 +4433,31 @@
 
               <div class="rounded-xl border border-rs-border bg-surface p-6">
                 <h3 class="mb-4 font-medium text-rs-fg">Active Sessions</h3>
-                <div v-if="sessionsLoading" class="py-2">
-                  <LoadingState mode="inline" message="Loading sessions..." />
+                <div
+v-if="sessionsLoading"
+class="py-2"
+>
+                  <LoadingState
+mode="inline"
+message="Loading sessions..."
+/>
                 </div>
-                <div v-else-if="sessionsError" class="text-body-sm text-danger-600">
+                <div
+v-else-if="sessionsError"
+class="text-body-sm text-danger-600"
+>
                   {{ sessionsError }}
                 </div>
-                <div v-else-if="sessions.length === 0" class="text-body-sm text-rs-muted">
+                <div
+v-else-if="sessions.length === 0"
+class="text-body-sm text-rs-muted"
+>
                   No active sessions found.
                 </div>
-                <div v-else class="space-y-3">
+                <div
+v-else
+class="space-y-3"
+>
                   <div
                     v-for="session in sessions"
                     :key="session.id"
@@ -3952,7 +4512,10 @@
             </div>
 
             <!-- Privacy Section -->
-            <div v-else-if="activeAccountSection === 'privacy'" class="space-y-6">
+            <div
+v-else-if="activeAccountSection === 'privacy'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Privacy</h2>
                 <p class="text-body-sm text-rs-muted">Control your data and privacy settings</p>
@@ -3972,7 +4535,7 @@
                       v-model="privacySettings.analytics"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -3989,7 +4552,7 @@
                       v-model="privacySettings.personalization"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                   <label
                     class="flex cursor-pointer items-center justify-between border-t border-neutral-100 pt-4"
@@ -4004,7 +4567,7 @@
                       v-model="privacySettings.marketing"
                       type="checkbox"
                       class="h-5 w-5 rounded border-neutral-300 text-brand-600 focus:ring-primary-500"
-                    />
+                    >
                   </label>
                 </div>
               </div>
@@ -4025,10 +4588,16 @@
                       Request Download
                     </button>
                   </div>
-                  <p v-if="gdprExportStatus" class="text-body-sm text-success-600">
+                  <p
+v-if="gdprExportStatus"
+class="text-body-sm text-success-600"
+>
                     {{ gdprExportStatus }}
                   </p>
-                  <p v-else-if="gdprExportError" class="text-body-sm text-danger-600">
+                  <p
+v-else-if="gdprExportError"
+class="text-body-sm text-danger-600"
+>
                     {{ gdprExportError }}
                   </p>
                   <div class="flex items-center justify-between border-t border-neutral-100 pt-4">
@@ -4059,16 +4628,25 @@
                   {{ privacyLoading ? 'Saving…' : 'Save Preferences' }}
                 </button>
               </div>
-              <p v-if="privacySaveSuccess" class="text-body-sm text-success-600">
+              <p
+v-if="privacySaveSuccess"
+class="text-body-sm text-success-600"
+>
                 Preferences saved.
               </p>
-              <p v-else-if="privacySaveError" class="text-body-sm text-danger-600">
+              <p
+v-else-if="privacySaveError"
+class="text-body-sm text-danger-600"
+>
                 {{ privacySaveError }}
               </p>
             </div>
 
             <!-- Compliance Section -->
-            <div v-else-if="activeAccountSection === 'compliance'" class="space-y-6">
+            <div
+v-else-if="activeAccountSection === 'compliance'"
+class="space-y-6"
+>
               <div>
                 <h2 class="text-body-lg font-semibold text-rs-fg">Compliance</h2>
                 <p class="text-body-sm text-rs-muted">Regulatory information and data rights</p>
@@ -4146,30 +4724,54 @@
                     class="flex items-center justify-between rounded-lg bg-neutral-50 p-3 transition-colors hover:bg-neutral-100"
                   >
                     <div class="flex items-center gap-3">
-                      <Icon name="document-text" :size="20" class="text-neutral-400" />
+                      <Icon
+name="document-text"
+:size="20"
+class="text-neutral-400"
+/>
                       <span class="text-body-sm font-medium text-rs-fg">Privacy Policy</span>
                     </div>
-                    <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                   </NuxtLink>
                   <NuxtLink
                     to="/terms"
                     class="flex items-center justify-between rounded-lg bg-neutral-50 p-3 transition-colors hover:bg-neutral-100"
                   >
                     <div class="flex items-center gap-3">
-                      <Icon name="document-text" :size="20" class="text-neutral-400" />
+                      <Icon
+name="document-text"
+:size="20"
+class="text-neutral-400"
+/>
                       <span class="text-body-sm font-medium text-rs-fg">Terms of Service</span>
                     </div>
-                    <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                   </NuxtLink>
                   <NuxtLink
                     to="/cookies"
                     class="flex items-center justify-between rounded-lg bg-neutral-50 p-3 transition-colors hover:bg-neutral-100"
                   >
                     <div class="flex items-center gap-3">
-                      <Icon name="document-text" :size="20" class="text-neutral-400" />
+                      <Icon
+name="document-text"
+:size="20"
+class="text-neutral-400"
+/>
                       <span class="text-body-sm font-medium text-rs-fg">Cookie Policy</span>
                     </div>
-                    <Icon name="chevron-right" :size="16" class="text-neutral-400" />
+                    <Icon
+name="chevron-right"
+:size="16"
+class="text-neutral-400"
+/>
                   </NuxtLink>
                 </div>
               </div>
@@ -4193,7 +4795,10 @@
       </div>
     </CenteredPage>
 
-    <ProviderVisitPrompt ref="providerVisitPromptRef" :auto-open="false" />
+    <ProviderVisitPrompt
+ref="providerVisitPromptRef"
+:auto-open="false"
+/>
 
     <LimitReachedModal
       v-if="limitModalOpen"
@@ -4220,13 +4825,13 @@
 </template>
 
 <script setup lang="ts">
-import type { LocationQueryRaw } from 'vue-router';
+import type { LocationQueryRaw } from 'vue-router'
 
-import AdPlacement from '~/components/ads/AdPlacement.vue';
-import UniversalDropdown from '~/components/shared/UniversalDropdown.vue';
-import ProviderLogo from '~/components/shared/ProviderLogo.vue';
-import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue';
-import { CenteredPage, DataTable, EmptyState, Icon, type IconName, LoadingState } from '~/ui';
+import AdPlacement from '~/components/ads/AdPlacement.vue'
+import UniversalDropdown from '~/components/shared/UniversalDropdown.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import ProviderVisitPrompt from '~/components/provider/ProviderVisitPrompt.vue'
+import { CenteredPage, DataTable, EmptyState, Icon, type IconName, LoadingState } from '~/ui'
 import {
   formatDate,
   formatDateTime,
@@ -4236,35 +4841,35 @@ import {
   formatNumber,
   formatPercent,
   formatUpdatedLabel,
-} from '~/shared/lib/format';
-import { getCorridorUrl } from '~/utils/country-slugs';
-import { COUNTRIES } from '~/utils/countries-currencies';
-import type { Alert, AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking';
-import { getCorridors } from '~/lib/pulseApi';
-import type { CorridorOption } from '~/types/pulse';
-import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports';
-import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed';
-import { useFeatureFlags } from '~/composables/useFeatureFlags';
-import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError';
-import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue';
+} from '~/shared/lib/format'
+import { getCorridorUrl } from '~/utils/country-slugs'
+import { COUNTRIES } from '~/utils/countries-currencies'
+import type { Alert, AlertRule, WatchTarget, WatchlistItem } from '~/types/tracking'
+import { getCorridors } from '~/lib/pulseApi'
+import type { CorridorOption } from '~/types/pulse'
+import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
+import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
+import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue'
 
-type DashboardTab =
-  | 'overview'
-  | 'watchlist'
-  | 'alerts'
-  | 'history'
-  | 'enterprise'
-  | 'ops'
-  | 'account';
-type AccountSection =
-  | 'profile'
-  | 'billing'
-  | 'notifications'
-  | 'security'
-  | 'privacy'
-  | 'compliance';
+type DashboardTab
+  = | 'overview'
+    | 'watchlist'
+    | 'alerts'
+    | 'history'
+    | 'enterprise'
+    | 'ops'
+    | 'account'
+type AccountSection
+  = | 'profile'
+    | 'billing'
+    | 'notifications'
+    | 'security'
+    | 'privacy'
+    | 'compliance'
 
-const tabs: { id: DashboardTab; label: string }[] = [
+const tabs: { id: DashboardTab, label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'watchlist', label: 'Watchlist' },
   { id: 'alerts', label: 'Alerts' },
@@ -4272,72 +4877,72 @@ const tabs: { id: DashboardTab; label: string }[] = [
   { id: 'enterprise', label: 'Enterprise' },
   { id: 'ops', label: 'Ops' },
   { id: 'account', label: 'Account' },
-];
+]
 
-const accountSections: { id: AccountSection; label: string; icon: IconName }[] = [
+const accountSections: { id: AccountSection, label: string, icon: IconName }[] = [
   { id: 'profile', label: 'Profile', icon: 'user' },
   { id: 'billing', label: 'Billing', icon: 'credit-card' },
   { id: 'notifications', label: 'Notifications', icon: 'bell-alert' },
   { id: 'security', label: 'Security', icon: 'shield-check' },
   { id: 'privacy', label: 'Privacy', icon: 'eye' },
   { id: 'compliance', label: 'Compliance', icon: 'document-text' },
-];
+]
 
 function extractErrorMessage(error: unknown, fallback: string): string {
-  return mapPlanStateFailureMessage(error, fallback);
+  return mapPlanStateFailureMessage(error, fallback)
 }
 
 function extractErrorCode(error: unknown): string {
-  const candidate = error as { data?: { error?: unknown } };
-  return typeof candidate?.data?.error === 'string' ? candidate.data.error : '';
+  const candidate = error as { data?: { error?: unknown } }
+  return typeof candidate?.data?.error === 'string' ? candidate.data.error : ''
 }
 
 function extractNestedErrorMessage(error: unknown): string | null {
-  const candidate = error as { data?: { message?: unknown }; message?: unknown };
+  const candidate = error as { data?: { message?: unknown }, message?: unknown }
   if (typeof candidate?.data?.message === 'string' && candidate.data.message.trim().length > 0) {
-    return candidate.data.message;
+    return candidate.data.message
   }
   if (
-    typeof candidate?.message === 'string' &&
-    candidate.message.trim().length > 0 &&
-    candidate.message !== 'fetch failed'
+    typeof candidate?.message === 'string'
+    && candidate.message.trim().length > 0
+    && candidate.message !== 'fetch failed'
   ) {
-    return candidate.message;
+    return candidate.message
   }
-  return null;
+  return null
 }
 
 function resolveExportErrorMessage(error: unknown, fallback: string): string {
   switch (extractErrorCode(error)) {
     case 'indices_export_enterprise_only':
-      return 'Indices exports are available on Enterprise only.';
+      return 'Indices exports are available on Enterprise only.'
     case 'export_limit_reached':
       return (
-        extractNestedErrorMessage(error) ||
-        'Your current plan export queue is full. Try again after existing jobs finish.'
-      );
+        extractNestedErrorMessage(error)
+        || 'Your current plan export queue is full. Try again after existing jobs finish.'
+      )
     case 'plan_inactive':
-      return 'Your paid plan is inactive. Reactivate billing to export data.';
+      return 'Your paid plan is inactive. Reactivate billing to export data.'
     case 'forbidden':
-      return 'Your current plan does not include this export.';
+      return 'Your current plan does not include this export.'
     default:
-      return extractNestedErrorMessage(error) || fallback;
+      return extractNestedErrorMessage(error) || fallback
   }
 }
 
 function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === 'AbortError';
+  return error instanceof Error && error.name === 'AbortError'
 }
 
-const route = useRoute();
-const { user, isAuthenticated, isAdmin, updatePasswordWithCurrent, listMfaFactors } = useAuth();
-const { pendingVisits } = useProviderVisits();
-const providerVisitPromptRef = ref<{ open: () => void } | null>(null);
-const pendingProviderFeedbackCount = computed(() => pendingVisits.value.length);
+const route = useRoute()
+const { user, isAuthenticated, isAdmin, updatePasswordWithCurrent, listMfaFactors } = useAuth()
+const { pendingVisits } = useProviderVisits()
+const providerVisitPromptRef = ref<{ open: () => void } | null>(null)
+const pendingProviderFeedbackCount = computed(() => pendingVisits.value.length)
 
 const openProviderFeedback = () => {
-  providerVisitPromptRef.value?.open();
-};
+  providerVisitPromptRef.value?.open()
+}
 const {
   sessions,
   loading: sessionsLoading,
@@ -4345,8 +4950,8 @@ const {
   fetchSessions,
   revokeSession,
   revokeAllSessions,
-} = useSessions();
-const { updateProfile } = useMe();
+} = useSessions()
+const { updateProfile } = useMe()
 const {
   isPlus,
   isEnterprise,
@@ -4362,49 +4967,49 @@ const {
   billing,
   refreshPlan,
   indicesExportsEnabled,
-} = useEntitlements();
-const { pulseEnabled } = useFeatureFlags();
-const exportsEnabled = computed(() => limits.value.exports);
+} = useEntitlements()
+const { pulseEnabled } = useFeatureFlags()
+const exportsEnabled = computed(() => limits.value.exports)
 
 const upgradeBannerText = computed(() =>
   pulseEnabled.value
     ? 'Pulse access, 16 alerts, 16 watchlist corridors, exports, and an ad-free experience'
-    : '16 alerts, 16 watchlist corridors, exports, and an ad-free experience'
-);
+    : '16 alerts, 16 watchlist corridors, exports, and an ad-free experience',
+)
 const upgradeLimitsText = computed(() =>
   pulseEnabled.value
     ? 'Upgrade to Plus for Pulse, 16 watchlist corridors, 16 alerts, 90-day history, and exports.'
-    : 'Upgrade to Plus for 16 watchlist corridors, 16 alerts, 90-day history, and exports.'
-);
+    : 'Upgrade to Plus for 16 watchlist corridors, 16 alerts, 90-day history, and exports.',
+)
 const removeAdsText = computed(() =>
   pulseEnabled.value
     ? 'Get Pulse access, 16 alerts, 90-day history, exports, and an ad-free experience.'
-    : 'Get 16 alerts, 90-day history, exports, and an ad-free experience.'
-);
+    : 'Get 16 alerts, 90-day history, exports, and an ad-free experience.',
+)
 const alertsUpgradeText = computed(() =>
   pulseEnabled.value
     ? 'Free accounts are limited to 1 alert. Upgrade to Plus for Pulse access, daily alerts, and up to 16 smart alerts.'
-    : 'Free accounts are limited to 1 alert. Upgrade to Plus for daily alerts and up to 16 smart alerts.'
-);
+    : 'Free accounts are limited to 1 alert. Upgrade to Plus for daily alerts and up to 16 smart alerts.',
+)
 const sidebarUpgradeText = computed(() =>
   pulseEnabled.value
     ? 'Pulse access, 16 alerts, 90-day history, exports, and ad-free'
-    : '16 alerts, 90-day history, exports, and ad-free'
-);
+    : '16 alerts, 90-day history, exports, and ad-free',
+)
 
-const billingActions = useBilling();
-const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.value);
-const billingPortalLoading = computed(() => billingActions.portalLoading.value);
-const exportsApi = useExports();
-const dataExportApi = useDataExport();
-const accountApi = useAccount();
-const accountDeleting = computed(() => accountApi.deleting.value);
-const modal = useSaveAlertModal();
-const toast = useToast();
-const { request } = useApi();
+const billingActions = useBilling()
+const billingCheckoutLoading = computed(() => billingActions.checkoutLoading.value)
+const billingPortalLoading = computed(() => billingActions.portalLoading.value)
+const exportsApi = useExports()
+const dataExportApi = useDataExport()
+const accountApi = useAccount()
+const accountDeleting = computed(() => accountApi.deleting.value)
+const modal = useSaveAlertModal()
+const toast = useToast()
+const { request } = useApi()
 const { data: recentSearchesData, pending: recentSearchesPending } = useRecentSearches(10, {
   watch: [],
-});
+})
 
 const {
   items: watchlistItems,
@@ -4413,40 +5018,40 @@ const {
   remove: watchlistRemove,
   reset: watchlistReset,
   save: watchlistSave,
-} = useWatchlist();
+} = useWatchlist()
 
-const showClearConfirmWatchlist = ref(false);
-const showClearConfirmAlerts = ref(false);
-const showClearConfirmCompare = ref(false);
-let clearConfirmTimer: ReturnType<typeof setTimeout> | undefined;
+const showClearConfirmWatchlist = ref(false)
+const showClearConfirmAlerts = ref(false)
+const showClearConfirmCompare = ref(false)
+let clearConfirmTimer: ReturnType<typeof setTimeout> | undefined
 
 function handleClearAll(which: 'watchlist' | 'alerts' | 'compare') {
   const flagMap = {
     watchlist: showClearConfirmWatchlist,
     alerts: showClearConfirmAlerts,
     compare: showClearConfirmCompare,
-  };
-  const resetMap = { watchlist: watchlistReset, alerts: alertsReset, compare: compareReset };
-  const flag = flagMap[which];
-  if (!flag.value) {
-    flag.value = true;
-    clearTimeout(clearConfirmTimer);
-    clearConfirmTimer = setTimeout(() => {
-      flag.value = false;
-    }, 4000);
-    return;
   }
-  flag.value = false;
-  clearTimeout(clearConfirmTimer);
-  resetMap[which]();
+  const resetMap = { watchlist: watchlistReset, alerts: alertsReset, compare: compareReset }
+  const flag = flagMap[which]
+  if (!flag.value) {
+    flag.value = true
+    clearTimeout(clearConfirmTimer)
+    clearConfirmTimer = setTimeout(() => {
+      flag.value = false
+    }, 4000)
+    return
+  }
+  flag.value = false
+  clearTimeout(clearConfirmTimer)
+  resetMap[which]()
 }
 
 const corridorWatchlistItems = computed(() =>
   watchlistItems.value.filter(
     (item): item is WatchlistItem & { target: Extract<WatchTarget, { type: 'corridor' }> } =>
-      item.target.type === 'corridor'
-  )
-);
+      item.target.type === 'corridor',
+  ),
+)
 
 const {
   alerts: alertItems,
@@ -4457,66 +5062,67 @@ const {
   reset: alertsReset,
   findById: alertsFindById,
   update: alertsUpdate,
-} = useAlerts();
+} = useAlerts()
 
 // Production-grade limit UX (no browser alert()).
-const limitModalOpen = ref(false);
-const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist');
-const limitModalLimit = ref(0);
+const limitModalOpen = ref(false)
+const limitModalFeature = ref<'watchlist' | 'alert'>('watchlist')
+const limitModalLimit = ref(0)
 
 const limitModalCount = computed(() => {
-  return limitModalFeature.value === 'watchlist' ? watchlistCount.value : alertsCount.value;
-});
+  return limitModalFeature.value === 'watchlist' ? watchlistCount.value : alertsCount.value
+})
 
 const formatRuleSummary = (rule: AlertRule) => {
-  const currency = rule.currency ? ` ${rule.currency}` : '';
-  return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim();
-};
+  const currency = rule.currency ? ` ${rule.currency}` : ''
+  return `${rule.metric} ${rule.comparator} ${rule.value}${currency}`.trim()
+}
 
 const limitModalItems = computed(() => {
-  const sliceLimit = limitModalLimit.value || 0;
+  const sliceLimit = limitModalLimit.value || 0
   if (limitModalFeature.value === 'alert') {
     const items = alertItems.value.map(alert => ({
       id: alert.id,
       label: watchlistFindById(alert.watchlistItemId)?.label || 'Alert',
       meta: formatRuleSummary(alert.rule),
-    }));
-    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items;
+    }))
+    return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
   }
 
   const items = watchlistItems.value.map(item => ({
     id: item.id,
     label: item.label,
-  }));
-  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items;
-});
+  }))
+  return sliceLimit > 0 ? items.slice(0, sliceLimit) : items
+})
 
 const openLimitModal = (feature: 'watchlist' | 'alert', explicitLimit?: number) => {
-  limitModalFeature.value = feature;
-  const limit =
-    explicitLimit ??
-    (feature === 'watchlist'
+  limitModalFeature.value = feature
+  const limit
+    = explicitLimit
+      ?? (feature === 'watchlist'
       ? limits.value.watchlistItems === 'unlimited'
         ? 0
         : Number(limits.value.watchlistItems)
       : limits.value.alerts === 'unlimited'
         ? 0
-        : Number(limits.value.alerts));
-  limitModalLimit.value = Number.isFinite(limit) ? limit : 0;
-  limitModalOpen.value = true;
-};
+        : Number(limits.value.alerts))
+  limitModalLimit.value = Number.isFinite(limit) ? limit : 0
+  limitModalOpen.value = true
+}
 
 const handleLimitRemove = async (id: string) => {
   if (limitModalFeature.value === 'watchlist') {
-    await watchlistRemove(id);
-  } else {
-    await alertsRemove(id);
+    await watchlistRemove(id)
+  }
+ else {
+    await alertsRemove(id)
   }
 
   if (limitModalLimit.value > 0 && limitModalCount.value < limitModalLimit.value) {
-    limitModalOpen.value = false;
+    limitModalOpen.value = false
   }
-};
+}
 
 const {
   runs: compareRuns,
@@ -4524,61 +5130,61 @@ const {
   count: compareCount,
   remove: compareRemove,
   reset: compareReset,
-} = useCompareHistory();
+} = useCompareHistory()
 
-const recentSearches = computed(() => recentSearchesData.value?.data ?? []);
+const recentSearches = computed(() => recentSearchesData.value?.data ?? [])
 
 type RateHistoryEntry = {
-  date: string;
-  rate: number;
-  bid?: number | null;
-  ask?: number | null;
-  source?: string | null;
-};
+  date: string
+  rate: number
+  bid?: number | null
+  ask?: number | null
+  source?: string | null
+}
 
-type RateHistoryStatus = 'ready' | 'warming' | 'unavailable';
+type RateHistoryStatus = 'ready' | 'warming' | 'unavailable'
 
 type RateHistoryResponse = {
-  base: string;
-  quote: string;
-  history: RateHistoryEntry[];
-  lastUpdated: string | null;
-  status: RateHistoryStatus;
-  message: string | null;
-  refreshQueued: boolean;
-  refreshRequestId: string | null;
-  derived: boolean;
-  bridgeCurrency: 'USD' | 'EUR' | null;
-};
+  base: string
+  quote: string
+  history: RateHistoryEntry[]
+  lastUpdated: string | null
+  status: RateHistoryStatus
+  message: string | null
+  refreshQueued: boolean
+  refreshRequestId: string | null
+  derived: boolean
+  bridgeCurrency: 'USD' | 'EUR' | null
+}
 
 type ProviderRateEntry = {
-  name: string;
-  rate: number;
-  markupBps?: number;
-  speed?: string;
-  lastUpdated?: string | null;
-};
+  name: string
+  rate: number
+  markupBps?: number
+  speed?: string
+  lastUpdated?: string | null
+}
 
 type ProviderRatesResponse = {
-  base: string;
-  quote: string;
-  midMarketRate: number | null;
-  data: ProviderRateEntry[];
-};
+  base: string
+  quote: string
+  midMarketRate: number | null
+  data: ProviderRateEntry[]
+}
 
 type RateSnapshot = {
-  rateLabel: string;
-  rateValue: number | null;
-  change: number | null;
-  changeValue: number;
-  hasChange: boolean;
-  lastUpdated: string | null;
-  history: RateHistoryEntry[];
-};
+  rateLabel: string
+  rateValue: number | null
+  change: number | null
+  changeValue: number
+  hasChange: boolean
+  lastUpdated: string | null
+  history: RateHistoryEntry[]
+}
 
 type BestProviderSnapshot = ProviderRateEntry & {
-  slug: string;
-};
+  slug: string
+}
 
 const historyDaysByTimeframe: Record<string, number> = {
   '7d': 7,
@@ -4586,83 +5192,83 @@ const historyDaysByTimeframe: Record<string, number> = {
   '90d': 90,
   '180d': 180,
   '365d': 365,
-};
+}
 
-const watchlistHistoryDays = 7;
+const watchlistHistoryDays = 7
 
-const rateHistoryCache = ref<Record<string, RateHistoryResponse>>({});
-const rateHistoryLoading = ref<Record<string, boolean>>({});
-const rateHistoryErrors = ref<Record<string, string | null>>({});
-const providerRatesCache = ref<Record<string, ProviderRatesResponse>>({});
-const providerRatesLoading = ref<Record<string, boolean>>({});
-const providerRatesErrors = ref<Record<string, string | null>>({});
+const rateHistoryCache = ref<Record<string, RateHistoryResponse>>({})
+const rateHistoryLoading = ref<Record<string, boolean>>({})
+const rateHistoryErrors = ref<Record<string, string | null>>({})
+const providerRatesCache = ref<Record<string, ProviderRatesResponse>>({})
+const providerRatesLoading = ref<Record<string, boolean>>({})
+const providerRatesErrors = ref<Record<string, string | null>>({})
 
 const formatRateValue = (value: number | null | undefined) => {
-  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
   return formatNumber(value, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
-  });
-};
+  })
+}
 
 const formatPercentValue = (value: number | null | undefined, includeSign = true) => {
-  if (value === null || value === undefined || !Number.isFinite(value)) return '—';
-  return formatPercent(value, { digits: 2, sign: includeSign });
-};
+  if (value === null || value === undefined || !Number.isFinite(value)) return '—'
+  return formatPercent(value, { digits: 2, sign: includeSign })
+}
 
 const countryOverrides: Record<
   string,
-  { name: string; code: string; flag: string; currency: string }
+  { name: string, code: string, flag: string, currency: string }
 > = {
   EU: { name: 'Eurozone', code: 'EU', flag: '🇪🇺', currency: 'EUR' },
   UK: { name: 'United Kingdom', code: 'UK', flag: '🇬🇧', currency: 'GBP' },
-};
+}
 
 const countryMap = [...COUNTRIES, ...Object.values(countryOverrides)].reduce(
   (acc, c) => {
-    acc[c.code] = c;
-    return acc;
+    acc[c.code] = c
+    return acc
   },
-  {} as Record<string, (typeof COUNTRIES)[0]>
-);
+  {} as Record<string, (typeof COUNTRIES)[0]>,
+)
 
-const getFlag = (code: string) => countryMap[code.toUpperCase()]?.flag || '🏳️';
-const getCountryName = (code: string) => countryMap[code.toUpperCase()]?.name || code;
-const getCurrencyForCountry = (code: string) => countryMap[code.toUpperCase()]?.currency || null;
-const getCurrencyCode = (code: string) => getCurrencyForCountry(code) || code.toUpperCase();
+const getFlag = (code: string) => countryMap[code.toUpperCase()]?.flag || '🏳️'
+const getCountryName = (code: string) => countryMap[code.toUpperCase()]?.name || code
+const getCurrencyForCountry = (code: string) => countryMap[code.toUpperCase()]?.currency || null
+const getCurrencyCode = (code: string) => getCurrencyForCountry(code) || code.toUpperCase()
 
-const buildHistoryKey = (base: string, quote: string, days: number) => `${base}-${quote}-${days}`;
-const buildProviderKey = (base: string, quote: string) => `${base}-${quote}`;
+const buildHistoryKey = (base: string, quote: string, days: number) => `${base}-${quote}-${days}`
+const buildProviderKey = (base: string, quote: string) => `${base}-${quote}`
 
 const getPairForCorridor = (from: string, to: string) => {
-  const base = getCurrencyForCountry(from.toUpperCase());
-  const quote = getCurrencyForCountry(to.toUpperCase());
-  if (!base || !quote) return null;
-  return { base, quote };
-};
+  const base = getCurrencyForCountry(from.toUpperCase())
+  const quote = getCurrencyForCountry(to.toUpperCase())
+  if (!base || !quote) return null
+  return { base, quote }
+}
 
 const getPairForTarget = (target: WatchTarget) => {
   if (target.type === 'corridor') {
-    return getPairForCorridor(target.from, target.to);
+    return getPairForCorridor(target.from, target.to)
   }
   if (target.type === 'fxPair') {
-    return { base: target.base.toUpperCase(), quote: target.quote.toUpperCase() };
+    return { base: target.base.toUpperCase(), quote: target.quote.toUpperCase() }
   }
-  return null;
-};
+  return null
+}
 
 const getRateHistory = (base: string, quote: string, days: number) => {
-  return rateHistoryCache.value[buildHistoryKey(base, quote, days)]?.history ?? [];
-};
+  return rateHistoryCache.value[buildHistoryKey(base, quote, days)]?.history ?? []
+}
 
 const getRateHistoryMeta = (base: string, quote: string, days: number) => {
-  return rateHistoryCache.value[buildHistoryKey(base, quote, days)] ?? null;
-};
+  return rateHistoryCache.value[buildHistoryKey(base, quote, days)] ?? null
+}
 
 const normalizeRateHistoryResponse = (
   base: string,
   quote: string,
-  response: Partial<RateHistoryResponse> | null | undefined
+  response: Partial<RateHistoryResponse> | null | undefined,
 ): RateHistoryResponse => {
   const history = Array.isArray(response?.history)
     ? response.history
@@ -4674,24 +5280,24 @@ const normalizeRateHistoryResponse = (
           source: entry.source ?? null,
         }))
         .filter(entry => entry.date && Number.isFinite(entry.rate))
-    : [];
+    : []
 
-  const rawStatus = response?.status;
-  const status: RateHistoryStatus =
-    rawStatus === 'ready' || rawStatus === 'warming' || rawStatus === 'unavailable'
+  const rawStatus = response?.status
+  const status: RateHistoryStatus
+    = rawStatus === 'ready' || rawStatus === 'warming' || rawStatus === 'unavailable'
       ? rawStatus
       : history.length > 0
         ? 'ready'
-        : 'warming';
+        : 'warming'
 
-  const message =
-    typeof response?.message === 'string'
+  const message
+    = typeof response?.message === 'string'
       ? response.message
       : status === 'warming'
         ? 'Rate history is warming up.'
         : status === 'unavailable'
           ? 'Rate history is unavailable for this corridor right now.'
-          : null;
+          : null
 
   return {
     base: (response?.base || base).toUpperCase(),
@@ -4708,38 +5314,39 @@ const normalizeRateHistoryResponse = (
       response?.bridgeCurrency === 'USD' || response?.bridgeCurrency === 'EUR'
         ? response.bridgeCurrency
         : null,
-  };
-};
+  }
+}
 
 const loadRateHistory = async (
   base: string,
   quote: string,
   days: number,
   signal?: AbortSignal,
-  options: { force?: boolean } = {}
+  options: { force?: boolean } = {},
 ) => {
-  const force = options.force === true;
-  const key = buildHistoryKey(base, quote, days);
-  const cached = rateHistoryCache.value[key];
+  const force = options.force === true
+  const key = buildHistoryKey(base, quote, days)
+  const cached = rateHistoryCache.value[key]
   const isTerminal = Boolean(
-    cached && (cached.history.length > 0 || cached.status === 'unavailable')
-  );
-  if (rateHistoryLoading.value[key] || (!force && isTerminal)) return;
-  rateHistoryLoading.value[key] = true;
-  rateHistoryErrors.value[key] = null;
+    cached && (cached.history.length > 0 || cached.status === 'unavailable'),
+  )
+  if (rateHistoryLoading.value[key] || (!force && isTerminal)) return
+  rateHistoryLoading.value[key] = true
+  rateHistoryErrors.value[key] = null
   try {
     const response = await request<RateHistoryResponse>('/rates/history', {
       query: { base, quote, days },
       signal,
-    });
+    })
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
       [key]: normalizeRateHistoryResponse(base, quote, response),
-    };
-  } catch (error: unknown) {
-    if (isAbortError(error)) return;
-    const msg = extractErrorMessage(error, 'Unable to load rate history.');
-    rateHistoryErrors.value[key] = msg;
+    }
+  }
+ catch (error: unknown) {
+    if (isAbortError(error)) return
+    const msg = extractErrorMessage(error, 'Unable to load rate history.')
+    rateHistoryErrors.value[key] = msg
     rateHistoryCache.value = {
       ...rateHistoryCache.value,
       [key]: {
@@ -4754,291 +5361,297 @@ const loadRateHistory = async (
         derived: false,
         bridgeCurrency: null,
       },
-    };
-  } finally {
-    rateHistoryLoading.value[key] = false;
+    }
   }
-};
+ finally {
+    rateHistoryLoading.value[key] = false
+  }
+}
 
 const loadProviderRates = async (base: string, quote: string, signal?: AbortSignal) => {
-  const key = buildProviderKey(base, quote);
-  if (providerRatesLoading.value[key] || providerRatesCache.value[key]) return;
-  providerRatesLoading.value[key] = true;
-  providerRatesErrors.value[key] = null;
+  const key = buildProviderKey(base, quote)
+  if (providerRatesLoading.value[key] || providerRatesCache.value[key]) return
+  providerRatesLoading.value[key] = true
+  providerRatesErrors.value[key] = null
   try {
     const response = await request<ProviderRatesResponse>('/rates/providers', {
       query: { base, quote },
       signal,
-    });
-    providerRatesCache.value = { ...providerRatesCache.value, [key]: response };
-  } catch (error: unknown) {
-    if (isAbortError(error)) return;
-    providerRatesErrors.value[key] = extractErrorMessage(error, 'Unable to load provider rates.');
+    })
+    providerRatesCache.value = { ...providerRatesCache.value, [key]: response }
+  }
+ catch (error: unknown) {
+    if (isAbortError(error)) return
+    providerRatesErrors.value[key] = extractErrorMessage(error, 'Unable to load provider rates.')
     providerRatesCache.value = {
       ...providerRatesCache.value,
       [key]: { base, quote, midMarketRate: null, data: [] },
-    };
-  } finally {
-    providerRatesLoading.value[key] = false;
+    }
   }
-};
+ finally {
+    providerRatesLoading.value[key] = false
+  }
+}
 
-const watchlistFindById = (id: string) => watchlistItems.value.find(i => i.id === id) ?? null;
+const watchlistFindById = (id: string) => watchlistItems.value.find(i => i.id === id) ?? null
 
 const watchlistLimitPercent = computed(() => {
-  if (limits.value.watchlistItems === 'unlimited') return 0;
-  return (watchlistCount.value / (limits.value.watchlistItems as number)) * 100;
-});
+  if (limits.value.watchlistItems === 'unlimited') return 0
+  return (watchlistCount.value / (limits.value.watchlistItems as number)) * 100
+})
 
 const alertsLimitPercent = computed(() => {
-  if (limits.value.alerts === 'unlimited') return 0;
-  return (alertsCount.value / (limits.value.alerts as number)) * 100;
-});
+  if (limits.value.alerts === 'unlimited') return 0
+  return (alertsCount.value / (limits.value.alerts as number)) * 100
+})
 
 const watchlistLimitReached = computed(() => {
-  if (limits.value.watchlistItems === 'unlimited') return false;
-  return watchlistCount.value >= (limits.value.watchlistItems as number);
-});
+  if (limits.value.watchlistItems === 'unlimited') return false
+  return watchlistCount.value >= (limits.value.watchlistItems as number)
+})
 
 const alertsLimitReached = computed(() => {
-  if (limits.value.alerts === 'unlimited') return false;
-  return alertsCount.value >= (limits.value.alerts as number);
-});
+  if (limits.value.alerts === 'unlimited') return false
+  return alertsCount.value >= (limits.value.alerts as number)
+})
 
-const hasAdminAccess = ref(false);
-const adminAccessChecked = ref(false);
+const hasAdminAccess = ref(false)
+const adminAccessChecked = ref(false)
 
 const checkAdminAccess = async (signal?: AbortSignal) => {
-  if (!import.meta.client) return;
+  if (!import.meta.client) return
   if (!isAuthenticated.value) {
-    hasAdminAccess.value = false;
-    adminAccessChecked.value = true;
-    return;
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
+    return
   }
   if (isAdmin.value || user.value?.isAdmin) {
-    hasAdminAccess.value = true;
-    adminAccessChecked.value = true;
-    return;
+    hasAdminAccess.value = true
+    adminAccessChecked.value = true
+    return
   }
-  if (adminAccessChecked.value) return;
-  let aborted = false;
+  if (adminAccessChecked.value) return
+  let aborted = false
   try {
     // Determine admin access via `/me` instead of probing `/admin/*` routes.
     // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
     // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
-    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 });
-    hasAdminAccess.value = Boolean(me?.user?.is_admin);
-  } catch (error: unknown) {
+    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
+    hasAdminAccess.value = Boolean(me?.user?.is_admin)
+  }
+ catch (error: unknown) {
     if (isAbortError(error)) {
-      aborted = true;
-      return;
+      aborted = true
+      return
     }
-    hasAdminAccess.value = false;
-  } finally {
+    hasAdminAccess.value = false
+  }
+ finally {
     if (!aborted) {
-      adminAccessChecked.value = true;
+      adminAccessChecked.value = true
     }
   }
-};
+}
 
 const visibleTabs = computed(() => {
-  const baseTabs = hasAdminAccess.value ? tabs : tabs.filter(tab => tab.id !== 'ops');
-  return isEnterprise.value ? baseTabs : baseTabs.filter(tab => tab.id !== 'enterprise');
-});
+  const baseTabs = hasAdminAccess.value ? tabs : tabs.filter(tab => tab.id !== 'ops')
+  return isEnterprise.value ? baseTabs : baseTabs.filter(tab => tab.id !== 'enterprise')
+})
 
 const activeTab = computed<DashboardTab>(() => {
-  const raw = route.query.tab;
-  const tab = Array.isArray(raw) ? raw[0] : raw;
-  if (tab === 'ops' && !hasAdminAccess.value) return 'overview';
-  if (tab === 'enterprise' && !isEnterprise.value) return 'overview';
+  const raw = route.query.tab
+  const tab = Array.isArray(raw) ? raw[0] : raw
+  if (tab === 'ops' && !hasAdminAccess.value) return 'overview'
+  if (tab === 'enterprise' && !isEnterprise.value) return 'overview'
   if (
-    tab === 'watchlist' ||
-    tab === 'alerts' ||
-    tab === 'history' ||
-    tab === 'enterprise' ||
-    tab === 'ops' ||
-    tab === 'account'
+    tab === 'watchlist'
+    || tab === 'alerts'
+    || tab === 'history'
+    || tab === 'enterprise'
+    || tab === 'ops'
+    || tab === 'account'
   )
-    return tab;
-  return 'overview';
-});
+    return tab
+  return 'overview'
+})
 
 function setTab(tab: DashboardTab) {
-  if (tab === 'ops' && !hasAdminAccess.value) return;
-  if (tab === 'enterprise' && !isEnterprise.value) return;
-  const nextQuery: LocationQueryRaw = { ...route.query };
+  if (tab === 'ops' && !hasAdminAccess.value) return
+  if (tab === 'enterprise' && !isEnterprise.value) return
+  const nextQuery: LocationQueryRaw = { ...route.query }
   if (tab === 'overview') {
-    delete nextQuery.tab;
-  } else {
-    nextQuery.tab = tab;
+    delete nextQuery.tab
   }
-  void navigateTo({ path: route.path, query: nextQuery });
+ else {
+    nextQuery.tab = tab
+  }
+  void navigateTo({ path: route.path, query: nextQuery })
 }
 
 async function openBillingPortal() {
-  billingActionMessage.value = null;
-  const result = await billingActions.openBillingPortal();
+  billingActionMessage.value = null
+  const result = await billingActions.openBillingPortal()
   if (!result.ok) {
-    billingActionMessage.value = result.error || 'Unable to open billing portal.';
+    billingActionMessage.value = result.error || 'Unable to open billing portal.'
   }
 }
 
 async function startCheckout() {
-  billingActionMessage.value = null;
-  await navigateTo('/plus/checkout');
+  billingActionMessage.value = null
+  await navigateTo('/plus/checkout')
 }
 
 type OpsHealthCorridor = {
-  corridor_id: string;
-  last_attempt_at: string | null;
-  last_attempt_age_minutes: number | null;
-  last_attempt_success: boolean | null;
-  last_attempt_http_status: number | null;
-  last_attempt_error_type: string | null;
-  last_attempt_error_message: string | null;
-  last_attempt_request: string | null;
-  last_quote_at: string | null;
-  last_quote_age_minutes: number | null;
-  payin: string | null;
-  payout: string | null;
-  send_amount: number | null;
-  fee_amount: number | null;
-  promotional_fee_amount: number | null;
-  total_debit_amount: number | null;
-  receive_amount: number | null;
-  implied_fx_rate: number | null;
-  promotional_rate: number | null;
-  base_rate: number | null;
-  promotional_cap_amount: number | null;
-  delivery_time_min_minutes: number | null;
-  delivery_time_max_minutes: number | null;
-  quality_flags: unknown;
-  updated_at: string | null;
-};
+  corridor_id: string
+  last_attempt_at: string | null
+  last_attempt_age_minutes: number | null
+  last_attempt_success: boolean | null
+  last_attempt_http_status: number | null
+  last_attempt_error_type: string | null
+  last_attempt_error_message: string | null
+  last_attempt_request: string | null
+  last_quote_at: string | null
+  last_quote_age_minutes: number | null
+  payin: string | null
+  payout: string | null
+  send_amount: number | null
+  fee_amount: number | null
+  promotional_fee_amount: number | null
+  total_debit_amount: number | null
+  receive_amount: number | null
+  implied_fx_rate: number | null
+  promotional_rate: number | null
+  base_rate: number | null
+  promotional_cap_amount: number | null
+  delivery_time_min_minutes: number | null
+  delivery_time_max_minutes: number | null
+  quality_flags: unknown
+  updated_at: string | null
+}
 
 type OpsHealthResponse = {
-  success: boolean;
-  provider_id: string;
-  affiliate: boolean;
-  affiliate_url: string | null;
-  outbound_url: string | null;
-  timestamp: string;
-  corridors: OpsHealthCorridor[];
+  success: boolean
+  provider_id: string
+  affiliate: boolean
+  affiliate_url: string | null
+  outbound_url: string | null
+  timestamp: string
+  corridors: OpsHealthCorridor[]
   summary: {
-    corridor_count: number;
-    stale_count: number;
-    fresh_window_minutes: number;
-  };
-};
+    corridor_count: number
+    stale_count: number
+    fresh_window_minutes: number
+  }
+}
 
 type TelemetryAggregateRow = {
-  metric: string;
-  value: unknown;
-  time_bucket: string;
-  dimensions: Record<string, unknown> | null;
-  computed_at: string;
-};
+  metric: string
+  value: unknown
+  time_bucket: string
+  dimensions: Record<string, unknown> | null
+  computed_at: string
+}
 
 type TelemetryListRow = {
-  key: string;
-  from?: string;
-  to?: string;
-  provider?: string;
-  corridor?: string;
-  count: number;
-};
+  key: string
+  from?: string
+  to?: string
+  provider?: string
+  corridor?: string
+  count: number
+}
 
 type OpsPrivacyEnvelope = {
-  applied: true;
-  minUniqueUsers: number;
-  reason?: string;
-};
+  applied: true
+  minUniqueUsers: number
+  reason?: string
+}
 
 type OpsAggregationWindow = {
-  startDate: string;
-  endDate: string;
-  minDatapoints24h: number;
-  minProviderQuotesPerCorridor: number;
-  minTrendLookbackDays: number;
-};
+  startDate: string
+  endDate: string
+  minDatapoints24h: number
+  minProviderQuotesPerCorridor: number
+  minTrendLookbackDays: number
+}
 
 type OpsPrivacyAnnotated = {
-  suppressed?: boolean;
-  suppressionReason?: string;
-  sampleSize?: number;
-  thresholdApplied?: number;
-  aggregationBasis?: string;
-};
+  suppressed?: boolean
+  suppressionReason?: string
+  sampleSize?: number
+  thresholdApplied?: number
+  aggregationBasis?: string
+}
 
 type OpsAnalyticsCorridor = OpsPrivacyAnnotated & {
-  corridor_id: string;
-  from_country: string;
-  to_country: string;
-  search_count: number;
-  click_count?: number;
-  trend?: string;
-  trend_percentage?: number;
-};
+  corridor_id: string
+  from_country: string
+  to_country: string
+  search_count: number
+  click_count?: number
+  trend?: string
+  trend_percentage?: number
+}
 
 type OpsAnalyticsProvider = OpsPrivacyAnnotated & {
-  provider_id: string;
-  provider_name?: string | null;
-  click_count?: number;
-  click_through_rate: number;
-  quote_count?: number;
-};
+  provider_id: string
+  provider_name?: string | null
+  click_count?: number
+  click_through_rate: number
+  quote_count?: number
+}
 
 type OpsRevenueMetric = {
-  provider_id: string;
-  provider_name?: string | null;
-  corridor_id?: string | null;
-  total_clicks: number;
-  affiliate_clicks: number;
-  affiliate_rate: number;
-  unique_users: number;
-};
+  provider_id: string
+  provider_name?: string | null
+  corridor_id?: string | null
+  total_clicks: number
+  affiliate_clicks: number
+  affiliate_rate: number
+  unique_users: number
+}
 
 type OpsProviderImpactSummary = OpsPrivacyAnnotated & {
-  provider_id: string;
-  provider_name?: string | null;
-  total_clicks: number;
-  unique_clicks: number;
-  affiliate_clicks: number;
-  conversions: number;
-  unique_conversions: number;
-  conversion_rate: number;
-  conversion_values: Record<string, number> | null;
-  quote_count?: number;
-};
+  provider_id: string
+  provider_name?: string | null
+  total_clicks: number
+  unique_clicks: number
+  affiliate_clicks: number
+  conversions: number
+  unique_conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+  quote_count?: number
+}
 
 type OpsProviderCorridorImpact = OpsPrivacyAnnotated & {
-  provider_id: string;
-  provider_name?: string | null;
-  corridor_id?: string | null;
-  total_clicks: number;
-  unique_clicks: number;
-  conversions: number;
-  conversion_rate: number;
-  conversion_values: Record<string, number> | null;
-  quote_count?: number;
-};
+  provider_id: string
+  provider_name?: string | null
+  corridor_id?: string | null
+  total_clicks: number
+  unique_clicks: number
+  conversions: number
+  conversion_rate: number
+  conversion_values: Record<string, number> | null
+  quote_count?: number
+}
 
 type OpsAuditLog = {
-  event_id: string;
-  created_at: string;
-  action: string;
-  actor_id: string;
-  severity?: string | null;
-};
+  event_id: string
+  created_at: string
+  action: string
+  actor_id: string
+  severity?: string | null
+}
 
 type BillingInvoice = {
-  id: string;
-  date: string | null;
-  amount: number | null;
-  currency: string | null;
-  status: string | null;
-  invoice_url: string | null;
-};
+  id: string
+  date: string | null
+  amount: number | null
+  currency: string | null
+  status: string | null
+  invoice_url: string | null
+}
 
 const opsProviders = [
   { id: 'remitly', label: 'Remitly', endpoint: '/ops/remitly/health' },
@@ -5065,9 +5678,9 @@ const opsProviders = [
   { id: 'sendwave', label: 'Sendwave', endpoint: '/ops/sendwave/health' },
   { id: 'mukuru', label: 'Mukuru', endpoint: '/ops/mukuru/health' },
   { id: 'wellsfargo', label: 'Wells Fargo', endpoint: '/ops/wellsfargo/health' },
-] as const;
+] as const
 
-type OpsProviderId = (typeof opsProviders)[number]['id'];
+type OpsProviderId = (typeof opsProviders)[number]['id']
 
 const opsAdminLinks = [
   {
@@ -5105,311 +5718,314 @@ const opsAdminLinks = [
     description: 'Manage placements, creatives, and ad performance.',
     to: '/admin/ads',
   },
-] as const;
+] as const
 
-const adminPlanEmail = ref('');
-const adminPlanSelection = ref<'free' | 'plus' | 'enterprise'>('free');
-const adminPlanNotes = ref('');
-const adminPlanLoading = ref(false);
-const adminPlanError = ref<string | null>(null);
-const adminPlanSuccess = ref<string | null>(null);
+const adminPlanEmail = ref('')
+const adminPlanSelection = ref<'free' | 'plus' | 'enterprise'>('free')
+const adminPlanNotes = ref('')
+const adminPlanLoading = ref(false)
+const adminPlanError = ref<string | null>(null)
+const adminPlanSuccess = ref<string | null>(null)
 
 function buildOpsRecord<T>(factory: () => T): Record<OpsProviderId, T> {
   return opsProviders.reduce(
     (acc, provider) => {
-      acc[provider.id] = factory();
-      return acc;
+      acc[provider.id] = factory()
+      return acc
     },
-    {} as Record<OpsProviderId, T>
-  );
+    {} as Record<OpsProviderId, T>,
+  )
 }
 
-const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>(buildOpsRecord(() => null));
-const opsLoading = ref<Record<OpsProviderId, boolean>>(buildOpsRecord(() => false));
-const opsErrors = ref<Record<OpsProviderId, string | null>>(buildOpsRecord(() => null));
-const opsHasLoaded = ref(false);
+const opsState = ref<Record<OpsProviderId, OpsHealthResponse | null>>(buildOpsRecord(() => null))
+const opsLoading = ref<Record<OpsProviderId, boolean>>(buildOpsRecord(() => false))
+const opsErrors = ref<Record<OpsProviderId, string | null>>(buildOpsRecord(() => null))
+const opsHasLoaded = ref(false)
 
 const telemetryMetricOptions = [
   { id: 'popular_corridors', label: 'Popular Corridors' },
   { id: 'provider_favorites', label: 'Provider Favorites' },
   { id: 'heatmap', label: 'Heatmap' },
   { id: 'engagement', label: 'Engagement' },
-] as const;
+] as const
 
-const telemetryHourOptions = [6, 24, 72, 168, 720] as const;
+const telemetryHourOptions = [6, 24, 72, 168, 720] as const
 
-const telemetryMetric = ref<(typeof telemetryMetricOptions)[number]['id']>('popular_corridors');
-const telemetryHours = ref<number>(24);
-const telemetryRows = ref<TelemetryAggregateRow[]>([]);
-const telemetryLoading = ref(false);
-const telemetryError = ref<string | null>(null);
-const telemetryHasLoaded = ref(false);
+const telemetryMetric = ref<(typeof telemetryMetricOptions)[number]['id']>('popular_corridors')
+const telemetryHours = ref<number>(24)
+const telemetryRows = ref<TelemetryAggregateRow[]>([])
+const telemetryLoading = ref(false)
+const telemetryError = ref<string | null>(null)
+const telemetryHasLoaded = ref(false)
 
-const opsAnalyticsLoading = ref(false);
-const opsAnalyticsError = ref<string | null>(null);
-const opsPopularCorridors = ref<OpsAnalyticsCorridor[]>([]);
-const opsFavoriteProviders = ref<OpsAnalyticsProvider[]>([]);
-const opsRevenueRows = ref<OpsRevenueMetric[]>([]);
-const opsProviderImpact = ref<OpsProviderImpactSummary[]>([]);
-const opsProviderCorridors = ref<OpsProviderCorridorImpact[]>([]);
-const opsAnalyticsPrivacy = ref<OpsPrivacyEnvelope | null>(null);
-const opsAnalyticsAggregationWindow = ref<OpsAggregationWindow | null>(null);
-const opsAnalyticsHasLoaded = ref(false);
+const opsAnalyticsLoading = ref(false)
+const opsAnalyticsError = ref<string | null>(null)
+const opsPopularCorridors = ref<OpsAnalyticsCorridor[]>([])
+const opsFavoriteProviders = ref<OpsAnalyticsProvider[]>([])
+const opsRevenueRows = ref<OpsRevenueMetric[]>([])
+const opsProviderImpact = ref<OpsProviderImpactSummary[]>([])
+const opsProviderCorridors = ref<OpsProviderCorridorImpact[]>([])
+const opsAnalyticsPrivacy = ref<OpsPrivacyEnvelope | null>(null)
+const opsAnalyticsAggregationWindow = ref<OpsAggregationWindow | null>(null)
+const opsAnalyticsHasLoaded = ref(false)
 
-const opsAuditLoading = ref(false);
-const opsAuditError = ref<string | null>(null);
-const opsAuditLogs = ref<OpsAuditLog[]>([]);
-const opsAuditHasLoaded = ref(false);
+const opsAuditLoading = ref(false)
+const opsAuditError = ref<string | null>(null)
+const opsAuditLogs = ref<OpsAuditLog[]>([])
+const opsAuditHasLoaded = ref(false)
 
-const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]));
+const opsRefreshing = computed(() => opsProviders.some(provider => opsLoading.value[provider.id]))
 
-const opsLastRefreshedAt = ref<string | null>(null);
-const opsExpandedProviders = ref<Set<string>>(new Set());
-const OPS_CORRIDOR_PREVIEW_LIMIT = 5;
+const opsLastRefreshedAt = ref<string | null>(null)
+const opsExpandedProviders = ref<Set<string>>(new Set())
+const OPS_CORRIDOR_PREVIEW_LIMIT = 5
 
 const toggleProviderExpanded = (providerId: string) => {
-  const next = new Set(opsExpandedProviders.value);
+  const next = new Set(opsExpandedProviders.value)
   if (next.has(providerId)) {
-    next.delete(providerId);
-  } else {
-    next.add(providerId);
+    next.delete(providerId)
   }
-  opsExpandedProviders.value = next;
-};
+ else {
+    next.add(providerId)
+  }
+  opsExpandedProviders.value = next
+}
 
-const isProviderExpanded = (providerId: string) => opsExpandedProviders.value.has(providerId);
+const isProviderExpanded = (providerId: string) => opsExpandedProviders.value.has(providerId)
 
 const getVisibleCorridors = (providerId: string) => {
-  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? [];
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
   if (isProviderExpanded(providerId) || corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) {
-    return corridors;
+    return corridors
   }
-  return corridors.slice(0, OPS_CORRIDOR_PREVIEW_LIMIT);
-};
+  return corridors.slice(0, OPS_CORRIDOR_PREVIEW_LIMIT)
+}
 
 const getHiddenCorridorCount = (providerId: string) => {
-  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? [];
-  if (corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) return 0;
-  return corridors.length - OPS_CORRIDOR_PREVIEW_LIMIT;
-};
+  const corridors = opsState.value[providerId as OpsProviderId]?.corridors ?? []
+  if (corridors.length <= OPS_CORRIDOR_PREVIEW_LIMIT) return 0
+  return corridors.length - OPS_CORRIDOR_PREVIEW_LIMIT
+}
 
 const opsSummary = computed(() => {
-  let total = 0;
-  let healthy = 0;
-  let stale = 0;
-  let errored = 0;
-  let totalCorridors = 0;
-  let staleCorridors = 0;
+  let total = 0
+  let healthy = 0
+  let stale = 0
+  let errored = 0
+  let totalCorridors = 0
+  let staleCorridors = 0
 
   for (const provider of opsProviders) {
-    total++;
-    const state = opsState.value[provider.id];
-    const error = opsErrors.value[provider.id];
+    total++
+    const state = opsState.value[provider.id]
+    const error = opsErrors.value[provider.id]
     if (error) {
-      errored++;
-      continue;
+      errored++
+      continue
     }
-    if (!state) continue;
-    const corridorCount = state.summary?.corridor_count ?? 0;
-    const staleCount = state.summary?.stale_count ?? 0;
-    totalCorridors += corridorCount;
-    staleCorridors += staleCount;
+    if (!state) continue
+    const corridorCount = state.summary?.corridor_count ?? 0
+    const staleCount = state.summary?.stale_count ?? 0
+    totalCorridors += corridorCount
+    staleCorridors += staleCount
     if (staleCount === 0) {
-      healthy++;
-    } else {
-      stale++;
+      healthy++
+    }
+ else {
+      stale++
     }
   }
 
-  const loaded = healthy + stale + errored;
-  const status: 'ok' | 'warning' | 'critical' | 'unknown' =
-    loaded === 0
+  const loaded = healthy + stale + errored
+  const status: 'ok' | 'warning' | 'critical' | 'unknown'
+    = loaded === 0
       ? 'unknown'
       : errored > 2 || staleCorridors > totalCorridors * 0.3
         ? 'critical'
         : errored > 0 || staleCorridors > 0
           ? 'warning'
-          : 'ok';
+          : 'ok'
 
-  return { total, healthy, stale, errored, loaded, totalCorridors, staleCorridors, status };
-});
+  return { total, healthy, stale, errored, loaded, totalCorridors, staleCorridors, status }
+})
 
 const opsStatusColor = computed(() => {
-  const s = opsSummary.value.status;
-  if (s === 'ok') return 'text-success-600 bg-success-50';
-  if (s === 'warning') return 'text-warning-700 bg-warning-50';
-  if (s === 'critical') return 'text-danger-600 bg-danger-50';
-  return 'text-neutral-500 bg-neutral-50';
-});
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'text-success-600 bg-success-50'
+  if (s === 'warning') return 'text-warning-700 bg-warning-50'
+  if (s === 'critical') return 'text-danger-600 bg-danger-50'
+  return 'text-neutral-500 bg-neutral-50'
+})
 
 const opsStatusLabel = computed(() => {
-  const s = opsSummary.value.status;
-  if (s === 'ok') return 'All Healthy';
-  if (s === 'warning') return 'Degraded';
-  if (s === 'critical') return 'Critical';
-  return 'Not Loaded';
-});
+  const s = opsSummary.value.status
+  if (s === 'ok') return 'All Healthy'
+  if (s === 'warning') return 'Degraded'
+  if (s === 'critical') return 'Critical'
+  return 'Not Loaded'
+})
 
-const opsAutoRefreshMs = 60_000;
-const opsInsightsRefreshMs = 300_000;
-let opsAutoRefreshTimer: ReturnType<typeof setInterval> | null = null;
-let opsInsightsRefreshTimer: ReturnType<typeof setInterval> | null = null;
+const opsAutoRefreshMs = 60_000
+const opsInsightsRefreshMs = 300_000
+let opsAutoRefreshTimer: ReturnType<typeof setInterval> | null = null
+let opsInsightsRefreshTimer: ReturnType<typeof setInterval> | null = null
 
 const startOpsAutoRefresh = () => {
-  if (opsAutoRefreshTimer || opsInsightsRefreshTimer) return;
+  if (opsAutoRefreshTimer || opsInsightsRefreshTimer) return
   opsAutoRefreshTimer = setInterval(() => {
-    if (activeTab.value !== 'ops') return;
-    void refreshAllOps();
-  }, opsAutoRefreshMs);
+    if (activeTab.value !== 'ops') return
+    void refreshAllOps()
+  }, opsAutoRefreshMs)
   opsInsightsRefreshTimer = setInterval(() => {
-    if (activeTab.value !== 'ops') return;
-    void loadTelemetryAnalytics();
-    void loadOpsAnalytics();
-    void loadOpsAudit();
-  }, opsInsightsRefreshMs);
-};
+    if (activeTab.value !== 'ops') return
+    void loadTelemetryAnalytics()
+    void loadOpsAnalytics()
+    void loadOpsAudit()
+  }, opsInsightsRefreshMs)
+}
 
 const stopOpsAutoRefresh = () => {
   if (opsAutoRefreshTimer) {
-    clearInterval(opsAutoRefreshTimer);
-    opsAutoRefreshTimer = null;
+    clearInterval(opsAutoRefreshTimer)
+    opsAutoRefreshTimer = null
   }
   if (opsInsightsRefreshTimer) {
-    clearInterval(opsInsightsRefreshTimer);
-    opsInsightsRefreshTimer = null;
+    clearInterval(opsInsightsRefreshTimer)
+    opsInsightsRefreshTimer = null
   }
-};
+}
 
 const formatOpsTimestamp = (value: string | null | undefined) => {
-  if (!value) return 'n/a';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'n/a';
-  return formatDateTime(parsed);
-};
+  if (!value) return 'n/a'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'n/a'
+  return formatDateTime(parsed)
+}
 
 const formatOpsNumber = (value: number | null | undefined, digits = 2) => {
-  if (value === null || value === undefined) return 'n/a';
-  const number = Number(value);
-  if (!Number.isFinite(number)) return 'n/a';
-  return formatNumber(number, { maximumFractionDigits: digits });
-};
+  if (value === null || value === undefined) return 'n/a'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'n/a'
+  return formatNumber(number, { maximumFractionDigits: digits })
+}
 
 const formatOpsPercent = (value: number | null | undefined, digits = 2) => {
-  if (value === null || value === undefined) return 'n/a';
-  const number = Number(value);
-  if (!Number.isFinite(number)) return 'n/a';
-  return formatPercent(number, { digits, sign: false });
-};
+  if (value === null || value === undefined) return 'n/a'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'n/a'
+  return formatPercent(number, { digits, sign: false })
+}
 
 const formatTrendPercentage = (value: number | null | undefined) => {
-  if (value === null || value === undefined) return '—';
-  const number = Number(value);
-  if (!Number.isFinite(number)) return '—';
-  return formatPercent(number, { digits: 1, sign: true });
-};
+  if (value === null || value === undefined) return '—'
+  const number = Number(value)
+  if (!Number.isFinite(number)) return '—'
+  return formatPercent(number, { digits: 1, sign: true })
+}
 
 const formatCurrencyValue = (value: number, currency: string) => {
-  if (!Number.isFinite(value)) return `${currency} 0`;
-  return formatMoney(value, { currency });
-};
+  if (!Number.isFinite(value)) return `${currency} 0`
+  return formatMoney(value, { currency })
+}
 
 const mergeCurrencyTotals = (
   totals: Record<string, number>,
-  values?: Record<string, number> | null
+  values?: Record<string, number> | null,
 ) => {
-  if (!values || typeof values !== 'object') return;
+  if (!values || typeof values !== 'object') return
   for (const [currency, rawValue] of Object.entries(values)) {
-    const number = Number(rawValue);
-    if (!Number.isFinite(number)) continue;
-    totals[currency] = (totals[currency] || 0) + number;
+    const number = Number(rawValue)
+    if (!Number.isFinite(number)) continue
+    totals[currency] = (totals[currency] || 0) + number
   }
-};
+}
 
 const formatCurrencyTotals = (values?: Record<string, number> | null) => {
-  if (!values || typeof values !== 'object') return '—';
+  if (!values || typeof values !== 'object') return '—'
   const entries = Object.entries(values)
     .filter(([, amount]) => Number.isFinite(Number(amount)))
-    .sort(([a], [b]) => a.localeCompare(b));
-  if (!entries.length) return '—';
+    .sort(([a], [b]) => a.localeCompare(b))
+  if (!entries.length) return '—'
   return entries
     .map(([currency, amount]) => formatCurrencyValue(Number(amount), currency))
-    .join(', ');
-};
+    .join(', ')
+}
 
 const formatOpsFlags = (value: unknown) => {
-  if (!value) return 'none';
-  if (Array.isArray(value)) return value.length ? value.join(', ') : 'none';
-  if (typeof value === 'string') return value;
+  if (!value) return 'none'
+  if (Array.isArray(value)) return value.length ? value.join(', ') : 'none'
+  if (typeof value === 'string') return value
   try {
-    return JSON.stringify(value);
-  } catch {
-    return 'unknown';
+    return JSON.stringify(value)
   }
-};
+ catch {
+    return 'unknown'
+  }
+}
 
 const formatAttemptStatus = (success: boolean | null) => {
-  if (success === true) return 'ok';
-  if (success === false) return 'fail';
-  return 'n/a';
-};
+  if (success === true) return 'ok'
+  if (success === false) return 'fail'
+  return 'n/a'
+}
 
 const attemptStatusClass = (success: boolean | null) => {
-  if (success === true) return 'text-success-600';
-  if (success === false) return 'text-danger-600';
-  return 'text-neutral-400';
-};
+  if (success === true) return 'text-success-600'
+  if (success === false) return 'text-danger-600'
+  return 'text-neutral-400'
+}
 
 const toOpsErrorMessage = (error: unknown) => {
   const candidate = error as {
-    statusCode?: number;
-    status?: number;
-    message?: string;
-    data?: { message?: string; error?: string };
-  };
-  const status = candidate?.statusCode ?? candidate?.status;
+    statusCode?: number
+    status?: number
+    message?: string
+    data?: { message?: string, error?: string }
+  }
+  const status = candidate?.statusCode ?? candidate?.status
   if (status === 401 || status === 403) {
-    return 'Admin access required to view ops data.';
+    return 'Admin access required to view ops data.'
   }
   if (status === 404) {
-    return 'Endpoint not found — check BFF proxy allowlist and backend route registration.';
+    return 'Endpoint not found — check BFF proxy allowlist and backend route registration.'
   }
-  const detail = candidate?.data?.message ?? candidate?.data?.error;
-  if (detail) return detail;
-  if (candidate?.message && candidate.message !== 'fetch failed') return candidate.message;
-  return 'Unable to load ops data.';
-};
+  const detail = candidate?.data?.message ?? candidate?.data?.error
+  if (detail) return detail
+  if (candidate?.message && candidate.message !== 'fetch failed') return candidate.message
+  return 'Unable to load ops data.'
+}
 
 const telemetryLatest = computed(() => {
-  if (!telemetryRows.value.length) return null;
+  if (!telemetryRows.value.length) return null
   return [...telemetryRows.value].sort(
-    (a, b) => new Date(b.time_bucket).getTime() - new Date(a.time_bucket).getTime()
-  )[0];
-});
+    (a, b) => new Date(b.time_bucket).getTime() - new Date(a.time_bucket).getTime(),
+  )[0]
+})
 
 const telemetryWindowHours = computed(() => {
-  const dimensions = telemetryLatest.value?.dimensions;
-  if (!dimensions || typeof dimensions !== 'object') return null;
-  const value = (dimensions as Record<string, unknown>).window_hours;
-  return typeof value === 'number' ? value : null;
-});
+  const dimensions = telemetryLatest.value?.dimensions
+  if (!dimensions || typeof dimensions !== 'object') return null
+  const value = (dimensions as Record<string, unknown>).window_hours
+  return typeof value === 'number' ? value : null
+})
 
 const telemetryEngagement = computed(() => {
-  if (telemetryMetric.value !== 'engagement') return null;
-  const payload = telemetryLatest.value?.value;
-  if (!payload || typeof payload !== 'object') return null;
-  return payload as { avg_engagement?: number; session_count?: number };
-});
+  if (telemetryMetric.value !== 'engagement') return null
+  const payload = telemetryLatest.value?.value
+  if (!payload || typeof payload !== 'object') return null
+  return payload as { avg_engagement?: number, session_count?: number }
+})
 
 const telemetryListRows = computed<TelemetryListRow[]>(() => {
-  if (!telemetryLatest.value) return [];
-  const payload = telemetryLatest.value.value;
-  if (!Array.isArray(payload)) return [];
+  if (!telemetryLatest.value) return []
+  const payload = telemetryLatest.value.value
+  if (!Array.isArray(payload)) return []
   if (telemetryMetric.value === 'popular_corridors') {
     return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
       key: `${row.corridor_id ?? 'corridor'}-${index}`,
       corridor: row.corridor_id as string | undefined,
       count: Number(row.search_count) || 0,
-    }));
+    }))
   }
   if (telemetryMetric.value === 'provider_favorites') {
     return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
@@ -5417,7 +6033,7 @@ const telemetryListRows = computed<TelemetryListRow[]>(() => {
       provider: row.provider_id as string | undefined,
       corridor: row.corridor_id as string | undefined,
       count: Number(row.click_count) || 0,
-    }));
+    }))
   }
   if (telemetryMetric.value === 'heatmap') {
     return payload.slice(0, 12).map((row: Record<string, unknown>, index: number) => ({
@@ -5425,26 +6041,26 @@ const telemetryListRows = computed<TelemetryListRow[]>(() => {
       from: row.from_country as string | undefined,
       to: row.to_country as string | undefined,
       count: Number(row.search_count) || 0,
-    }));
+    }))
   }
-  return [];
-});
+  return []
+})
 
 const opsRevenueSummary = computed(() => {
   const totals = {
     totalClicks: 0,
     affiliateClicks: 0,
     uniqueUsers: 0,
-  };
-  for (const row of opsRevenueRows.value) {
-    totals.totalClicks += Number(row.total_clicks) || 0;
-    totals.affiliateClicks += Number(row.affiliate_clicks) || 0;
-    totals.uniqueUsers += Number(row.unique_users) || 0;
   }
-  const affiliateRate =
-    totals.totalClicks > 0 ? (totals.affiliateClicks / totals.totalClicks) * 100 : 0;
-  return { ...totals, affiliateRate };
-});
+  for (const row of opsRevenueRows.value) {
+    totals.totalClicks += Number(row.total_clicks) || 0
+    totals.affiliateClicks += Number(row.affiliate_clicks) || 0
+    totals.uniqueUsers += Number(row.unique_users) || 0
+  }
+  const affiliateRate
+    = totals.totalClicks > 0 ? (totals.affiliateClicks / totals.totalClicks) * 100 : 0
+  return { ...totals, affiliateRate }
+})
 
 const opsConversionSummary = computed(() => {
   const totals = {
@@ -5453,63 +6069,65 @@ const opsConversionSummary = computed(() => {
     uniqueConversions: 0,
     conversionRate: 0,
     conversionValues: {} as Record<string, number>,
-  };
-  for (const row of opsProviderImpact.value) {
-    totals.totalClicks += Number(row.total_clicks) || 0;
-    totals.conversions += Number(row.conversions) || 0;
-    totals.uniqueConversions += Number(row.unique_conversions) || 0;
-    mergeCurrencyTotals(totals.conversionValues, row.conversion_values);
   }
-  totals.conversionRate =
-    totals.totalClicks > 0 ? (totals.conversions / totals.totalClicks) * 100 : 0;
-  return totals;
-});
+  for (const row of opsProviderImpact.value) {
+    totals.totalClicks += Number(row.total_clicks) || 0
+    totals.conversions += Number(row.conversions) || 0
+    totals.uniqueConversions += Number(row.unique_conversions) || 0
+    mergeCurrencyTotals(totals.conversionValues, row.conversion_values)
+  }
+  totals.conversionRate
+    = totals.totalClicks > 0 ? (totals.conversions / totals.totalClicks) * 100 : 0
+  return totals
+})
 
 const opsSuppressedCount = computed(() => {
-  const fromCorridors = opsPopularCorridors.value.filter(row => row.suppressed).length;
-  const fromProviders = opsFavoriteProviders.value.filter(row => row.suppressed).length;
-  const fromImpactProviders = opsProviderImpact.value.filter(row => row.suppressed).length;
-  const fromImpactCorridors = opsProviderCorridors.value.filter(row => row.suppressed).length;
-  return fromCorridors + fromProviders + fromImpactProviders + fromImpactCorridors;
-});
+  const fromCorridors = opsPopularCorridors.value.filter(row => row.suppressed).length
+  const fromProviders = opsFavoriteProviders.value.filter(row => row.suppressed).length
+  const fromImpactProviders = opsProviderImpact.value.filter(row => row.suppressed).length
+  const fromImpactCorridors = opsProviderCorridors.value.filter(row => row.suppressed).length
+  return fromCorridors + fromProviders + fromImpactProviders + fromImpactCorridors
+})
 
 const opsPrivacyThresholdSummary = computed(() => {
-  const meta = opsAnalyticsAggregationWindow.value;
-  if (!meta) return null;
-  return `k>=${opsAnalyticsPrivacy.value?.minUniqueUsers ?? 5}, ${meta.minDatapoints24h} datapoints/24h, ${meta.minProviderQuotesPerCorridor} quotes/corridor, ${meta.minTrendLookbackDays}d trends`;
-});
+  const meta = opsAnalyticsAggregationWindow.value
+  if (!meta) return null
+  return `k>=${opsAnalyticsPrivacy.value?.minUniqueUsers ?? 5}, ${meta.minDatapoints24h} datapoints/24h, ${meta.minProviderQuotesPerCorridor} quotes/corridor, ${meta.minTrendLookbackDays}d trends`
+})
 
 const loadOpsHealth = async (providerId: OpsProviderId) => {
-  const provider = opsProviders.find(item => item.id === providerId);
-  if (!provider) return;
-  if (opsLoading.value[providerId]) return;
-  opsLoading.value[providerId] = true;
-  opsErrors.value[providerId] = null;
+  const provider = opsProviders.find(item => item.id === providerId)
+  if (!provider) return
+  if (opsLoading.value[providerId]) return
+  opsLoading.value[providerId] = true
+  opsErrors.value[providerId] = null
   try {
-    const response = await request<OpsHealthResponse>(provider.endpoint);
-    opsState.value[providerId] = response;
-  } catch (error) {
-    opsErrors.value[providerId] = toOpsErrorMessage(error);
-  } finally {
-    opsLoading.value[providerId] = false;
+    const response = await request<OpsHealthResponse>(provider.endpoint)
+    opsState.value[providerId] = response
   }
-};
+ catch (error) {
+    opsErrors.value[providerId] = toOpsErrorMessage(error)
+  }
+ finally {
+    opsLoading.value[providerId] = false
+  }
+}
 
 const refreshAllOps = async () => {
-  opsHasLoaded.value = true;
-  await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)));
-  opsLastRefreshedAt.value = new Date().toISOString();
-};
+  opsHasLoaded.value = true
+  await Promise.all(opsProviders.map(provider => loadOpsHealth(provider.id)))
+  opsLastRefreshedAt.value = new Date().toISOString()
+}
 
 const handleAdminPlanGrant = async () => {
-  const email = adminPlanEmail.value.trim();
+  const email = adminPlanEmail.value.trim()
   if (!email) {
-    adminPlanError.value = 'Enter a user email to update.';
-    return;
+    adminPlanError.value = 'Enter a user email to update.'
+    return
   }
-  adminPlanLoading.value = true;
-  adminPlanError.value = null;
-  adminPlanSuccess.value = null;
+  adminPlanLoading.value = true
+  adminPlanError.value = null
+  adminPlanSuccess.value = null
   try {
     await request('/admin/plans/grant', {
       method: 'POST',
@@ -5520,26 +6138,28 @@ const handleAdminPlanGrant = async () => {
           ? { notes: adminPlanNotes.value }
           : {}),
       },
-    });
-    adminPlanSuccess.value = `Plan "${adminPlanSelection.value}" granted to ${email}.`;
-  } catch (error) {
-    adminPlanError.value = toOpsErrorMessage(error);
-  } finally {
-    adminPlanLoading.value = false;
+    })
+    adminPlanSuccess.value = `Plan "${adminPlanSelection.value}" granted to ${email}.`
   }
-};
+ catch (error) {
+    adminPlanError.value = toOpsErrorMessage(error)
+  }
+ finally {
+    adminPlanLoading.value = false
+  }
+}
 
 const buildOpsDateRange = (days: number) => {
-  const end = new Date();
-  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
-  return { start_date: start.toISOString(), end_date: end.toISOString() };
-};
+  const end = new Date()
+  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
+  return { start_date: start.toISOString(), end_date: end.toISOString() }
+}
 
 const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
-  if (telemetryLoading.value) return;
-  telemetryHasLoaded.value = true;
-  telemetryLoading.value = true;
-  telemetryError.value = null;
+  if (telemetryLoading.value) return
+  telemetryHasLoaded.value = true
+  telemetryLoading.value = true
+  telemetryError.value = null
   try {
     const response = await request<{ data: TelemetryAggregateRow[] }>('/telemetry/analytics', {
       query: {
@@ -5547,261 +6167,269 @@ const loadTelemetryAnalytics = async (signal?: AbortSignal) => {
         hours: telemetryHours.value,
       },
       signal,
-    });
-    telemetryRows.value = response?.data ?? [];
-  } catch (error: unknown) {
-    if (isAbortError(error)) return;
-    telemetryError.value = toOpsErrorMessage(error);
-    telemetryRows.value = [];
-  } finally {
-    telemetryLoading.value = false;
+    })
+    telemetryRows.value = response?.data ?? []
   }
-};
+ catch (error: unknown) {
+    if (isAbortError(error)) return
+    telemetryError.value = toOpsErrorMessage(error)
+    telemetryRows.value = []
+  }
+ finally {
+    telemetryLoading.value = false
+  }
+}
 
 const loadOpsAnalytics = async () => {
-  if (opsAnalyticsLoading.value) return;
-  opsAnalyticsHasLoaded.value = true;
-  opsAnalyticsLoading.value = true;
-  opsAnalyticsError.value = null;
-  const range = buildOpsDateRange(7);
+  if (opsAnalyticsLoading.value) return
+  opsAnalyticsHasLoaded.value = true
+  opsAnalyticsLoading.value = true
+  opsAnalyticsError.value = null
+  const range = buildOpsDateRange(7)
   try {
     const results = await Promise.allSettled([
       request<{
-        corridors: OpsAnalyticsCorridor[];
-        privacy?: OpsPrivacyEnvelope;
-        aggregationWindow?: OpsAggregationWindow;
+        corridors: OpsAnalyticsCorridor[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
       }>('/analytics/corridors', {
         query: { ...range, limit: 6 },
       }),
       request<{
-        providers: OpsAnalyticsProvider[];
-        privacy?: OpsPrivacyEnvelope;
-        aggregationWindow?: OpsAggregationWindow;
+        providers: OpsAnalyticsProvider[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
       }>('/analytics/providers', {
         query: { ...range, limit: 6 },
       }),
       request<{
-        providers: OpsProviderImpactSummary[];
-        corridors: OpsProviderCorridorImpact[];
-        privacy?: OpsPrivacyEnvelope;
-        aggregationWindow?: OpsAggregationWindow;
+        providers: OpsProviderImpactSummary[]
+        corridors: OpsProviderCorridorImpact[]
+        privacy?: OpsPrivacyEnvelope
+        aggregationWindow?: OpsAggregationWindow
       }>('/analytics/providers/impact', {
         query: { ...range, limit: 8, corridor_limit: 8 },
       }),
       request<{ revenue: OpsRevenueMetric[] }>('/analytics/revenue', {
         query: { ...range, limit: 10 },
       }),
-    ]);
-    const [corridors, providers, impact, revenue] = results;
-    opsPopularCorridors.value =
-      corridors.status === 'fulfilled' ? (corridors.value?.corridors ?? []) : [];
-    opsFavoriteProviders.value =
-      providers.status === 'fulfilled' ? (providers.value?.providers ?? []) : [];
-    opsProviderImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers ?? []) : [];
-    opsProviderCorridors.value =
-      impact.status === 'fulfilled' ? (impact.value?.corridors ?? []) : [];
-    opsRevenueRows.value = revenue.status === 'fulfilled' ? (revenue.value?.revenue ?? []) : [];
-    opsAnalyticsPrivacy.value =
-      corridors.status === 'fulfilled'
+    ])
+    const [corridors, providers, impact, revenue] = results
+    opsPopularCorridors.value
+      = corridors.status === 'fulfilled' ? (corridors.value?.corridors ?? []) : []
+    opsFavoriteProviders.value
+      = providers.status === 'fulfilled' ? (providers.value?.providers ?? []) : []
+    opsProviderImpact.value = impact.status === 'fulfilled' ? (impact.value?.providers ?? []) : []
+    opsProviderCorridors.value
+      = impact.status === 'fulfilled' ? (impact.value?.corridors ?? []) : []
+    opsRevenueRows.value = revenue.status === 'fulfilled' ? (revenue.value?.revenue ?? []) : []
+    opsAnalyticsPrivacy.value
+      = corridors.status === 'fulfilled'
         ? (corridors.value?.privacy ?? null)
         : providers.status === 'fulfilled'
           ? (providers.value?.privacy ?? null)
           : impact.status === 'fulfilled'
             ? (impact.value?.privacy ?? null)
-            : null;
-    opsAnalyticsAggregationWindow.value =
-      corridors.status === 'fulfilled'
+            : null
+    opsAnalyticsAggregationWindow.value
+      = corridors.status === 'fulfilled'
         ? (corridors.value?.aggregationWindow ?? null)
         : providers.status === 'fulfilled'
           ? (providers.value?.aggregationWindow ?? null)
           : impact.status === 'fulfilled'
             ? (impact.value?.aggregationWindow ?? null)
-            : null;
-    const failures = results.filter(r => r.status === 'rejected');
+            : null
+    const failures = results.filter(r => r.status === 'rejected')
     if (failures.length === results.length) {
-      opsAnalyticsError.value = toOpsErrorMessage((failures[0] as PromiseRejectedResult).reason);
-    } else if (failures.length > 0) {
-      opsAnalyticsError.value = `${failures.length} of ${results.length} analytics endpoints failed to load.`;
+      opsAnalyticsError.value = toOpsErrorMessage((failures[0] as PromiseRejectedResult).reason)
     }
-  } catch (error) {
-    opsAnalyticsError.value = toOpsErrorMessage(error);
-    opsPopularCorridors.value = [];
-    opsFavoriteProviders.value = [];
-    opsProviderImpact.value = [];
-    opsProviderCorridors.value = [];
-    opsRevenueRows.value = [];
-    opsAnalyticsPrivacy.value = null;
-    opsAnalyticsAggregationWindow.value = null;
-  } finally {
-    opsAnalyticsLoading.value = false;
+ else if (failures.length > 0) {
+      opsAnalyticsError.value = `${failures.length} of ${results.length} analytics endpoints failed to load.`
+    }
   }
-};
+ catch (error) {
+    opsAnalyticsError.value = toOpsErrorMessage(error)
+    opsPopularCorridors.value = []
+    opsFavoriteProviders.value = []
+    opsProviderImpact.value = []
+    opsProviderCorridors.value = []
+    opsRevenueRows.value = []
+    opsAnalyticsPrivacy.value = null
+    opsAnalyticsAggregationWindow.value = null
+  }
+ finally {
+    opsAnalyticsLoading.value = false
+  }
+}
 
 const loadOpsAudit = async () => {
-  if (opsAuditLoading.value) return;
-  opsAuditHasLoaded.value = true;
-  opsAuditLoading.value = true;
-  opsAuditError.value = null;
-  const range = buildOpsDateRange(7);
+  if (opsAuditLoading.value) return
+  opsAuditHasLoaded.value = true
+  opsAuditLoading.value = true
+  opsAuditError.value = null
+  const range = buildOpsDateRange(7)
   try {
     const response = await request<{ logs: OpsAuditLog[] }>('/audit/logs', {
       query: { ...range, limit: 8, offset: 0 },
-    });
-    opsAuditLogs.value = response?.logs ?? [];
-  } catch (error) {
-    opsAuditError.value = toOpsErrorMessage(error);
-    opsAuditLogs.value = [];
-  } finally {
-    opsAuditLoading.value = false;
+    })
+    opsAuditLogs.value = response?.logs ?? []
   }
-};
+ catch (error) {
+    opsAuditError.value = toOpsErrorMessage(error)
+    opsAuditLogs.value = []
+  }
+ finally {
+    opsAuditLoading.value = false
+  }
+}
 
 watch(
   () => activeTab.value,
-  tab => {
+  (tab) => {
     if (tab === 'ops') {
-      startOpsAutoRefresh();
-    } else {
-      stopOpsAutoRefresh();
+      startOpsAutoRefresh()
+    }
+ else {
+      stopOpsAutoRefresh()
     }
     if (tab === 'ops' && !hasAdminAccess.value) {
-      return;
+      return
     }
     if (tab === 'ops') {
       if (!opsHasLoaded.value) {
-        void refreshAllOps();
+        void refreshAllOps()
       }
-      void loadTelemetryAnalytics();
-      void loadOpsAnalytics();
-      void loadOpsAudit();
+      void loadTelemetryAnalytics()
+      void loadOpsAnalytics()
+      void loadOpsAudit()
     }
-  }
-);
+  },
+)
 
 useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
-  if (activeTab.value !== 'ops') return;
-  await loadTelemetryAnalytics(signal);
-});
+  if (activeTab.value !== 'ops') return
+  await loadTelemetryAnalytics(signal)
+})
 
 useAbortableWatch(
   isAuthenticated,
   async (loggedIn, signal) => {
-    adminAccessChecked.value = false;
+    adminAccessChecked.value = false
     if (loggedIn) {
-      await checkAdminAccess(signal);
-      return;
+      await checkAdminAccess(signal)
+      return
     }
-    hasAdminAccess.value = false;
-    adminAccessChecked.value = true;
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 useAbortableWatch([() => telemetryMetric.value, () => telemetryHours.value], async (_, signal) => {
-  if (activeTab.value !== 'ops') return;
-  await loadTelemetryAnalytics(signal);
-});
+  if (activeTab.value !== 'ops') return
+  await loadTelemetryAnalytics(signal)
+})
 
 useAbortableWatch(
   isAuthenticated,
   async (loggedIn, signal) => {
-    adminAccessChecked.value = false;
+    adminAccessChecked.value = false
     if (loggedIn) {
-      await checkAdminAccess(signal);
-      return;
+      await checkAdminAccess(signal)
+      return
     }
-    hasAdminAccess.value = false;
-    adminAccessChecked.value = true;
+    hasAdminAccess.value = false
+    adminAccessChecked.value = true
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 // Form state
-type CorridorSelection = { from: string; to: string };
+type CorridorSelection = { from: string, to: string }
 
-const newWatchlist = ref<CorridorSelection>({ from: '', to: '' });
-const graphTimeframe = ref('7d');
+const newWatchlist = ref<CorridorSelection>({ from: '', to: '' })
+const graphTimeframe = ref('7d')
 
 // Rate Checker state
-const showCorridorSelector = ref(false);
-const selectedCorridor = ref<CorridorSelection | null>(null);
-const customCorridor = ref<CorridorSelection>({ from: '', to: '' });
+const showCorridorSelector = ref(false)
+const selectedCorridor = ref<CorridorSelection | null>(null)
+const customCorridor = ref<CorridorSelection>({ from: '', to: '' })
 
 const defaultSelectedCorridor = computed<CorridorSelection | null>(() => {
-  const first = corridorWatchlistItems.value[0];
-  if (!first || first.target.type !== 'corridor') return null;
+  const first = corridorWatchlistItems.value[0]
+  if (!first || first.target.type !== 'corridor') return null
   return {
     from: first.target.from.toUpperCase(),
     to: first.target.to.toUpperCase(),
-  };
-});
+  }
+})
 
 // Avoid showing mock corridors. Default to the user's real watchlist corridor when available.
 watch(
   () => [watchlistHydrated.value, corridorWatchlistItems.value.length] as const,
   ([hydrated]) => {
-    if (!hydrated) return;
-    if (selectedCorridor.value) return;
-    const fallback = defaultSelectedCorridor.value;
-    if (!fallback) return;
-    selectedCorridor.value = fallback;
+    if (!hydrated) return
+    if (selectedCorridor.value) return
+    const fallback = defaultSelectedCorridor.value
+    if (!fallback) return
+    selectedCorridor.value = fallback
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => showCorridorSelector.value,
-  open => {
-    if (!open) return;
+  (open) => {
+    if (!open) return
     if (selectedCorridor.value) {
-      customCorridor.value = { ...selectedCorridor.value };
-      return;
+      customCorridor.value = { ...selectedCorridor.value }
+      return
     }
-    customCorridor.value = { from: '', to: '' };
-  }
-);
+    customCorridor.value = { from: '', to: '' }
+  },
+)
 
 type TimeframePeriod = {
-  label: string;
-  value: '7d' | '30d' | '90d' | '180d' | '365d';
-  requiredPlan: 'plus' | 'enterprise' | null;
-};
+  label: string
+  value: '7d' | '30d' | '90d' | '180d' | '365d'
+  requiredPlan: 'plus' | 'enterprise' | null
+}
 
 const allTimeframePeriods: TimeframePeriod[] = [
   { label: '7D', value: '7d', requiredPlan: null },
   { label: '1M', value: '30d', requiredPlan: null },
   { label: '3M', value: '90d', requiredPlan: 'plus' },
   { label: '6M', value: '180d', requiredPlan: 'enterprise' },
-];
+]
 
 const timeframePeriods = computed<TimeframePeriod[]>(() => {
-  if (isEnterprise.value) return allTimeframePeriods;
+  if (isEnterprise.value) return allTimeframePeriods
   // Plus and free users: hide enterprise-only tabs (6M)
-  return allTimeframePeriods.filter(period => period.requiredPlan !== 'enterprise');
-});
+  return allTimeframePeriods.filter(period => period.requiredPlan !== 'enterprise')
+})
 
 const hasTimeframeAccess = (period: TimeframePeriod) => {
-  if (!period.requiredPlan) return true;
-  if (period.requiredPlan === 'plus') return isPlus.value;
-  return isEnterprise.value;
-};
+  if (!period.requiredPlan) return true
+  if (period.requiredPlan === 'plus') return isPlus.value
+  return isEnterprise.value
+}
 
 const isTimeframeLocked = (value: string) => {
-  const period = allTimeframePeriods.find(entry => entry.value === value);
-  if (!period) return false;
-  return !hasTimeframeAccess(period);
-};
+  const period = allTimeframePeriods.find(entry => entry.value === value)
+  if (!period) return false
+  return !hasTimeframeAccess(period)
+}
 
 const lockedTimeframeTitle = (period: TimeframePeriod) => {
-  if (hasTimeframeAccess(period)) return undefined;
-  return period.requiredPlan === 'enterprise' ? 'Enterprise required' : 'Plus required';
-};
+  if (hasTimeframeAccess(period)) return undefined
+  return period.requiredPlan === 'enterprise' ? 'Enterprise required' : 'Plus required'
+}
 
 const getAllowedTimeframes = () => {
-  if (isEnterprise.value) return ['7d', '30d', '90d', '180d'];
-  if (isPlus.value) return ['7d', '30d', '90d'];
-  return ['7d', '30d'];
-};
+  if (isEnterprise.value) return ['7d', '30d', '90d', '180d']
+  if (isPlus.value) return ['7d', '30d', '90d']
+  return ['7d', '30d']
+}
 
 const countryOptions = computed(() => {
   return Object.values(countryMap)
@@ -5812,47 +6440,47 @@ const countryOptions = computed(() => {
       code: c.code,
       flag: getFlag(c.code),
       name: c.name,
-    }));
-});
+    }))
+})
 
-const inlineFromOptions = computed(() => countryOptions.value);
-const inlineToOptions = computed(() => countryOptions.value);
+const inlineFromOptions = computed(() => countryOptions.value)
+const inlineToOptions = computed(() => countryOptions.value)
 
-const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30);
+const selectedHistoryDays = computed(() => historyDaysByTimeframe[graphTimeframe.value] ?? 30)
 
 const selectedPair = computed(() => {
-  if (!selectedCorridor.value) return null;
-  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to);
-});
+  if (!selectedCorridor.value) return null
+  return getPairForCorridor(selectedCorridor.value.from, selectedCorridor.value.to)
+})
 
 const selectedHistoryMeta = computed(() => {
-  const pair = selectedPair.value;
-  if (!pair) return null;
-  return getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value);
-});
+  const pair = selectedPair.value
+  if (!pair) return null
+  return getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
+})
 
 const selectedHistoryStatusMessage = computed(() => {
-  if (!selectedCorridor.value) return 'Select a corridor';
-  const meta = selectedHistoryMeta.value;
-  if (!meta) return 'No rate history yet';
-  if (typeof meta.message === 'string' && meta.message.trim().length > 0) return meta.message;
-  if (meta.status === 'warming') return 'Rate history is warming up.';
+  if (!selectedCorridor.value) return 'Select a corridor'
+  const meta = selectedHistoryMeta.value
+  if (!meta) return 'No rate history yet'
+  if (typeof meta.message === 'string' && meta.message.trim().length > 0) return meta.message
+  if (meta.status === 'warming') return 'Rate history is warming up.'
   if (meta.status === 'unavailable')
-    return 'Rate history is unavailable for this corridor right now.';
-  return 'No rate history yet';
-});
+    return 'Rate history is unavailable for this corridor right now.'
+  return 'No rate history yet'
+})
 
 const selectedHistoryDerivedLabel = computed(() => {
-  const meta = selectedHistoryMeta.value;
-  if (!meta?.derived) return null;
+  const meta = selectedHistoryMeta.value
+  if (!meta?.derived) return null
   if (meta.bridgeCurrency === 'USD' || meta.bridgeCurrency === 'EUR') {
-    return `Derived via ${meta.bridgeCurrency} bridge`;
+    return `Derived via ${meta.bridgeCurrency} bridge`
   }
-  return 'Derived history';
-});
+  return 'Derived history'
+})
 
 const selectedSnapshot = computed<RateSnapshot>(() => {
-  const pair = selectedPair.value;
+  const pair = selectedPair.value
   if (!pair) {
     return {
       rateLabel: '—',
@@ -5862,10 +6490,10 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
       hasChange: false,
       lastUpdated: null,
       history: [],
-    };
+    }
   }
-  const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value);
-  const history = getRateHistory(pair.base, pair.quote, selectedHistoryDays.value);
+  const meta = getRateHistoryMeta(pair.base, pair.quote, selectedHistoryDays.value)
+  const history = getRateHistory(pair.base, pair.quote, selectedHistoryDays.value)
   if (!history.length) {
     return {
       rateLabel: '—',
@@ -5875,13 +6503,13 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
       hasChange: false,
       lastUpdated: meta?.lastUpdated ?? null,
       history,
-    };
+    }
   }
-  const latest = history[history.length - 1];
-  const previous = history.length > 1 ? history[history.length - 2] : null;
-  const change =
-    previous && previous.rate > 0 ? ((latest.rate - previous.rate) / previous.rate) * 100 : null;
-  const hasChange = change !== null && change !== undefined && Number.isFinite(change);
+  const latest = history[history.length - 1]
+  const previous = history.length > 1 ? history[history.length - 2] : null
+  const change
+    = previous && previous.rate > 0 ? ((latest.rate - previous.rate) / previous.rate) * 100 : null
+  const hasChange = change !== null && change !== undefined && Number.isFinite(change)
   return {
     rateLabel: formatRateValue(latest.rate),
     rateValue: latest.rate,
@@ -5890,66 +6518,67 @@ const selectedSnapshot = computed<RateSnapshot>(() => {
     hasChange,
     lastUpdated: meta?.lastUpdated ?? latest.date,
     history,
-  };
-});
+  }
+})
 
 const selectedHistoryLoading = computed(() => {
-  const pair = selectedPair.value;
-  if (!pair) return false;
-  const key = buildHistoryKey(pair.base, pair.quote, selectedHistoryDays.value);
-  return Boolean(rateHistoryLoading.value[key]);
-});
+  const pair = selectedPair.value
+  if (!pair) return false
+  const key = buildHistoryKey(pair.base, pair.quote, selectedHistoryDays.value)
+  return Boolean(rateHistoryLoading.value[key])
+})
 
-const SELECTED_HISTORY_REFRESH_POLL_MS = 2500;
-const SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS = 8;
-const selectedHistoryRefreshAttempts = ref(0);
-const selectedHistoryRefreshTimer = ref<number | null>(null);
-const selectedHistoryLastRefreshRequestId = ref<string | null>(null);
-const selectedHistoryLastPairKey = ref<string | null>(null);
+const SELECTED_HISTORY_REFRESH_POLL_MS = 2500
+const SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS = 8
+const selectedHistoryRefreshAttempts = ref(0)
+const selectedHistoryRefreshTimer = ref<number | null>(null)
+const selectedHistoryLastRefreshRequestId = ref<string | null>(null)
+const selectedHistoryLastPairKey = ref<string | null>(null)
 
 const stopSelectedHistoryRefreshPoll = () => {
-  if (!import.meta.client) return;
+  if (!import.meta.client) return
   if (selectedHistoryRefreshTimer.value !== null) {
-    window.clearTimeout(selectedHistoryRefreshTimer.value);
-    selectedHistoryRefreshTimer.value = null;
+    window.clearTimeout(selectedHistoryRefreshTimer.value)
+    selectedHistoryRefreshTimer.value = null
   }
-};
+}
 
 const shouldPollSelectedHistory = () => {
-  const meta = selectedHistoryMeta.value;
-  if (!meta) return false;
-  if (meta.history.length > 0) return false;
-  if (meta.status !== 'warming') return false;
-  return Boolean(meta.refreshQueued && meta.refreshRequestId);
-};
+  const meta = selectedHistoryMeta.value
+  if (!meta) return false
+  if (meta.history.length > 0) return false
+  if (meta.status !== 'warming') return false
+  return Boolean(meta.refreshQueued && meta.refreshRequestId)
+}
 
 const scheduleSelectedHistoryRefreshPoll = () => {
-  if (!import.meta.client) return;
-  if (selectedHistoryRefreshTimer.value !== null) return;
-  if (selectedHistoryRefreshAttempts.value >= SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS) return;
-  const pair = selectedPair.value;
-  if (!pair) return;
-  if (!shouldPollSelectedHistory()) return;
+  if (!import.meta.client) return
+  if (selectedHistoryRefreshTimer.value !== null) return
+  if (selectedHistoryRefreshAttempts.value >= SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS) return
+  const pair = selectedPair.value
+  if (!pair) return
+  if (!shouldPollSelectedHistory()) return
 
   selectedHistoryRefreshTimer.value = window.setTimeout(async () => {
-    selectedHistoryRefreshTimer.value = null;
-    selectedHistoryRefreshAttempts.value += 1;
+    selectedHistoryRefreshTimer.value = null
+    selectedHistoryRefreshAttempts.value += 1
     try {
       await loadRateHistory(pair.base, pair.quote, selectedHistoryDays.value, undefined, {
         force: true,
-      });
-    } catch (error: unknown) {
-      if (isAbortError(error)) return;
+      })
+    }
+ catch (error: unknown) {
+      if (isAbortError(error)) return
     }
 
     if (
-      shouldPollSelectedHistory() &&
-      selectedHistoryRefreshAttempts.value < SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS
+      shouldPollSelectedHistory()
+      && selectedHistoryRefreshAttempts.value < SELECTED_HISTORY_REFRESH_MAX_ATTEMPTS
     ) {
-      scheduleSelectedHistoryRefreshPoll();
+      scheduleSelectedHistoryRefreshPoll()
     }
-  }, SELECTED_HISTORY_REFRESH_POLL_MS);
-};
+  }, SELECTED_HISTORY_REFRESH_POLL_MS)
+}
 
 const currentRate = computed(() => {
   return {
@@ -5957,41 +6586,41 @@ const currentRate = computed(() => {
     change: selectedSnapshot.value.change,
     updatedLabel: formatUpdatedLabel(selectedSnapshot.value.lastUpdated),
     isAvailable: selectedSnapshot.value.rateValue !== null,
-  };
-});
+  }
+})
 
 const rateStats = computed(() => {
-  const history = selectedSnapshot.value.history;
+  const history = selectedSnapshot.value.history
   if (!history.length) {
-    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false };
+    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false }
   }
-  const values = history.map(point => point.rate).filter(Number.isFinite);
+  const values = history.map(point => point.rate).filter(Number.isFinite)
   if (!values.length) {
-    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false };
+    return { high: '—', low: '—', average: '—', volatility: '—', hasData: false }
   }
-  const high = Math.max(...values);
-  const low = Math.min(...values);
-  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-  const variance =
-    values.reduce((sum, value) => sum + Math.pow(value - average, 2), 0) / values.length;
-  const volatility = average > 0 ? (Math.sqrt(variance) / average) * 100 : 0;
+  const high = Math.max(...values)
+  const low = Math.min(...values)
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length
+  const variance
+    = values.reduce((sum, value) => sum + Math.pow(value - average, 2), 0) / values.length
+  const volatility = average > 0 ? (Math.sqrt(variance) / average) * 100 : 0
   return {
     high: formatRateValue(high),
     low: formatRateValue(low),
     average: formatRateValue(average),
     volatility: formatPercentValue(volatility, false),
     hasData: true,
-  };
-});
+  }
+})
 
 useAbortableWatch(
   [selectedPair, selectedHistoryDays],
   async ([pair, days], signal) => {
-    if (!pair) return;
-    await loadRateHistory(pair.base, pair.quote, days, signal);
+    if (!pair) return
+    await loadRateHistory(pair.base, pair.quote, days, signal)
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => ({
@@ -6002,98 +6631,98 @@ watch(
     pairKey: selectedPair.value ? `${selectedPair.value.base}-${selectedPair.value.quote}` : null,
     days: selectedHistoryDays.value,
   }),
-  state => {
-    if (!import.meta.client) return;
+  (state) => {
+    if (!import.meta.client) return
 
     if (state.pairKey !== selectedHistoryLastPairKey.value) {
-      selectedHistoryLastPairKey.value = state.pairKey;
-      selectedHistoryRefreshAttempts.value = 0;
-      stopSelectedHistoryRefreshPoll();
+      selectedHistoryLastPairKey.value = state.pairKey
+      selectedHistoryRefreshAttempts.value = 0
+      stopSelectedHistoryRefreshPoll()
     }
 
     if (state.requestId !== selectedHistoryLastRefreshRequestId.value) {
-      selectedHistoryLastRefreshRequestId.value = state.requestId;
-      selectedHistoryRefreshAttempts.value = 0;
+      selectedHistoryLastRefreshRequestId.value = state.requestId
+      selectedHistoryRefreshAttempts.value = 0
     }
 
     const canPoll = Boolean(
-      state.pairKey &&
-      state.status === 'warming' &&
-      state.refreshQueued &&
-      state.requestId &&
-      state.historyLength === 0
-    );
+      state.pairKey
+      && state.status === 'warming'
+      && state.refreshQueued
+      && state.requestId
+      && state.historyLength === 0,
+    )
     if (!canPoll) {
-      stopSelectedHistoryRefreshPoll();
-      return;
+      stopSelectedHistoryRefreshPoll()
+      return
     }
 
-    scheduleSelectedHistoryRefreshPoll();
+    scheduleSelectedHistoryRefreshPoll()
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 onUnmounted(() => {
-  stopSelectedHistoryRefreshPoll();
-});
+  stopSelectedHistoryRefreshPoll()
+})
 
 watch(
   () => [isPlus.value, isEnterprise.value] as const,
   () => {
-    const allowedTimeframes = getAllowedTimeframes();
-    if (allowedTimeframes.includes(graphTimeframe.value)) return;
-    graphTimeframe.value = isPlus.value ? '90d' : '30d';
+    const allowedTimeframes = getAllowedTimeframes()
+    if (allowedTimeframes.includes(graphTimeframe.value)) return
+    graphTimeframe.value = isPlus.value ? '90d' : '30d'
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 function selectCorridor(from: string, to: string) {
-  const nextFrom = (from || '').trim().toUpperCase();
-  const nextTo = (to || '').trim().toUpperCase();
-  if (!nextFrom || !nextTo) return;
-  selectedCorridor.value = { from: nextFrom, to: nextTo };
-  showCorridorSelector.value = false;
+  const nextFrom = (from || '').trim().toUpperCase()
+  const nextTo = (to || '').trim().toUpperCase()
+  if (!nextFrom || !nextTo) return
+  selectedCorridor.value = { from: nextFrom, to: nextTo }
+  showCorridorSelector.value = false
 }
 
 function getTimeframeStartLabel() {
   if (selectedSnapshot.value.history.length > 0) {
-    return formatMonthDay(selectedSnapshot.value.history[0].date);
+    return formatMonthDay(selectedSnapshot.value.history[0].date)
   }
-  const days = selectedHistoryDays.value;
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return formatMonthDay(date);
+  const days = selectedHistoryDays.value
+  const date = new Date()
+  date.setDate(date.getDate() - days)
+  return formatMonthDay(date)
 }
 
 const watchlistPairs = computed(() => {
-  const pairs = new Map<string, { base: string; quote: string }>();
-  watchlistItems.value.forEach(item => {
-    const pair = getPairForTarget(item.target);
-    if (!pair) return;
-    pairs.set(buildProviderKey(pair.base, pair.quote), pair);
-  });
-  return Array.from(pairs.values());
-});
+  const pairs = new Map<string, { base: string, quote: string }>()
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    pairs.set(buildProviderKey(pair.base, pair.quote), pair)
+  })
+  return Array.from(pairs.values())
+})
 
 useAbortableWatch(
   watchlistPairs,
-  async (pairs: Array<{ base: string; quote: string }>, signal) => {
+  async (pairs: Array<{ base: string, quote: string }>, signal) => {
     await Promise.all(
       pairs.flatMap(pair => [
         loadRateHistory(pair.base, pair.quote, watchlistHistoryDays, signal),
         loadProviderRates(pair.base, pair.quote, signal),
-      ])
-    );
+      ]),
+    )
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
-  const map: Record<string, RateSnapshot> = {};
-  watchlistItems.value.forEach(item => {
-    const pair = getPairForTarget(item.target);
-    if (!pair) return;
-    const history = getRateHistory(pair.base, pair.quote, watchlistHistoryDays);
+  const map: Record<string, RateSnapshot> = {}
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    const history = getRateHistory(pair.base, pair.quote, watchlistHistoryDays)
     if (!history.length) {
       map[item.id] = {
         rateLabel: '—',
@@ -6103,14 +6732,14 @@ const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
         hasChange: false,
         lastUpdated: null,
         history,
-      };
-      return;
+      }
+      return
     }
-    const latest = history[history.length - 1];
-    const previous = history.length > 1 ? history[history.length - 2] : null;
-    const change =
-      previous && previous.rate > 0 ? ((latest.rate - previous.rate) / previous.rate) * 100 : null;
-    const meta = getRateHistoryMeta(pair.base, pair.quote, watchlistHistoryDays);
+    const latest = history[history.length - 1]
+    const previous = history.length > 1 ? history[history.length - 2] : null
+    const change
+      = previous && previous.rate > 0 ? ((latest.rate - previous.rate) / previous.rate) * 100 : null
+    const meta = getRateHistoryMeta(pair.base, pair.quote, watchlistHistoryDays)
     map[item.id] = {
       rateLabel: formatRateValue(latest.rate),
       rateValue: latest.rate,
@@ -6119,10 +6748,10 @@ const watchlistSnapshots = computed<Record<string, RateSnapshot>>(() => {
       hasChange: change !== null,
       lastUpdated: meta?.lastUpdated ?? latest.date,
       history,
-    };
-  });
-  return map;
-});
+    }
+  })
+  return map
+})
 
 const getWatchlistSnapshot = (itemId: string) => {
   return (
@@ -6135,269 +6764,272 @@ const getWatchlistSnapshot = (itemId: string) => {
       lastUpdated: null,
       history: [],
     }
-  );
-};
+  )
+}
 
 const isWatchlistHistoryLoading = (itemId: string) => {
-  const item = watchlistItems.value.find(candidate => candidate.id === itemId);
-  if (!item) return false;
-  const pair = getPairForTarget(item.target);
-  if (!pair) return false;
-  const key = buildHistoryKey(pair.base, pair.quote, watchlistHistoryDays);
-  return Boolean(rateHistoryLoading.value[key]);
-};
+  const item = watchlistItems.value.find(candidate => candidate.id === itemId)
+  if (!item) return false
+  const pair = getPairForTarget(item.target)
+  if (!pair) return false
+  const key = buildHistoryKey(pair.base, pair.quote, watchlistHistoryDays)
+  return Boolean(rateHistoryLoading.value[key])
+}
 
 const providerSlugOverrides: Record<string, string> = {
   'western union': 'western-union',
-  worldremit: 'worldremit',
-  remitly: 'remitly',
-  wise: 'wise',
-  xe: 'xe-money',
+  'worldremit': 'worldremit',
+  'remitly': 'remitly',
+  'wise': 'wise',
+  'xe': 'xe-money',
   'xe money': 'xe-money',
-  xoom: 'xoom',
-  ria: 'ria',
-  dahabshiil: 'dahabshiil',
-};
+  'xoom': 'xoom',
+  'ria': 'ria',
+  'dahabshiil': 'dahabshiil',
+}
 
 const slugifyProvider = (name: string) => {
-  const normalized = name.trim().toLowerCase();
-  if (providerSlugOverrides[normalized]) return providerSlugOverrides[normalized];
-  return normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-};
+  const normalized = name.trim().toLowerCase()
+  if (providerSlugOverrides[normalized]) return providerSlugOverrides[normalized]
+  return normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
 
 const bestProviderByItemId = computed<Record<string, BestProviderSnapshot>>(() => {
-  const map: Record<string, BestProviderSnapshot> = {};
-  watchlistItems.value.forEach(item => {
-    const pair = getPairForTarget(item.target);
-    if (!pair) return;
-    const key = buildProviderKey(pair.base, pair.quote);
-    const data = providerRatesCache.value[key]?.data ?? [];
-    if (!data.length) return;
-    const best = data.reduce((top, next) => (next.rate > top.rate ? next : top));
-    map[item.id] = { ...best, slug: slugifyProvider(best.name) };
-  });
-  return map;
-});
+  const map: Record<string, BestProviderSnapshot> = {}
+  watchlistItems.value.forEach((item) => {
+    const pair = getPairForTarget(item.target)
+    if (!pair) return
+    const key = buildProviderKey(pair.base, pair.quote)
+    const data = providerRatesCache.value[key]?.data ?? []
+    if (!data.length) return
+    const best = data.reduce((top, next) => (next.rate > top.rate ? next : top))
+    map[item.id] = { ...best, slug: slugifyProvider(best.name) }
+  })
+  return map
+})
 
 const getBestProviderForItem = (itemId: string) => {
-  return bestProviderByItemId.value[itemId] ?? null;
-};
+  return bestProviderByItemId.value[itemId] ?? null
+}
 
 const isProviderRatesLoadingForItem = (itemId: string) => {
-  const item = watchlistItems.value.find(candidate => candidate.id === itemId);
-  if (!item) return false;
-  const pair = getPairForTarget(item.target);
-  if (!pair) return false;
-  const key = buildProviderKey(pair.base, pair.quote);
-  return Boolean(providerRatesLoading.value[key]);
-};
+  const item = watchlistItems.value.find(candidate => candidate.id === itemId)
+  if (!item) return false
+  const pair = getPairForTarget(item.target)
+  if (!pair) return false
+  const key = buildProviderKey(pair.base, pair.quote)
+  return Boolean(providerRatesLoading.value[key])
+}
 
 async function handleAddToWatchlist() {
   if (watchlistLimitReached.value) {
-    openLimitModal('watchlist');
-    return;
+    openLimitModal('watchlist')
+    return
   }
 
   if (!selectedCorridor.value) {
-    showCorridorSelector.value = true;
-    return;
+    showCorridorSelector.value = true
+    return
   }
   const target: WatchTarget = {
     type: 'corridor',
     from: selectedCorridor.value.from,
     to: selectedCorridor.value.to,
     method: 'bank',
-  };
-  const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`;
-  const result = await watchlistSave(target, { label });
+  }
+  const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
+  const result = await watchlistSave(target, { label })
 
   if (result.status === 'saved') {
-    toast.success('Added to watchlist.');
-  } else if (result.status === 'already_saved') {
-    toast.info('Already in your watchlist.');
-  } else if (result.status === 'limit_reached') {
-    openLimitModal('watchlist', result.limit);
-  } else if (result.status === 'error') {
+    toast.success('Added to watchlist.')
+  }
+ else if (result.status === 'already_saved') {
+    toast.info('Already in your watchlist.')
+  }
+ else if (result.status === 'limit_reached') {
+    openLimitModal('watchlist', result.limit)
+  }
+ else if (result.status === 'error') {
     if (result.reason === 'limit_reached') {
-      openLimitModal('watchlist');
-      return;
+      openLimitModal('watchlist')
+      return
     }
     if (result.reason === 'unauthorized') {
-      toast.error('Your session expired. Please sign in again to save watchlist items.');
-      return;
+      toast.error('Your session expired. Please sign in again to save watchlist items.')
+      return
     }
     if (result.reason === 'account_deleted') {
-      toast.error('This account has been deleted and can no longer save watchlist items.');
-      return;
+      toast.error('This account has been deleted and can no longer save watchlist items.')
+      return
     }
     if (result.reason === 'service_unavailable') {
-      toast.error('Watchlist service is temporarily unavailable. Please try again.');
-      return;
+      toast.error('Watchlist service is temporarily unavailable. Please try again.')
+      return
     }
-    toast.error(result.message);
+    toast.error(result.message)
   }
 }
 
 function handleSetAlert() {
   if (alertsLimitReached.value) {
-    openLimitModal('alert');
-    return;
+    openLimitModal('alert')
+    return
   }
 
   if (!selectedCorridor.value) {
-    showCorridorSelector.value = true;
-    return;
+    showCorridorSelector.value = true
+    return
   }
   const target: WatchTarget = {
     type: 'corridor',
     from: selectedCorridor.value.from,
     to: selectedCorridor.value.to,
     method: 'bank',
-  };
-  const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`;
-  modal.open({ target, label, source: 'dashboard' });
+  }
+  const label = `${selectedCorridor.value.from} → ${selectedCorridor.value.to}`
+  modal.open({ target, label, source: 'dashboard' })
 }
 
 // Account section state
-const activeAccountSection = ref<AccountSection>('profile');
-const checkoutNotice = ref<'success' | 'cancel' | null>(null);
+const activeAccountSection = ref<AccountSection>('profile')
+const checkoutNotice = ref<'success' | 'cancel' | null>(null)
 
 const requestedAccountSection = computed<AccountSection | null>(() => {
-  const raw = route.query.section;
-  const section = Array.isArray(raw) ? raw[0] : raw;
+  const raw = route.query.section
+  const section = Array.isArray(raw) ? raw[0] : raw
   if (
-    section === 'profile' ||
-    section === 'billing' ||
-    section === 'notifications' ||
-    section === 'security' ||
-    section === 'privacy' ||
-    section === 'compliance'
+    section === 'profile'
+    || section === 'billing'
+    || section === 'notifications'
+    || section === 'security'
+    || section === 'privacy'
+    || section === 'compliance'
   ) {
-    return section;
+    return section
   }
-  return null;
-});
+  return null
+})
 
 watch(
   () => [activeTab.value, requestedAccountSection.value] as const,
   ([tab, section]) => {
-    if (tab !== 'account' || !section) return;
-    activeAccountSection.value = section;
+    if (tab !== 'account' || !section) return
+    activeAccountSection.value = section
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
-const billingHistory = ref<BillingInvoice[]>([]);
-const billingHistoryLoading = ref(false);
-const billingHistoryError = ref<string | null>(null);
-const billingActionMessage = ref<string | null>(null);
+const billingHistory = ref<BillingInvoice[]>([])
+const billingHistoryLoading = ref(false)
+const billingHistoryError = ref<string | null>(null)
+const billingActionMessage = ref<string | null>(null)
 
-const billingSummary = computed(() => billing.value);
+const billingSummary = computed(() => billing.value)
 const hasStoredPaidPlan = computed(
-  () => storedPlanCode.value === 'plus' || storedPlanCode.value === 'enterprise'
-);
+  () => storedPlanCode.value === 'plus' || storedPlanCode.value === 'enterprise',
+)
 const billingPlanLabel = computed(() => {
-  if (storedPlanCode.value === 'enterprise') return 'Enterprise';
-  if (storedPlanCode.value === 'plus') return 'Plus';
-  return 'Free';
-});
+  if (storedPlanCode.value === 'enterprise') return 'Enterprise'
+  if (storedPlanCode.value === 'plus') return 'Plus'
+  return 'Free'
+})
 const billingPlanDescription = computed(() => {
-  if (storedPlanCode.value === 'enterprise') return 'Custom billing';
+  if (storedPlanCode.value === 'enterprise') return 'Custom billing'
   if (storedPlanCode.value === 'plus') {
-    if (planLifecycleState.value === 'scheduled_cancel') return 'Scheduled to end at period close';
-    if (hasPaidAccess.value) return 'Paid subscription';
-    return 'Billing needs attention';
+    if (planLifecycleState.value === 'scheduled_cancel') return 'Scheduled to end at period close'
+    if (hasPaidAccess.value) return 'Paid subscription'
+    return 'Billing needs attention'
   }
-  return 'Free forever';
-});
+  return 'Free forever'
+})
 const billingStatus = computed(() => {
-  if (!hasStoredPaidPlan.value) return 'free';
-  return planLifecycleState.value || billingSummary.value?.status || planStatus.value || 'inactive';
-});
+  if (!hasStoredPaidPlan.value) return 'free'
+  return planLifecycleState.value || billingSummary.value?.status || planStatus.value || 'inactive'
+})
 const billingRenewalLabel = computed(() => {
-  if (!hasStoredPaidPlan.value) return 'Plan type';
-  return billingSummary.value?.cancel_at_period_end ? 'Access ends on' : 'Next billing date';
-});
+  if (!hasStoredPaidPlan.value) return 'Plan type'
+  return billingSummary.value?.cancel_at_period_end ? 'Access ends on' : 'Next billing date'
+})
 const billingRenewalValue = computed(() => {
-  if (!hasStoredPaidPlan.value) return 'No billing';
+  if (!hasStoredPaidPlan.value) return 'No billing'
   return formatBillingDate(
-    billingSummary.value?.current_period_end || billingSummary.value?.next_billing_date
-  );
-});
-const billingUpgradeLabel = computed(() => (hasStoredPaidPlan.value ? 'Upgrade again' : 'Upgrade'));
+    billingSummary.value?.current_period_end || billingSummary.value?.next_billing_date,
+  )
+})
+const billingUpgradeLabel = computed(() => (hasStoredPaidPlan.value ? 'Upgrade again' : 'Upgrade'))
 const showBillingPortalButton = computed(
   () =>
-    hasStoredPaidPlan.value && (hasPaidAccess.value || recoveryAction.value === 'billing_portal')
-);
+    hasStoredPaidPlan.value && (hasPaidAccess.value || recoveryAction.value === 'billing_portal'),
+)
 const showBillingUpgradeButton = computed(
-  () => !hasStoredPaidPlan.value || recoveryAction.value === 'upgrade'
-);
+  () => !hasStoredPaidPlan.value || recoveryAction.value === 'upgrade',
+)
 const billingPrimaryActionLabel = computed(() => {
-  if (planLifecycleState.value === 'scheduled_cancel') return 'Keep plan active';
-  if (!hasPaidAccess.value && recoveryAvailable.value) return 'Reactivate billing';
-  return 'Manage subscription';
-});
+  if (planLifecycleState.value === 'scheduled_cancel') return 'Keep plan active'
+  if (!hasPaidAccess.value && recoveryAvailable.value) return 'Reactivate billing'
+  return 'Manage subscription'
+})
 const billingRecoveryMessage = computed(() => {
-  if (!hasStoredPaidPlan.value) return null;
+  if (!hasStoredPaidPlan.value) return null
   if (planLifecycleState.value === 'scheduled_cancel') {
-    return 'Your plan is set to cancel at the end of the current period. Open billing to keep it active.';
+    return 'Your plan is set to cancel at the end of the current period. Open billing to keep it active.'
   }
   if (planLifecycleState.value === 'past_due') {
-    return 'Billing needs attention. Paid features are paused until you reactivate.';
+    return 'Billing needs attention. Paid features are paused until you reactivate.'
   }
   if (
-    !hasPaidAccess.value &&
-    recoveryAvailable.value &&
-    recoveryAction.value === 'billing_portal'
+    !hasPaidAccess.value
+    && recoveryAvailable.value
+    && recoveryAction.value === 'billing_portal'
   ) {
-    return 'Your paid access is inactive. Open billing to reactivate.';
+    return 'Your paid access is inactive. Open billing to reactivate.'
   }
   if (!hasPaidAccess.value && recoveryAvailable.value && recoveryAction.value === 'upgrade') {
-    return 'Your paid access has ended. Upgrade again to restore paid features.';
+    return 'Your paid access has ended. Upgrade again to restore paid features.'
   }
-  return null;
-});
+  return null
+})
 
 const formatBillingDate = (value: string | null | undefined) => {
-  if (!value) return 'Unavailable';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'Unavailable';
-  return formatDate(parsed, { style: 'long' });
-};
+  if (!value) return 'Unavailable'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'Unavailable'
+  return formatDate(parsed, { style: 'long' })
+}
 
 const formatBillingAmount = (
   amount: number | null | undefined,
-  currency: string | null | undefined
+  currency: string | null | undefined,
 ) => {
-  if (amount === null || amount === undefined || !currency) return '—';
-  return formatMoney(amount, { currency: currency.toUpperCase() });
-};
+  if (amount === null || amount === undefined || !currency) return '—'
+  return formatMoney(amount, { currency: currency.toUpperCase() })
+}
 
 const billingStatusBadge = computed(() => {
-  const status = billingStatus.value;
+  const status = billingStatus.value
   if (status === 'scheduled_cancel') {
-    return { label: 'Scheduled to cancel', classes: 'bg-warning-100 text-warning-700' };
+    return { label: 'Scheduled to cancel', classes: 'bg-warning-100 text-warning-700' }
   }
   if (status === 'active' || status === 'trialing') {
-    return { label: 'Active', classes: 'bg-success-100 text-success-700' };
+    return { label: 'Active', classes: 'bg-success-100 text-success-700' }
   }
   if (status === 'past_due') {
-    return { label: 'Past due', classes: 'bg-warning-100 text-warning-700' };
+    return { label: 'Past due', classes: 'bg-warning-100 text-warning-700' }
   }
   if (
-    status === 'canceled' ||
-    status === 'incomplete_expired' ||
-    status === 'unpaid' ||
-    status === 'expired' ||
-    status === 'inactive'
+    status === 'canceled'
+    || status === 'incomplete_expired'
+    || status === 'unpaid'
+    || status === 'expired'
+    || status === 'inactive'
   ) {
-    return { label: 'Canceled', classes: 'bg-neutral-100 text-neutral-600' };
+    return { label: 'Canceled', classes: 'bg-neutral-100 text-neutral-600' }
   }
   return {
     label: status ? status.replace(/_/g, ' ') : 'Free',
     classes: 'bg-neutral-100 text-neutral-600',
-  };
-});
+  }
+})
 
 const {
   settings: notificationSettings,
@@ -6405,9 +7037,9 @@ const {
   error: notificationLoadError,
   fetchSettings: fetchNotificationSettings,
   saveSettings: saveNotificationSettings,
-} = useNotificationSettings();
-const notificationSaveSuccess = ref(false);
-const notificationSaveError = ref<string | null>(null);
+} = useNotificationSettings()
+const notificationSaveSuccess = ref(false)
+const notificationSaveError = ref<string | null>(null)
 
 const {
   supported: pushSupported,
@@ -6416,21 +7048,21 @@ const {
   error: pushError,
   subscribeWebPush,
   unsubscribeWebPush,
-} = usePushNotifications();
+} = usePushNotifications()
 
 const securitySettings = ref({
   currentPassword: '',
   newPassword: '',
   confirmPassword: '',
-});
-const passwordUpdateLoading = ref(false);
-const passwordUpdateError = ref<string | null>(null);
-const passwordUpdateSuccess = ref(false);
-const mfaEnabled = ref(false);
+})
+const passwordUpdateLoading = ref(false)
+const passwordUpdateError = ref<string | null>(null)
+const passwordUpdateSuccess = ref(false)
+const mfaEnabled = ref(false)
 
-listMfaFactors().then(factors => {
-  mfaEnabled.value = factors.totp?.some(f => f.status === 'verified') ?? false;
-});
+listMfaFactors().then((factors) => {
+  mfaEnabled.value = factors.totp?.some(f => f.status === 'verified') ?? false
+})
 
 const {
   settings: privacySettings,
@@ -6438,284 +7070,296 @@ const {
   error: privacyLoadError,
   fetchSettings: fetchPrivacySettings,
   saveSettings: savePrivacySettings,
-} = usePrivacySettings();
-const privacySaveSuccess = ref(false);
-const privacySaveError = ref<string | null>(null);
+} = usePrivacySettings()
+const privacySaveSuccess = ref(false)
+const privacySaveError = ref<string | null>(null)
 
 // Profile editing
-const profileName = ref('');
-const profileSaved = ref(false);
-const profileSaveError = ref<string | null>(null);
+const profileName = ref('')
+const profileSaved = ref(false)
+const profileSaveError = ref<string | null>(null)
 
 watch(
   () => user.value?.name,
-  name => {
-    if (name) profileName.value = name;
+  (name) => {
+    if (name) profileName.value = name
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => route.query.checkout,
-  value => {
-    void handleCheckoutNotice(value);
+  (value) => {
+    void handleCheckoutNotice(value)
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 watch(
   () => activeAccountSection.value,
-  section => {
+  (section) => {
     if (section === 'billing' && hasStoredPaidPlan.value) {
-      void fetchBillingHistory();
+      void fetchBillingHistory()
     }
     if (section === 'security' && isAuthenticated.value) {
-      void fetchSessions();
+      void fetchSessions()
     }
     if (section === 'privacy' && isAuthenticated.value) {
-      void fetchPrivacySettings();
+      void fetchPrivacySettings()
     }
     if (section === 'notifications' && isAuthenticated.value) {
-      void fetchNotificationSettings();
+      void fetchNotificationSettings()
     }
-  }
-);
+  },
+)
 
 watch(
   () => hasStoredPaidPlan.value,
-  value => {
+  (value) => {
     if (value && activeAccountSection.value === 'billing') {
-      void fetchBillingHistory(true);
+      void fetchBillingHistory(true)
     }
-  }
-);
+  },
+)
 
 async function saveProfile() {
-  const trimmed = profileName.value.trim();
-  if (!trimmed) return;
+  const trimmed = profileName.value.trim()
+  if (!trimmed) return
 
-  profileSaveError.value = null;
+  profileSaveError.value = null
   try {
-    await updateProfile({ name: trimmed });
-    profileSaved.value = true;
+    await updateProfile({ name: trimmed })
+    profileSaved.value = true
     setTimeout(() => {
-      profileSaved.value = false;
-    }, 3000);
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Failed to save profile.';
-    profileSaveError.value = msg;
-    useLogger('DashboardSignedIn').warn('Profile update failed', error);
+      profileSaved.value = false
+    }, 3000)
+  }
+ catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Failed to save profile.'
+    profileSaveError.value = msg
+    useLogger('DashboardSignedIn').warn('Profile update failed', error)
   }
 }
 
 async function handleSavePrivacySettings() {
-  privacySaveError.value = null;
-  privacySaveSuccess.value = false;
+  privacySaveError.value = null
+  privacySaveSuccess.value = false
   try {
-    await savePrivacySettings();
+    await savePrivacySettings()
     if (privacyLoadError.value) {
-      privacySaveError.value = privacyLoadError.value;
-      return;
+      privacySaveError.value = privacyLoadError.value
+      return
     }
-    privacySaveSuccess.value = true;
+    privacySaveSuccess.value = true
     setTimeout(() => {
-      privacySaveSuccess.value = false;
-    }, 3000);
-  } catch (error: unknown) {
-    privacySaveError.value =
-      error instanceof Error ? error.message : 'Failed to save privacy settings.';
+      privacySaveSuccess.value = false
+    }, 3000)
+  }
+ catch (error: unknown) {
+    privacySaveError.value
+      = error instanceof Error ? error.message : 'Failed to save privacy settings.'
   }
 }
 
 async function handleSaveNotificationSettings() {
-  notificationSaveError.value = null;
-  notificationSaveSuccess.value = false;
+  notificationSaveError.value = null
+  notificationSaveSuccess.value = false
   try {
-    await saveNotificationSettings();
+    await saveNotificationSettings()
     if (notificationLoadError.value) {
-      notificationSaveError.value = notificationLoadError.value;
-      return;
+      notificationSaveError.value = notificationLoadError.value
+      return
     }
-    notificationSaveSuccess.value = true;
+    notificationSaveSuccess.value = true
     setTimeout(() => {
-      notificationSaveSuccess.value = false;
-    }, 3000);
-  } catch (error: unknown) {
-    notificationSaveError.value =
-      error instanceof Error ? error.message : 'Failed to save notification settings.';
+      notificationSaveSuccess.value = false
+    }, 3000)
+  }
+ catch (error: unknown) {
+    notificationSaveError.value
+      = error instanceof Error ? error.message : 'Failed to save notification settings.'
   }
 }
 
 async function handlePushToggle() {
-  notificationSaveError.value = null;
+  notificationSaveError.value = null
   if (!pushSupported.value) {
-    notificationSaveError.value = 'Push notifications are not supported in this browser.';
-    return;
+    notificationSaveError.value = 'Push notifications are not supported in this browser.'
+    return
   }
   const result = notificationSettings.value.pushEnabled
     ? await unsubscribeWebPush()
-    : await subscribeWebPush();
+    : await subscribeWebPush()
 
   if (result.success) {
-    await fetchNotificationSettings();
-  } else if (pushError.value) {
-    notificationSaveError.value = pushError.value;
+    await fetchNotificationSettings()
+  }
+ else if (pushError.value) {
+    notificationSaveError.value = pushError.value
   }
 }
 
 async function handlePasswordUpdate() {
-  passwordUpdateError.value = null;
-  passwordUpdateSuccess.value = false;
+  passwordUpdateError.value = null
+  passwordUpdateSuccess.value = false
 
-  const currentPassword = securitySettings.value.currentPassword.trim();
-  const newPassword = securitySettings.value.newPassword.trim();
-  const confirmPassword = securitySettings.value.confirmPassword.trim();
+  const currentPassword = securitySettings.value.currentPassword.trim()
+  const newPassword = securitySettings.value.newPassword.trim()
+  const confirmPassword = securitySettings.value.confirmPassword.trim()
 
   if (!currentPassword) {
-    passwordUpdateError.value = 'Enter your current password.';
-    return;
+    passwordUpdateError.value = 'Enter your current password.'
+    return
   }
 
   if (newPassword.length < 8) {
-    passwordUpdateError.value = 'New password must be at least 8 characters.';
-    return;
+    passwordUpdateError.value = 'New password must be at least 8 characters.'
+    return
   }
 
   if (newPassword !== confirmPassword) {
-    passwordUpdateError.value = 'Passwords do not match.';
-    return;
+    passwordUpdateError.value = 'Passwords do not match.'
+    return
   }
 
-  passwordUpdateLoading.value = true;
+  passwordUpdateLoading.value = true
   try {
-    const result = await updatePasswordWithCurrent(currentPassword, newPassword);
+    const result = await updatePasswordWithCurrent(currentPassword, newPassword)
     if (!result.ok) {
-      passwordUpdateError.value = result.error || 'Unable to update password.';
-      return;
+      passwordUpdateError.value = result.error || 'Unable to update password.'
+      return
     }
     securitySettings.value = {
       currentPassword: '',
       newPassword: '',
       confirmPassword: '',
-    };
-    passwordUpdateSuccess.value = true;
+    }
+    passwordUpdateSuccess.value = true
     setTimeout(() => {
-      passwordUpdateSuccess.value = false;
-    }, 3000);
-  } catch (error) {
-    passwordUpdateError.value =
-      error instanceof Error ? error.message : 'Unable to update password.';
-  } finally {
-    passwordUpdateLoading.value = false;
+      passwordUpdateSuccess.value = false
+    }, 3000)
+  }
+ catch (error) {
+    passwordUpdateError.value
+      = error instanceof Error ? error.message : 'Unable to update password.'
+  }
+ finally {
+    passwordUpdateLoading.value = false
   }
 }
 
 const formatSessionActivity = (timestamp: string) => {
-  const parsed = new Date(timestamp);
-  if (Number.isNaN(parsed.getTime())) return 'Recently active';
-  const diffMs = Date.now() - parsed.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes < 5) return 'Active now';
-  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  return formatDate(parsed);
-};
+  const parsed = new Date(timestamp)
+  if (Number.isNaN(parsed.getTime())) return 'Recently active'
+  const diffMs = Date.now() - parsed.getTime()
+  const diffMinutes = Math.floor(diffMs / 60000)
+  if (diffMinutes < 5) return 'Active now'
+  if (diffMinutes < 60) return `${diffMinutes} minutes ago`
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours} hours ago`
+  return formatDate(parsed)
+}
 
-const sessionMeta = (session: { device_type: string | null; location: string | null }) => {
+const sessionMeta = (session: { device_type: string | null, location: string | null }) => {
   const device = session.device_type
     ? session.device_type.charAt(0).toUpperCase() + session.device_type.slice(1)
-    : 'Unknown device';
-  const location = session.location || 'Unknown location';
-  return `${device} • ${location}`;
-};
+    : 'Unknown device'
+  const location = session.location || 'Unknown location'
+  return `${device} • ${location}`
+}
 
 const handleRevokeSession = async (sessionId: string) => {
   try {
-    await revokeSession(sessionId);
-    toast.success('Session signed out.');
-  } catch (error) {
-    useLogger('DashboardSignedIn').warn('Failed to revoke session', error);
-    toast.error('Unable to sign out session. Please try again.');
+    await revokeSession(sessionId)
+    toast.success('Session signed out.')
   }
-};
+ catch (error) {
+    useLogger('DashboardSignedIn').warn('Failed to revoke session', error)
+    toast.error('Unable to sign out session. Please try again.')
+  }
+}
 
 const handleRevokeAllSessions = async () => {
-  const current = sessions.value.find(session => session.is_current);
+  const current = sessions.value.find(session => session.is_current)
   try {
-    await revokeAllSessions(current?.session_id);
-    toast.success('Signed out all other sessions.');
-  } catch (error) {
-    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error);
-    toast.error('Unable to sign out other sessions. Please try again.');
+    await revokeAllSessions(current?.session_id)
+    toast.success('Signed out all other sessions.')
   }
-};
+ catch (error) {
+    useLogger('DashboardSignedIn').warn('Failed to revoke sessions', error)
+    toast.error('Unable to sign out other sessions. Please try again.')
+  }
+}
 
 const fetchBillingHistory = async (force = false) => {
-  if (!isPlus.value) return;
-  if (billingHistoryLoading.value) return;
-  if (billingHistory.value.length > 0 && !force) return;
+  if (!isPlus.value) return
+  if (billingHistoryLoading.value) return
+  if (billingHistory.value.length > 0 && !force) return
 
-  billingHistoryLoading.value = true;
-  billingHistoryError.value = null;
+  billingHistoryLoading.value = true
+  billingHistoryError.value = null
 
   try {
-    const response = await request<{ invoices: BillingInvoice[] }>('/billing/history');
-    billingHistory.value = Array.isArray(response.invoices) ? response.invoices : [];
-  } catch (error: unknown) {
+    const response = await request<{ invoices: BillingInvoice[] }>('/billing/history')
+    billingHistory.value = Array.isArray(response.invoices) ? response.invoices : []
+  }
+ catch (error: unknown) {
     billingHistoryError.value = mapPlanStateFailureMessage(
       error,
       'Unable to load billing history.',
       {
         customer_not_found:
           'No billing profile exists for this account yet. Start checkout to create one.',
-      }
-    );
-  } finally {
-    billingHistoryLoading.value = false;
+      },
+    )
   }
-};
+ finally {
+    billingHistoryLoading.value = false
+  }
+}
 
 async function handleCheckoutNotice(value: unknown) {
   if (value === 'success') {
-    checkoutNotice.value = 'success';
-    await refreshPlan();
-    await fetchBillingHistory(true);
-  } else if (value === 'cancel') {
-    checkoutNotice.value = 'cancel';
-  } else {
-    checkoutNotice.value = null;
-    return;
+    checkoutNotice.value = 'success'
+    await refreshPlan()
+    await fetchBillingHistory(true)
+  }
+ else if (value === 'cancel') {
+    checkoutNotice.value = 'cancel'
+  }
+ else {
+    checkoutNotice.value = null
+    return
   }
 
-  const nextQuery: LocationQueryRaw = { ...route.query };
-  delete nextQuery.checkout;
-  void navigateTo({ path: route.path, query: nextQuery, replace: true });
+  const nextQuery: LocationQueryRaw = { ...route.query }
+  delete nextQuery.checkout
+  void navigateTo({ path: route.path, query: nextQuery, replace: true })
 }
 
 // Export functionality
-const showExportModal = ref(false);
-const isExporting = ref(false);
-const selectedExportItems = ref<string[]>([]);
+const showExportModal = ref(false)
+const isExporting = ref(false)
+const selectedExportItems = ref<string[]>([])
 
 watch(
   () => route.query.openExport,
-  value => {
+  (value) => {
     if (value === '1') {
-      showExportModal.value = true;
+      showExportModal.value = true
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
-type ExportDateRange = '7d' | '30d';
+type ExportDateRange = '7d' | '30d'
 
 const getDefaultDateFrom = () => {
-  const date = new Date();
+  const date = new Date()
   // Inclusive window: last 30 days means today + previous 29 days.
-  date.setDate(date.getDate() - 29);
-  return date.toISOString().split('T')[0];
-};
+  date.setDate(date.getDate() - 29)
+  return date.toISOString().split('T')[0]
+}
 
 const exportSettings = ref({
   dataType: 'history' as 'history' | 'watchlist' | 'alerts' | 'all' | 'indices',
@@ -6724,226 +7368,228 @@ const exportSettings = ref({
   dateTo: new Date().toISOString().split('T')[0],
   format: 'csv' as 'csv' | 'pdf',
   includeCorridorHistory: false,
-});
+})
 
 const exportCorridorIds = computed<string[]>(() => {
-  const ids: string[] = [];
+  const ids: string[] = []
   for (const item of watchlistItems.value) {
-    if (item.target.type !== 'corridor') continue;
-    const pair = getPairForTarget(item.target);
-    if (!pair) continue;
-    const from = item.target.from.toUpperCase();
-    const to = item.target.to.toUpperCase();
-    const base = pair.base.toUpperCase();
-    const quote = pair.quote.toUpperCase();
-    ids.push(`${from}-${to}-${base}-${quote}`);
+    if (item.target.type !== 'corridor') continue
+    const pair = getPairForTarget(item.target)
+    if (!pair) continue
+    const from = item.target.from.toUpperCase()
+    const to = item.target.to.toUpperCase()
+    const base = pair.base.toUpperCase()
+    const quote = pair.quote.toUpperCase()
+    ids.push(`${from}-${to}-${base}-${quote}`)
   }
 
-  const unique = Array.from(new Set(ids));
-  return unique.slice(0, 16);
-});
+  const unique = Array.from(new Set(ids))
+  return unique.slice(0, 16)
+})
 
-const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors());
+const { data: trackedCorridorsData } = await useAsyncData('pulse-corridors', () => getCorridors())
 
 const resolveAllAvailableGoldHistoryRange = (
-  windowDays: number
-): { dateFrom: string; dateTo: string } | null => {
+  windowDays: number,
+): { dateFrom: string, dateTo: string } | null => {
   // Only meaningful when exporting corridor history (Gold indices).
-  const byId = new Map<string, CorridorOption>();
+  const byId = new Map<string, CorridorOption>()
   for (const c of trackedCorridorsData.value || []) {
-    if (c.corridorId) byId.set(c.corridorId, c);
+    if (c.corridorId) byId.set(c.corridorId, c)
   }
 
-  let minDate: string | null = null;
-  let maxDate: string | null = null;
+  let minDate: string | null = null
+  let maxDate: string | null = null
   for (const id of exportCorridorIds.value) {
-    const c = byId.get(id);
-    if (!c?.minDate || !c?.maxDate) continue;
+    const c = byId.get(id)
+    if (!c?.minDate || !c?.maxDate) continue
     if (minDate === null || c.minDate < minDate) {
-      minDate = c.minDate;
+      minDate = c.minDate
     }
     if (maxDate === null || c.maxDate > maxDate) {
-      maxDate = c.maxDate;
+      maxDate = c.maxDate
     }
   }
 
-  if (!minDate || !maxDate) return null;
+  if (!minDate || !maxDate) return null
 
   // Use the maximum available window (up to hard cap) so exports remain bounded and
   // still work when Gold only has <30 days in a new environment.
-  const end = new Date(`${maxDate}T00:00:00.000Z`);
-  const start = new Date(end);
+  const end = new Date(`${maxDate}T00:00:00.000Z`)
+  const start = new Date(end)
   const clampedDays = Math.min(
     Math.max(Math.floor(windowDays || EXPORTS_MAX_WINDOW_DAYS_HARD_CAP), 1),
-    EXPORTS_MAX_WINDOW_DAYS_HARD_CAP
-  );
-  start.setUTCDate(start.getUTCDate() - (clampedDays - 1));
-  const candidateFrom = start.toISOString().split('T')[0];
-  const dateFrom = candidateFrom < minDate ? minDate : candidateFrom;
-  return { dateFrom, dateTo: maxDate };
-};
+    EXPORTS_MAX_WINDOW_DAYS_HARD_CAP,
+  )
+  start.setUTCDate(start.getUTCDate() - (clampedDays - 1))
+  const candidateFrom = start.toISOString().split('T')[0]
+  const dateFrom = candidateFrom < minDate ? minDate : candidateFrom
+  return { dateFrom, dateTo: maxDate }
+}
 
-const exportStatusMessage = ref<string | null>(null);
-const exportErrorMessage = ref<string | null>(null);
-const exportJobId = ref<string | null>(null);
-let exportPollTimer: ReturnType<typeof setInterval> | null = null;
-let gdprExportPollTimer: ReturnType<typeof setInterval> | null = null;
+const exportStatusMessage = ref<string | null>(null)
+const exportErrorMessage = ref<string | null>(null)
+const exportJobId = ref<string | null>(null)
+let exportPollTimer: ReturnType<typeof setInterval> | null = null
+let gdprExportPollTimer: ReturnType<typeof setInterval> | null = null
 
 const clearExportPolling = () => {
   if (exportPollTimer) {
-    clearInterval(exportPollTimer);
-    exportPollTimer = null;
+    clearInterval(exportPollTimer)
+    exportPollTimer = null
   }
-};
+}
 
 const clearGdprExportPolling = () => {
   if (gdprExportPollTimer) {
-    clearInterval(gdprExportPollTimer);
-    gdprExportPollTimer = null;
+    clearInterval(gdprExportPollTimer)
+    gdprExportPollTimer = null
   }
-};
+}
 
 onBeforeUnmount(() => {
-  clearExportPolling();
-  clearGdprExportPolling();
-  stopOpsAutoRefresh();
-});
+  clearExportPolling()
+  clearGdprExportPolling()
+  stopOpsAutoRefresh()
+})
 
 const triggerDownload = (url: string) => {
   if (import.meta.client) {
-    window.open(url, '_blank', 'noopener');
+    window.open(url, '_blank', 'noopener')
   }
-};
+}
 
 const pollExportStatus = async (jobId: string) => {
-  clearExportPolling();
+  clearExportPolling()
   exportPollTimer = setInterval(async () => {
     try {
-      const response = await exportsApi.getExportStatus(jobId);
-      const status = response.job.status;
+      const response = await exportsApi.getExportStatus(jobId)
+      const status = response.job.status
       if (status === 'failed') {
-        exportErrorMessage.value = response.job.error || 'Export failed. Please try again.';
-        isExporting.value = false;
-        clearExportPolling();
-        return;
+        exportErrorMessage.value = response.job.error || 'Export failed. Please try again.'
+        isExporting.value = false
+        clearExportPolling()
+        return
       }
       if (status === 'done') {
-        const download = await exportsApi.getExportDownloadUrl(jobId);
-        exportStatusMessage.value = 'Export ready. Downloading...';
-        triggerDownload(download.url);
-        isExporting.value = false;
-        clearExportPolling();
-      } else {
-        exportStatusMessage.value = 'Export in progress...';
+        const download = await exportsApi.getExportDownloadUrl(jobId)
+        exportStatusMessage.value = 'Export ready. Downloading...'
+        triggerDownload(download.url)
+        isExporting.value = false
+        clearExportPolling()
       }
-    } catch (error: unknown) {
-      exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to check export status.');
-      isExporting.value = false;
-      clearExportPolling();
+ else {
+        exportStatusMessage.value = 'Export in progress...'
+      }
     }
-  }, 2000);
-};
+ catch (error: unknown) {
+      exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to check export status.')
+      isExporting.value = false
+      clearExportPolling()
+    }
+  }, 2000)
+}
 
 function setExportDateRange(range: ExportDateRange) {
-  const days = range === '7d' ? 7 : 30;
+  const days = range === '7d' ? 7 : 30
 
   // Prefer Gold availability bounds when exporting corridor history.
   if (exportSettings.value.includeCorridorHistory && exportCorridorIds.value.length > 0) {
-    const resolved = resolveAllAvailableGoldHistoryRange(days);
+    const resolved = resolveAllAvailableGoldHistoryRange(days)
     if (resolved) {
-      exportSettings.value.dateFrom = resolved.dateFrom;
-      exportSettings.value.dateTo = resolved.dateTo;
-      exportSettings.value.dateRange = range;
-      return;
+      exportSettings.value.dateFrom = resolved.dateFrom
+      exportSettings.value.dateTo = resolved.dateTo
+      exportSettings.value.dateRange = range
+      return
     }
   }
 
-  const today = new Date();
-  exportSettings.value.dateTo = today.toISOString().split('T')[0];
+  const today = new Date()
+  exportSettings.value.dateTo = today.toISOString().split('T')[0]
 
-  const fromDate = new Date();
+  const fromDate = new Date()
   // Inclusive window: subtract (days-1).
-  fromDate.setDate(fromDate.getDate() - (days - 1));
-  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0];
-  exportSettings.value.dateRange = range;
+  fromDate.setDate(fromDate.getDate() - (days - 1))
+  exportSettings.value.dateFrom = fromDate.toISOString().split('T')[0]
+  exportSettings.value.dateRange = range
 }
 
 // Initialize date range when modal opens
 watch(
   () => showExportModal.value,
-  isOpen => {
+  (isOpen) => {
     if (isOpen) {
-      const range = exportSettings.value.dateRange || '30d';
-      setExportDateRange(range);
+      const range = exportSettings.value.dateRange || '30d'
+      setExportDateRange(range)
     }
-  }
-);
+  },
+)
 
 watch(
   () => exportSettings.value.dataType,
-  dataType => {
+  (dataType) => {
     if (dataType === 'indices' && !indicesExportsEnabled.value) {
-      exportSettings.value.dataType = 'history';
-      exportSettings.value.includeCorridorHistory = false;
-      return;
+      exportSettings.value.dataType = 'history'
+      exportSettings.value.includeCorridorHistory = false
+      return
     }
     if (dataType === 'indices') {
-      exportSettings.value.includeCorridorHistory = true;
-      return;
+      exportSettings.value.includeCorridorHistory = true
+      return
     }
     if (dataType !== 'history') {
-      exportSettings.value.includeCorridorHistory = false;
+      exportSettings.value.includeCorridorHistory = false
     }
-  }
-);
+  },
+)
 
 watch(
   () => exportSettings.value.includeCorridorHistory,
-  enabled => {
+  (enabled) => {
     if (enabled) {
-      setExportDateRange(exportSettings.value.dateRange || '30d');
+      setExportDateRange(exportSettings.value.dateRange || '30d')
     }
-  }
-);
+  },
+)
 
 watch(
   () => exportCorridorIds.value.length,
-  count => {
+  (count) => {
     if (count === 0) {
-      exportSettings.value.includeCorridorHistory = false;
+      exportSettings.value.includeCorridorHistory = false
     }
-  }
-);
+  },
+)
 
 async function handleExport() {
-  exportErrorMessage.value = null;
-  exportStatusMessage.value = null;
-  isExporting.value = true;
+  exportErrorMessage.value = null
+  exportStatusMessage.value = null
+  isExporting.value = true
 
   try {
-    const itemIds =
-      exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
+    const itemIds
+      = exportSettings.value.dataType === 'history' && selectedExportItems.value.length > 0
         ? selectedExportItems.value
-        : undefined;
+        : undefined
 
-    const corridorIds =
-      (exportSettings.value.dataType === 'history' ||
-        exportSettings.value.dataType === 'indices') &&
-      exportSettings.value.includeCorridorHistory &&
-      exportCorridorIds.value.length > 0
+    const corridorIds
+      = (exportSettings.value.dataType === 'history'
+        || exportSettings.value.dataType === 'indices')
+      && exportSettings.value.includeCorridorHistory
+      && exportCorridorIds.value.length > 0
         ? exportCorridorIds.value
-        : undefined;
+        : undefined
 
     if (
-      (exportSettings.value.dataType === 'indices' ||
-        exportSettings.value.dataType === 'history') &&
-      exportSettings.value.includeCorridorHistory &&
-      (!corridorIds || corridorIds.length === 0)
+      (exportSettings.value.dataType === 'indices'
+        || exportSettings.value.dataType === 'history')
+      && exportSettings.value.includeCorridorHistory
+      && (!corridorIds || corridorIds.length === 0)
     ) {
-      exportErrorMessage.value =
-        'Select at least one watchlist corridor to include indices history.';
-      isExporting.value = false;
-      return;
+      exportErrorMessage.value
+        = 'Select at least one watchlist corridor to include indices history.'
+      isExporting.value = false
+      return
     }
 
     const response = await exportsApi.createExport({
@@ -6953,322 +7599,334 @@ async function handleExport() {
       dateTo: exportSettings.value.dateTo,
       itemIds,
       corridorIds,
-    });
+    })
 
-    exportJobId.value = response.job.id;
-    exportStatusMessage.value = 'Export queued. We will start processing shortly.';
-    await pollExportStatus(response.job.id);
-  } catch (error: unknown) {
-    exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to start export.');
-    isExporting.value = false;
+    exportJobId.value = response.job.id
+    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
+    await pollExportStatus(response.job.id)
+  }
+ catch (error: unknown) {
+    exportErrorMessage.value = resolveExportErrorMessage(error, 'Failed to start export.')
+    isExporting.value = false
   }
 }
 
 function handleExportSelected() {
-  showExportModal.value = true;
+  showExportModal.value = true
 }
 
-const gdprExportStatus = ref<string | null>(null);
-const gdprExportError = ref<string | null>(null);
-const gdprExportJobId = ref<string | null>(null);
-const showDeleteAccountModal = ref(false);
-const deleteAccountConfirmText = ref('');
-const deleteAccountConfirmed = ref(false);
-const deleteAccountError = ref<string | null>(null);
-const deleteAccountWarning = ref<string | null>(null);
+const gdprExportStatus = ref<string | null>(null)
+const gdprExportError = ref<string | null>(null)
+const gdprExportJobId = ref<string | null>(null)
+const showDeleteAccountModal = ref(false)
+const deleteAccountConfirmText = ref('')
+const deleteAccountConfirmed = ref(false)
+const deleteAccountError = ref<string | null>(null)
+const deleteAccountWarning = ref<string | null>(null)
 
-const showDeleteWatchlistModal = ref(false);
-const watchlistItemToDelete = ref<WatchlistItem | null>(null);
-const showDeleteAlertModal = ref(false);
-const alertToDelete = ref<Alert | null>(null);
+const showDeleteWatchlistModal = ref(false)
+const watchlistItemToDelete = ref<WatchlistItem | null>(null)
+const showDeleteAlertModal = ref(false)
+const alertToDelete = ref<Alert | null>(null)
 
 const deleteAccountReady = computed(() => {
   return (
     deleteAccountConfirmed.value && deleteAccountConfirmText.value.trim().toUpperCase() === 'DELETE'
-  );
-});
+  )
+})
 
 const requestGdprExport = async () => {
-  gdprExportStatus.value = null;
-  gdprExportError.value = null;
+  gdprExportStatus.value = null
+  gdprExportError.value = null
   try {
-    const response = await dataExportApi.requestExport();
-    gdprExportJobId.value = response.job.id;
-    gdprExportStatus.value = `Export requested (job ${response.job.id}). Preparing your download...`;
+    const response = await dataExportApi.requestExport()
+    gdprExportJobId.value = response.job.id
+    gdprExportStatus.value = `Export requested (job ${response.job.id}). Preparing your download...`
 
-    clearGdprExportPolling();
+    clearGdprExportPolling()
     gdprExportPollTimer = setInterval(async () => {
       try {
-        const status = await dataExportApi.getExportStatus(response.job.id);
-        const jobStatus = status.job.status;
+        const status = await dataExportApi.getExportStatus(response.job.id)
+        const jobStatus = status.job.status
         if (jobStatus === 'failed') {
-          gdprExportStatus.value = null;
-          gdprExportError.value = status.job.error || 'Export failed. Please try again.';
-          clearGdprExportPolling();
-          return;
+          gdprExportStatus.value = null
+          gdprExportError.value = status.job.error || 'Export failed. Please try again.'
+          clearGdprExportPolling()
+          return
         }
         if (jobStatus === 'done') {
-          const download = await dataExportApi.getExportDownloadUrl(response.job.id);
-          gdprExportStatus.value = 'Export ready. Downloading...';
-          triggerDownload(download.url);
-          clearGdprExportPolling();
-          return;
+          const download = await dataExportApi.getExportDownloadUrl(response.job.id)
+          gdprExportStatus.value = 'Export ready. Downloading...'
+          triggerDownload(download.url)
+          clearGdprExportPolling()
+          return
         }
         if (jobStatus === 'running') {
-          gdprExportStatus.value = 'Export is running...';
-          return;
+          gdprExportStatus.value = 'Export is running...'
+          return
         }
-        gdprExportStatus.value = 'Export queued...';
-      } catch (error: unknown) {
-        gdprExportStatus.value = null;
-        gdprExportError.value = extractErrorMessage(error, 'Failed to check export status.');
-        clearGdprExportPolling();
+        gdprExportStatus.value = 'Export queued...'
       }
-    }, 2500);
-  } catch (error: unknown) {
-    gdprExportError.value = extractErrorMessage(error, 'Failed to request GDPR export.');
+ catch (error: unknown) {
+        gdprExportStatus.value = null
+        gdprExportError.value = extractErrorMessage(error, 'Failed to check export status.')
+        clearGdprExportPolling()
+      }
+    }, 2500)
   }
-};
+ catch (error: unknown) {
+    gdprExportError.value = extractErrorMessage(error, 'Failed to request GDPR export.')
+  }
+}
 
 const openDeleteAccountModal = () => {
-  showDeleteAccountModal.value = true;
-  deleteAccountConfirmText.value = '';
-  deleteAccountConfirmed.value = false;
-  deleteAccountError.value = null;
-  deleteAccountWarning.value = null;
-};
+  showDeleteAccountModal.value = true
+  deleteAccountConfirmText.value = ''
+  deleteAccountConfirmed.value = false
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
+}
 
 const closeDeleteAccountModal = () => {
-  if (accountDeleting.value) return;
-  showDeleteAccountModal.value = false;
-  deleteAccountConfirmText.value = '';
-  deleteAccountConfirmed.value = false;
-  deleteAccountError.value = null;
-  deleteAccountWarning.value = null;
-};
+  if (accountDeleting.value) return
+  showDeleteAccountModal.value = false
+  deleteAccountConfirmText.value = ''
+  deleteAccountConfirmed.value = false
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
+}
 
 const handleDeleteAccount = async () => {
-  deleteAccountError.value = null;
-  deleteAccountWarning.value = null;
+  deleteAccountError.value = null
+  deleteAccountWarning.value = null
 
   if (!deleteAccountReady.value) {
-    deleteAccountError.value = 'Please confirm account deletion.';
-    return;
+    deleteAccountError.value = 'Please confirm account deletion.'
+    return
   }
 
-  const result = await accountApi.deleteAccount();
+  const result = await accountApi.deleteAccount()
   if (!result.ok) {
-    deleteAccountError.value = result.error || 'Account deletion failed.';
-    return;
+    deleteAccountError.value = result.error || 'Account deletion failed.'
+    return
   }
 
   if (result.result?.warnings?.length) {
-    deleteAccountWarning.value = result.result.warnings.join(', ');
+    deleteAccountWarning.value = result.result.warnings.join(', ')
   }
-};
+}
 
 const openDeleteWatchlistModal = (item: WatchlistItem) => {
-  watchlistItemToDelete.value = item;
-  showDeleteWatchlistModal.value = true;
-};
+  watchlistItemToDelete.value = item
+  showDeleteWatchlistModal.value = true
+}
 
 const closeDeleteWatchlistModal = () => {
-  showDeleteWatchlistModal.value = false;
-  watchlistItemToDelete.value = null;
-};
+  showDeleteWatchlistModal.value = false
+  watchlistItemToDelete.value = null
+}
 
 const confirmDeleteWatchlistItem = async () => {
-  if (!watchlistItemToDelete.value) return;
-  const ok = await watchlistRemove(watchlistItemToDelete.value.id);
+  if (!watchlistItemToDelete.value) return
+  const ok = await watchlistRemove(watchlistItemToDelete.value.id)
   if (ok) {
-    toast.success('Removed from watchlist.');
-    closeDeleteWatchlistModal();
+    toast.success('Removed from watchlist.')
+    closeDeleteWatchlistModal()
   }
-};
+}
 
 const openDeleteAlertModal = (alert: Alert) => {
-  alertToDelete.value = alert;
-  showDeleteAlertModal.value = true;
-};
+  alertToDelete.value = alert
+  showDeleteAlertModal.value = true
+}
 
 const closeDeleteAlertModal = () => {
-  showDeleteAlertModal.value = false;
-  alertToDelete.value = null;
-};
+  showDeleteAlertModal.value = false
+  alertToDelete.value = null
+}
 
 const confirmDeleteAlert = async () => {
-  if (!alertToDelete.value) return;
-  const ok = await alertsRemove(alertToDelete.value.id);
+  if (!alertToDelete.value) return
+  const ok = await alertsRemove(alertToDelete.value.id)
   if (ok) {
-    toast.success('Alert deleted.');
-    closeDeleteAlertModal();
+    toast.success('Alert deleted.')
+    closeDeleteAlertModal()
   }
-};
+}
 
 // Graph data
 const graphData = computed(() => {
-  const history = selectedSnapshot.value.history;
-  if (!history.length) return [];
-  const series = history.slice(-120);
-  const values = series.map(point => point.rate).filter(Number.isFinite);
-  if (!values.length) return [];
-  const minRate = Math.min(...values);
-  const maxRate = Math.max(...values);
-  const range = maxRate - minRate;
-  const isFlat = range === 0;
+  const history = selectedSnapshot.value.history
+  if (!history.length) return []
+  const series = history.slice(-120)
+  const values = series.map(point => point.rate).filter(Number.isFinite)
+  if (!values.length) return []
+  const minRate = Math.min(...values)
+  const maxRate = Math.max(...values)
+  const range = maxRate - minRate
+  const isFlat = range === 0
   return series.map((point, index) => {
-    const x = series.length === 1 ? 400 : (index / (series.length - 1)) * 400;
-    const y = isFlat ? 90 : 170 - ((point.rate - minRate) / range) * 160;
-    return { x, y: Math.max(10, Math.min(170, y)) };
-  });
-});
+    const x = series.length === 1 ? 400 : (index / (series.length - 1)) * 400
+    const y = isFlat ? 90 : 170 - ((point.rate - minRate) / range) * 160
+    return { x, y: Math.max(10, Math.min(170, y)) }
+  })
+})
 
-const graphPoints = computed(() => graphData.value.map(d => `${d.x},${d.y}`).join(' '));
+const graphPoints = computed(() => graphData.value.map(d => `${d.x},${d.y}`).join(' '))
 
 // Top Movers from Watchlist
-const topMoversLimit = computed(() => (isPlus.value ? 5 : 3));
+const topMoversLimit = computed(() => (isPlus.value ? 5 : 3))
 const topMoversFromWatchlist = computed(() => {
-  if (!corridorWatchlistItems.value.length) return [];
+  if (!corridorWatchlistItems.value.length) return []
 
   // Deduplicate by corridor (from-to pair) to prevent showing the same corridor multiple times
-  const seen = new Set<string>();
-  const uniqueItems = corridorWatchlistItems.value.filter(item => {
-    const key = `${item.target.from}-${item.target.to}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const seen = new Set<string>()
+  const uniqueItems = corridorWatchlistItems.value.filter((item) => {
+    const key = `${item.target.from}-${item.target.to}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 
   return uniqueItems
-    .map(item => {
-      const snapshot = getWatchlistSnapshot(item.id);
-      if (snapshot.change === null || snapshot.change === undefined) return null;
-      return { ...item, change: snapshot.change };
+    .map((item) => {
+      const snapshot = getWatchlistSnapshot(item.id)
+      if (snapshot.change === null || snapshot.change === undefined) return null
+      return { ...item, change: snapshot.change }
     })
     .filter(
       (
-        item
+        item,
       ): item is WatchlistItem & {
-        target: Extract<WatchTarget, { type: 'corridor' }>;
-        change: number;
-      } => item !== null && item !== undefined && Number.isFinite(item.change)
+        target: Extract<WatchTarget, { type: 'corridor' }>
+        change: number
+      } => item !== null && item !== undefined && Number.isFinite(item.change),
     )
     .sort((a, b) => Math.abs(b.change) - Math.abs(a.change))
-    .slice(0, topMoversLimit.value);
-});
+    .slice(0, topMoversLimit.value)
+})
 
 const topMoversLoading = computed(() => {
-  return corridorWatchlistItems.value.some(item => isWatchlistHistoryLoading(item.id));
-});
+  return corridorWatchlistItems.value.some(item => isWatchlistHistoryLoading(item.id))
+})
 
 async function handleAddWatchlist() {
   if (watchlistLimitReached.value) {
-    openLimitModal('watchlist');
-    return;
+    openLimitModal('watchlist')
+    return
   }
 
-  const from = (newWatchlist.value.from || '').trim().toUpperCase();
-  const to = (newWatchlist.value.to || '').trim().toUpperCase();
-  if (!from || !to) return;
+  const from = (newWatchlist.value.from || '').trim().toUpperCase()
+  const to = (newWatchlist.value.to || '').trim().toUpperCase()
+  if (!from || !to) return
 
   const target: WatchTarget = {
     type: 'corridor',
     from,
     to,
     method: 'bank',
-  };
-  const label = `${from} → ${to}`;
-  const result = await watchlistSave(target, { label });
+  }
+  const label = `${from} → ${to}`
+  const result = await watchlistSave(target, { label })
 
   if (result.status === 'saved') {
-    newWatchlist.value = { from: '', to: '' };
-    toast.success('Added to watchlist.');
-  } else if (result.status === 'already_saved') {
+    newWatchlist.value = { from: '', to: '' }
+    toast.success('Added to watchlist.')
+  }
+ else if (result.status === 'already_saved') {
     // Already in watchlist, just reset the form
-    newWatchlist.value = { from: '', to: '' };
-    toast.info('Already in your watchlist.');
-  } else if (result.status === 'limit_reached' || result.status === 'error') {
+    newWatchlist.value = { from: '', to: '' }
+    toast.info('Already in your watchlist.')
+  }
+ else if (result.status === 'limit_reached' || result.status === 'error') {
     if (result.status === 'limit_reached') {
-      openLimitModal('watchlist', result.limit);
-    } else if (result.reason === 'limit_reached') {
-      openLimitModal('watchlist');
-    } else if (result.reason === 'unauthorized') {
-      toast.error('Your session expired. Please sign in again to save watchlist items.');
-    } else if (result.reason === 'account_deleted') {
-      toast.error('This account has been deleted and can no longer save watchlist items.');
-    } else if (result.reason === 'service_unavailable') {
-      toast.error('Watchlist service is temporarily unavailable. Please try again.');
-    } else {
-      toast.error(result.message);
+      openLimitModal('watchlist', result.limit)
+    }
+ else if (result.reason === 'limit_reached') {
+      openLimitModal('watchlist')
+    }
+ else if (result.reason === 'unauthorized') {
+      toast.error('Your session expired. Please sign in again to save watchlist items.')
+    }
+ else if (result.reason === 'account_deleted') {
+      toast.error('This account has been deleted and can no longer save watchlist items.')
+    }
+ else if (result.reason === 'service_unavailable') {
+      toast.error('Watchlist service is temporarily unavailable. Please try again.')
+    }
+ else {
+      toast.error(result.message)
     }
   }
 }
 
-const comparingCorridor = ref<string | null>(null);
-const comparingSelectedCorridor = ref(false);
+const comparingCorridor = ref<string | null>(null)
+const comparingSelectedCorridor = ref(false)
 
 async function handleCompareClick(item: WatchlistItem) {
-  if (comparingCorridor.value === item.id) return;
+  if (comparingCorridor.value === item.id) return
 
-  comparingCorridor.value = item.id;
+  comparingCorridor.value = item.id
 
   if (item.target.type !== 'corridor') {
-    comparingCorridor.value = null;
-    return;
+    comparingCorridor.value = null
+    return
   }
 
-  const url = getCorridorUrl(item.target.from, item.target.to);
+  const url = getCorridorUrl(item.target.from, item.target.to)
 
   try {
-    await navigateTo(url);
-  } finally {
-    comparingCorridor.value = null;
+    await navigateTo(url)
+  }
+ finally {
+    comparingCorridor.value = null
   }
 }
 
 async function handleCompareSelectedCorridor() {
-  if (comparingSelectedCorridor.value) return;
+  if (comparingSelectedCorridor.value) return
 
   if (!selectedCorridor.value) {
-    showCorridorSelector.value = true;
-    return;
+    showCorridorSelector.value = true
+    return
   }
 
-  comparingSelectedCorridor.value = true;
+  comparingSelectedCorridor.value = true
 
-  const url = getCorridorUrl(selectedCorridor.value.from, selectedCorridor.value.to);
+  const url = getCorridorUrl(selectedCorridor.value.from, selectedCorridor.value.to)
 
   try {
-    await navigateTo(url);
-  } finally {
-    comparingSelectedCorridor.value = false;
+    await navigateTo(url)
+  }
+ finally {
+    comparingSelectedCorridor.value = false
   }
 }
 
 function openAlert(item: WatchlistItem) {
-  modal.open({ target: item.target, label: item.label, source: 'dashboard' });
+  modal.open({ target: item.target, label: item.label, source: 'dashboard' })
 }
 
 function openCreateAlert() {
   if (alertsLimitReached.value) {
-    openLimitModal('alert');
-    return;
+    openLimitModal('alert')
+    return
   }
   const fallback = resolveDashboardAlertSeed({
     selectedCorridor: selectedCorridor.value,
     watchlistCorridors: corridorWatchlistItems.value,
     recentSearches: recentSearches.value,
-  });
+  })
 
   modal.open({
     target: fallback.target,
     label: fallback.label,
     source: 'dashboard',
-  });
+  })
 }
 
 function formatMethod(method: string | null | undefined): string {
-  if (!method) return 'Bank';
+  if (!method) return 'Bank'
   const methodMap: Record<string, string> = {
     bank: 'Bank',
     cash: 'Cash Pickup',
@@ -7278,220 +7936,221 @@ function formatMethod(method: string | null | undefined): string {
     bank_deposit: 'Bank',
     cash_pickup: 'Cash Pickup',
     mobile_wallet: 'Mobile Wallet',
-  };
+  }
   return (
-    methodMap[method.toLowerCase()] ||
-    method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ')
-  );
+    methodMap[method.toLowerCase()]
+    || method.charAt(0).toUpperCase() + method.slice(1).replace(/_/g, ' ')
+  )
 }
 
 function formatTarget(target: WatchTarget) {
   if (target.type === 'corridor')
-    return `${target.from} → ${target.to} • ${formatMethod(target.method)}`;
-  if (target.type === 'fxPair') return `${target.base}/${target.quote}`;
-  return '';
+    return `${target.from} → ${target.to} • ${formatMethod(target.method)}`
+  if (target.type === 'fxPair') return `${target.base}/${target.quote}`
+  return ''
 }
 
 function formatRule(rule: AlertRule) {
-  const op =
-    rule.comparator === 'gte'
+  const op
+    = rule.comparator === 'gte'
       ? '≥'
       : rule.comparator === 'lte'
         ? '≤'
         : rule.comparator === 'gt'
           ? '>'
-          : '<';
-  const currency = rule.metric === 'sendScore' ? '' : rule.currency ? ` ${rule.currency}` : '';
-  return `${rule.metric} ${op} ${rule.value}${currency}`;
+          : '<'
+  const currency = rule.metric === 'sendScore' ? '' : rule.currency ? ` ${rule.currency}` : ''
+  return `${rule.metric} ${op} ${rule.value}${currency}`
 }
 
 function formatComparator(comparator: string) {
   switch (comparator) {
     case 'gte':
-      return '≥';
+      return '≥'
     case 'lte':
-      return '≤';
+      return '≤'
     case 'gt':
-      return '>';
+      return '>'
     case 'lt':
-      return '<';
+      return '<'
     default:
-      return comparator;
+      return comparator
   }
 }
 
 function formatFrequency(frequency: string) {
   switch (frequency) {
     case 'once':
-      return 'Notify once';
+      return 'Notify once'
     case 'weekly':
-      return 'Weekly alerts';
+      return 'Weekly alerts'
     case 'daily':
-      return 'Daily alerts';
+      return 'Daily alerts'
     default:
-      return frequency;
+      return frequency
   }
 }
 
 function formatCurrency(amount: number, countryCode: string): string {
-  const currency = getCurrencyForCountry(countryCode.toUpperCase()) || 'USD';
-  return formatMoney(amount, { currency, maximumFractionDigits: 0 });
+  const currency = getCurrencyForCountry(countryCode.toUpperCase()) || 'USD'
+  return formatMoney(amount, { currency, maximumFractionDigits: 0 })
 }
 
 function formatMetricLabel(metric: string) {
   switch (metric) {
     case 'recipientGets':
-      return 'Recipient gets';
+      return 'Recipient gets'
     case 'totalCost':
-      return 'Total cost';
+      return 'Total cost'
     case 'fee':
-      return 'Fee';
+      return 'Fee'
     case 'rate':
-      return 'Exchange rate';
+      return 'Exchange rate'
     case 'midMarketRate':
-      return 'Mid-market rate';
+      return 'Mid-market rate'
     case 'sendScore':
-      return 'Intelligent Alert';
+      return 'Intelligent Alert'
     case 'index':
-      return 'Index';
+      return 'Index'
     default:
-      return metric;
+      return metric
   }
 }
 
 function getWatchlistAlertCount(watchlistItemId: string) {
-  return alertItems.value.filter(a => a.watchlistItemId === watchlistItemId).length;
+  return alertItems.value.filter(a => a.watchlistItemId === watchlistItemId).length
 }
 
 function getAlertSnapshot(alert: { watchlistItemId: string }) {
-  return getWatchlistSnapshot(alert.watchlistItemId);
+  return getWatchlistSnapshot(alert.watchlistItemId)
 }
 
 function getWatchlistChartData(itemId: string) {
-  return getWatchlistSnapshot(itemId).history.map(point => point.rate);
+  return getWatchlistSnapshot(itemId).history.map(point => point.rate)
 }
 
 function getWatchlistChartPoints(itemId: string) {
-  const data = getWatchlistChartData(itemId);
-  if (data.length < 2) return '';
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
+  const data = getWatchlistChartData(itemId)
+  if (data.length < 2) return ''
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
 
-  const width = 400;
-  const height = 120;
-  const padding = 15;
+  const width = 400
+  const height = 120
+  const padding = 15
 
   const points = data.map((rate, i) => {
-    const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-    const normalized = (rate - min) / range;
-    const y = height - padding - normalized * (height - 2 * padding);
-    return `${x},${y}`;
-  });
+    const x = padding + (i / (data.length - 1)) * (width - 2 * padding)
+    const normalized = (rate - min) / range
+    const y = height - padding - normalized * (height - 2 * padding)
+    return `${x},${y}`
+  })
 
-  return points.join(' ');
+  return points.join(' ')
 }
 
 function getWatchlistChartPath(itemId: string) {
-  const data = getWatchlistChartData(itemId);
-  if (data.length < 2) return '';
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
+  const data = getWatchlistChartData(itemId)
+  if (data.length < 2) return ''
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
 
-  const width = 400;
-  const height = 120;
-  const padding = 15;
+  const width = 400
+  const height = 120
+  const padding = 15
 
-  let path = '';
+  let path = ''
   data.forEach((rate, i) => {
-    const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
-    const normalized = (rate - min) / range;
-    const y = height - padding - normalized * (height - 2 * padding);
+    const x = padding + (i / (data.length - 1)) * (width - 2 * padding)
+    const normalized = (rate - min) / range
+    const y = height - padding - normalized * (height - 2 * padding)
     if (i === 0) {
-      path = `M ${x},${y}`;
-    } else {
-      path += ` L ${x},${y}`;
+      path = `M ${x},${y}`
     }
-  });
+ else {
+      path += ` L ${x},${y}`
+    }
+  })
 
-  const lastX = padding + ((data.length - 1) / (data.length - 1)) * (width - 2 * padding);
-  const firstX = padding;
-  path += ` L ${lastX},${height} L ${firstX},${height} Z`;
+  const lastX = padding + ((data.length - 1) / (data.length - 1)) * (width - 2 * padding)
+  const firstX = padding
+  path += ` L ${lastX},${height} L ${firstX},${height} Z`
 
-  return path;
+  return path
 }
 
 function getWatchlistChartCurrentY(itemId: string) {
-  const data = getWatchlistChartData(itemId);
-  if (data.length < 1) return 60;
-  const lastRate = data[data.length - 1];
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const range = max - min || 1;
+  const data = getWatchlistChartData(itemId)
+  if (data.length < 1) return 60
+  const lastRate = data[data.length - 1]
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
 
-  const height = 120;
-  const padding = 15;
-  const normalized = (lastRate - min) / range;
-  return height - padding - normalized * (height - 2 * padding);
+  const height = 120
+  const padding = 15
+  const normalized = (lastRate - min) / range
+  return height - padding - normalized * (height - 2 * padding)
 }
 
 function getWatchlistStats(itemId: string) {
-  const data = getWatchlistChartData(itemId);
+  const data = getWatchlistChartData(itemId)
   if (!data.length) {
     return {
       high: '—',
       low: '—',
       avg: '—',
-    };
+    }
   }
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const avg = data.reduce((a, b) => a + b, 0) / data.length;
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const avg = data.reduce((a, b) => a + b, 0) / data.length
 
   return {
     high: formatRateValue(max),
     low: formatRateValue(min),
     avg: formatRateValue(avg),
-  };
+  }
 }
 
 function getAlertCorridor(alert: { watchlistItemId: string }) {
-  const item = watchlistFindById(alert.watchlistItemId);
+  const item = watchlistFindById(alert.watchlistItemId)
   if (item?.target?.type === 'corridor') {
-    return { from: item.target.from, to: item.target.to };
+    return { from: item.target.from, to: item.target.to }
   }
-  return { from: 'US', to: 'PH' };
+  return { from: 'US', to: 'PH' }
 }
 
-function getAlertProgress(alert: { rule: AlertRule; watchlistItemId: string }) {
-  const snapshot = getAlertSnapshot(alert);
-  const current = snapshot.rateValue;
-  const target = alert.rule.value;
+function getAlertProgress(alert: { rule: AlertRule, watchlistItemId: string }) {
+  const snapshot = getAlertSnapshot(alert)
+  const current = snapshot.rateValue
+  const target = alert.rule.value
   if (!current || !Number.isFinite(current) || !Number.isFinite(target) || target <= 0) {
-    return 0;
+    return 0
   }
   if (alert.rule.comparator === 'gte' || alert.rule.comparator === 'gt') {
-    return (current / target) * 100;
+    return (current / target) * 100
   }
-  return (target / current) * 100;
+  return (target / current) * 100
 }
 
-function editAlert(alert: { id: string; watchlistItemId: string }) {
-  const existingAlert = alertsFindById(alert.id);
-  const item = watchlistFindById(alert.watchlistItemId);
+function editAlert(alert: { id: string, watchlistItemId: string }) {
+  const existingAlert = alertsFindById(alert.id)
+  const item = watchlistFindById(alert.watchlistItemId)
   if (item && existingAlert) {
     modal.open({
       target: item.target,
       label: item.label,
       source: 'dashboard',
       alertId: alert.id,
-    });
+    })
   }
 }
 
 useHead({
   title: 'Dashboard | Remit-Scout',
   meta: [{ name: 'robots', content: 'noindex, nofollow' }],
-});
+})
 </script>

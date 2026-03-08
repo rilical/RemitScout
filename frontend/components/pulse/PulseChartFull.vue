@@ -1,5 +1,9 @@
 <template>
-  <div :class="CHART_STYLE.card" class="overflow-hidden" data-chart-export-root>
+  <div
+:class="CHART_STYLE.card"
+class="overflow-hidden"
+data-chart-export-root
+>
     <!-- Header -->
     <div class="border-b border-neutral-700 p-6">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -11,13 +15,19 @@
           <h2 class="text-h3 font-bold text-white">
             {{ chartData?.metadata.title || chartMeta?.title }}
           </h2>
-          <p v-if="chartData?.insight" class="mt-1 text-neutral-400">
+          <p
+v-if="chartData?.insight"
+class="mt-1 text-neutral-400"
+>
             {{ chartData.insight }}
           </p>
         </div>
 
         <!-- Controls -->
-        <div v-if="!isGated" class="flex flex-wrap items-center gap-3">
+        <div
+v-if="!isGated"
+class="flex flex-wrap items-center gap-3"
+>
           <!-- Range Selector -->
           <div class="flex items-center gap-1 rounded-lg bg-neutral-900 p-1">
             <button
@@ -63,7 +73,12 @@
               "
               @click="viewMode = 'chart'"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -82,7 +97,12 @@
               "
               @click="viewMode = 'table'"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -113,9 +133,16 @@
       </div>
 
       <!-- Loading -->
-      <div v-else-if="loading" class="flex h-80 items-center justify-center">
+      <div
+v-else-if="loading"
+class="flex h-80 items-center justify-center"
+>
         <div class="flex items-center gap-3 text-neutral-400">
-          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+          <svg
+class="h-5 w-5 animate-spin"
+fill="none"
+viewBox="0 0 24 24"
+>
             <circle
               class="opacity-25"
               cx="12"
@@ -135,7 +162,10 @@
       </div>
 
       <!-- Chart View -->
-      <div v-else-if="viewMode === 'chart'" class="min-h-[320px]">
+      <div
+v-else-if="viewMode === 'chart'"
+class="min-h-[320px]"
+>
         <div
           v-if="chartData && !chartHasRenderableSeries"
           class="flex h-80 items-center justify-center text-center text-neutral-300"
@@ -149,7 +179,10 @@
             </p>
           </div>
         </div>
-        <AsyncErrorBoundary v-else-if="chartComponent && chartData" skeleton-height="320">
+        <AsyncErrorBoundary
+v-else-if="chartComponent && chartData"
+skeleton-height="320"
+>
           <component
             :is="chartComponent"
             :series="chartData.series"
@@ -158,7 +191,10 @@
             :rows="matrixRows"
           />
         </AsyncErrorBoundary>
-        <div v-else class="flex h-80 items-center justify-center text-neutral-400">
+        <div
+v-else
+class="flex h-80 items-center justify-center text-neutral-400"
+>
           No data available
         </div>
       </div>
@@ -189,7 +225,12 @@
           class="flex items-center gap-1 transition-colors hover:text-white"
           :title="chartData?.metadata.sourceNotes"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -206,7 +247,12 @@
           class="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
           @click="$emit('embed')"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -222,59 +268,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, markRaw, defineAsyncComponent } from 'vue';
-import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue';
-import { getChartData, getMethodCoverage } from '~/lib/pulseApi';
-import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry';
-import { formatDate } from '~/shared/lib/format';
-import { CHART_STYLE } from '~/lib/pulseChartStyle';
-import type { PulseLevel } from '~/composables/useEntitlements';
-import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse';
+import { ref, computed, watch, onMounted, markRaw, defineAsyncComponent } from 'vue'
+import AsyncErrorBoundary from '~/components/shared/AsyncErrorBoundary.vue'
+import { getChartData, getMethodCoverage } from '~/lib/pulseApi'
+import { getChartById, isRangeGated } from '~/lib/pulseChartRegistry'
+import { formatDate } from '~/shared/lib/format'
+import { CHART_STYLE } from '~/lib/pulseChartStyle'
+import type { PulseLevel } from '~/composables/useEntitlements'
+import type { ChartData, PulseFilters, TimeRange, MethodCoverageRow } from '~/types/pulse'
 
-const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'));
-const PulseBarChart = defineAsyncComponent(() => import('./PulseBarChart.vue'));
-const PulseStackedChart = defineAsyncComponent(() => import('./PulseStackedChart.vue'));
-const PulseScatterChart = defineAsyncComponent(() => import('./PulseScatterChart.vue'));
-const PulseMatrixTable = defineAsyncComponent(() => import('./PulseMatrixTable.vue'));
-const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue'));
+const PulseLineChart = defineAsyncComponent(() => import('./PulseLineChart.vue'))
+const PulseBarChart = defineAsyncComponent(() => import('./PulseBarChart.vue'))
+const PulseStackedChart = defineAsyncComponent(() => import('./PulseStackedChart.vue'))
+const PulseScatterChart = defineAsyncComponent(() => import('./PulseScatterChart.vue'))
+const PulseMatrixTable = defineAsyncComponent(() => import('./PulseMatrixTable.vue'))
+const PulseTableView = defineAsyncComponent(() => import('./PulseTableView.vue'))
 
 interface Props {
-  chartId: string;
-  filters: PulseFilters;
-  pulseLevel?: PulseLevel;
-  canEmbed?: boolean;
-  initialRange?: TimeRange;
+  chartId: string
+  filters: PulseFilters
+  pulseLevel?: PulseLevel
+  canEmbed?: boolean
+  initialRange?: TimeRange
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pulseLevel: 'none',
   canEmbed: true,
   initialRange: '30d',
-});
+})
 
 const emit = defineEmits<{
-  embed: [];
-  'range-change': [range: TimeRange];
-}>();
+  'embed': []
+  'range-change': [range: TimeRange]
+}>()
 
-const loading = ref(true);
-const chartData = ref<ChartData | null>(null);
-const matrixRows = ref<MethodCoverageRow[]>([]);
-const selectedRange = ref<TimeRange>(props.initialRange);
-const viewMode = ref<'chart' | 'table'>('chart');
+const loading = ref(true)
+const chartData = ref<ChartData | null>(null)
+const matrixRows = ref<MethodCoverageRow[]>([])
+const selectedRange = ref<TimeRange>(props.initialRange)
+const viewMode = ref<'chart' | 'table'>('chart')
 
-const chartMeta = computed(() => getChartById(props.chartId));
+const chartMeta = computed(() => getChartById(props.chartId))
 
-const isPlus = computed(() => props.pulseLevel !== 'none');
-const isFullAccess = computed(() => props.pulseLevel === 'full');
-const isPro = computed(() => props.pulseLevel === 'full');
-const canEmbed = computed(() => props.canEmbed);
-const isGated = computed(() => !isPro.value);
+const isPlus = computed(() => props.pulseLevel !== 'none')
+const isFullAccess = computed(() => props.pulseLevel === 'full')
+const isPro = computed(() => props.pulseLevel === 'full')
+const canEmbed = computed(() => props.canEmbed)
+const isGated = computed(() => !isPro.value)
 
 const gatedTitle = computed(() => {
-  const title = chartMeta.value?.title;
-  return title ? `${title} (Enterprise)` : 'Pulse (Enterprise)';
-});
+  const title = chartMeta.value?.title
+  return title ? `${title} (Enterprise)` : 'Pulse (Enterprise)'
+})
 
 const ranges = computed(() => {
   const baseRanges = [
@@ -285,102 +331,105 @@ const ranges = computed(() => {
       label: '90D',
       isGated: isRangeGated(props.chartId, '90d', isFullAccess.value),
     },
-  ];
+  ]
 
   if (isFullAccess.value) {
     baseRanges.push({
       value: '365d' as TimeRange,
       label: '1Y',
       isGated: isRangeGated(props.chartId, '365d', isFullAccess.value),
-    });
+    })
   }
 
-  return baseRanges;
-});
+  return baseRanges
+})
 
 const chartComponent = computed(() => {
-  if (!chartMeta.value) return null;
+  if (!chartMeta.value) return null
 
   switch (chartMeta.value.type) {
     case 'line':
-      return markRaw(PulseLineChart);
+      return markRaw(PulseLineChart)
     case 'bar':
-      return markRaw(PulseBarChart);
+      return markRaw(PulseBarChart)
     case 'stacked':
-      return markRaw(PulseStackedChart);
+      return markRaw(PulseStackedChart)
     case 'scatter':
-      return markRaw(PulseScatterChart);
+      return markRaw(PulseScatterChart)
     case 'matrix':
-      return markRaw(PulseMatrixTable);
+      return markRaw(PulseMatrixTable)
     default:
-      return markRaw(PulseLineChart);
+      return markRaw(PulseLineChart)
   }
-});
+})
 
 const chartHasRenderableSeries = computed(() => {
-  if (!chartData.value || !Array.isArray(chartData.value.series)) return false;
+  if (!chartData.value || !Array.isArray(chartData.value.series)) return false
   return chartData.value.series.some(
-    series => Array.isArray(series.points) && series.points.length > 0
-  );
-});
+    series => Array.isArray(series.points) && series.points.length > 0,
+  )
+})
 
 const chartEmptyTitle = computed(() => {
   if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
-    return 'Data pending';
+    return 'Data pending'
   }
-  return 'No data available';
-});
+  return 'No data available'
+})
 
 const chartEmptyMessage = computed(() => {
   if (chartData.value?.dataAvailable === false || !chartData.value?.updatedAt) {
-    return 'Data is being prepared for this corridor. Check back shortly.';
+    return 'Data is being prepared for this corridor. Check back shortly.'
   }
-  return 'No chart points are available for the selected filters.';
-});
+  return 'No chart points are available for the selected filters.'
+})
 
 async function loadData() {
   if (isGated.value) {
     // Enterprise charts are enterprise-only; don't mount or fetch anything when gated.
-    chartData.value = null;
-    matrixRows.value = [];
-    loading.value = false;
-    return;
+    chartData.value = null
+    matrixRows.value = []
+    loading.value = false
+    return
   }
-  loading.value = true;
+  loading.value = true
   try {
     if (chartMeta.value?.type === 'matrix') {
-      matrixRows.value = await getMethodCoverage(props.filters);
-      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value);
-    } else {
-      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value);
+      matrixRows.value = await getMethodCoverage(props.filters)
+      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
     }
-  } catch (e) {
-    useLogger('PulseChartFull').error('Failed to load chart data', e);
-  } finally {
-    loading.value = false;
+ else {
+      chartData.value = await getChartData(props.chartId, props.filters, selectedRange.value)
+    }
+  }
+ catch (e) {
+    useLogger('PulseChartFull').error('Failed to load chart data', e)
+  }
+ finally {
+    loading.value = false
   }
 }
 
-function selectRange(range: { value: TimeRange; isGated: boolean }) {
-  if (range.isGated && !isFullAccess.value) return;
-  selectedRange.value = range.value;
-  emit('range-change', range.value);
-  loadData();
+function selectRange(range: { value: TimeRange, isGated: boolean }) {
+  if (range.isGated && !isFullAccess.value) return
+  selectedRange.value = range.value
+  emit('range-change', range.value)
+  loadData()
 }
 
 function formatLastUpdated(timestamp: string): string {
-  const diff = Date.now() - new Date(timestamp).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return formatDate(timestamp);
+  const diff = Date.now() - new Date(timestamp).getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return formatDate(timestamp)
 }
 
-watch(() => props.filters, loadData, { deep: true });
-watch(() => props.chartId, loadData);
-watch(() => props.pulseLevel, loadData);
+watch(() => props.filters, loadData, { deep: true })
+watch(() => props.chartId, loadData)
+watch(() => props.pulseLevel, loadData)
 
-onMounted(loadData);
+onMounted(loadData)
 </script>

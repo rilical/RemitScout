@@ -14,11 +14,12 @@
               v-model="autoRefresh"
               type="checkbox"
               class="h-4 w-4 rounded border-rs-border text-brand-600"
-            />
-            Auto-refresh
-            <span v-if="autoRefresh" class="font-semibold tabular-nums text-rs-fg"
-              >{{ countdown }}s</span
             >
+            Auto-refresh
+            <span
+v-if="autoRefresh"
+class="font-semibold tabular-nums text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="text-body-sm h-10 rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -77,7 +78,7 @@
                 <p class="text-caption text-white/62 mt-1">
                   {{
                     stressInsights.highestRisk
-                      ? `Top risk ${stressInsights.highestRisk.corridor_id}`
+                      ? `Top risk ${formatCorridorPrimary(stressInsights.highestRisk.corridor_id)}`
                       : 'No critical hotspots'
                   }}
                 </p>
@@ -126,7 +127,7 @@
             >
               {{
                 stressInsights.highestRisk
-                  ? `Highest-risk corridor ${stressInsights.highestRisk.corridor_id} is ${stressInsights.highestRisk.stress_level} at ${formatStressScore(stressInsights.highestRisk.stress_score)}.`
+                  ? `Highest-risk corridor ${formatCorridorPrimary(stressInsights.highestRisk.corridor_id)} is ${stressInsights.highestRisk.stress_level} at ${formatStressScore(stressInsights.highestRisk.stress_score)}.`
                   : 'No elevated corridors are currently present in the stress set.'
               }}
             </div>
@@ -202,7 +203,11 @@
               <div class="bg-rs-surface-2/60 rounded-2xl border border-rs-border p-4">
                 <p class="text-caption text-rs-muted">Highest risk</p>
                 <p class="text-body-lg mt-1 font-semibold text-rs-fg">
-                  {{ stressInsights.highestRisk?.corridor_id ?? '—' }}
+                  {{
+                    stressInsights.highestRisk
+                      ? formatCorridorPrimary(stressInsights.highestRisk.corridor_id)
+                      : '—'
+                  }}
                 </p>
               </div>
               <div class="bg-rs-surface-2/60 rounded-2xl border border-rs-border p-4">
@@ -234,9 +239,9 @@
                 @toggle-pause="togglePauseProbing"
                 @apply-override="applyOverride"
                 @activate-kill-switch="activateKillSwitch"
-                @update:override-corridor-id="overrideCorridorId = $event"
-                @update:override-level="overrideLevel = $event"
-                @update:override-duration="overrideDuration = $event"
+                @update:override-corridor-id="updateOverrideCorridorId"
+                @update:override-level="updateOverrideLevel"
+                @update:override-duration="updateOverrideDuration"
               />
             </div>
           </article>
@@ -260,7 +265,7 @@
                   type="text"
                   placeholder="Filter corridors…"
                   class="text-body-sm h-10 rounded-lg border border-rs-border bg-white px-3 focus:outline-none focus:ring-2 focus:ring-brand-600"
-                />
+                >
                 <select
                   v-model="levelFilter"
                   class="text-body-sm h-10 rounded-lg border border-rs-border bg-white px-3 focus:outline-none focus:ring-2 focus:ring-brand-600"
@@ -353,7 +358,10 @@
                 </span>
               </div>
 
-              <div v-if="stressInsights.topWatchlist.length" class="mt-4 space-y-3">
+              <div
+v-if="stressInsights.topWatchlist.length"
+class="mt-4 space-y-3"
+>
                 <div
                   v-for="corridor in stressInsights.topWatchlist"
                   :key="corridor.corridor_id"
@@ -362,9 +370,10 @@
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <p class="text-body-sm font-semibold text-rs-fg">
-                        {{ corridor.corridor_id }}
+                        {{ formatCorridorPrimary(corridor.corridor_id) }}
                       </p>
                       <p class="text-caption mt-1 text-rs-muted">
+                        {{ formatCorridorSecondary(corridor.corridor_id) }} ·
                         {{ formatConfidence(corridor.confidence) }} confidence · observed
                         {{ formatDateTime(corridor.computed_at ?? corridor.date) }}
                       </p>
@@ -411,9 +420,9 @@
                   @toggle-pause="togglePauseProbing"
                   @apply-override="applyOverride"
                   @activate-kill-switch="activateKillSwitch"
-                  @update:override-corridor-id="overrideCorridorId = $event"
-                  @update:override-level="overrideLevel = $event"
-                  @update:override-duration="overrideDuration = $event"
+                  @update:override-corridor-id="updateOverrideCorridorId"
+                  @update:override-level="updateOverrideLevel"
+                  @update:override-duration="updateOverrideDuration"
                 />
               </div>
             </article>
@@ -436,6 +445,11 @@ import {
 } from '~/lib/opsApi'
 import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
 import { buildCorridorStressInsights, type CorridorStressInsight } from '~/utils/adminInsights'
+import {
+  buildCorridorSearchText,
+  formatCorridorCountryCodePair,
+  formatCorridorCountryPair,
+} from '~/utils/corridorLabels'
 
 definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
@@ -474,6 +488,18 @@ const killSwitchLoading = ref(false)
 const killSwitchError = ref<string | null>(null)
 const actionMessage = ref<string | null>(null)
 
+const updateOverrideCorridorId = (value: string) => {
+  overrideCorridorId.value = value
+}
+
+const updateOverrideLevel = (value: 'normal' | 'elevated' | 'high' | 'critical') => {
+  overrideLevel.value = value
+}
+
+const updateOverrideDuration = (value: number) => {
+  overrideDuration.value = value
+}
+
 const stressInsights = computed(() =>
   buildCorridorStressInsights(corridors.value, summary.value, lastUpdated.value),
 )
@@ -506,31 +532,33 @@ const showEmptyState = computed(
 
 const filteredCorridors = computed(() => {
   const query = search.value.trim().toLowerCase()
-  return stressInsights.value.corridors.filter(corridor => {
+  return stressInsights.value.corridors.filter((corridor) => {
     if (levelFilter.value !== 'all' && corridor.stress_level !== levelFilter.value) return false
     if (!query) return true
     return (
-      corridor.corridor_id.toLowerCase().includes(query) ||
-      String(corridor.confidence || '')
+      buildCorridorSearchText(corridor.corridor_id).includes(query)
+      || formatCorridorPrimary(corridor.corridor_id).toLowerCase().includes(query)
+      || formatCorridorSecondary(corridor.corridor_id).toLowerCase().includes(query)
+      || String(corridor.confidence || '')
         .toLowerCase()
-        .includes(query) ||
-      corridor.stress_level.toLowerCase().includes(query)
+        .includes(query)
+        || corridor.stress_level.toLowerCase().includes(query)
     )
   })
 })
 
 const heroTone = computed<'stable' | 'watch' | 'critical'>(() => {
   if (
-    controlState.value?.kill_switch_active ||
-    stressInsights.value.criticalCount > 0 ||
-    stressInsights.value.freshnessState === 'stale'
+    controlState.value?.kill_switch_active
+    || stressInsights.value.criticalCount > 0
+    || stressInsights.value.freshnessState === 'stale'
   ) {
     return 'critical'
   }
   if (
-    controlState.value?.pause_active ||
-    stressInsights.value.elevatedCount > 0 ||
-    stressInsights.value.freshnessState === 'delayed'
+    controlState.value?.pause_active
+    || stressInsights.value.elevatedCount > 0
+    || stressInsights.value.freshnessState === 'delayed'
   ) {
     return 'watch'
   }
@@ -630,7 +658,7 @@ const killSwitchScopeLabel = computed(() => {
   return `${controlState.value.stress_probing_disabled_modules}/${controlState.value.total_modules} modules disabled`
 })
 
-watch(autoRefresh, enabled => {
+watch(autoRefresh, (enabled) => {
   if (timer) {
     clearInterval(timer)
     timer = null
@@ -675,15 +703,11 @@ const formatAge = (minutes: number | null | undefined): string => {
 }
 
 const formatCorridorPrimary = (corridorId: string): string => {
-  const [from, to] = corridorId.split('-')
-  if (from && to) return `${from} -> ${to}`
-  return corridorId
+  return formatCorridorCountryPair(corridorId, ' -> ')
 }
 
 const formatCorridorSecondary = (corridorId: string): string => {
-  const parts = corridorId.split('-')
-  if (parts.length >= 4) return `${parts[2]} / ${parts[3]}`
-  return corridorId
+  return formatCorridorCountryCodePair(corridorId, ' -> ')
 }
 
 const load = async () => {
@@ -693,7 +717,8 @@ const load = async () => {
 
   if (loading.value && !hasVisibleData) {
     error.value = null
-  } else {
+  }
+ else {
     refreshing.value = true
   }
 
@@ -710,7 +735,8 @@ const load = async () => {
     summary.value = overviewRes.value.summary
     lastUpdated.value = overviewRes.value.updatedAt ?? new Date().toISOString()
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.overview = getAdminApiErrorMessage(
       overviewRes.reason,
       'Stress overview is temporarily unavailable.',
@@ -720,7 +746,8 @@ const load = async () => {
   if (controlsRes.status === 'fulfilled') {
     controlState.value = controlsRes.value
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.controls = getAdminApiErrorMessage(
       controlsRes.reason,
       'Control-state telemetry is temporarily unavailable.',
@@ -731,7 +758,8 @@ const load = async () => {
 
   if (fulfilled > 0) {
     error.value = null
-  } else if (!hasVisibleData) {
+  }
+ else if (!hasVisibleData) {
     error.value = 'Failed to load corridor stress.'
   }
 
@@ -751,9 +779,11 @@ const togglePauseProbing = async () => {
       ? 'Adaptive probing has been paused.'
       : 'Adaptive probing has resumed.'
     await load()
-  } catch (e: unknown) {
+  }
+ catch (e: unknown) {
     pauseProbingError.value = getAdminApiErrorMessage(e, 'Failed to update pause state.')
-  } finally {
+  }
+ finally {
     pauseProbingLoading.value = false
   }
 }
@@ -765,11 +795,14 @@ const applyOverride = async () => {
   actionMessage.value = null
   try {
     await applyStressOverride(overrideCorridorId.value, overrideLevel.value, overrideDuration.value)
-    actionMessage.value = `Override applied to ${overrideCorridorId.value} for ${overrideDuration.value}h.`
+    actionMessage.value
+      = `Override applied to ${formatCorridorPrimary(overrideCorridorId.value)} for ${overrideDuration.value}h.`
     await load()
-  } catch (e: unknown) {
+  }
+ catch (e: unknown) {
     overrideError.value = getAdminApiErrorMessage(e, 'Failed to apply override.')
-  } finally {
+  }
+ finally {
     overrideLoading.value = false
   }
 }
@@ -783,9 +816,11 @@ const activateKillSwitch = async () => {
     await activateStressKillSwitch()
     actionMessage.value = 'Kill switch activated. Stress-driven probing has been disabled.'
     await load()
-  } catch (e: unknown) {
+  }
+ catch (e: unknown) {
     killSwitchError.value = getAdminApiErrorMessage(e, 'Failed to activate kill switch.')
-  } finally {
+  }
+ finally {
     killSwitchLoading.value = false
   }
 }
@@ -856,7 +891,12 @@ const StressControlPanel = defineComponent({
     'update:override-duration',
   ],
   setup(props, { emit }) {
-    const corridorOptions = computed(() => props.corridors.map(corridor => corridor.corridor_id))
+    const corridorOptions = computed(() =>
+      props.corridors.map(corridor => ({
+        value: corridor.corridor_id,
+        label: formatCorridorCountryPair(corridor.corridor_id, ' -> '),
+      })),
+    )
 
     return () =>
       h('div', { class: 'space-y-5' }, [
@@ -934,8 +974,8 @@ const StressControlPanel = defineComponent({
                 },
                 [
                   h('option', { value: '' }, 'Select corridor'),
-                  ...corridorOptions.value.map(corridorId =>
-                    h('option', { value: corridorId }, corridorId),
+                  ...corridorOptions.value.map(corridor =>
+                    h('option', { value: corridor.value }, corridor.label),
                   ),
                 ],
               ),
