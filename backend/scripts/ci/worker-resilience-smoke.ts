@@ -3,7 +3,11 @@ import { GetQueueUrlCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { getQueueAgeSeconds, getQueueDLQ, getQueueDepth, getQueueStats } from '../../shared/sqs'
 import { resolveSmokeApiBaseUrl } from './alerts-watchlists-smoke'
 import { jsonFetch, maybeVerifySupabaseMfa, signInSupabase } from './auth-surface-smoke'
-import { isAdminMfaRequiredResponse, readSmokeUserMfaCode } from './admin-surface-smoke'
+import {
+  isAdminMfaRequiredResponse,
+  readSmokeUserMfaCode,
+  resolveAdminSmokeAuthToken,
+} from './admin-surface-smoke'
 
 type Check = {
   name: string
@@ -28,6 +32,19 @@ type AdminExchangeResponse = {
   error?: string
   code?: string
   message?: string
+}
+
+export const resolveWorkerResilienceAdminAuth = (
+  status: number,
+  body: AdminExchangeResponse | null | undefined,
+  supabaseToken: string,
+) => {
+  const auth = resolveAdminSmokeAuthToken(status, body, supabaseToken)
+  return {
+    ...auth,
+    ok: status < 400 && Boolean(auth.token),
+    note: `status=${status}${auth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`,
+  }
 }
 
 type OpsServiceHealthResponse = {
@@ -213,14 +230,17 @@ const main = async () => {
     adminExchange = await exchangeAdminSession(apiBase, supabaseToken)
   }
 
-  const adminToken = typeof adminExchange.body?.access_token === 'string'
-    ? adminExchange.body.access_token
-    : ''
+  const adminAuth = resolveWorkerResilienceAdminAuth(
+    adminExchange.status,
+    adminExchange.body,
+    supabaseToken,
+  )
+  const adminToken = adminAuth.token
 
   record({
     name: 'POST /sessions/admin/exchange',
-    ok: adminExchange.status < 400 && Boolean(adminToken),
-    note: `status=${adminExchange.status}`,
+    ok: adminAuth.ok,
+    note: adminAuth.note,
   })
 
   if (!adminToken) {
