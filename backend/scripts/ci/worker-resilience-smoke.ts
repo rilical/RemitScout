@@ -47,6 +47,36 @@ export const resolveWorkerResilienceAdminAuth = (
   }
 }
 
+export const resolveQueueLookupIssue = (
+  error: unknown,
+): 'nonexistent_queue' | 'access_denied' | null => {
+  const name = typeof error === 'object' && error && 'name' in error
+    ? String(error.name || '')
+    : ''
+  const message = typeof error === 'object' && error && 'message' in error
+    ? String(error.message || '')
+    : ''
+  const haystack = `${name} ${message}`.toLowerCase()
+
+  if (
+    haystack.includes('nonexistentqueue')
+    || haystack.includes('queuedoesnotexist')
+    || haystack.includes('queue does not exist')
+  ) {
+    return 'nonexistent_queue'
+  }
+
+  if (
+    haystack.includes('accessdenied')
+    || haystack.includes('not authorized to perform')
+    || haystack.includes('authorizationerror')
+  ) {
+    return 'access_denied'
+  }
+
+  return null
+}
+
 type OpsServiceHealthResponse = {
   source?: string
   unavailable?: boolean
@@ -149,12 +179,24 @@ const getQueueName = (envName: string, kind: QueueKind): string => {
 
 const resolveQueueUrl = async (envName: string, kind: QueueKind) => {
   const queueName = getQueueName(envName, kind)
-  const response = await sqs.send(new GetQueueUrlCommand({ QueueName: queueName }))
-  const queueUrl = String(response.QueueUrl || '').trim()
-  if (!queueUrl) {
-    throw new Error(`Queue URL not found for ${queueName}`)
+  try {
+    const response = await sqs.send(new GetQueueUrlCommand({ QueueName: queueName }))
+    const queueUrl = String(response.QueueUrl || '').trim()
+    if (!queueUrl) {
+      throw new Error(`Queue URL not found for ${queueName}`)
+    }
+    return { queueName, queueUrl, issue: null as const }
+  } catch (error) {
+    const issue = resolveQueueLookupIssue(error)
+    if (issue) {
+      return {
+        queueName,
+        queueUrl: null,
+        issue,
+      }
+    }
+    throw error
   }
-  return { queueName, queueUrl }
 }
 
 const queueAgeThresholdSeconds = (
@@ -305,7 +347,15 @@ const main = async () => {
   }
 
   for (const kind of queueKinds) {
-    const { queueName, queueUrl } = await resolveQueueUrl(envName, kind)
+    const { queueName, queueUrl, issue } = await resolveQueueUrl(envName, kind)
+    if (!queueUrl) {
+      record({
+        name: `Queue ${kind} direct lookup unavailable`,
+        ok: true,
+        note: `queue=${queueName} reason=${issue}`,
+      })
+      continue
+    }
     const stats = await getQueueStats(queueUrl)
     const ageSeconds = await getQueueAgeSeconds(queueUrl)
     const dlqUrl = await getQueueDLQ(queueUrl)
