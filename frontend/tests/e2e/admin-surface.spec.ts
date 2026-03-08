@@ -42,6 +42,18 @@ const expectNoAdminLoadFailure = async (page: Page) => {
   await expect(page).not.toHaveURL(/\/sign-in(?:\?|$)/i)
 }
 
+const visitObserverPage = async (page: Page) => {
+  await expect(page).toHaveURL(/\/admin\/observer(?:\?|$)/, { timeout: 30000 })
+  await expect(page.getByText(/operations center/i).first()).toBeVisible({
+    timeout: 30000,
+  })
+  await expect(page.getByRole('button', { name: /refresh status/i })).toBeVisible({
+    timeout: 30000,
+  })
+  await expect(page.getByText(/signal ledger/i).first()).toBeVisible({ timeout: 30000 })
+  await expectNoAdminLoadFailure(page)
+}
+
 const visitAdminPage = async (
   page: Page,
   path: string,
@@ -65,12 +77,7 @@ test.describe('admin surface smoke', () => {
     page,
   }) => {
     await completeSignIn(page)
-
-    await expect(page.getByRole('heading', { name: /observer console/i })).toBeVisible({
-      timeout: 30000,
-    })
-    await expect(page.getByText(/operations center/i).first()).toBeVisible({ timeout: 30000 })
-    await expectNoAdminLoadFailure(page)
+    await visitObserverPage(page)
 
     await visitAdminPage(page, '/admin/modules', /module registry/i, ['registered modules'])
     await visitAdminPage(page, '/admin/discovery', /provider control plane/i, ['pending discovery reviews', 'operator brief'])
