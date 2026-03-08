@@ -234,6 +234,21 @@ export const useAuth = () => {
   }
 
   const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
+    const initialSession = await new Promise<Session | null>((resolve) => {
+      const timeout = setTimeout(() => resolve(null), 5000)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+        if (event === 'INITIAL_SESSION') {
+          clearTimeout(timeout)
+          subscription.unsubscribe()
+          resolve(nextSession)
+        }
+      })
+    })
+
+    if (initialSession) {
+      return initialSession
+    }
+
     const getCurrentSession = async (): Promise<Session | null> => {
       try {
         const { data, error } = await supabase.auth.getSession()
@@ -258,28 +273,28 @@ export const useAuth = () => {
         const sanitizedUrl = `${window.location.pathname}${window.location.search}`
         window.history.replaceState({}, document.title, sanitizedUrl)
       }
-    }
 
-    if (!nextSession) {
-      nextSession = await restoreSessionFromStorage(supabase)
-    }
+      if (!nextSession) {
+        nextSession = await restoreSessionFromStorage(supabase)
+      }
 
-    for (const delayMs of INITIAL_SESSION_RETRY_DELAYS_MS) {
-      if (nextSession) break
-      await new Promise(resolve => setTimeout(resolve, delayMs))
-      nextSession = await getCurrentSession()
-    }
+      for (const delayMs of INITIAL_SESSION_RETRY_DELAYS_MS) {
+        if (nextSession) break
+        await new Promise(resolve => setTimeout(resolve, delayMs))
+        nextSession = await getCurrentSession()
+      }
 
-    if (!nextSession) {
-      nextSession = await refreshSessionFromHint(supabase)
-    }
+      if (!nextSession) {
+        nextSession = await refreshSessionFromHint(supabase)
+      }
 
-    if (!nextSession) {
-      nextSession = await getCurrentSession()
-    }
+      if (!nextSession) {
+        nextSession = await getCurrentSession()
+      }
 
-    if (!nextSession && !readStoredSupabaseSession()) {
-      writeAuthSessionHint(false)
+      if (!nextSession && !readStoredSupabaseSession()) {
+        writeAuthSessionHint(false)
+      }
     }
 
     return nextSession
@@ -375,12 +390,14 @@ export const useAuth = () => {
     }
 
     if (!initPromise.value) {
-      attachAuthListener(supabase)
       initPromise.value = resolveInitialSession(supabase)
         .then(nextSession => setSession(nextSession))
         .catch((error) => {
           lastError.value = error instanceof Error ? error.message : String(error)
           setSession(null)
+        })
+        .finally(() => {
+          attachAuthListener(supabase)
         })
     }
 
