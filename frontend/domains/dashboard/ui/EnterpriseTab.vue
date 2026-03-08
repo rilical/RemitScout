@@ -1,50 +1,50 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type ComponentPublicInstance } from 'vue';
-import { DataTable, Icon } from '~/ui';
-import { formatDate, formatRelativeTime } from '~/shared/lib/format';
-import { useApi } from '~/composables/useApi';
-import { useEntitlements } from '~/composables/useEntitlements';
-import { useEnterpriseApiKeys } from '~/composables/useEnterpriseApiKeys';
-import { useEnterpriseEmbeds } from '~/composables/useEnterpriseEmbeds';
-import { useEnterpriseExports } from '~/composables/useEnterpriseExports';
+import { computed, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
+import { DataTable, Icon } from '~/ui'
+import { formatDate, formatRelativeTime } from '~/shared/lib/format'
+import { useApi } from '~/composables/useApi'
+import { useEntitlements } from '~/composables/useEntitlements'
+import { useEnterpriseApiKeys } from '~/composables/useEnterpriseApiKeys'
+import { useEnterpriseEmbeds } from '~/composables/useEnterpriseEmbeds'
+import { useEnterpriseExports } from '~/composables/useEnterpriseExports'
 import {
   CHART_VISUAL_EXPORT_FORMATS,
   type ChartVisualExportFormat,
   useChartImageExport,
-} from '~/composables/useChartImageExport';
-import { buildCorridorSearchText, formatCorridorCountryPair } from '~/utils/corridorLabels';
+} from '~/composables/useChartImageExport'
+import { buildCorridorSearchText, formatCorridorCountryPair } from '~/utils/corridorLabels'
 
-type EmbedVisualKey = 'teer' | 'rci' | 'rvi_bps';
-type NoticeTone = 'danger' | 'warning' | 'info';
+type EmbedVisualKey = 'teer' | 'rci' | 'rvi_bps'
+type NoticeTone = 'danger' | 'warning' | 'info'
 
 type EnterpriseCorridorRecord = {
-  corridorId: string;
-  sourceCountry: string;
-  destCountry: string;
-  sourceCurrency: string;
-  destCurrency: string;
-  dataTier: number;
-  exportCadenceMinutes: number;
-  collectionCadenceMinutes: number;
-  collectionTier: 'tier_1' | 'tier_2';
-  isUsdOrigin: boolean;
-  dataPoints: number;
-  lastUpdated: string | null;
-};
+  corridorId: string
+  sourceCountry: string
+  destCountry: string
+  sourceCurrency: string
+  destCurrency: string
+  dataTier: number
+  exportCadenceMinutes: number
+  collectionCadenceMinutes: number
+  collectionTier: 'tier_1' | 'tier_2'
+  isUsdOrigin: boolean
+  dataPoints: number
+  lastUpdated: string | null
+}
 
 type EnterpriseCorridorResponse = {
-  totalCorridors: number;
-  corridors: EnterpriseCorridorRecord[];
-};
+  totalCorridors: number
+  corridors: EnterpriseCorridorRecord[]
+}
 
 type EnterpriseNotice = {
-  tone: NoticeTone;
-  title: string;
-  body: string;
-};
+  tone: NoticeTone
+  title: string
+  body: string
+}
 
-const EXPORT_DELAY_THRESHOLD_MINUTES = 15;
-const BANK_DEPOSIT_METHOD_PROFILE = 'standard_bank' as const;
+const EXPORT_DELAY_THRESHOLD_MINUTES = 15
+const BANK_DEPOSIT_METHOD_PROFILE = 'standard_bank' as const
 
 const EXPORT_JOB_TYPE_LABELS: Record<string, string> = {
   history: 'Quote history',
@@ -62,11 +62,11 @@ const EXPORT_JOB_TYPE_LABELS: Record<string, string> = {
   indices_csv: 'Indices CSV',
   indices_pdf: 'Indices PDF',
   indices_parquet: 'Indices Parquet',
-};
+}
 
-const { apiAccess, apiTier, apiRateLimitRpm, indicesEmbedsEnabled, indicesExportsEnabled, limits } =
-  useEntitlements();
-const { request } = useApi();
+const { apiAccess, apiTier, apiRateLimitRpm, indicesEmbedsEnabled, indicesExportsEnabled, limits }
+  = useEntitlements()
+const { request } = useApi()
 
 const {
   apiKeys,
@@ -89,7 +89,7 @@ const {
   rotateKey: rotateEnterpriseApiKey,
   revokeKey: revokeEnterpriseApiKey,
   copyToken: copyApiKeyToken,
-} = useEnterpriseApiKeys();
+} = useEnterpriseApiKeys()
 
 const {
   corridorId: embedCorridorId,
@@ -113,7 +113,7 @@ const {
   publishedEmbedsError,
   fetchPublishedEmbeds,
   revokePublishedEmbed,
-} = useEnterpriseEmbeds();
+} = useEnterpriseEmbeds()
 
 const {
   jobs: exportJobs,
@@ -134,67 +134,67 @@ const {
   fetchJobs: fetchExportJobs,
   createJob: createExportJob,
   downloadJob: downloadExport,
-} = useEnterpriseExports();
+} = useEnterpriseExports()
 
-const { exportVisual, exporting: visualExporting } = useChartImageExport();
-const embedVisualButtons: Array<{ value: ChartVisualExportFormat; label: string }> =
-  CHART_VISUAL_EXPORT_FORMATS.map(format => ({
+const { exportVisual, exporting: visualExporting } = useChartImageExport()
+const embedVisualButtons: Array<{ value: ChartVisualExportFormat, label: string }>
+  = CHART_VISUAL_EXPORT_FORMATS.map(format => ({
     value: format,
     label: format.toUpperCase(),
-  }));
+  }))
 
 const embedPreviewFrames = ref<Record<EmbedVisualKey, HTMLIFrameElement | null>>({
   teer: null,
   rci: null,
   rvi_bps: null,
-});
+})
 const embedVisualErrors = ref<Record<EmbedVisualKey, string | null>>({
   teer: null,
   rci: null,
   rvi_bps: null,
-});
-const activeVisualExportKey = ref<EmbedVisualKey | null>(null);
-const activeVisualExportFormat = ref<ChartVisualExportFormat | null>(null);
-const corridors = ref<EnterpriseCorridorRecord[]>([]);
-const corridorsLoading = ref(false);
-const corridorsError = ref<string | null>(null);
-const embedCorridorInput = ref(embedCorridorId.value);
-const exportCorridorSearch = ref('');
-const embedFormError = ref<string | null>(null);
-const exportFormError = ref<string | null>(null);
+})
+const activeVisualExportKey = ref<EmbedVisualKey | null>(null)
+const activeVisualExportFormat = ref<ChartVisualExportFormat | null>(null)
+const corridors = ref<EnterpriseCorridorRecord[]>([])
+const corridorsLoading = ref(false)
+const corridorsError = ref<string | null>(null)
+const embedCorridorInput = ref(embedCorridorId.value)
+const exportCorridorSearch = ref('')
+const embedFormError = ref<string | null>(null)
+const exportFormError = ref<string | null>(null)
 
-embedMethodProfile.value = BANK_DEPOSIT_METHOD_PROFILE;
+embedMethodProfile.value = BANK_DEPOSIT_METHOD_PROFILE
 
-const normalizeCorridorId = (value: string) => value.toUpperCase().trim();
+const normalizeCorridorId = (value: string) => value.toUpperCase().trim()
 
 const selectedExportCorridorIds = computed({
   get: () => exportCorridorIds.value,
   set: (next: string[]) => {
-    exportCorridorIdsText.value = next.join('\n');
+    exportCorridorIdsText.value = next.join('\n')
   },
-});
+})
 
-const selectedExportCorridorIdSet = computed(() => new Set(selectedExportCorridorIds.value));
+const selectedExportCorridorIdSet = computed(() => new Set(selectedExportCorridorIds.value))
 
-const apiKeyUsageLabel = computed(() => `${activeApiKeyCount.value}/${maxApiKeys.value}`);
+const apiKeyUsageLabel = computed(() => `${activeApiKeyCount.value}/${maxApiKeys.value}`)
 const activePublishedEmbedCount = computed(
-  () => publishedEmbeds.value.filter(embed => !embed.revokedAt).length
-);
-const corridorCatalogCount = computed(() => corridors.value.length);
+  () => publishedEmbeds.value.filter(embed => !embed.revokedAt).length,
+)
+const corridorCatalogCount = computed(() => corridors.value.length)
 
 const selectedEmbedCorridor = computed(
   () =>
     corridors.value.find(
-      corridor => corridor.corridorId === normalizeCorridorId(embedCorridorId.value)
-    ) ?? null
-);
+      corridor => corridor.corridorId === normalizeCorridorId(embedCorridorId.value),
+    ) ?? null,
+)
 
 const embedCorridorCandidates = computed(() => {
-  const query = embedCorridorInput.value.trim().toLowerCase();
-  if (!query) return corridors.value.slice(0, 8);
+  const query = embedCorridorInput.value.trim().toLowerCase()
+  if (!query) return corridors.value.slice(0, 8)
 
   return corridors.value
-    .filter(corridor => {
+    .filter((corridor) => {
       return [
         buildCorridorSearchText(corridor.corridorId),
         corridor.sourceCountry,
@@ -204,21 +204,21 @@ const embedCorridorCandidates = computed(() => {
       ]
         .join(' ')
         .toLowerCase()
-        .includes(query);
+        .includes(query)
     })
-    .slice(0, 8);
-});
+    .slice(0, 8)
+})
 
 const exportCorridorCandidates = computed(() => {
-  const query = exportCorridorSearch.value.trim().toLowerCase();
+  const query = exportCorridorSearch.value.trim().toLowerCase()
   const available = corridors.value.filter(
-    corridor => !selectedExportCorridorIdSet.value.has(corridor.corridorId)
-  );
+    corridor => !selectedExportCorridorIdSet.value.has(corridor.corridorId),
+  )
 
-  if (!query) return available.slice(0, 8);
+  if (!query) return available.slice(0, 8)
 
   return available
-    .filter(corridor => {
+    .filter((corridor) => {
       return [
         buildCorridorSearchText(corridor.corridorId),
         corridor.sourceCountry,
@@ -228,40 +228,40 @@ const exportCorridorCandidates = computed(() => {
       ]
         .join(' ')
         .toLowerCase()
-        .includes(query);
+        .includes(query)
     })
-    .slice(0, 8);
-});
+    .slice(0, 8)
+})
 
 const selectedExportCorridors = computed(() =>
   selectedExportCorridorIds.value
     .map(corridorId => corridors.value.find(item => item.corridorId === corridorId) ?? null)
-    .filter((corridor): corridor is EnterpriseCorridorRecord => corridor !== null)
-);
+    .filter((corridor): corridor is EnterpriseCorridorRecord => corridor !== null),
+)
 
 const delayedExportJobs = computed(() =>
-  exportJobs.value.filter(job => {
-    const ageMinutes = getJobAgeMinutes(job.createdAt);
+  exportJobs.value.filter((job) => {
+    const ageMinutes = getJobAgeMinutes(job.createdAt)
     return (
-      ['queued', 'running'].includes(job.status) &&
-      ageMinutes !== null &&
-      ageMinutes >= EXPORT_DELAY_THRESHOLD_MINUTES
-    );
-  })
-);
+      ['queued', 'running'].includes(job.status)
+      && ageMinutes !== null
+      && ageMinutes >= EXPORT_DELAY_THRESHOLD_MINUTES
+    )
+  }),
+)
 
 const enterpriseNotices = computed<EnterpriseNotice[]>(() => {
-  const notices: EnterpriseNotice[] = [];
+  const notices: EnterpriseNotice[] = []
 
   if (publishedEmbedsError.value || embedPublishedError.value) {
     notices.push({
       tone: 'danger',
       title: 'Embed publishing is degraded',
       body:
-        embedPublishedError.value ||
-        publishedEmbedsError.value ||
-        'Published embeds are failing on this environment. Treat the embed section as degraded until the storage layer is restored.',
-    });
+        embedPublishedError.value
+        || publishedEmbedsError.value
+        || 'Published embeds are failing on this environment. Treat the embed section as degraded until the storage layer is restored.',
+    })
   }
 
   if (delayedExportJobs.value.length > 0) {
@@ -269,7 +269,7 @@ const enterpriseNotices = computed<EnterpriseNotice[]>(() => {
       tone: 'warning',
       title: 'Export processing is delayed',
       body: `${delayedExportJobs.value.length} export job${delayedExportJobs.value.length === 1 ? '' : 's'} ha${delayedExportJobs.value.length === 1 ? 's' : 've'} been queued for more than ${EXPORT_DELAY_THRESHOLD_MINUTES} minutes. Export creation works, but delivery is not healthy on this environment.`,
-    });
+    })
   }
 
   if (corridorsError.value) {
@@ -277,7 +277,7 @@ const enterpriseNotices = computed<EnterpriseNotice[]>(() => {
       tone: 'warning',
       title: 'Corridor catalog unavailable',
       body: corridorsError.value,
-    });
+    })
   }
 
   if (!apiAccess.value) {
@@ -285,255 +285,255 @@ const enterpriseNotices = computed<EnterpriseNotice[]>(() => {
       tone: 'info',
       title: 'API access is not enabled',
       body: 'The enterprise dashboard can still show billing and export entitlements, but direct API features are locked until API access is enabled for this account.',
-    });
+    })
   }
 
-  return notices;
-});
+  return notices
+})
 
-const effectiveEmbedError = computed(() => embedFormError.value || embedPublishedError.value);
-const effectiveExportError = computed(() => exportFormError.value || exportJobsError.value);
+const effectiveEmbedError = computed(() => embedFormError.value || embedPublishedError.value)
+const effectiveExportError = computed(() => exportFormError.value || exportJobsError.value)
 
 watch(
   () => embedCorridorId.value,
-  value => {
+  (value) => {
     const selectedCorridor = corridors.value.find(
-      corridor => corridor.corridorId === normalizeCorridorId(value)
-    );
+      corridor => corridor.corridorId === normalizeCorridorId(value),
+    )
     const nextValue = selectedCorridor
       ? corridorTitle(selectedCorridor)
-      : formatCorridorCountryPair(value, ' -> ');
+      : formatCorridorCountryPair(value, ' -> ')
     if (embedCorridorInput.value !== nextValue) {
-      embedCorridorInput.value = nextValue;
+      embedCorridorInput.value = nextValue
     }
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 function setEmbedPreviewFrame(
   key: EmbedVisualKey,
-  frame: Element | ComponentPublicInstance | null
+  frame: Element | ComponentPublicInstance | null,
 ) {
-  embedPreviewFrames.value[key] = frame instanceof HTMLIFrameElement ? frame : null;
+  embedPreviewFrames.value[key] = frame instanceof HTMLIFrameElement ? frame : null
 }
 
 function corridorSubtitle(corridor: EnterpriseCorridorRecord) {
-  return `Bank deposit only • Tier ${corridor.dataTier} • ${formatCadence(corridor.exportCadenceMinutes)}`;
+  return `Bank deposit only • Tier ${corridor.dataTier} • ${formatCadence(corridor.exportCadenceMinutes)}`
 }
 
 function corridorTitle(corridor: EnterpriseCorridorRecord) {
-  return formatCorridorCountryPair(corridor.corridorId, ' -> ');
+  return formatCorridorCountryPair(corridor.corridorId, ' -> ')
 }
 
 function formatCadence(minutes: number) {
-  if (!Number.isFinite(minutes) || minutes <= 0) return 'Unknown cadence';
-  if (minutes < 60) return `${minutes} min cadence`;
-  if (minutes % 60 === 0) return `${minutes / 60} hr cadence`;
-  return `${minutes} min cadence`;
+  if (!Number.isFinite(minutes) || minutes <= 0) return 'Unknown cadence'
+  if (minutes < 60) return `${minutes} min cadence`
+  if (minutes % 60 === 0) return `${minutes / 60} hr cadence`
+  return `${minutes} min cadence`
 }
 
 function formatJobAgeMinutes(createdAt: string) {
-  const created = new Date(createdAt);
-  if (Number.isNaN(created.getTime())) return null;
-  return Math.floor((Date.now() - created.getTime()) / 60_000);
+  const created = new Date(createdAt)
+  if (Number.isNaN(created.getTime())) return null
+  return Math.floor((Date.now() - created.getTime()) / 60_000)
 }
 
 function getJobAgeMinutes(createdAt: string) {
-  return formatJobAgeMinutes(createdAt);
+  return formatJobAgeMinutes(createdAt)
 }
 
 function formatJobAgeLabel(createdAt: string) {
-  const ageMinutes = formatJobAgeMinutes(createdAt);
-  if (ageMinutes === null) return 'Created recently';
-  if (ageMinutes < 1) return 'Created just now';
-  if (ageMinutes < 60) return `Queued ${ageMinutes} min ago`;
-  const ageHours = Math.floor(ageMinutes / 60);
-  if (ageHours < 24) return `Queued ${ageHours}h ago`;
-  return `Queued ${formatRelativeTime(createdAt)}`;
+  const ageMinutes = formatJobAgeMinutes(createdAt)
+  if (ageMinutes === null) return 'Created recently'
+  if (ageMinutes < 1) return 'Created just now'
+  if (ageMinutes < 60) return `Queued ${ageMinutes} min ago`
+  const ageHours = Math.floor(ageMinutes / 60)
+  if (ageHours < 24) return `Queued ${ageHours}h ago`
+  return `Queued ${formatRelativeTime(createdAt)}`
 }
 
 function formatExportJobType(jobType: string) {
-  return EXPORT_JOB_TYPE_LABELS[jobType] || jobType.replace(/_/g, ' ');
+  return EXPORT_JOB_TYPE_LABELS[jobType] || jobType.replace(/_/g, ' ')
 }
 
 function formatPublishedEmbedTitle(title: string) {
   return title.replace(/\b[A-Z]{2}-[A-Z]{2}(?:-[A-Z]{3}-[A-Z]{3})?\b/g, corridorId =>
-    formatCorridorCountryPair(corridorId, ' -> ')
-  );
+    formatCorridorCountryPair(corridorId, ' -> '),
+  )
 }
 
 function getNoticeClasses(tone: NoticeTone) {
   if (tone === 'danger') {
-    return 'border-danger-200 bg-danger-50 text-danger-900';
+    return 'border-danger-200 bg-danger-50 text-danger-900'
   }
   if (tone === 'warning') {
-    return 'border-warning-200 bg-warning-50 text-warning-900';
+    return 'border-warning-200 bg-warning-50 text-warning-900'
   }
-  return 'border-brand-100 bg-brand-50 text-brand-900';
+  return 'border-brand-100 bg-brand-50 text-brand-900'
 }
 
 function getNoticeIcon(tone: NoticeTone) {
-  if (tone === 'danger') return 'exclamation-triangle';
-  if (tone === 'warning') return 'clock';
-  return 'info';
+  if (tone === 'danger') return 'exclamation-triangle'
+  if (tone === 'warning') return 'clock'
+  return 'info'
 }
 
-function isDelayedJob(job: { status: string; createdAt: string }) {
-  const ageMinutes = getJobAgeMinutes(job.createdAt);
+function isDelayedJob(job: { status: string, createdAt: string }) {
+  const ageMinutes = getJobAgeMinutes(job.createdAt)
   return (
-    ['queued', 'running'].includes(job.status) &&
-    ageMinutes !== null &&
-    ageMinutes >= EXPORT_DELAY_THRESHOLD_MINUTES
-  );
+    ['queued', 'running'].includes(job.status)
+    && ageMinutes !== null
+    && ageMinutes >= EXPORT_DELAY_THRESHOLD_MINUTES
+  )
 }
 
 function selectEmbedCorridor(corridorId: string) {
-  embedCorridorId.value = corridorId;
-  const corridor = corridors.value.find(item => item.corridorId === corridorId);
+  embedCorridorId.value = corridorId
+  const corridor = corridors.value.find(item => item.corridorId === corridorId)
   embedCorridorInput.value = corridor
     ? corridorTitle(corridor)
-    : formatCorridorCountryPair(corridorId, ' -> ');
-  embedFormError.value = null;
+    : formatCorridorCountryPair(corridorId, ' -> ')
+  embedFormError.value = null
 }
 
 function addExportCorridor(corridorId: string) {
-  selectedExportCorridorIds.value = [...selectedExportCorridorIds.value, corridorId];
-  exportCorridorSearch.value = '';
-  exportFormError.value = null;
+  selectedExportCorridorIds.value = [...selectedExportCorridorIds.value, corridorId]
+  exportCorridorSearch.value = ''
+  exportFormError.value = null
 }
 
 function removeExportCorridor(corridorId: string) {
-  selectedExportCorridorIds.value = selectedExportCorridorIds.value.filter(id => id !== corridorId);
+  selectedExportCorridorIds.value = selectedExportCorridorIds.value.filter(id => id !== corridorId)
 }
 
 function useEmbedCorridorForExport() {
   if (!selectedEmbedCorridor.value) {
-    return;
+    return
   }
   if (selectedExportCorridorIdSet.value.has(selectedEmbedCorridor.value.corridorId)) {
-    return;
+    return
   }
-  addExportCorridor(selectedEmbedCorridor.value.corridorId);
+  addExportCorridor(selectedEmbedCorridor.value.corridorId)
 }
 
 async function handlePublishEmbed() {
-  embedFormError.value = null;
+  embedFormError.value = null
   if (!selectedEmbedCorridor.value) {
-    embedFormError.value = 'Choose a country pair from the corridor catalog before publishing.';
-    return;
+    embedFormError.value = 'Choose a country pair from the corridor catalog before publishing.'
+    return
   }
 
-  embedCorridorId.value = selectedEmbedCorridor.value.corridorId;
-  await publishEmbed();
+  embedCorridorId.value = selectedEmbedCorridor.value.corridorId
+  await publishEmbed()
 }
 
 async function handleCreateExport() {
-  exportFormError.value = null;
+  exportFormError.value = null
 
   if (exportJobType.value === 'indices' && selectedExportCorridorIds.value.length === 0) {
-    exportFormError.value = 'Add at least one corridor for TEER / RCI / RVI exports.';
-    return;
+    exportFormError.value = 'Add at least one corridor for TEER / RCI / RVI exports.'
+    return
   }
 
-  await createExportJob();
+  await createExportJob()
 }
 
 function commitEmbedSearch() {
   if (embedCorridorCandidates.value.length > 0) {
-    selectEmbedCorridor(embedCorridorCandidates.value[0].corridorId);
+    selectEmbedCorridor(embedCorridorCandidates.value[0].corridorId)
   }
 }
 
 function commitExportSearch() {
   if (exportCorridorCandidates.value.length > 0) {
-    addExportCorridor(exportCorridorCandidates.value[0].corridorId);
+    addExportCorridor(exportCorridorCandidates.value[0].corridorId)
   }
 }
 
 async function fetchCorridors() {
-  if (!apiAccess.value || corridorsLoading.value) return;
+  if (!apiAccess.value || corridorsLoading.value) return
 
-  corridorsLoading.value = true;
-  corridorsError.value = null;
+  corridorsLoading.value = true
+  corridorsError.value = null
   try {
-    const response = await request<EnterpriseCorridorResponse>('/indices/corridors');
-    corridors.value = Array.isArray(response.corridors) ? response.corridors : [];
+    const response = await request<EnterpriseCorridorResponse>('/indices/corridors')
+    corridors.value = Array.isArray(response.corridors) ? response.corridors : []
     if (
-      corridors.value.length > 0 &&
-      !corridors.value.some(
-        corridor => corridor.corridorId === normalizeCorridorId(embedCorridorId.value)
+      corridors.value.length > 0
+      && !corridors.value.some(
+        corridor => corridor.corridorId === normalizeCorridorId(embedCorridorId.value),
       )
     ) {
-      selectEmbedCorridor(corridors.value[0].corridorId);
+      selectEmbedCorridor(corridors.value[0].corridorId)
     }
     selectedExportCorridorIds.value = selectedExportCorridorIds.value.filter(corridorId =>
-      corridors.value.some(corridor => corridor.corridorId === corridorId)
-    );
-  } catch {
-    corridorsError.value =
-      'The country-pair catalog could not load. Refresh to restore the bank-deposit corridor picker.';
-  } finally {
-    corridorsLoading.value = false;
+      corridors.value.some(corridor => corridor.corridorId === corridorId),
+    )
+  }
+ catch {
+    corridorsError.value
+      = 'The country-pair catalog could not load. Refresh to restore the bank-deposit corridor picker.'
+  }
+ finally {
+    corridorsLoading.value = false
   }
 }
 
 async function downloadEmbedVisual(
   key: EmbedVisualKey,
   label: string,
-  format: ChartVisualExportFormat
+  format: ChartVisualExportFormat,
 ) {
-  const frame = embedPreviewFrames.value[key];
-  embedVisualErrors.value[key] = null;
+  const frame = embedPreviewFrames.value[key]
+  embedVisualErrors.value[key] = null
 
   if (!frame) {
-    embedVisualErrors.value[key] = 'Publish a static embed before downloading visual exports.';
-    return;
+    embedVisualErrors.value[key] = 'Publish a static embed before downloading visual exports.'
+    return
   }
   if (!(frame instanceof HTMLIFrameElement)) {
-    embedVisualErrors.value[key] = 'Embed preview is not ready yet.';
-    return;
+    embedVisualErrors.value[key] = 'Embed preview is not ready yet.'
+    return
   }
 
-  activeVisualExportKey.value = key;
-  activeVisualExportFormat.value = format;
+  activeVisualExportKey.value = key
+  activeVisualExportFormat.value = format
 
   try {
     await exportVisual(frame, {
       filename: `remit-scout-${key}-${normalizeCorridorId(embedCorridorId.value).toLowerCase()}-${embedTheme.value}`,
       title: `${label} Published Embed`,
       format,
-    });
-  } catch (error) {
-    embedVisualErrors.value[key] =
-      error instanceof Error ? error.message : 'Unable to generate visual export.';
-  } finally {
-    activeVisualExportKey.value = null;
-    activeVisualExportFormat.value = null;
+    })
+  }
+ catch (error) {
+    embedVisualErrors.value[key]
+      = error instanceof Error ? error.message : 'Unable to generate visual export.'
+  }
+ finally {
+    activeVisualExportKey.value = null
+    activeVisualExportFormat.value = null
   }
 }
 
 const copyPublishedUrl = async (publicUrl: string, label: string) => {
-  await copyPublishedValue(
-    publicUrl,
-    `${label} URL copied.`,
-    'No published URL available to copy.'
-  );
-};
+  await copyPublishedValue(publicUrl, `${label} URL copied.`, 'No published URL available to copy.')
+}
 
 const copyPublishedCode = async (embedCode: string, label: string) => {
   await copyPublishedValue(
     embedCode,
     `${label} embed code copied.`,
-    'No embed code available to copy.'
-  );
-};
+    'No embed code available to copy.',
+  )
+}
 
 onMounted(() => {
-  void fetchApiKeys();
-  void fetchExportJobs();
-  void fetchPublishedEmbeds();
-  void fetchCorridors();
-});
+  void fetchApiKeys()
+  void fetchExportJobs()
+  void fetchPublishedEmbeds()
+  void fetchCorridors()
+})
 </script>
 
 <template>
@@ -546,7 +546,11 @@ onMounted(() => {
           <div
             class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70"
           >
-            <Icon name="building-library" :size="16" class="text-current" />
+            <Icon
+name="building-library"
+:size="16"
+class="text-current"
+/>
             Enterprise
           </div>
           <div class="space-y-2">
@@ -603,7 +607,10 @@ onMounted(() => {
       </div>
     </section>
 
-    <div v-if="enterpriseNotices.length > 0" class="space-y-3">
+    <div
+v-if="enterpriseNotices.length > 0"
+class="space-y-3"
+>
       <div
         v-for="notice in enterpriseNotices"
         :key="`${notice.tone}-${notice.title}`"
@@ -612,7 +619,11 @@ onMounted(() => {
       >
         <div class="flex items-start gap-3">
           <div class="mt-0.5 rounded-full bg-white/60 p-1">
-            <Icon :name="getNoticeIcon(notice.tone)" :size="16" class="text-current" />
+            <Icon
+:name="getNoticeIcon(notice.tone)"
+:size="16"
+class="text-current"
+/>
           </div>
           <div>
             <div class="text-body-sm font-semibold">{{ notice.title }}</div>
@@ -640,7 +651,11 @@ onMounted(() => {
             :disabled="apiKeysLoading || !apiAccess"
             @click="fetchApiKeys"
           >
-            <Icon name="arrows-right-left" :size="16" class="text-current" />
+            <Icon
+name="arrows-right-left"
+:size="16"
+class="text-current"
+/>
             Refresh
           </button>
         </div>
@@ -665,7 +680,7 @@ onMounted(() => {
               type="text"
               placeholder="Key name"
               class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            />
+            >
             <div class="flex flex-wrap gap-2">
               <label
                 v-for="scope in availableScopes"
@@ -677,7 +692,7 @@ onMounted(() => {
                   type="checkbox"
                   :value="scope.value"
                   class="rounded border-rs-border text-brand-600 focus:ring-brand-200"
-                />
+                >
                 <span class="font-mono text-[11px]">{{ scope.value }}</span>
               </label>
             </div>
@@ -693,7 +708,10 @@ onMounted(() => {
           </button>
         </div>
 
-        <p v-if="apiKeysError" class="text-body-sm text-danger-600">
+        <p
+v-if="apiKeysError"
+class="text-body-sm text-danger-600"
+>
           {{ apiKeysError }}
         </p>
 
@@ -815,7 +833,10 @@ onMounted(() => {
             />
           </button>
 
-          <div v-if="showApiReference" class="mt-4 space-y-4">
+          <div
+v-if="showApiReference"
+class="mt-4 space-y-4"
+>
             <div class="grid gap-3 sm:grid-cols-2">
               <div class="text-body-sm rounded-xl border border-rs-border bg-surface p-3">
                 <div class="text-rs-muted">Auth header</div>
@@ -864,7 +885,11 @@ onMounted(() => {
             :disabled="publishedEmbedsLoading"
             @click="fetchPublishedEmbeds"
           >
-            <Icon name="arrows-right-left" :size="16" class="text-current" />
+            <Icon
+name="arrows-right-left"
+:size="16"
+class="text-current"
+/>
             Refresh embeds
           </button>
         </div>
@@ -880,12 +905,15 @@ onMounted(() => {
                   placeholder="Search by send country or destination country"
                   class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                   @keydown.enter.prevent="commitEmbedSearch"
-                />
+                >
               </div>
               <div
                 class="mt-2 max-h-56 overflow-auto rounded-xl border border-rs-border bg-surface"
               >
-                <div v-if="corridorsLoading" class="text-body-sm px-3 py-4 text-rs-muted">
+                <div
+v-if="corridorsLoading"
+class="text-body-sm px-3 py-4 text-rs-muted"
+>
                   Loading corridor catalog…
                 </div>
                 <button
@@ -935,8 +963,8 @@ onMounted(() => {
                 </div>
                 <button
                   v-if="
-                    exportJobType === 'indices' &&
-                    !selectedExportCorridorIdSet.has(selectedEmbedCorridor.corridorId)
+                    exportJobType === 'indices'
+                    && !selectedExportCorridorIdSet.has(selectedEmbedCorridor.corridorId)
                   "
                   type="button"
                   class="text-body-sm font-semibold text-brand-600 hover:text-brand-700"
@@ -955,7 +983,7 @@ onMounted(() => {
                   type="number"
                   min="1"
                   class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                />
+                >
               </div>
               <div>
                 <label class="text-body-sm font-semibold text-neutral-700">Delivery method</label>
@@ -972,16 +1000,14 @@ onMounted(() => {
 
             <div class="grid gap-3 sm:grid-cols-2">
               <div>
-                <label class="text-body-sm font-semibold text-neutral-700"
-                  >History window (days)</label
-                >
+                <label class="text-body-sm font-semibold text-neutral-700">History window (days)</label>
                 <input
                   v-model.number="embedDays"
                   type="number"
                   min="1"
                   max="365"
                   class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                />
+                >
               </div>
               <div>
                 <label class="text-body-sm font-semibold text-neutral-700">Theme</label>
@@ -1018,10 +1044,16 @@ onMounted(() => {
           </div>
         </div>
 
-        <p v-if="embedCopyStatus" class="text-body-sm text-success-600">
+        <p
+v-if="embedCopyStatus"
+class="text-body-sm text-success-600"
+>
           {{ embedCopyStatus }}
         </p>
-        <p v-if="effectiveEmbedError" class="text-body-sm text-danger-600">
+        <p
+v-if="effectiveEmbedError"
+class="text-body-sm text-danger-600"
+>
           {{ effectiveEmbedError }}
         </p>
 
@@ -1033,7 +1065,10 @@ onMounted(() => {
           <div class="mt-1 text-[11px] text-success-700">
             Published ID <span class="font-mono">{{ embedPublishedId }}</span>
           </div>
-          <div v-if="embedPublishedAt" class="mt-1 text-[11px] text-success-700">
+          <div
+v-if="embedPublishedAt"
+class="mt-1 text-[11px] text-success-700"
+>
             Published {{ formatDate(embedPublishedAt) }}
           </div>
         </div>
@@ -1069,9 +1104,9 @@ onMounted(() => {
                   @click="downloadEmbedVisual(item.key, item.label, format.value)"
                 >
                   {{
-                    visualExporting &&
-                    activeVisualExportKey === item.key &&
-                    activeVisualExportFormat === format.value
+                    visualExporting
+                    && activeVisualExportKey === item.key
+                    && activeVisualExportFormat === format.value
                       ? `Generating ${format.label}…`
                       : format.label
                   }}
@@ -1086,7 +1121,10 @@ onMounted(() => {
               :value="embedCodes[item.key]"
             />
 
-            <p v-if="embedVisualErrors[item.key]" class="text-body-sm mt-2 text-danger-600">
+            <p
+v-if="embedVisualErrors[item.key]"
+class="text-body-sm mt-2 text-danger-600"
+>
               {{ embedVisualErrors[item.key] }}
             </p>
 
@@ -1138,7 +1176,10 @@ onMounted(() => {
             No published embeds yet.
           </div>
 
-          <div v-else class="space-y-3">
+          <div
+v-else
+class="space-y-3"
+>
             <div
               v-for="embed in publishedEmbeds"
               :key="embed.id"
@@ -1161,7 +1202,10 @@ onMounted(() => {
                     >
                       Revoked {{ formatDate(embed.revokedAt) }}
                     </span>
-                    <span v-else class="rounded-full bg-success-100 px-2 py-0.5 text-success-700">
+                    <span
+v-else
+class="rounded-full bg-success-100 px-2 py-0.5 text-success-700"
+>
                       Active
                     </span>
                   </div>
@@ -1239,7 +1283,11 @@ onMounted(() => {
           :disabled="exportJobsLoading"
           @click="fetchExportJobs"
         >
-          <Icon name="arrows-right-left" :size="16" class="text-current" />
+          <Icon
+name="arrows-right-left"
+:size="16"
+class="text-current"
+/>
           Refresh jobs
         </button>
       </div>
@@ -1271,13 +1319,13 @@ onMounted(() => {
             type="date"
             class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
             placeholder="From"
-          />
+          >
           <input
             v-model="exportDateTo"
             type="date"
             class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
             placeholder="To"
-          />
+          >
         </div>
         <button
           type="button"
@@ -1303,11 +1351,14 @@ onMounted(() => {
                 placeholder="Search by send country or destination country"
                 class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 @keydown.enter.prevent="commitExportSearch"
-              />
+              >
             </div>
 
             <div class="max-h-64 overflow-auto rounded-xl border border-rs-border bg-surface">
-              <div v-if="corridorsLoading" class="text-body-sm px-3 py-4 text-rs-muted">
+              <div
+v-if="corridorsLoading"
+class="text-body-sm px-3 py-4 text-rs-muted"
+>
                 Loading corridor catalog…
               </div>
               <button
@@ -1351,7 +1402,10 @@ onMounted(() => {
               Add one or more corridors to export indices data.
             </div>
 
-            <div v-else class="max-h-64 space-y-2 overflow-auto pr-1">
+            <div
+v-else
+class="max-h-64 space-y-2 overflow-auto pr-1"
+>
               <div
                 v-for="corridor in selectedExportCorridors"
                 :key="corridor.corridorId"
@@ -1405,7 +1459,10 @@ onMounted(() => {
         </span>
       </div>
 
-      <p v-if="effectiveExportError" class="text-body-sm text-danger-600">
+      <p
+v-if="effectiveExportError"
+class="text-body-sm text-danger-600"
+>
         {{ effectiveExportError }}
       </p>
 
@@ -1471,7 +1528,10 @@ onMounted(() => {
           >
             Failed
           </span>
-          <span v-else class="text-body-sm text-neutral-400"> Pending </span>
+          <span
+v-else
+class="text-body-sm text-neutral-400"
+> Pending </span>
         </template>
       </DataTable>
     </section>
