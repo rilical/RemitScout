@@ -63,6 +63,13 @@
             {{ errorMessage }}
           </div>
 
+          <div
+            v-if="initializing"
+            class="mb-4 rounded-lg border border-brand-100 bg-brand-50 px-4 py-3 text-body-sm text-brand-700"
+          >
+            Validating your reset link…
+          </div>
+
           <form
             class="space-y-4"
             @submit.prevent="handlePasswordUpdate"
@@ -79,6 +86,7 @@
                 v-model="password"
                 type="password"
                 autocomplete="new-password"
+                :disabled="initializing || loading"
                 class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                 placeholder="••••••••"
                 required
@@ -103,6 +111,7 @@
                 v-model="confirmPassword"
                 type="password"
                 autocomplete="new-password"
+                :disabled="initializing || loading"
                 class="h-11 w-full rounded-lg border-2 border-neutral-300 bg-surface px-4 text-rs-fg placeholder:text-neutral-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20 transition-colors"
                 :class="{ 'border-danger-600': confirmPassword && password !== confirmPassword }"
                 placeholder="••••••••"
@@ -118,7 +127,7 @@
 
             <button
               type="submit"
-              :disabled="loading || !recoverySessionReady || !passwordValid || password !== confirmPassword"
+              :disabled="initializing || loading || !recoverySessionReady || !passwordValid || password !== confirmPassword"
               class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
             >
               {{ loading ? 'Updating…' : 'Update password' }}
@@ -155,55 +164,61 @@ setSeo({
 const password = ref('')
 const passwordValid = ref(false)
 const confirmPassword = ref('')
+const initializing = ref(true)
 const loading = ref(false)
 const recoverySessionReady = ref(false)
 const success = ref(false)
 const errorMessage = ref<string | null>(null)
 
 onMounted(async () => {
-  if (!isConfigured.value) {
-    if (supabaseSuppressConfigError) {
-      await navigateTo('/sign-in')
+  try {
+    if (!isConfigured.value) {
+      if (supabaseSuppressConfigError) {
+        await navigateTo('/sign-in')
+        return
+      }
+      errorMessage.value = 'Supabase is not configured.'
       return
     }
-    errorMessage.value = 'Supabase is not configured.'
-    return
-  }
 
-  const supabase = useSupabaseClient()
-  if (!supabase) {
-    errorMessage.value = 'Supabase client is not available.'
-    return
-  }
-
-  const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash)
-    || (typeof route.query.token === 'string' && route.query.token)
-  const pkceCode = typeof route.query.code === 'string' ? route.query.code : null
-
-  if (tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'recovery',
-    })
-    if (error) {
-      errorMessage.value = error.message
+    const supabase = useSupabaseClient()
+    if (!supabase) {
+      errorMessage.value = 'Supabase client is not available.'
       return
     }
-  }
-  else if (pkceCode) {
-    const { error } = await supabase.auth.exchangeCodeForSession(pkceCode)
-    if (error) {
-      errorMessage.value = error.message
+
+    const tokenHash = (typeof route.query.token_hash === 'string' && route.query.token_hash)
+      || (typeof route.query.token === 'string' && route.query.token)
+    const pkceCode = typeof route.query.code === 'string' ? route.query.code : null
+
+    if (tokenHash) {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'recovery',
+      })
+      if (error) {
+        errorMessage.value = error.message
+        return
+      }
+    }
+    else if (pkceCode) {
+      const { error } = await supabase.auth.exchangeCodeForSession(pkceCode)
+      if (error) {
+        errorMessage.value = error.message
+        return
+      }
+    }
+    else {
+      errorMessage.value = 'This reset link is invalid or expired.'
       return
     }
-  }
-  else {
-    errorMessage.value = 'This reset link is invalid or expired.'
-    return
-  }
 
-  recoverySessionReady.value = true
-  await ensureHydrated()
+    recoverySessionReady.value = true
+    await ensureHydrated()
+  }
+  finally {
+    initializing.value = false
+  }
 })
 
 async function handlePasswordUpdate() {
