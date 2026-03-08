@@ -1,4 +1,4 @@
-import { NestedStack } from 'aws-cdk-lib'
+import { Fn, NestedStack } from 'aws-cdk-lib'
 import type { Construct } from 'constructs'
 
 import { createFrontend } from '../frontend'
@@ -15,7 +15,7 @@ export class EdgeNestedStack extends NestedStack {
     const frontend = createFrontend(this, {
       envName: props.envName,
       planeAWaf: api.planeAWaf,
-      planeAApiEndpoint: api.planeAApi.apiEndpoint,
+      planeAApiDomain: Fn.select(2, Fn.split('/', api.planeAApi.apiEndpoint)),
       planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
       ...props.frontendOptions,
     })

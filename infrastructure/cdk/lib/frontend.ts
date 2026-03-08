@@ -33,7 +33,7 @@ export type FrontendOptions = {
   frontendHostedZoneId?: string
   frontendHostedZoneName?: string
   planeAWaf?: CfnWebACL
-  planeAApiEndpoint?: string
+  planeAApiDomain?: string
   planeACloudFrontDomain?: string
   enableFrontend?: boolean
 }
@@ -125,8 +125,8 @@ export const createFrontend = (
   })
 
   const s3Origin = S3BucketOrigin.withOriginAccessControl(bucket)
-  const planeAOriginDomain = options.planeAApiEndpoint
-    ? resolveOriginDomain(options.planeAApiEndpoint)
+  const planeAOriginDomain = options.planeAApiDomain
+    ? options.planeAApiDomain
     : options.planeACloudFrontDomain
       ? resolveOriginDomain(options.planeACloudFrontDomain)
       : ''
