@@ -30,6 +30,7 @@ jobs:
     timeout-minutes: 35
     environment: staging
     env:
+      NODE_OPTIONS: --dns-result-order=ipv4first
       NEW_RELIC_USER_API_KEY: ${{ secrets.NEW_RELIC_USER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
