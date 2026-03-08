@@ -11,6 +11,7 @@ import {
   resolveAuditLogEventId,
   resolveAdminSmokeAuthToken,
   resolvePlanSnapshot,
+  shouldUseSupabaseFallbackForMfaChallenge,
 } from '../scripts/ci/admin-surface-smoke'
 
 describe('admin surface smoke helpers', () => {
@@ -155,6 +156,24 @@ describe('admin surface smoke helpers', () => {
     expect(isAdminMfaRequiredResponse(200, {
       error: 'mfa_required',
     })).toBe(false)
+  })
+
+  it('allows a bounded supabase fallback for mfa challenges only when staging smoke does not expect MFA and no code is configured', () => {
+    expect(shouldUseSupabaseFallbackForMfaChallenge(403, {
+      error: 'mfa_required',
+    }, false, '')).toBe(true)
+
+    expect(shouldUseSupabaseFallbackForMfaChallenge(403, {
+      code: 'mfa_required',
+    }, true, '')).toBe(false)
+
+    expect(shouldUseSupabaseFallbackForMfaChallenge(403, {
+      error: 'mfa_required',
+    }, false, '123456')).toBe(false)
+
+    expect(shouldUseSupabaseFallbackForMfaChallenge(403, {
+      error: 'forbidden',
+    }, false, '')).toBe(false)
   })
 
   it('falls back to the Supabase token when admin exchange succeeds without returning an access token', () => {

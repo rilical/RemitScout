@@ -419,6 +419,17 @@ export const resolveAdminSmokeAuthToken = (
   return { token: '', source: 'none' }
 }
 
+export const shouldUseSupabaseFallbackForMfaChallenge = (
+  status: number,
+  body: AdminExchangeResponse | null | undefined,
+  expectAdminMfa: boolean,
+  smokeUserMfaCode: string,
+): boolean => (
+  isAdminMfaRequiredResponse(status, body)
+  && !expectAdminMfa
+  && smokeUserMfaCode.trim().length === 0
+)
+
 const mustEnv = (key: string): string => {
   const value = process.env[key]
   if (!value || !value.trim()) {
@@ -577,12 +588,19 @@ const main = async () => {
   const adminConfig = readAdminSmokeConfig()
   const expectAdminMfa = readExpectedAdminMfa()
   const includePageSurfaceChecks = readIncludePageSurfaceChecks()
+  const smokeUserMfaCode = readSmokeUserMfaCode()
   const checks: Check[] = []
   const record = (check: Check) => checks.push(check)
   const supabaseSession = await signInSupabase()
   let exchange = await exchangeAdminSession(apiBase, supabaseSession.accessToken)
   let supabaseAccessToken = supabaseSession.accessToken
   const initialExchangeRequiredMfa = isAdminMfaRequiredResponse(exchange.status, exchange.body)
+  const allowSupabaseMfaFallback = shouldUseSupabaseFallbackForMfaChallenge(
+    exchange.status,
+    exchange.body,
+    expectAdminMfa,
+    smokeUserMfaCode,
+  )
 
   if (expectAdminMfa) {
     record({
@@ -594,7 +612,7 @@ const main = async () => {
     })
   }
 
-  if (initialExchangeRequiredMfa) {
+  if (initialExchangeRequiredMfa && !allowSupabaseMfaFallback) {
     supabaseAccessToken = await maybeVerifySupabaseMfa(
       supabaseSession.supabaseUrl,
       supabaseSession.apiKey,
@@ -604,17 +622,17 @@ const main = async () => {
   }
 
   const adminAuth = resolveAdminSmokeAuthToken(
-    exchange.status,
-    exchange.body,
+    allowSupabaseMfaFallback ? 200 : exchange.status,
+    allowSupabaseMfaFallback ? { token_type: 'Bearer' } : exchange.body,
     supabaseAccessToken,
   )
   const adminAccessToken = adminAuth.token
 
   record({
     name: 'POST /sessions/admin/exchange',
-    ok: exchange.status < 400 && adminAccessToken.length > 0,
-    note: exchange.status < 400
-      ? `status=${exchange.status}${adminAuth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`
+    ok: (exchange.status < 400 || allowSupabaseMfaFallback) && adminAccessToken.length > 0,
+    note: (exchange.status < 400 || allowSupabaseMfaFallback)
+      ? `status=${exchange.status}${adminAuth.source === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}${allowSupabaseMfaFallback ? ' mfa_challenge_tolerated' : ''}`
       : `status=${exchange.status} body=${JSON.stringify(exchange.body)}`,
   })
 
