@@ -349,6 +349,14 @@ jobs:
           DATABASE_URL_PLANE_B: ${{ secrets.DATABASE_URL_PLANE_B }}
           DB_FORCE_IPV4: '1'
           AGENT_HEALTH_LOOKBACK_HOURS: ${{ vars.AGENT_HEALTH_LOOKBACK_HOURS || '6' }}
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_ENV_NAME: staging
+          SMOKE_EXPECT_OPS_ACTIVE: '1'
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
         run: |
           set -euo pipefail
           if [ -z "${DATABASE_URL_PLANE_B:-}" ]; then
@@ -356,7 +364,30 @@ jobs:
             exit 1
           fi
           mkdir -p .smoke-artifacts
-          pnpm -C backend exec tsx scripts/e2e-agent-health-check.ts | tee .smoke-artifacts/staging-agent-pipeline-health.log
+          if pnpm -C backend exec tsx scripts/e2e-agent-health-check.ts | tee .smoke-artifacts/staging-agent-pipeline-health.log; then
+            exit 0
+          fi
+
+          if ! grep -q 'agent_health_db_ipv4_resolution_failed' .smoke-artifacts/staging-agent-pipeline-health.log \
+            || ! grep -q 'ENETUNREACH' .smoke-artifacts/staging-agent-pipeline-health.log; then
+            echo "::error::Agent pipeline E2E health failed for a reason other than GitHub runner DB network isolation."
+            exit 1
+          fi
+
+          echo "::warning::GitHub runner cannot reach the staging DB directly (IPv6-only Supabase host). Falling back to authenticated worker resilience evidence."
+          if [ -z "${SMOKE_BASE_URL:-}" ]; then
+            echo "::error::Missing PUBLIC_API_BASE for staging agent-health fallback."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "::error::Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY for staging agent-health fallback."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "::error::Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging agent-health fallback."
+            exit 1
+          fi
+          pnpm -C backend ci:worker-resilience-smoke | tee .smoke-artifacts/staging-agent-pipeline-health-fallback.log
 
       - name: Auth surface smoke (staging)
         env:

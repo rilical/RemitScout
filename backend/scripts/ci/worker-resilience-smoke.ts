@@ -76,6 +76,8 @@ const CRITICAL_SERVICE_IDS = [
   'ops-alerts',
   'alert-evaluation',
   'export-worker',
+  'agent-orchestrator',
+  'stress-responder',
 ] as const
 
 const sqs = new SQSClient({})
