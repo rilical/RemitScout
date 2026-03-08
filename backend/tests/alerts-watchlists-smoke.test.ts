@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   evaluateMeChecks,
+  shouldRetrySmokeResponse,
   readSmokeMeExpectations,
   resolveSmokeErrorCode,
   resolveSmokeApiBaseUrl,
@@ -77,5 +78,11 @@ describe('alerts/watchlists smoke helpers', () => {
         error: 'smart_not_offered',
       },
     })).toBe('smart_not_offered')
+  })
+
+  it('retries transient 5xx smoke responses', () => {
+    expect(shouldRetrySmokeResponse(503)).toBe(true)
+    expect(shouldRetrySmokeResponse(502)).toBe(true)
+    expect(shouldRetrySmokeResponse(400)).toBe(false)
   })
 })
