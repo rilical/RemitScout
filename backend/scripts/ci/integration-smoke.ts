@@ -26,6 +26,12 @@ type ProviderProbeResult = {
   retryableHydration: boolean
 }
 
+type ProviderProbeEvaluation = {
+  ok: boolean
+  note: string
+  retryableHydration: boolean
+}
+
 const nowMs = () => Date.now()
 
 const percentile = (values: number[], p: number) => {
@@ -62,6 +68,24 @@ const normalizeMethod = (value?: string) => {
     || normalized === 'cash' || normalized === 'card' || normalized === 'airtime'
     ? (normalized === 'bank_deposit' ? 'bank' : normalized)
     : 'bank'
+}
+
+export const evaluateProviderProbe = (
+  status: number,
+  providerCount: number,
+  errorCode: string | null,
+): ProviderProbeEvaluation => {
+  const collecting = errorCode === 'quotes_unavailable' || errorCode === 'refresh_pending'
+
+  return {
+    ok: status < 500 && !collecting && providerCount > 0,
+    note: collecting
+      ? `collecting (${String(errorCode)})`
+      : `providers=${providerCount}${errorCode ? ` (${String(errorCode)})` : ''}`,
+    // Newly deployed staging can briefly surface quotes_unavailable as a 503 while
+    // collectors hydrate. Keep retrying that case instead of failing readiness early.
+    retryableHydration: collecting || (status < 500 && providerCount === 0),
+  }
 }
 
 const macroToCorridorTests = (corridors: MacroCorridor[]): CorridorTest[] =>
@@ -241,19 +265,14 @@ const runRemote = async (baseUrl: string): Promise<HttpResult[]> => {
       body?.code ||
       body?.message ||
       null
-
-    const collecting =
-      body?.error?.code === 'quotes_unavailable' ||
-      body?.error?.code === 'refresh_pending'
+    const evaluation = evaluateProviderProbe(res.status, providerCount, errorCode)
 
     return {
-      ok: res.status < 500 && !collecting && providerCount > 0,
+      ok: evaluation.ok,
       status: res.status,
       ms,
-      note: collecting
-        ? `collecting (${String(errorCode)})`
-        : `providers=${providerCount}${errorCode ? ` (${String(errorCode)})` : ''}`,
-      retryableHydration: res.status < 500 && (collecting || providerCount === 0),
+      note: evaluation.note,
+      retryableHydration: evaluation.retryableHydration,
     }
   }
 
@@ -409,7 +428,9 @@ const main = async () => {
   }
 }
 
-main().catch((error) => {
-  console.error('Integration smoke crashed:', error instanceof Error ? error.message : String(error))
-  process.exit(1)
-})
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('Integration smoke crashed:', error instanceof Error ? error.message : String(error))
+    process.exit(1)
+  })
+}
