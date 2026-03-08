@@ -108,7 +108,7 @@ Each provider has a freshness SLO enable flag. All default to `false`.
 | `PLANE_A_ADMIN_REQUIRE_ALLOWLIST` | `true` in prod/staging | Requires admin IP allowlist to be configured |
 | `PLANE_A_ADMIN_ALLOWLIST_STRICT` | `true` in prod/staging | Strict IP allowlist enforcement for admin routes |
 | `PLANE_A_REQUIRE_EMAIL_CONFIRMATION` | `true` | Requires email confirmation before account activation |
-| `ADMIN_MFA_REQUIRED` | `true` (always in prod/staging) | Requires MFA for admin access |
+| `ADMIN_MFA_REQUIRED` | `true` in prod, recommended `true` in staging | Requires MFA for admin access |
 | `PLANE_C_REQUIRE_INTERNAL_AUTH` | `true` in prod/staging | Requires internal API token for Plane C calls |
 | `PLANE_C_ENABLE_IAM_AUTH` | `false` | Enables IAM-based auth for Plane C |
 | `PLANE_A_CORS_ALLOW_CREDENTIALS` | `false` | Enables credentials in CORS responses |

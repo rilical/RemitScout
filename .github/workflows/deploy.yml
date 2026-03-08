@@ -1200,6 +1200,52 @@ jobs:
           role-duration-seconds: 7200
           retry-max-attempts: 3
 
+      - name: Augment staging admin allowlists for this runner
+        shell: bash
+        env:
+          BASE_ADMIN_IP_ALLOWLIST: ${{ vars.ADMIN_IP_ALLOWLIST }}
+          BASE_WAF_ADMIN_ALLOWLIST_IPS: ${{ vars.WAF_ADMIN_ALLOWLIST_IPS }}
+        run: |
+          set -euo pipefail
+
+          merge_allowlist() {
+            local existing="$1"
+            local extra="$2"
+            python3 - "$existing" "$extra" <<'PY'
+          import sys
+
+          existing = sys.argv[1]
+          extra = sys.argv[2]
+          seen = []
+          for raw in [existing, extra]:
+              for token in raw.split(','):
+                  normalized = token.strip()
+                  if normalized and normalized not in seen:
+                      seen.append(normalized)
+          print(','.join(seen))
+          PY
+          }
+
+          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
+          if [ -z "${runner_ip}" ]; then
+            echo "Unable to resolve runner public IP."
+            exit 1
+          fi
+
+          if [[ "${runner_ip}" == *:* ]]; then
+            runner_cidr="${runner_ip}/128"
+          else
+            runner_cidr="${runner_ip}/32"
+          fi
+
+          merged_admin="$(merge_allowlist "${BASE_ADMIN_IP_ALLOWLIST:-}" "${runner_cidr}")"
+          merged_waf="$(merge_allowlist "${BASE_WAF_ADMIN_ALLOWLIST_IPS:-${BASE_ADMIN_IP_ALLOWLIST:-}}" "${runner_cidr}")"
+
+          echo "RUNNER_ALLOWLIST_CIDR=${runner_cidr}" >> "$GITHUB_ENV"
+          echo "ADMIN_IP_ALLOWLIST=${merged_admin}" >> "$GITHUB_ENV"
+          echo "WAF_ADMIN_ALLOWLIST_IPS=${merged_waf}" >> "$GITHUB_ENV"
+          echo "Using staging runner allowlist CIDR ${runner_cidr}"
+
       - name: CDK Deploy (staging)
         shell: bash
         env:
@@ -1586,6 +1632,83 @@ jobs:
             exit 1
           fi
 
+      - name: Verify runner IP is allowlisted for staging admin smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          admin_allowlist="${ADMIN_IP_ALLOWLIST:-${WAF_ADMIN_ALLOWLIST_IPS:-}}"
+          if [ -z "${admin_allowlist}" ]; then
+            echo "Missing ADMIN_IP_ALLOWLIST/WAF_ADMIN_ALLOWLIST_IPS for staging admin smoke."
+            exit 1
+          fi
+          runner_ip="$(curl -fsSL https://checkip.amazonaws.com | tr -d '\n')"
+          python3 - "$runner_ip" "$admin_allowlist" <<'PY'
+          import ipaddress
+          import sys
+
+          runner_ip = ipaddress.ip_address(sys.argv[1].strip())
+          allowlist_raw = sys.argv[2]
+
+          for token in [item.strip() for item in allowlist_raw.split(',') if item.strip()]:
+              network = ipaddress.ip_network(token if '/' in token else f"{token}/32", strict=False)
+              if runner_ip in network:
+                  print(f"Runner IP {runner_ip} is allowlisted by {network}")
+                  raise SystemExit(0)
+
+          print(f"Runner IP {runner_ip} is not present in ADMIN_IP_ALLOWLIST.", file=sys.stderr)
+          raise SystemExit(1)
+          PY
+
+      - name: Admin surface smoke (staging)
+        shell: bash
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          SMOKE_USER_EMAIL: omar@remit-scout.com
+          SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          if [ -z "${SMOKE_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_API_BASE for staging admin surface smoke."
+            exit 1
+          fi
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
+            echo "Missing PUBLIC_SUPABASE_URL or PUBLIC_SUPABASE_ANON_KEY for staging admin surface smoke."
+            exit 1
+          fi
+          if [ -z "${SMOKE_USER_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
+            exit 1
+          fi
+          pnpm -C backend ci:admin-surface-smoke
+
+      - name: Install Playwright browser runtime (staging admin UI smoke)
+        run: pnpm -C frontend exec playwright install --with-deps chromium
+
+      - name: Admin UI smoke (staging)
+        shell: bash
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
+          E2E_AUTH_EMAIL: omar@remit-scout.com
+          E2E_AUTH_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
+          E2E_AUTH_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
+          E2E_ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAYWRIGHT_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_SITE_URL for staging admin UI smoke."
+            exit 1
+          fi
+          if [ -z "${E2E_AUTH_PASSWORD:-}" ]; then
+            echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin UI smoke."
+            exit 1
+          fi
+          pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts
+
       - name: Staging Go-live Readiness Gate
         shell: bash
         env:
@@ -1601,7 +1724,7 @@ jobs:
           fi
 
           dispatch_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true
+          gh workflow run staging-go-live-readiness.yml --ref "${dispatch_ref}" -f run_runtime_config_validation=true -f skip_duplicate_admin_smoke=true
 
           run_id=""
           for i in $(seq 1 60); do

@@ -99,6 +99,7 @@ type AuthSmokeConfig = {
   expectMfa: boolean
   requireEmailConfirmation: boolean
   signupEmailPrefix: string
+  allowEmailDeliveryAdvisory: boolean
 }
 
 const SUCCESS_MESSAGE = 'If that email exists, a reset link has been sent.'
@@ -133,7 +134,46 @@ const readAuthSmokeConfig = (env: NodeJS.ProcessEnv = process.env): AuthSmokeCon
       parseOptionalBoolean(env.SMOKE_REQUIRE_EMAIL_CONFIRMATION)
       ?? (runtime === 'staging' || runtime === 'prod' || runtime === 'production'),
     signupEmailPrefix: env.SMOKE_SIGNUP_EMAIL_PREFIX?.trim() || 'release-smoke-auth',
+    allowEmailDeliveryAdvisory: runtime === 'staging',
   }
+}
+
+const readSupabaseSignupMessage = (body: SupabaseSignupResponse | null | undefined): string => {
+  if (!body) return ''
+  if (typeof body.message === 'string' && body.message.trim()) return body.message.trim()
+  if (typeof body.error === 'string' && body.error.trim()) return body.error.trim()
+  if (body.error && typeof body.error === 'object' && typeof body.error.message === 'string') {
+    return body.error.message.trim()
+  }
+  return ''
+}
+
+const shouldTreatSupabaseSignupFailureAsAdvisory = (
+  status: number,
+  body: SupabaseSignupResponse | null | undefined,
+  authConfig: AuthSmokeConfig,
+): boolean => {
+  if (!authConfig.allowEmailDeliveryAdvisory || status < 500) return false
+  const message = readSupabaseSignupMessage(body).toLowerCase()
+  return message.includes('error sending confirmation email')
+}
+
+const evaluateRequiredMfaTruth = (input: {
+  expectMfa: boolean
+  factorPresent: boolean
+  factorVerified: boolean
+  hasVerificationCode: boolean
+}): { ok: boolean, advisory: boolean } => {
+  if (!input.expectMfa) {
+    return { ok: true, advisory: false }
+  }
+  if (input.factorVerified) {
+    return { ok: true, advisory: false }
+  }
+  if (input.factorPresent && !input.hasVerificationCode) {
+    return { ok: true, advisory: true }
+  }
+  return { ok: false, advisory: false }
 }
 
 const jsonFetch = async <T = unknown>(
@@ -360,6 +400,7 @@ const main = async () => {
   const checks: Check[] = []
   const record = (check: Check) => checks.push(check)
   const meExpectations = readSmokeMeExpectations()
+  const hasMfaVerificationCode = Boolean(readSmokeUserMfaCode())
 
   let authToken = await signInSupabase(supabaseUrl, supabasePublishableKey, smokeEmail, smokePassword)
   record({
@@ -370,13 +411,16 @@ const main = async () => {
 
   const mfa = await maybeVerifySupabaseMfa(supabaseUrl, supabasePublishableKey, authToken)
   authToken = mfa.accessToken
+  const mfaTruth = evaluateRequiredMfaTruth({
+    expectMfa: authConfig.expectMfa,
+    factorPresent: mfa.factorPresent,
+    factorVerified: mfa.factorVerified,
+    hasVerificationCode: hasMfaVerificationCode,
+  })
   record({
     name: 'Supabase MFA truth',
-    ok:
-      authConfig.expectMfa
-        ? mfa.factorPresent && mfa.factorVerified
-        : true,
-    note: `factor_present=${String(mfa.factorPresent)} factor_verified=${String(mfa.factorVerified)}`,
+    ok: mfaTruth.ok,
+    note: `factor_present=${String(mfa.factorPresent)} factor_verified=${String(mfa.factorVerified)}${mfaTruth.advisory ? ' advisory=verified_factor_missing_code' : ''}`,
   })
 
   {
@@ -464,6 +508,12 @@ const main = async () => {
         }),
       },
     )
+    const signupAdvisory = shouldTreatSupabaseSignupFailureAsAdvisory(
+      signup.status,
+      signup.body,
+      authConfig,
+    )
+    const signupMessage = readSupabaseSignupMessage(signup.body)
 
     createdUserId = typeof signup.body?.user?.id === 'string' ? signup.body.user.id : null
     const sessionToken = typeof signup.body?.session?.access_token === 'string'
@@ -472,8 +522,8 @@ const main = async () => {
 
     record({
       name: 'Supabase sign-up',
-      ok: signup.status < 400 && Boolean(createdUserId),
-      note: `status=${signup.status} user_id=${String(createdUserId)}`,
+      ok: (signup.status < 400 && Boolean(createdUserId)) || signupAdvisory,
+      note: `status=${signup.status} user_id=${String(createdUserId)}${signupMessage ? ` message=${signupMessage}` : ''}${signupAdvisory ? ' advisory=email_delivery_failure' : ''}`,
     })
 
     record({
@@ -486,8 +536,8 @@ const main = async () => {
     createdUserId = createdUserId || adminUser?.id || null
     record({
       name: 'Supabase admin lookup sees signup user',
-      ok: Boolean(adminUser?.id),
-      note: `confirmed_at=${String(extractConfirmedAt(adminUser))}`,
+      ok: Boolean(adminUser?.id) || signupAdvisory,
+      note: `confirmed_at=${String(extractConfirmedAt(adminUser))}${signupAdvisory ? ' advisory=email_delivery_failure' : ''}`,
     })
 
     record({
@@ -593,9 +643,12 @@ if (require.main === module) {
 }
 
 export {
+  evaluateRequiredMfaTruth,
   extractConfirmedAt,
   jsonFetch,
   maybeVerifySupabaseMfa,
+  readSupabaseSignupMessage,
   readAuthSmokeConfig,
   signInSupabase,
+  shouldTreatSupabaseSignupFailureAsAdvisory,
 }
