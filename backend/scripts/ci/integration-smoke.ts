@@ -18,6 +18,14 @@ type CorridorTest = {
   corridorId: string
 }
 
+type ProviderProbeResult = {
+  ok: boolean
+  status: number
+  ms: number
+  note: string
+  retryableHydration: boolean
+}
+
 const nowMs = () => Date.now()
 
 const percentile = (values: number[], p: number) => {
@@ -208,8 +216,46 @@ const runRemote = async (baseUrl: string): Promise<HttpResult[]> => {
   const root = normalizeBaseUrl(baseUrl)
   const apiBase = `${root}/api/v1`
   const results: HttpResult[] = []
+  const providerStabilizationAttempts = Math.max(
+    1,
+    toInt(process.env.SMOKE_PROVIDER_STABILIZATION_ATTEMPTS) ?? 1,
+  )
+  const providerStabilizationDelayMs = Math.max(
+    0,
+    toInt(process.env.SMOKE_PROVIDER_STABILIZATION_DELAY_MS) ?? 0,
+  )
 
   const record = (r: HttpResult) => results.push(r)
+
+  const probeProviders = async (providersUrl: string): Promise<ProviderProbeResult> => {
+    const { res, ms, body } = await timedFetchJson(providersUrl)
+    const providerCount =
+      Array.isArray(body?.data) ? body.data.length
+        : Array.isArray(body?.providers) ? body.providers.length
+          : 0
+
+    const errorCode =
+      body?.error?.code ||
+      body?.error?.error ||
+      body?.error ||
+      body?.code ||
+      body?.message ||
+      null
+
+    const collecting =
+      body?.error?.code === 'quotes_unavailable' ||
+      body?.error?.code === 'refresh_pending'
+
+    return {
+      ok: res.status < 500 && !collecting && providerCount > 0,
+      status: res.status,
+      ms,
+      note: collecting
+        ? `collecting (${String(errorCode)})`
+        : `providers=${providerCount}${errorCode ? ` (${String(errorCode)})` : ''}`,
+      retryableHydration: res.status < 500 && (collecting || providerCount === 0),
+    }
+  }
 
   // Core health endpoints
   {
@@ -255,33 +301,38 @@ const runRemote = async (baseUrl: string): Promise<HttpResult[]> => {
       `&amount=500&fromCurrency=${corridor.fromCurrency}&toCurrency=${corridor.toCurrency}` +
       `&method=${corridor.method}`
 
-    const { res, ms, body } = await timedFetchJson(providersUrl)
+    const providerStart = nowMs()
+    let providerProbe: ProviderProbeResult | null = null
+    let providerAttemptsUsed = 0
 
-    const providerCount =
-      Array.isArray(body?.data) ? body.data.length
-        : Array.isArray(body?.providers) ? body.providers.length
-          : 0
+    for (let attempt = 1; attempt <= providerStabilizationAttempts; attempt += 1) {
+      providerAttemptsUsed = attempt
+      providerProbe = await probeProviders(providersUrl)
+      if (providerProbe.ok || !providerProbe.retryableHydration) {
+        break
+      }
+      if (attempt >= providerStabilizationAttempts || providerStabilizationDelayMs <= 0) {
+        break
+      }
+      console.log(
+        `Waiting for provider hydration ${corridor.from}-${corridor.to} (${corridor.method}) ` +
+        `attempt ${attempt}/${providerStabilizationAttempts} | ${providerProbe.note}`,
+      )
+      await sleep(providerStabilizationDelayMs)
+    }
 
-    const errorCode =
-      body?.error?.code ||
-      body?.error?.error ||
-      body?.error ||
-      body?.code ||
-      body?.message ||
-      null
-
-    const collecting =
-      body?.error?.code === 'quotes_unavailable' ||
-      body?.error?.code === 'refresh_pending'
+    if (!providerProbe) {
+      throw new Error(`Provider probe produced no result for ${corridor.corridorId}`)
+    }
 
     record({
       name: `GET /providers ${corridor.from}-${corridor.to} (${corridor.method})`,
-      ok: res.status < 500 && !collecting && providerCount > 0,
-      status: res.status,
-      ms,
-      note: collecting
-        ? `collecting (${String(errorCode)})`
-        : `providers=${providerCount}${errorCode ? ` (${String(errorCode)})` : ''}`,
+      ok: providerProbe.ok,
+      status: providerProbe.status,
+      ms: nowMs() - providerStart,
+      note: providerAttemptsUsed > 1
+        ? `${providerProbe.note}; stabilization_attempts=${providerAttemptsUsed}/${providerStabilizationAttempts}`
+        : providerProbe.note,
     })
   }
 
