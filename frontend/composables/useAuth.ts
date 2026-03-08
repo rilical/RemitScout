@@ -2,6 +2,11 @@ import type { Session, SupabaseClient, User as SupabaseUser } from '@supabase/su
 
 type OAuthProvider = 'google'
 const AUTH_STORAGE_KEY = 'remit-scout-auth'
+const AUTH_SESSION_HINT_KEY = 'rs:auth-session-seeded'
+const INITIAL_SESSION_RETRY_DELAYS_MS = [50, 150, 300]
+const AUTH_RECOVERY_GRACE_MS = 2500
+const AUTH_RECOVERY_POLL_MS = 100
+const AUTH_RECOVERY_PROBE_INTERVAL_MS = 500
 
 export interface User {
   id: string
@@ -36,6 +41,8 @@ type SignUpInput = {
 }
 
 type PersistedSessionTokens = Pick<Session, 'access_token' | 'refresh_token'>
+
+const isBrowser = () => typeof window !== 'undefined'
 
 const parsePersistedSessionTokens = (value: unknown): PersistedSessionTokens | null => {
   if (!value || typeof value !== 'object') return null
@@ -100,6 +107,42 @@ export const mapSupabaseUser = (supabaseUser: SupabaseUser | null): User | null 
   }
 }
 
+const readAuthSessionHint = (): boolean => {
+  if (!isBrowser()) return false
+  try {
+    return window.localStorage.getItem(AUTH_SESSION_HINT_KEY) === '1'
+  }
+ catch {
+    return false
+  }
+}
+
+const writeAuthSessionHint = (enabled: boolean) => {
+  if (!isBrowser()) return
+  try {
+    if (enabled) {
+      window.localStorage.setItem(AUTH_SESSION_HINT_KEY, '1')
+      return
+    }
+    window.localStorage.removeItem(AUTH_SESSION_HINT_KEY)
+  }
+ catch {
+    // Best-effort only; auth bootstrap should not depend on localStorage access.
+  }
+}
+
+const readStoredSupabaseSession = (): PersistedSessionTokens | null => {
+  if (!isBrowser()) return null
+  try {
+    return extractStoredSupabaseSession(window.localStorage.getItem(AUTH_STORAGE_KEY))
+  }
+ catch {
+    return null
+  }
+}
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 export const useAuth = () => {
   const config = useRuntimeConfig()
   const { request } = useApi()
@@ -151,39 +194,63 @@ export const useAuth = () => {
     }
     session.value = effectiveSession
     user.value = mapSupabaseUser(effectiveSession?.user ?? null)
+    if (effectiveSession) {
+      writeAuthSessionHint(true)
+    }
     hydrated.value = true
   }
 
-  const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
-    let nextSession: Session | null = null
+  const restoreSessionFromStorage = async (supabase: SupabaseClient): Promise<Session | null> => {
+    const storedTokens = readStoredSupabaseSession()
+    if (!storedTokens) return null
 
     try {
-      const { data, error } = await supabase.auth.getSession()
+      const { data, error } = await supabase.auth.setSession(storedTokens)
       if (error) {
         lastError.value = error.message
       }
-      nextSession = data.session ?? null
+      return data.session ?? null
     }
  catch (error) {
       lastError.value = error instanceof Error ? error.message : String(error)
+      return null
     }
+  }
 
-    if (!nextSession) {
-      // Some clients can return null before auth storage finishes initialization.
-      await new Promise(resolve => setTimeout(resolve, 0))
+  const refreshSessionFromHint = async (supabase: SupabaseClient): Promise<Session | null> => {
+    if (!readAuthSessionHint()) return null
+
+    try {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error) {
+        lastError.value = error.message
+      }
+      return data.session ?? null
+    }
+ catch (error) {
+      lastError.value = error instanceof Error ? error.message : String(error)
+      return null
+    }
+  }
+
+  const resolveInitialSession = async (supabase: SupabaseClient): Promise<Session | null> => {
+    const getCurrentSession = async (): Promise<Session | null> => {
       try {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
           lastError.value = error.message
         }
-        nextSession = data.session ?? null
+        return data.session ?? null
       }
  catch (error) {
         lastError.value = error instanceof Error ? error.message : String(error)
+        return null
       }
     }
 
-    if (!nextSession && import.meta.client && typeof window !== 'undefined') {
+    let nextSession = await getCurrentSession()
+
+    if (!nextSession && isBrowser()) {
       if (
         window.location.hash.includes('access_token=')
         && window.location.hash.includes('refresh_token=')
@@ -193,23 +260,51 @@ export const useAuth = () => {
       }
     }
 
-    if (!nextSession && import.meta.client && typeof window !== 'undefined') {
-      const storedTokens = extractStoredSupabaseSession(window.localStorage.getItem(AUTH_STORAGE_KEY))
-      if (storedTokens) {
-        try {
-          const { data, error } = await supabase.auth.setSession(storedTokens)
-          if (error) {
-            lastError.value = error.message
-          }
-          nextSession = data.session ?? null
-        }
- catch (error) {
-          lastError.value = error instanceof Error ? error.message : String(error)
-        }
-      }
+    if (!nextSession) {
+      nextSession = await restoreSessionFromStorage(supabase)
+    }
+
+    for (const delayMs of INITIAL_SESSION_RETRY_DELAYS_MS) {
+      if (nextSession) break
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+      nextSession = await getCurrentSession()
+    }
+
+    if (!nextSession) {
+      nextSession = await refreshSessionFromHint(supabase)
+    }
+
+    if (!nextSession) {
+      nextSession = await getCurrentSession()
+    }
+
+    if (!nextSession && !readStoredSupabaseSession()) {
+      writeAuthSessionHint(false)
     }
 
     return nextSession
+  }
+
+  const hasSessionRecoveryEvidence = () =>
+    Boolean(readAuthSessionHint() || readStoredSupabaseSession())
+
+  const attachAuthListener = (supabase: SupabaseClient) => {
+    if (listenerAttached.value) return
+
+    listenerAttached.value = true
+    supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'SIGNED_OUT') {
+        writeAuthSessionHint(false)
+        setSession(null)
+        return
+      }
+
+      if (event === 'INITIAL_SESSION' && !nextSession && readAuthSessionHint()) {
+        return
+      }
+
+      setSession(nextSession)
+    })
   }
 
   const getSupabase = () => {
@@ -280,27 +375,59 @@ export const useAuth = () => {
     }
 
     if (!initPromise.value) {
+      attachAuthListener(supabase)
       initPromise.value = resolveInitialSession(supabase)
         .then(nextSession => setSession(nextSession))
         .catch((error) => {
           lastError.value = error instanceof Error ? error.message : String(error)
           setSession(null)
         })
-        .finally(() => {
-          if (!listenerAttached.value) {
-            listenerAttached.value = true
-            supabase.auth.onAuthStateChange((event, nextSession) => {
-              if (event === 'INITIAL_SESSION' && !nextSession) {
-                setSession(null)
-                return
-              }
-              setSession(nextSession)
-            })
-          }
-        })
     }
 
     await initPromise.value
+  }
+
+  const ensureAuthenticated = async (
+    options: { recoveryTimeoutMs?: number } = {},
+  ): Promise<boolean> => {
+    await ensureHydrated()
+
+    if (isAuthenticated.value) {
+      return true
+    }
+
+    if (!import.meta.client || !isConfigured.value || !hasSessionRecoveryEvidence()) {
+      return false
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      return false
+    }
+
+    const timeoutMs = Math.max(0, options.recoveryTimeoutMs ?? AUTH_RECOVERY_GRACE_MS)
+    const deadline = Date.now() + timeoutMs
+    let nextProbeAt = Date.now()
+
+    while (Date.now() < deadline) {
+      if (isAuthenticated.value) {
+        return true
+      }
+
+      if (Date.now() >= nextProbeAt) {
+        const recoveredSession = await resolveInitialSession(supabase)
+        if (recoveredSession) {
+          setSession(recoveredSession)
+          return true
+        }
+
+        nextProbeAt = Date.now() + AUTH_RECOVERY_PROBE_INTERVAL_MS
+      }
+
+      await sleep(AUTH_RECOVERY_POLL_MS)
+    }
+
+    return isAuthenticated.value
   }
 
   if (import.meta.client && !hydrated.value) {
@@ -693,6 +820,7 @@ export const useAuth = () => {
     mfaPending.value = false
 
     if (!isConfigured.value) {
+      writeAuthSessionHint(false)
       user.value = null
       session.value = null
       return { ok: true }
@@ -700,6 +828,7 @@ export const useAuth = () => {
 
     const supabase = getSupabase()
     if (!supabase) {
+      writeAuthSessionHint(false)
       user.value = null
       session.value = null
       return { ok: true }
@@ -711,6 +840,7 @@ export const useAuth = () => {
       return { ok: false, error: error.message }
     }
 
+    writeAuthSessionHint(false)
     setSession(null)
     return { ok: true }
   }
@@ -769,6 +899,7 @@ export const useAuth = () => {
     lastError,
     isConfigured,
     ensureHydrated,
+    ensureAuthenticated,
     signIn,
     signUp,
     signInWithOAuth,

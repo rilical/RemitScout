@@ -53,4 +53,23 @@ describe('useAuth helpers', () => {
       refresh_token: 'refresh-token',
     })
   })
+
+  it('extractStoredSupabaseSession reads full Supabase session payloads', () => {
+    expect(
+      extractStoredSupabaseSession(
+        JSON.stringify({
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+          expires_at: 1773012292,
+          user: {
+            id: '92bd2179-5d84-400e-949a-bcdef6351854',
+            email: 'omar@remit-scout.com',
+          },
+        }),
+      ),
+    ).toEqual({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+    })
+  })
 })
