@@ -655,6 +655,7 @@ jobs:
         with:
           node_version: ${{ inputs.node_version }}
           pnpm_version: ${{ inputs.pnpm_version }}
+      - run: pnpm -C frontend exec playwright install --with-deps chromium
       - run: pnpm release:gate:ci
 
   config-validate:
