@@ -270,6 +270,7 @@ jobs:
       - name: Migration lint
         run: pnpm -C backend exec tsx scripts/ci/migration-lint.ts
       - name: Migration numbering guardrail
+        if: needs.changes.outputs.migrations_changed == 'true' || (inputs.mode || github.event.inputs.mode) == 'nightly'
         run: pnpm -C backend guardrail:migrations
       - name: SQL interpolation guardrail (changed files)
         run: |
