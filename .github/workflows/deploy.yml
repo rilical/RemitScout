@@ -1504,26 +1504,58 @@ jobs:
             api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
-          refresh_status="$(curl -sS -o /tmp/refresh-status.out -w '%{http_code}' "${api_base}/api/v1/quotes/refresh-status?request_ids=00000000-0000-4000-8000-000000000001")"
-          if [ "${refresh_status}" = "401" ]; then
-            echo "/quotes/refresh-status returned 401"
-            cat /tmp/refresh-status.out
-            exit 1
-          fi
+          fetch_status() {
+            local output_path="$1"
+            shift
+            local status
+            status="$(curl -sS -o "${output_path}" -w '%{http_code}' "$@" || true)"
+            if [ -z "${status}" ]; then
+              status="000"
+            fi
+            printf '%s' "${status}"
+          }
 
-          session_status="$(curl -sS -o /tmp/session-track.out -w '%{http_code}' -X POST "${api_base}/api/v1/sessions/track" -H 'content-type: application/json' --data '{"session_id":"stg-check-session","anon_id":"stg-check-anon","metadata":{"source":"deploy-check"}}')"
-          if [ "${session_status}" = "401" ]; then
-            echo "/sessions/track returned 401"
-            cat /tmp/session-track.out
-            exit 1
-          fi
+          consecutive=0
+          for attempt in $(seq 1 12); do
+            refresh_status="$(fetch_status /tmp/refresh-status.out "${api_base}/api/v1/quotes/refresh-status?request_ids=00000000-0000-4000-8000-000000000001")"
+            session_status="$(fetch_status /tmp/session-track.out -X POST "${api_base}/api/v1/sessions/track" -H 'content-type: application/json' --data '{"session_id":"stg-check-session","anon_id":"stg-check-anon","metadata":{"source":"deploy-check"}}')"
+            pricing_status="$(fetch_status /tmp/pricing.out "${api_base}/api/v1/billing/pricing")"
+            health_status="$(fetch_status /tmp/healthz.out "${api_base}/healthz")"
+            ready_status="$(fetch_status /tmp/readyz.out "${api_base}/readyz")"
+            corridor_status="$(fetch_status /tmp/corridor-currencies.out "${api_base}/api/v1/corridor-currencies?from=US&to=MX")"
+            providers_status="$(fetch_status /tmp/providers.out "${api_base}/api/v1/providers?from=US&to=MX&amount=500&fromCurrency=USD&toCurrency=MXN&method=bank")"
 
-          pricing_status="$(curl -sS -o /tmp/pricing.out -w '%{http_code}' "${api_base}/api/v1/billing/pricing")"
-          if [ "${pricing_status}" = "401" ]; then
-            echo "/billing/pricing returned 401"
-            cat /tmp/pricing.out
-            exit 1
-          fi
+            if [ "${refresh_status}" = "200" ] \
+              && [ "${session_status}" = "200" ] \
+              && [ "${pricing_status}" = "200" ] \
+              && [ "${health_status}" = "200" ] \
+              && [ "${ready_status}" = "200" ] \
+              && [ "${corridor_status}" = "200" ] \
+              && [ "${providers_status}" = "200" ]; then
+              consecutive=$((consecutive + 1))
+              echo "Public route stabilization sample ${attempt}/12 passed (${consecutive}/3 consecutive)."
+              if [ "${consecutive}" -ge 3 ]; then
+                break
+              fi
+            else
+              consecutive=0
+              echo "Waiting for public route stabilization (attempt ${attempt}/12, refresh=${refresh_status}, session=${session_status}, pricing=${pricing_status}, health=${health_status}, ready=${ready_status}, corridors=${corridor_status}, providers=${providers_status})."
+            fi
+
+            if [ "${attempt}" -eq 12 ]; then
+              echo "::error::Public API routes did not stabilize before staging verification."
+              cat /tmp/refresh-status.out
+              cat /tmp/session-track.out
+              cat /tmp/pricing.out
+              cat /tmp/healthz.out
+              cat /tmp/readyz.out
+              cat /tmp/corridor-currencies.out
+              cat /tmp/providers.out
+              exit 1
+            fi
+
+            sleep 5
+          done
 
       - name: Authenticated Watchlist/Alerts Smoke (staging)
         shell: bash
@@ -1696,6 +1728,18 @@ jobs:
 
       - name: Install Playwright browser runtime (staging admin UI smoke)
         run: pnpm -C frontend exec playwright install --with-deps chromium
+
+      - name: Public UI smoke (staging)
+        shell: bash
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAYWRIGHT_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_SITE_URL for staging public UI smoke."
+            exit 1
+          fi
+          pnpm -C frontend exec playwright test tests/e2e/public-release-smoke.spec.ts
 
       - name: Admin UI smoke (staging)
         shell: bash

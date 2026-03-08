@@ -47,12 +47,6 @@ export const resolveWorkerResilienceAdminAuth = (
   }
 }
 
-export const shouldTreatFallbackEvidenceAsAdvisory = (
-  source: 'admin_exchange' | 'supabase_fallback' | 'none',
-  status: number,
-  hasRequiredSignal: boolean,
-): boolean => source === 'supabase_fallback' && status < 400 && !hasRequiredSignal
-
 export const resolveQueueLookupIssue = (
   error: unknown,
 ): 'nonexistent_queue' | 'access_denied' | null => {
@@ -308,15 +302,10 @@ const main = async () => {
   })
   const services = Array.isArray(serviceHealth.body?.services) ? serviceHealth.body.services : []
   const hasServiceHealth = services.length > 0
-  const serviceHealthAdvisory = shouldTreatFallbackEvidenceAsAdvisory(
-    fallbackAuthSource,
-    serviceHealth.status,
-    hasServiceHealth,
-  )
   record({
     name: 'GET /ops/services/health',
-    ok: (serviceHealth.status < 400 && hasServiceHealth) || serviceHealthAdvisory,
-    note: `status=${serviceHealth.status} services=${services.length} source=${String(serviceHealth.body?.source || '')}${serviceHealthAdvisory ? ' advisory=supabase_fallback' : ''}`,
+    ok: serviceHealth.status < 400 && hasServiceHealth,
+    note: `status=${serviceHealth.status} services=${services.length} source=${String(serviceHealth.body?.source || '')}${fallbackAuthSource === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`,
   })
 
   const pauseState = services.find((service) => service.service_id === 'ops-pause-state') ?? null
@@ -342,11 +331,11 @@ const main = async () => {
         })
       }
     }
-  } else if (serviceHealthAdvisory) {
+  } else if (fallbackAuthSource === 'supabase_fallback') {
     record({
-      name: 'Ops service detail unavailable under Supabase fallback',
-      ok: true,
-      note: 'advisory=supabase_fallback',
+      name: 'Ops service detail remains unavailable under Supabase fallback',
+      ok: false,
+      note: 'fallback=supabase_jwt',
     })
   }
 
@@ -355,22 +344,17 @@ const main = async () => {
   })
   const observerHealthy = observer.status < 400 && observer.body?.success === true
   const observerGoldPresent = Boolean(observer.body?.gold?.latest_date)
-  const observerAdvisory = shouldTreatFallbackEvidenceAsAdvisory(
-    fallbackAuthSource,
-    observer.status,
-    observerHealthy || observerGoldPresent,
-  )
   record({
     name: 'GET /ops/observer/summary',
-    ok: observerHealthy || observerAdvisory,
-    note: `status=${observer.status} gold_latest=${String(observer.body?.gold?.latest_date || '')}${observerAdvisory ? ' advisory=supabase_fallback' : ''}`,
+    ok: observerHealthy,
+    note: `status=${observer.status} gold_latest=${String(observer.body?.gold?.latest_date || '')}${fallbackAuthSource === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`,
   })
 
   if (expectOpsActive) {
     record({
       name: 'Observer gold export date present',
-      ok: observerGoldPresent || observerAdvisory,
-      note: `latest_date=${String(observer.body?.gold?.latest_date || '')}${observerAdvisory ? ' advisory=supabase_fallback' : ''}`,
+      ok: observerGoldPresent,
+      note: `latest_date=${String(observer.body?.gold?.latest_date || '')}${fallbackAuthSource === 'supabase_fallback' ? ' fallback=supabase_jwt' : ''}`,
     })
   }
 
@@ -379,7 +363,7 @@ const main = async () => {
     if (!queueUrl) {
       record({
         name: `Queue ${kind} direct lookup unavailable`,
-        ok: true,
+        ok: !expectOpsActive,
         note: `queue=${queueName} reason=${issue}`,
       })
       continue
