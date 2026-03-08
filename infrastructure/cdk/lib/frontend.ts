@@ -33,6 +33,7 @@ export type FrontendOptions = {
   frontendHostedZoneId?: string
   frontendHostedZoneName?: string
   planeAWaf?: CfnWebACL
+  planeAApiEndpoint?: string
   planeACloudFrontDomain?: string
   enableFrontend?: boolean
 }
@@ -124,9 +125,11 @@ export const createFrontend = (
   })
 
   const s3Origin = S3BucketOrigin.withOriginAccessControl(bucket)
-  const planeAOriginDomain = options.planeACloudFrontDomain
-    ? resolveOriginDomain(options.planeACloudFrontDomain)
-    : ''
+  const planeAOriginDomain = options.planeAApiEndpoint
+    ? resolveOriginDomain(options.planeAApiEndpoint)
+    : options.planeACloudFrontDomain
+      ? resolveOriginDomain(options.planeACloudFrontDomain)
+      : ''
   const planeAOrigin = planeAOriginDomain ? new HttpOrigin(planeAOriginDomain) : undefined
 
   const isrFunction = createISRLambdaEdge(scope)
@@ -211,6 +214,14 @@ export const createFrontend = (
               compress: true,
             },
             '/readyz': {
+              origin: planeAOrigin,
+              viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+              allowedMethods: AllowedMethods.ALLOW_ALL,
+              cachePolicy: CachePolicy.CACHING_DISABLED,
+              originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+              compress: true,
+            },
+            '/metrics': {
               origin: planeAOrigin,
               viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
               allowedMethods: AllowedMethods.ALLOW_ALL,

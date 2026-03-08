@@ -1532,6 +1532,45 @@ jobs:
             api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
 
+          fetch_status() {
+            local url="$1"
+            local output_path="$2"
+            local status
+            status="$(curl -sS -o "${output_path}" -w '%{http_code}' "${url}" || true)"
+            if [ -z "${status}" ]; then
+              status="000"
+            fi
+            printf '%s' "${status}"
+          }
+
+          wait_for_api_stabilization() {
+            local attempt health_status ready_status metrics_status consecutive
+            consecutive=0
+            for attempt in $(seq 1 36); do
+              health_status="$(fetch_status "${api_base}/healthz" /tmp/postdeploy-healthz.out)"
+              ready_status="$(fetch_status "${api_base}/readyz" /tmp/postdeploy-readyz.out)"
+              metrics_status="$(fetch_status "${api_base}/metrics" /tmp/postdeploy-metrics.out)"
+              if [ "${health_status}" = "200" ] \
+                && [ "${ready_status}" = "200" ] \
+                && { [ "${metrics_status}" = "200" ] || [ "${metrics_status}" = "401" ] || [ "${metrics_status}" = "403" ]; }; then
+                consecutive=$((consecutive + 1))
+                echo "Public API stabilization sample ${attempt}/36 passed (${consecutive}/3 consecutive; health=${health_status}, ready=${ready_status}, metrics=${metrics_status})."
+                if [ "${consecutive}" -ge 3 ]; then
+                  echo "Public API stabilized after ${attempt} checks."
+                  return 0
+                fi
+              else
+                consecutive=0
+                echo "Waiting for public API stabilization (attempt ${attempt}/36, health=${health_status}, ready=${ready_status}, metrics=${metrics_status})."
+              fi
+              sleep 5
+            done
+            echo "::error::Public API did not stabilize before post-deploy smoke."
+            return 1
+          }
+
+          wait_for_api_stabilization
+
           set +e
           SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke
           smoke_ec=$?
@@ -2665,6 +2704,45 @@ jobs:
           if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
             api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
           fi
+
+          fetch_status() {
+            local url="$1"
+            local output_path="$2"
+            local status
+            status="$(curl -sS -o "${output_path}" -w '%{http_code}' "${url}" || true)"
+            if [ -z "${status}" ]; then
+              status="000"
+            fi
+            printf '%s' "${status}"
+          }
+
+          wait_for_api_stabilization() {
+            local attempt health_status ready_status metrics_status consecutive
+            consecutive=0
+            for attempt in $(seq 1 36); do
+              health_status="$(fetch_status "${api_base}/healthz" /tmp/postdeploy-healthz.out)"
+              ready_status="$(fetch_status "${api_base}/readyz" /tmp/postdeploy-readyz.out)"
+              metrics_status="$(fetch_status "${api_base}/metrics" /tmp/postdeploy-metrics.out)"
+              if [ "${health_status}" = "200" ] \
+                && [ "${ready_status}" = "200" ] \
+                && { [ "${metrics_status}" = "200" ] || [ "${metrics_status}" = "401" ] || [ "${metrics_status}" = "403" ]; }; then
+                consecutive=$((consecutive + 1))
+                echo "Public API stabilization sample ${attempt}/36 passed (${consecutive}/3 consecutive; health=${health_status}, ready=${ready_status}, metrics=${metrics_status})."
+                if [ "${consecutive}" -ge 3 ]; then
+                  echo "Public API stabilized after ${attempt} checks."
+                  return 0
+                fi
+              else
+                consecutive=0
+                echo "Waiting for public API stabilization (attempt ${attempt}/36, health=${health_status}, ready=${ready_status}, metrics=${metrics_status})."
+              fi
+              sleep 5
+            done
+            echo "::error::Public API did not stabilize before post-deploy smoke."
+            return 1
+          }
+
+          wait_for_api_stabilization
 
           set +e
           SMOKE_ALLOW_PROTECTED_METRICS=1 SMOKE_ALLOW_PROTECTED_HEALTH=1 API_BASE_URL="$api_base" pnpm -C backend ci:api-smoke

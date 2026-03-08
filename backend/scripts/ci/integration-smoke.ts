@@ -28,6 +28,7 @@ const percentile = (values: number[], p: number) => {
 }
 
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '')
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 const toInt = (value: string | undefined): number | undefined => {
   if (!value) return undefined
   const parsed = Number.parseInt(value, 10)
@@ -160,12 +161,38 @@ const resolveCorridorSet = (): CorridorTest[] => {
 const timedFetchJson = async (url: string, init?: RequestInit) => {
   const start = nowMs()
   const timeoutMs = Number(process.env.SMOKE_FETCH_TIMEOUT_MS || 12000)
-  const initWithTimeout = {
-    ...init,
-    signal: init?.signal || withTimeout(timeoutMs),
+  // Freshly deployed public edges can return transient 5xx responses while route
+  // propagation settles. Keep the smoke strict on final status, but give it a
+  // realistic retry budget before declaring the release unhealthy.
+  const maxAttempts = Math.max(1, Number(process.env.SMOKE_FETCH_RETRIES || 10))
+  let res: Response | null = null
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const initWithTimeout = {
+      ...init,
+      signal: init?.signal || withTimeout(timeoutMs),
+    }
+
+    try {
+      res = await fetch(url, initWithTimeout)
+      if (res.status < 500 || attempt === maxAttempts) {
+        break
+      }
+    } catch (error) {
+      lastError = error
+      if (attempt === maxAttempts || init?.signal?.aborted) {
+        throw error
+      }
+    }
+
+    await sleep(Math.min(4000, attempt * 1000))
   }
 
-  const res = await fetch(url, initWithTimeout)
+  if (!res) {
+    throw lastError instanceof Error ? lastError : new Error(`Request failed for ${url}`)
+  }
+
   const ms = nowMs() - start
   let body: any = null
   const contentType = res.headers.get('content-type') || ''
