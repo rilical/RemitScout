@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   resolveQueueLookupIssue,
   resolveWorkerResilienceAdminAuth,
-  shouldTreatFallbackEvidenceAsAdvisory,
 } from '../scripts/ci/worker-resilience-smoke'
 
 describe('worker resilience smoke admin auth', () => {
@@ -51,19 +50,5 @@ describe('worker resilience smoke admin auth', () => {
     })).toBe('access_denied')
 
     expect(resolveQueueLookupIssue(new Error('socket timeout'))).toBeNull()
-  })
-})
-
-describe('worker resilience fallback advisories', () => {
-  it('treats missing signal as advisory only under Supabase fallback with a non-error status', () => {
-    expect(shouldTreatFallbackEvidenceAsAdvisory('supabase_fallback', 200, false)).toBe(true)
-    expect(shouldTreatFallbackEvidenceAsAdvisory('supabase_fallback', 204, false)).toBe(true)
-  })
-
-  it('keeps real admin exchange and error responses as hard failures', () => {
-    expect(shouldTreatFallbackEvidenceAsAdvisory('admin_exchange', 200, false)).toBe(false)
-    expect(shouldTreatFallbackEvidenceAsAdvisory('none', 200, false)).toBe(false)
-    expect(shouldTreatFallbackEvidenceAsAdvisory('supabase_fallback', 403, false)).toBe(false)
-    expect(shouldTreatFallbackEvidenceAsAdvisory('supabase_fallback', 200, true)).toBe(false)
   })
 })

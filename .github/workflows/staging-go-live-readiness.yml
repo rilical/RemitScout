@@ -577,6 +577,18 @@ jobs:
       - name: Install Playwright browser runtime (staging UI smoke)
         run: pnpm -C frontend exec playwright install --with-deps chromium
 
+      - name: Public UI smoke (staging)
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAYWRIGHT_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_SITE_URL for staging public UI smoke."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          pnpm -C frontend exec playwright test tests/e2e/public-release-smoke.spec.ts 2>&1 | tee .smoke-artifacts/staging-public-ui-smoke.log
+
       - name: Auth UI smoke (staging)
         env:
           PLAYWRIGHT_BASE_URL: ${{ vars.PUBLIC_SITE_URL }}
@@ -616,6 +628,20 @@ jobs:
           fi
           mkdir -p .smoke-artifacts
           pnpm -C frontend exec playwright test tests/e2e/admin-surface.spec.ts 2>&1 | tee .smoke-artifacts/staging-admin-ui-smoke.log
+
+      - name: Public integration smoke (staging, post-ui)
+        env:
+          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          SMOKE_PROVIDER_STABILIZATION_ATTEMPTS: '12'
+          SMOKE_PROVIDER_STABILIZATION_DELAY_MS: '5000'
+        run: |
+          set -euo pipefail
+          if [ -z "${SMOKE_BASE_URL:-}" ]; then
+            echo "Missing PUBLIC_API_BASE for staging post-UI public integration smoke."
+            exit 1
+          fi
+          mkdir -p .smoke-artifacts
+          SMOKE_FETCH_RETRIES=10 pnpm -C backend ci:integration-smoke | tee .smoke-artifacts/staging-public-integration-post-ui-smoke.log
 
       - name: Observability business gate (staging hard gate)
         if: ${{ vars.REQUIRE_NEW_RELIC_GATES == '1' && env.NEW_RELIC_USER_API_KEY != '' }}

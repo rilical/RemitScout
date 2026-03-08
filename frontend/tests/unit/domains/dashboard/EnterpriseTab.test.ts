@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 
 const mockExportVisual = vi.hoisted(() => vi.fn())
 const mockEnterpriseRequest = vi.hoisted(() => vi.fn())
+const corridorSearchPlaceholder = 'e.g. US → Philippines, GB → Nigeria'
 
 vi.mock('~/ui', () => ({
   DataTable: {
@@ -70,6 +71,7 @@ vi.mock('~/composables/useEnterpriseEmbeds', () => ({
     theme: ref('dark'),
     copyStatus: ref(null),
     publishedId: ref('123e4567-e89b-12d3-a456-426614174001'),
+    publishedCreatedAt: ref('2026-03-05T00:00:00.000Z'),
     publishedAt: ref('2026-03-05T00:00:00.000Z'),
     publishedGenerating: ref(false),
     publishedError: ref(null),
@@ -122,6 +124,16 @@ vi.mock('~/composables/useEnterpriseEmbeds', () => ({
     publishedEmbedsError: ref(null),
     fetchPublishedEmbeds: vi.fn(),
     revokePublishedEmbed: vi.fn(),
+    methodProfileOptions: [
+      { value: 'standard_bank', label: 'Bank deposit' },
+      { value: 'standard_card', label: 'Card to bank' },
+      { value: 'cash_pickup', label: 'Cash pickup' },
+      { value: 'mobile_wallet', label: 'Mobile wallet' },
+      { value: 'airtime_topup', label: 'Airtime top-up' },
+      { value: 'card_delivery', label: 'Card delivery' },
+      { value: 'home_delivery', label: 'Home delivery' },
+    ],
+    amountBucketPresets: [200, 500, 1000, 3000, 10000],
   }),
 }))
 
@@ -236,7 +248,7 @@ describe('EnterpriseTab', () => {
     const inputs = wrapper
       .findAll('input[type="text"]')
       .filter(input =>
-        input.attributes('placeholder')?.includes('Search by send country or destination country'),
+        input.attributes('placeholder')?.includes(corridorSearchPlaceholder),
       )
     const exportSearchInput = inputs.at(-1)
 
@@ -257,7 +269,7 @@ describe('EnterpriseTab', () => {
     const embedSearchInput = wrapper
       .findAll('input[type="text"]')
       .find(input =>
-        input.attributes('placeholder')?.includes('Search by send country or destination country'),
+        input.attributes('placeholder')?.includes(corridorSearchPlaceholder),
       )
 
     expect(embedSearchInput).toBeDefined()
