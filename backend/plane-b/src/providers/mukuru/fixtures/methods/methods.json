@@ -1,0 +1,32 @@
+{
+  "products": [
+    {
+      "id": 31,
+      "title": "Cash ZAR",
+      "iso": "ZAR",
+      "is_send_calculator": true,
+      "show_fee": 1
+    },
+    {
+      "id": 775,
+      "title": "Bank Top-up GBP",
+      "iso": "GBP",
+      "is_send_calculator": true,
+      "show_fee": 1
+    },
+    {
+      "id": 1693,
+      "title": "Mukuru Wallet USD",
+      "iso": "USD",
+      "is_send_calculator": true,
+      "show_fee": 1
+    },
+    {
+      "id": 528,
+      "title": "M-Pesa Top-up KES",
+      "iso": "KES",
+      "is_send_calculator": false,
+      "show_fee": 1
+    }
+  ]
+}

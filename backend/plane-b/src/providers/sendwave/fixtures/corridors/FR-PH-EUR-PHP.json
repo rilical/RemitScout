@@ -1,0 +1,801 @@
+{
+  "segments": {
+    "hasDifferentiatedPricing": true,
+    "payoutMethodsAndPrices": [
+      {
+        "bestPricedSegmentName": "ph_gcash",
+        "hasDifferentiatedPricing": false,
+        "isBestPricedPayoutMethod": true,
+        "label": "GCash",
+        "payoutMethod": "mobile",
+        "segments": [
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.67</del><ins style=\"{{final_receive_amount}}\">68.60&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "GCash",
+            "segmentName": "ph_gcash"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.67</del><ins style=\"{{final_receive_amount}}\">68.60&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "GCash",
+            "segmentName": "ph_gcash"
+          }
+        ]
+      },
+      {
+        "bestPricedSegmentName": "ph_bangko_kabayan_inc_ph",
+        "hasDifferentiatedPricing": false,
+        "isBestPricedPayoutMethod": false,
+        "label": "Compte bancaire",
+        "payoutMethod": "bank",
+        "segments": [
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Kabayan Inc",
+            "segmentName": "ph_bangko_kabayan_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Nuestra Señora Del Pilar Inc",
+            "segmentName": "ph_bangko_nuestra_senora_del_pilar_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of Florida",
+            "segmentName": "ph_bank_of_florida_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of Makati",
+            "segmentName": "ph_bank_of_makati_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Cantilan Bank",
+            "segmentName": "ph_cantilan_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "CIMB Bank Philippines",
+            "segmentName": "ph_cimb_bank_philippines_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Citibank",
+            "segmentName": "ph_citibank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Industrial and Commercial Bank of China Manila Branch",
+            "segmentName": "ph_industrial_and_commercial_bank_of_china_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Innovative Rural Bank Inc",
+            "segmentName": "ph_innovative_rural_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "KEB Hana Bank Manila Branch",
+            "segmentName": "ph_keb_hana_bank_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rang-Ay Bank Inc",
+            "segmentName": "ph_rang-ay_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Shinhan Bank Manila Branch",
+            "segmentName": "ph_shinhan_bank_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Sumitomo Mitsui Banking Corporation",
+            "segmentName": "ph_sumitomo_mitsui_banking_corporation_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "United Overseas Bank Ltd Manila Branch",
+            "segmentName": "ph_united_overseas_bank_ltd_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Country Builders Bank Inc",
+            "segmentName": "ph_country_builders_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Deutsche Bank AG",
+            "segmentName": "ph_deutsche_bank_ag_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Dumaguete City Development Bank",
+            "segmentName": "ph_dumaguete_city_development_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "First Consolidated Bank Inc",
+            "segmentName": "ph_first_consolidated_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Guagua Rural Bank Inc",
+            "segmentName": "ph_guagua_rural_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Hong Kong and Shanghai Banking Corp",
+            "segmentName": "ph_hong_kong_and_shanghai_banking_corp_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "HSBC Savings Bank Inc",
+            "segmentName": "ph_hsbc_savings_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Community Rural Bank of Romblon",
+            "segmentName": "ph_community_rural_bank_of_romblon_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Korea Exchange Bank",
+            "segmentName": "ph_korea_exchange_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Tong Yang Savings Bank Inc",
+            "segmentName": "ph_tong_yang_savings_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Development Bank of the Philippines",
+            "segmentName": "ph_development_bank_of_the_philippines_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "JP Morgan Chase Bank",
+            "segmentName": "ph_jp_morgan_chase_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Mabuhay Inc",
+            "segmentName": "ph_bangko_mabuhay_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Amanah Islamic Investment Bank",
+            "segmentName": "ph_amanah_islamic_investment_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Asia United Bank",
+            "segmentName": "ph_asia_united"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Australia and New Zealand Bank",
+            "segmentName": "ph_australia_and_new_zealand_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Banco De Oro Unibank",
+            "segmentName": "ph_banco_de_oro_unibank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangkok Bank Public Co",
+            "segmentName": "ph_bangkok_bank_public_co_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of America",
+            "segmentName": "ph_bank_of_america_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of China Manila",
+            "segmentName": "ph_bank_of_china_manila_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank Of Commerce",
+            "segmentName": "ph_bank_of_commerce"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank Of The Philippine Islands",
+            "segmentName": "ph_bank_of_the_philippine_islands"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "China Banking Corporation",
+            "segmentName": "ph_china_banking_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "China Bank Savings",
+            "segmentName": "ph_china_bank_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Chinatrust Commercial Bank",
+            "segmentName": "ph_chinatrust_commercial"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Dungganon Bank",
+            "segmentName": "ph_dungganon"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "East West Bank",
+            "segmentName": "ph_east_west"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Equicom Savings Bank",
+            "segmentName": "ph_equicom_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Industrial Bank of Korea",
+            "segmentName": "ph_industrial_bank_of_korea_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Isla Bank",
+            "segmentName": "ph_isla"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Land Bank",
+            "segmentName": "ph_land"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Malayan Savings Bank",
+            "segmentName": "ph_malayan_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Maybank Philippines",
+            "segmentName": "ph_maybank_philippines"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Mega International Commercial Bank Co Ltd",
+            "segmentName": "ph_mega_international_commercial_bank_co_ltd_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Metropolitan Bank And Trust Corporation",
+            "segmentName": "ph_metropolitan_bank_and_trust_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Mizuho Bank, Ltd Manila Branch",
+            "segmentName": "ph_mizuho_bank_ltd_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "MUFG Bank Ltd",
+            "segmentName": "ph_mufg_bank_ltd_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Partner Rural Bank",
+            "segmentName": "ph_partner_rural"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine Bank Of Communications",
+            "segmentName": "ph_philippine_bank_of_communications"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine Savings Bank",
+            "segmentName": "ph_philippine_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Phil National Bank Savings",
+            "segmentName": "ph_phil_national_bank_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine National Bank",
+            "segmentName": "ph_philippine_national"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Phil Trust Bank",
+            "segmentName": "ph_phil_trust"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Producers Bank",
+            "segmentName": "ph_producers"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Queen City Development Bank Inc",
+            "segmentName": "ph_queen_city_development_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rizal Commercial Banking Corporation",
+            "segmentName": "ph_rizal_commercial_banking_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Robinsons Bank",
+            "segmentName": "ph_robinsons"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rural Bank of Digos",
+            "segmentName": "ph_rural_bank_of_digos_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rural Bank of Montalban Inc",
+            "segmentName": "ph_rural_bank_of_montalban_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Security Bank",
+            "segmentName": "ph_security"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Standard Chartered Bank",
+            "segmentName": "ph_standard_chartered_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Sun Savings Bank",
+            "segmentName": "ph_sun_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "UCPB Savings",
+            "segmentName": "ph_ucpb_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Union Bank",
+            "segmentName": "ph_union_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "United Coconut Planters Bank",
+            "segmentName": "ph_united_coconut_planters"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Wealth Development Bank",
+            "segmentName": "ph_wealth_development"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Yuanta Savings Bank",
+            "segmentName": "ph_yuanta_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Kabayan Inc",
+            "segmentName": "ph_bangko_kabayan_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Nuestra Señora Del Pilar Inc",
+            "segmentName": "ph_bangko_nuestra_senora_del_pilar_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of Florida",
+            "segmentName": "ph_bank_of_florida_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of Makati",
+            "segmentName": "ph_bank_of_makati_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Cantilan Bank",
+            "segmentName": "ph_cantilan_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "CIMB Bank Philippines",
+            "segmentName": "ph_cimb_bank_philippines_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Citibank, N.A.",
+            "segmentName": "ph_citibank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Industrial and Commercial Bank of China (ICBC) - Manila Branch",
+            "segmentName": "ph_industrial_and_commercial_bank_of_china_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Innovative Rural Bank Inc",
+            "segmentName": "ph_innovative_rural_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "KEB Hana Bank - Manila Branch",
+            "segmentName": "ph_keb_hana_bank_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rang-Ay Bank Inc",
+            "segmentName": "ph_rang-ay_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Shinhan Bank - Manila Branch",
+            "segmentName": "ph_shinhan_bank_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Sumitomo Mitsui Banking Corporation (SMBC)",
+            "segmentName": "ph_sumitomo_mitsui_banking_corporation_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "United Overseas Bank, Ltd. (UOB) - Manila Branch",
+            "segmentName": "ph_united_overseas_bank_ltd_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Country Builders Bank Inc",
+            "segmentName": "ph_country_builders_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Deutsche Bank AG",
+            "segmentName": "ph_deutsche_bank_ag_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Dumaguete City Development Bank",
+            "segmentName": "ph_dumaguete_city_development_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "First Consolidated Bank Inc",
+            "segmentName": "ph_first_consolidated_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Guagua Rural Bank Inc",
+            "segmentName": "ph_guagua_rural_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Hong Kong and Shanghai Banking Corp.",
+            "segmentName": "ph_hong_kong_and_shanghai_banking_corp_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "HSBC Savings Bank Inc",
+            "segmentName": "ph_hsbc_savings_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Community Rural Bank of Romblon",
+            "segmentName": "ph_community_rural_bank_of_romblon_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Korea Exchange Bank",
+            "segmentName": "ph_korea_exchange_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Tong Yang Savings Bank, Inc.",
+            "segmentName": "ph_tong_yang_savings_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Development Bank of the Philippines",
+            "segmentName": "ph_development_bank_of_the_philippines_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "JP Morgan Chase Bank, NA.",
+            "segmentName": "ph_jp_morgan_chase_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangko Mabuhay (A Rural Bank), Inc.",
+            "segmentName": "ph_bangko_mabuhay_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Amanah Islamic Investment Bank",
+            "segmentName": "ph_amanah_islamic_investment_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Asia United Bank",
+            "segmentName": "ph_asia_united"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Australia and New Zealand Bank",
+            "segmentName": "ph_australia_and_new_zealand_bank_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Banco De Oro Unibank",
+            "segmentName": "ph_banco_de_oro_unibank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bangkok Bank Public Co, Ltd.",
+            "segmentName": "ph_bangkok_bank_public_co_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of America, N.A.",
+            "segmentName": "ph_bank_of_america_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank of China, Ltd. - Manila Branch",
+            "segmentName": "ph_bank_of_china_manila_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank Of Commerce",
+            "segmentName": "ph_bank_of_commerce"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Bank Of The Philippine Islands",
+            "segmentName": "ph_bank_of_the_philippine_islands"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "China Banking Corporation",
+            "segmentName": "ph_china_banking_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "China Bank Savings",
+            "segmentName": "ph_china_bank_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Chinatrust Commercial Bank",
+            "segmentName": "ph_chinatrust_commercial"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Dungganon Bank",
+            "segmentName": "ph_dungganon"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "East West Bank",
+            "segmentName": "ph_east_west"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Equicom Savings Bank",
+            "segmentName": "ph_equicom_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Industrial Bank of Korea",
+            "segmentName": "ph_industrial_bank_of_korea_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Isla Bank",
+            "segmentName": "ph_isla"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Land Bank",
+            "segmentName": "ph_land"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Malayan Savings Bank",
+            "segmentName": "ph_malayan_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Maybank Philippines",
+            "segmentName": "ph_maybank_philippines"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Mega International Commercial Bank Co, Ltd.",
+            "segmentName": "ph_mega_international_commercial_bank_co_ltd_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Metropolitan Bank And Trust Corporation",
+            "segmentName": "ph_metropolitan_bank_and_trust_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Mizuho Bank, Ltd. - Manila Branch",
+            "segmentName": "ph_mizuho_bank_ltd_manila_branch_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "MUFG Bank, Ltd.",
+            "segmentName": "ph_mufg_bank_ltd_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Partner Rural Bank",
+            "segmentName": "ph_partner_rural"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine Bank Of Communications",
+            "segmentName": "ph_philippine_bank_of_communications"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine Savings Bank",
+            "segmentName": "ph_philippine_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Phil National Bank Savings",
+            "segmentName": "ph_phil_national_bank_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Philippine National Bank",
+            "segmentName": "ph_philippine_national"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Phil Trust Bank",
+            "segmentName": "ph_phil_trust"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Producers Bank",
+            "segmentName": "ph_producers"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Queen City Development Bank, Inc.",
+            "segmentName": "ph_queen_city_development_bank_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rizal Commercial Banking Corporation",
+            "segmentName": "ph_rizal_commercial_banking_corporation"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Robinsons Bank",
+            "segmentName": "ph_robinsons"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rural Bank of Digos",
+            "segmentName": "ph_rural_bank_of_digos_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Rural Bank of Montalban, Inc",
+            "segmentName": "ph_rural_bank_of_montalban_inc_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Security Bank",
+            "segmentName": "ph_security"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Standard Chartered Bank",
+            "segmentName": "ph_standard_chartered_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Sun Savings Bank",
+            "segmentName": "ph_sun_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "UCPB Savings",
+            "segmentName": "ph_ucpb_savings"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Union Bank",
+            "segmentName": "ph_union_ph"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "United Coconut Planters Bank",
+            "segmentName": "ph_united_coconut_planters"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Wealth Development Bank",
+            "segmentName": "ph_wealth_development"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Yuanta Savings Bank",
+            "segmentName": "ph_yuanta_savings"
+          }
+        ]
+      },
+      {
+        "bestPricedSegmentName": "ph_cash_pickup",
+        "hasDifferentiatedPricing": false,
+        "isBestPricedPayoutMethod": false,
+        "label": "Retrait d’espèces",
+        "payoutMethod": "cash",
+        "segments": [
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">66.43</del><ins style=\"{{final_receive_amount}}\">67.36&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Retrait d’espèces – Réseau de partenaires Metrobank",
+            "segmentName": "ph_cash_pickup"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">66.43</del><ins style=\"{{final_receive_amount}}\">67.36&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+            "segmentDisplayName": "Retrait d’espèces – Réseau de partenaires Metrobank",
+            "segmentName": "ph_cash_pickup"
+          }
+        ]
+      }
+    ]
+  },
+  "pricing": {
+    "baseExchangeRate": "67.32756",
+    "baseFeeAmount": "0.00",
+    "baseFeeRateBps": 0,
+    "baseSendAmount": "100.00",
+    "calculationId": "37d36637-384b-4e59-a83f-3d7e3f5e3a4d",
+    "campaignsApplied": [
+      {
+        "adjustmentBps": 135,
+        "adjustmentType": "FX",
+        "applyCampaignMarkup": true,
+        "campaignId": -1,
+        "code": "NEW",
+        "description": "Promotion Taux de change de bienvenue",
+        "descriptionKeyOverride": false,
+        "isStackable": false,
+        "sendCurrencyValue": "93.1270000"
+      }
+    ],
+    "dynamicPricing": null,
+    "effectiveExchangeRate": "68.25883",
+    "effectiveFeeAmount": "0.00",
+    "effectiveFeeRateBps": 0,
+    "effectiveMaxFee": null,
+    "effectiveSendAmount": "100.00",
+    "maxFee": null,
+    "payAmount": "100.00",
+    "promosValue": "0",
+    "rateDisclaimerDescription": null,
+    "rateDisclaimerTitle": null,
+    "rateQuote": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{campaign_rate_text}}\">Promotion Taux de change de bienvenue:</span></span> <span style=\"{{send_amount}}\">1&nbsp;EUR</span> = <span style=\"{{receive_amount}}\"><del style=\"{{base_receive_amount}}\">67.32</del><ins style=\"{{final_receive_amount}}\">68.25&nbsp;PHP</ins></span> <br /> <span style=\"{{fee_text}}\">Frais de transfert : 0.00&nbsp;EUR</span></span>",
+    "rateText": "Promotion Taux de change de bienvenue:",
+    "receiveAmount": "6826",
+    "sendBonusAmount": "0"
+  },
+  "segmentName": "ph_bangko_kabayan_inc_ph",
+  "payoutMethod": "bank_deposit"
+}

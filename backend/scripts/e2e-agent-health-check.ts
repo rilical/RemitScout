@@ -44,6 +44,20 @@ const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
 const DETECTION_CYCLE_METRIC = 'detection_cycle_count'
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on'])
 
+type ConnectionHostSource = 'host' | 'hostname' | 'hostaddr'
+type ConnectionHostCandidate = {
+  source: ConnectionHostSource
+  value: string
+}
+type Ipv4RewriteResult = {
+  connectionString: string
+  originalHost: string
+  resolvedHost: string
+  source: ConnectionHostSource
+}
+type ResolveIpv4Address = (hostname: string) => Promise<string | null>
+const HOSTLESS_SENTINEL = '__remit_scout_hostless__'
+
 const resolveEnvironmentName = () => {
   const value = (config.envName || config.env || process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim()
   if (!value) return 'dev'
@@ -61,6 +75,104 @@ const shouldForceIpv4DbConnection = () => {
   return process.env.GITHUB_ACTIONS === 'true'
 }
 
+const normalizeHostCandidate = (value: string | null | undefined) =>
+  (value || '').trim().replace(/^\[|\]$/g, '')
+
+const collectConnectionHostCandidates = (parsed: URL): ConnectionHostCandidate[] => {
+  const candidates: ConnectionHostCandidate[] = [
+    { source: 'host', value: normalizeHostCandidate(parsed.searchParams.get('host')) },
+    { source: 'hostname', value: normalizeHostCandidate(parsed.hostname) },
+    { source: 'hostaddr', value: normalizeHostCandidate(parsed.searchParams.get('hostaddr')) },
+  ]
+  const seen = new Set<string>()
+
+  return candidates.filter((candidate) => {
+    if (!candidate.value || candidate.value === HOSTLESS_SENTINEL) return false
+    const dedupeKey = `${candidate.source}:${candidate.value.toLowerCase()}`
+    if (seen.has(dedupeKey)) return false
+    seen.add(dedupeKey)
+    return true
+  })
+}
+
+const parseConnectionString = (connectionString: string) => {
+  try {
+    return new URL(connectionString)
+  } catch {
+    if (!connectionString.includes('@/')) {
+      throw new TypeError('Invalid URL')
+    }
+    return new URL(connectionString.replace('@/', `@${HOSTLESS_SENTINEL}/`))
+  }
+}
+
+const applyResolvedHost = (parsed: URL, resolvedHost: string) => {
+  if (parsed.searchParams.has('host')) {
+    parsed.searchParams.set('host', resolvedHost)
+  }
+  if (parsed.searchParams.has('hostaddr')) {
+    parsed.searchParams.set('hostaddr', resolvedHost)
+  }
+  if (parsed.hostname) {
+    parsed.hostname = resolvedHost
+  }
+  return parsed.toString()
+}
+
+const defaultResolveIpv4Address: ResolveIpv4Address = async (hostname) => {
+  const resolved = await lookup(hostname, { family: 4 })
+  return resolved.address || null
+}
+
+export const rewriteDbConnectionStringForIpv4 = async (
+  connectionString: string,
+  resolveIpv4Address: ResolveIpv4Address = defaultResolveIpv4Address,
+): Promise<Ipv4RewriteResult | null> => {
+  if (!connectionString) {
+    return null
+  }
+
+  const parsed = parseConnectionString(connectionString)
+  const candidates = collectConnectionHostCandidates(parsed)
+
+  for (const candidate of candidates) {
+    if (candidate.value === 'localhost') {
+      return null
+    }
+
+    if (net.isIP(candidate.value) === 4) {
+      const rewritten = applyResolvedHost(parsed, candidate.value)
+      if (rewritten === connectionString) {
+        return null
+      }
+      return {
+        connectionString: rewritten,
+        originalHost: candidate.value,
+        resolvedHost: candidate.value,
+        source: candidate.source,
+      }
+    }
+
+    if (net.isIP(candidate.value) === 6) {
+      continue
+    }
+
+    const resolvedHost = await resolveIpv4Address(candidate.value)
+    if (!resolvedHost) {
+      continue
+    }
+
+    return {
+      connectionString: applyResolvedHost(parsed, resolvedHost),
+      originalHost: candidate.value,
+      resolvedHost,
+      source: candidate.source,
+    }
+  }
+
+  return null
+}
+
 const resolvePlaneBDbConnectionString = async () => {
   const connectionString = config.db.planeBUrl
   if (!connectionString || !shouldForceIpv4DbConnection()) {
@@ -74,23 +186,17 @@ const resolvePlaneBDbConnectionString = async () => {
   }
 
   try {
-    const parsed = new URL(connectionString)
-    const hostname = parsed.hostname
-    if (!hostname || hostname === 'localhost' || net.isIP(hostname) === 4) {
+    const rewritten = await rewriteDbConnectionStringForIpv4(connectionString)
+    if (!rewritten) {
       return connectionString
     }
 
-    const resolved = await lookup(hostname, { family: 4 })
-    if (!resolved.address) {
-      return connectionString
-    }
-
-    parsed.hostname = resolved.address
     logger.info('agent_health_db_ipv4_resolved', {
-      originalHost: hostname,
-      resolvedHost: resolved.address,
+      originalHost: rewritten.originalHost,
+      resolvedHost: rewritten.resolvedHost,
+      source: rewritten.source,
     })
-    return parsed.toString()
+    return rewritten.connectionString
   } catch (error) {
     logger.warn('agent_health_db_ipv4_resolution_failed', {
       error: error instanceof Error ? error.message : String(error),
@@ -284,12 +390,14 @@ async function main(): Promise<number> {
   return 0
 }
 
-main()
-  .then((code) => process.exit(code))
-  .catch((err) => {
-    logger.error('e2e_health_check_fatal', {
-      error: err instanceof Error ? err.message : String(err),
+if (require.main === module) {
+  main()
+    .then((code) => process.exit(code))
+    .catch((err) => {
+      logger.error('e2e_health_check_fatal', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+      console.error('Fatal error:', err)
+      process.exit(1)
     })
-    console.error('Fatal error:', err)
-    process.exit(1)
-  })
+}

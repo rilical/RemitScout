@@ -55,6 +55,8 @@ coverage/
 *.lcov
 
 # Provider fixtures
+# Curated sanitized fixtures used by parser tests may be force-added as tracked files.
+# Ad hoc local captures under these trees stay ignored by default.
 backend/plane-b/src/providers/*/fixtures/
 
 # IDE and Editor files

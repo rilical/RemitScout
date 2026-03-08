@@ -1,0 +1,162 @@
+{
+  "tariffs": [
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "sendingAmount": 10000,
+      "sendingAmountDiscount": 0,
+      "sendingAmountWithoutCommission": 9905,
+      "sendingCommission": 95,
+      "sendingCommissionDiscount": 0,
+      "sendingTransferCommission": 95,
+      "paidNotificationCommission": 0,
+      "receivingCurrency": {
+        "id": "949",
+        "code": "TRY",
+        "name": "Турецкая лира"
+      },
+      "receivingAmount": 490346,
+      "exchangeRate": 49.505,
+      "exchangeRateType": "reverse",
+      "exchangeRateDiscount": 0,
+      "profit": 0,
+      "properties": {}
+    }
+  ],
+  "tariffInfo": [
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1095,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "840",
+        "code": "USD",
+        "name": "Доллар США"
+      },
+      "minReceivingAmount": 1200,
+      "maxReceivingAmount": 577100,
+      "fractionalReceivingAmountUsage": "disabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "cash"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1097,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "949",
+        "code": "TRY",
+        "name": "Турецкая лира"
+      },
+      "minReceivingAmount": 48700,
+      "maxReceivingAmount": 24271800,
+      "fractionalReceivingAmountUsage": "disabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "cash"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1019,
+      "maxSendingAmount": 509500,
+      "minSendingCommission": 19,
+      "receivingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minReceivingAmount": 1000,
+      "maxReceivingAmount": 500000,
+      "fractionalReceivingAmountUsage": "disabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "cash"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1095,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "840",
+        "code": "USD",
+        "name": "Доллар США"
+      },
+      "minReceivingAmount": 1154,
+      "maxReceivingAmount": 577132,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "card"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1097,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "949",
+        "code": "TRY",
+        "name": "Турецкая лира"
+      },
+      "minReceivingAmount": 49597,
+      "maxReceivingAmount": 24752475,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "card"
+    },
+    {
+      "sendingCurrency": {
+        "id": "978",
+        "code": "EUR",
+        "name": "ЕВРО"
+      },
+      "minSendingAmount": 1097,
+      "maxSendingAmount": 500095,
+      "minSendingCommission": 95,
+      "receivingCurrency": {
+        "id": "949",
+        "code": "TRY",
+        "name": "Турецкая лира"
+      },
+      "minReceivingAmount": 49597,
+      "maxReceivingAmount": 24752475,
+      "fractionalReceivingAmountUsage": "enabled",
+      "paymentMethod": "debitCard",
+      "receivingMethod": "accountViaHizlipara",
+      "warnings": [
+        {
+          "priority": 4,
+          "messages": [
+            {
+              "caption": "Перевод на IBAN",
+              "body": "Переводы до 20,000 TRY доставляются за секунды, 24/7.\nВы указываете имя и номер счёта получателя"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

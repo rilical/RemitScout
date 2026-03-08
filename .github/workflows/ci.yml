@@ -551,7 +551,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm -C frontend exec playwright install --with-deps
+      - run: pnpm -C frontend exec playwright install --with-deps chromium
       - run: pnpm -C frontend build
       - run: pnpm -C frontend sentry:sourcemaps
       - name: Check bundle size
@@ -632,11 +632,21 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     env:
       DATABASE_URL: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       DATABASE_URL_PLANE_A: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       DATABASE_URL_PLANE_B: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
       DATABASE_URL_PLANE_C: postgres://remit:remit@localhost:5432/remit # pragma: allowlist secret
+      REDIS_URL: redis://localhost:6379/0
       PLANE_A_ADMIN_EMAILS: admin@example.com
       PLANE_A_CORS_ORIGINS: http://localhost:3000
     steps:

@@ -1,0 +1,19 @@
+{
+  "status": "Success",
+  "code": 200,
+  "data": {
+    "charges": {
+      "source_currency": "USD",
+      "source_amount": 100.0,
+      "rate": 132.044,
+      "base_rate": 126.4569,
+      "destination_currency": "KES",
+      "destination_amount": 13204.4,
+      "commission": 5.0,
+      "agent_fee": "0",
+      "hq_fee": "0",
+      "total_charges": 5.0,
+      "tax": "0.00"
+    }
+  }
+}

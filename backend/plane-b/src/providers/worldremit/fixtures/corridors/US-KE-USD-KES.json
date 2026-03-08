@@ -1,0 +1,154 @@
+{
+  "calculation": {
+    "createCalculation": {
+      "errors": [],
+      "__typename": "CreateCalculationResult",
+      "calculation": {
+        "id": "07cc3e16-85dc-40a4-ac1a-f07e377c7b06",
+        "send": {
+          "amount": 100,
+          "currency": "USD",
+          "__typename": "Money"
+        },
+        "isFree": false,
+        "receive": {
+          "amount": 13004,
+          "currency": "KES",
+          "__typename": "Money"
+        },
+        "rounding": null,
+        "__typename": "Calculation",
+        "exchangeRate": {
+          "value": 130.0354,
+          "__typename": "FxRate",
+          "crossedOutValue": 127.4584
+        },
+        "informativeSummary": {
+          "fee": {
+            "type": "Uniform",
+            "value": {
+              "amount": 0,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "__typename": "Fee"
+          },
+          "discount": null,
+          "__typename": "InformativeSummary",
+          "totalToPay": {
+            "amount": 100,
+            "__typename": "Money"
+          },
+          "appliedPromotions": null
+        },
+        "payInMethodsCalculations": [
+          {
+            "__typename": "PayInMethodCalculation",
+            "totalToPay": {
+              "amount": 100,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "payInMethod": {
+              "id": "debit-card",
+              "icon": {
+                "__typename": "Icon",
+                "resolutions": {
+                  "1.0": "https://images.ctfassets.net/sb7j5o4oxtgv/4YX9OnymFRpcKN6D6SDlAP/895463d5faddf75fdcf63a6d79f922f2/credit-card-newbrand_1.0.png",
+                  "1.5": "https://images.ctfassets.net/sb7j5o4oxtgv/77KXHmmUPgfFALY0IyLDdX/efce4fd5914aea68d948d79b78c5860a/credit-card-newbrand_1.5.png",
+                  "2.0": "https://images.ctfassets.net/sb7j5o4oxtgv/24S5O3crvmBI9HxgMgl6FL/60e92711561db86217d4e9ec4b23ceae/credit-card-newbrand_2.0.png",
+                  "3.0": "https://images.ctfassets.net/sb7j5o4oxtgv/2LZQ2NJyQ90fxbDvyMSyN4/8310e87b74ea246d57a6a5404c2a000e/credit-card-newbrand_3.0.png",
+                  "4.0": "https://images.ctfassets.net/sb7j5o4oxtgv/6CQA92aBmGUW06GwgwMY7u/c4a098e3213afc69335e23dba8919473/credit-card-newbrand_4.0.png"
+                }
+              },
+              "name": "Debit Card",
+              "__typename": "PayInMethod",
+              "transferRedirectionType": null
+            }
+          },
+          {
+            "__typename": "PayInMethodCalculation",
+            "totalToPay": {
+              "amount": 103,
+              "currency": "USD",
+              "__typename": "Money"
+            },
+            "payInMethod": {
+              "id": "credit-card",
+              "icon": {
+                "__typename": "Icon",
+                "resolutions": {
+                  "1.0": "https://images.ctfassets.net/sb7j5o4oxtgv/4YX9OnymFRpcKN6D6SDlAP/895463d5faddf75fdcf63a6d79f922f2/credit-card-newbrand_1.0.png",
+                  "1.5": "https://images.ctfassets.net/sb7j5o4oxtgv/77KXHmmUPgfFALY0IyLDdX/efce4fd5914aea68d948d79b78c5860a/credit-card-newbrand_1.5.png",
+                  "2.0": "https://images.ctfassets.net/sb7j5o4oxtgv/24S5O3crvmBI9HxgMgl6FL/60e92711561db86217d4e9ec4b23ceae/credit-card-newbrand_2.0.png",
+                  "3.0": "https://images.ctfassets.net/sb7j5o4oxtgv/2LZQ2NJyQ90fxbDvyMSyN4/8310e87b74ea246d57a6a5404c2a000e/credit-card-newbrand_3.0.png",
+                  "4.0": "https://images.ctfassets.net/sb7j5o4oxtgv/6CQA92aBmGUW06GwgwMY7u/c4a098e3213afc69335e23dba8919473/credit-card-newbrand_4.0.png"
+                }
+              },
+              "name": "Credit Card",
+              "__typename": "PayInMethod",
+              "transferRedirectionType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  "payoutMethods": {
+    "payOutMethods": [
+      {
+        "code": "ATP",
+        "__typename": "PayOutMethod",
+        "correspondents": [
+          {
+            "id": "136",
+            "name": "TransferTo Kenya Zepz",
+            "__typename": "Correspondent",
+            "payOutTime": null
+          }
+        ],
+        "payOutTimeEstimate": "⚡ Within 5 minutes"
+      },
+      {
+        "code": "MOB",
+        "__typename": "PayOutMethod",
+        "correspondents": [
+          {
+            "id": "4040",
+            "name": "M-PESA",
+            "__typename": "Correspondent",
+            "payOutTime": null
+          }
+        ],
+        "payOutTimeEstimate": "⚡ Within 5 minutes"
+      },
+      {
+        "code": "PTV",
+        "__typename": "PayOutMethod",
+        "correspondents": [
+          {
+            "id": "1769",
+            "name": "Debit Card Deposit",
+            "__typename": "Correspondent",
+            "payOutTime": null
+          }
+        ],
+        "payOutTimeEstimate": "Within 1 hour"
+      }
+    ]
+  },
+  "mappedPayoutMethod": "mobile_wallet",
+  "selectedPayoutMethod": {
+    "code": "MOB",
+    "__typename": "PayOutMethod",
+    "correspondents": [
+      {
+        "id": "4040",
+        "name": "M-PESA",
+        "__typename": "Correspondent",
+        "payOutTime": null
+      }
+    ],
+    "payOutTimeEstimate": "⚡ Within 5 minutes"
+  }
+}
