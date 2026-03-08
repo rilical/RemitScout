@@ -185,7 +185,7 @@ const resolveQueueUrl = async (envName: string, kind: QueueKind) => {
     if (!queueUrl) {
       throw new Error(`Queue URL not found for ${queueName}`)
     }
-    return { queueName, queueUrl, issue: null as const }
+    return { queueName, queueUrl, issue: null }
   } catch (error) {
     const issue = resolveQueueLookupIssue(error)
     if (issue) {
