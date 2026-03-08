@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import DashboardSignedIn from './DashboardSignedIn.vue'
 
-const { ensureAuthenticated, isAuthenticated } = useAuth()
+const { ensureHydrated, isAuthenticated, hydrated } = useAuth()
+await ensureHydrated()
 
-await ensureAuthenticated()
-
-if (import.meta.client && !isAuthenticated.value) {
+if (import.meta.client && hydrated.value && !isAuthenticated.value) {
   await navigateTo({
     path: '/sign-in',
     query: { redirect: '/dashboard' },
