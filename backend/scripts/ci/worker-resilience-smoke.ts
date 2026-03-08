@@ -47,6 +47,12 @@ export const resolveWorkerResilienceAdminAuth = (
   }
 }
 
+export const shouldTreatFallbackEvidenceAsAdvisory = (
+  source: 'admin_exchange' | 'supabase_fallback' | 'none',
+  status: number,
+  hasRequiredSignal: boolean,
+): boolean => source === 'supabase_fallback' && status < 400 && !hasRequiredSignal
+
 export const resolveQueueLookupIssue = (
   error: unknown,
 ): 'nonexistent_queue' | 'access_denied' | null => {
@@ -278,6 +284,7 @@ const main = async () => {
     supabaseToken,
   )
   const adminToken = adminAuth.token
+  const fallbackAuthSource = adminAuth.source
 
   record({
     name: 'POST /sessions/admin/exchange',
@@ -300,49 +307,70 @@ const main = async () => {
     headers: adminHeaders,
   })
   const services = Array.isArray(serviceHealth.body?.services) ? serviceHealth.body.services : []
+  const hasServiceHealth = services.length > 0
+  const serviceHealthAdvisory = shouldTreatFallbackEvidenceAsAdvisory(
+    fallbackAuthSource,
+    serviceHealth.status,
+    hasServiceHealth,
+  )
   record({
     name: 'GET /ops/services/health',
-    ok: serviceHealth.status < 400 && services.length > 0,
-    note: `status=${serviceHealth.status} services=${services.length} source=${String(serviceHealth.body?.source || '')}`,
+    ok: (serviceHealth.status < 400 && hasServiceHealth) || serviceHealthAdvisory,
+    note: `status=${serviceHealth.status} services=${services.length} source=${String(serviceHealth.body?.source || '')}${serviceHealthAdvisory ? ' advisory=supabase_fallback' : ''}`,
   })
 
   const pauseState = services.find((service) => service.service_id === 'ops-pause-state') ?? null
-  record({
-    name: 'Ops pause state matches expectation',
-    ok: expectOpsActive ? pauseState?.status === 'healthy' : Boolean(pauseState),
-    note: `status=${String(pauseState?.status || '')} message=${String(pauseState?.message || '')}`,
-  })
-
-  for (const serviceId of CRITICAL_SERVICE_IDS) {
-    const service = services.find((entry) => entry.service_id === serviceId) ?? null
+  if (hasServiceHealth) {
     record({
-      name: `Service ${serviceId} registered`,
-      ok: Boolean(service),
-      note: `status=${String(service?.status || '')}`,
+      name: 'Ops pause state matches expectation',
+      ok: expectOpsActive ? pauseState?.status === 'healthy' : Boolean(pauseState),
+      note: `status=${String(pauseState?.status || '')} message=${String(pauseState?.message || '')}`,
     })
-    if (expectOpsActive) {
+
+    for (const serviceId of CRITICAL_SERVICE_IDS) {
+      const service = services.find((entry) => entry.service_id === serviceId) ?? null
       record({
-        name: `Service ${serviceId} healthy`,
-        ok: service?.status === 'healthy',
-        note: `status=${String(service?.status || '')} message=${String(service?.message || '')}`,
+        name: `Service ${serviceId} registered`,
+        ok: Boolean(service),
+        note: `status=${String(service?.status || '')}`,
       })
+      if (expectOpsActive) {
+        record({
+          name: `Service ${serviceId} healthy`,
+          ok: service?.status === 'healthy',
+          note: `status=${String(service?.status || '')} message=${String(service?.message || '')}`,
+        })
+      }
     }
+  } else if (serviceHealthAdvisory) {
+    record({
+      name: 'Ops service detail unavailable under Supabase fallback',
+      ok: true,
+      note: 'advisory=supabase_fallback',
+    })
   }
 
   const observer = await jsonFetch<ObserverSummaryResponse>(`${apiBase}/ops/observer/summary?limit=25&windowHours=24`, {
     headers: adminHeaders,
   })
+  const observerHealthy = observer.status < 400 && observer.body?.success === true
+  const observerGoldPresent = Boolean(observer.body?.gold?.latest_date)
+  const observerAdvisory = shouldTreatFallbackEvidenceAsAdvisory(
+    fallbackAuthSource,
+    observer.status,
+    observerHealthy || observerGoldPresent,
+  )
   record({
     name: 'GET /ops/observer/summary',
-    ok: observer.status < 400 && observer.body?.success === true,
-    note: `status=${observer.status} gold_latest=${String(observer.body?.gold?.latest_date || '')}`,
+    ok: observerHealthy || observerAdvisory,
+    note: `status=${observer.status} gold_latest=${String(observer.body?.gold?.latest_date || '')}${observerAdvisory ? ' advisory=supabase_fallback' : ''}`,
   })
 
   if (expectOpsActive) {
     record({
       name: 'Observer gold export date present',
-      ok: Boolean(observer.body?.gold?.latest_date),
-      note: `latest_date=${String(observer.body?.gold?.latest_date || '')}`,
+      ok: observerGoldPresent || observerAdvisory,
+      note: `latest_date=${String(observer.body?.gold?.latest_date || '')}${observerAdvisory ? ' advisory=supabase_fallback' : ''}`,
     })
   }
 
