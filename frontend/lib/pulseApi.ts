@@ -13,6 +13,7 @@ import type {
   PulseScreenerResponse,
 } from '~/types/pulse'
 import { useApi } from '~/composables/useApi'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import type { PulseCorridor, PulseTimeframe } from '~/stores/pulse'
 import type { MarketDepth, ArbitrageOpportunity, BankComparisonData, ProviderWithTrueCost, CostTrendData } from '~/types/remit'
 
@@ -169,7 +170,9 @@ export async function getCorridors(): Promise<CorridorOption[]> {
   const { request } = useApi()
 
   try {
-    corridorCache = await request<CorridorOption[]>('/pulse/corridors')
+    corridorCache = await request<CorridorOption[]>('/pulse/corridors', {
+      retries: UI_BOOTSTRAP_RETRIES,
+    })
     return corridorCache
   }
   catch (error: any) {

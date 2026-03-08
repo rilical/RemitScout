@@ -1,3 +1,5 @@
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
+
 export type Plan = 'free' | 'plus' | 'enterprise'
 export type PlanLifecycleState
   = | 'active'
@@ -205,7 +207,9 @@ export const useEntitlements = () => {
     error.value = null
 
     try {
-      const data = await request<MeResponse>('/me')
+      const data = await request<MeResponse>('/me', {
+        retries: UI_BOOTSTRAP_RETRIES,
+      })
 
       if (data.success && data.plan) {
         const storedPlan
@@ -249,8 +253,9 @@ export const useEntitlements = () => {
     }
     catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch plan'
-      // Default to free plan on error
-      resetToFree()
+      if (!hydrated.value) {
+        resetToFree()
+      }
       hydrated.value = true
     }
     finally {

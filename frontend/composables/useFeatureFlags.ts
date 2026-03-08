@@ -1,4 +1,5 @@
 import { computed, watch } from 'vue'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 
 export type RuntimeFlagKey
   = | 'pulse.public'
@@ -179,7 +180,7 @@ export const useFeatureFlags = () => {
     try {
       snapshot.value = await request<EffectiveRuntimeFlagsResponse>('/feature-flags/effective', {
         method: 'GET',
-        retries: 0,
+        retries: UI_BOOTSTRAP_RETRIES,
       })
       loadedContext.value = currentContextKey
       hydrated.value = true

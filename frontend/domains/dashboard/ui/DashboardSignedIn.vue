@@ -4851,6 +4851,7 @@ import { EXPORTS_MAX_WINDOW_DAYS_HARD_CAP } from '~/shared/lib/exports'
 import { resolveDashboardAlertSeed } from '~/domains/dashboard/application/alertSeed'
 import { useFeatureFlags } from '~/composables/useFeatureFlags'
 import { mapPlanStateFailureMessage } from '~/composables/usePlanStateError'
+import { UI_BOOTSTRAP_RETRIES } from '~/composables/requestPolicies'
 import EnterpriseTab from '~/domains/dashboard/ui/EnterpriseTab.vue'
 
 type DashboardTab
@@ -5436,7 +5437,10 @@ const checkAdminAccess = async (signal?: AbortSignal) => {
     // Determine admin access via `/me` instead of probing `/admin/*` routes.
     // `/admin/*` and `/ops/*` can be IP-allowlisted in production, which would make the UI
     // hide ops/admin even for legitimate admins. `/me` is the authoritative server decision.
-    const me = await request<{ user?: { is_admin?: boolean } }>('/me', { signal, retries: 0 })
+    const me = await request<{ user?: { is_admin?: boolean } }>('/me', {
+      signal,
+      retries: UI_BOOTSTRAP_RETRIES,
+    })
     hasAdminAccess.value = Boolean(me?.user?.is_admin)
   }
  catch (error: unknown) {
