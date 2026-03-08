@@ -104,6 +104,15 @@ type SmokeApiErrorBody = {
   }
 }
 
+type SmokeRetryOptions = {
+  retries?: number
+  retryDelayMs?: number
+}
+
+const SMOKE_RETRYABLE_STATUS_MIN = 500
+const DEFAULT_SMOKE_RETRIES = 3
+const DEFAULT_SMOKE_RETRY_DELAY_MS = 1000
+
 const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, '')
 
 export const resolveSmokeRootBaseUrl = (value: string) => {
@@ -123,6 +132,8 @@ export const resolveSmokeApiBaseUrl = (value: string) => {
   if (normalized.endsWith('/api')) return `${normalized}/v1`
   return `${normalized}/api/v1`
 }
+
+export const shouldRetrySmokeResponse = (status: number) => status >= SMOKE_RETRYABLE_STATUS_MIN
 
 const parseOptionalBoolean = (value: string | undefined): boolean | undefined => {
   if (!value || !value.trim()) return undefined
@@ -226,13 +237,33 @@ const mustEnv = (key: string): string => {
 const jsonFetch = async <T = unknown>(
   url: string,
   init?: RequestInit,
+  options: SmokeRetryOptions = {},
 ): Promise<{ status: number; body: T }> => {
-  const res = await fetch(url, init)
-  const contentType = res.headers.get('content-type') || ''
-  const body: unknown = contentType.includes('application/json')
-    ? await res.json().catch(() => ({}))
-    : await res.text().catch(() => '')
-  return { status: res.status, body: body as T }
+  const retries = Math.max(0, Math.floor(options.retries ?? DEFAULT_SMOKE_RETRIES))
+  const retryDelayMs = Math.max(0, Math.floor(options.retryDelayMs ?? DEFAULT_SMOKE_RETRY_DELAY_MS))
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, init)
+      const contentType = res.headers.get('content-type') || ''
+      const body: unknown = contentType.includes('application/json')
+        ? await res.json().catch(() => ({}))
+        : await res.text().catch(() => '')
+
+      if (!shouldRetrySmokeResponse(res.status) || attempt === retries) {
+        return { status: res.status, body: body as T }
+      }
+    } catch (error) {
+      if (attempt === retries) {
+        throw error
+      }
+    }
+
+    const delayMs = retryDelayMs * (attempt + 1)
+    await new Promise(resolve => setTimeout(resolve, delayMs))
+  }
+
+  return { status: 503, body: {} as T }
 }
 
 const signInSupabase = async (): Promise<string> => {
