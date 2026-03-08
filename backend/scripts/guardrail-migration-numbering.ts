@@ -18,7 +18,7 @@
  * retroactively renumbered without breaking already-applied schema_migrations
  * rows):
  *
- *   Duplicates: 017, 027, 040, 060, 076, 083, 104, 105
+ *   Duplicates: 017, 027, 040, 060, 076, 083
  *   Gaps:       033, 048-051
  */
 
@@ -30,7 +30,7 @@ const MIGRATIONS_DIR = path.resolve(__dirname, '..', 'db', 'migrations')
 // ── Legacy allowlists ─────────────────────────────────────────────────────────
 // These were created before this guardrail existed. They cannot be renumbered
 // because the filename IS the primary key stored in public.schema_migrations.
-const LEGACY_DUPLICATE_NUMBERS = new Set([17, 27, 40, 60, 76, 83, 104, 105])
+const LEGACY_DUPLICATE_NUMBERS = new Set([17, 27, 40, 60, 76, 83])
 
 // Gap numbers that are intentionally absent (reserved, skipped, or deleted).
 const LEGACY_GAP_NUMBERS = new Set([33, 48, 49, 50, 51])
