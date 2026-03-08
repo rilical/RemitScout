@@ -66,6 +66,21 @@ const visitAdminPage = async (
   markers: string[],
 ) => {
   await page.goto(path)
+  await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
+
+  if (!canRunPrivilegedAdminUi) {
+    if (/\/account\/security(?:\?|$)/i.test(page.url())) {
+      await expect(page.getByRole('heading', { name: /multi-factor authentication/i })).toBeVisible({
+        timeout: 10000,
+      })
+      return 'mfa_required' as const
+    }
+
+    if (/\/sign-in(?:\?|$)/i.test(page.url())) {
+      return 'session_rejected' as const
+    }
+  }
+
   await expect(page.getByRole('heading', { name: heading })).toBeVisible({
     timeout: 30000,
   })
@@ -73,6 +88,7 @@ const visitAdminPage = async (
     await expect(page.getByText(new RegExp(marker, 'i')).first()).toBeVisible({ timeout: 30000 })
   }
   await expectNoAdminLoadFailure(page)
+  return 'loaded' as const
 }
 
 test.describe('admin surface smoke', () => {
@@ -90,7 +106,11 @@ test.describe('admin surface smoke', () => {
       console.log('Skipping privileged admin UI checks: E2E_AUTH_MFA_CODE not configured.')
     }
 
-    await visitAdminPage(page, '/admin/modules', /module registry/i, ['registered modules'])
+    const modulesVisit = await visitAdminPage(page, '/admin/modules', /module registry/i, ['registered modules'])
+    if (!canRunPrivilegedAdminUi && modulesVisit !== 'loaded') {
+      test.skip(true, 'Admin UI smoke requires E2E_AUTH_MFA_CODE when staging routes enforce MFA.')
+    }
+
     await visitAdminPage(page, '/admin/discovery', /provider control plane/i, ['pending discovery reviews', 'operator brief'])
     await visitAdminPage(page, '/admin/analytics', /analytics console/i, ['corridor search trends', 'engagement trend'])
     await visitAdminPage(page, '/admin/gold-exports', /gold exports: indices snapshot/i, ['snapshot rows', 'correction ledger'])
