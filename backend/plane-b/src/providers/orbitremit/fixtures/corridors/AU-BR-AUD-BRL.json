@@ -1,0 +1,44 @@
+{
+  "rate": {
+    "type": "success",
+    "data": {
+      "data": {
+        "type": "estimates",
+        "id": "c1480fdd-576f-4a6b-97c0-9b7a2a7f5d4a",
+        "attributes": {
+          "send_currency": "AUD",
+          "payout_currency": "BRL",
+          "base_currency": "AUD",
+          "send_amount": "500.00",
+          "payout_amount": "1796.04",
+          "created_at": "2026-01-12 21:58:23",
+          "expires_at": "2026-01-12 22:08:23",
+          "rate": "3.59207",
+          "promotion_rate": "3.59207",
+          "promotion_threshold": "1000.00",
+          "standard_rate": "3.5560",
+          "standard_send_amount": "500.00",
+          "standard_payout_amount": "1778.00"
+        }
+      }
+    }
+  },
+  "fee": {
+    "code": 200,
+    "status": "success",
+    "data": {
+      "fee": "4.00",
+      "send_currency": "AUD",
+      "payout_currency": "BRL",
+      "send_amount": "500",
+      "recipient_type": "bank_account"
+    }
+  },
+  "meta": {
+    "recipientType": "bank_account",
+    "requestedRecipientType": "bank_account",
+    "availableRecipientTypes": [
+      "bank_account"
+    ]
+  }
+}

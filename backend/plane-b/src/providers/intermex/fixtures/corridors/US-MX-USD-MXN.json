@@ -1,0 +1,33 @@
+{
+    "rate": 17.5367,
+    "origAmount": 900.0,
+    "destAmount": 15783.03,
+    "feeAmount": 6.57,
+    "totalAmount": 906.57,
+    "genericPromotionId": 0,
+    "promoType": null,
+    "discountAmount": 0,
+    "fxDif": 0,
+    "paymentMethods": [
+        {
+            "isImxDebitCard": false,
+            "feeAmountCrossed": null,
+            "styleId": 3,
+            "senderPaymentMethodId": 3,
+            "senderPaymentMethodName": "Debit Card",
+            "isAvailable": true,
+            "senderPaymentMethodOrder": 2,
+            "feeAmount": 6.57
+        },
+        {
+            "isImxDebitCard": false,
+            "feeAmountCrossed": null,
+            "styleId": 3,
+            "senderPaymentMethodId": 4,
+            "senderPaymentMethodName": "Credit Card",
+            "isAvailable": true,
+            "senderPaymentMethodOrder": 3,
+            "feeAmount": 9.27
+        }
+    ]
+}

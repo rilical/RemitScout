@@ -1,0 +1,44 @@
+{
+    "style": {
+        "styleId": 3,
+        "styleName": "BEST FX RATES",
+        "paymentMethodTxt": "Bank Account, Credit or Debit Card",
+        "deliveryTxt": "In Minutes Option"
+    },
+    "paymentMethods": [
+        {
+            "isImxDebitCard": false,
+            "feeAmountCrossed": null,
+            "styleId": 3,
+            "senderPaymentMethodId": 3,
+            "senderPaymentMethodName": "DebitCard",
+            "isAvailable": true,
+            "senderPaymentMethodOrder": 2,
+            "feeAmount": 4.97
+        },
+        {
+            "isImxDebitCard": false,
+            "feeAmountCrossed": null,
+            "styleId": 3,
+            "senderPaymentMethodId": 4,
+            "senderPaymentMethodName": "CreditCard",
+            "isAvailable": true,
+            "senderPaymentMethodOrder": 3,
+            "feeAmount": 3.97
+        }
+    ],
+    "deliveryMethodsList": [
+        {
+            "tranTypeId": 1,
+            "deliveryMethod": "W",
+            "tranTypeName": "Cash Pickup",
+            "isSelected": true
+        },
+        {
+            "tranTypeId": 3,
+            "deliveryMethod": "W",
+            "tranTypeName": "Bank Deposit",
+            "isSelected": false
+        }
+    ]
+}

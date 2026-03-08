@@ -1,0 +1,18 @@
+{
+  "SendingAmount": {
+    "Amount": "100.00",
+    "Currency": "USD"
+  },
+  "ReceivingAmount": {
+    "Amount": "2622292.00",
+    "Currency": "VND"
+  },
+  "StandardRate": {
+    "RateType": "Standard",
+    "Rate": "26222.92"
+  },
+  "PromotionalRate": {
+    "RateType": "Promotional",
+    "Rate": null
+  }
+}

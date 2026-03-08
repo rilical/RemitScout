@@ -1,0 +1,60 @@
+{
+  "response_status": {
+    "status": 0,
+    "message": "OK"
+  },
+  "services_groups": [
+    {
+      "service": "000",
+      "service_name": "Money In Minutes",
+      "speed_days": 1,
+      "pay_groups": [
+        {
+          "fund_in": "CC",
+          "fx_rate": 17.2,
+          "promotional_fx_rate": 17.8,
+          "gross_fee": 2.99,
+          "net_fee": 2.5,
+          "send_amount": 100,
+          "receive_amount": 1720
+        },
+        {
+          "fund_in": "AC",
+          "fx_rate": 17.3,
+          "gross_fee": 1.99,
+          "send_amount": 100,
+          "receive_amount": 1730
+        }
+      ]
+    },
+    {
+      "service": "500",
+      "service_name": "Direct to Bank",
+      "speed_days": 1,
+      "pay_groups": [
+        {
+          "fund_in": "DC",
+          "fx_rate": 17.1,
+          "promo_fx_rate": 17.6,
+          "gross_fee": 2.49,
+          "send_amount": 100,
+          "receive_amount": 1710
+        }
+      ]
+    },
+    {
+      "service": "800",
+      "service_name": "Mobile Money Transfer",
+      "speed_days": 1,
+      "pay_groups": [
+        {
+          "fund_in": "GP",
+          "fx_rate": 17,
+          "gross_fee": 2.79,
+          "send_amount": 100,
+          "receive_amount": 1700
+        }
+      ]
+    }
+  ]
+}

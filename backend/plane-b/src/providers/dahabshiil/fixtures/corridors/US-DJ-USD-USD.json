@@ -1,0 +1,19 @@
+{
+  "status": "Success",
+  "code": 200,
+  "data": {
+    "charges": {
+      "source_currency": "USD",
+      "source_amount": 100.0,
+      "rate": 1.0,
+      "base_rate": 1.0,
+      "destination_currency": "USD",
+      "destination_amount": 100.0,
+      "commission": 4.3,
+      "agent_fee": "0",
+      "hq_fee": "0",
+      "total_charges": 4.3,
+      "tax": "0.00"
+    }
+  }
+}

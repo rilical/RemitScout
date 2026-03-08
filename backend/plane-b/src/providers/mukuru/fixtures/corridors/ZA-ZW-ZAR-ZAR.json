@@ -1,0 +1,67 @@
+{
+  "quote": {
+    "status": "success",
+    "data": {
+      "payin_amount": 500,
+      "payout_amount": 500,
+      "rate_message": "Rate R1:R1",
+      "charge_message": "",
+      "amount_adjusted_message": "Amount adjusted to multiples of R100.",
+      "bonus_amount_message": "",
+      "breakdown": {
+        "Rate": {
+          "amount": "R1:R1"
+        },
+        "payin": {
+          "Send": {
+            "amount": "ZAR500.00"
+          },
+          "Charge": {
+            "amount": "ZAR65.00"
+          },
+          "Total to pay": {
+            "amount": "ZAR565.00"
+          }
+        },
+        "payout": {
+          "They receive": {
+            "amount": "ZAR500.00"
+          }
+        }
+      },
+      "breakdown_template": "<div id=\"breakdown_flex_wrapper\">\n\t<div id=\"breakdown_payin\">\n\t\t<div class=\"breakdown_line_item\">\n\t\t<span class=\"\">\n\t\t\tSend\t\t\t\t</span>\n\t\t<span class=\"\">\n\t\t\tZAR500.00\t\t\t\t</span>\n\t\t</div>\n\t\t<div class=\"breakdown_line_item\">\n\t\t<span class=\"\">\n\t\t\tCharge\t\t\t\t</span>\n\t\t<span class=\"\">\n\t\t\tZAR65.00\t\t\t\t</span>\n\t\t</div>\n\t\t<div class=\"breakdown_line_item\">\n\t\t<span class=\"\">\n\t\t\tTotal to pay\t\t\t\t</span>\n\t\t<span class=\"\">\n\t\t\tZAR565.00\t\t\t\t</span>\n\t\t</div>\n\t</div>\n\t<div id=\"breakdown_payout\">\n\t\t<div class=\"breakdown_line_item\">\n\t\t<span class=\"\">\n\t\t\tThey receive\t\t\t\t</span>\n\t\t<span class=\"\">\n\t\t\tZAR500.00\t\t\t\t</span>\n\t\t</div>\n\t</div>\n</div>"
+    }
+  },
+  "products": [
+    {
+      "id": 1693,
+      "title": "Mukuru Wallet USD",
+      "iso": "USD",
+      "is_send_calculator": true,
+      "show_fee": 1
+    },
+    {
+      "id": 31,
+      "title": "Cash ZAR",
+      "iso": "ZAR",
+      "is_send_calculator": true,
+      "show_fee": 1
+    },
+    {
+      "id": 18,
+      "title": "Cash USD",
+      "iso": "USD",
+      "is_send_calculator": true,
+      "show_fee": 1
+    }
+  ],
+  "selectedProduct": {
+    "id": 31,
+    "title": "Cash ZAR",
+    "iso": "ZAR",
+    "is_send_calculator": true,
+    "show_fee": 1
+  },
+  "payoutMethod": "cash_pickup",
+  "sourceCurrency": "ZAR"
+}

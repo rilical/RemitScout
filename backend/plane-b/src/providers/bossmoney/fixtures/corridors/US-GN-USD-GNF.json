@@ -1,0 +1,62 @@
+{
+  "free_transaction": {
+    "max_amount": "5000.00",
+    "currency_code": "USD"
+  },
+  "pricing_fee": {
+    "pricing_rule_name": "",
+    "fee": "1.49",
+    "currency_code": "USD",
+    "max_amount": "2999.00",
+    "fees_by_payment_method": [
+      {
+        "payment_method": "credit",
+        "fee": "9.99"
+      },
+      {
+        "payment_method": "debit",
+        "fee": "0.00"
+      },
+      {
+        "payment_method": "mobile-pay",
+        "fee": "0.00",
+        "status": "available"
+      },
+      {
+        "payment_method": "ach",
+        "fee": "0.00",
+        "highlight_fee": true,
+        "is_enabled": true
+      },
+      {
+        "payment_method": "boss-money-wallet",
+        "fee": "0.00"
+      }
+    ]
+  },
+  "fee": {
+    "pricing_rule_name": "",
+    "fee": "0.00",
+    "currency_code": "USD",
+    "max_amount": "5000.00"
+  },
+  "loyalty_stats": [
+    {
+      "program_id": "",
+      "program_type": "free_of_fee",
+      "redeem": {
+        "redeem_count": 3,
+        "redeemed": 0,
+        "available_to_redeem": 3
+      }
+    }
+  ],
+  "fx_rates": {
+    "sell_rate": "8657.6422",
+    "base_sell_rate": "8469.0812"
+  },
+  "amounts": {
+    "sender": "500.00",
+    "recipient": "4328822"
+  }
+}

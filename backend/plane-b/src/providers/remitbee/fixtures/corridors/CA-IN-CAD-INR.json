@@ -1,0 +1,55 @@
+{
+  "transfer_amount": "900.00",
+  "receiving_amount": "58,898.19",
+  "rate": 64.6091,
+  "cumulative_rate": 65.4424,
+  "special_rate": 67.6091,
+  "special_rate_adjustment": "3.00",
+  "special_rate_transfer_amount_limit": 250,
+  "special_rate_type": "FIRST_TX",
+  "spot_rate": 64.9091,
+  "country_id": 103,
+  "country_to": "India",
+  "currency_code": "INR",
+  "currency_name": "Indian Rupee",
+  "payment_additional_info": {
+    "first_transfer_free": true,
+    "all_transfers_free": false
+  },
+  "payment_types": [
+    {
+      "label": "Debit",
+      "payment_type": "DEBIT",
+      "funding_time": "Instant",
+      "settlement_time": "January 12th",
+      "timeline": {
+        "funding_timeline": {
+          "predicted_minutes": 0,
+          "predicted_date": "Today"
+        },
+        "settlement_timeline": {
+          "predicted_minutes": 60,
+          "predicted_date": "January 12th"
+        }
+      },
+      "fees": "0.00"
+    },
+    {
+      "label": "E-Transfer",
+      "payment_type": "INTERAC_E_TRANSFER",
+      "funding_time": "Within 15 mins",
+      "settlement_time": "January 12th",
+      "timeline": {
+        "funding_timeline": {
+          "predicted_minutes": 15,
+          "predicted_date": "Today"
+        },
+        "settlement_timeline": {
+          "predicted_minutes": 180,
+          "predicted_date": "January 12th"
+        }
+      },
+      "fees": "1.99"
+    }
+  ]
+}

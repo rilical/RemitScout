@@ -1,0 +1,41 @@
+{
+  "errorMessage": null,
+  "informationMessage": null,
+  "warningMessage": null,
+  "responseCode": "success",
+  "receivingCountry": "Mexico",
+  "rnm": "BBVA (Mexico)",
+  "paymentMethod": "Credit to Account",
+  "requestedAmount": "$500.00",
+  "formattedDeliveyAmount": "8,853.10 MXN",
+  "formattedFxRate": "1 USD = 17.7062 MXN",
+  "formattedTransferFeeString": "$6.00",
+  "deliveryAmountCurrency": null,
+  "fxCurrency": "MXN",
+  "transferFeeCurrency": "USD",
+  "wibURL": "https://connect.secure.wellsfargo.com/auth/login/grssendmoney",
+  "totalAmount": "$506.00",
+  "specialOffers": null,
+  "transferFeesMap": {
+    "$25.00 - $1500.00": "$6.00"
+  },
+  "fxRateMap": {
+    "$25 - $250": "1 USD = 17.6883 MXN",
+    "$250.01 - $1000": "1 USD = 17.7062 MXN",
+    "$1000.01 - $1500": "1 USD = 17.7151 MXN"
+  },
+  "invalidFields": null,
+  "paymentTypes": null,
+  "rnmMap": null,
+  "paymentFromCashFlag": false,
+  "deliveryAmountCurrencyFlag": false,
+  "fxRateMapFlag": true,
+  "paymentFromAccountFlag": true,
+  "informationMessageMsgCode": null,
+  "receivingCountryCode": "MX",
+  "errorMessageMsgCode": null,
+  "paymentMethodCode": "ACCT_TO_ACCT",
+  "requestedRawAmount": 500,
+  "rnmCode": "9"
+}
+

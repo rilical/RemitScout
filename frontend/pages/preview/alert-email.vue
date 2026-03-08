@@ -85,16 +85,18 @@ style="text-decoration:none; display:inline-block;"
                 cellspacing="0"
                 style="margin-top: 24px;"
               >
-                <tr>
-                  <td :style="`background: ${currentView.buttonColor}; border-radius: 8px;`">
-                    <a
-                      :href="currentView.cta.url"
-                      style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: -0.01em;"
-                    >
-                      {{ currentView.cta.text }}
-                    </a>
-                  </td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td :style="`background: ${currentView.buttonColor}; border-radius: 8px;`">
+                      <a
+                        :href="currentView.cta.url"
+                        style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: -0.01em;"
+                      >
+                        {{ currentView.cta.text }}
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 

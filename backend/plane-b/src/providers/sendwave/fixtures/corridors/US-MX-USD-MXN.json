@@ -1,0 +1,183 @@
+{
+  "segments": {
+    "hasDifferentiatedPricing": true,
+    "payoutMethodsAndPrices": [
+      {
+        "bestPricedSegmentName": "mx_mercadopago_mx_bank",
+        "hasDifferentiatedPricing": false,
+        "isBestPricedPayoutMethod": true,
+        "label": "Bank Account",
+        "payoutMethod": "bank",
+        "segments": [
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Mercado Pago",
+            "segmentName": "mx_mercadopago_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Banorte",
+            "segmentName": "mx_banorte_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Inbursa",
+            "segmentName": "mx_inbursa_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Compartamos",
+            "segmentName": "mx_compartamos_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "HSBC",
+            "segmentName": "mx_hsbc_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Santander",
+            "segmentName": "mx_santander_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Scotiabank",
+            "segmentName": "mx_scotiabank_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "SPIN BY OXXO",
+            "segmentName": "mx_spinoxxo_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "BanCoppel",
+            "segmentName": "mx_bancoppel_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Banco Azteca",
+            "segmentName": "mx_azteca_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "BBVA Mexico (Bancomer)",
+            "segmentName": "mx_bbvamexico_mx_bank"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Citibanamex (Banamex)",
+            "segmentName": "mx_citibanamex_mx_bank"
+          }
+        ]
+      },
+      {
+        "bestPricedSegmentName": "mx_ria_airpak_cpu",
+        "hasDifferentiatedPricing": false,
+        "isBestPricedPayoutMethod": false,
+        "label": "Cash Pickup",
+        "payoutMethod": "cash",
+        "segments": [
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Calimax / Modatelas / Aprecio / Maxilana",
+            "segmentName": "mx_ria_airpak_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Bancomer",
+            "segmentName": "mx_ria_bancomer_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "BanCoppel S.A.",
+            "segmentName": "mx_ria_bancoppel_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Banorte",
+            "segmentName": "mx_ria_banorte_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Elektra / Banco Azteca",
+            "segmentName": "mx_ria_elektra_banco_azteca_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Farmacias del Ahorro",
+            "segmentName": "mx_ria_farmacias_del_ahorro_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Farmacias Guadalajara",
+            "segmentName": "mx_ria_farmacias_guadalajara_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "OXXO",
+            "segmentName": "mx_ria_oxxo_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Tiendas Soriana",
+            "segmentName": "mx_ria_soriana_cpu"
+          },
+          {
+            "description": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount}}\">17.50&nbsp;MXN</span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+            "segmentDisplayName": "Bodega Aurrera and Walmart",
+            "segmentName": "mx_ria_walmart_cpu"
+          }
+        ]
+      }
+    ]
+  },
+  "pricing": {
+    "baseExchangeRate": "17.60832",
+    "baseFeeAmount": "0.00",
+    "baseFeeRateBps": 0,
+    "baseSendAmount": "100.00",
+    "calculationId": "78b585e1-02de-436e-851c-7d279e80e90e",
+    "campaignsApplied": [],
+    "dynamicPricing": {
+      "bestRateText": "Tap to learn how to get the best rate, up to\n",
+      "bestRateValue": "1.00 USD = 17.67 MXN",
+      "ratesDescription": {
+        "description": "Get a better exchange rate when you send more to loved ones.",
+        "promotionsDescription": null,
+        "promotionsTitle": null,
+        "rates": [
+          {
+            "max": "$500.00",
+            "min": null,
+            "receive": "17.61 MXN",
+            "send": "$1.00"
+          },
+          {
+            "max": null,
+            "min": "$500.00",
+            "receive": "17.67 MXN",
+            "send": "$1.00"
+          }
+        ],
+        "title": "Send more to save more"
+      }
+    },
+    "effectiveExchangeRate": "17.60832",
+    "effectiveFeeAmount": "0.00",
+    "effectiveFeeRateBps": 0,
+    "effectiveMaxFee": null,
+    "effectiveSendAmount": "100.00",
+    "maxFee": null,
+    "payAmount": "100.00",
+    "promosValue": "0",
+    "rateDisclaimerDescription": null,
+    "rateDisclaimerTitle": null,
+    "rateQuote": "<span style=\"{{rate_quote}}\"><span style=\"{{rate_text}}\"><span style=\"{{standard_rate_text}}\">Exchange Rate:</span></span> <span style=\"{{send_amount}}\">1&nbsp;USD</span> = <span style=\"{{receive_amount}}\"><span style=\"{{standard_receive_amount_dynamic_pricing}}\"><b><u>17.60&nbsp;MXN</u></b></span></span> <br /> <span style=\"{{fee_text}}\">Transfer fees: 0.00&nbsp;USD</span></span>",
+    "rateText": "Exchange Rate:",
+    "receiveAmount": "1761",
+    "sendBonusAmount": "0"
+  },
+  "segmentName": "mx_mercadopago_mx_bank",
+  "payoutMethod": "bank_deposit"
+}

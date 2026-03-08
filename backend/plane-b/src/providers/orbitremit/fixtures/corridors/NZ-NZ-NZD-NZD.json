@@ -1,0 +1,43 @@
+{
+  "rate": {
+    "type": "success",
+    "data": {
+      "data": {
+        "type": "estimates",
+        "id": "230cd82a-30a5-4265-b814-8d9f32877895",
+        "attributes": {
+          "send_currency": "NZD",
+          "payout_currency": "NZD",
+          "base_currency": "NZD",
+          "send_amount": "500.00",
+          "payout_amount": "500.00",
+          "created_at": "2026-01-12 22:02:55",
+          "expires_at": "2026-01-12 22:12:55",
+          "rate": "1.00000"
+        }
+      }
+    },
+    "warning": "Missing standard_rate in response"
+  },
+  "fee": {
+    "code": 200,
+    "status": "success",
+    "data": {
+      "fee": "0.00",
+      "send_currency": "NZD",
+      "payout_currency": "NZD",
+      "send_amount": "500",
+      "recipient_type": "bank_account"
+    }
+  },
+  "meta": {
+    "recipientType": "bank_account",
+    "requestedRecipientType": "bank_account",
+    "availableRecipientTypes": [
+      "bank_account",
+      "i_r_d_account",
+      "m_o_j_account",
+      "m_s_d_account"
+    ]
+  }
+}
