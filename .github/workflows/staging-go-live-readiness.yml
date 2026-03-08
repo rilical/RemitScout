@@ -364,7 +364,7 @@ jobs:
             exit 1
           fi
           mkdir -p .smoke-artifacts
-          if pnpm -C backend exec tsx scripts/e2e-agent-health-check.ts | tee .smoke-artifacts/staging-agent-pipeline-health.log; then
+          if pnpm -C backend exec tsx scripts/e2e-agent-health-check.ts 2>&1 | tee .smoke-artifacts/staging-agent-pipeline-health.log; then
             exit 0
           fi
 
