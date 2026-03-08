@@ -47,12 +47,26 @@ const resolvePublishedEmbedError = (error: unknown, fallback: string) => {
   })
 }
 
+type MethodProfile = 'standard_bank' | 'standard_card' | 'cash_pickup' | 'mobile_wallet' | 'airtime_topup' | 'card_delivery' | 'home_delivery'
+
+const METHOD_PROFILE_OPTIONS: Array<{ value: MethodProfile, label: string }> = [
+  { value: 'standard_bank', label: 'Bank deposit' },
+  { value: 'standard_card', label: 'Card to bank' },
+  { value: 'cash_pickup', label: 'Cash pickup' },
+  { value: 'mobile_wallet', label: 'Mobile wallet' },
+  { value: 'airtime_topup', label: 'Airtime top-up' },
+  { value: 'card_delivery', label: 'Card delivery' },
+  { value: 'home_delivery', label: 'Home delivery' },
+]
+
+const AMOUNT_BUCKET_PRESETS = [200, 500, 1000, 3000, 10000] as const
+
 export function useEnterpriseEmbeds() {
   const { request } = useApi()
 
   const corridorId = ref('US-PH-USD-PHP')
   const amountBucket = ref(500)
-  const methodProfile = ref<'standard_bank'>('standard_bank')
+  const methodProfile = ref<MethodProfile>('standard_bank')
   const days = ref(30)
   const theme = ref<'dark' | 'light'>('dark')
   const copyStatus = ref<string | null>(null)
@@ -240,5 +254,7 @@ export function useEnterpriseEmbeds() {
     publishedEmbedsError,
     fetchPublishedEmbeds,
     revokePublishedEmbed,
+    methodProfileOptions: METHOD_PROFILE_OPTIONS,
+    amountBucketPresets: AMOUNT_BUCKET_PRESETS,
   }
 }
