@@ -118,7 +118,7 @@
 
             <button
               type="submit"
-              :disabled="loading || !isAuthenticated || !passwordValid || password !== confirmPassword"
+              :disabled="loading || !recoverySessionReady || !passwordValid || password !== confirmPassword"
               class="w-full rounded-lg bg-brand-600 px-4 py-3 text-body-sm font-semibold text-white hover:bg-brand-700 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:bg-neutral-300 disabled:cursor-not-allowed"
             >
               {{ loading ? 'Updating…' : 'Update password' }}
@@ -156,6 +156,7 @@ const password = ref('')
 const passwordValid = ref(false)
 const confirmPassword = ref('')
 const loading = ref(false)
+const recoverySessionReady = ref(false)
 const success = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -201,10 +202,8 @@ onMounted(async () => {
     return
   }
 
+  recoverySessionReady.value = true
   await ensureHydrated()
-  if (!isAuthenticated.value) {
-    errorMessage.value = 'This reset link is invalid or expired.'
-  }
 })
 
 async function handlePasswordUpdate() {

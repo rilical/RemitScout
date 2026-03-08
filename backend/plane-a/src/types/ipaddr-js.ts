@@ -12,4 +12,3 @@ declare module 'ipaddr.js' {
 
   export default ipaddr
 }
-

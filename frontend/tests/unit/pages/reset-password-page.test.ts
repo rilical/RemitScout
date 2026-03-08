@@ -141,4 +141,25 @@ describe('reset-password page', () => {
     expect(wrapper.text()).toContain('Password updated')
     expect(wrapper.text()).toContain('Go to sign in')
   })
+
+  it('allows password reset after a verified recovery link even if auth hydration lags', async () => {
+    routeState.query = { token_hash: 'valid-token-hash' }
+    isAuthenticatedRef = ref(false)
+
+    const wrapper = await mountPage()
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.get('#password').setValue('StrongPassw0rd!')
+    await wrapper.get('#confirm-password').setValue('StrongPassw0rd!')
+
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(mockUpdatePassword).toHaveBeenCalledWith('StrongPassw0rd!')
+    expect(wrapper.text()).toContain('Password updated')
+  })
 })

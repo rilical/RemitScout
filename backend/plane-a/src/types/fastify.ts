@@ -1,10 +1,10 @@
 import type { Span } from '@opentelemetry/api'
 import type { AuthError, AuthUser } from '../auth/types'
-import type { ApiKeyContext } from '../services/api-keys'
-import type { InstitutionalClientContext } from '../services/institutional-clients'
-import type { Entitlements, PlanCode } from '../services/entitlements'
 import type { PlaneAContainer } from '../container'
 import type { ApiKeyAccessPolicy } from '../routes/api-key-access'
+import type { ApiKeyContext } from '../services/api-keys'
+import type { Entitlements, PlanCode } from '../services/entitlements'
+import type { InstitutionalClientContext } from '../services/institutional-clients'
 import type { PlanLifecycleState, PlanRecoveryAction } from '../services/plan-state'
 
 declare module 'fastify' {
@@ -40,3 +40,5 @@ declare module 'fastify' {
     apiKeyAccess?: ApiKeyAccessPolicy
   }
 }
+
+export {}

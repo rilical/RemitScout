@@ -4,11 +4,13 @@ import { defineConfig } from '@playwright/test'
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3002'
 const localServerMode = process.env.PLAYWRIGHT_LOCAL_SERVER_MODE || 'dev'
 const localWorkers = process.env.PLAYWRIGHT_BASE_URL ? undefined : 1
+const localE2EEnv
+  = 'NUXT_PUBLIC_PULSE_ENABLED=1 E2E_MOCK_API=1 NUXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 NUXT_PUBLIC_SUPABASE_ANON_KEY=e2e-anon-key'
 
 const localWebServerCommand
   = localServerMode === 'preview'
-    ? 'LOCAL_E2E_PREVIEW=1 NUXT_PUBLIC_PULSE_ENABLED=1 NUXT_BUILD_TYPECHECK=0 pnpm run build && LOCAL_E2E_PREVIEW=1 NUXT_PUBLIC_PULSE_ENABLED=1 E2E_MOCK_API=1 pnpm exec nuxi preview -p 3002'
-    : 'NUXT_PUBLIC_PULSE_ENABLED=1 E2E_MOCK_API=1 pnpm exec nuxi dev -p 3002 --host 127.0.0.1'
+    ? `LOCAL_E2E_PREVIEW=1 ${localE2EEnv} NUXT_BUILD_TYPECHECK=0 pnpm run build && LOCAL_E2E_PREVIEW=1 ${localE2EEnv} pnpm exec nuxi preview -p 3002`
+    : `${localE2EEnv} pnpm exec nuxi dev -p 3002 --host 127.0.0.1`
 
 export default defineConfig({
   testDir: './tests/e2e',
