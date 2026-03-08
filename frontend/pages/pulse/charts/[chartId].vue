@@ -8,7 +8,12 @@
             to="/pulse"
             class="flex items-center gap-2 text-neutral-400 hover:text-white motion-safe:transition-colors"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -31,7 +36,12 @@
                 "
                 @click="store.setViewMode('sender')"
               >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -50,7 +60,12 @@
                 "
                 @click="store.setViewMode('analyst')"
               >
-                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-3.5 w-3.5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -67,7 +82,12 @@
               class="text-body-sm flex items-center gap-2 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-2 text-white hover:bg-neutral-600 motion-safe:transition-colors"
               @click="showEmbedModal = true"
             >
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -83,7 +103,10 @@
     </div>
 
     <!-- Filter Header -->
-    <PulseFilterHeader v-model="filters" :last-updated="lastUpdated" />
+    <PulseFilterHeader
+v-model="filters"
+:last-updated="lastUpdated"
+/>
 
     <!-- Main Content -->
     <div class="mx-auto max-w-page px-page-x py-8">
@@ -116,7 +139,10 @@
           </div>
 
           <!-- Analyst Mode: Actionable Insight Panel -->
-          <div v-else class="overflow-hidden rounded-xl border border-brand-600/30 bg-brand-600/5">
+          <div
+v-else
+class="overflow-hidden rounded-xl border border-brand-600/30 bg-brand-600/5"
+>
             <div class="flex items-center justify-between border-b border-brand-600/20 px-6 py-4">
               <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/20">
@@ -141,9 +167,7 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-body-sm font-mono text-neutral-500">Signal strength:</span>
-                <span class="text-body-sm font-bold text-brand-600"
-                  >{{ actionableInsight.confidence }}%</span
-                >
+                <span class="text-body-sm font-bold text-brand-600">{{ actionableInsight.confidence }}%</span>
               </div>
             </div>
             <div class="p-6">
@@ -169,7 +193,12 @@
                       :disabled="isExporting"
                       @click="handleExportCSV"
                     >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -184,7 +213,12 @@
                       :disabled="isExporting"
                       @click="handleExportPDF"
                     >
-                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -207,7 +241,10 @@
                       {{ exportErrorMessage }}
                     </span>
                   </template>
-                  <p v-else class="text-body-sm max-w-xl text-neutral-300">
+                  <p
+v-else
+class="text-body-sm max-w-xl text-neutral-300"
+>
                     Pulse chart exports are available on Enterprise only. Signed-out, free, and Plus
                     users can view this page, but only Enterprise can generate compliance-ready
                     Pulse exports.
@@ -275,7 +312,12 @@
                 :to="compareRatesUrl"
                 class="flex items-center gap-3 rounded-lg bg-brand-600 px-4 py-3 text-white hover:bg-brand-700 motion-safe:transition-colors"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -289,7 +331,12 @@
                 class="flex w-full items-center gap-3 rounded-lg border border-neutral-600 bg-neutral-700 px-4 py-3 text-white hover:bg-neutral-600 motion-safe:transition-colors"
                 @click="handleSetAlert"
               >
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -303,9 +350,17 @@
           </div>
 
           <!-- Enterprise Upsell -->
-          <div v-if="!isPro" class="rounded-xl border border-brand-600/30 bg-brand-600/10 p-6">
+          <div
+v-if="!isPro"
+class="rounded-xl border border-brand-600/30 bg-brand-600/10 p-6"
+>
             <div class="mb-3 flex items-center gap-2 text-brand-600">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-5 w-5"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -323,7 +378,12 @@
               class="text-body-sm inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700 motion-safe:transition-colors"
             >
               Contact Sales
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -342,7 +402,7 @@
       :chart-id="chartId"
       :filters="filters"
       :range="selectedChartRange"
-      :chart-container-ref="chartContainerRef as unknown as HTMLElement | null"
+      :chart-container-ref="chartContainerRef"
       @close="showEmbedModal = false"
     />
 
@@ -358,72 +418,72 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import type { PulseFilters, AmountBucket, TimeRange } from '~/types/pulse';
-import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry';
-import { getPulseOverview } from '~/lib/pulseApi';
-import { usePulseStore } from '~/stores/pulse';
-import { useFeatureFlags } from '~/composables/useFeatureFlags';
-import { useEntitlements } from '~/composables/useEntitlements';
-import { useExports } from '~/composables/useExports';
-import { setSeo } from '~/composables/useSeo';
-import { useStructuredData } from '~/composables/useStructuredData';
-import { getCorridorUrl } from '~/utils/country-slugs';
+import { ref, computed, onMounted, onBeforeUnmount, defineAsyncComponent, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import type { PulseFilters, AmountBucket, TimeRange } from '~/types/pulse'
+import { getChartById, getRelatedCharts } from '~/lib/pulseChartRegistry'
+import { getPulseOverview } from '~/lib/pulseApi'
+import { usePulseStore } from '~/stores/pulse'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
+import { useEntitlements } from '~/composables/useEntitlements'
+import { useExports } from '~/composables/useExports'
+import { setSeo } from '~/composables/useSeo'
+import { useStructuredData } from '~/composables/useStructuredData'
+import { getCorridorUrl } from '~/utils/country-slugs'
 
 const AuthPromptModal = defineAsyncComponent(
-  () => import('~/components/shared/AuthPromptModal.vue')
-);
+  () => import('~/components/shared/AuthPromptModal.vue'),
+)
 const PulseShareModal = defineAsyncComponent(
-  () => import('~/components/pulse/PulseShareModal.vue')
-);
-const PulseChartFull = defineAsyncComponent(() => import('~/components/pulse/PulseChartFull.vue'));
+  () => import('~/components/pulse/PulseShareModal.vue'),
+)
+const PulseChartFull = defineAsyncComponent(() => import('~/components/pulse/PulseChartFull.vue'))
 
-const { pulseEnabled } = useFeatureFlags();
+const { pulseEnabled } = useFeatureFlags()
 
 if (!pulseEnabled.value) {
-  await navigateTo('/plus', { redirectCode: 302 });
+  await navigateTo('/plus', { redirectCode: 302 })
 }
 
-const route = useRoute();
-const store = usePulseStore();
-const { isAuthenticated } = useAuth();
-const saveAlertModal = useSaveAlertModal();
-const { pulseLevel, pulseEmbedsEnabled, indicesExportsEnabled } = useEntitlements();
-const exportsApi = useExports();
+const route = useRoute()
+const store = usePulseStore()
+const { isAuthenticated } = useAuth()
+const saveAlertModal = useSaveAlertModal()
+const { pulseLevel, pulseEmbedsEnabled, indicesExportsEnabled } = useEntitlements()
+const exportsApi = useExports()
 
-const chartId = computed(() => route.params.chartId as string);
+const chartId = computed(() => route.params.chartId as string)
 
-const chartMeta = computed(() => getChartById(chartId.value));
+const chartMeta = computed(() => getChartById(chartId.value))
 
 const normalizeChartRange = (value: unknown): TimeRange | null => {
-  if (typeof value !== 'string') return null;
+  if (typeof value !== 'string') return null
 
   switch (value.trim().toLowerCase()) {
     case '24h':
     case '7d':
-      return '7d';
+      return '7d'
     case '30d':
-      return '30d';
+      return '30d'
     case '90d':
-      return '90d';
+      return '90d'
     case '1y':
     case '365d':
     case 'max':
-      return '365d';
+      return '365d'
     default:
-      return null;
+      return null
   }
-};
+}
 
 const resolveInitialChartRange = (): TimeRange => {
   return (
-    normalizeChartRange(route.query.range) ||
-    normalizeChartRange(route.query.timeframe) ||
-    chartMeta.value?.defaultRange ||
-    '30d'
-  );
-};
+    normalizeChartRange(route.query.range)
+    || normalizeChartRange(route.query.timeframe)
+    || chartMeta.value?.defaultRange
+    || '30d'
+  )
+}
 
 const filters = ref<PulseFilters>({
   corridor: (route.query.corridor as string) || 'global',
@@ -431,124 +491,124 @@ const filters = ref<PulseFilters>({
   amount: (Number.parseInt(route.query.amount as string, 10) as AmountBucket) || 200,
   fundingMethod: (route.query.fund as 'bank' | 'card' | 'cash') || 'bank',
   payoutMethod: (route.query.pay as 'bank' | 'cash' | 'wallet') || 'bank',
-});
+})
 
-const isPlus = computed(() => pulseLevel.value !== 'none');
-const isPro = computed(() => pulseLevel.value === 'full');
-const lastUpdated = ref<string>('');
-const showEmbedModal = ref(false);
-const authModalOpen = ref(false);
-const chartContainerRef = ref<HTMLElement | null>(null);
-const selectedChartRange = ref<TimeRange>(resolveInitialChartRange());
-const isExporting = ref(false);
-const exportStatusMessage = ref<string | null>(null);
-const exportErrorMessage = ref<string | null>(null);
-let exportPollTimer: ReturnType<typeof setInterval> | null = null;
+const isPlus = computed(() => pulseLevel.value !== 'none')
+const isPro = computed(() => pulseLevel.value === 'full')
+const lastUpdated = ref<string>('')
+const showEmbedModal = ref(false)
+const authModalOpen = ref(false)
+const chartContainerRef = ref<HTMLElement | null>(null)
+const selectedChartRange = ref<TimeRange>(resolveInitialChartRange())
+const isExporting = ref(false)
+const exportStatusMessage = ref<string | null>(null)
+const exportErrorMessage = ref<string | null>(null)
+let exportPollTimer: ReturnType<typeof setInterval> | null = null
 
 const CHART_RANGE_TO_WINDOW_DAYS: Record<TimeRange, number> = {
   '7d': 7,
   '30d': 30,
   '90d': 90,
   '365d': 365,
-};
+}
 
 const CHART_RANGE_LABELS: Record<TimeRange, string> = {
   '7d': '7D',
   '30d': '30D',
   '90d': '90D',
   '365d': '1Y',
-};
+}
 
 watch(
   () => [chartId.value, route.query.timeframe, route.query.range],
   () => {
-    selectedChartRange.value = resolveInitialChartRange();
+    selectedChartRange.value = resolveInitialChartRange()
   },
-);
+)
 
 const exportCorridorId = computed(() => {
-  return filters.value.corridorId || store.corridor?.corridorId || '';
-});
+  return filters.value.corridorId || store.corridor?.corridorId || ''
+})
 
-const toIsoDate = (value: Date) => value.toISOString().split('T')[0];
+const toIsoDate = (value: Date) => value.toISOString().split('T')[0]
 
 const buildExportDateWindow = () => {
-  const requestedDays = CHART_RANGE_TO_WINDOW_DAYS[selectedChartRange.value] ?? 30;
-  const windowDays = Math.max(1, requestedDays);
-  const dateToDate = new Date();
-  const dateFromDate = new Date();
-  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1));
+  const requestedDays = CHART_RANGE_TO_WINDOW_DAYS[selectedChartRange.value] ?? 30
+  const windowDays = Math.max(1, requestedDays)
+  const dateToDate = new Date()
+  const dateFromDate = new Date()
+  dateFromDate.setDate(dateFromDate.getDate() - (windowDays - 1))
   return {
     dateFrom: toIsoDate(dateFromDate),
     dateTo: toIsoDate(dateToDate),
-  };
-};
+  }
+}
 
 const clearExportPolling = () => {
   if (exportPollTimer) {
-    clearInterval(exportPollTimer);
-    exportPollTimer = null;
+    clearInterval(exportPollTimer)
+    exportPollTimer = null
   }
-};
+}
 
-const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3));
+const relatedCharts = computed(() => getRelatedCharts(chartId.value, 3))
 
 const compareRatesUrl = computed(() => {
   if (store.corridor?.fromCode && store.corridor?.toCode) {
-    return getCorridorUrl(store.corridor.fromCode, store.corridor.toCode);
+    return getCorridorUrl(store.corridor.fromCode, store.corridor.toCode)
   }
 
-  const corridorParts = (filters.value.corridorId || '').split('-');
+  const corridorParts = (filters.value.corridorId || '').split('-')
   if (corridorParts.length >= 2 && corridorParts[0] && corridorParts[1]) {
-    return getCorridorUrl(corridorParts[0], corridorParts[1]);
+    return getCorridorUrl(corridorParts[0], corridorParts[1])
   }
 
-  const slug = (filters.value.corridor || '').trim();
+  const slug = (filters.value.corridor || '').trim()
   if (slug && slug.includes('-to-')) {
-    return `/send-money/${slug}`;
+    return `/send-money/${slug}`
   }
 
-  return getCorridorUrl('US', 'PH');
-});
+  return getCorridorUrl('US', 'PH')
+})
 
 const queryString = computed(() => {
-  const params = new URLSearchParams();
-  if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor);
-  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId);
-  if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount));
-  if (filters.value.fundingMethod !== 'bank') params.set('fund', filters.value.fundingMethod);
-  if (filters.value.payoutMethod !== 'bank') params.set('pay', filters.value.payoutMethod);
-  return params.toString();
-});
+  const params = new URLSearchParams()
+  if (filters.value.corridor !== 'global') params.set('corridor', filters.value.corridor)
+  if (filters.value.corridorId) params.set('corridor_id', filters.value.corridorId)
+  if (filters.value.amount !== 200) params.set('amount', String(filters.value.amount))
+  if (filters.value.fundingMethod !== 'bank') params.set('fund', filters.value.fundingMethod)
+  if (filters.value.payoutMethod !== 'bank') params.set('pay', filters.value.payoutMethod)
+  return params.toString()
+})
 
 const formatUtcTimestamp = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Awaiting fresh Pulse data';
-  return date.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-};
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Awaiting fresh Pulse data'
+  return date.toISOString().replace('T', ' ').slice(0, 16) + ' UTC'
+}
 
 const provenanceLabel = computed(() => {
-  if (!lastUpdated.value) return 'Awaiting fresh Pulse data';
-  return `Gold export updated ${formatUtcTimestamp(lastUpdated.value)}`;
-});
+  if (!lastUpdated.value) return 'Awaiting fresh Pulse data'
+  return `Gold export updated ${formatUtcTimestamp(lastUpdated.value)}`
+})
 
 const corridorContextLabel = computed(() => {
-  if (filters.value.corridorId) return filters.value.corridorId;
-  if (filters.value.corridor === 'global') return 'Global corridor view';
-  return filters.value.corridor.toUpperCase();
-});
+  if (filters.value.corridorId) return filters.value.corridorId
+  if (filters.value.corridor === 'global') return 'Global corridor view'
+  return filters.value.corridor.toUpperCase()
+})
 
-const timeframeContextLabel = computed(() => `${CHART_RANGE_LABELS[selectedChartRange.value]} window`);
+const timeframeContextLabel = computed(() => `${CHART_RANGE_LABELS[selectedChartRange.value]} window`)
 
 const actionableInsight = computed(() => {
-  const insights: Record<string, { signal: string; action: string; confidence: number }> = {
+  const insights: Record<string, { signal: string, action: string, confidence: number }> = {
     'true-cost-vs-mid': {
       signal: 'Spread Compression Detected',
       action:
         'True-cost delta is narrower than the 7D average. Monitor the next few refreshes for a favorable send window.',
       confidence: 87,
     },
-    volatility: {
+    'volatility': {
       signal: 'Low Volatility Window',
       action:
         'FX volatility is near the 30D low. Conditions look more stable than usual for larger transfers.',
@@ -566,107 +626,108 @@ const actionableInsight = computed(() => {
         'No significant liquidity gaps were detected in the latest snapshots. Standard execution conditions appear stable.',
       confidence: 85,
     },
-  };
+  }
   return (
     insights[chartId.value] || {
       signal: 'Market Neutral',
       action: 'No outsized signal is visible right now. Continue monitoring the latest refreshes.',
       confidence: 75,
     }
-  );
-});
+  )
+})
 
 const extractApiErrorCode = (error: unknown): string => {
-  const candidate = error as { data?: { error?: unknown } };
-  return typeof candidate?.data?.error === 'string' ? candidate.data.error : '';
-};
+  const candidate = error as { data?: { error?: unknown } }
+  return typeof candidate?.data?.error === 'string' ? candidate.data.error : ''
+}
 
 const extractApiErrorMessage = (error: unknown): string | null => {
-  const candidate = error as { data?: { message?: unknown }; message?: unknown };
+  const candidate = error as { data?: { message?: unknown }, message?: unknown }
   if (typeof candidate?.data?.message === 'string' && candidate.data.message.trim().length > 0) {
-    return candidate.data.message;
+    return candidate.data.message
   }
   if (
-    typeof candidate?.message === 'string' &&
-    candidate.message.trim().length > 0 &&
-    candidate.message !== 'fetch failed'
+    typeof candidate?.message === 'string'
+    && candidate.message.trim().length > 0
+    && candidate.message !== 'fetch failed'
   ) {
-    return candidate.message;
+    return candidate.message
   }
-  return null;
-};
+  return null
+}
 
 function resolveIndicesExportError(error: unknown, fallback: string): string {
   switch (extractApiErrorCode(error)) {
     case 'indices_export_enterprise_only':
     case 'enterprise_required':
     case 'forbidden':
-      return 'Pulse chart exports are available on Enterprise only.';
+      return 'Pulse chart exports are available on Enterprise only.'
     case 'plan_inactive':
-      return 'Your paid plan is inactive. Reactivate billing to export Pulse charts.';
+      return 'Your paid plan is inactive. Reactivate billing to export Pulse charts.'
     case 'export_limit_reached':
       return (
-        extractApiErrorMessage(error) ||
-        'Your current plan export queue is full. Try again after existing jobs finish.'
-      );
+        extractApiErrorMessage(error)
+        || 'Your current plan export queue is full. Try again after existing jobs finish.'
+      )
     default:
-      return extractApiErrorMessage(error) || fallback;
+      return extractApiErrorMessage(error) || fallback
   }
 }
 
 const triggerExportDownload = (url: string) => {
   if (import.meta.client) {
-    window.open(url, '_blank', 'noopener');
+    window.open(url, '_blank', 'noopener')
   }
-};
+}
 
 const pollExportStatus = async (jobId: string) => {
-  clearExportPolling();
+  clearExportPolling()
   exportPollTimer = setInterval(async () => {
     try {
-      const status = await exportsApi.getExportStatus(jobId);
+      const status = await exportsApi.getExportStatus(jobId)
       if (status.job.status === 'failed') {
-        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.';
-        isExporting.value = false;
-        clearExportPolling();
-        return;
+        exportErrorMessage.value = status.job.error || 'Export failed. Please try again.'
+        isExporting.value = false
+        clearExportPolling()
+        return
       }
       if (status.job.status === 'done') {
-        const download = await exportsApi.getExportDownloadUrl(jobId);
-        exportStatusMessage.value = 'Export ready. Downloading...';
-        triggerExportDownload(download.url);
-        isExporting.value = false;
-        clearExportPolling();
-        return;
+        const download = await exportsApi.getExportDownloadUrl(jobId)
+        exportStatusMessage.value = 'Export ready. Downloading...'
+        triggerExportDownload(download.url)
+        isExporting.value = false
+        clearExportPolling()
+        return
       }
-      exportStatusMessage.value = 'Export in progress...';
-    } catch (error: any) {
-      exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to check export status.');
-      isExporting.value = false;
-      clearExportPolling();
+      exportStatusMessage.value = 'Export in progress...'
     }
-  }, 2000);
-};
+ catch (error: any) {
+      exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to check export status.')
+      isExporting.value = false
+      clearExportPolling()
+    }
+  }, 2000)
+}
 
 const startIndicesExport = async (format: 'csv' | 'pdf') => {
-  if (isExporting.value) return;
+  if (isExporting.value) return
 
   if (!exportCorridorId.value) {
-    exportErrorMessage.value =
-      'Export is not available for this corridor. Select a corridor from the filter first.';
-    return;
+    exportErrorMessage.value
+      = 'Export is not available for this corridor. Select a corridor from the filter first.'
+    return
   }
 
   if (!indicesExportsEnabled.value) {
-    exportErrorMessage.value = 'Pulse chart exports are available on Enterprise only.';
-    return;
+    exportErrorMessage.value = 'Pulse chart exports are available on Enterprise only.'
+    return
   }
 
-  exportErrorMessage.value = null;
-  exportStatusMessage.value = null;
-  isExporting.value = true;
+  exportErrorMessage.value = null
+  exportStatusMessage.value = null
+  isExporting.value = true
 
-  const { dateFrom, dateTo } = buildExportDateWindow();
+  const { dateFrom, dateTo } = buildExportDateWindow()
   try {
     const response = await exportsApi.createExport({
       dataType: 'indices',
@@ -674,69 +735,71 @@ const startIndicesExport = async (format: 'csv' | 'pdf') => {
       dateFrom,
       dateTo,
       corridorIds: [exportCorridorId.value],
-    });
-    exportStatusMessage.value = 'Export queued. We will start processing shortly.';
-    void pollExportStatus(response.job.id);
-  } catch (error: any) {
-    exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to start export.');
-    isExporting.value = false;
+    })
+    exportStatusMessage.value = 'Export queued. We will start processing shortly.'
+    void pollExportStatus(response.job.id)
   }
-};
+ catch (error: any) {
+    exportErrorMessage.value = resolveIndicesExportError(error, 'Failed to start export.')
+    isExporting.value = false
+  }
+}
 
 function handleExportCSV() {
-  void startIndicesExport('csv');
+  void startIndicesExport('csv')
 }
 
 function handleExportPDF() {
-  void startIndicesExport('pdf');
+  void startIndicesExport('pdf')
 }
 
 function handleSetAlert() {
   if (!isAuthenticated.value) {
-    authModalOpen.value = true;
-    return;
+    authModalOpen.value = true
+    return
   }
-  const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`;
+  const label = chartMeta.value?.title || `Pulse chart ${chartId.value}`
   saveAlertModal.open({
     target: { type: 'pulseChart', chartId: chartId.value },
     label,
     source: 'pulse',
-  });
+  })
 }
 
 onMounted(async () => {
   if (isPlus.value) {
     try {
-      const overview = await getPulseOverview(filters.value);
-      lastUpdated.value = overview.lastUpdated;
-    } catch {
-      lastUpdated.value = '';
+      const overview = await getPulseOverview(filters.value)
+      lastUpdated.value = overview.lastUpdated
+    }
+ catch {
+      lastUpdated.value = ''
     }
   }
-  await store.initFromRoute(route.query as Record<string, string>);
-});
+  await store.initFromRoute(route.query as Record<string, string>)
+})
 
 onBeforeUnmount(() => {
-  clearExportPolling();
-});
+  clearExportPolling()
+})
 
 const chartSeoTitle = computed(() =>
-  chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse'
-);
+  chartMeta.value ? `${chartMeta.value.title} | Remit-Pulse` : 'Chart | Remit-Pulse',
+)
 const chartSeoDescription = computed(
-  () => chartMeta.value?.description || 'Market data chart from Remit-Pulse'
-);
+  () => chartMeta.value?.description || 'Market data chart from Remit-Pulse',
+)
 
 useServerSeoMeta({
   title: chartSeoTitle,
   description: chartSeoDescription,
-});
+})
 
 setSeo({
   title: chartSeoTitle.value,
   description: chartSeoDescription.value,
   ogImage: false,
-});
+})
 
 defineOgImage({
   component: 'OgImageDefault',
@@ -744,16 +807,16 @@ defineOgImage({
     title: chartSeoTitle,
     description: chartSeoDescription,
   },
-});
+})
 
 const {
   public: { siteUrl },
-} = useRuntimeConfig();
-const { addBreadcrumbSchema } = useStructuredData();
+} = useRuntimeConfig()
+const { addBreadcrumbSchema } = useStructuredData()
 
 addBreadcrumbSchema([
   { name: 'Home', url: `${siteUrl}/` },
   { name: 'Pulse', url: `${siteUrl}/pulse` },
   { name: chartSeoTitle.value, url: `${siteUrl}/pulse/charts/${chartId.value}` },
-]);
+])
 </script>

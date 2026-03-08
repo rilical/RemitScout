@@ -3,7 +3,10 @@
     <!-- Hero -->
     <section class="relative overflow-hidden bg-neutral-900 py-16 lg:py-24">
       <div class="mx-auto max-w-page px-page-x">
-        <Breadcrumbs :items="breadcrumbItems" :dark="true" />
+        <Breadcrumbs
+:items="breadcrumbItems"
+:dark="true"
+/>
 
         <div class="mt-12 max-w-4xl">
           <h1
@@ -35,7 +38,12 @@
             class="text-body inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
           >
             Get in touch
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -49,7 +57,10 @@
     </section>
 
     <!-- Providers We Compare -->
-    <section v-reveal class="bg-surface py-16 lg:py-20">
+    <section
+v-reveal
+class="bg-surface py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-8">
           <h2 class="text-h2 mb-4 font-bold text-neutral-900">Providers we compare</h2>
@@ -76,7 +87,11 @@
               :key="`provider-${partner.slug}-${index}`"
               class="flex h-36 w-56 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-surface p-6 shadow-sm hover:shadow-md motion-safe:transition-shadow"
             >
-              <ProviderLogo :slug="partner.slug" :alt="partner.name" size="default" />
+              <ProviderLogo
+:slug="partner.slug"
+:alt="partner.name"
+size="default"
+/>
             </div>
           </div>
         </div>
@@ -90,7 +105,12 @@
             class="text-body inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white hover:bg-brand-700 motion-safe:transition-colors"
           >
             Become a partner
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -104,7 +124,10 @@
     </section>
 
     <!-- Partnership Types -->
-    <section v-reveal.slide-left class="bg-neutral-50 py-16 lg:py-20">
+    <section
+v-reveal.slide-left
+class="bg-neutral-50 py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm mb-3 font-semibold uppercase tracking-wide text-brand-600">
@@ -148,7 +171,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Provider onboarding
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -187,7 +215,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Sponsorship enquiry
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -226,7 +259,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Publisher & media inquiry
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -260,8 +298,7 @@
               </div>
               <span
                 class="rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-600"
-                >NDA required</span
-              >
+                >NDA required</span>
             </div>
             <h3 class="text-h4 mb-2 font-bold text-neutral-900">Institutional data access</h3>
             <p class="text-body-sm mb-4 leading-relaxed text-neutral-700 [text-wrap:pretty]">
@@ -273,7 +310,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Request access
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -285,7 +327,10 @@
           </div>
 
           <!-- Fallback: non-gated institutional placeholder -->
-          <div v-else class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm">
+          <div
+v-else
+class="rounded-2xl border border-neutral-200 bg-surface p-6 shadow-sm"
+>
             <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-100">
               <svg
                 class="h-6 w-6 text-brand-600"
@@ -311,7 +356,12 @@
               class="text-body-sm inline-flex items-center gap-1.5 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
             >
               Get in touch
-              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -326,7 +376,10 @@
     </section>
 
     <!-- Provider Benefits -->
-    <section v-reveal.slide-right class="bg-neutral-900 py-16 lg:py-20">
+    <section
+v-reveal.slide-right
+class="bg-neutral-900 py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm mb-3 font-semibold uppercase tracking-wide text-brand-400">
@@ -437,7 +490,10 @@
     </section>
 
     <!-- How Remit-Score Works -->
-    <section v-reveal class="bg-surface py-16 lg:py-20">
+    <section
+v-reveal
+class="bg-surface py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
@@ -464,7 +520,12 @@
                 class="text-body-sm inline-flex items-center gap-2 font-semibold text-brand-600 hover:text-brand-700 motion-safe:transition-colors"
               >
                 See full scoring methodology
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -507,7 +568,10 @@
     </section>
 
     <!-- Independence Rules -->
-    <section v-reveal.slide-left class="bg-neutral-50 py-16 lg:py-20">
+    <section
+v-reveal.slide-left
+class="bg-neutral-50 py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mb-10">
           <p class="text-body-sm mb-3 font-semibold uppercase tracking-wide text-brand-600">
@@ -590,7 +654,12 @@
             class="text-body-sm inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-surface px-6 py-3 font-semibold text-neutral-900 hover:bg-neutral-50 motion-safe:transition-colors"
           >
             Read the full methodology
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -604,7 +673,10 @@
     </section>
 
     <!-- Data Sourcing & Accuracy -->
-    <section v-reveal class="bg-brand-600 py-16 lg:py-20">
+    <section
+v-reveal
+class="bg-brand-600 py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-5xl">
           <h2 class="text-h2 mb-4 font-bold text-white">Data sourcing & accuracy</h2>
@@ -623,20 +695,16 @@
             <ul class="text-body-sm space-y-3 text-white/80">
               <li class="flex items-start gap-3">
                 <span class="mt-0.5 font-bold text-white/40">•</span>
-                <span
-                  ><strong class="font-semibold text-white">Quotes can change at checkout.</strong>
+                <span><strong class="font-semibold text-white">Quotes can change at checkout.</strong>
                   The final amount depends on payment method, promotional discounts, KYC
                   verification, and provider-specific rules. Always verify the final amount on the
-                  provider's site before completing a transfer.</span
-                >
+                  provider's site before completing a transfer.</span>
               </li>
               <li class="flex items-start gap-3">
                 <span class="mt-0.5 font-bold text-white/40">•</span>
-                <span
-                  ><strong class="font-semibold text-white">We fix errors quickly.</strong> If you
+                <span><strong class="font-semibold text-white">We fix errors quickly.</strong> If you
                   notice incorrect pricing, fees, or availability, use our corrections form. We
-                  investigate and resolve confirmed issues within 48 hours.</span
-                >
+                  investigate and resolve confirmed issues within 48 hours.</span>
               </li>
             </ul>
             <div class="mt-6 flex flex-wrap gap-3">
@@ -659,7 +727,10 @@
     </section>
 
     <!-- FAQ -->
-    <section v-reveal class="bg-surface py-16 lg:py-20">
+    <section
+v-reveal
+class="bg-surface py-16 lg:py-20"
+>
       <div class="mx-auto max-w-page px-page-x">
         <div class="mx-auto max-w-3xl">
           <div class="mb-10 text-center">
@@ -684,7 +755,10 @@
     </section>
 
     <!-- Final CTA -->
-    <section v-reveal.scale-in class="bg-brand-600 py-16 sm:py-20">
+    <section
+v-reveal.scale-in
+class="bg-brand-600 py-16 sm:py-20"
+>
       <div class="mx-auto max-w-3xl px-page-x text-center">
         <h2 class="text-h1 mb-4 font-bold text-white [text-wrap:balance]">Ready to get listed?</h2>
         <p class="text-h4 mb-10 leading-relaxed text-white/80 [text-wrap:balance]">
@@ -697,7 +771,12 @@
             class="text-body inline-flex items-center gap-2 rounded-xl bg-surface px-8 py-4 font-bold text-brand-600 hover:bg-neutral-50 motion-safe:transition-colors"
           >
             Get in touch
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+class="h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24"
+>
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -719,14 +798,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import Breadcrumbs from '~/components/shared/Breadcrumbs.vue';
-import FaqAccordion from '~/components/shared/FaqAccordion.vue';
-import ProviderLogo from '~/components/shared/ProviderLogo.vue';
-import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo';
-import { useFeatureFlags } from '~/composables/useFeatureFlags';
+import { ref } from 'vue'
+import Breadcrumbs from '~/components/shared/Breadcrumbs.vue'
+import FaqAccordion from '~/components/shared/FaqAccordion.vue'
+import ProviderLogo from '~/components/shared/ProviderLogo.vue'
+import { setSeo, jsonLdBreadcrumb } from '~/composables/useSeo'
+import { useFeatureFlags } from '~/composables/useFeatureFlags'
 
-const { enterpriseEnabled } = useFeatureFlags();
+const { enterpriseEnabled } = useFeatureFlags()
 
 const partners = ref([
   { name: 'Wise', slug: 'wise' },
@@ -735,11 +814,11 @@ const partners = ref([
   { name: 'Western Union', slug: 'western-union' },
   { name: 'SendWave', slug: 'sendwave' },
   { name: 'XE Money', slug: 'xe-money' },
-]);
+])
 
-const runtimeConfig = useRuntimeConfig();
-const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com';
-const canonicalUrl = `${siteUrl}/partnerships`;
+const runtimeConfig = useRuntimeConfig()
+const siteUrl = runtimeConfig?.public?.siteUrl || 'https://remit-scout.com'
+const canonicalUrl = `${siteUrl}/partnerships`
 
 defineOgImage({
   component: 'OgImageDefault',
@@ -748,7 +827,7 @@ defineOgImage({
     description:
       'Work with Remit-Scout. Transparent comparison, market data, and enterprise data access.',
   },
-});
+})
 
 setSeo({
   title: 'Partnerships & Integrations | Remit-Scout',
@@ -756,12 +835,12 @@ setSeo({
     'Work with Remit-Scout — an independent remittance comparison and market data platform built for transparency, with no pay-to-rank.',
   canonical: canonicalUrl,
   ogImage: false,
-});
+})
 
 jsonLdBreadcrumb([
   { name: 'Home', url: `${siteUrl}/` },
   { name: 'Partnerships', url: canonicalUrl },
-]);
+])
 
 useHead({
   script: [
@@ -770,20 +849,20 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        name: 'Remit-Scout',
-        url: siteUrl,
-        logo: `${siteUrl}/logos/remit-scout.svg`,
-        contactPoint: [
+        'name': 'Remit-Scout',
+        'url': siteUrl,
+        'logo': `${siteUrl}/logos/remit-scout.svg`,
+        'contactPoint': [
           {
             '@type': 'ContactPoint',
-            contactType: 'partnerships',
-            url: `${siteUrl}/contact`,
+            'contactType': 'partnerships',
+            'url': `${siteUrl}/contact`,
           },
         ],
       }),
     },
   ],
-});
+})
 
 const partnershipFaqs = [
   {
@@ -794,10 +873,10 @@ const partnershipFaqs = [
   {
     question: 'How do affiliate partnerships work? Do I have to pay to be listed?',
     answer:
-      "<p><strong>No upfront costs.</strong> There's no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we'll list you for free.</p><p class=\"mt-3\">Affiliate partnerships are optional. If we have an affiliate relationship, we only earn a commission when a user clicks through and completes a transfer with you. If you don't want an affiliate relationship, we'll still list you — you just won't pay any commissions. Either way, your ranking is determined by pricing and service quality.</p>",
+      '<p><strong>No upfront costs.</strong> There\'s no fee to be listed on Remit-Scout. If you share pricing documentation or allow quote capture from public pages, we\'ll list you for free.</p><p class="mt-3">Affiliate partnerships are optional. If we have an affiliate relationship, we only earn a commission when a user clicks through and completes a transfer with you. If you don\'t want an affiliate relationship, we\'ll still list you — you just won\'t pay any commissions. Either way, your ranking is determined by pricing and service quality.</p>',
   },
   {
-    question: "What's the benefit to me if I don't want an affiliate relationship?",
+    question: 'What\'s the benefit to me if I don\'t want an affiliate relationship?',
     answer:
       '<p>Even without an affiliate relationship, you still benefit from: free exposure in comparison results, fair ranking driven by your pricing, brand visibility with high-intent users, and new customer acquisition when users click through to complete a transfer on your site. Many providers start without affiliate relationships and add them later if the traffic volume justifies it.</p>',
   },
@@ -805,24 +884,24 @@ const partnershipFaqs = [
     question:
       'Can I improve my ranking by paying more or having a stronger affiliate relationship?',
     answer:
-      "<p><strong>No.</strong> Our ranking algorithm is completely independent of commercial relationships. Rankings are determined solely by comparison data: what recipients receive after fees and FX markup, total cost, transfer speed, and trust signals. If you want to improve your ranking, improve your pricing and service quality — that's the only lever.</p>",
+      '<p><strong>No.</strong> Our ranking algorithm is completely independent of commercial relationships. Rankings are determined solely by comparison data: what recipients receive after fees and FX markup, total cost, transfer speed, and trust signals. If you want to improve your ranking, improve your pricing and service quality — that\'s the only lever.</p>',
   },
   {
-    question: "What if my pricing changes or I notice an error in how I'm listed?",
+    question: 'What if my pricing changes or I notice an error in how I\'m listed?',
     answer:
       '<p><strong>We fix errors quickly.</strong> If you notice incorrect pricing, fees, or service details, contact your partnership contact or use our corrections form. We investigate and resolve confirmed issues within 48 hours.</p><p class="mt-3">For pricing changes: if we have direct data feeds, updates are automatic. If we collect quotes manually, just notify us and we\'ll update our system.</p>',
   },
   {
-    question: "How long does onboarding take? What's the process?",
+    question: 'How long does onboarding take? What\'s the process?',
     answer:
       '<p>Most providers can be listed within <strong>1–2 weeks</strong> of initial contact. The typical process: initial contact and documentation sharing, integration into our comparison system (3–5 business days), testing and accuracy verification, then go-live. If you can provide structured data or a feed, the process is faster.</p>',
   },
-];
+]
 
 const breadcrumbItems = [
   { name: 'Home', path: '/' },
   { name: 'Partnerships', path: '/partnerships' },
-];
+]
 </script>
 
 <style scoped>

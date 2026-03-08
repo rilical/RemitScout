@@ -40,7 +40,10 @@
           <h2 class="mt-3 text-body-lg font-semibold text-rs-fg">
             {{ launchGate.blocked ? 'Live activation is blocked by the institutional launch gate.' : 'Institutional clients may be activated live.' }}
           </h2>
-          <p class="mt-2 text-body-sm" :class="launchGate.blocked ? 'text-amber-900' : 'text-emerald-900'">
+          <p
+class="mt-2 text-body-sm"
+:class="launchGate.blocked ? 'text-amber-900' : 'text-emerald-900'"
+>
             {{ launchGateMessage }}
           </p>
           <p
@@ -119,7 +122,10 @@
             </p>
           </div>
 
-          <form class="grid gap-4 md:grid-cols-2" @submit.prevent="createClient">
+          <form
+class="grid gap-4 md:grid-cols-2"
+@submit.prevent="createClient"
+>
             <label class="text-body-sm text-rs-muted">
               Client name
               <input
@@ -168,16 +174,67 @@
               >
             </label>
 
-            <label class="text-body-sm text-rs-muted md:col-span-2">
-              Corridors allowed
+            <div class="text-body-sm text-rs-muted md:col-span-2">
+              <div class="font-medium text-rs-muted">Allowed country pairs</div>
+              <p class="mt-1 text-xs text-rs-muted">
+                Search by send country or destination country. We save source/destination country only, bank deposit only.
+              </p>
               <input
-                v-model="createForm.corridors_raw"
+                v-model="createCorridorSearch"
                 type="text"
-                class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
-                :disabled="!canMutate || creating"
-                placeholder="US-MX, US-IN, GB-PK"
+                class="mt-2 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+                :disabled="!canMutate || creating || corridorCatalogLoading"
+                placeholder="Search by send country or destination country"
+                @keydown.enter.prevent="commitCreateCorridorSearch"
               >
-            </label>
+              <div
+                v-if="corridorCatalogLoading"
+                class="mt-2 rounded-2xl border border-rs-border bg-rs-bg/40 px-3 py-3 text-xs text-rs-muted"
+              >
+                Loading country-pair catalog...
+              </div>
+              <div
+                v-else-if="corridorCatalogError"
+                class="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900"
+              >
+                {{ corridorCatalogError }}
+              </div>
+              <div
+                v-else-if="createCorridorCandidates.length > 0"
+                class="mt-2 grid gap-2 sm:grid-cols-2"
+              >
+                <button
+                  v-for="corridor in createCorridorCandidates"
+                  :key="`create-${corridor.value}`"
+                  type="button"
+                  class="rounded-2xl border border-rs-border bg-white px-4 py-3 text-left hover:border-brand-300 hover:bg-brand-50/40 disabled:opacity-60"
+                  :disabled="!canMutate || creating"
+                  @click="addCreateCorridor(corridor.value)"
+                >
+                  <div class="font-semibold text-rs-fg">{{ corridor.label }}</div>
+                  <div class="mt-1 text-xs text-rs-muted">{{ corridor.codeLabel }} • Bank deposit only</div>
+                </button>
+              </div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button
+                  v-for="corridor in createSelectedCorridorOptions"
+                  :key="`create-selected-${corridor.value}`"
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700"
+                  :disabled="!canMutate || creating"
+                  @click="removeCreateCorridor(corridor.value)"
+                >
+                  <span>{{ corridor.label }}</span>
+                  <span class="text-brand-500">×</span>
+                </button>
+                <span
+                  v-if="createSelectedCorridorOptions.length === 0"
+                  class="text-body-sm text-rs-muted"
+                >
+                  No country pairs selected yet.
+                </span>
+              </div>
+            </div>
 
             <label class="text-body-sm text-rs-muted">
               Rate limit RPM
@@ -526,11 +583,17 @@
           </button>
         </div>
 
-        <div v-if="detailLoading" class="mt-4 text-body-sm text-rs-muted">
+        <div
+v-if="detailLoading"
+class="mt-4 text-body-sm text-rs-muted"
+>
           Loading client detail...
         </div>
 
-        <div v-else-if="clientDetail" class="mt-5 grid gap-4 lg:grid-cols-3">
+        <div
+v-else-if="clientDetail"
+class="mt-5 grid gap-4 lg:grid-cols-3"
+>
           <article class="rounded-2xl border border-rs-border bg-rs-surface p-4">
             <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Workflow</div>
             <div class="mt-3 text-body-sm text-rs-fg">
@@ -655,7 +718,10 @@
           </button>
         </div>
 
-        <form class="mt-5 grid gap-4 md:grid-cols-2" @submit.prevent="saveEdit">
+        <form
+class="mt-5 grid gap-4 md:grid-cols-2"
+@submit.prevent="saveEdit"
+>
           <label class="text-body-sm text-rs-muted">
             Client name
             <input
@@ -679,15 +745,67 @@
             </select>
           </label>
 
-          <label class="text-body-sm text-rs-muted md:col-span-2">
-            Corridors allowed
+          <div class="text-body-sm text-rs-muted md:col-span-2">
+            <div class="font-medium text-rs-muted">Allowed country pairs</div>
+            <p class="mt-1 text-xs text-rs-muted">
+              Search by send country or destination country. We save source/destination country only, bank deposit only.
+            </p>
             <input
-              v-model="editForm.corridors_raw"
+              v-model="editCorridorSearch"
               type="text"
-              class="mt-1 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
-              :disabled="saving"
+              class="mt-2 w-full rounded-lg border border-rs-border px-3 py-2 text-body-sm"
+              :disabled="saving || corridorCatalogLoading"
+              placeholder="Search by send country or destination country"
+              @keydown.enter.prevent="commitEditCorridorSearch"
             >
-          </label>
+            <div
+              v-if="corridorCatalogLoading"
+              class="mt-2 rounded-2xl border border-rs-border bg-rs-bg/40 px-3 py-3 text-xs text-rs-muted"
+            >
+              Loading country-pair catalog...
+            </div>
+            <div
+              v-else-if="corridorCatalogError"
+              class="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-xs text-amber-900"
+            >
+              {{ corridorCatalogError }}
+            </div>
+            <div
+              v-else-if="editCorridorCandidates.length > 0"
+              class="mt-2 grid gap-2 sm:grid-cols-2"
+            >
+              <button
+                v-for="corridor in editCorridorCandidates"
+                :key="`edit-${corridor.value}`"
+                type="button"
+                class="rounded-2xl border border-rs-border bg-white px-4 py-3 text-left hover:border-brand-300 hover:bg-brand-50/40 disabled:opacity-60"
+                :disabled="saving"
+                @click="addEditCorridor(corridor.value)"
+              >
+                <div class="font-semibold text-rs-fg">{{ corridor.label }}</div>
+                <div class="mt-1 text-xs text-rs-muted">{{ corridor.codeLabel }} • Bank deposit only</div>
+              </button>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                v-for="corridor in editSelectedCorridorOptions"
+                :key="`edit-selected-${corridor.value}`"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700"
+                :disabled="saving"
+                @click="removeEditCorridor(corridor.value)"
+              >
+                <span>{{ corridor.label }}</span>
+                <span class="text-brand-500">×</span>
+              </button>
+              <span
+                v-if="editSelectedCorridorOptions.length === 0"
+                class="text-body-sm text-rs-muted"
+              >
+                No country pairs selected yet.
+              </span>
+            </div>
+          </div>
 
           <label class="text-body-sm text-rs-muted">
             Rate limit RPM
@@ -845,6 +963,12 @@ import type { DataTableColumn } from '~/ui'
 import type { AdminSurfaceOverviewModel } from '~/utils/adminSurfaceStatus'
 import { formatAdminSurfaceAge, getFreshnessTone } from '~/utils/adminSurfaceStatus'
 import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
+import {
+  buildCorridorSearchText,
+  formatCorridorCountryCodePair,
+  formatCorridorCountryPair,
+  toCountryPairId,
+} from '~/utils/corridorLabels'
 
 definePageMeta({
   middleware: ['auth', 'admin'],
@@ -895,6 +1019,21 @@ type InstitutionalWorkflow = {
   blocked_actions: string[]
   allowed_prelaunch_actions: string[]
   key_state: string
+}
+
+type CorridorCatalogRecord = {
+  corridorId: string
+}
+
+type CorridorCatalogResponse = {
+  corridors?: CorridorCatalogRecord[]
+}
+
+type CountryPairOption = {
+  value: string
+  label: string
+  codeLabel: string
+  searchText: string
 }
 
 type ClientDetail = {
@@ -978,11 +1117,34 @@ const editForm = reactive({
 const saving = ref(false)
 const rotatedApiKey = ref('')
 const rotatedCopied = ref(false)
+const corridorCatalogRaw = ref<CorridorCatalogRecord[]>([])
+const corridorCatalogLoading = ref(false)
+const corridorCatalogError = ref<string | null>(null)
+const createCorridorSearch = ref('')
+const editCorridorSearch = ref('')
+const createSelectedCorridors = ref<string[]>([])
+const editSelectedCorridors = ref<string[]>([])
 
 const canMutate = computed(() => Boolean(isSuperAdmin.value))
-const expandedClient = computed(() => clients.value.find((client) => client.id === expandedId.value) ?? null)
+const expandedClient = computed(() => clients.value.find(client => client.id === expandedId.value) ?? null)
 const detailWorkflow = computed(() => clientDetail.value?.workflow ?? workflow.value)
 const isActivationBlocked = computed(() => Boolean(launchGate.value?.blocked))
+const corridorCatalogOptions = computed<CountryPairOption[]>(() => {
+  const options = new Map<string, CountryPairOption>()
+  for (const corridor of corridorCatalogRaw.value) {
+    const value = toCountryPairId(corridor.corridorId)
+    if (!value || options.has(value)) continue
+    options.set(value, {
+      value,
+      label: formatCorridorCountryPair(value, ' -> '),
+      codeLabel: formatCorridorCountryCodePair(value, ' -> '),
+      searchText: buildCorridorSearchText(value),
+    })
+  }
+  return Array.from(options.values()).sort((left, right) => left.label.localeCompare(right.label))
+})
+const createSelectedCorridorSet = computed(() => new Set(createSelectedCorridors.value))
+const editSelectedCorridorSet = computed(() => new Set(editSelectedCorridors.value))
 
 const launchGateMessage = computed(() => {
   if (!launchGate.value) return ''
@@ -994,18 +1156,18 @@ const launchGateMessage = computed(() => {
 })
 
 const humanizeWorkflowAction = (value: string) =>
-  value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+  value.replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
 
 const blockedActionSummary = computed(() =>
   (detailWorkflow.value?.blocked_actions || []).length
     ? (detailWorkflow.value?.blocked_actions || []).map(humanizeWorkflowAction).join(', ')
-    : 'No blocked actions.'
+    : 'No blocked actions.',
 )
 
 const allowedActionSummary = computed(() =>
   (detailWorkflow.value?.allowed_prelaunch_actions || []).length
     ? (detailWorkflow.value?.allowed_prelaunch_actions || []).map(humanizeWorkflowAction).join(', ')
-    : 'No prelaunch actions loaded yet.'
+    : 'No prelaunch actions loaded yet.',
 )
 
 const tierBadgeClass = (tier: string) => {
@@ -1033,7 +1195,7 @@ const clientColumns: DataTableColumn[] = [
 ]
 
 const clientRows = computed(() =>
-  clients.value.map((client) => ({
+  clients.value.map(client => ({
     id: client.id,
     name: client.name,
     client_prefix: client.client_prefix,
@@ -1051,9 +1213,96 @@ const clientRows = computed(() =>
 const asString = (value: unknown): string => typeof value === 'string' ? value : String(value ?? '')
 const clientFromRow = (value: unknown): InstitutionalClient => value as InstitutionalClient
 
-const parseCsvCorridors = (raw: string): string[] | null => {
-  if (!raw.trim()) return null
-  return raw.split(',').map((value) => value.trim()).filter(Boolean)
+const normalizeAllowedCorridors = (values: string[] | null | undefined): string[] => {
+  return Array.from(
+    new Set(
+      (values || [])
+        .map(value => toCountryPairId(value))
+        .filter(Boolean),
+    ),
+  )
+}
+
+const getFallbackCorridorOption = (corridorId: string): CountryPairOption => {
+  const value = toCountryPairId(corridorId)
+  return {
+    value,
+    label: formatCorridorCountryPair(value, ' -> '),
+    codeLabel: formatCorridorCountryCodePair(value, ' -> '),
+    searchText: buildCorridorSearchText(value),
+  }
+}
+
+const toSelectedCorridorOptions = (values: string[]) =>
+  values.map(
+    corridorId =>
+      corridorCatalogOptions.value.find(option => option.value === corridorId)
+      || getFallbackCorridorOption(corridorId),
+  )
+
+const createSelectedCorridorOptions = computed(() => toSelectedCorridorOptions(createSelectedCorridors.value))
+const editSelectedCorridorOptions = computed(() => toSelectedCorridorOptions(editSelectedCorridors.value))
+
+const filterCorridorOptions = (query: string, selected: Set<string>) => {
+  const normalizedQuery = query.trim().toLowerCase()
+  return corridorCatalogOptions.value
+    .filter(option => !selected.has(option.value))
+    .filter(option => !normalizedQuery || option.searchText.includes(normalizedQuery))
+    .slice(0, 8)
+}
+
+const createCorridorCandidates = computed(() =>
+  filterCorridorOptions(createCorridorSearch.value, createSelectedCorridorSet.value),
+)
+const editCorridorCandidates = computed(() =>
+  filterCorridorOptions(editCorridorSearch.value, editSelectedCorridorSet.value),
+)
+
+const setCreateSelectedCorridors = (values: string[]) => {
+  createSelectedCorridors.value = normalizeAllowedCorridors(values)
+  createForm.corridors_raw = createSelectedCorridors.value.join(', ')
+}
+
+const setEditSelectedCorridors = (values: string[]) => {
+  editSelectedCorridors.value = normalizeAllowedCorridors(values)
+  editForm.corridors_raw = editSelectedCorridors.value.join(', ')
+}
+
+const addCreateCorridor = (corridorId: string) => {
+  if (createSelectedCorridorSet.value.has(corridorId)) return
+  setCreateSelectedCorridors([...createSelectedCorridors.value, corridorId])
+  createCorridorSearch.value = ''
+}
+
+const removeCreateCorridor = (corridorId: string) => {
+  setCreateSelectedCorridors(createSelectedCorridors.value.filter(value => value !== corridorId))
+}
+
+const addEditCorridor = (corridorId: string) => {
+  if (editSelectedCorridorSet.value.has(corridorId)) return
+  setEditSelectedCorridors([...editSelectedCorridors.value, corridorId])
+  editCorridorSearch.value = ''
+}
+
+const removeEditCorridor = (corridorId: string) => {
+  setEditSelectedCorridors(editSelectedCorridors.value.filter(value => value !== corridorId))
+}
+
+const commitCreateCorridorSearch = () => {
+  if (createCorridorCandidates.value.length > 0) {
+    addCreateCorridor(createCorridorCandidates.value[0].value)
+  }
+}
+
+const commitEditCorridorSearch = () => {
+  if (editCorridorCandidates.value.length > 0) {
+    addEditCorridor(editCorridorCandidates.value[0].value)
+  }
+}
+
+const selectedCorridorsPayload = (values: string[]) => {
+  if (values.length === 0) return null
+  return values
 }
 
 const parseJsonObject = (value: string, fallback: Record<string, unknown>) => {
@@ -1143,6 +1392,8 @@ const resetCreateForm = () => {
   createForm.compliance_notes = ''
   createForm.onboarding_checklist_json = defaultChecklist()
   createForm.prelaunch_config_json = defaultPrelaunchConfig()
+  createCorridorSearch.value = ''
+  setCreateSelectedCorridors([])
 }
 
 const loadClients = async () => {
@@ -1184,6 +1435,25 @@ const loadClients = async () => {
   }
 }
 
+const loadCorridorCatalog = async () => {
+  if (corridorCatalogLoading.value) return
+
+  corridorCatalogLoading.value = true
+  corridorCatalogError.value = null
+
+  try {
+    const data = await request<CorridorCatalogResponse>('/indices/corridors')
+    corridorCatalogRaw.value = Array.isArray(data.corridors) ? data.corridors : []
+  }
+ catch {
+    corridorCatalogError.value
+      = 'The country-pair catalog is unavailable right now. Refresh before updating enterprise corridor access.'
+  }
+ finally {
+    corridorCatalogLoading.value = false
+  }
+}
+
 const createClient = async () => {
   if (!canMutate.value) return
 
@@ -1205,7 +1475,7 @@ const createClient = async () => {
         name: createForm.name,
         client_prefix: createForm.client_prefix,
         tier: createForm.tier,
-        corridors_allowed: parseCsvCorridors(createForm.corridors_raw),
+        corridors_allowed: selectedCorridorsPayload(createSelectedCorridors.value),
         rate_limit_rpm: createForm.rate_limit_rpm,
         rate_limit_daily: createForm.rate_limit_daily,
         contract_start: createForm.contract_start || null,
@@ -1295,7 +1565,8 @@ const startEdit = (client: InstitutionalClient) => {
   editingClient.value = client
   editForm.name = client.name
   editForm.tier = client.tier
-  editForm.corridors_raw = client.corridors_allowed?.join(', ') || ''
+  setEditSelectedCorridors(client.corridors_allowed || [])
+  editCorridorSearch.value = ''
   editForm.rate_limit_rpm = client.rate_limit_rpm
   editForm.rate_limit_daily = client.rate_limit_daily
   editForm.contract_start = client.contract_start || ''
@@ -1317,7 +1588,7 @@ const saveEdit = async () => {
       body: {
         name: editForm.name,
         tier: editForm.tier,
-        corridors_allowed: parseCsvCorridors(editForm.corridors_raw),
+        corridors_allowed: selectedCorridorsPayload(editSelectedCorridors.value),
         rate_limit_rpm: editForm.rate_limit_rpm,
         rate_limit_daily: editForm.rate_limit_daily,
         contract_start: editForm.contract_start || null,
@@ -1411,5 +1682,6 @@ const rotateKey = async (client: InstitutionalClient) => {
 
 onMounted(() => {
   void loadClients()
+  void loadCorridorCatalog()
 })
 </script>

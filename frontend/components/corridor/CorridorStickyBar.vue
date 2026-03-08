@@ -913,7 +913,7 @@ function resolveCountryCodeFromInput(inputId: string, fallback: string) {
   const rawValue = input?.value?.trim().toLowerCase() || ''
   if (!rawValue) return fallback
 
-  const matchedCountry = COUNTRIES.find(country => {
+  const matchedCountry = COUNTRIES.find((country) => {
     const name = country.name.trim().toLowerCase()
     const code = country.code.trim().toLowerCase()
     return rawValue === name || rawValue === code

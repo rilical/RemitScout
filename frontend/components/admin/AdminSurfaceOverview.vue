@@ -21,11 +21,17 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
                 class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
                 :class="toneClasses(props.model.runtimeTone).badge"
               >
-                <span class="h-2 w-2 rounded-full" :class="toneClasses(props.model.runtimeTone).dot" />
+                <span
+class="h-2 w-2 rounded-full"
+:class="toneClasses(props.model.runtimeTone).dot"
+/>
                 {{ props.model.runtimeLabel }}
               </span>
             </div>
-            <p v-if="props.model.runtimeDetail" class="mt-3 text-body-sm text-rs-muted">
+            <p
+v-if="props.model.runtimeDetail"
+class="mt-3 text-body-sm text-rs-muted"
+>
               {{ props.model.runtimeDetail }}
             </p>
           </article>
@@ -37,11 +43,17 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
                 class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold"
                 :class="toneClasses(props.model.freshnessTone).badge"
               >
-                <span class="h-2 w-2 rounded-full" :class="toneClasses(props.model.freshnessTone).dot" />
+                <span
+class="h-2 w-2 rounded-full"
+:class="toneClasses(props.model.freshnessTone).dot"
+/>
                 {{ props.model.freshnessLabel }}
               </span>
             </div>
-            <p v-if="props.model.freshnessDetail" class="mt-3 text-body-sm text-rs-muted">
+            <p
+v-if="props.model.freshnessDetail"
+class="mt-3 text-body-sm text-rs-muted"
+>
               {{ props.model.freshnessDetail }}
             </p>
           </article>
@@ -49,13 +61,19 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
           <article class="rounded-2xl border border-rs-border bg-rs-bg/70 p-4">
             <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Last successful job</div>
             <div class="mt-3 text-body-lg font-semibold text-rs-fg">{{ props.model.lastJobLabel }}</div>
-            <p v-if="props.model.lastJobDetail" class="mt-2 text-body-sm text-rs-muted">
+            <p
+v-if="props.model.lastJobDetail"
+class="mt-2 text-body-sm text-rs-muted"
+>
               {{ props.model.lastJobDetail }}
             </p>
           </article>
         </div>
 
-        <div v-if="props.model.stats?.length" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div
+v-if="props.model.stats?.length"
+class="grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+>
           <article
             v-for="stat in props.model.stats"
             :key="stat.label"
@@ -63,7 +81,12 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
           >
             <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">{{ stat.label }}</div>
             <div class="mt-2 text-body-lg font-semibold text-rs-fg">{{ stat.value }}</div>
-            <p v-if="stat.detail" class="mt-2 text-body-sm text-rs-muted">{{ stat.detail }}</p>
+            <p
+v-if="stat.detail"
+class="mt-2 text-body-sm text-rs-muted"
+>
+{{ stat.detail }}
+</p>
           </article>
         </div>
       </div>
@@ -83,7 +106,10 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
                   class="inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
                   :class="toneClasses(dependency.status).badge"
                 >
-                  <span class="h-2 w-2 rounded-full" :class="toneClasses(dependency.status).dot" />
+                  <span
+class="h-2 w-2 rounded-full"
+:class="toneClasses(dependency.status).dot"
+/>
                   {{ dependency.status }}
                 </span>
               </div>
@@ -101,7 +127,12 @@ const toneClasses = (tone: AdminSurfaceTone) => getAdminSurfaceToneClasses(tone)
               class="rounded-xl border border-dashed border-rs-border bg-rs-surface px-3 py-3"
             >
               <div class="text-body-sm font-semibold text-rs-fg">{{ action.label }}</div>
-              <p v-if="action.detail" class="mt-1 text-body-sm text-rs-muted">{{ action.detail }}</p>
+              <p
+v-if="action.detail"
+class="mt-1 text-body-sm text-rs-muted"
+>
+{{ action.detail }}
+</p>
             </div>
           </div>
         </article>

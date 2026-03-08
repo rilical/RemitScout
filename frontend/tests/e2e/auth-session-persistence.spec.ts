@@ -51,7 +51,7 @@ test.describe('auth session persistence', () => {
     await userMenuButton.click()
 
     await Promise.all([
-      page.waitForURL((url) => !/\/dashboard(?:\?|$)/.test(url.toString()), { timeout: 30000 }),
+      page.waitForURL(url => !/\/dashboard(?:\?|$)/.test(url.toString()), { timeout: 30000 }),
       page.getByRole('button', { name: /^sign out$/i }).click(),
     ])
 

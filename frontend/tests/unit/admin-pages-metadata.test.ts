@@ -14,8 +14,8 @@ describe('admin pages metadata', () => {
 
     for (const file of pageFiles) {
       const content = readFileSync(path.join(adminPagesDir, file), 'utf8')
-      const hasAdminGuard = content.includes("middleware: ['auth', 'admin']")
-      const hasSuperAdminGuard = content.includes("middleware: ['auth', 'super-admin']")
+      const hasAdminGuard = content.includes('middleware: [\'auth\', \'admin\']')
+      const hasSuperAdminGuard = content.includes('middleware: [\'auth\', \'super-admin\']')
       expect(
         hasAdminGuard || hasSuperAdminGuard,
         `${file} missing authenticated admin middleware`,

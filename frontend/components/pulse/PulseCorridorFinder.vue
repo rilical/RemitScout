@@ -50,7 +50,11 @@
               </div>
               <div class="mt-3 flex items-center gap-3">
                 <span class="text-4xl leading-none">{{ currentCorridor?.fromFlag || '🌍' }}</span>
-                <Icon name="arrow-right" :size="20" class="text-neutral-500" />
+                <Icon
+name="arrow-right"
+:size="20"
+class="text-neutral-500"
+/>
                 <span class="text-4xl leading-none">{{ currentCorridor?.toFlag || '🌍' }}</span>
                 <div class="min-w-0">
                   <div class="truncate font-mono text-xl font-semibold text-white">
@@ -243,7 +247,7 @@
               spellcheck="false"
               placeholder="USD PHP, Philippines, Mexico, US-MX-USD-MXN..."
               class="h-12 w-full rounded-2xl border border-neutral-700 bg-neutral-900/80 pl-11 pr-4 text-sm text-white placeholder:text-neutral-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
+            >
           </div>
           <div class="flex items-center justify-between text-xs text-neutral-500">
             <span>{{ queryMetaLabel }}</span>
@@ -271,7 +275,11 @@
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-xl leading-none">{{ corridor.fromFlag }}</span>
-                  <Icon name="arrow-right" :size="16" class="text-neutral-500" />
+                  <Icon
+name="arrow-right"
+:size="16"
+class="text-neutral-500"
+/>
                   <span class="text-xl leading-none">{{ corridor.toFlag }}</span>
                   <span class="truncate font-semibold text-white">{{ corridor.label }}</span>
                 </div>
@@ -318,255 +326,255 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { CorridorOption } from '~/types/pulse';
-import type { PulseTimeframe } from '~/stores/pulse';
-import { Icon } from '~/ui';
-import { getAvailableTimeframes } from '~/composables/usePulseTimeframes';
-import { formatNumber, formatUpdatedLabel } from '~/shared/lib/format';
+import { computed, ref } from 'vue'
+import type { CorridorOption } from '~/types/pulse'
+import type { PulseTimeframe } from '~/stores/pulse'
+import { Icon } from '~/ui'
+import { getAvailableTimeframes } from '~/composables/usePulseTimeframes'
+import { formatNumber, formatUpdatedLabel } from '~/shared/lib/format'
 import {
   computeCorridorDaysAvailable,
   matchesCorridorSearch,
   sortCorridorsByCoverage,
-} from '~/domains/pulse/application';
-import { COUNTRIES } from '~/utils/countries-currencies';
+} from '~/domains/pulse/application'
+import { COUNTRIES } from '~/utils/countries-currencies'
 
-const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX'];
+const timeframes: PulseTimeframe[] = ['24H', '7D', '30D', '1Y', 'MAX']
 
 const props = withDefaults(
   defineProps<{
-    corridors: CorridorOption[];
-    featuredCorridors?: CorridorOption[];
-    selectedCorridorId?: string | null;
-    selectedTimeframe: PulseTimeframe;
-    selectedAmount: number;
-    latestUpdatedAt?: string | null;
-    goldBenchmarkAmount?: number;
+    corridors: CorridorOption[]
+    featuredCorridors?: CorridorOption[]
+    selectedCorridorId?: string | null
+    selectedTimeframe: PulseTimeframe
+    selectedAmount: number
+    latestUpdatedAt?: string | null
+    goldBenchmarkAmount?: number
   }>(),
   {
     featuredCorridors: () => [],
     selectedCorridorId: null,
     latestUpdatedAt: null,
     goldBenchmarkAmount: 500,
-  }
-);
+  },
+)
 
 const emit = defineEmits<{
-  'select-corridor': [corridorId: string];
-  'select-timeframe': [timeframe: PulseTimeframe];
-  'select-amount': [amount: number];
-}>();
+  'select-corridor': [corridorId: string]
+  'select-timeframe': [timeframe: PulseTimeframe]
+  'select-amount': [amount: number]
+}>()
 
-const query = ref('');
+const query = ref('')
 
 const countryNameByCode = new Map(
-  COUNTRIES.map(country => [country.code.trim().toUpperCase(), country.name.trim()])
-);
+  COUNTRIES.map(country => [country.code.trim().toUpperCase(), country.name.trim()]),
+)
 
-const sortedCorridors = computed(() => sortCorridorsByCoverage(props.corridors));
+const sortedCorridors = computed(() => sortCorridorsByCoverage(props.corridors))
 
 const featuredCorridorsResolved = computed(() => {
-  if (props.featuredCorridors.length > 0) return props.featuredCorridors.slice(0, 8);
-  return sortedCorridors.value.slice(0, 8);
-});
+  if (props.featuredCorridors.length > 0) return props.featuredCorridors.slice(0, 8)
+  return sortedCorridors.value.slice(0, 8)
+})
 
 const currentCorridor = computed(() => {
   if (props.selectedCorridorId) {
-    const matched = props.corridors.find(c => c.corridorId === props.selectedCorridorId);
-    if (matched) return matched;
+    const matched = props.corridors.find(c => c.corridorId === props.selectedCorridorId)
+    if (matched) return matched
   }
-  return featuredCorridorsResolved.value[0] || sortedCorridors.value[0] || null;
-});
+  return featuredCorridorsResolved.value[0] || sortedCorridors.value[0] || null
+})
 
-const currentDaysAvailable = computed(() => computeCorridorDaysAvailable(currentCorridor.value));
+const currentDaysAvailable = computed(() => computeCorridorDaysAvailable(currentCorridor.value))
 
 const searchableResults = computed(() => {
-  const normalizedQuery = query.value.trim();
-  if (!normalizedQuery) return featuredCorridorsResolved.value;
-  return sortedCorridors.value.filter(corridor => matchesCorridorSearch(corridor, normalizedQuery));
-});
+  const normalizedQuery = query.value.trim()
+  if (!normalizedQuery) return featuredCorridorsResolved.value
+  return sortedCorridors.value.filter(corridor => matchesCorridorSearch(corridor, normalizedQuery))
+})
 
-const visibleResults = computed(() => searchableResults.value.slice(0, 9));
+const visibleResults = computed(() => searchableResults.value.slice(0, 9))
 
 const currentRouteLabel = computed(() => {
-  const corridor = currentCorridor.value;
-  if (!corridor) return 'Use the search to jump to a Gold-supported route.';
-  const from = countryLabel(corridor.sourceCountry) || corridor.fromCode;
-  const to = countryLabel(corridor.destCountry) || corridor.toCode;
-  return `${from} to ${to} • ${corridor.fromCode} → ${corridor.toCode}`;
-});
+  const corridor = currentCorridor.value
+  if (!corridor) return 'Use the search to jump to a Gold-supported route.'
+  const from = countryLabel(corridor.sourceCountry) || corridor.fromCode
+  const to = countryLabel(corridor.destCountry) || corridor.toCode
+  return `${from} to ${to} • ${corridor.fromCode} → ${corridor.toCode}`
+})
 
 const currentCoverageDaysLabel = computed(() => {
-  if (currentDaysAvailable.value <= 0) return 'Warming up';
-  return `${formatNumber(currentDaysAvailable.value)}d`;
-});
+  if (currentDaysAvailable.value <= 0) return 'Warming up'
+  return `${formatNumber(currentDaysAvailable.value)}d`
+})
 
 const currentCoverageRangeLabel = computed(() => {
-  const corridor = currentCorridor.value;
-  if (!corridor?.minDate || !corridor?.maxDate) return 'Gold history is still being collected.';
-  return `${corridor.minDate} to ${corridor.maxDate}`;
-});
+  const corridor = currentCorridor.value
+  if (!corridor?.minDate || !corridor?.maxDate) return 'Gold history is still being collected.'
+  return `${corridor.minDate} to ${corridor.maxDate}`
+})
 
-const currentDataPointsLabel = computed(() => formatPointCount(currentCorridor.value?.dataPoints));
+const currentDataPointsLabel = computed(() => formatPointCount(currentCorridor.value?.dataPoints))
 
 const currentQualityLabel = computed(() => {
-  const corridor = currentCorridor.value;
-  if (!corridor) return 'No corridor selected yet.';
+  const corridor = currentCorridor.value
+  if (!corridor) return 'No corridor selected yet.'
   if (
-    typeof corridor.unsuppressedPoints === 'number' &&
-    typeof corridor.dataPoints === 'number' &&
-    corridor.dataPoints > 0
+    typeof corridor.unsuppressedPoints === 'number'
+    && typeof corridor.dataPoints === 'number'
+    && corridor.dataPoints > 0
   ) {
-    const share = Math.round((corridor.unsuppressedPoints / corridor.dataPoints) * 100);
-    return `${share}% directly displayable`;
+    const share = Math.round((corridor.unsuppressedPoints / corridor.dataPoints) * 100)
+    return `${share}% directly displayable`
   }
   if (currentDaysAvailable.value > 0 && currentDaysAvailable.value < 7) {
-    return 'Still warming up for longer windows';
+    return 'Still warming up for longer windows'
   }
-  return 'Using Gold export coverage';
-});
+  return 'Using Gold export coverage'
+})
 
 const currentFreshnessLabel = computed(
   () =>
-    `Updated ${formatUpdatedLabel(currentCorridor.value?.lastUpdated || props.latestUpdatedAt || null)}`
-);
+    `Updated ${formatUpdatedLabel(currentCorridor.value?.lastUpdated || props.latestUpdatedAt || null)}`,
+)
 
 const currentFreshnessShortLabel = computed(() => {
   const label = formatUpdatedLabel(
-    currentCorridor.value?.lastUpdated || props.latestUpdatedAt || null
-  );
-  return label === 'Updated —' ? '—' : label.replace(/^Updated\s+/i, '');
-});
+    currentCorridor.value?.lastUpdated || props.latestUpdatedAt || null,
+  )
+  return label === 'Updated —' ? '—' : label.replace(/^Updated\s+/i, '')
+})
 
 const currentFreshnessHelpLabel = computed(() => {
-  const corridor = currentCorridor.value;
-  if (!corridor?.lastUpdated) return 'No freshness timestamp yet.';
+  const corridor = currentCorridor.value
+  if (!corridor?.lastUpdated) return 'No freshness timestamp yet.'
   return freshnessTone(corridor) === 'fresh'
     ? 'Recent Gold snapshot available.'
-    : 'Use this with coverage and quality to judge readiness.';
-});
+    : 'Use this with coverage and quality to judge readiness.'
+})
 
 const currentCadenceLabel = computed(() => {
-  const corridor = currentCorridor.value;
-  if (!corridor) return 'Cadence pending';
-  const collection = corridor.collectionCadenceMinutes;
-  const exportCadence = corridor.exportCadenceMinutes;
-  if (collection && exportCadence) return `${collection}m collect • ${exportCadence}m export`;
-  if (collection) return `${collection}m collection cadence`;
-  if (exportCadence) return `${exportCadence}m export cadence`;
-  return 'Cadence not published';
-});
+  const corridor = currentCorridor.value
+  if (!corridor) return 'Cadence pending'
+  const collection = corridor.collectionCadenceMinutes
+  const exportCadence = corridor.exportCadenceMinutes
+  if (collection && exportCadence) return `${collection}m collect • ${exportCadence}m export`
+  if (collection) return `${collection}m collection cadence`
+  if (exportCadence) return `${exportCadence}m export cadence`
+  return 'Cadence not published'
+})
 
 const corridorCountLabel = computed(
-  () => `${formatNumber(props.corridors.length)} Gold-supported corridors`
-);
+  () => `${formatNumber(props.corridors.length)} Gold-supported corridors`,
+)
 
 const featuredLabel = computed(
-  () => `${featuredCorridorsResolved.value.length} pinned / top coverage`
-);
+  () => `${featuredCorridorsResolved.value.length} pinned / top coverage`,
+)
 
 const amountOptions = computed(() => {
-  const base = [100, 200, 500, 1000, props.selectedAmount];
-  return Array.from(new Set(base)).sort((a, b) => a - b);
-});
+  const base = [100, 200, 500, 1000, props.selectedAmount]
+  return Array.from(new Set(base)).sort((a, b) => a - b)
+})
 
-const selectedAmountLabel = computed(() => formatCurrency(props.selectedAmount));
+const selectedAmountLabel = computed(() => formatCurrency(props.selectedAmount))
 
-const goldBenchmarkLabel = computed(() => formatCurrency(props.goldBenchmarkAmount));
+const goldBenchmarkLabel = computed(() => formatCurrency(props.goldBenchmarkAmount))
 
 const queryMetaLabel = computed(() => {
   if (!query.value.trim()) {
-    return 'Showing curated quick picks first to keep discovery fast.';
+    return 'Showing curated quick picks first to keep discovery fast.'
   }
-  const total = searchableResults.value.length;
-  return `${formatNumber(total)} corridor${total === 1 ? '' : 's'} matched`;
-});
+  const total = searchableResults.value.length
+  return `${formatNumber(total)} corridor${total === 1 ? '' : 's'} matched`
+})
 
 const availableTimeframes = computed(
-  () => new Set(getAvailableTimeframes(currentDaysAvailable.value))
-);
+  () => new Set(getAvailableTimeframes(currentDaysAvailable.value)),
+)
 
 const isTimeframeAvailableForCurrent = (timeframe: PulseTimeframe) =>
-  availableTimeframes.value.has(timeframe);
+  availableTimeframes.value.has(timeframe)
 
 const handleCorridorSelect = (corridor: CorridorOption) => {
-  if (!corridor.corridorId) return;
-  emit('select-corridor', corridor.corridorId);
-  query.value = '';
-};
+  if (!corridor.corridorId) return
+  emit('select-corridor', corridor.corridorId)
+  query.value = ''
+}
 
 const corridorButtonClass = (corridor: CorridorOption) =>
   corridor.corridorId === props.selectedCorridorId
     ? 'border-brand-400 bg-brand-500/15'
-    : 'border-neutral-700 bg-neutral-900/70 hover:border-neutral-500 hover:bg-neutral-900';
+    : 'border-neutral-700 bg-neutral-900/70 hover:border-neutral-500 hover:bg-neutral-900'
 
 const timeframeClass = (timeframe: PulseTimeframe) =>
   props.selectedTimeframe === timeframe
     ? 'border-brand-400 bg-brand-500/15 text-brand-100'
-    : 'border-neutral-700 bg-neutral-900/70 text-neutral-300 hover:border-neutral-500 hover:text-white';
+    : 'border-neutral-700 bg-neutral-900/70 text-neutral-300 hover:border-neutral-500 hover:text-white'
 
 const resultCardClass = (corridor: CorridorOption) =>
   corridor.corridorId === props.selectedCorridorId
     ? 'border-brand-400 bg-brand-500/12'
-    : 'border-neutral-700 bg-neutral-900/70 hover:border-neutral-500 hover:bg-neutral-900';
+    : 'border-neutral-700 bg-neutral-900/70 hover:border-neutral-500 hover:bg-neutral-900'
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(amount)
 
 const countryLabel = (code?: string | null) => {
-  if (!code) return '';
-  return countryNameByCode.get(code.trim().toUpperCase()) || code.trim().toUpperCase();
-};
+  if (!code) return ''
+  return countryNameByCode.get(code.trim().toUpperCase()) || code.trim().toUpperCase()
+}
 
-const formatTierLabel = (value: string) => value.replace(/_/g, ' ');
+const formatTierLabel = (value: string) => value.replace(/_/g, ' ')
 
 const formatCompactCoverage = (corridor: CorridorOption) => {
-  const days = computeCorridorDaysAvailable(corridor);
-  if (days <= 0) return 'warming up';
-  return `${formatNumber(days)}d history`;
-};
+  const days = computeCorridorDaysAvailable(corridor)
+  if (days <= 0) return 'warming up'
+  return `${formatNumber(days)}d history`
+}
 
 const formatPointCount = (value?: number | null) => {
-  if (typeof value !== 'number' || value <= 0) return 'No points yet';
-  return `${formatNumber(value)} points`;
-};
+  if (typeof value !== 'number' || value <= 0) return 'No points yet'
+  return `${formatNumber(value)} points`
+}
 
 const formatQualityChip = (corridor: CorridorOption) => {
   if (
-    typeof corridor.unsuppressedPoints !== 'number' ||
-    typeof corridor.dataPoints !== 'number' ||
-    corridor.dataPoints <= 0
+    typeof corridor.unsuppressedPoints !== 'number'
+    || typeof corridor.dataPoints !== 'number'
+    || corridor.dataPoints <= 0
   ) {
-    return 'Quality pending';
+    return 'Quality pending'
   }
-  const share = Math.round((corridor.unsuppressedPoints / corridor.dataPoints) * 100);
-  return `${share}% displayable`;
-};
+  const share = Math.round((corridor.unsuppressedPoints / corridor.dataPoints) * 100)
+  return `${share}% displayable`
+}
 
 const freshnessTone = (corridor: CorridorOption) => {
-  if (!corridor.lastUpdated) return 'warming';
-  const updatedAt = new Date(corridor.lastUpdated).getTime();
-  if (Number.isNaN(updatedAt)) return 'warming';
-  const ageHours = (Date.now() - updatedAt) / (1000 * 60 * 60);
-  if (ageHours <= 24) return 'fresh';
-  if (ageHours <= 24 * 7) return 'recent';
-  return 'warming';
-};
+  if (!corridor.lastUpdated) return 'warming'
+  const updatedAt = new Date(corridor.lastUpdated).getTime()
+  if (Number.isNaN(updatedAt)) return 'warming'
+  const ageHours = (Date.now() - updatedAt) / (1000 * 60 * 60)
+  if (ageHours <= 24) return 'fresh'
+  if (ageHours <= 24 * 7) return 'recent'
+  return 'warming'
+}
 
 const freshnessClass = (corridor: CorridorOption) => {
-  const tone = freshnessTone(corridor);
-  if (tone === 'fresh') return 'border-emerald-500/30 bg-emerald-500/12 text-emerald-200';
-  if (tone === 'recent') return 'border-amber-500/30 bg-amber-500/12 text-amber-200';
-  return 'border-neutral-700 bg-neutral-900/70 text-neutral-300';
-};
+  const tone = freshnessTone(corridor)
+  if (tone === 'fresh') return 'border-emerald-500/30 bg-emerald-500/12 text-emerald-200'
+  if (tone === 'recent') return 'border-amber-500/30 bg-amber-500/12 text-amber-200'
+  return 'border-neutral-700 bg-neutral-900/70 text-neutral-300'
+}
 
 const corridorRouteLabel = (corridor: CorridorOption) => {
-  const from = countryLabel(corridor.sourceCountry) || corridor.fromCode;
-  const to = countryLabel(corridor.destCountry) || corridor.toCode;
-  return `${from} to ${to} • ${corridor.fromCode} → ${corridor.toCode}`;
-};
+  const from = countryLabel(corridor.sourceCountry) || corridor.fromCode
+  const to = countryLabel(corridor.destCountry) || corridor.toCode
+  return `${from} to ${to} • ${corridor.fromCode} → ${corridor.toCode}`
+}
 </script>

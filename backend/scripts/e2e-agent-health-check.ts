@@ -17,6 +17,9 @@
  *   pnpm tsx backend/scripts/e2e-agent-health-check.ts --lookback-hours=2
  */
 
+import dns from 'node:dns'
+import { lookup } from 'node:dns/promises'
+import net from 'node:net'
 import {
   CloudWatchClient,
   GetMetricDataCommand,
@@ -39,6 +42,7 @@ const LOOKBACK_HOURS = Number(process.env.AGENT_HEALTH_LOOKBACK_HOURS) ||
   Number(process.argv.find((a) => a.startsWith('--lookback-hours='))?.split('=')[1]) || 1
 const AGENT_METRIC_NAMESPACE = 'RemitScout/Agents'
 const DETECTION_CYCLE_METRIC = 'detection_cycle_count'
+const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on'])
 
 const resolveEnvironmentName = () => {
   const value = (config.envName || config.env || process.env.ENVIRONMENT || process.env.NODE_ENV || '').trim()
@@ -47,6 +51,52 @@ const resolveEnvironmentName = () => {
   if (normalized === 'production') return 'prod'
   if (normalized === 'development') return 'dev'
   return normalized
+}
+
+const shouldForceIpv4DbConnection = () => {
+  const explicitFlag = (process.env.DB_FORCE_IPV4 || '').trim().toLowerCase()
+  if (explicitFlag) {
+    return TRUE_VALUES.has(explicitFlag)
+  }
+  return process.env.GITHUB_ACTIONS === 'true'
+}
+
+const resolvePlaneBDbConnectionString = async () => {
+  const connectionString = config.db.planeBUrl
+  if (!connectionString || !shouldForceIpv4DbConnection()) {
+    return connectionString
+  }
+
+  try {
+    dns.setDefaultResultOrder('ipv4first')
+  } catch {
+    // Ignore on runtimes that do not support result-order overrides.
+  }
+
+  try {
+    const parsed = new URL(connectionString)
+    const hostname = parsed.hostname
+    if (!hostname || hostname === 'localhost' || net.isIP(hostname) === 4) {
+      return connectionString
+    }
+
+    const resolved = await lookup(hostname, { family: 4 })
+    if (!resolved.address) {
+      return connectionString
+    }
+
+    parsed.hostname = resolved.address
+    logger.info('agent_health_db_ipv4_resolved', {
+      originalHost: hostname,
+      resolvedHost: resolved.address,
+    })
+    return parsed.toString()
+  } catch (error) {
+    logger.warn('agent_health_db_ipv4_resolution_failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return connectionString
+  }
 }
 
 const loadDetectionCycleMetricCount = async (): Promise<number> => {
@@ -97,7 +147,7 @@ const loadDetectionCycleMetricCount = async (): Promise<number> => {
 }
 
 async function runChecks(): Promise<CheckResult[]> {
-  const pool = createPool(config.db.planeBUrl)
+  const pool = createPool(await resolvePlaneBDbConnectionString())
   const results: CheckResult[] = []
   const lookbackInterval = `${LOOKBACK_HOURS} hours`
 

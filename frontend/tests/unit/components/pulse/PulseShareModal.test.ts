@@ -1,27 +1,27 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 
-const mockCreatePulsePublishedEmbed = vi.hoisted(() => vi.fn());
+const mockCreatePulsePublishedEmbed = vi.hoisted(() => vi.fn())
 
 vi.mock('~/lib/pulseApi', async () => {
-  const actual = await vi.importActual<typeof import('~/lib/pulseApi')>('~/lib/pulseApi');
+  const actual = await vi.importActual<typeof import('~/lib/pulseApi')>('~/lib/pulseApi')
   return {
     ...actual,
     createPulsePublishedEmbed: (...args: unknown[]) => mockCreatePulsePublishedEmbed(...args),
-  };
-});
+  }
+})
 
 vi.mock('~/composables/useFocusTrap', () => ({
   useFocusTrap: () => ({
     activate: vi.fn(),
     deactivate: vi.fn(),
   }),
-}));
+}))
 
 vi.mock('~/composables/useChartImageExport', async () => {
   const actual = await vi.importActual<typeof import('~/composables/useChartImageExport')>(
-    '~/composables/useChartImageExport'
-  );
+    '~/composables/useChartImageExport',
+  )
   return {
     ...actual,
     useChartImageExport: () => ({
@@ -29,12 +29,12 @@ vi.mock('~/composables/useChartImageExport', async () => {
       exportAsImage: vi.fn(),
       exporting: { value: false },
     }),
-  };
-});
+  }
+})
 
 describe('PulseShareModal', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.clearAllMocks()
     mockCreatePulsePublishedEmbed.mockResolvedValue({
       publishedId: '123e4567-e89b-12d3-a456-426614174000',
       publicUrl: 'https://remit-scout.test/embed/pulse/all-in-cost?published_id=123e4567-e89b-12d3-a456-426614174000',
@@ -55,19 +55,19 @@ describe('PulseShareModal', () => {
             '<iframe src="https://remit-scout.test/embed/pulse/all-in-cost?published_id=123e4567-e89b-12d3-a456-426614174000"></iframe>',
         },
       ],
-    });
+    })
 
     vi.stubGlobal('useLogger', () => ({
       error: vi.fn(),
-    }));
-  });
+    }))
+  })
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+    vi.unstubAllGlobals()
+  })
 
   const mountModal = async (overrides?: { range?: '7d' | '30d' | '90d' | '365d' }) => {
-    const PulseShareModal = (await import('~/components/pulse/PulseShareModal.vue')).default;
+    const PulseShareModal = (await import('~/components/pulse/PulseShareModal.vue')).default
     const wrapper = mount(PulseShareModal, {
       props: {
         chartId: 'all-in-cost',
@@ -85,22 +85,22 @@ describe('PulseShareModal', () => {
           Icon: true,
         },
       },
-    });
+    })
 
-    await flushPromises();
-    return wrapper;
-  };
+    await flushPromises()
+    return wrapper
+  }
 
   it('renders publish-first embed copy without auto-publishing on open', async () => {
-    const wrapper = await mountModal();
+    const wrapper = await mountModal()
 
     expect(wrapper.text()).toContain(
-      'Publish a durable static embed and paste this code into your website.'
-    );
-    expect(wrapper.text()).toContain('Viewers only access the public published URL created here.');
-    expect(wrapper.text()).not.toContain('Copy the link below to share this chart with others.');
-    expect(mockCreatePulsePublishedEmbed).not.toHaveBeenCalled();
-  });
+      'Publish a durable static embed and paste this code into your website.',
+    )
+    expect(wrapper.text()).toContain('Viewers only access the public published URL created here.')
+    expect(wrapper.text()).not.toContain('Copy the link below to share this chart with others.')
+    expect(mockCreatePulsePublishedEmbed).not.toHaveBeenCalled()
+  })
 
   it('shows enterprise-only copy when publishing is rejected', async () => {
     mockCreatePulsePublishedEmbed.mockRejectedValue({
@@ -108,60 +108,60 @@ describe('PulseShareModal', () => {
       data: {
         error: 'enterprise_required',
       },
-    });
+    })
 
-    const wrapper = await mountModal();
-    await wrapper.findAll('button').find(button => button.text() === 'Publish Static Embed')?.trigger('click');
-    await flushPromises();
+    const wrapper = await mountModal()
+    await wrapper.findAll('button').find(button => button.text() === 'Publish Static Embed')?.trigger('click')
+    await flushPromises()
 
     expect(wrapper.text()).toContain(
-      'Enterprise embed access is required to publish static Pulse embeds.'
-    );
-  });
+      'Enterprise embed access is required to publish static Pulse embeds.',
+    )
+  })
 
   it('publishes using the active chart range', async () => {
-    const wrapper = await mountModal({ range: '365d' });
+    const wrapper = await mountModal({ range: '365d' })
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Publish Static Embed')
-      ?.trigger('click');
-    await flushPromises();
+      ?.trigger('click')
+    await flushPromises()
 
     expect(mockCreatePulsePublishedEmbed).toHaveBeenCalledWith(
       expect.objectContaining({
         range: '365d',
-      })
-    );
-  });
+      }),
+    )
+  })
 
   it('clears the published embed when the theme changes', async () => {
-    const wrapper = await mountModal();
+    const wrapper = await mountModal()
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Publish Static Embed')
-      ?.trigger('click');
-    await flushPromises();
+      ?.trigger('click')
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Published embed ready');
+    expect(wrapper.text()).toContain('Published embed ready')
 
-    await wrapper.get('#pulse-embed-theme').setValue('light');
-    await flushPromises();
+    await wrapper.get('#pulse-embed-theme').setValue('light')
+    await flushPromises()
 
-    expect(wrapper.text()).not.toContain('Published embed ready');
-    expect(wrapper.text()).toContain('Publish a static embed to preview it here.');
-  });
+    expect(wrapper.text()).not.toContain('Published embed ready')
+    expect(wrapper.text()).toContain('Publish a static embed to preview it here.')
+  })
 
   it('offers PNG, SVG, and PDF visual exports', async () => {
-    const wrapper = await mountModal();
+    const wrapper = await mountModal()
 
     await wrapper
       .findAll('button')
       .find(button => button.text() === 'Download Visual')
-      ?.trigger('click');
+      ?.trigger('click')
 
-    expect(wrapper.text()).toContain('Download PNG');
-    expect(wrapper.text()).toContain('Download SVG');
-    expect(wrapper.text()).toContain('Download PDF');
-    expect(wrapper.text()).toContain('Visual exports preserve legends, context, and attribution');
-  });
-});
+    expect(wrapper.text()).toContain('Download PNG')
+    expect(wrapper.text()).toContain('Download SVG')
+    expect(wrapper.text()).toContain('Download PDF')
+    expect(wrapper.text()).toContain('Visual exports preserve legends, context, and attribution')
+  })
+})

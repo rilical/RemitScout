@@ -14,11 +14,12 @@
               v-model="autoRefresh"
               type="checkbox"
               class="h-4 w-4 rounded border-rs-border text-brand-600"
-            />
-            Auto-refresh
-            <span v-if="autoRefresh" class="font-semibold tabular-nums text-rs-fg"
-              >{{ countdown }}s</span
             >
+            Auto-refresh
+            <span
+v-if="autoRefresh"
+class="font-semibold tabular-nums text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="text-body-sm h-10 rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -73,7 +74,10 @@
         </article>
       </section>
 
-      <section class="rounded-2xl border p-6 shadow-sm" :class="operatorBrief.panelClass">
+      <section
+class="rounded-2xl border p-6 shadow-sm"
+:class="operatorBrief.panelClass"
+>
         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div class="flex items-center gap-3">
@@ -128,19 +132,26 @@
               type="text"
               placeholder="Filter module or provider"
               class="text-body-sm h-10 min-w-[16rem] rounded-lg border border-rs-border bg-rs-bg px-3 text-rs-fg focus:border-brand-500 focus:outline-none"
-            />
+            >
             <select
               v-model="statusFilter"
               class="text-body-sm h-10 min-w-[12rem] rounded-lg border border-rs-border bg-rs-bg px-3 text-rs-fg focus:border-brand-500 focus:outline-none"
             >
-              <option v-for="option in filterOptions" :key="option.value" :value="option.value">
+              <option
+v-for="option in filterOptions"
+:key="option.value"
+:value="option.value"
+>
                 {{ option.label }}
               </option>
             </select>
           </div>
         </div>
 
-        <div v-if="filteredModules.length > 0" class="mt-6 space-y-3">
+        <div
+v-if="filteredModules.length > 0"
+class="mt-6 space-y-3"
+>
           <ModuleHealthCard
             v-for="mod in filteredModules"
             :key="mod.module_id"
@@ -164,35 +175,35 @@
 </template>
 
 <script setup lang="ts">
-import type { ModuleHealthEntry, ModuleStatus } from '~/types/modules';
-import { getModuleHealth } from '~/lib/opsApi';
+import type { ModuleHealthEntry, ModuleStatus } from '~/types/modules'
+import { getModuleHealth } from '~/lib/opsApi'
 
-type ModuleFilter = 'all' | ModuleStatus | 'attention' | 'stale';
+type ModuleFilter = 'all' | ModuleStatus | 'attention' | 'stale'
 
-const STALE_HEALTH_CHECK_SECONDS = 24 * 60 * 60;
+const STALE_HEALTH_CHECK_SECONDS = 24 * 60 * 60
 
-definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' });
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
 useAdminPage({
   title: 'Module Registry | Remit-Scout',
   description: 'Health status for all registered signal modules.',
-});
+})
 
-const { formatDateTime, formatDuration, formatNumber } = useAdminFormat();
+const { formatDateTime, formatDuration, formatNumber } = useAdminFormat()
 
-const loading = ref(false);
-const error = ref<string | null>(null);
-const lastUpdated = ref<string | null>(null);
-const modules = ref<ModuleHealthEntry[]>([]);
-const expandedId = ref<string | null>(null);
-const search = ref('');
-const statusFilter = ref<ModuleFilter>('all');
+const loading = ref(false)
+const error = ref<string | null>(null)
+const lastUpdated = ref<string | null>(null)
+const modules = ref<ModuleHealthEntry[]>([])
+const expandedId = ref<string | null>(null)
+const search = ref('')
+const statusFilter = ref<ModuleFilter>('all')
 
-const autoRefresh = ref(false);
-const countdown = ref(60);
-let timer: ReturnType<typeof setInterval> | null = null;
+const autoRefresh = ref(false)
+const countdown = ref(60)
+let timer: ReturnType<typeof setInterval> | null = null
 
-const filterOptions: Array<{ value: ModuleFilter; label: string }> = [
+const filterOptions: Array<{ value: ModuleFilter, label: string }> = [
   { value: 'all', label: 'All modules' },
   { value: 'attention', label: 'Needs attention' },
   { value: 'stale', label: 'Stale checks' },
@@ -202,113 +213,113 @@ const filterOptions: Array<{ value: ModuleFilter; label: string }> = [
   { value: 'candidate', label: 'Candidate' },
   { value: 'quarantined', label: 'Quarantined' },
   { value: 'deprecated', label: 'Deprecated' },
-];
+]
 
 const toTimestamp = (value: string | null | undefined) => {
-  if (!value) return null;
-  const timestamp = new Date(value).getTime();
-  return Number.isNaN(timestamp) ? null : timestamp;
-};
+  if (!value) return null
+  const timestamp = new Date(value).getTime()
+  return Number.isNaN(timestamp) ? null : timestamp
+}
 
 const ageSecondsFromNow = (value: string | null | undefined) => {
-  const timestamp = toTimestamp(value);
-  if (timestamp === null) return Number.POSITIVE_INFINITY;
-  return Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-};
+  const timestamp = toTimestamp(value)
+  if (timestamp === null) return Number.POSITIVE_INFINITY
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
+}
 
 const isStaleHealthCheck = (module: ModuleHealthEntry) =>
-  ageSecondsFromNow(module.last_health_check_at) > STALE_HEALTH_CHECK_SECONDS;
+  ageSecondsFromNow(module.last_health_check_at) > STALE_HEALTH_CHECK_SECONDS
 
 const moduleNeedsAttention = (module: ModuleHealthEntry) =>
-  module.status === 'quarantined' ||
-  module.status === 'deprecated' ||
-  module.consecutive_failures > 0 ||
-  module.parse_error_rate >= 0.02 ||
-  isStaleHealthCheck(module);
+  module.status === 'quarantined'
+  || module.status === 'deprecated'
+  || module.consecutive_failures > 0
+  || module.parse_error_rate >= 0.02
+  || isStaleHealthCheck(module)
 
 const attentionRank = (module: ModuleHealthEntry) => {
-  let score = 0;
-  if (module.status === 'quarantined' || module.status === 'deprecated') score += 8;
-  if (isStaleHealthCheck(module)) score += 4;
-  if (module.consecutive_failures > 0) score += Math.min(4, module.consecutive_failures);
-  if (module.parse_error_rate >= 0.05) score += 4;
-  else if (module.parse_error_rate >= 0.02) score += 2;
+  let score = 0
+  if (module.status === 'quarantined' || module.status === 'deprecated') score += 8
+  if (isStaleHealthCheck(module)) score += 4
+  if (module.consecutive_failures > 0) score += Math.min(4, module.consecutive_failures)
+  if (module.parse_error_rate >= 0.05) score += 4
+  else if (module.parse_error_rate >= 0.02) score += 2
   if (module.status === 'candidate' || module.status === 'sandbox' || module.status === 'beta')
-    score += 1;
-  return score;
-};
+    score += 1
+  return score
+}
 
 const providersCovered = computed(
-  () => new Set(modules.value.map(module => module.provider_id)).size
-);
+  () => new Set(modules.value.map(module => module.provider_id)).size,
+)
 const collectorTypes = computed(
-  () => new Set(modules.value.map(module => module.collector_type)).size
-);
+  () => new Set(modules.value.map(module => module.collector_type)).size,
+)
 const productionCount = computed(
-  () => modules.value.filter(module => module.status === 'production').length
-);
+  () => modules.value.filter(module => module.status === 'production').length,
+)
 const preProductionCount = computed(
   () =>
     modules.value.filter(
       module =>
-        module.status === 'candidate' || module.status === 'sandbox' || module.status === 'beta'
-    ).length
-);
-const attentionModules = computed(() => modules.value.filter(moduleNeedsAttention));
-const staleModules = computed(() => modules.value.filter(isStaleHealthCheck));
+        module.status === 'candidate' || module.status === 'sandbox' || module.status === 'beta',
+    ).length,
+)
+const attentionModules = computed(() => modules.value.filter(moduleNeedsAttention))
+const staleModules = computed(() => modules.value.filter(isStaleHealthCheck))
 
 const sortedModules = computed(() =>
   [...modules.value].sort((left, right) => {
-    const scoreDelta = attentionRank(right) - attentionRank(left);
-    if (scoreDelta !== 0) return scoreDelta;
-    return left.display_name.localeCompare(right.display_name);
-  })
-);
+    const scoreDelta = attentionRank(right) - attentionRank(left)
+    if (scoreDelta !== 0) return scoreDelta
+    return left.display_name.localeCompare(right.display_name)
+  }),
+)
 
 const filteredModules = computed(() => {
-  const token = search.value.trim().toLowerCase();
+  const token = search.value.trim().toLowerCase()
 
-  return sortedModules.value.filter(module => {
-    const matchesToken =
-      !token ||
-      [module.display_name, module.module_id, module.provider_id, module.collector_type].some(
-        value => value.toLowerCase().includes(token)
-      );
+  return sortedModules.value.filter((module) => {
+    const matchesToken
+      = !token
+        || [module.display_name, module.module_id, module.provider_id, module.collector_type].some(
+        value => value.toLowerCase().includes(token),
+      )
 
-    const matchesStatus =
-      statusFilter.value === 'all'
+    const matchesStatus
+      = statusFilter.value === 'all'
         ? true
         : statusFilter.value === 'attention'
           ? moduleNeedsAttention(module)
           : statusFilter.value === 'stale'
             ? isStaleHealthCheck(module)
-            : module.status === statusFilter.value;
+            : module.status === statusFilter.value
 
-    return matchesToken && matchesStatus;
-  });
-});
+    return matchesToken && matchesStatus
+  })
+})
 
-watch(filteredModules, entries => {
-  if (!expandedId.value) return;
-  if (entries.some(entry => entry.module_id === expandedId.value)) return;
-  expandedId.value = null;
-});
+watch(filteredModules, (entries) => {
+  if (!expandedId.value) return
+  if (entries.some(entry => entry.module_id === expandedId.value)) return
+  expandedId.value = null
+})
 
 const statusBadges = computed(() => [
   { label: 'Production', count: productionCount.value },
   { label: 'Pre-production', count: preProductionCount.value },
   { label: 'Attention', count: attentionModules.value.length },
   { label: 'Stale', count: staleModules.value.length },
-]);
+])
 
 const topAttentionModule = computed(
   () =>
     attentionModules.value.slice().sort((left, right) => {
-      const scoreDelta = attentionRank(right) - attentionRank(left);
-      if (scoreDelta !== 0) return scoreDelta;
-      return left.display_name.localeCompare(right.display_name);
-    })[0] ?? null
-);
+      const scoreDelta = attentionRank(right) - attentionRank(left)
+      if (scoreDelta !== 0) return scoreDelta
+      return left.display_name.localeCompare(right.display_name)
+    })[0] ?? null,
+)
 
 const operatorBrief = computed(() => {
   if (modules.value.length === 0) {
@@ -319,11 +330,11 @@ const operatorBrief = computed(() => {
         'If this is unexpected, verify writes into silver.module_registry, recent migrations, and the module registration path before trusting the dashboard.',
       panelClass: 'border-slate-200 bg-slate-50',
       badgeClass: 'bg-slate-200 text-slate-700',
-    };
+    }
   }
 
   if (attentionModules.value.length > 0) {
-    const focus = topAttentionModule.value;
+    const focus = topAttentionModule.value
     return {
       label: 'Intervention required',
       summary: `${formatNumber(attentionModules.value.length, 0)} modules need follow-up before operators can treat this registry as clean.`,
@@ -332,7 +343,7 @@ const operatorBrief = computed(() => {
         : 'Review quarantined, failing, and stale modules first.',
       panelClass: 'border-amber-200 bg-amber-50',
       badgeClass: 'bg-amber-100 text-amber-800',
-    };
+    }
   }
 
   return {
@@ -342,8 +353,8 @@ const operatorBrief = computed(() => {
       'Use the registry inventory below to spot new modules, confirm provider coverage, and drill into corridor freshness before production promotion.',
     panelClass: 'border-emerald-200 bg-emerald-50',
     badgeClass: 'bg-emerald-100 text-emerald-700',
-  };
-});
+  }
+})
 
 const emptyState = computed(() => {
   if (modules.value.length === 0) {
@@ -351,63 +362,65 @@ const emptyState = computed(() => {
       title: 'No modules registered yet',
       body: 'This environment is returning an empty module registry.',
       hint: 'If staging should already be populated, verify the registry writer path and silver.module_registry data before using this surface for go-live decisions.',
-    };
+    }
   }
 
   return {
     title: 'No modules match the current filters',
     body: 'The current search and status filters excluded every module.',
     hint: 'Reset the filter to All modules or widen the search to inspect the rest of the registry.',
-  };
-});
-
-watch(autoRefresh, enabled => {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
   }
-  if (!enabled) return;
-  countdown.value = 60;
+})
+
+watch(autoRefresh, (enabled) => {
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+  if (!enabled) return
+  countdown.value = 60
   timer = setInterval(() => {
-    countdown.value -= 1;
+    countdown.value -= 1
     if (countdown.value <= 0) {
-      countdown.value = 60;
-      void load();
+      countdown.value = 60
+      void load()
     }
-  }, 1000);
-});
+  }, 1000)
+})
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer);
-});
+  if (timer) clearInterval(timer)
+})
 
 const getErrorMessage = (cause: unknown, fallback: string) =>
   cause instanceof Error
     ? cause.message
-    : typeof cause === 'object' &&
-        cause !== null &&
-        'message' in cause &&
-        typeof cause.message === 'string'
+    : typeof cause === 'object'
+      && cause !== null
+      && 'message' in cause
+      && typeof cause.message === 'string'
       ? cause.message
-      : fallback;
+      : fallback
 
 const load = async () => {
-  if (loading.value) return;
-  loading.value = true;
-  error.value = null;
+  if (loading.value) return
+  loading.value = true
+  error.value = null
 
   try {
-    const response = await getModuleHealth();
-    modules.value = response.modules;
-    lastUpdated.value = response.updatedAt ?? new Date().toISOString();
-  } catch (cause: unknown) {
-    error.value = getErrorMessage(cause, 'Failed to load module health.');
-  } finally {
-    loading.value = false;
+    const response = await getModuleHealth()
+    modules.value = response.modules
+    lastUpdated.value = response.updatedAt ?? new Date().toISOString()
   }
-};
+ catch (cause: unknown) {
+    error.value = getErrorMessage(cause, 'Failed to load module health.')
+  }
+ finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
-  void load();
-});
+  void load()
+})
 </script>

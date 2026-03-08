@@ -14,11 +14,12 @@
               v-model="autoRefresh"
               type="checkbox"
               class="h-4 w-4 rounded border-rs-border text-brand-600"
-            />
-            Auto-refresh
-            <span v-if="autoRefresh" class="font-semibold tabular-nums text-rs-fg"
-              >{{ countdown }}s</span
             >
+            Auto-refresh
+            <span
+v-if="autoRefresh"
+class="font-semibold tabular-nums text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="text-body-sm h-10 rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
@@ -224,7 +225,10 @@
               </span>
             </div>
 
-            <div v-if="insights.summary.watchlist.length" class="mt-4 space-y-3">
+            <div
+v-if="insights.summary.watchlist.length"
+class="mt-4 space-y-3"
+>
               <div
                 v-for="incident in insights.summary.watchlist"
                 :key="incident.bundle_id"
@@ -282,7 +286,10 @@
           </div>
           <template v-else-if="trendsData?.points?.length">
             <FailureTrendsChart :points="trendsData.points" />
-            <p v-if="insights.totalBundlesInTrend === 0" class="text-caption mt-3 text-rs-muted">
+            <p
+v-if="insights.totalBundlesInTrend === 0"
+class="text-caption mt-3 text-rs-muted"
+>
               No new bundle pressure was recorded in the current 7-day window.
             </p>
           </template>
@@ -416,18 +423,18 @@ const pageMeta = computed(() => {
 const refreshDisabled = computed(() => loading.value || refreshing.value)
 const showEmptyState = computed(
   () =>
-    insights.value.telemetryState !== 'live' &&
-    actions.value.length === 0 &&
-    bundles.value.length === 0,
+    insights.value.telemetryState !== 'live'
+    && actions.value.length === 0
+    && bundles.value.length === 0,
 )
 
 const heroTone = computed<'stable' | 'active' | 'critical'>(() => {
   if (insights.value.summary.criticalOpenCount > 0 || insights.value.failedActions > 0)
     return 'critical'
   if (
-    insights.value.summary.openCount > 0 ||
-    insights.value.executingActions > 0 ||
-    (metrics.value?.pending_bundles ?? 0) > 0
+    insights.value.summary.openCount > 0
+    || insights.value.executingActions > 0
+    || (metrics.value?.pending_bundles ?? 0) > 0
   )
     return 'active'
   return 'stable'
@@ -471,7 +478,7 @@ const heroBadgeClass = computed(() => {
   return 'border-emerald-300/25 bg-emerald-400/12 text-emerald-100'
 })
 
-watch(autoRefresh, enabled => {
+watch(autoRefresh, (enabled) => {
   if (timer) {
     clearInterval(timer)
     timer = null
@@ -506,15 +513,16 @@ const load = async () => {
   if (refreshDisabled.value) return
 
   const hasVisibleData = Boolean(
-    metrics.value ||
-    actions.value.length ||
-    bundles.value.length ||
-    trendsData.value?.points?.length,
+    metrics.value
+    || actions.value.length
+    || bundles.value.length
+    || trendsData.value?.points?.length,
   )
 
   if (loading.value && !hasVisibleData) {
     error.value = null
-  } else {
+  }
+ else {
     refreshing.value = true
   }
 
@@ -531,7 +539,8 @@ const load = async () => {
   if (metricsRes.status === 'fulfilled') {
     metrics.value = metricsRes.value
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.metrics = getAdminApiErrorMessage(
       metricsRes.reason,
       'Metrics are temporarily unavailable.',
@@ -541,7 +550,8 @@ const load = async () => {
   if (actionsRes.status === 'fulfilled') {
     actions.value = actionsRes.value.actions
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.actions = getAdminApiErrorMessage(
       actionsRes.reason,
       'Recent actions are temporarily unavailable.',
@@ -551,7 +561,8 @@ const load = async () => {
   if (bundlesRes.status === 'fulfilled') {
     bundles.value = bundlesRes.value.bundles
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.bundles = getAdminApiErrorMessage(
       bundlesRes.reason,
       'Failure bundles are temporarily unavailable.',
@@ -561,7 +572,8 @@ const load = async () => {
   if (trendsRes.status === 'fulfilled') {
     trendsData.value = trendsRes.value
     fulfilled += 1
-  } else {
+  }
+ else {
     nextFeedErrors.trends = getAdminApiErrorMessage(
       trendsRes.reason,
       'Trend data is temporarily unavailable.',
@@ -573,7 +585,8 @@ const load = async () => {
   if (fulfilled > 0) {
     lastUpdated.value = new Date().toISOString()
     error.value = null
-  } else if (!hasVisibleData) {
+  }
+ else if (!hasVisibleData) {
     error.value = 'Failed to load the self-healing pipeline.'
   }
 

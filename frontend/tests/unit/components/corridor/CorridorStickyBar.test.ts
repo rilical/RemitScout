@@ -91,7 +91,7 @@ describe('CorridorStickyBar', () => {
           fromCurrency: string
           payoutMethod: string
         }
-      | undefined
+        | undefined
 
     expect(emitted).toBeDefined()
     expect(emitted?.fromCountry).toBe('US')

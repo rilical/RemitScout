@@ -1,16 +1,16 @@
 import { computed, watch } from 'vue'
 
-export type RuntimeFlagKey =
-  | 'pulse.public'
-  | 'pulse.screener'
-  | 'enterprise.public'
-  | 'ads.public'
+export type RuntimeFlagKey
+  = | 'pulse.public'
+    | 'pulse.screener'
+    | 'enterprise.public'
+    | 'ads.public'
 
-export type RuntimeFlagSource =
-  | 'hard_env_disabled'
-  | 'entitlement_override'
-  | 'db_flag'
-  | 'bootstrap_default'
+export type RuntimeFlagSource
+  = | 'hard_env_disabled'
+    | 'entitlement_override'
+    | 'db_flag'
+    | 'bootstrap_default'
 
 export type EffectiveRuntimeFlag = {
   key: RuntimeFlagKey
@@ -146,7 +146,7 @@ export const useFeatureFlags = () => {
         : [],
     )
 
-    return fallbackFlags.value.map((flag) => ({
+    return fallbackFlags.value.map(flag => ({
       ...flag,
       enabled: enabledByKey.get(flag.key) ?? flag.enabled,
     }))

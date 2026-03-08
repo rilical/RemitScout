@@ -346,7 +346,7 @@ const responseRows = computed(() =>
 
 const cycleTotals = computed(() =>
   responseRows.value
-    .map((row) => totalCycleMinutes(row))
+    .map(row => totalCycleMinutes(row))
     .filter((value): value is number => value !== null),
 )
 
@@ -440,7 +440,7 @@ const cycleTimeBuckets = computed(() =>
   CYCLE_BUCKETS.map(({ label, min, max, badgeClass }) => ({
     label,
     badgeClass,
-    count: cycleTotals.value.filter((total) => total >= min && total < max).length,
+    count: cycleTotals.value.filter(total => total >= min && total < max).length,
   })),
 )
 
@@ -457,9 +457,11 @@ const load = async () => {
     tceRows.value = tceRes.rows
     mttdRows.value = mttdRes.entries
     lastUpdated.value = tceRes.updatedAt ?? mttdRes.updatedAt ?? new Date().toISOString()
-  } catch (e: any) {
+  }
+ catch (e: any) {
     error.value = e?.message ?? 'Failed to load data quality metrics.'
-  } finally {
+  }
+ finally {
     loading.value = false
   }
 }

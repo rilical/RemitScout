@@ -13,8 +13,6 @@
 
 /* eslint-disable no-console */
 
-const PROVIDER_FACTORIES: Record<string, () => Promise<{ run: () => Promise<unknown> }>> = {}
-
 // Provider configs: providerId → { factory, sourceCountries, sampleSource }
 type ProviderConfig = {
   factory: () => Promise<any>

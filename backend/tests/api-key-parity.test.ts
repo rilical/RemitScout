@@ -145,7 +145,7 @@ const makeExportJob = () => ({
 })
 
 const stripDynamicHistoryRange = (body: Record<string, unknown>) => {
-  const { fromDate, toDate, ...rest } = body
+  const { fromDate: _fromDate, toDate: _toDate, ...rest } = body
   return rest
 }
 

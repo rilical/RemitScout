@@ -14,7 +14,6 @@ import {
   computeMedian,
   computeMAD,
   CrossProviderDetector,
-  type CrossProviderAnomalyResult,
 } from '../plane-b/src/signals/cross-provider-detector'
 
 /* ------------------------------------------------------------------ */

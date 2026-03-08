@@ -14,11 +14,12 @@
               v-model="autoRefresh"
               type="checkbox"
               class="h-4 w-4 rounded border-rs-border text-brand-600"
-            />
-            Auto-refresh
-            <span v-if="autoRefresh" class="font-semibold tabular-nums text-rs-fg"
-              >{{ countdown }}s</span
             >
+            Auto-refresh
+            <span
+v-if="autoRefresh"
+class="font-semibold tabular-nums text-rs-fg"
+>{{ countdown }}s</span>
           </label>
           <button
             class="text-body-sm hover:bg-rs-surface-2 h-10 rounded-lg border border-rs-border bg-rs-surface px-4 font-semibold text-rs-fg disabled:opacity-60"
@@ -74,7 +75,10 @@
               {{ formatNumber(latestScan.errors_count ?? 0, 0) }} errors
             </p>
           </template>
-          <p v-else class="text-body-sm mt-2 text-rs-muted">
+          <p
+v-else
+class="text-body-sm mt-2 text-rs-muted"
+>
             No discovery scans have been recorded yet.
           </p>
         </article>
@@ -97,7 +101,10 @@
               {{ formatNumber(latestRun.blocked_count, 0) }}
             </p>
           </template>
-          <p v-else class="text-body-sm mt-2 text-rs-muted">
+          <p
+v-else
+class="text-body-sm mt-2 text-rs-muted"
+>
             No certification runs have been recorded yet.
           </p>
         </article>
@@ -116,7 +123,10 @@
         </article>
       </section>
 
-      <section class="rounded-2xl border p-6 shadow-sm" :class="readiness.panelClass">
+      <section
+class="rounded-2xl border p-6 shadow-sm"
+:class="readiness.panelClass"
+>
         <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div class="flex items-center gap-3">
@@ -169,13 +179,13 @@
               type="text"
               placeholder="Filter provider"
               class="text-body-sm h-10 rounded-lg border border-rs-border bg-rs-bg px-3 text-rs-fg focus:border-brand-500 focus:outline-none"
-            />
+            >
             <input
               v-model.trim="certProviderIdsInput"
               type="text"
               placeholder="Certification providers (csv)"
               class="text-body-sm h-10 min-w-[14rem] rounded-lg border border-rs-border bg-rs-bg px-3 text-rs-fg focus:border-brand-500 focus:outline-none"
-            />
+            >
             <select
               v-model="certMethod"
               class="text-body-sm h-10 rounded-lg border border-rs-border bg-rs-bg px-3 text-rs-fg focus:border-brand-500 focus:outline-none"
@@ -232,7 +242,10 @@
                   </td>
                 </tr>
                 <tr v-if="filteredPendingReviews.length === 0">
-                  <td colspan="4" class="px-4 py-8 text-center text-rs-muted">
+                  <td
+colspan="4"
+class="px-4 py-8 text-center text-rs-muted"
+>
                     {{
                       pendingReviews.length === 0
                         ? 'No pending discovery reviews.'
@@ -264,7 +277,10 @@
               {{ sectionErrors.recentScans }}
             </div>
 
-            <div v-else-if="filteredRecentScans.length > 0" class="mt-4 space-y-2">
+            <div
+v-else-if="filteredRecentScans.length > 0"
+class="mt-4 space-y-2"
+>
               <button
                 v-for="scan in filteredRecentScans.slice(0, 5)"
                 :key="`recent:${scan.id}`"
@@ -312,13 +328,16 @@
                 Review state is explicit. Apply is separate and retryable.
               </p>
             </div>
-            <div v-if="selectedScan" class="flex flex-wrap gap-2">
+            <div
+v-if="selectedScan"
+class="flex flex-wrap gap-2"
+>
               <button
                 class="text-body-sm hover:bg-rs-surface-2 h-10 rounded-lg border border-rs-border bg-rs-bg px-4 font-semibold text-rs-fg disabled:opacity-60"
                 :disabled="
-                  actionBusy ||
-                  selectedScan.review_status === 'approved' ||
-                  selectedScan.apply_status === 'applied'
+                  actionBusy
+                  || selectedScan.review_status === 'approved'
+                  || selectedScan.apply_status === 'applied'
                 "
                 @click="approveSelectedScan"
               >
@@ -327,9 +346,9 @@
               <button
                 class="text-body-sm h-10 rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
                 :disabled="
-                  actionBusy ||
-                  selectedScan.review_status === 'dismissed' ||
-                  selectedScan.apply_status === 'applied'
+                  actionBusy
+                  || selectedScan.review_status === 'dismissed'
+                  || selectedScan.apply_status === 'applied'
                 "
                 @click="applySelectedScan"
               >
@@ -359,7 +378,10 @@
             {{ sectionErrors.selectedScan }}
           </div>
 
-          <div v-if="selectedScan" class="mt-4 space-y-4">
+          <div
+v-if="selectedScan"
+class="mt-4 space-y-4"
+>
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
                 <div class="text-xs uppercase tracking-wide text-rs-muted">Provider</div>
@@ -405,9 +427,9 @@
                 <div class="text-body-sm mt-1 font-semibold text-rs-fg">
                   {{
                     formatDateTime(
-                      selectedScan.completed_at ||
-                        selectedScan.started_at ||
-                        selectedScan.created_at
+                      selectedScan.completed_at
+                        || selectedScan.started_at
+                        || selectedScan.created_at,
                     )
                   }}
                 </div>
@@ -446,8 +468,7 @@
                 <h3 class="text-body-sm font-semibold text-rs-fg">Diff evidence</h3>
                 <pre
                   class="mt-3 max-h-[28rem] overflow-auto rounded-lg bg-slate-950/95 p-4 text-xs text-slate-100"
-                  >{{ prettyJson(selectedScan.diff_json) }}</pre
-                >
+                  >{{ prettyJson(selectedScan.diff_json) }}</pre>
               </div>
               <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
                 <h3 class="text-body-sm font-semibold text-rs-fg">Apply state</h3>
@@ -459,8 +480,7 @@
                       apply_errors_json: selectedScan.apply_errors_json,
                       result_json: selectedScan.result_json,
                     })
-                  }}</pre
-                >
+                  }}</pre>
               </div>
             </div>
           </div>
@@ -549,7 +569,10 @@
                 Providers that stay on static fallback or unresolved drift do not reach certified.
               </p>
             </div>
-            <div v-if="selectedRun" class="text-body-sm grid grid-cols-3 gap-2 text-rs-muted">
+            <div
+v-if="selectedRun"
+class="text-body-sm grid grid-cols-3 gap-2 text-rs-muted"
+>
               <div>Certified {{ selectedRun.certified_count }}</div>
               <div>Degraded {{ selectedRun.degraded_count }}</div>
               <div>Blocked {{ selectedRun.blocked_count }}</div>
@@ -563,7 +586,10 @@
             {{ sectionErrors.selectedRun }}
           </div>
 
-          <div v-if="selectedRun" class="mt-4 space-y-4">
+          <div
+v-if="selectedRun"
+class="mt-4 space-y-4"
+>
             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
               <div class="rounded-xl border border-rs-border bg-rs-bg p-4">
                 <div class="text-xs uppercase tracking-wide text-rs-muted">Environment</div>
@@ -631,7 +657,10 @@
                     </td>
                   </tr>
                   <tr v-if="selectedRunResults.length === 0">
-                    <td colspan="4" class="px-4 py-8 text-center text-rs-muted">
+                    <td
+colspan="4"
+class="px-4 py-8 text-center text-rs-muted"
+>
                       No provider outcomes recorded for this run yet.
                     </td>
                   </tr>
@@ -667,44 +696,44 @@ import {
   type AdminDiscoveryCertificationRun,
   type AdminDiscoveryScanDetail,
   type AdminDiscoveryScanSummary,
-} from '~/lib/opsApi';
+} from '~/lib/opsApi'
 
 type SectionErrorState = {
-  pendingReviews: string | null;
-  recentScans: string | null;
-  runs: string | null;
-  selectedScan: string | null;
-  selectedRun: string | null;
-};
+  pendingReviews: string | null
+  recentScans: string | null
+  runs: string | null
+  selectedScan: string | null
+  selectedRun: string | null
+}
 
-definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' });
+definePageMeta({ middleware: ['auth', 'admin'], layout: 'admin' })
 
 useAdminPage({
   title: 'Provider Control Plane | Remit-Scout',
   description:
     'Operator workflow for discovery review, transactional apply, and provider certification.',
-});
+})
 
-const { formatDateTime, formatDuration, formatNumber } = useAdminFormat();
+const { formatDateTime, formatDuration, formatNumber } = useAdminFormat()
 
-const loading = ref(false);
-const error = ref<string | null>(null);
-const actionMessage = ref<string | null>(null);
-const lastUpdated = ref<string | null>(null);
-const actionBusy = ref(false);
-const runningCertification = ref(false);
-const autoRefresh = ref(false);
-const countdown = ref(60);
-const providerFilter = ref('');
-const certProviderIdsInput = ref('');
-const certMethod = ref<'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'>('bank');
+const loading = ref(false)
+const error = ref<string | null>(null)
+const actionMessage = ref<string | null>(null)
+const lastUpdated = ref<string | null>(null)
+const actionBusy = ref(false)
+const runningCertification = ref(false)
+const autoRefresh = ref(false)
+const countdown = ref(60)
+const providerFilter = ref('')
+const certProviderIdsInput = ref('')
+const certMethod = ref<'bank' | 'cash' | 'wallet' | 'airtime' | 'home' | 'card'>('bank')
 
-const pendingReviews = ref<AdminDiscoveryScanSummary[]>([]);
-const recentScans = ref<AdminDiscoveryScanSummary[]>([]);
-const selectedScan = ref<AdminDiscoveryScanDetail | null>(null);
-const certificationRuns = ref<AdminDiscoveryCertificationRun[]>([]);
-const selectedRun = ref<AdminDiscoveryCertificationRun | null>(null);
-const selectedRunResults = ref<AdminDiscoveryCertificationResult[]>([]);
+const pendingReviews = ref<AdminDiscoveryScanSummary[]>([])
+const recentScans = ref<AdminDiscoveryScanSummary[]>([])
+const selectedScan = ref<AdminDiscoveryScanDetail | null>(null)
+const certificationRuns = ref<AdminDiscoveryCertificationRun[]>([])
+const selectedRun = ref<AdminDiscoveryCertificationRun | null>(null)
+const selectedRunResults = ref<AdminDiscoveryCertificationResult[]>([])
 
 const sectionErrors = reactive<SectionErrorState>({
   pendingReviews: null,
@@ -712,114 +741,114 @@ const sectionErrors = reactive<SectionErrorState>({
   runs: null,
   selectedScan: null,
   selectedRun: null,
-});
+})
 
-let timer: ReturnType<typeof setInterval> | null = null;
+let timer: ReturnType<typeof setInterval> | null = null
 
 const getErrorMessage = (cause: unknown, fallback: string) =>
   cause instanceof Error
     ? cause.message
-    : typeof cause === 'object' &&
-        cause !== null &&
-        'message' in cause &&
-        typeof cause.message === 'string'
+    : typeof cause === 'object'
+      && cause !== null
+      && 'message' in cause
+      && typeof cause.message === 'string'
       ? cause.message
-      : fallback;
+      : fallback
 
 const toTimestamp = (value: string | null | undefined) => {
-  if (!value) return null;
-  const timestamp = new Date(value).getTime();
-  return Number.isNaN(timestamp) ? null : timestamp;
-};
+  if (!value) return null
+  const timestamp = new Date(value).getTime()
+  return Number.isNaN(timestamp) ? null : timestamp
+}
 
 const ageSecondsFromNow = (value: string | null | undefined) => {
-  const timestamp = toTimestamp(value);
-  if (timestamp === null) return null;
-  return Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-};
+  const timestamp = toTimestamp(value)
+  if (timestamp === null) return null
+  return Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
+}
 
 const formatAge = (value: string | null | undefined) => {
-  const seconds = ageSecondsFromNow(value);
-  return seconds == null ? '—' : formatDuration(seconds);
-};
+  const seconds = ageSecondsFromNow(value)
+  return seconds == null ? '—' : formatDuration(seconds)
+}
 
 const formatMilliseconds = (value: number | null | undefined) => {
-  if (value == null || !Number.isFinite(value)) return '—';
-  if (value < 1000) return `${Math.max(0, Math.round(value))}ms`;
-  return `${formatNumber(value / 1000, 1)}s`;
-};
+  if (value == null || !Number.isFinite(value)) return '—'
+  if (value < 1000) return `${Math.max(0, Math.round(value))}ms`
+  return `${formatNumber(value / 1000, 1)}s`
+}
 
 const durationSecondsBetween = (
   startedAt: string | null | undefined,
-  completedAt: string | null | undefined
+  completedAt: string | null | undefined,
 ) => {
-  const started = toTimestamp(startedAt);
-  const completed = toTimestamp(completedAt);
-  if (started == null || completed == null || completed < started) return null;
-  return Math.floor((completed - started) / 1000);
-};
+  const started = toTimestamp(startedAt)
+  const completed = toTimestamp(completedAt)
+  if (started == null || completed == null || completed < started) return null
+  return Math.floor((completed - started) / 1000)
+}
 
 const clearSectionErrors = (...keys: Array<keyof SectionErrorState>) => {
   for (const key of keys) {
-    sectionErrors[key] = null;
+    sectionErrors[key] = null
   }
-};
+}
 
-watch(autoRefresh, enabled => {
+watch(autoRefresh, (enabled) => {
   if (timer) {
-    clearInterval(timer);
-    timer = null;
+    clearInterval(timer)
+    timer = null
   }
-  if (!enabled) return;
-  countdown.value = 60;
+  if (!enabled) return
+  countdown.value = 60
   timer = setInterval(() => {
-    countdown.value -= 1;
+    countdown.value -= 1
     if (countdown.value <= 0) {
-      countdown.value = 60;
-      void load();
+      countdown.value = 60
+      void load()
     }
-  }, 1000);
-});
+  }, 1000)
+})
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer);
-});
+  if (timer) clearInterval(timer)
+})
 
 const filteredPendingReviews = computed(() => {
-  const token = providerFilter.value.trim().toLowerCase();
-  if (!token) return pendingReviews.value;
-  return pendingReviews.value.filter(scan => scan.provider_id.toLowerCase().includes(token));
-});
+  const token = providerFilter.value.trim().toLowerCase()
+  if (!token) return pendingReviews.value
+  return pendingReviews.value.filter(scan => scan.provider_id.toLowerCase().includes(token))
+})
 
 const filteredRecentScans = computed(() => {
-  const token = providerFilter.value.trim().toLowerCase();
-  if (!token) return recentScans.value;
-  return recentScans.value.filter(scan => scan.provider_id.toLowerCase().includes(token));
-});
+  const token = providerFilter.value.trim().toLowerCase()
+  if (!token) return recentScans.value
+  return recentScans.value.filter(scan => scan.provider_id.toLowerCase().includes(token))
+})
 
 const pendingProvidersCount = computed(
-  () => new Set(pendingReviews.value.map(scan => scan.provider_id)).size
-);
+  () => new Set(pendingReviews.value.map(scan => scan.provider_id)).size,
+)
 
 const oldestPendingLabel = computed(() => {
   const oldestSeconds = pendingReviews.value.reduce<number | null>((oldest, scan) => {
-    const age = ageSecondsFromNow(scan.completed_at || scan.started_at || scan.created_at);
-    if (age == null) return oldest;
-    return oldest == null ? age : Math.max(oldest, age);
-  }, null);
+    const age = ageSecondsFromNow(scan.completed_at || scan.started_at || scan.created_at)
+    if (age == null) return oldest
+    return oldest == null ? age : Math.max(oldest, age)
+  }, null)
 
-  return oldestSeconds == null ? '—' : formatDuration(oldestSeconds);
-});
+  return oldestSeconds == null ? '—' : formatDuration(oldestSeconds)
+})
 
-const latestScan = computed(() => recentScans.value[0] ?? pendingReviews.value[0] ?? null);
-const latestRun = computed(() => certificationRuns.value[0] ?? null);
+const latestScan = computed(() => recentScans.value[0] ?? pendingReviews.value[0] ?? null)
+const latestRun = computed(() => certificationRuns.value[0] ?? null)
 
 const readiness = computed(() => {
   const primaryFailures = [
     sectionErrors.pendingReviews,
     sectionErrors.recentScans,
     sectionErrors.runs,
-  ].filter(Boolean).length;
+  ].filter(Boolean).length
 
   if (primaryFailures > 0) {
     return {
@@ -829,7 +858,7 @@ const readiness = computed(() => {
         'Keep working from the visible panels, but verify Plane A logs, DB health, and recent migrations before you trust the missing sections.',
       panelClass: 'border-amber-200 bg-amber-50',
       badgeClass: 'bg-amber-100 text-amber-800',
-    };
+    }
   }
 
   if (pendingReviews.value.length > 0) {
@@ -840,12 +869,12 @@ const readiness = computed(() => {
         'Prioritize the oldest unresolved scan, then run review-only certification to confirm the provider can stay off static fallback.',
       panelClass: 'border-amber-200 bg-amber-50',
       badgeClass: 'bg-amber-100 text-amber-800',
-    };
+    }
   }
 
   if (
-    latestRun.value &&
-    (latestRun.value.blocked_count > 0 || latestRun.value.degraded_count > 0)
+    latestRun.value
+    && (latestRun.value.blocked_count > 0 || latestRun.value.degraded_count > 0)
   ) {
     return {
       label: 'Watch',
@@ -854,7 +883,7 @@ const readiness = computed(() => {
         'Open the most recent run and confirm every blocked provider has explicit drift reasons and operator follow-up.',
       panelClass: 'border-sky-200 bg-sky-50',
       badgeClass: 'bg-sky-100 text-sky-700',
-    };
+    }
   }
 
   if (!latestScan.value && !latestRun.value) {
@@ -865,7 +894,7 @@ const readiness = computed(() => {
         'This is acceptable in a fresh environment. If staging should be exercised, trigger a review-only certification run and confirm the first scan lands.',
       panelClass: 'border-slate-200 bg-slate-50',
       badgeClass: 'bg-slate-200 text-slate-700',
-    };
+    }
   }
 
   return {
@@ -875,225 +904,239 @@ const readiness = computed(() => {
       'Use this control plane to inspect drift before promotion and keep review/apply state explicit for every provider.',
     panelClass: 'border-emerald-200 bg-emerald-50',
     badgeClass: 'bg-emerald-100 text-emerald-700',
-  };
-});
+  }
+})
 
 const nextCheckpoint = computed(() => {
   if (pendingReviews.value.length > 0) {
-    const next = pendingReviews.value[0];
-    return `${next.provider_id} is next in queue. Review status is ${next.review_status} and apply status is ${next.apply_status}.`;
+    const next = pendingReviews.value[0]
+    return `${next.provider_id} is next in queue. Review status is ${next.review_status} and apply status is ${next.apply_status}.`
   }
   if (latestRun.value) {
-    return `Latest certification run ${latestRun.value.run_id} completed ${formatAge(latestRun.value.completed_at || latestRun.value.created_at)} ago.`;
+    return `Latest certification run ${latestRun.value.run_id} completed ${formatAge(latestRun.value.completed_at || latestRun.value.created_at)} ago.`
   }
   if (latestScan.value) {
-    return `Latest discovery scan ${latestScan.value.id} for ${latestScan.value.provider_id} completed ${formatAge(latestScan.value.completed_at || latestScan.value.started_at || latestScan.value.created_at)} ago.`;
+    return `Latest discovery scan ${latestScan.value.id} for ${latestScan.value.provider_id} completed ${formatAge(latestScan.value.completed_at || latestScan.value.started_at || latestScan.value.created_at)} ago.`
   }
-  return 'Trigger a review-only certification run once provider discovery should be active in this environment.';
-});
+  return 'Trigger a review-only certification run once provider discovery should be active in this environment.'
+})
 
 const certificationDurationLabel = computed(() => {
-  if (!selectedRun.value) return '—';
+  if (!selectedRun.value) return '—'
   const seconds = durationSecondsBetween(
     selectedRun.value.created_at,
-    selectedRun.value.completed_at
-  );
-  return seconds == null ? '—' : formatDuration(seconds);
-});
+    selectedRun.value.completed_at,
+  )
+  return seconds == null ? '—' : formatDuration(seconds)
+})
 
-const prettyJson = (value: unknown) => JSON.stringify(value ?? null, null, 2);
+const prettyJson = (value: unknown) => JSON.stringify(value ?? null, null, 2)
 
 const reviewBadgeClass = (status: string) => {
   if (status === 'approved' || status === 'automation_approved')
-    return 'bg-emerald-100 text-emerald-700';
-  if (status === 'dismissed') return 'bg-slate-200 text-slate-700';
-  if (status === 'not_required') return 'bg-sky-100 text-sky-700';
-  return 'bg-amber-100 text-amber-700';
-};
+    return 'bg-emerald-100 text-emerald-700'
+  if (status === 'dismissed') return 'bg-slate-200 text-slate-700'
+  if (status === 'not_required') return 'bg-sky-100 text-sky-700'
+  return 'bg-amber-100 text-amber-700'
+}
 
 const applyBadgeClass = (status: string) => {
-  if (status === 'applied') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'failed') return 'bg-rose-100 text-rose-700';
-  if (status === 'pending_apply' || status === 'applying') return 'bg-amber-100 text-amber-700';
-  if (status === 'dismissed' || status === 'not_applicable') return 'bg-slate-200 text-slate-700';
-  return 'bg-sky-100 text-sky-700';
-};
+  if (status === 'applied') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'failed') return 'bg-rose-100 text-rose-700'
+  if (status === 'pending_apply' || status === 'applying') return 'bg-amber-100 text-amber-700'
+  if (status === 'dismissed' || status === 'not_applicable') return 'bg-slate-200 text-slate-700'
+  return 'bg-sky-100 text-sky-700'
+}
 
 const runStatusClass = (status: string) => {
-  if (status === 'certified' || status === 'completed') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'blocked' || status === 'failed') return 'bg-rose-100 text-rose-700';
-  return 'bg-amber-100 text-amber-700';
-};
+  if (status === 'certified' || status === 'completed') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'blocked' || status === 'failed') return 'bg-rose-100 text-rose-700'
+  return 'bg-amber-100 text-amber-700'
+}
 
 const scanStatusClass = (status: string) => {
-  if (status === 'completed') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'failed') return 'bg-rose-100 text-rose-700';
-  if (status === 'partial') return 'bg-amber-100 text-amber-700';
-  return 'bg-sky-100 text-sky-700';
-};
+  if (status === 'completed') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'failed') return 'bg-rose-100 text-rose-700'
+  if (status === 'partial') return 'bg-amber-100 text-amber-700'
+  return 'bg-sky-100 text-sky-700'
+}
 
 const openScan = async (scanId: number) => {
-  clearSectionErrors('selectedScan');
+  clearSectionErrors('selectedScan')
   try {
-    const response = await getDiscoveryScan(scanId);
-    selectedScan.value = response.scan;
-  } catch (cause: unknown) {
-    sectionErrors.selectedScan = getErrorMessage(cause, 'Failed to load discovery scan detail.');
+    const response = await getDiscoveryScan(scanId)
+    selectedScan.value = response.scan
   }
-};
+ catch (cause: unknown) {
+    sectionErrors.selectedScan = getErrorMessage(cause, 'Failed to load discovery scan detail.')
+  }
+}
 
 const openRun = async (runId: string) => {
-  clearSectionErrors('selectedRun');
+  clearSectionErrors('selectedRun')
   try {
-    const response = await getDiscoveryCertificationRun(runId);
-    selectedRun.value = response.run;
-    selectedRunResults.value = response.results;
-  } catch (cause: unknown) {
-    sectionErrors.selectedRun = getErrorMessage(cause, 'Failed to load certification run detail.');
+    const response = await getDiscoveryCertificationRun(runId)
+    selectedRun.value = response.run
+    selectedRunResults.value = response.results
   }
-};
+ catch (cause: unknown) {
+    sectionErrors.selectedRun = getErrorMessage(cause, 'Failed to load certification run detail.')
+  }
+}
 
 const load = async () => {
-  if (loading.value) return;
-  loading.value = true;
-  error.value = null;
-  clearSectionErrors('pendingReviews', 'recentScans', 'runs');
+  if (loading.value) return
+  loading.value = true
+  error.value = null
+  clearSectionErrors('pendingReviews', 'recentScans', 'runs')
 
   try {
     const [pendingResult, scansResult, runsResult] = await Promise.allSettled([
       listPendingDiscoveryReviews(50),
       listDiscoveryScans({ limit: 25 }),
       listDiscoveryCertificationRuns(12),
-    ]);
+    ])
 
     if (pendingResult.status === 'fulfilled') {
-      pendingReviews.value = pendingResult.value.scans;
-    } else {
+      pendingReviews.value = pendingResult.value.scans
+    }
+ else {
       sectionErrors.pendingReviews = getErrorMessage(
         pendingResult.reason,
-        'Pending review queue is unavailable right now.'
-      );
+        'Pending review queue is unavailable right now.',
+      )
     }
 
     if (scansResult.status === 'fulfilled') {
-      recentScans.value = scansResult.value.scans;
-    } else {
+      recentScans.value = scansResult.value.scans
+    }
+ else {
       sectionErrors.recentScans = getErrorMessage(
         scansResult.reason,
-        'Recent discovery scan history is unavailable right now.'
-      );
+        'Recent discovery scan history is unavailable right now.',
+      )
     }
 
     if (runsResult.status === 'fulfilled') {
-      certificationRuns.value = runsResult.value.runs;
-    } else {
+      certificationRuns.value = runsResult.value.runs
+    }
+ else {
       sectionErrors.runs = getErrorMessage(
         runsResult.reason,
-        'Certification run history is unavailable right now.'
-      );
+        'Certification run history is unavailable right now.',
+      )
     }
 
-    const hasRenderableData =
-      pendingReviews.value.length > 0 ||
-      recentScans.value.length > 0 ||
-      certificationRuns.value.length > 0;
+    const hasRenderableData
+      = pendingReviews.value.length > 0
+        || recentScans.value.length > 0
+        || certificationRuns.value.length > 0
 
     if (
-      sectionErrors.pendingReviews &&
-      sectionErrors.recentScans &&
-      sectionErrors.runs &&
-      !hasRenderableData
+      sectionErrors.pendingReviews
+      && sectionErrors.recentScans
+      && sectionErrors.runs
+      && !hasRenderableData
     ) {
-      error.value = 'Failed to load provider control plane.';
-      return;
+      error.value = 'Failed to load provider control plane.'
+      return
     }
 
-    const preferredScanId =
-      selectedScan.value?.id ?? pendingReviews.value[0]?.id ?? recentScans.value[0]?.id ?? null;
+    const preferredScanId
+      = selectedScan.value?.id ?? pendingReviews.value[0]?.id ?? recentScans.value[0]?.id ?? null
     if (preferredScanId != null) {
-      await openScan(preferredScanId);
-    } else {
-      selectedScan.value = null;
-      clearSectionErrors('selectedScan');
+      await openScan(preferredScanId)
+    }
+ else {
+      selectedScan.value = null
+      clearSectionErrors('selectedScan')
     }
 
-    const preferredRunId = selectedRun.value?.run_id ?? certificationRuns.value[0]?.run_id ?? null;
+    const preferredRunId = selectedRun.value?.run_id ?? certificationRuns.value[0]?.run_id ?? null
     if (preferredRunId) {
-      await openRun(preferredRunId);
-    } else {
-      selectedRun.value = null;
-      selectedRunResults.value = [];
-      clearSectionErrors('selectedRun');
+      await openRun(preferredRunId)
+    }
+ else {
+      selectedRun.value = null
+      selectedRunResults.value = []
+      clearSectionErrors('selectedRun')
     }
 
-    lastUpdated.value = new Date().toISOString();
-  } finally {
-    loading.value = false;
+    lastUpdated.value = new Date().toISOString()
   }
-};
+ finally {
+    loading.value = false
+  }
+}
 
 const mutateSelectedScan = async (operation: 'approve' | 'apply' | 'dismiss') => {
-  if (!selectedScan.value || actionBusy.value) return;
-  actionBusy.value = true;
-  actionMessage.value = null;
+  if (!selectedScan.value || actionBusy.value) return
+  actionBusy.value = true
+  actionMessage.value = null
 
   try {
     if (operation === 'approve') {
-      const response = await approveDiscoveryReview(selectedScan.value.id);
-      selectedScan.value = response.scan;
-      actionMessage.value = `Scan ${response.scan.id} approved.`;
-    } else if (operation === 'apply') {
-      const response = await applyDiscoveryReview(selectedScan.value.id);
-      selectedScan.value = response.scan;
+      const response = await approveDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
+      actionMessage.value = `Scan ${response.scan.id} approved.`
+    }
+ else if (operation === 'apply') {
+      const response = await applyDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
       actionMessage.value = response.applied
         ? `Scan ${response.scan.id} applied.`
-        : `Apply failed for scan ${response.scan.id}; retry is available.`;
-    } else {
-      const response = await dismissDiscoveryReview(selectedScan.value.id);
-      selectedScan.value = response.scan;
-      actionMessage.value = `Scan ${response.scan.id} dismissed.`;
+        : `Apply failed for scan ${response.scan.id}; retry is available.`
+    }
+ else {
+      const response = await dismissDiscoveryReview(selectedScan.value.id)
+      selectedScan.value = response.scan
+      actionMessage.value = `Scan ${response.scan.id} dismissed.`
     }
 
-    await load();
-  } catch (cause: unknown) {
-    actionMessage.value = getErrorMessage(cause, 'Action failed.');
-  } finally {
-    actionBusy.value = false;
+    await load()
   }
-};
+ catch (cause: unknown) {
+    actionMessage.value = getErrorMessage(cause, 'Action failed.')
+  }
+ finally {
+    actionBusy.value = false
+  }
+}
 
-const approveSelectedScan = async () => mutateSelectedScan('approve');
-const applySelectedScan = async () => mutateSelectedScan('apply');
-const dismissSelectedScan = async () => mutateSelectedScan('dismiss');
+const approveSelectedScan = async () => mutateSelectedScan('approve')
+const applySelectedScan = async () => mutateSelectedScan('apply')
+const dismissSelectedScan = async () => mutateSelectedScan('dismiss')
 
 const runCertification = async () => {
-  if (runningCertification.value) return;
-  runningCertification.value = true;
-  actionMessage.value = null;
+  if (runningCertification.value) return
+  runningCertification.value = true
+  actionMessage.value = null
 
   try {
     const providerIds = certProviderIdsInput.value
       .split(',')
       .map(entry => entry.trim().toLowerCase())
-      .filter(Boolean);
+      .filter(Boolean)
 
     const run = await triggerDiscoveryCertification({
       providerIds: providerIds.length ? providerIds : undefined,
       method: certMethod.value,
       reviewOnly: true,
-    });
+    })
 
-    actionMessage.value = `Certification run ${run.run_id} completed with status ${run.status}.`;
-    await load();
-    await openRun(run.run_id);
-  } catch (cause: unknown) {
-    actionMessage.value = getErrorMessage(cause, 'Certification run failed.');
-  } finally {
-    runningCertification.value = false;
+    actionMessage.value = `Certification run ${run.run_id} completed with status ${run.status}.`
+    await load()
+    await openRun(run.run_id)
   }
-};
+ catch (cause: unknown) {
+    actionMessage.value = getErrorMessage(cause, 'Certification run failed.')
+  }
+ finally {
+    runningCertification.value = false
+  }
+}
 
 onMounted(() => {
-  void load();
-});
+  void load()
+})
 </script>

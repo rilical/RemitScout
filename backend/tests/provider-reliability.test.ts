@@ -18,8 +18,6 @@ import {
   ProviderReliabilityScorer,
   DEFAULT_RELIABILITY_CONFIG,
   type ProviderOperationalData,
-  type ReliabilityScore,
-  type ReliabilityConfig,
 } from '../plane-b/src/scoring/provider-reliability'
 import { GLOBAL_WEIGHT_CORRIDOR_ID } from '../shared/weighting-model'
 

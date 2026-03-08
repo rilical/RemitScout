@@ -67,13 +67,19 @@
                 <td class="py-3 text-rs-fg">{{ flag.hard_gate_enabled ? 'open' : 'closed' }}</td>
                 <td class="py-3 text-rs-muted">
                   <div>{{ flag.reason }}</div>
-                  <div v-if="flag.db_flag?.updated_at" class="mt-1 text-xs text-neutral-400">
+                  <div
+v-if="flag.db_flag?.updated_at"
+class="mt-1 text-xs text-neutral-400"
+>
                     DB updated {{ formatTimestamp(flag.db_flag.updated_at) }}
                   </div>
                 </td>
               </tr>
               <tr v-if="runtimeFlags.length === 0">
-                <td colspan="5" class="py-4 text-center text-body-sm text-rs-muted">
+                <td
+colspan="5"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
                   No runtime flags resolved.
                 </td>
               </tr>
@@ -129,7 +135,10 @@
         <p class="mt-1 text-body-sm text-rs-muted">
           Use DB overrides for rollout targeting. Hard env gates still win when disabled.
         </p>
-        <form class="mt-4 grid gap-3" @submit.prevent="createFlag">
+        <form
+class="mt-4 grid gap-3"
+@submit.prevent="createFlag"
+>
           <label class="text-body-sm text-rs-muted">
             Key
             <input
@@ -188,12 +197,19 @@
           Select a DB override from the table below.
         </div>
 
-        <div v-else class="mt-4 space-y-3">
+        <div
+v-else
+class="mt-4 space-y-3"
+>
           <div class="text-body-sm text-rs-muted">
             Editing: <span class="font-semibold text-rs-fg">{{ selectedFlag.key }}</span>
           </div>
           <label class="flex items-center gap-2 text-body-sm text-rs-muted">
-            <input v-model="editor.enabled" type="checkbox" class="h-4 w-4 rounded border-rs-border text-brand-600">
+            <input
+v-model="editor.enabled"
+type="checkbox"
+class="h-4 w-4 rounded border-rs-border text-brand-600"
+>
             Enabled
           </label>
           <label class="block text-body-sm text-rs-muted">
@@ -248,7 +264,7 @@
           :error="error ? { message: error } : null"
           :empty="{
             title: 'No DB overrides yet.',
-            message: 'Bootstrap defaults are active until you add an explicit DB override.'
+            message: 'Bootstrap defaults are active until you add an explicit DB override.',
           }"
         >
           <template #cell-key="{ row }">
@@ -296,7 +312,10 @@
                 <td class="py-2 text-rs-muted">{{ entry.next_enabled }}</td>
               </tr>
               <tr v-if="history.length === 0">
-                <td colspan="4" class="py-4 text-center text-body-sm text-rs-muted">
+                <td
+colspan="4"
+class="py-4 text-center text-body-sm text-rs-muted"
+>
                   No history entries yet.
                 </td>
               </tr>
@@ -388,7 +407,7 @@ const canMutate = computed(() => Boolean(isSuperAdmin.value))
 const effectivePlanLabel = computed(() => runtimeFlags.value[0]?.plan_code || 'free')
 const hardGatedCount = computed(() => runtimeFlags.value.filter(flag => !flag.hard_gate_enabled).length)
 const dbManagedCount = computed(() => flags.value.length)
-const audienceScopedCount = computed(() => flags.value.filter(flag => {
+const audienceScopedCount = computed(() => flags.value.filter((flag) => {
   const rules = flag.audience_rules || {}
   return Object.keys(rules).length > 0 && rules.global !== true
 }).length)

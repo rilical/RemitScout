@@ -10,7 +10,6 @@ import { createLogger } from '../../shared/logger'
 import type { JobHandler } from '../../shared/types/job'
 import { formatError } from '../../shared/utils/error-handling'
 import {
-  resolveLlmConnector,
   validateResolvedLlmConfig,
 } from './agent-llm-startup'
 

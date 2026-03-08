@@ -1,15 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { mount, flushPromises } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { mount, flushPromises } from '@vue/test-utils'
 
-const mockGetModuleHealth = vi.hoisted(() => vi.fn());
+const mockGetModuleHealth = vi.hoisted(() => vi.fn())
 
 vi.mock('~/lib/opsApi', () => ({
   getModuleHealth: (...args: unknown[]) => mockGetModuleHealth(...args),
-}));
+}))
 
 const mountModulesPage = async () => {
-  const ModulesPage = (await import('~/pages/admin/modules.vue')).default;
+  const ModulesPage = (await import('~/pages/admin/modules.vue')).default
   return mount(ModulesPage, {
     global: {
       stubs: {
@@ -23,41 +23,41 @@ const mountModulesPage = async () => {
         },
       },
     },
-  });
-};
+  })
+}
 
 describe('admin modules page', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetModuleHealth.mockResolvedValue({ modules: [], updatedAt: null });
+    vi.clearAllMocks()
+    mockGetModuleHealth.mockResolvedValue({ modules: [], updatedAt: null })
 
-    vi.stubGlobal('definePageMeta', vi.fn());
-    vi.stubGlobal('useAdminPage', vi.fn());
-    vi.stubGlobal('ref', ref);
-    vi.stubGlobal('computed', computed);
-    vi.stubGlobal('watch', watch);
-    vi.stubGlobal('onMounted', onMounted);
-    vi.stubGlobal('onUnmounted', onUnmounted);
+    vi.stubGlobal('definePageMeta', vi.fn())
+    vi.stubGlobal('useAdminPage', vi.fn())
+    vi.stubGlobal('ref', ref)
+    vi.stubGlobal('computed', computed)
+    vi.stubGlobal('watch', watch)
+    vi.stubGlobal('onMounted', onMounted)
+    vi.stubGlobal('onUnmounted', onUnmounted)
     vi.stubGlobal('useAdminFormat', () => ({
       formatDateTime: (value: string | null) => value || '—',
       formatDuration: (value: number | null | undefined) => (value == null ? '—' : `${value}s`),
       formatNumber: (value: number | null | undefined) => (value == null ? '—' : String(value)),
-    }));
-  });
+    }))
+  })
 
   afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+    vi.unstubAllGlobals()
+  })
 
   it('renders registry guidance when no modules are registered', async () => {
-    const wrapper = await mountModulesPage();
+    const wrapper = await mountModulesPage()
 
-    await flushPromises();
-    await flushPromises();
+    await flushPromises()
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('No modules registered yet');
-    expect(wrapper.text()).toContain('silver.module_registry');
-  });
+    expect(wrapper.text()).toContain('No modules registered yet')
+    expect(wrapper.text()).toContain('silver.module_registry')
+  })
 
   it('filters the inventory by search and attention state', async () => {
     mockGetModuleHealth.mockResolvedValue({
@@ -94,25 +94,25 @@ describe('admin modules page', () => {
           updated_at: '2026-03-07T12:00:00.000Z',
         },
       ],
-    });
+    })
 
-    const wrapper = await mountModulesPage();
+    const wrapper = await mountModulesPage()
 
-    await flushPromises();
-    await flushPromises();
+    await flushPromises()
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Remitly Bank Rails');
-    expect(wrapper.text()).toContain('Wise Sandbox');
+    expect(wrapper.text()).toContain('Remitly Bank Rails')
+    expect(wrapper.text()).toContain('Wise Sandbox')
 
-    await wrapper.get('input[placeholder="Filter module or provider"]').setValue('wise');
-    await flushPromises();
+    await wrapper.get('input[placeholder="Filter module or provider"]').setValue('wise')
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Wise Sandbox');
-    expect(wrapper.text()).not.toContain('Remitly Bank Rails');
+    expect(wrapper.text()).toContain('Wise Sandbox')
+    expect(wrapper.text()).not.toContain('Remitly Bank Rails')
 
-    await wrapper.get('select').setValue('attention');
-    await flushPromises();
+    await wrapper.get('select').setValue('attention')
+    await flushPromises()
 
-    expect(wrapper.text()).toContain('Wise Sandbox');
-  });
-});
+    expect(wrapper.text()).toContain('Wise Sandbox')
+  })
+})

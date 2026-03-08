@@ -52,10 +52,6 @@ export type DiscoveryBrowser = {
   close: () => Promise<void>
 }
 
-// ── Sleep helper ─────────────────────────────────────────────────────
-
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
-
 // ── Launch ───────────────────────────────────────────────────────────
 
 /**

@@ -199,11 +199,17 @@ class="text-body-sm text-rs-muted"
           </button>
         </div>
 
-        <div v-if="detailLoading" class="mt-4 text-body-sm text-rs-muted">
+        <div
+v-if="detailLoading"
+class="mt-4 text-body-sm text-rs-muted"
+>
           Loading event detail…
         </div>
 
-        <div v-else class="mt-4 grid gap-4 md:grid-cols-2">
+        <div
+v-else
+class="mt-4 grid gap-4 md:grid-cols-2"
+>
           <div class="rounded-xl border border-rs-border bg-rs-surface p-4">
             <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">Context</div>
             <div class="mt-3 space-y-2 text-body-sm text-rs-fg">
@@ -224,7 +230,10 @@ class="text-body-sm text-rs-muted"
               <div>Entity: {{ selectedLog.entity_type || 'entity' }}{{ selectedLog.entity_id ? `:${selectedLog.entity_id}` : '' }}</div>
               <div>Session: {{ selectedLog.session_id || 'n/a' }}</div>
             </div>
-            <div v-if="selectedLog.evidence_links?.length" class="mt-3 space-y-1">
+            <div
+v-if="selectedLog.evidence_links?.length"
+class="mt-3 space-y-1"
+>
               <a
                 v-for="link in selectedLog.evidence_links"
                 :key="link"

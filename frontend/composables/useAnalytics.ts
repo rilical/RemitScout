@@ -1,3 +1,5 @@
+import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'
+
 type AnalyticsDateRange = {
   start_date: string
   end_date: string
@@ -268,4 +270,3 @@ export const useAnalytics = () => {
     getRevenueMetrics,
   }
 }
-import { getAdminApiErrorMessage } from '~/utils/adminApiErrors'

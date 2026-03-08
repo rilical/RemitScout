@@ -120,7 +120,7 @@ describe('sign-in page', () => {
 
     const recoveryButton = wrapper
       .findAll('button')
-      .find((candidate) => candidate.text().includes('Send recovery email'))
+      .find(candidate => candidate.text().includes('Send recovery email'))
     expect(recoveryButton).toBeTruthy()
     await recoveryButton!.trigger('click')
     await flushPromises()

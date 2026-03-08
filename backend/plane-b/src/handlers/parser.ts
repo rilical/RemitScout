@@ -1,6 +1,5 @@
 import type { Pool } from 'pg'
 import type { JobContext, JobResult } from '../../../shared/types/job'
-import type { FailureBundle, FailureCategory, FailureSeverity } from '../../../shared/types/failure-bundle'
 import { BaseJobHandler } from './base-job-handler'
 
 /**
@@ -122,7 +121,7 @@ export class ParserHandler extends BaseJobHandler {
    */
   private diagnoseParseFailure(
     bundle: { error_message: string; error_type: string; dom_signature_hash: string | null; previous_dom_signature_hash: string | null },
-    observations: Array<{ observation_id: string; payload: unknown; observed_at: string }>,
+    _observations: Array<{ observation_id: string; payload: unknown; observed_at: string }>,
   ): { summary: string; category: string; suggestedAction: string; confidence: string } {
     // DOM change detection
     if (bundle.dom_signature_hash && bundle.previous_dom_signature_hash

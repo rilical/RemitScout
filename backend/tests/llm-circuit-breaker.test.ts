@@ -33,7 +33,7 @@ vi.mock('../shared/logger', () => ({
 import { CircuitBreaker } from '../shared/circuit-breaker'
 import { LLM_CIRCUIT_OPEN_SENTINEL, isLlmCircuitOpenSentinel, llmCircuitBreaker } from '../plane-b/src/agents/llm-circuit-breaker'
 import { LLMClient } from '../plane-b/src/agents/llm-client'
-import type { LLMConnector, LLMCompletionRequest, LLMCompletionResponse } from '../plane-b/src/agents/llm-client'
+import type { LLMConnector, LLMCompletionResponse } from '../plane-b/src/agents/llm-client'
 
 // ---------------------------------------------------------------------------
 // Helpers

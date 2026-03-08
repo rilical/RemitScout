@@ -1,10 +1,10 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 import {
   extractPlanStateFailure,
   mapPlanStateFailureMessage,
   resolvePlanStateFailureCode,
-} from '~/composables/usePlanStateError';
+} from '~/composables/usePlanStateError'
 
 describe('usePlanStateError', () => {
   it('prefers canonical plan_failure details over legacy error codes', () => {
@@ -21,14 +21,14 @@ describe('usePlanStateError', () => {
           recovery_action: 'billing_portal',
         },
       },
-    });
+    })
 
-    expect(resolvePlanStateFailureCode(failure)).toBe('plan_inactive');
-    expect(failure.requiredPlan).toBe('enterprise');
-    expect(failure.capability).toBe('api_access');
-    expect(failure.lifecycleState).toBe('past_due');
-    expect(failure.recoveryAction).toBe('billing_portal');
-  });
+    expect(resolvePlanStateFailureCode(failure)).toBe('plan_inactive')
+    expect(failure.requiredPlan).toBe('enterprise')
+    expect(failure.capability).toBe('api_access')
+    expect(failure.lifecycleState).toBe('past_due')
+    expect(failure.recoveryAction).toBe('billing_portal')
+  })
 
   it('maps inactive paid-plan failures to recovery-aware copy', () => {
     const message = mapPlanStateFailureMessage(
@@ -42,11 +42,11 @@ describe('usePlanStateError', () => {
           },
         },
       },
-      'Fallback'
-    );
+      'Fallback',
+    )
 
-    expect(message).toBe('Your paid plan is inactive. Reactivate billing to continue.');
-  });
+    expect(message).toBe('Your paid plan is inactive. Reactivate billing to continue.')
+  })
 
   it('reads nested validation details for billing recovery errors', () => {
     const message = mapPlanStateFailureMessage(
@@ -61,9 +61,9 @@ describe('usePlanStateError', () => {
           },
         },
       },
-      'Fallback'
-    );
+      'Fallback',
+    )
 
-    expect(message).toBe('No billing profile was found for this account.');
-  });
-});
+    expect(message).toBe('No billing profile was found for this account.')
+  })
+})
