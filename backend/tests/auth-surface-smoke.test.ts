@@ -54,6 +54,13 @@ describe('auth-surface-smoke helpers', () => {
     ).toBe(true)
   })
 
+  it('allows staging signup bare 5xx failures to become advisory when confirmation is required', () => {
+    const config = readAuthSmokeConfig({ ENVIRONMENT: 'staging' })
+    expect(
+      shouldTreatSupabaseSignupFailureAsAdvisory(500, null, config),
+    ).toBe(true)
+  })
+
   it('keeps production signup email delivery failures blocking', () => {
     const config = readAuthSmokeConfig({ ENVIRONMENT: 'production' })
     expect(
@@ -64,6 +71,16 @@ describe('auth-surface-smoke helpers', () => {
         },
         config,
       ),
+    ).toBe(false)
+  })
+
+  it('keeps staging bare 5xx failures blocking when confirmation is not required', () => {
+    const config = readAuthSmokeConfig({
+      ENVIRONMENT: 'staging',
+      SMOKE_REQUIRE_EMAIL_CONFIRMATION: '0',
+    })
+    expect(
+      shouldTreatSupabaseSignupFailureAsAdvisory(500, null, config),
     ).toBe(false)
   })
 

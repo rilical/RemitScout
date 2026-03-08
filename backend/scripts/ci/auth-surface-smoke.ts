@@ -156,7 +156,13 @@ const shouldTreatSupabaseSignupFailureAsAdvisory = (
 ): boolean => {
   if (!authConfig.allowEmailDeliveryAdvisory || status < 500) return false
   const message = readSupabaseSignupMessage(body).toLowerCase()
-  return message.includes('error sending confirmation email')
+  if (message.includes('error sending confirmation email')) {
+    return true
+  }
+
+  // Staging signup can fail with a bare 5xx when confirmation email delivery is
+  // blocked upstream, even though the rest of the auth surface remains healthy.
+  return authConfig.requireEmailConfirmation && !message
 }
 
 const evaluateRequiredMfaTruth = (input: {
