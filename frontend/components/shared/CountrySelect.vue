@@ -210,7 +210,8 @@ const getAvailableCountries = () => {
 }
 
 const restoreSelectedValue = () => {
-  searchQuery.value = getSelectedCountry()?.name ?? ''
+  const selected = getSelectedCountry()
+  searchQuery.value = selected ? `${selected.flag} ${selected.name}` : ''
 }
 
 const matchCountry = (country: CountryOption, query: string) => {
@@ -337,7 +338,7 @@ const openDropdown = async (resetSearch: boolean) => {
 const selectCountry = (country: CountryOption) => {
   emit('update:modelValue', country.value)
   emit('country-selected', country.value, country.currency)
-  searchQuery.value = country.name
+  searchQuery.value = `${country.flag} ${country.name}`
   isOpen.value = false
   highlightedIndex.value = -1
 }
@@ -358,7 +359,7 @@ const commitTypedCountry = () => {
   if (!match) return false
 
   if (match.value === props.modelValue) {
-    searchQuery.value = match.name
+    searchQuery.value = `${match.flag} ${match.name}`
     isOpen.value = false
     highlightedIndex.value = -1
     return true

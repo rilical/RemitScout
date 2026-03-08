@@ -181,76 +181,6 @@ class="text-body-sm leading-relaxed text-white/80"
               </div>
             </div>
 
-            <div class="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
-                    Live sweep status
-                  </p>
-                  <p class="text-body-lg mt-2 font-semibold text-white">
-                    {{ heroRefreshStatusTitle }}
-                  </p>
-                  <p class="text-body-sm mt-1 text-white/70">
-                    {{ heroRefreshStatusBody }}
-                  </p>
-                </div>
-                <p
-                  class="text-body-sm min-w-[7.5rem] text-right font-semibold tabular-nums text-white/80"
-                >
-                  {{
-                    showHeroRefreshStatus
-                      ? `${refreshProgress}%`
-                      : hasApiQuotes
-                        ? 'Locked in'
-                        : 'Stand by'
-                  }}
-                </p>
-              </div>
-
-              <div class="mt-4">
-                <div
-                  class="relative overflow-hidden rounded-full border border-white/10 bg-white/10 p-[3px]"
-                >
-                  <div
-                    class="absolute inset-[3px] rounded-full bg-gradient-to-r from-white/5 via-white/10 to-white/5"
-                  />
-                  <div class="relative h-2.5 overflow-hidden rounded-full bg-white/5">
-                    <div
-                      class="relative h-full rounded-full transition-[width] duration-500 ease-out"
-                      :class="heroRefreshBarClass"
-                      :style="{ width: heroRefreshBarWidth }"
-                    >
-                      <div
-                        v-if="showHeroRefreshStatus"
-                        class="loading-bar-animate absolute inset-y-0 left-0 rounded-full bg-white/35"
-                      />
-                      <div
-                        v-if="showHeroRefreshStatus"
-                        class="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-full bg-white/25 blur-md"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="mt-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40"
-                >
-                  <span>Queued</span>
-                  <span>In flight</span>
-                  <span>Ready</span>
-                </div>
-              </div>
-
-              <div class="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-white/55">
-                <span>{{ providerCount }} providers tracked</span>
-                <span v-if="mostRecentUpdate && hasApiQuotes">
-                  Last live update {{ mostRecentUpdateLabel }}
-                </span>
-                <span v-else-if="showHeroRefreshStatus && refreshSecondsRemaining > 0">
-                  About {{ refreshSecondsRemaining }}s remaining
-                </span>
-              </div>
-            </div>
-
             <!-- Quick Actions -->
             <div class="flex flex-wrap items-center gap-3">
               <button
@@ -756,8 +686,8 @@ class="scroll-mt-20 bg-surface"
             :to-country="toCountryCode"
             :available-to-currencies="availableToCurrencies"
             :available-from-currencies="availableFromCurrencies"
-            :available-methods="availableMethods"
-            :methods-loading="isRefreshQueued && !availableMethods.length"
+            :available-methods="supportedMethods"
+            :methods-loading="isRefreshQueued && !supportedMethods.length"
             :watchlist-active="isCorridorSaved"
             :alert-active="hasCorridorAlerts"
             @update="handleBarUpdate"
@@ -773,67 +703,28 @@ class="scroll-mt-20 bg-surface"
         <div
           v-if="showRefreshGate"
           data-testid="corridor-refresh-gate"
-          class="mb-8 rounded-2xl border border-rs-border bg-surface p-8 shadow-sm"
+          class="mb-6 rounded-xl border border-rs-border bg-surface px-5 py-3 shadow-sm"
         >
-          <div class="mx-auto flex max-w-2xl flex-col gap-5 py-4">
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-rs-muted">
-                  Live sweep status
-                </p>
-                <p class="text-body-lg mt-2 font-semibold text-rs-fg">
-                  {{ heroRefreshStatusTitle }}
-                </p>
-                <p class="text-body-sm mt-1 text-rs-muted">
-                  {{ heroRefreshStatusBody }}
-                </p>
-              </div>
-              <p class="text-body-sm font-semibold tabular-nums text-brand-700 sm:text-right">
-                {{ `${refreshProgress}%` }}
-              </p>
-            </div>
-
-            <div>
-              <div
-                class="relative overflow-hidden rounded-full border border-brand-200 bg-neutral-100 p-[3px]"
-              >
+          <div class="flex items-center gap-4">
+            <p class="text-body-sm font-semibold text-rs-fg whitespace-nowrap">
+              {{ heroRefreshStatusTitle }}
+            </p>
+            <div class="flex-1">
+              <div class="h-1.5 overflow-hidden rounded-full bg-neutral-100">
                 <div
-                  class="absolute inset-[3px] rounded-full bg-gradient-to-r from-brand-50 via-white to-brand-50"
+                  class="h-full rounded-full transition-[width] duration-500 ease-out"
+                  :class="heroRefreshBarClass"
+                  :style="{ width: heroRefreshBarWidth }"
                 />
-                <div class="relative h-2.5 overflow-hidden rounded-full bg-white">
-                  <div
-                    class="relative h-full rounded-full transition-[width] duration-500 ease-out"
-                    :class="heroRefreshBarClass"
-                    :style="{ width: heroRefreshBarWidth }"
-                  >
-                    <div
-                      class="loading-bar-animate absolute inset-y-0 left-0 rounded-full bg-white/45"
-                    />
-                    <div
-                      class="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-full bg-white/30 blur-md"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div
-                class="mt-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-rs-muted"
-              >
-                <span>Queued</span>
-                <span>In flight</span>
-                <span>Ready</span>
               </div>
             </div>
-
-            <div
-              class="flex flex-wrap items-center justify-center gap-3 text-[11px] text-rs-muted sm:justify-start"
-            >
-              <span>{{ providerCount }} providers tracked</span>
-              <span v-if="refreshSecondsRemaining > 0">
-                About {{ refreshSecondsRemaining }}s remaining
-              </span>
-              <span v-else>Locking in the live ranking</span>
-            </div>
+            <p class="text-body-sm min-w-[3rem] text-right font-semibold tabular-nums text-brand-600">
+              {{ `${refreshProgress}%` }}
+            </p>
           </div>
+          <p class="text-[11px] mt-1 text-rs-muted">
+            {{ heroRefreshStatusBody }}
+          </p>
         </div>
 
         <template v-else>
