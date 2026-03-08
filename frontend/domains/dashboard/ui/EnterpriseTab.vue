@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, type ComponentPublicInstance } from 'vue'
 import { DataTable, Icon } from '~/ui'
 import { formatDate, formatRelativeTime } from '~/shared/lib/format'
 import { useApi } from '~/composables/useApi'
@@ -13,6 +13,7 @@ import {
   useChartImageExport,
 } from '~/composables/useChartImageExport'
 import { buildCorridorSearchText, formatCorridorCountryPair } from '~/utils/corridorLabels'
+import { getCountryByCode } from '~/utils/countries-currencies'
 
 type EmbedVisualKey = 'teer' | 'rci' | 'rvi_bps'
 type NoticeTone = 'danger' | 'warning' | 'info'
@@ -44,7 +45,6 @@ type EnterpriseNotice = {
 }
 
 const EXPORT_DELAY_THRESHOLD_MINUTES = 15
-const BANK_DEPOSIT_METHOD_PROFILE = 'standard_bank' as const
 
 const EXPORT_JOB_TYPE_LABELS: Record<string, string> = {
   history: 'Quote history',
@@ -62,6 +62,12 @@ const EXPORT_JOB_TYPE_LABELS: Record<string, string> = {
   indices_csv: 'Indices CSV',
   indices_pdf: 'Indices PDF',
   indices_parquet: 'Indices Parquet',
+}
+
+const INDEX_DEFINITIONS: Record<string, { full: string, description: string }> = {
+  teer: { full: 'Total Effective Exchange Rate', description: 'The all-in rate including fees — what the recipient effectively receives.' },
+  rci: { full: 'Remittance Cost Index', description: 'Total cost as a % of send amount — lower is cheaper.' },
+  rvi_bps: { full: 'Rate Volatility Index', description: 'Pricing dispersion across providers in basis points — higher means more variation.' },
 }
 
 const { apiAccess, apiTier, apiRateLimitRpm, indicesEmbedsEnabled, indicesExportsEnabled, limits }
@@ -113,6 +119,8 @@ const {
   publishedEmbedsError,
   fetchPublishedEmbeds,
   revokePublishedEmbed,
+  methodProfileOptions,
+  amountBucketPresets,
 } = useEnterpriseEmbeds()
 
 const {
@@ -162,8 +170,12 @@ const embedCorridorInput = ref(embedCorridorId.value)
 const exportCorridorSearch = ref('')
 const embedFormError = ref<string | null>(null)
 const exportFormError = ref<string | null>(null)
+const revokeConfirmId = ref<string | null>(null)
+let revokeConfirmTimeout: ReturnType<typeof setTimeout> | null = null
 
-embedMethodProfile.value = BANK_DEPOSIT_METHOD_PROFILE
+const showGettingStarted = ref(
+  import.meta.client ? localStorage.getItem('rs-enterprise-getting-started-dismissed') !== '1' : true,
+)
 
 const normalizeCorridorId = (value: string) => value.toUpperCase().trim()
 
@@ -182,6 +194,10 @@ const activePublishedEmbedCount = computed(
 )
 const corridorCatalogCount = computed(() => corridors.value.length)
 
+const selectedMethodLabel = computed(() =>
+  methodProfileOptions.find(o => o.value === embedMethodProfile.value)?.label ?? 'Bank deposit',
+)
+
 const selectedEmbedCorridor = computed(
   () =>
     corridors.value.find(
@@ -189,24 +205,37 @@ const selectedEmbedCorridor = computed(
     ) ?? null,
 )
 
+function sortCorridorsForDisplay(list: EnterpriseCorridorRecord[]): EnterpriseCorridorRecord[] {
+  return [...list].sort((a, b) => {
+    const aUs = a.sourceCountry === 'US' ? 0 : 1
+    const bUs = b.sourceCountry === 'US' ? 0 : 1
+    if (aUs !== bUs) return aUs - bUs
+    if (a.sourceCountry !== b.sourceCountry) return a.sourceCountry.localeCompare(b.sourceCountry)
+    return (b.dataPoints ?? 0) - (a.dataPoints ?? 0)
+  })
+}
+
 const embedCorridorCandidates = computed(() => {
   const query = embedCorridorInput.value.trim().toLowerCase()
-  if (!query) return corridors.value.slice(0, 8)
+  if (!query) {
+    return sortCorridorsForDisplay(corridors.value).slice(0, 12)
+  }
 
-  return corridors.value
-    .filter((corridor) => {
-      return [
-        buildCorridorSearchText(corridor.corridorId),
-        corridor.sourceCountry,
-        corridor.destCountry,
-        corridorTitle(corridor),
-        corridorSubtitle(corridor),
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(query)
-    })
-    .slice(0, 8)
+  return sortCorridorsForDisplay(
+    corridors.value
+      .filter((corridor) => {
+        return [
+          buildCorridorSearchText(corridor.corridorId),
+          corridor.sourceCountry,
+          corridor.destCountry,
+          corridorTitle(corridor),
+          corridorSubtitle(corridor),
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      }),
+  ).slice(0, 12)
 })
 
 const exportCorridorCandidates = computed(() => {
@@ -215,22 +244,25 @@ const exportCorridorCandidates = computed(() => {
     corridor => !selectedExportCorridorIdSet.value.has(corridor.corridorId),
   )
 
-  if (!query) return available.slice(0, 8)
+  if (!query) {
+    return sortCorridorsForDisplay(available).slice(0, 12)
+  }
 
-  return available
-    .filter((corridor) => {
-      return [
-        buildCorridorSearchText(corridor.corridorId),
-        corridor.sourceCountry,
-        corridor.destCountry,
-        corridorTitle(corridor),
-        corridorSubtitle(corridor),
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(query)
-    })
-    .slice(0, 8)
+  return sortCorridorsForDisplay(
+    available
+      .filter((corridor) => {
+        return [
+          buildCorridorSearchText(corridor.corridorId),
+          corridor.sourceCountry,
+          corridor.destCountry,
+          corridorTitle(corridor),
+          corridorSubtitle(corridor),
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      }),
+  ).slice(0, 12)
 })
 
 const selectedExportCorridors = computed(() =>
@@ -318,7 +350,12 @@ function setEmbedPreviewFrame(
 }
 
 function corridorSubtitle(corridor: EnterpriseCorridorRecord) {
-  return `Bank deposit only • Tier ${corridor.dataTier} • ${formatCadence(corridor.exportCadenceMinutes)}`
+  const parts = [`Tier ${corridor.dataTier}`, `Updated every ${formatCadence(corridor.exportCadenceMinutes)}`]
+  if (corridor.lastUpdated) {
+    const ago = formatRelativeTime(corridor.lastUpdated)
+    if (ago) parts.push(`Last: ${ago}`)
+  }
+  return parts.join(' • ')
 }
 
 function corridorTitle(corridor: EnterpriseCorridorRecord) {
@@ -327,9 +364,9 @@ function corridorTitle(corridor: EnterpriseCorridorRecord) {
 
 function formatCadence(minutes: number) {
   if (!Number.isFinite(minutes) || minutes <= 0) return 'Unknown cadence'
-  if (minutes < 60) return `${minutes} min cadence`
-  if (minutes % 60 === 0) return `${minutes / 60} hr cadence`
-  return `${minutes} min cadence`
+  if (minutes < 60) return `${minutes} min`
+  if (minutes % 60 === 0) return `${minutes / 60} hr`
+  return `${minutes} min`
 }
 
 function formatJobAgeMinutes(createdAt: string) {
@@ -450,6 +487,57 @@ function commitExportSearch() {
   }
 }
 
+function dismissGettingStarted() {
+  showGettingStarted.value = false
+  if (import.meta.client) localStorage.setItem('rs-enterprise-getting-started-dismissed', '1')
+}
+
+function initiateRevoke(embedId: string) {
+  if (revokeConfirmTimeout) clearTimeout(revokeConfirmTimeout)
+  revokeConfirmId.value = embedId
+  revokeConfirmTimeout = setTimeout(() => {
+    revokeConfirmId.value = null
+  }, 3000)
+}
+
+function confirmRevoke(embedId: string) {
+  if (revokeConfirmTimeout) clearTimeout(revokeConfirmTimeout)
+  revokeConfirmId.value = null
+  revokePublishedEmbed(embedId)
+}
+
+function truncateUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    const path = u.pathname + u.search
+    if (path.length <= 40) return u.host + path
+    return u.host + path.slice(0, 20) + '…' + path.slice(-12)
+  }
+  catch {
+    return url.length > 60 ? url.slice(0, 30) + '…' + url.slice(-12) : url
+  }
+}
+
+function countryByCode(code: string): string | null {
+  const country = getCountryByCode(code)
+  return country?.name ?? null
+}
+
+function buildGroupHeaders(candidates: EnterpriseCorridorRecord[]): Map<string, string> {
+  const headers = new Map<string, string>()
+  for (let i = 0; i < candidates.length; i++) {
+    const current = candidates[i]!
+    const prev = i > 0 ? candidates[i - 1] : null
+    if (!prev || prev.sourceCountry !== current.sourceCountry) {
+      headers.set(current.corridorId, countryByCode(current.sourceCountry) ?? current.sourceCountry)
+    }
+  }
+  return headers
+}
+
+const embedGroupHeaders = computed(() => buildGroupHeaders(embedCorridorCandidates.value))
+const exportGroupHeaders = computed(() => buildGroupHeaders(exportCorridorCandidates.value))
+
 async function fetchCorridors() {
   if (!apiAccess.value || corridorsLoading.value) return
 
@@ -534,6 +622,10 @@ onMounted(() => {
   void fetchPublishedEmbeds()
   void fetchCorridors()
 })
+
+onBeforeUnmount(() => {
+  if (revokeConfirmTimeout) clearTimeout(revokeConfirmTimeout)
+})
 </script>
 
 <template>
@@ -606,6 +698,36 @@ class="text-current"
         </div>
       </div>
     </section>
+
+    <div v-if="showGettingStarted" class="mb-6 rounded-2xl border border-brand-200 bg-brand-50/50 px-6 py-5">
+      <div class="flex items-start justify-between">
+        <div>
+          <h3 class="text-body-sm font-bold text-brand-900">Getting started with Enterprise</h3>
+          <div class="mt-3 space-y-2 text-body-sm text-brand-800">
+            <p><strong>1.</strong> Create an API key to authenticate server-to-server requests.</p>
+            <p><strong>2.</strong> Pick a corridor (e.g. US → Philippines) to monitor.</p>
+            <p><strong>3.</strong> Publish an embed or create a data export.</p>
+          </div>
+          <div class="mt-3 flex items-center gap-4 text-[11px]">
+            <NuxtLink to="/indices-methodology" class="font-semibold text-brand-700 hover:text-brand-800">
+              What are TEER, RCI &amp; RVI? →
+            </NuxtLink>
+            <NuxtLink to="/api-docs" class="font-semibold text-brand-700 hover:text-brand-800">
+              API documentation →
+            </NuxtLink>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="ml-4 shrink-0 text-brand-400 hover:text-brand-600"
+          @click="dismissGettingStarted"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
 
     <div
 v-if="enterpriseNotices.length > 0"
@@ -878,6 +1000,9 @@ class="mt-4 space-y-4"
               Publish durable TEER / RCI / RVI embed bundles with corridor search, clear preview
               state, and download controls for the exact rendered chart.
             </p>
+            <NuxtLink to="/indices-methodology" class="text-[11px] font-semibold text-brand-600 hover:text-brand-700">
+              Learn about TEER, RCI &amp; RVI →
+            </NuxtLink>
           </div>
           <button
             type="button"
@@ -902,7 +1027,7 @@ class="text-current"
                 <input
                   v-model="embedCorridorInput"
                   type="text"
-                  placeholder="Search by send country or destination country"
+                  placeholder="e.g. US → Philippines, GB → Nigeria"
                   class="text-body-sm w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                   @keydown.enter.prevent="commitEmbedSearch"
                 >
@@ -916,29 +1041,38 @@ class="text-body-sm px-3 py-4 text-rs-muted"
 >
                   Loading corridor catalog…
                 </div>
-                <button
-                  v-for="corridor in embedCorridorCandidates"
+                <template
+                  v-for="(corridor, index) in embedCorridorCandidates"
                   :key="corridor.corridorId"
-                  type="button"
-                  class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
-                  @click="selectEmbedCorridor(corridor.corridorId)"
                 >
-                  <div>
-                    <div class="text-body-sm font-semibold text-rs-fg">
-                      {{ corridorTitle(corridor) }}
-                    </div>
-                    <div class="mt-1 text-[11px] text-rs-muted">
-                      {{ corridorSubtitle(corridor) }}
-                    </div>
+                  <div
+                    v-if="embedGroupHeaders.has(corridor.corridorId)"
+                    class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-rs-muted"
+                  >
+                    {{ embedGroupHeaders.get(corridor.corridorId) }}
                   </div>
-                  <div class="text-[11px] text-rs-muted">
-                    {{
-                      corridor.lastUpdated
-                        ? formatRelativeTime(corridor.lastUpdated)
-                        : 'No recent update'
-                    }}
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
+                    @click="selectEmbedCorridor(corridor.corridorId)"
+                  >
+                    <div>
+                      <div class="text-body-sm font-semibold text-rs-fg">
+                        {{ corridorTitle(corridor) }}
+                      </div>
+                      <div class="mt-1 text-[11px] text-rs-muted">
+                        {{ corridorSubtitle(corridor) }}
+                      </div>
+                    </div>
+                    <div class="text-[11px] text-rs-muted">
+                      {{
+                        corridor.lastUpdated
+                          ? formatRelativeTime(corridor.lastUpdated)
+                          : 'No recent update'
+                      }}
+                    </div>
+                  </button>
+                </template>
                 <div
                   v-if="!corridorsLoading && embedCorridorCandidates.length === 0"
                   class="text-body-sm px-3 py-4 text-rs-muted"
@@ -978,29 +1112,41 @@ class="text-body-sm px-3 py-4 text-rs-muted"
             <div class="grid gap-3 sm:grid-cols-2">
               <div>
                 <label class="text-body-sm font-semibold text-neutral-700">Amount bucket</label>
-                <input
+                <p class="mt-0.5 text-[11px] text-rs-muted">Transfer amount used for price comparison</p>
+                <select
                   v-model.number="embedAmountBucket"
-                  type="number"
-                  min="1"
                   class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 >
+                  <option
+                    v-for="amt in amountBucketPresets"
+                    :key="amt"
+                    :value="amt"
+                  >
+                    ${{ amt.toLocaleString() }}
+                  </option>
+                </select>
               </div>
               <div>
                 <label class="text-body-sm font-semibold text-neutral-700">Delivery method</label>
-                <div
-                  class="text-body-sm mt-2 flex min-h-[46px] items-center rounded-xl border border-rs-border bg-neutral-50 px-3 py-2.5 font-semibold text-rs-fg"
+                <select
+                  v-model="embedMethodProfile"
+                  class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 >
-                  Bank deposit only
-                </div>
-                <p class="mt-2 text-[11px] text-rs-muted">
-                  Enterprise indices are published only for bank-deposit corridors.
-                </p>
+                  <option
+                    v-for="opt in methodProfileOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </option>
+                </select>
               </div>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
               <div>
                 <label class="text-body-sm font-semibold text-neutral-700">History window (days)</label>
+                <p class="mt-0.5 text-[11px] text-rs-muted">Days of historical data to include</p>
                 <input
                   v-model.number="embedDays"
                   type="number"
@@ -1031,15 +1177,12 @@ class="text-body-sm px-3 py-4 text-rs-muted"
                 {{ embedPublishedGenerating ? 'Publishing embed…' : 'Publish static embed bundle' }}
               </button>
               <span class="text-[11px] text-rs-muted">
-                Bank deposit only • {{ embedAmountBucket }} amount bucket • {{ embedDays }} day
-                window
+                {{ selectedMethodLabel }} • ${{ embedAmountBucket.toLocaleString() }} • {{ embedDays }} days
               </span>
             </div>
 
             <p class="text-[11px] leading-5 text-rs-muted">
-              Published embeds are immutable public snapshots. If the embed store is degraded on
-              staging, this section will fail loudly instead of silently pretending nothing is
-              wrong.
+              Published embeds are immutable public snapshots.
             </p>
           </div>
         </div>
@@ -1084,6 +1227,9 @@ class="mt-1 text-[11px] text-success-700"
                 <div class="text-body-sm font-semibold text-rs-fg">{{ item.label }} embed</div>
                 <p class="mt-1 text-[11px] text-rs-muted">
                   Static code, public URL, and rendered image export for {{ item.label }}.
+                </p>
+                <p class="text-[11px] text-rs-muted">
+                  {{ INDEX_DEFINITIONS[item.key]?.full }} — {{ INDEX_DEFINITIONS[item.key]?.description }}
                 </p>
               </div>
               <div class="flex flex-wrap items-center gap-2">
@@ -1210,15 +1356,33 @@ class="rounded-full bg-success-100 px-2 py-0.5 text-success-700"
                     </span>
                   </div>
                 </div>
-                <button
-                  v-if="!embed.revokedAt"
-                  type="button"
-                  class="text-body-sm font-semibold text-danger-600 hover:text-danger-700 disabled:opacity-60"
-                  :disabled="publishedEmbedsLoading"
-                  @click="revokePublishedEmbed(embed.id)"
-                >
-                  Revoke
-                </button>
+                <div v-if="!embed.revokedAt" class="flex items-center gap-2">
+                  <button
+                    v-if="revokeConfirmId !== embed.id"
+                    type="button"
+                    class="text-body-sm font-semibold text-danger-600 hover:text-danger-700 disabled:opacity-60"
+                    :disabled="publishedEmbedsLoading"
+                    @click="initiateRevoke(embed.id)"
+                  >
+                    Revoke
+                  </button>
+                  <template v-else>
+                    <button
+                      type="button"
+                      class="text-body-sm rounded-lg bg-danger-600 px-3 py-1 font-semibold text-white hover:bg-danger-700"
+                      @click="confirmRevoke(embed.id)"
+                    >
+                      Confirm revoke?
+                    </button>
+                    <button
+                      type="button"
+                      class="text-body-sm font-semibold text-rs-muted hover:text-rs-fg"
+                      @click="revokeConfirmId = null"
+                    >
+                      Cancel
+                    </button>
+                  </template>
+                </div>
               </div>
 
               <div class="mt-3 space-y-3">
@@ -1257,8 +1421,8 @@ class="rounded-full bg-success-100 px-2 py-0.5 text-success-700"
                       </a>
                     </div>
                   </div>
-                  <div class="break-all font-mono text-[11px] text-rs-muted">
-                    {{ variant.publicUrl }}
+                  <div class="font-mono text-[11px] text-rs-muted" :title="variant.publicUrl">
+                    {{ truncateUrl(variant.publicUrl) }}
                   </div>
                 </div>
               </div>
@@ -1348,7 +1512,7 @@ class="text-current"
               <input
                 v-model="exportCorridorSearch"
                 type="text"
-                placeholder="Search by send country or destination country"
+                placeholder="e.g. US → Philippines, GB → Nigeria"
                 class="text-body-sm mt-2 w-full rounded-xl border border-rs-border bg-surface px-3 py-2.5 text-rs-fg focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 @keydown.enter.prevent="commitExportSearch"
               >
@@ -1361,23 +1525,32 @@ class="text-body-sm px-3 py-4 text-rs-muted"
 >
                 Loading corridor catalog…
               </div>
-              <button
-                v-for="corridor in exportCorridorCandidates"
+              <template
+                v-for="(corridor, index) in exportCorridorCandidates"
                 :key="corridor.corridorId"
-                type="button"
-                class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
-                @click="addExportCorridor(corridor.corridorId)"
               >
-                <div>
-                  <div class="text-body-sm font-semibold text-rs-fg">
-                    {{ corridorTitle(corridor) }}
-                  </div>
-                  <div class="mt-1 text-[11px] text-rs-muted">
-                    {{ corridorSubtitle(corridor) }}
-                  </div>
+                <div
+                  v-if="exportGroupHeaders.has(corridor.corridorId)"
+                  class="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-rs-muted"
+                >
+                  {{ exportGroupHeaders.get(corridor.corridorId) }}
                 </div>
-                <div class="text-[11px] font-semibold text-brand-600">Add</div>
-              </button>
+                <button
+                  type="button"
+                  class="flex w-full items-start justify-between gap-3 border-b border-rs-border px-3 py-3 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
+                  @click="addExportCorridor(corridor.corridorId)"
+                >
+                  <div>
+                    <div class="text-body-sm font-semibold text-rs-fg">
+                      {{ corridorTitle(corridor) }}
+                    </div>
+                    <div class="mt-1 text-[11px] text-rs-muted">
+                      {{ corridorSubtitle(corridor) }}
+                    </div>
+                  </div>
+                  <div class="text-[11px] font-semibold text-brand-600">Add</div>
+                </button>
+              </template>
               <div
                 v-if="!corridorsLoading && exportCorridorCandidates.length === 0"
                 class="text-body-sm px-3 py-4 text-rs-muted"
