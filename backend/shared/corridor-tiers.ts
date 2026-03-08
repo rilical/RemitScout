@@ -46,7 +46,7 @@ export function getCorridorTier(corridorId: string): CorridorTier {
 export function isUsdOriginCorridor(corridorId: string): boolean {
   const parsed = parseCorridorId(corridorId)
   if (!parsed) return false
-  return parsed.sourceCurrency.toUpperCase() === 'USD'
+  return parsed.sourceCountry.toUpperCase() === 'US'
 }
 
 /**
