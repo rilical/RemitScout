@@ -1789,6 +1789,8 @@ export const createEcsTasks = (
     ),
     environment: {
       ...sharedEnv,
+      AGENT_ENABLED: 'true',
+      AGENT_ORCHESTRATOR_ENABLED: 'true',
       HEALTH_PORT: '8080',
     },
     ...secretsConfig,
