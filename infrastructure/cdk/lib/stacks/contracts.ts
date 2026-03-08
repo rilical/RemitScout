@@ -109,7 +109,7 @@ export type RuntimeResources = {
 export type EdgeNestedStackProps = NestedStackProps & {
   envName: string
   api: ApiResources
-  frontendOptions: Omit<FrontendOptions, 'envName' | 'planeAWaf' | 'planeAApiEndpoint' | 'planeACloudFrontDomain'>
+  frontendOptions: Omit<FrontendOptions, 'envName' | 'planeAWaf' | 'planeAApiDomain' | 'planeACloudFrontDomain'>
   defaultFrontendBaseUrl?: string
   pinpointAppId?: string
 }
