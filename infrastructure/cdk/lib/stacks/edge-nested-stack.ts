@@ -15,6 +15,7 @@ export class EdgeNestedStack extends NestedStack {
     const frontend = createFrontend(this, {
       envName: props.envName,
       planeAWaf: api.planeAWaf,
+      planeAApiEndpoint: api.planeAApi.apiEndpoint,
       planeACloudFrontDomain: api.planeACloudFront?.distributionDomainName,
       ...props.frontendOptions,
     })

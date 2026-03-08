@@ -295,8 +295,49 @@ jobs:
             echo "Missing PUBLIC_API_BASE for staging public integration smoke."
             exit 1
           fi
+
+          fetch_status() {
+            local url="$1"
+            local output_path="$2"
+            local status
+            status="$(curl -sS -o "${output_path}" -w '%{http_code}' "${url}" || true)"
+            if [ -z "${status}" ]; then
+              status="000"
+            fi
+            printf '%s' "${status}"
+          }
+
+          consecutive=0
+          for attempt in $(seq 1 24); do
+            health_status="$(fetch_status "${api_root}/healthz" /tmp/staging-public-healthz.out)"
+            ready_status="$(fetch_status "${api_root}/readyz" /tmp/staging-public-readyz.out)"
+            corridor_status="$(fetch_status "${api_root}/api/v1/corridor-currencies?from=US&to=MX" /tmp/staging-public-corridors.out)"
+            providers_status="$(fetch_status "${api_root}/api/v1/providers?from=US&to=MX&amount=500&fromCurrency=USD&toCurrency=MXN&method=bank" /tmp/staging-public-providers.out)"
+
+            if [ "${health_status}" = "200" ] \
+              && [ "${ready_status}" = "200" ] \
+              && [ "${corridor_status}" = "200" ] \
+              && [ "${providers_status}" = "200" ]; then
+              consecutive=$((consecutive + 1))
+              echo "Public site/API stabilization sample ${attempt}/24 passed (${consecutive}/3 consecutive)."
+              if [ "${consecutive}" -ge 3 ]; then
+                break
+              fi
+            else
+              consecutive=0
+              echo "Waiting for public site/API stabilization (attempt ${attempt}/24, health=${health_status}, ready=${ready_status}, corridors=${corridor_status}, providers=${providers_status})."
+            fi
+
+            if [ "${attempt}" -eq 24 ]; then
+              echo "::error::Public site/API did not stabilize before staging integration smoke."
+              exit 1
+            fi
+
+            sleep 5
+          done
+
           mkdir -p .smoke-artifacts
-          SMOKE_BASE_URL="${api_root}" pnpm -C backend ci:integration-smoke | tee .smoke-artifacts/staging-public-integration-smoke.log
+          SMOKE_BASE_URL="${api_root}" SMOKE_FETCH_RETRIES=10 pnpm -C backend ci:integration-smoke | tee .smoke-artifacts/staging-public-integration-smoke.log
 
       - name: Agent pipeline E2E health (staging)
         env:
