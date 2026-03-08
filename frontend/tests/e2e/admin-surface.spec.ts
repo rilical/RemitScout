@@ -7,9 +7,14 @@ const authMfaCode = process.env.E2E_AUTH_MFA_CODE || process.env.PLAYWRIGHT_AUTH
 const targetEmail = process.env.E2E_ADMIN_SMOKE_TARGET_EMAIL || 'support@remit-scout.com'
 const isRemoteTarget = /^https?:\/\//.test(baseUrl)
 const canRun = isRemoteTarget && Boolean(authEmail && authPassword)
+const canRunPrivilegedAdminUi = authMfaCode.trim().length > 0
+const initialAdminPath = canRunPrivilegedAdminUi ? '/admin/observer' : '/admin/modules'
+const initialAdminPathPattern = canRunPrivilegedAdminUi
+  ? /\/admin\/observer(?:\?|$)/
+  : /\/admin\/modules(?:\?|$)/
 
 const completeSignIn = async (page: Page) => {
-  await page.goto('/sign-in?redirect=/admin/observer')
+  await page.goto(`/sign-in?redirect=${encodeURIComponent(initialAdminPath)}`)
 
   await page.getByLabel(/email/i).fill(authEmail)
   await page.getByLabel(/password/i).fill(authPassword)
@@ -25,13 +30,13 @@ const completeSignIn = async (page: Page) => {
 
     await mfaInput.fill(authMfaCode)
     await Promise.all([
-      page.waitForURL(/\/admin\/observer(?:\?|$)/, { timeout: 30000 }),
+      page.waitForURL(initialAdminPathPattern, { timeout: 30000 }),
       page.getByRole('button', { name: /^verify$/i }).click(),
     ])
     return
   }
 
-  await page.waitForURL(/\/admin\/observer(?:\?|$)/, { timeout: 30000 })
+  await page.waitForURL(initialAdminPathPattern, { timeout: 30000 })
 }
 
 const expectNoAdminLoadFailure = async (page: Page) => {
@@ -77,7 +82,13 @@ test.describe('admin surface smoke', () => {
     page,
   }) => {
     await completeSignIn(page)
-    await visitObserverPage(page)
+
+    if (canRunPrivilegedAdminUi) {
+      await visitObserverPage(page)
+    }
+    else {
+      console.log('Skipping privileged admin UI checks: E2E_AUTH_MFA_CODE not configured.')
+    }
 
     await visitAdminPage(page, '/admin/modules', /module registry/i, ['registered modules'])
     await visitAdminPage(page, '/admin/discovery', /provider control plane/i, ['pending discovery reviews', 'operator brief'])
@@ -87,6 +98,10 @@ test.describe('admin surface smoke', () => {
     await visitAdminPage(page, '/admin/feature-flags', /feature flags/i, ['effective runtime flags', 'db overrides'])
     await visitAdminPage(page, '/admin/institutional', /institutional client management/i, ['prelaunch workflow', 'create prelaunch client'])
     await visitAdminPage(page, '/admin/ads', /ad inventory/i, ['preview harness', 'inventory list'])
+
+    if (!canRunPrivilegedAdminUi) {
+      return
+    }
 
     await page.goto(`/admin/enterprise?email=${encodeURIComponent(targetEmail)}`)
     await expect(page.getByRole('heading', { name: /enterprise account management/i })).toBeVisible(
