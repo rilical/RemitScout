@@ -390,6 +390,35 @@ jobs:
             export SMOKE_QUEUE_KINDS="quote_refresh,fx_rate_refresh,ingest_fanout,ingest_fanout_tier2,exports,notifications,ops_alerts,gold_live"
           fi
 
+          DATABASE_URL_PLANE_B="$(
+            python3 - <<'PY'
+from urllib.parse import quote, urlsplit, urlunsplit
+import os
+import socket
+
+raw = os.environ["DATABASE_URL_PLANE_B"]
+parts = urlsplit(raw)
+hostname = parts.hostname
+port = parts.port or 5432
+
+if not hostname:
+    print(raw)
+    raise SystemExit(0)
+
+ipv4 = socket.getaddrinfo(hostname, port, socket.AF_INET, socket.SOCK_STREAM)[0][4][0]
+username = parts.username
+password = parts.password
+auth = ""
+if username is not None:
+    auth = quote(username, safe="")
+    if password is not None:
+        auth += ":" + quote(password, safe="")
+    auth += "@"
+netloc = f"{auth}{ipv4}:{port}"
+print(urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment)))
+PY
+          )"
+          export DATABASE_URL_PLANE_B
           mkdir -p .smoke-artifacts
           if pnpm -C backend exec tsx scripts/e2e-agent-health-check.ts 2>&1 | tee .smoke-artifacts/staging-agent-pipeline-health.log; then
             exit 0
