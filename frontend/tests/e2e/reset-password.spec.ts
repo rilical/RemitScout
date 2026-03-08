@@ -80,6 +80,8 @@ test.describe('reset password flow', () => {
 
     await expect(page.getByRole('heading', { name: 'Set a new password' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Update password' })).toBeDisabled()
+    await expect(page.getByLabel('New password')).toBeEditable()
+    await expect(page.getByLabel('Confirm password')).toBeEditable()
 
     await page.getByLabel('New password').fill('StrongPassw0rd!')
     await page.getByLabel('Confirm password').fill('StrongPassw0rd!')
