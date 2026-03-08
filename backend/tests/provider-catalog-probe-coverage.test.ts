@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { resolveRepoPath } from './support/repo-paths'
 
 type ProviderCatalog = {
   providers: Array<{
@@ -14,13 +14,7 @@ type ProviderCatalog = {
 
 describe('provider catalog probe coverage', () => {
   it('keeps every provider covered by aws_scheduled and github_actions probes', () => {
-    const catalogPath = path.resolve(
-      process.cwd(),
-      '..',
-      '.remit-scout',
-      'providers',
-      'catalog.json',
-    )
+    const catalogPath = resolveRepoPath(__dirname, '.remit-scout', 'providers', 'catalog.json')
     const raw = JSON.parse(readFileSync(catalogPath, 'utf8')) as ProviderCatalog
     const providers = raw.providers || []
 

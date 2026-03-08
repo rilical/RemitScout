@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { buildApp } from '../../plane-a/src/app'
+import { resolveRepoPath } from '../support/repo-paths'
 
 type OpenApiOperation = {
   method: string
@@ -85,7 +85,7 @@ const extractRuntimeOperations = async (): Promise<Set<string>> => {
 
 describe('openapi contract compliance', () => {
   it('documents valid OpenAPI header and paths section', () => {
-    const file = path.resolve(__dirname, '../../../docs/openapi/api.yaml')
+    const file = resolveRepoPath(__dirname, 'docs', 'openapi', 'api.yaml')
     const content = readFileSync(file, 'utf8')
 
     expect(content).toMatch(/openapi:\s*3\./)
@@ -93,7 +93,7 @@ describe('openapi contract compliance', () => {
   })
 
   it('maps every documented OpenAPI operation to a registered Plane A route', async () => {
-    const file = path.resolve(__dirname, '../../../docs/openapi/api.yaml')
+    const file = resolveRepoPath(__dirname, 'docs', 'openapi', 'api.yaml')
     const content = readFileSync(file, 'utf8')
     const openApiOperations = extractOpenApiOperations(content)
     const runtimeOperations = await extractRuntimeOperations()
