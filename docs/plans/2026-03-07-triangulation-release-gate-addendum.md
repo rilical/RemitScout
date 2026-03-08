@@ -38,7 +38,7 @@ traceability:
     - backend/plane-a/src/repositories/implementations/triangulated-index-repository.ts
     - backend/db/migrations/091_partner_entitlements_factors.sql
     - backend/db/migrations/103_fk_constraints_weight_snapshot_triangulated_index.sql
-    - backend/db/migrations/108_observation_module_registry_triangulation_hardening.sql
+    - backend/db/migrations/104_observation_module_registry_triangulation_hardening.sql
   runtime_stage_gates:
     - task_cluster: cluster.triangulation-contract@v1
       bounded_evidence_note: "Triangulation must be proven from observation ingest through API delivery, not just by unit tests."

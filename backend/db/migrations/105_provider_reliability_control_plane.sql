@@ -1,5 +1,3 @@
--- Migration 109: Provider reliability control plane
-
 BEGIN;
 
 ALTER TABLE silver.discovery_scan
