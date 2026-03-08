@@ -1,4 +1,5 @@
 import { buildApp } from '../../plane-a/src/app'
+import { disconnectRedis } from '../../shared/redis'
 
 const normalizeBaseUrl = (value: string) => value.replace(/\/$/, '')
 
@@ -70,6 +71,7 @@ const run = async () => {
     console.log('✅ API smoke checks passed')
   } finally {
     await app.close()
+    await disconnectRedis().catch(() => {})
   }
 }
 
