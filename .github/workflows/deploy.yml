@@ -593,8 +593,7 @@ jobs:
 
   deploy-staging:
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.env == 'staging') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run != null && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'staging')
+      github.event_name == 'workflow_dispatch' && inputs.env == 'staging'
     concurrency:
       group: deploy-staging
       cancel-in-progress: false
@@ -1662,18 +1661,27 @@ jobs:
       - name: Admin surface smoke (staging)
         shell: bash
         env:
-          SMOKE_BASE_URL: ${{ vars.PUBLIC_API_BASE }}
+          STACK_NAME: ${{ vars.STACK_NAME }}
           SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
           SMOKE_USER_EMAIL: omar@remit-scout.com
           SMOKE_USER_PASSWORD: ${{ secrets.LAUNCH_PASSWORD_OMAR || secrets.DEFAULT_LAUNCH_PASSWORD }}
           SMOKE_USER_MFA_CODE: ${{ secrets.LAUNCH_MFA_OMAR || '' }}
           SMOKE_EXPECT_ADMIN_MFA: ${{ vars.ADMIN_MFA_REQUIRED || '1' }}
+          SMOKE_INCLUDE_PAGE_SURFACES: '0'
           ADMIN_SMOKE_TARGET_EMAIL: support@remit-scout.com
         run: |
           set -euo pipefail
-          if [ -z "${SMOKE_BASE_URL:-}" ]; then
-            echo "Missing PUBLIC_API_BASE for staging admin surface smoke."
+          outputs="$(aws cloudformation describe-stacks --stack-name "${STACK_NAME}" --query "Stacks[0].Outputs" --output json)"
+          plane_a_cf="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneACloudFrontDomain") | .OutputValue')"
+          plane_a_api="$(echo "$outputs" | jq -r '.[] | select(.OutputKey=="PlaneAApiUrl") | .OutputValue')"
+          api_base="https://${plane_a_cf}"
+          if [ -z "$plane_a_cf" ] || [ "$plane_a_cf" = "null" ]; then
+            api_base="$(echo "$plane_a_api" | sed 's:/*$::')"
+          fi
+
+          if [ -z "${api_base:-}" ] || [ "${api_base}" = "null" ]; then
+            echo "Unable to resolve Plane A API base for staging admin surface smoke."
             exit 1
           fi
           if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_PUBLISHABLE_KEY:-}" ]; then
@@ -1684,7 +1692,7 @@ jobs:
             echo "Missing LAUNCH_PASSWORD_OMAR or DEFAULT_LAUNCH_PASSWORD for staging admin surface smoke."
             exit 1
           fi
-          pnpm -C backend ci:admin-surface-smoke
+          SMOKE_BASE_URL="$api_base" pnpm -C backend ci:admin-surface-smoke
 
       - name: Install Playwright browser runtime (staging admin UI smoke)
         run: pnpm -C frontend exec playwright install --with-deps chromium

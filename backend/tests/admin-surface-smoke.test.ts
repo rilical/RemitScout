@@ -6,6 +6,7 @@ import {
   isAdminMfaRequiredResponse,
   readAdminSmokeConfig,
   readExpectedAdminMfa,
+  readIncludePageSurfaceChecks,
   readSmokeUserMfaCode,
   resolveAuditLogEventId,
   resolveAdminSmokeAuthToken,
@@ -99,6 +100,16 @@ describe('admin surface smoke helpers', () => {
     expect(readExpectedAdminMfa({
       ENVIRONMENT: 'development',
       SMOKE_EXPECT_ADMIN_MFA: '1',
+    })).toBe(true)
+  })
+
+  it('includes page-surface checks by default and honors explicit disable', () => {
+    expect(readIncludePageSurfaceChecks({})).toBe(true)
+    expect(readIncludePageSurfaceChecks({
+      SMOKE_INCLUDE_PAGE_SURFACES: '0',
+    })).toBe(false)
+    expect(readIncludePageSurfaceChecks({
+      SMOKE_INCLUDE_PAGE_SURFACES: 'true',
     })).toBe(true)
   })
 
